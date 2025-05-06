@@ -95,19 +95,21 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
     x_pos = np.array(config["x"])
     y_pos = np.array(config["y"])
 
-    # Don't flip y coordinates for two mirror telescopes (SCT and SST)
     if not is_two_mirror_telescope(telescope_model_name):
         y_pos = -y_pos
 
-    # For SST, apply 90 degree rotation
-    if "SST" in telescope_model_name:
-        base_angle = 90
+    # Apply rotation
+    base_angle = 0.0
+    if "MSTS" in telescope_model_name:
+        base_angle = 270.0
+    elif "SST" in telescope_model_name:
+        base_angle = 90.0
     else:
         base_angle = 248.2
 
     # Apply base rotation and any additional rotation from config
     total_rotation = base_angle
-    if config["rotate_angle"] is not None:
+    if config.get("rotate_angle") is not None:
         total_rotation += config["rotate_angle"]
 
     rot_angle = np.deg2rad(total_rotation)
@@ -166,21 +168,33 @@ def _create_pixel_plot(
         telescope_model_name,
     )
 
-    # Add collections
-    for patches, style in [
-        (on_pixels, {"facecolor": "none", "edgecolor": "black", "linewidth": 0.2}),
-        (
-            edge_pixels,
-            {
-                "facecolor": (*mcolors.to_rgb("brown"), 0.5),
-                "edgecolor": (*mcolors.to_rgb("black"), 1),
-                "linewidth": 0.2,
-            },
-        ),
-        (off_pixels, {"facecolor": "black", "edgecolor": "black", "linewidth": 0.2}),
-    ]:
-        if patches:
-            ax.add_collection(PatchCollection(patches, **style))
+    # Combine all patches into a single collection
+    all_patches = on_pixels + edge_pixels + off_pixels
+    facecolors = [
+        "none"
+        if i < len(on_pixels)
+        else (*mcolors.to_rgb("brown"), 0.5)
+        if i < len(on_pixels) + len(edge_pixels)
+        else "black"
+        for i in range(len(on_pixels) + len(edge_pixels) + len(off_pixels))
+    ]
+    edgecolors = (
+        ["black"] * len(on_pixels)
+        + [(*mcolors.to_rgb("black"), 1)] * len(edge_pixels)
+        + ["black"] * len(off_pixels)
+    )
+    linewidths = [0.2] * len(all_patches)
+
+    # Add the combined collection
+    ax.add_collection(
+        PatchCollection(
+            all_patches,
+            facecolor=facecolors,
+            edgecolor=edgecolors,
+            linewidth=linewidths,
+            match_original=True,
+        )
+    )
 
     # Configure plot with titles
     _configure_plot(
@@ -188,6 +202,7 @@ def _create_pixel_plot(
         telescope_model_name,
         pixel_data["x"],
         pixel_data["y"],
+        rotation=pixel_data["rotation"],
         title=title,
         xtitle=xtitle,
         ytitle=ytitle,
@@ -208,7 +223,7 @@ def _read_pixel_config(dat_file_path):
         "pixel_shape": None,
         "pixel_diameter": None,
         "trigger_groups": [],
-        "rotate_angle": None,  # Add this field
+        "rotate_angle": None,
     }
 
     with open(dat_file_path, encoding="utf-8") as f:
@@ -218,7 +233,7 @@ def _read_pixel_config(dat_file_path):
                 config["rotate_angle"] = float(line.split()[1].strip())
             elif line.startswith("PixType"):
                 parts = line.split()
-                config["pixel_shape"] = int(parts[5].strip())  # funnel shape
+                config["pixel_shape"] = int(parts[5].strip())
                 config["pixel_diameter"] = float(parts[6].strip())
             elif line.startswith("Pixel"):
                 parts = line.split()
@@ -272,9 +287,8 @@ def _is_edge_pixel(x, y, x_pos, y_pos, diameter, shape):
     return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.4) < 4
 
 
-def _add_pixel_id(x, y, pixel_id, telescope_model_name):
+def _add_pixel_id(x, y, pixel_id, font_size):
     """Add pixel ID text to the plot."""
-    font_size = 2 if "SCT" in names.get_array_element_type_from_name(telescope_model_name) else 4
     plt.text(x, y, pixel_id, ha="center", va="center", fontsize=font_size)
 
 
@@ -283,6 +297,9 @@ def _create_pixel_patches(
 ):
     """Create matplotlib patches for different pixel types."""
     on_pixels, edge_pixels, off_pixels = [], [], []
+
+    array_element_type = names.get_array_element_type_from_name(telescope_model_name)
+    font_size = 2 if "SCT" in array_element_type else 4
 
     for i, (x, y) in enumerate(zip(x_pos, y_pos)):
         patch = _create_patch(x, y, diameter, shape)
@@ -296,7 +313,7 @@ def _create_pixel_patches(
             off_pixels.append(patch)
 
         if pixel_ids[i] < pixels_id_to_print:
-            _add_pixel_id(x, y, pixel_ids[i], telescope_model_name)
+            _add_pixel_id(x, y, pixel_ids[i], font_size)
 
     return on_pixels, edge_pixels, off_pixels
 
@@ -310,13 +327,15 @@ def _count_neighbors(x, y, x_pos, y_pos, max_dist):
     return count
 
 
-def _configure_plot(ax, telescope_model_name, x_pos, y_pos, title=None, xtitle=None, ytitle=None):
+def _configure_plot(
+    ax, telescope_model_name, x_pos, y_pos, rotation=0, title=None, xtitle=None, ytitle=None
+):
     # First set the aspect ratio
     ax.set_aspect("equal")
 
     # Calculate the axis limits
     x_min, x_max = min(x_pos), max(x_pos)
-    y_min, y_max = min(y_pos), max(y_pos)  # Fixed: Added max(y_pos)
+    y_min, y_max = min(y_pos), max(y_pos)
 
     # Add some padding
     x_padding = (x_max - x_min) * 0.1
@@ -326,7 +345,6 @@ def _configure_plot(ax, telescope_model_name, x_pos, y_pos, title=None, xtitle=N
     ax.set_xlim(x_min - x_padding, x_max + x_padding)
     ax.set_ylim(y_min - y_padding, y_max + y_padding)
 
-    # Rest of your configuration code...
     plt.grid(True)
     ax.set_axisbelow(True)
 
@@ -338,6 +356,127 @@ def _configure_plot(ax, telescope_model_name, x_pos, y_pos, title=None, xtitle=N
         y=1.02,
     )
     plt.tick_params(axis="both", which="major", labelsize=15)
+
+    # Add coordinate system axes
+    _add_coordinate_axes(ax, x_pos, y_pos, rotation)
+
+
+def _add_coordinate_axes(ax, x_pos, y_pos, rotation=0):
+    """Add coordinate system axes to the plot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to draw on
+    x_pos, y_pos : array-like
+        Arrays of x and y positions of pixels
+    rotation : float
+        Rotation angle in degrees
+    """
+    # Calculate the length of the axes
+    x_range = max(x_pos) - min(x_pos)
+    y_range = max(y_pos) - min(y_pos)
+    axis_length = min(x_range, y_range) * 0.08
+
+    # Find the rightmost and bottom-most pixels
+    rightmost_x = max(x_pos)
+    bottommost_y = min(y_pos)
+
+    # Calculate typical pixel spacing
+    pixel_distances = []
+    for i, (x1, y1) in enumerate(zip(x_pos, y_pos)):
+        for x2, y2 in zip(x_pos[i + 1 :], y_pos[i + 1 :]):
+            dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+            if dist > 0:  # Avoid same pixel
+                pixel_distances.append(dist)
+    pixel_spacing = min(pixel_distances) if pixel_distances else axis_length
+
+    # Position Az-Alt axes further away from pixels
+    x_origin = rightmost_x + pixel_spacing
+    y_origin = bottommost_y + pixel_spacing
+
+    # Adjust position if too close to plot border
+    x_padding = x_range * 0.1
+    if x_origin + axis_length > rightmost_x + x_padding:
+        x_origin = rightmost_x + x_padding - axis_length * 1.5
+
+    # Make arrows thinner and slightly longer
+    arrow_style = {
+        "head_width": axis_length * 0.15,
+        "head_length": axis_length * 0.15,
+        "width": axis_length * 0.02,
+    }
+
+    arrow_length = 0.6
+
+    # Check if this is an SST telescope by looking at the rotation angle
+    # SST telescopes have a base rotation of 90 degrees
+    is_sst = abs(rotation - 90.0) < 1.0
+
+    az_direction = 1 if is_sst else -1
+    ax.arrow(
+        x_origin,
+        y_origin,
+        az_direction * axis_length * arrow_length,
+        0,
+        fc="red",
+        ec="red",
+        **arrow_style,
+    )
+    # Position Az text based on direction
+    ax.text(
+        x_origin + az_direction * axis_length * (arrow_length + 0.2),
+        y_origin,
+        "Az",
+        ha="left" if az_direction > 0 else "right",
+        va="center",
+        color="red",
+    )
+
+    ax.arrow(x_origin, y_origin, 0, -axis_length * arrow_length, fc="red", ec="red", **arrow_style)
+    # Position Alt text slightly further below arrow tip
+    ax.text(
+        x_origin,
+        y_origin - axis_length * (arrow_length + 0.2),
+        "Alt",
+        ha="center",
+        va="top",
+        color="red",
+    )
+
+    # Calculate rotated axes for X_pix and Y_pix
+    rot_angle = np.deg2rad(rotation)
+
+    # Position x_pix-y_pix with increased separation from Az-Alt
+    x_origin_pix = x_origin - axis_length * 2.0  # Increased separation
+    y_origin_pix = y_origin
+
+    # X_pix axis direction depends on telescope type
+    x_direction = -1 if is_sst else 1  # Invert direction for SST
+    x_dir = x_direction * axis_length * arrow_length * np.cos(rot_angle)
+    y_dir = x_direction * axis_length * arrow_length * np.sin(rot_angle)
+    ax.arrow(x_origin_pix, y_origin_pix, x_dir, y_dir, fc="black", ec="black", **arrow_style)
+    # Position X_pix text with more spacing and LaTeX subscript
+    ax.text(
+        x_origin_pix + x_dir * 1.3,
+        y_origin_pix + y_dir * 1.3,
+        "$X_{pix}$",
+        ha="right" if x_dir < 0 else "left",
+        va="center",
+    )
+
+    # Y_pix axis
+    y_x_dir = axis_length * arrow_length * np.sin(rot_angle)
+    y_y_dir = -axis_length * arrow_length * np.cos(rot_angle)
+    ax.arrow(x_origin_pix, y_origin_pix, y_x_dir, y_y_dir, fc="black", ec="black", **arrow_style)
+    # Position Y_pix text with more spacing and LaTeX subscript
+    ax.text(
+        x_origin_pix + y_x_dir * 1.3,
+        y_origin_pix + y_y_dir * 1.3,
+        "$Y_{pix}$",
+        ha="center",
+        va="top" if y_y_dir < 0 else "bottom",
+    )
 
 
 def _add_legend(ax, on_pixels, off_pixels):
