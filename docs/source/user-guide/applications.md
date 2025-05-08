@@ -49,6 +49,7 @@ simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
+simtools-plot-pixel-data <applications.simtools-plot-pixel-data>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
