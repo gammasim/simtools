@@ -26,7 +26,6 @@ dependencies:
   - pytest-mock
   - pytest-profiling
   - pytest-repeat
-  - pytest-retry
   - pytest-xdist
   - python-dotenv
   - pyyaml
@@ -39,6 +38,7 @@ dependencies:
   - pip:
       - pytest-random-order
       - pytest-requirements
+      - pytest-retry
 
 # cheatsheet
 # create: conda env create -f environment.yml
