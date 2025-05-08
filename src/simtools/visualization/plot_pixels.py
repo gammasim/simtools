@@ -102,7 +102,7 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
     base_angle = 0.0
     if "MSTS" in telescope_model_name:
         base_angle = 270.0
-    elif "SST" in telescope_model_name:
+    elif "SST" in telescope_model_name or "SCT" in telescope_model_name:
         base_angle = 90.0
     else:
         base_angle = 248.2
@@ -125,6 +125,10 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
         "pixel_shape": config["pixel_shape"],
         "pixel_diameter": config["pixel_diameter"],
         "rotation": total_rotation,
+        # Add FOV info
+        "fov_diameter": config["fov_diameter"],
+        "focal_length": config["focal_length"],
+        "edge_radius": config["edge_radius"],
     }
 
 
@@ -206,6 +210,11 @@ def _create_pixel_plot(
         title=title,
         xtitle=xtitle,
         ytitle=ytitle,
+        fov_info={
+            "diameter": pixel_data.get("fov_diameter"),
+            "focal_length": pixel_data.get("focal_length"),
+            "edge_radius": pixel_data.get("edge_radius"),
+        },
     )
     _add_legend(ax, on_pixels, off_pixels)
 
@@ -224,11 +233,24 @@ def _read_pixel_config(dat_file_path):
         "pixel_diameter": None,
         "trigger_groups": [],
         "rotate_angle": None,
+        "fov_diameter": None,
+        "focal_length": None,
+        "edge_radius": None,
     }
 
     with open(dat_file_path, encoding="utf-8") as f:
         for line in f:
-            if line.startswith("Rotate"):
+            if "field-of-view diameter of" in line and "focal length of" in line:
+                fov_part = line.split("field-of-view diameter of")[1]
+                config["fov_diameter"] = float(fov_part.split("deg")[0].strip())
+                focal_part = line.split("focal length of")[1]
+                config["focal_length"] = float(focal_part.split("m")[0].strip())
+
+            elif "Mean radius of camera edge" in line and "is" in line:
+                radius_part = line.split("is")[1]
+                config["edge_radius"] = float(radius_part.split("m")[0].strip())
+
+            elif line.startswith("Rotate"):
                 # Parse rotation angle from line like "Rotate 10.893"
                 config["rotate_angle"] = float(line.split()[1].strip())
             elif line.startswith("PixType"):
@@ -240,7 +262,7 @@ def _read_pixel_config(dat_file_path):
                 config["x"].append(float(parts[3].strip()))
                 config["y"].append(float(parts[4].strip()))
                 config["pixel_ids"].append(int(parts[1].strip()))
-                if len(parts) > 9:
+                if len(parts) >= 9:
                     config["pixels_on"].append(int(parts[9].strip()) != 0)
                 else:
                     config["pixels_on"].append(True)
@@ -280,11 +302,11 @@ def _create_patch(x, y, diameter, shape):
 def _is_edge_pixel(x, y, x_pos, y_pos, diameter, shape):
     """Determine if a pixel is on the edge based on neighbor count."""
     if shape == 0:  # Circular
-        return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.1) < 6
-    if shape in (1, 3):  # Hexagonal
-        return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.1) < 6
+        return _count_neighbors(x, y, x_pos, y_pos, diameter * 2) < 6
+    if shape in (1, 3):  # Hexagonal - increase threshold for neighbor detection
+        return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.4) < 6
     # Square
-    return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.4) < 4
+    return _count_neighbors(x, y, x_pos, y_pos, diameter * 2.2) < 6
 
 
 def _add_pixel_id(x, y, pixel_id, font_size):
@@ -328,7 +350,15 @@ def _count_neighbors(x, y, x_pos, y_pos, max_dist):
 
 
 def _configure_plot(
-    ax, telescope_model_name, x_pos, y_pos, rotation=0, title=None, xtitle=None, ytitle=None
+    ax,
+    telescope_model_name,
+    x_pos,
+    y_pos,
+    rotation=0,
+    title=None,
+    xtitle=None,
+    ytitle=None,
+    fov_info=None,
 ):
     # First set the aspect ratio
     ax.set_aspect("equal")
@@ -359,6 +389,28 @@ def _configure_plot(
 
     # Add coordinate system axes
     _add_coordinate_axes(ax, x_pos, y_pos, rotation)
+
+    # Add observer note at bottom left
+    x_min = min(x_pos) - (max(x_pos) - min(x_pos)) * 0.05  # Use same padding as plot limits
+    y_min = min(y_pos) - (max(y_pos) - min(y_pos)) * 0.05
+    ax.text(x_min, y_min, "For an observer facing the camera", fontsize=10, ha="left", va="bottom")
+
+    # Add FOV info at top left
+    if fov_info and fov_info["diameter"] and fov_info["focal_length"] and fov_info["edge_radius"]:
+        info_text = (
+            f"FoV diameter: {fov_info['diameter']:.2f}°\n"
+            f"Focal length: {fov_info['focal_length']:.2f} m\n"
+            f"Edge radius: {fov_info['edge_radius'] * 100:.1f} cm"
+        )
+        ax.text(
+            x_min + x_padding * 0.2,  # Position near top left
+            y_max - y_padding * 0.1,
+            info_text,
+            fontsize=10,
+            ha="left",
+            va="top",
+            bbox={"facecolor": "white", "alpha": 0.8, "edgecolor": "none"},
+        )
 
 
 def _add_coordinate_axes(ax, x_pos, y_pos, rotation=0):
