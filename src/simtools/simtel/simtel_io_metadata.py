@@ -65,10 +65,7 @@ def _decode_dictionary(meta, encoding="utf8"):
     """Decode metadata dictionary."""
 
     def safe_decode(byte_str, encoding, errors="ignore"):
-        try:
-            return byte_str.decode(encoding, errors=errors)
-        except UnicodeDecodeError:
-            return ""
+        return byte_str.decode(encoding, errors=errors)
 
     try:
         return {k.decode(encoding, errors="ignore"): v.decode(encoding) for k, v in meta.items()}
