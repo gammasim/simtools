@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 """Read metadata from sim_telarray files."""
 
+import logging
 from functools import cache
 
 from eventio import EventIOFile
 from eventio.simtel import HistoryMeta
+
+_logger = logging.getLogger(__name__)
 
 
 @cache
@@ -28,10 +31,6 @@ def read_sim_telarray_metadata(file, encoding="utf8"):
     telescope_meta: dict
         Dictionary of telescope metadata, keyed by telescope ID.
     """
-
-    def decode(meta):
-        return {k.decode(encoding): v.decode(encoding) for k, v in meta.items()}
-
     global_meta = None
     telescope_meta = {}
 
@@ -45,7 +44,7 @@ def read_sim_telarray_metadata(file, encoding="utf8"):
                     break
                 continue
 
-            meta = decode(o.parse())
+            meta = _decode_dictionary(o.parse(), encoding=encoding)
             if o.header.id == -1:
                 global_meta = meta
             else:
@@ -60,6 +59,25 @@ def read_sim_telarray_metadata(file, encoding="utf8"):
     return clean_meta(global_meta), {
         tel_id: clean_meta(meta) for tel_id, meta in telescope_meta.items()
     }
+
+
+def _decode_dictionary(meta, encoding="utf8"):
+    """Decode metadata dictionary."""
+
+    def safe_decode(byte_str, encoding, errors="ignore"):
+        try:
+            return byte_str.decode(encoding, errors=errors)
+        except UnicodeDecodeError:
+            return ""
+
+    try:
+        return {k.decode(encoding, errors="ignore"): v.decode(encoding) for k, v in meta.items()}
+    except UnicodeDecodeError as e:
+        _logger.warning(
+            f"Failed to decode metadata with encoding {encoding}: {e}. "
+            "Falling back to 'utf-8' with errors='ignore'."
+        )
+        return {safe_decode(k, encoding): safe_decode(v, encoding) for k, v in meta.items()}
 
 
 def get_sim_telarray_telescope_id(telescope_name, file):
