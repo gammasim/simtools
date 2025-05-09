@@ -39,6 +39,7 @@ simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
+simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
 simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
 simtools-generate-array-config <applications/simtools-generate-array-config>

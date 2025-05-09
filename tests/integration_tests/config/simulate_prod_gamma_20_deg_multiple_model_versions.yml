@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     CONFIGURATION:
       SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: multiple_model_versions
-      MODEL_VERSION: [6.0.0, 5.0.0]
+      MODEL_VERSION: [6.0.0, 6.1.0]
       SITE: South
       ARRAY_LAYOUT_NAME: alpha
       PRIMARY: gamma
@@ -30,8 +30,8 @@ CTA_SIMPIPE:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.zst
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_5.0.0_multiple_model_versions.log_hist.tar.gz
+        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_5.0.0_multiple_model_versions.zst
+        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.zst
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
