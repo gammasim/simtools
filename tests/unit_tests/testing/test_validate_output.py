@@ -12,6 +12,11 @@ from simtools.testing import validate_output
 
 logging.getLogger().setLevel(logging.DEBUG)
 
+PATH_TO_OUTPUT = "/path/to/output"
+PATCH_TO_VALIDATE_CFG = "simtools.testing.validate_output._validate_simtel_cfg_files"
+PATH_CFG_6 = "/path/to/simtel_cfg_6.0.0.cfg"
+PATH_CFG_7 = "/path/to/simtel_cfg_7.0.0.cfg"
+
 
 @pytest.fixture
 def create_json_file(tmp_test_directory):
@@ -60,7 +65,7 @@ def test_path():
 
 @pytest.fixture
 def output_path():
-    return "/path/to/output"
+    return PATH_TO_OUTPUT
 
 
 @pytest.fixture
@@ -85,7 +90,7 @@ def mock_validate_reference_output_file(mocker):
 
 @pytest.fixture
 def mock_validate_simtel_cfg_files(mocker):
-    return mocker.patch("simtools.testing.validate_output._validate_simtel_cfg_files")
+    return mocker.patch(PATCH_TO_VALIDATE_CFG)
 
 
 @pytest.fixture
@@ -440,7 +445,7 @@ def test_validate_simtel_cfg_files(mocker, test_path):
     mocker.patch("simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True)
     config = {
         "CONFIGURATION": {
-            "OUTPUT_PATH": "/path/to/output",
+            "OUTPUT_PATH": PATH_TO_OUTPUT,
             "MODEL_VERSION": "3.4.5",
             "LABEL": "label",
         },
@@ -458,14 +463,12 @@ def test_compare_value_from_parameter_dict():
 
 
 def test_test_simtel_cfg_files_with_command_line_version(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(
-        "simtools.testing.validate_output._validate_simtel_cfg_files"
-    )
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
+    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
     integration_test = {
         "TEST_SIMTEL_CFG_FILES": {
-            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
-            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+            "6.0.0": PATH_CFG_6,
+            "7.0.0": PATH_CFG_7,
         }
     }
     from_command_line = ["5.0.0", "6.0.0"]
@@ -475,18 +478,16 @@ def test_test_simtel_cfg_files_with_command_line_version(mocker):
         config, integration_test, from_command_line, from_config_file
     )
 
-    mock_validate_simtel_cfg_files.assert_called_once_with(config, "/path/to/simtel_cfg_6.0.0.cfg")
+    mock_validate_simtel_cfg_files.assert_called_once_with(config, PATH_CFG_6)
 
 
 def test_test_simtel_cfg_files_with_config_file_version(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(
-        "simtools.testing.validate_output._validate_simtel_cfg_files"
-    )
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
+    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
     integration_test = {
         "TEST_SIMTEL_CFG_FILES": {
-            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
-            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+            "6.0.0": PATH_CFG_6,
+            "7.0.0": PATH_CFG_7,
         }
     }
     from_command_line = None
@@ -496,18 +497,16 @@ def test_test_simtel_cfg_files_with_config_file_version(mocker):
         config, integration_test, from_command_line, from_config_file
     )
 
-    mock_validate_simtel_cfg_files.assert_called_once_with(config, "/path/to/simtel_cfg_7.0.0.cfg")
+    mock_validate_simtel_cfg_files.assert_called_once_with(config, PATH_CFG_7)
 
 
 def test_test_simtel_cfg_files_with_single_version(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(
-        "simtools.testing.validate_output._validate_simtel_cfg_files"
-    )
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
+    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
     integration_test = {
         "TEST_SIMTEL_CFG_FILES": {
-            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
-            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+            "6.0.0": PATH_CFG_6,
+            "7.0.0": PATH_CFG_7,
         }
     }
     from_command_line = "6.0.0"
@@ -517,18 +516,16 @@ def test_test_simtel_cfg_files_with_single_version(mocker):
         config, integration_test, from_command_line, from_config_file
     )
 
-    mock_validate_simtel_cfg_files.assert_called_once_with(config, "/path/to/simtel_cfg_6.0.0.cfg")
+    mock_validate_simtel_cfg_files.assert_called_once_with(config, PATH_CFG_6)
 
 
 def test_test_simtel_cfg_files_no_matching_version(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(
-        "simtools.testing.validate_output._validate_simtel_cfg_files"
-    )
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
+    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
     integration_test = {
         "TEST_SIMTEL_CFG_FILES": {
-            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
-            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+            "6.0.0": PATH_CFG_6,
+            "7.0.0": PATH_CFG_7,
         }
     }
     from_command_line = ["5.0.0"]
@@ -542,10 +539,8 @@ def test_test_simtel_cfg_files_no_matching_version(mocker):
 
 
 def test_test_simtel_cfg_files_no_test_simtel_cfg_files(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(
-        "simtools.testing.validate_output._validate_simtel_cfg_files"
-    )
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
+    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
     integration_test = {}
 
     validate_output._test_simtel_cfg_files(config, integration_test, None, None)

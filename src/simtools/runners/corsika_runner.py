@@ -257,5 +257,5 @@ class CorsikaRunner:
             file_type=file_type,
             run_number=run_number,
             mode=mode,
-            model_version_index=model_version_index,
+            _model_version_index=model_version_index,
         )
