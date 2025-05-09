@@ -759,7 +759,7 @@ class DatabaseHandler:
         """
         db_name = self._get_db_name(db_name)
         collection = self.get_collection(db_name, "production_tables")
-        self._logger.info(f"Adding production for {production_table.get('collection')} to to DB")
+        self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
         DatabaseHandler.production_table_cached.clear()
 
@@ -809,13 +809,13 @@ class DatabaseHandler:
                 raise ValueError(f"File is not UTF-8 encoded: {file_path}")
             files_to_add_to_db.add(f"{file_path}")
 
-        self._logger.info(
+        self._logger.debug(
             f"Adding a new entry to DB {db_name} and collection {collection_name}:\n{par_dict}"
         )
         collection.insert_one(par_dict)
 
         for file_to_insert_now in files_to_add_to_db:
-            self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
+            self._logger.debug(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
         self._reset_parameter_cache()
