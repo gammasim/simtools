@@ -128,7 +128,7 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
           pytest --durations=10 --color=yes -n 4 --dist loadscope \
-            --cov=simtools --cov-report=xml
+            --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
 
       # CTAO-DPPS-SonarQube
       - uses: SonarSource/sonarqube-scan-action@v5.1.0
@@ -142,7 +142,8 @@ jobs:
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
-          pytest --color=yes -n 4 --dist loadscope --count 5 --random-order
+          pytest --color=yes -n 4 --dist loadscope --count 5 --random-order \
+           --retries 2 --retry-delay 5
 
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v5

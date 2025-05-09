@@ -38,6 +38,7 @@ dependencies:
   - pip:
       - pytest-random-order
       - pytest-requirements
+      - pytest-retry
 
 # cheatsheet
 # create: conda env create -f environment.yml
