@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_metadata &#8212; simtools v0.1.dev1+g98221da Manual</title>
+    <title>simtel.simtel_io_metadata &#8212; simtools v0.1.dev1+gb3036c3 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=a03f4595"></script>
+    <script src="../../_static/documentation_options.js?v=8dc17914"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g98221da Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb3036c3 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -396,10 +396,13 @@ document.write(`
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sd">&quot;&quot;&quot;Read metadata from sim_telarray files.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cache</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">HistoryMeta</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="read_sim_telarray_metadata">
@@ -425,10 +428,6 @@ document.write(`
 <span class="sd">    telescope_meta: dict</span>
 <span class="sd">        Dictionary of telescope metadata, keyed by telescope ID.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span><span class="n">meta</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">):</span> <span class="n">v</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-
     <span class="n">global_meta</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">telescope_meta</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -442,7 +441,7 @@ document.write(`
                     <span class="k">break</span>
                 <span class="k">continue</span>
 
-            <span class="n">meta</span> <span class="o">=</span> <span class="n">decode</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">())</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">_decode_dictionary</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">(),</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">global_meta</span> <span class="o">=</span> <span class="n">meta</span>
             <span class="k">else</span><span class="p">:</span>
@@ -458,6 +457,22 @@ document.write(`
         <span class="n">tel_id</span><span class="p">:</span> <span class="n">clean_meta</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span> <span class="k">for</span> <span class="n">tel_id</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">telescope_meta</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">}</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_decode_dictionary</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decode metadata dictionary.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">safe_decode</span><span class="p">(</span><span class="n">byte_str</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">byte_str</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span> <span class="n">v</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to decode metadata with encoding </span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Falling back to &#39;utf-8&#39; with errors=&#39;ignore&#39;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">safe_decode</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span> <span class="n">safe_decode</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
 
 <div class="viewcode-block" id="get_sim_telarray_telescope_id">
