@@ -52,8 +52,8 @@ optional-dependencies."dev" = [
 optional-dependencies."doc" = [
   "myst-parser",
   "numpydoc",
+  "pydata-sphinx-theme",
   "sphinx",
-  "sphinx-book-theme",
   "towncrier",
 ]
 optional-dependencies."tests" = [

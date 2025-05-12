@@ -120,7 +120,7 @@ default_role = "py:obj"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_book_theme"
+html_theme = "pydata_sphinx_theme"
 
 html_title = f"{project} v{version} Manual"
 
@@ -128,10 +128,7 @@ html_title = f"{project} v{version} Manual"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "path_to_docs": "docs/source",
-    "repository_url": "https://github.com/gammasim/simtools",
-    "repository_branch": "main",
-    "use_issues_button": True,
+    "navbar_start": ["navbar-logo", "version-switcher"],
     "show_toc_level": 1,
     "announcement": (
         "simtools is under rapid development with continuous changes. "
@@ -150,10 +147,12 @@ html_theme_options = {
             "type": "url",
         },
     ],
-    "home_page_in_toc": True,
-    "use_source_button": True,
-    "use_download_button": True,
     "navigation_with_keys": False,
+    "switcher": {
+        "json_url": "https://github.com/gammasim/simtools/blob/doc-preparation/docs/_static/switcher.json",
+        "version_match": "dev",
+    },
+    "check_switcher": False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
