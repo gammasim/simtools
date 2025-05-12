@@ -149,10 +149,10 @@ html_theme_options = {
     ],
     "navigation_with_keys": False,
     "switcher": {
-        "json_url": "https://github.com/gammasim/simtools/blob/doc-preparation/docs/_static/switcher.json",
+        "json_url": "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json",
         "version_match": "dev",
     },
-    "check_switcher": False,
+    "check_switcher": True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
