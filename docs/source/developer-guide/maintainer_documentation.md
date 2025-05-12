@@ -33,3 +33,5 @@ The conda feedstock for gammasimtools is [this repository](https://github.com/co
 A new merge request is automatically created for new releases on pypi.
 
 New, updated, or removed command-line tools require manual modifications in the `recipe/meta.yaml` file.
+Changed dependencies require manual modifications in a similar way.
+A template for the required changes can be obtained using the [grayskull](https://pypi.org/project/grayskull/) tool: `grayskull pypi gammasimtools` generates a `meta.yaml` file with the required changes.
