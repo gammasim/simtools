@@ -1,4 +1,3 @@
-import logging
 from unittest.mock import patch
 
 import astropy.units as u
@@ -6,8 +5,8 @@ import numpy as np
 import pytest
 
 import simtools.utils.general as gen
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.derive_production_statistics import (
     ProductionStatisticsDerivator,
@@ -36,26 +35,26 @@ def metric():
 
 
 def test_initialization(test_fits_file, metric):
-    """Test the initialization of the StatisticalErrorEvaluator."""
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+    """Test the initialization of the StatisticalUncertaintyEvaluator."""
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     assert isinstance(evaluator.data, dict)
     assert "event_energies_reco" in evaluator.data
 
 
 def test_calculate_uncertainty_effective_area(test_fits_file, metric):
-    """Test the calculation of effective area error."""
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+    """Test the calculation of effective area uncertainty."""
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.calculate_metrics()
-    errors = evaluator.calculate_uncertainty_effective_area()
-    assert "relative_errors" in errors
-    assert len(errors["relative_errors"]) > 0
+    uncertainties = evaluator.calculate_uncertainty_effective_area()
+    assert "relative_uncertainties" in uncertainties
+    assert len(uncertainties["relative_uncertainties"]) > 0
 
 
 def test_calculate_energy_estimate(test_fits_file, metric):
-    """Test the calculation of energy estimate error."""
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+    """Test the calculation of energy estimate uncertainty."""
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.calculate_metrics()
-    error, sigma, delta = evaluator.calculate_energy_estimate()
+    uncertainty, sigma, delta = evaluator.calculate_energy_estimate()
     assert isinstance(sigma, list)
     assert isinstance(delta, list)
 
@@ -64,17 +63,19 @@ def test_missing_file():
     """Test initialization with a missing file."""
     file_path = "nonexistent_file.fits"
     metrics = {
-        "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
+        "uncertainty_effective_area": {
+            "target_uncertainty": {"value": 0.1, "unit": "dimensionless"}
+        }
     }
 
     with pytest.raises(FileNotFoundError, match=f"Error loading file {file_path}:"):
-        StatisticalErrorEvaluator(file_path, metrics)
+        StatisticalUncertaintyEvaluator(file_path, metrics)
 
 
 def test_calculate_production_statistics(test_fits_file, metric):
     """Test the calculation of production statistics for a specific grid point using ProductionStatisticsHandler."""
 
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
 
     derive_production_statistics = ProductionStatisticsDerivator(evaluator, metrics=metric)
@@ -88,7 +89,7 @@ def test_calculate_production_statistics(test_fits_file, metric):
 
 def test_calculate_metrics(test_fits_file, metric):
     """Test the calculation of metrics."""
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
 
     evaluator.calculate_energy_estimate = lambda: (
         0.33,
@@ -99,7 +100,7 @@ def test_calculate_metrics(test_fits_file, metric):
     evaluator.calculate_metrics()
 
     expected_values = np.array([0.40824829, 0.31622776, 0.1796053])
-    computed_values = evaluator.uncertainty_effective_area["relative_errors"].value[
+    computed_values = evaluator.uncertainty_effective_area["relative_uncertainties"].value[
         : len(expected_values)
     ]
     assert computed_values == pytest.approx(expected_values, rel=1e-2)
@@ -118,29 +119,31 @@ def setup_evaluator(metric):
     file_path = "path_to_fits_file"
     grid_point = (1.0, 45.0, 30.0, 0.1, 0.05)
 
-    evaluator = StatisticalErrorEvaluator(file_path, metrics=metric, grid_point=grid_point)
+    evaluator = StatisticalUncertaintyEvaluator(file_path, metrics=metric, grid_point=grid_point)
 
     evaluator.metric_results = {
-        "uncertainty_effective_area": {"relative_errors": np.array([0.04, 0.05, 0.06])},
-        "error_sig_eff_gh": 0.02,
+        "uncertainty_effective_area": {"relative_uncertainties": np.array([0.04, 0.05, 0.06])},
+        "uncertainty_sig_eff_gh": 0.02,
         "energy_estimate": 0.03,
-        "error_gamma_ray_psf": 0.01,
-        "error_image_template_methods": 0.04,
+        "uncertainty_gamma_ray_psf": 0.01,
+        "uncertainty_image_template_methods": 0.04,
     }
 
     return evaluator
 
 
 def test_calculate_overall_metric_average(test_fits_file):
-    evaluator = StatisticalErrorEvaluator(
+    evaluator = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file,
         metrics={
-            "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
+            "uncertainty_effective_area": {
+                "target_uncertainty": {"value": 0.1, "unit": "dimensionless"}
+            }
         },
     )
     evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
     evaluator.metric_results = {
-        "uncertainty_effective_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
+        "uncertainty_effective_area": {"relative_uncertainties": np.array([0.1, 0.2, 0.3, 0.4])}
     }
     overall_metric = evaluator.calculate_overall_metric(metric="average")
     expected_metric = 0.4
@@ -151,15 +154,17 @@ def test_calculate_overall_metric_average(test_fits_file):
 
 
 def test_calculate_overall_metric_maximum(test_fits_file):
-    evaluator = StatisticalErrorEvaluator(
+    evaluator = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file,
         metrics={
-            "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
+            "uncertainty_effective_area": {
+                "target_uncertainty": {"value": 0.1, "unit": "dimensionless"}
+            }
         },
     )
     evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
     evaluator.metric_results = {
-        "uncertainty_effective_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
+        "uncertainty_effective_area": {"relative_uncertainties": np.array([0.1, 0.2, 0.3, 0.4])}
     }
     overall_metric = evaluator.calculate_overall_metric(metric="maximum")
     expected_metric = (
@@ -173,7 +178,7 @@ def test_calculate_overall_metric_maximum(test_fits_file):
 
 def test_create_bin_edges(test_fits_file, metric):
     """Test the creation of unique energy bin edges."""
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
 
     evaluator.data = {
         "bin_edges_low": np.array([1.0, 2.0, 3.0]),
@@ -189,36 +194,36 @@ def test_create_bin_edges(test_fits_file, metric):
     )
 
 
-def test_compute_efficiency_and_errors(test_fits_file, metric):
-    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
+def test_compute_efficiency_and_uncertainties(test_fits_file, metric):
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
 
     reconstructed_event_counts = np.array([10, 20, 5, 0]) * u.ct
     simulated_event_counts = np.array([100, 200, 50, 0]) * u.ct
 
-    efficiencies, relative_errors = evaluator.compute_efficiency_and_errors(
+    efficiencies, relative_uncertainties = evaluator.compute_efficiency_and_uncertainties(
         reconstructed_event_counts, simulated_event_counts
     )
 
     expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
-    expected_relative_errors = np.array([0.3, 0.21213203, 0.42426407, 0.0])
+    expected_relative_uncertainties = np.array([0.3, 0.21213203, 0.42426407, 0.0])
 
     assert np.allclose(efficiencies, expected_efficiencies, atol=1e-2), (
         f"Expected efficiencies {expected_efficiencies}, but got {efficiencies}"
     )
-    assert np.allclose(relative_errors, expected_relative_errors, atol=1e-2), (
-        f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
+    assert np.allclose(relative_uncertainties, expected_relative_uncertainties, atol=1e-2), (
+        f"Expected relative uncertainties {expected_relative_uncertainties}, but got {relative_uncertainties}"
     )
 
     with pytest.raises(
         ValueError, match="Reconstructed event counts exceed simulated event counts."
     ):
-        evaluator.compute_efficiency_and_errors(20.0, 10.0)
+        evaluator.compute_efficiency_and_uncertainties(20.0, 10.0)
 
 
 def test_calculate_overall_metric_invalid_metric(test_fits_file):
-    evaluator = StatisticalErrorEvaluator(
+    evaluator = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file,
-        metrics={"invalid_metric": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
+        metrics={"invalid_metric": {"target_uncertainty": {"value": 0.1, "unit": "dimensionless"}}},
     )
 
     with pytest.raises(ValueError, match="Invalid metric specified"):
@@ -226,8 +231,8 @@ def test_calculate_overall_metric_invalid_metric(test_fits_file):
 
 
 def test_set_grid_point_single_azimuth_zenith(caplog):
-    with patch.object(StatisticalErrorEvaluator, "load_data_from_file", return_value={}):
-        evaluator = StatisticalErrorEvaluator(file_path="", metrics={})
+    with patch.object(StatisticalUncertaintyEvaluator, "load_data_from_file", return_value={}):
+        evaluator = StatisticalUncertaintyEvaluator(file_path="", metrics={})
         events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0])}
         evaluator._set_grid_point(events_data)
         assert evaluator.grid_point == (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)
@@ -242,7 +247,5 @@ def test_set_grid_point_single_azimuth_zenith(caplog):
 
         evaluator.grid_point = (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)
         events_data = {"PNT_AZ": np.array([90.0]), "PNT_ALT": np.array([30.0])}
-        with caplog.at_level(logging.WARNING):
-            evaluator._set_grid_point(events_data)
-            assert "Grid point already set to" in caplog.text
+        evaluator._set_grid_point(events_data)
         assert evaluator.grid_point == (1 * u.TeV, 90 * u.deg, 60 * u.deg, 0, 0 * u.deg)

@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 import simtools.utils.general as gen
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
 
@@ -35,7 +35,7 @@ def mock_statistical_error_evaluator():
         "error_image_template_methods": 0.05,
     }
 
-    mock_evaluator = MagicMock(spec=StatisticalErrorEvaluator)
+    mock_evaluator = MagicMock(spec=StatisticalUncertaintyEvaluator)
     mock_evaluator.metric_results = metric_results
     mock_evaluator.calculate_metrics.return_value = None
     mock_evaluator.calculate_required_events = MagicMock(return_value=1e5)

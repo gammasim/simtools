@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Application to run the StatisticalErrorEvaluator and interpolate results.
+Application to run the StatisticalUncertaintyEvaluator and interpolate results.
 
 This application evaluates statistical uncertainties from DL2 MC event files
 based on input parameters like zenith angles and camera offsets, and performs interpolation

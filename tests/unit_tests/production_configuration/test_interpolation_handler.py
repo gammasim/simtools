@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 import simtools.utils.general as gen
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
 
@@ -32,11 +32,11 @@ def metric():
 def test_interpolation_handler_interpolate(test_fits_file, test_fits_file_2, metric):
     """Test interpolation with the InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
-    evaluator1 = StatisticalErrorEvaluator(
+    evaluator1 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file, metrics=metric, grid_point=grid_point1
     )
     grid_point2 = (1, 180, 60, 0, 0.5)
-    evaluator2 = StatisticalErrorEvaluator(
+    evaluator2 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
     handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
@@ -52,11 +52,11 @@ def test_interpolation_handler_interpolate(test_fits_file, test_fits_file_2, met
 def test_interpolation_handler_build_data_array(test_fits_file, test_fits_file_2, metric):
     """Test the _build_data_array method of InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
-    evaluator1 = StatisticalErrorEvaluator(
+    evaluator1 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file, metrics=metric, grid_point=grid_point1
     )
     grid_point2 = (1, 180, 60, 0, 0.5)
-    evaluator2 = StatisticalErrorEvaluator(
+    evaluator2 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
     handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
@@ -83,11 +83,11 @@ def test_interpolation_handler_remove_flat_dimensions():
 def test_interpolation_handler_plot_comparison(test_fits_file, test_fits_file_2, metric):
     """Test the plot_comparison method of InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
-    evaluator1 = StatisticalErrorEvaluator(
+    evaluator1 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file, metrics=metric, grid_point=grid_point1
     )
     grid_point2 = (1, 180, 60, 0, 0.7)
-    evaluator2 = StatisticalErrorEvaluator(
+    evaluator2 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
     handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)

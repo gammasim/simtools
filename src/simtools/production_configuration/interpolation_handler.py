@@ -1,4 +1,4 @@
-"""Handle interpolation between multiple StatisticalErrorEvaluator instances."""
+"""Handle interpolation between multiple StatisticalUncertaintyEvaluator instances."""
 
 import logging
 
@@ -14,7 +14,7 @@ __all__ = ["InterpolationHandler"]
 
 
 class InterpolationHandler:
-    """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
+    """Handle interpolation between multiple StatisticalUncertaintyEvaluator instances."""
 
     def __init__(self, evaluators, metrics: dict):
         self._logger = logging.getLogger(__name__)
@@ -199,7 +199,7 @@ class InterpolationHandler:
 
         Parameters
         ----------
-        evaluator : StatisticalErrorEvaluator
+        evaluator : StatisticalUncertaintyEvaluator
             The evaluator for which to plot the comparison.
 
         Returns
