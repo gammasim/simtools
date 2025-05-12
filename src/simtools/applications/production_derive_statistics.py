@@ -46,12 +46,14 @@ The output will display the production statistics for the specified query point 
  the results to the specified output file.
 """
 
+import logging
 from pathlib import Path
 
 from simtools.configuration import configurator
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
 )
+from simtools.utils import general as gen
 
 
 def _parse(label, description):
@@ -124,6 +126,8 @@ def main():
         label,
         "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
     )
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     manager = ProductionStatisticsHandler(args_dict)
     manager.run()
