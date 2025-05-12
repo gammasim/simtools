@@ -1,0 +1,813 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.derive_corsika_limits &#8212; simtools v0.1.dev1+gc9f2ae8 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=4baaf38c"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/derive_corsika_limits';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://github.com/gammasim/simtools/blob/doc-preparation/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.dev1+gc9f2ae8" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gc9f2ae8 Manual</p>
+  
+</a></div>
+    
+      <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.derive_corsika_limits</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.derive_corsika_limits</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Calculate CORSIKA thresholds for energy, radial distance, and viewcone.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventDataReader</span>
+
+
+<div class="viewcode-block" id="LimitCalculator">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LimitCalculator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute thresholds for CORSIKA configuration for energy, radial distance, and viewcone.</span>
+
+<span class="sd">    Event data is read from the reduced MC event data file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event_data_file : str</span>
+<span class="sd">        Path to the HDF5 file containing the event data.</span>
+<span class="sd">    telescope_list : list, optional</span>
+<span class="sd">        List of telescope IDs to filter the events (default is None).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_data_file</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the LimitCalculator with the given event data file.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_data_file</span> <span class="o">=</span> <span class="n">event_data_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_list</span> <span class="o">=</span> <span class="n">telescope_list</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reader</span> <span class="o">=</span> <span class="n">SimtelIOEventDataReader</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="n">telescope_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">triggered_shower_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">triggered_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the limits based on the loss fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hist : np.ndarray</span>
+<span class="sd">            1D histogram array.</span>
+<span class="sd">        bin_edges : np.ndarray</span>
+<span class="sd">            Array of bin edges.</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+<span class="sd">        limit_type : str, optional</span>
+<span class="sd">            Type of limit (&#39;lower&#39; or &#39;upper&#39;). Default is &#39;lower&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Bin edge value corresponding to the threshold.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cumulative_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span> <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">total_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">loss_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="n">total_events</span>
+        <span class="n">bin_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cumulative_sum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="n">bin_index</span><span class="p">]</span> <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span> <span class="k">else</span> <span class="n">bin_edges</span><span class="p">[</span><span class="o">-</span><span class="n">bin_index</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">energy_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return bins for the energy histogram.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span>
+            <span class="mi">1000</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LimitCalculator.compute_lower_energy_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_lower_energy_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the lower energy limit in TeV based on the event loss fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Lower energy limit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hist</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">core_distance_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return bins for the core distance histogram.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="mi">1000</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LimitCalculator.compute_upper_radial_distance">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_upper_radial_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the upper radial distance based on the event loss fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Upper radial distance in m.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hist</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">view_cone_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return bins for the viewcone histogram.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="mi">1000</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LimitCalculator.compute_viewcone">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_viewcone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the viewcone based on the event loss fraction.</span>
+
+<span class="sd">        The shower IDs of triggered events are used to create a mask for the</span>
+<span class="sd">        azimuth and altitude of the triggered events. A mapping is created</span>
+<span class="sd">        between the triggered events and the simulated events using the shower IDs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Viewcone radius in degrees.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hist</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LimitCalculator.plot_data">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.plot_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_energy_limit</span><span class="p">,</span> <span class="n">upper_radial_distance</span><span class="p">,</span> <span class="n">viewcone</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the core distances and energies of triggered events.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lower_energy_limit: astropy.units.Quantity</span>
+<span class="sd">            Lower energy limit to display on plots.</span>
+<span class="sd">        upper_radial_distance: astropy.units.Quantity</span>
+<span class="sd">            Upper radial distance limit to display on plots.</span>
+<span class="sd">        viewcone: astropy.units.Quantity</span>
+<span class="sd">            Viewcone radius to display on plots.</span>
+<span class="sd">        output_path: Path or str, optional</span>
+<span class="sd">            Directory to save plots. If None, plots will be displayed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event_counts</span> <span class="o">=</span> <span class="s2">&quot;Event Count&quot;</span>
+        <span class="n">plots</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;core_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;x_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="p">,</span>
+                <span class="s2">&quot;y_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">],</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Core Distance [m]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;Energy [TeV]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core distance vs energy&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_vs_energy_distribution.png&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;energy_distribution&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;x_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;histtype&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Energy [TeV]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: energy distribution&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;energy_distribution.png&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;x_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;histtype&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Core Distance [m]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core distance distribution&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">upper_radial_distance</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_distance_distribution.png&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_xy&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;x_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">x_core_shower</span><span class="p">,</span>
+                <span class="s2">&quot;y_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">y_core_shower</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Core X [m]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;Core Y [m]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core x vs core y&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">upper_radial_distance</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">upper_radial_distance</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_xy_distribution.png&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;view-cone&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;x_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;histtype&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance to pointing direction [deg]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: viewcone distribution&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">viewcone</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;viewcone_distribution.png&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">plot_args</span> <span class="ow">in</span> <span class="n">plots</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">)</span>
+            <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">filename</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_plot</span><span class="p">(</span><span class="o">**</span><span class="n">plot_args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x_data</span><span class="p">,</span>
+        <span class="n">y_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+        <span class="n">plot_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">scales</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">colorbar_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create and save a plot with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x_data : array-like</span>
+<span class="sd">            Data for the x-axis or primary data for histograms.</span>
+<span class="sd">        y_data : array-like, optional</span>
+<span class="sd">            Data for the y-axis in scatter or 2D histograms.</span>
+<span class="sd">        bins : int, array-like, or list, optional</span>
+<span class="sd">            Bins specification for histograms.</span>
+<span class="sd">        plot_type : str, optional</span>
+<span class="sd">            Type of plot: &#39;histogram&#39;, &#39;histogram2d&#39;, or &#39;scatter&#39;.</span>
+<span class="sd">        plot_params : dict, optional</span>
+<span class="sd">            Additional parameters to pass to the plotting function.</span>
+<span class="sd">        labels : dict, optional</span>
+<span class="sd">            Dictionary containing &#39;x&#39;, &#39;y&#39;, and &#39;title&#39; labels.</span>
+<span class="sd">        scales : dict, optional</span>
+<span class="sd">            Dictionary containing &#39;x&#39; and &#39;y&#39; scale types (&#39;log&#39; or &#39;linear&#39;).</span>
+<span class="sd">        colorbar_label : str, optional</span>
+<span class="sd">            Label for the colorbar in 2D histograms.</span>
+<span class="sd">        output_file : Path, optional</span>
+<span class="sd">            File path to save the plot. If not provided, the plot will be displayed.</span>
+<span class="sd">        lines : dict, optional</span>
+<span class="sd">            Dictionary containing &#39;x&#39; and &#39;y&#39; values for reference lines.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        matplotlib.figure.Figure</span>
+<span class="sd">            The created figure object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">plot_params</span> <span class="o">=</span> <span class="n">plot_params</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="n">scales</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;histogram&quot;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_params</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_params</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">colorbar_label</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">colorbar_label</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;scatter&quot;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">scales</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">scales</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving plot to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">fig</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
