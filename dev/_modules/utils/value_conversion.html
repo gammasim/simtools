@@ -1,0 +1,666 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>utils.value_conversion &#8212; simtools v0.1.dev1+g31f93fd Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=45f7d492"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/utils/value_conversion';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+g31f93fd Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-optics.html">simtools-validate-optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/productions.html">Simulation Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/docker_files.html">Containers (docker files)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/reporting.html">Reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/documentation.html">Generating Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/pull_requests.html">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/utils/value_conversion.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for utils.value_conversion</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Value and quantity conversion.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="extract_type_of_value">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.value_conversion.extract_type_of_value">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_type_of_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the string representation of the the type of a value.</span>
+
+<span class="sd">    For example, for a string, it returns &#39;str&#39; rather than &#39;&lt;class &#39;str&#39;&gt;&#39;.</span>
+<span class="sd">    Take into account also the case where the value is a numpy type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;numpy&quot;</span> <span class="ow">in</span> <span class="n">_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d+&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">&quot;astropy&quot;</span> <span class="ow">in</span> <span class="n">_type</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Astropy types are not supported yet.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_value_unit_type">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.value_conversion.get_value_unit_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_value_unit_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit_str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the value, unit and type of a value.</span>
+
+<span class="sd">    The value is stripped of its unit and the unit is returned</span>
+<span class="sd">    in its string form (i.e., to_string()).</span>
+<span class="sd">    The type is returned as a string representation of the type.</span>
+<span class="sd">    For example, for a string, it returns &#39;str&#39; rather than &#39;&lt;class &#39;str&#39;&gt;&#39;.</span>
+<span class="sd">    An additional unit string can be given and the return value is converted to this units.</span>
+
+<span class="sd">    Note that Quantities are always floats, even if the original value is represented as an int.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value: str, int, float, bool, u.Quantity</span>
+<span class="sd">        Value to be parsed.</span>
+<span class="sd">    unit_str: str</span>
+<span class="sd">        Unit to be used for the value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    type of value, str, str</span>
+<span class="sd">        Value, unit in string representation (to_string())),</span>
+<span class="sd">        and string representation of the type of the value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_unit</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_quantity_value</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">base_value</span> <span class="o">=</span> <span class="n">_quantity_value</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">base_type</span> <span class="o">=</span> <span class="n">extract_type_of_value</span><span class="p">(</span><span class="n">base_value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_quantity_value</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="n">base_unit</span> <span class="o">=</span> <span class="n">_quantity_value</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+                <span class="k">try</span><span class="p">:</span>  <span class="c1"># handle case of e.g., &quot;0 0&quot; and avoid unit.scale</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">base_unit</span><span class="p">)</span>
+                    <span class="n">base_value</span> <span class="o">=</span> <span class="n">value</span>
+                    <span class="n">base_type</span> <span class="o">=</span> <span class="s2">&quot;str&quot;</span>
+                    <span class="n">base_unit</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+        <span class="c1"># ValueError: covers strings of type &quot;5 not a unit&quot;</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">base_value</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">base_type</span> <span class="o">=</span> <span class="s2">&quot;str&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">base_value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">base_type</span> <span class="o">=</span> <span class="n">extract_type_of_value</span><span class="p">(</span><span class="n">base_value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">unit_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">base_value</span> <span class="o">=</span> <span class="n">base_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">base_unit</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit_str</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">u</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot convert </span><span class="si">{</span><span class="n">base_unit</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">unit_str</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="n">base_unit</span> <span class="o">=</span> <span class="n">unit_str</span>
+
+    <span class="k">return</span> <span class="n">base_value</span><span class="p">,</span> <span class="n">_unit_as_string</span><span class="p">(</span><span class="n">base_unit</span><span class="p">),</span> <span class="n">base_type</span></div>
+
+
+
+<div class="viewcode-block" id="split_value_and_unit">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.value_conversion.split_value_and_unit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_value_and_unit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split a value into its value and unit.</span>
+
+<span class="sd">    Takes into account the case where the value is a Quantity, a number,</span>
+<span class="sd">    or a simtools-type string encoding a list of values and units.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value: str, int, float, bool, u.Quantity</span>
+<span class="sd">        Value to be parsed.</span>
+<span class="sd">    is_integer: bool</span>
+<span class="sd">        Flag to indicate if the value is an integer.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value, str</span>
+<span class="sd">        Value and units as (value, unit), or lists of values and unites</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_split_value_is_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_split_value_is_string</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_split_value_is_list</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_value_is_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split value and unit for an astropy Quantity.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>  <span class="c1"># type [100.0, 200] * u.m</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_integer</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">],</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">)]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_integer</span> <span class="k">else</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_value_is_string</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split value and unit for a string.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>  <span class="c1"># single integer value</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>  <span class="c1"># single value with/without unit</span>
+        <span class="n">quantity</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>  <span class="c1"># cases where numbers are wrongly identified as units</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">unit</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_integer</span> <span class="k">else</span> <span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_split_value_is_list</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">is_integer</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># string value (not numerical)</span>
+        <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_value_is_list</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split value and unit for a list.&quot;&quot;&quot;</span>
+    <span class="n">value_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unit_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">_value</span><span class="p">,</span> <span class="n">_unit</span> <span class="o">=</span> <span class="n">split_value_and_unit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">_value</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_integer</span> <span class="k">else</span> <span class="n">_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">unit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_unit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value_list</span><span class="p">,</span> <span class="n">unit_list</span>
+
+
+<div class="viewcode-block" id="get_value_as_quantity">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.value_conversion.get_value_as_quantity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_value_as_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a value as a Quantity with a given unit. If value is a Quantity, convert to the given unit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value:</span>
+<span class="sd">        value to get a unit. It can be a float, int, or a Quantity (convertible to &#39;unit&#39;).</span>
+<span class="sd">    unit: astropy.units.Unit</span>
+<span class="sd">        Unit to apply to &#39;quantity&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Quantity of value &#39;quantity&#39; and unit &#39;unit&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    u.UnitConversionError</span>
+<span class="sd">        If the value cannot be converted to the given unit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">u</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot convert </span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">unit</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unit_as_string</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the string representation of a unit. Collapse if it is a list of identical items.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="p">[</span><span class="n">unit</span><span class="p">]</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="k">if</span> <span class="n">element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">unit</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">unit</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">unit</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (CTAO), Tobias Kleiner (DESY), Eshita Joshi (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,740 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtel.simulator_camera_efficiency &#8212; simtools v0.1.dev1+g31f93fd Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=45f7d492"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simulator_camera_efficiency';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+g31f93fd Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-optics.html">simtools-validate-optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/productions.html">Simulation Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/docker_files.html">Containers (docker files)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/reporting.html">Reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/documentation.html">Generating Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/pull_requests.html">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simulator_camera_efficiency.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtel.simulator_camera_efficiency</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simulation runner for camera efficiency calculations.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidModelParameterError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelRunner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorCameraEfficiency&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="SimulatorCameraEfficiency">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimulatorCameraEfficiency</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interface with the testeff tool of sim_telarray to perform camera efficiency simulations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    telescope_model: TelescopeModel</span>
+<span class="sd">        Instance of TelescopeModel class.</span>
+<span class="sd">    site_model: SiteModel</span>
+<span class="sd">        Instance of SiteModel class.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    simtel_path: str or Path</span>
+<span class="sd">        Location of sim_telarray installation.</span>
+<span class="sd">    file_simtel: str or Path</span>
+<span class="sd">        Location of the sim_telarray testeff tool output file.</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle given in the config to CameraEfficiency.</span>
+<span class="sd">    nsb_spectrum: str or Path</span>
+<span class="sd">        Path to the nsb spectrum file.</span>
+<span class="sd">    skip_correction_to_nsb_spectrum: bool</span>
+<span class="sd">        If True, skip the correction to the original altitude where the NSB spectrum was derived.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">telescope_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">file_simtel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">file_log</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nsb_spectrum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_correction_to_nsb_spectrum</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelRunner.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimulatorCameraEfficiency&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">simtel_path</span><span class="o">=</span><span class="n">simtel_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="n">telescope_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span> <span class="o">=</span> <span class="n">site_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">label</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_simtel</span> <span class="o">=</span> <span class="n">file_simtel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_log</span> <span class="o">=</span> <span class="n">file_log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_spectrum</span> <span class="o">=</span> <span class="n">nsb_spectrum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skip_correction_to_nsb_spectrum</span> <span class="o">=</span> <span class="n">skip_correction_to_nsb_spectrum</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nsb_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nsb_spectrum property.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_spectrum</span>
+
+    <span class="nd">@nsb_spectrum</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nsb_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsb_spectrum</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter for nsb_spectrum.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">nsb_spectrum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_spectrum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_or_fix_nsb_spectrum_file_format</span><span class="p">(</span><span class="n">nsb_spectrum</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_spectrum</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">config_file_directory</span>
+                <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_spectrum&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_run_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the command used to run testeff.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Preparing the command to run testeff&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Processing camera pixel features</span>
+        <span class="n">pixel_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_shape</span><span class="p">()</span>
+        <span class="n">pixel_shape_cmd</span> <span class="o">=</span> <span class="s2">&quot;-hpix&quot;</span> <span class="k">if</span> <span class="n">pixel_shape</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;-spix&quot;</span>
+        <span class="n">pixel_diameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_diameter</span><span class="p">()</span>
+
+        <span class="c1"># Processing focal length</span>
+        <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_telescope_effective_focal_length</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Processing mirror class</span>
+        <span class="n">mirror_class</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mirror_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_class&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidModelParameterError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Processing camera transmission</span>
+        <span class="n">camera_transmission</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">camera_transmission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_transmission&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Processing camera filter</span>
+        <span class="c1"># A special case is testeff does not support 2D distributions</span>
+        <span class="n">camera_filter_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_filter&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">is_file_2d</span><span class="p">(</span><span class="s2">&quot;camera_filter&quot;</span><span class="p">):</span>
+            <span class="n">camera_filter_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_one_dim_distribution</span><span class="p">(</span>
+                <span class="s2">&quot;camera_filter&quot;</span><span class="p">,</span> <span class="s2">&quot;camera_filter_incidence_angle&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Processing mirror reflectivity</span>
+        <span class="c1"># A special case is testeff does not support 2D distributions</span>
+        <span class="n">mirror_reflectivity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">mirror_reflectivity_secondary</span> <span class="o">=</span> <span class="n">mirror_reflectivity</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">is_file_2d</span><span class="p">(</span><span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">):</span>
+            <span class="n">mirror_reflectivity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_one_dim_distribution</span><span class="p">(</span>
+                <span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">,</span> <span class="s2">&quot;primary_mirror_incidence_angle&quot;</span>
+            <span class="p">)</span>
+            <span class="n">mirror_reflectivity_secondary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_one_dim_distribution</span><span class="p">(</span>
+                <span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_mirror_incidence_angle&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/testeff&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_correction_to_nsb_spectrum</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -nc&quot;</span>  <span class="c1"># Do not apply correction to original altitude where B&amp;E was derived</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -I&quot;</span>  <span class="c1"># Clear the fall-back configuration directories</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_spectrum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fnsb </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsb_spectrum</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -nm -nsb-extra&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -alt </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;corsika_observation_level&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fatm </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;atmospheric_transmission&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -flen </span><span class="si">{</span><span class="n">focal_length</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">pixel_shape_cmd</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">pixel_diameter</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fmir </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;mirror_list&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fmir </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;fake_mirror_list&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fref </span><span class="si">{</span><span class="n">mirror_reflectivity</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -m2&quot;</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fref2 </span><span class="si">{</span><span class="n">mirror_reflectivity_secondary</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -teltrans &quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;telescope_transmission&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -camtrans </span><span class="si">{</span><span class="n">camera_transmission</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fflt </span><span class="si">{</span><span class="n">camera_filter_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot; -fang </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_lightguide_efficiency_angle_file_name</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot; -fwl </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_lightguide_efficiency_wavelength_file_name</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fqe </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;quantum_efficiency&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; 200 1000&quot;</span>  <span class="c1"># lmin and lmax</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; 300&quot;</span>  <span class="c1"># Xmax</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;atmospheric_profile&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Remove the default sim_telarray configuration directories</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;cd </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;sim_telarray&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_simtel</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_log</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check run results.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            if camera efficiency simulation results file does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Checking run</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_simtel</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Camera efficiency simulation results file does not exist (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_simtel</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Everything looks fine with output file.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_one_dim_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">two_dim_parameter</span><span class="p">,</span> <span class="n">weighting_distribution_parameter</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate an average one-dimensional curve for testeff from the two-dimensional curve.</span>
+
+<span class="sd">        The two-dimensional distribution is provided in two_dim_parameter. The distribution</span>
+<span class="sd">        of weights to use for averaging the two-dimensional distribution is given in</span>
+<span class="sd">        weighting_distribution_parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        two_dim_parameter: str</span>
+<span class="sd">            The name of the two-dimensional distribution parameter.</span>
+<span class="sd">        weighting_distribution_parameter: str</span>
+<span class="sd">            The name of the parameter with the distribution of weights.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        one_dim_file: Path</span>
+<span class="sd">            The file path and name with the new one-dimensional distribution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">incidence_angle_distribution_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
+            <span class="n">weighting_distribution_parameter</span>
+        <span class="p">)</span>
+        <span class="n">incidence_angle_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">read_incidence_angle_distribution</span><span class="p">(</span>
+            <span class="n">incidence_angle_distribution_file</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">two_dim_parameter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">))</span><span class="si">}</span><span class="s2"> distribution &quot;</span>
+            <span class="s2">&quot;is a 2D one which testeff does not support. &quot;</span>
+            <span class="s2">&quot;Instead of using the 2D distribution, the two dimensional distribution &quot;</span>
+            <span class="s2">&quot;will be averaged, using the photon incidence angle distribution as weights. &quot;</span>
+            <span class="s2">&quot;The incidence angle distribution is taken &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;from the file - </span><span class="si">{</span><span class="n">incidence_angle_distribution_file</span><span class="si">}</span><span class="s2">).&quot;</span>
+        <span class="p">)</span>
+        <span class="n">two_dim_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">read_two_dim_wavelength_angle</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">two_dim_parameter</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">distribution_to_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">calc_average_curve</span><span class="p">(</span>
+            <span class="n">two_dim_distribution</span><span class="p">,</span> <span class="n">incidence_angle_distribution</span>
+        <span class="p">)</span>
+        <span class="n">new_file_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;weighted_average_1D_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">two_dim_parameter</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">export_table_to_model_directory</span><span class="p">(</span>
+            <span class="n">new_file_name</span><span class="p">,</span> <span class="n">distribution_to_export</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_or_fix_nsb_spectrum_file_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsb_spectrum_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate or fix the nsb spectrum file format.</span>
+
+<span class="sd">        The nsb spectrum file format required by sim_telarray has three columns:</span>
+<span class="sd">        wavelength (nm), ignored, NSB flux [1e9 * ph/m2/s/sr/nm],</span>
+<span class="sd">        where the second column is ignored by sim_telarray and the third is used for the NSB flux.</span>
+<span class="sd">        This function makes sure the file has at least three columns,</span>
+<span class="sd">        by copying the second column to the third.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nsb_spectrum_file: str or Path</span>
+<span class="sd">            The path to the nsb spectrum file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        validated_nsb_spectrum_file: Path</span>
+<span class="sd">            The path to the validated nsb spectrum file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">validated_nsb_spectrum_file</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">nsb_spectrum_file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">read_file_encoded_in_utf_or_latin</span><span class="p">(</span><span class="n">nsb_spectrum_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">validated_nsb_spectrum_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="n">split_line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split_line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">split_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">split_line</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">split_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">split_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">split_line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">validated_nsb_spectrum_file</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (CTAO), Tobias Kleiner (DESY), Eshita Joshi (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
