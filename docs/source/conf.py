@@ -122,7 +122,6 @@ default_role = "py:obj"
 #
 html_theme = "pydata_sphinx_theme"
 
-# TODO html_title = f"{project} v{version} Manual"
 html_title = f"{project}"
 
 # Theme options are theme-specific and customize the look and feel of a theme
