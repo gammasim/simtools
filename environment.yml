@@ -18,7 +18,7 @@ dependencies:
   - particle
   - pip
   - pre-commit
-  - pydata_sphinx_theme
+  - pydata-sphinx-theme
   - pylint
   - pymongo
   - pyproj
