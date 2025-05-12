@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Python dependencies
+      - name: Install dependencies
         run: |
           pip install '.[doc]'
 
@@ -78,12 +78,22 @@ jobs:
           fi
           touch docs/build/html/.nojekyll
 
-      - name: Deploy to github pages
-        # only run when PR is merged
-        if: github.event.pull_request.merged
+      - name: Deploy versioned doc on release
+        if: github.event_name == 'release'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: docs/build/html
-          CLEAN: true
+          TARGET-FOLDER: ${{ github.ref_name }}  # e.g., v0.7.0
+          CLEAN: false
+
+      - name: Deploy dev docs on PR merge to main
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docs/build/html
+          TARGET-FOLDER: dev
+          CLEAN: false
