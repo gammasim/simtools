@@ -18,6 +18,7 @@ dependencies:
   - particle
   - pip
   - pre-commit
+  - pydata_sphinx_theme
   - pylint
   - pymongo
   - pyproj
@@ -32,7 +33,6 @@ dependencies:
   - ruff
   - scipy
   - sphinx
-  - sphinx-book-theme
   - towncrier
   - toml
   - pip:
