@@ -7,6 +7,47 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.16.0](https://github.com/gammasim/simtools/tree/v0.16.0) - 2025-05-05
+
+### Documentation
+
+- Add a section on mocking to the developer documentation. ([#1516](https://github.com/gammasim/simtools/pull/1516))
+- Improve model parameter description (schemas, versions) in documentation. ([#1524](https://github.com/gammasim/simtools/pull/1524))
+
+### New Features
+
+- Add grid generation production application to generate the grid points for Corsika simulations, with energy thresholds, viewcone and radius interpolation. ([#1482](https://github.com/gammasim/simtools/pull/1482))
+- Add support for multiple versions and the multipipe functionality of sim_telarray ([#1496](https://github.com/gammasim/simtools/pull/1496))
+- Add validation metadata written by sim_telarray with array model parameters. ([#1505](https://github.com/gammasim/simtools/pull/1505))
+- Improve robustness of sim_telarray configuration by adding an invalid (dummy) telescope configuration. ([#1509](https://github.com/gammasim/simtools/pull/1509))
+- Adding functionality for producing simulation configuration reports. ([#1510](https://github.com/gammasim/simtools/pull/1510))
+- Add random seeds from file for instrument configuration. ([#1511](https://github.com/gammasim/simtools/pull/1511))
+- Adapt docker files and building workflows to CORSIKA 7.8000. ([#1512](https://github.com/gammasim/simtools/pull/1512))
+- Add sim_telarray random seed for instrument configuration to metadata (and metadata tests). ([#1515](https://github.com/gammasim/simtools/pull/1515))
+- Integration test with multipipe and support for packing all output files in grid productions. ([#1520](https://github.com/gammasim/simtools/pull/1520))
+- Add versioning to model parameter schema files. Implement example for `corsika_starting_grammage`. ([#1523](https://github.com/gammasim/simtools/pull/1523))
+- Added an application to produce calibration device reports. ([#1530](https://github.com/gammasim/simtools/pull/1530))
+- Allow `corsika_starting_grammage` to be telescope-type dependent. ([#1539](https://github.com/gammasim/simtools/pull/1539))
+
+### Maintenance
+
+- Separate TelescopeModel and SiteModel for improved readability in `sim_telarray` configuration writer. ([#1489](https://github.com/gammasim/simtools/pull/1489))
+- Fix licence definition in pyproject.toml to follow PEP 639. ([#1493](https://github.com/gammasim/simtools/pull/1493))
+- Improve consistency of spelling of `sim_telarray`. ([#1494](https://github.com/gammasim/simtools/pull/1494))
+- Remove test condition in simulator light emission and mock configuration file access. ([#1495](https://github.com/gammasim/simtools/pull/1495))
+- Refactoring of event scaling application and moving most of the functionality into a new module. ([#1498](https://github.com/gammasim/simtools/pull/1498))
+- Renaming of event scaling methods to production statistics derivation methods. ([#1502](https://github.com/gammasim/simtools/pull/1502))
+- Improved naming and docstrings in simulation runners. ([#1519](https://github.com/gammasim/simtools/pull/1519))
+- Remove duplication of reading yaml/json files in simtools.utils.general. ([#1522](https://github.com/gammasim/simtools/pull/1522))
+- Remove duplication in `make_run_command` in `corsika_simtel_runner` and `simulator_array`. ([#1525](https://github.com/gammasim/simtools/pull/1525))
+- Collect pyeventio related functions in new module `simtel_io_file_info`. ([#1531](https://github.com/gammasim/simtools/pull/1531))
+- Add new field model_parameter_schema_version to model parameter test files. ([#1535](https://github.com/gammasim/simtools/pull/1535))
+
+### Simulation model
+
+- Change list of applicable array elements and class for `pedestal_events` model parameter. ([#1490](https://github.com/gammasim/simtools/pull/1490))
+
+
 ## [v0.15.0](https://github.com/gammasim/simtools/tree/v0.15.0) - 2025-04-04
 
 ### Maintenance
