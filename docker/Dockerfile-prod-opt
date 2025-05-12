@@ -23,9 +23,19 @@ WORKDIR /workdir/sim_telarray
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
-    autoconf automake csh patch perl which bzip2 && \
+    automake csh patch perl which bzip2 \
+    wget make tar m4 && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
+
+# hadolint ignore=DL3003
+RUN cd /tmp && \
+    wget -nv http://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz && \
+    tar -xzf autoconf-2.71.tar.gz && \
+    cd autoconf-2.71 && \
+    ./configure --prefix=/usr && \
+    make && make install && \
+    cd / && rm -rf /tmp/autoconf-2.71*
 
 ADD corsika_simtelarray.tar.gz .
 ADD corsikaOptPatch.tar.gz ./corsika-$CORSIKA_VERSION
