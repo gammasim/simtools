@@ -90,6 +90,7 @@ def _parse(label, description):
     config.parser.add_argument(
         "--query_point",
         required=True,
+        metavar=("ENERGY", "AZIMUTH", "ZENITH", "NSB", "OFFSET"),
         nargs=5,
         type=float,
         help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
