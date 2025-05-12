@@ -95,5 +95,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: docs/build/html
-          target-folder: dev
+          target-folder: .
           clean: false
