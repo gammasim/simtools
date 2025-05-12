@@ -27,7 +27,7 @@ class ProductionStatisticsDerivator:
 
         Parameters
         ----------
-        evaluator : StatisticalErrorEvaluator
+        evaluator : StatisticalUncertaintyEvaluator
             The evaluator responsible for calculating metrics and handling event data.
         metrics : dict
             Dictionary containing metrics, including target error for effective area.

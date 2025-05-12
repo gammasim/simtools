@@ -6,10 +6,10 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 
-__all__ = ["StatisticalErrorEvaluator"]
+__all__ = ["StatisticalUncertaintyEvaluator"]
 
 
-class StatisticalErrorEvaluator:
+class StatisticalUncertaintyEvaluator:
     """
     Evaluates statistical uncertainties from a DL2 MC event file.
 
@@ -81,11 +81,6 @@ class StatisticalErrorEvaluator:
             )
             self._logger.error(msg)
             raise ValueError(msg)
-        if self.grid_point is not None:
-            self._logger.warning(
-                f"Grid point already set to: {self.grid_point}. "
-                "Overwriting with new values from file."
-            )
         self.grid_point = (
             1 * u.TeV,
             unique_azimuths[0],
@@ -164,7 +159,9 @@ class StatisticalErrorEvaluator:
         )
         return reconstructed_event_histogram * u.count
 
-    def compute_efficiency_and_errors(self, reconstructed_event_counts, simulated_event_counts):
+    def compute_efficiency_and_uncertainties(
+        self, reconstructed_event_counts, simulated_event_counts
+    ):
         """
         Compute reconstructed event efficiency and its uncertainty assuming binomial distribution.
 
@@ -179,7 +176,7 @@ class StatisticalErrorEvaluator:
         -------
         efficiencies : array
             Array of calculated efficiencies.
-        relative_errors : array
+        relative_uncertainties : array
             Array of relative uncertainties.
         """
         # Ensure the inputs have compatible units
@@ -220,15 +217,15 @@ class StatisticalErrorEvaluator:
                 )
             )
 
-        # Compute relative errors
-        relative_errors = np.divide(
+        # Compute relative uncertainties
+        relative_uncertainties = np.divide(
             uncertainties,
             np.sqrt(simulated_event_counts.value),
             out=np.zeros_like(uncertainties, dtype=float),
             where=uncertainties > 0,
         )
 
-        return efficiencies, relative_errors
+        return efficiencies, relative_uncertainties
 
     def calculate_energy_threshold(self, requested_eff_area_fraction=0.1):
         """
@@ -245,7 +242,7 @@ class StatisticalErrorEvaluator:
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
 
-        efficiencies, _ = self.compute_efficiency_and_errors(
+        efficiencies, _ = self.compute_efficiency_and_uncertainties(
             reconstructed_event_histogram, simulated_event_histogram
         )
 
@@ -265,7 +262,7 @@ class StatisticalErrorEvaluator:
 
         Returns
         -------
-        errors : dict
+        uncertainties : dict
             Dictionary with uncertainties for the file.
         """
         bin_edges = self.create_bin_edges()
@@ -273,10 +270,10 @@ class StatisticalErrorEvaluator:
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
-        _, relative_errors = self.compute_efficiency_and_errors(
+        _, relative_uncertainties = self.compute_efficiency_and_uncertainties(
             reconstructed_event_histogram, simulated_event_histogram
         )
-        return {"relative_errors": relative_errors}
+        return {"relative_uncertainties": relative_uncertainties}
 
     def calculate_energy_estimate(self):
         """
@@ -287,7 +284,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for energy estimation.
         """
-        logging.info("Calculating Energy Resolution Error")
+        logging.info("Calculating Energy Resolution Uncertainty")
 
         event_energies_reco = self.data["event_energies_reco"]
         event_energies_mc = self.data["event_energies_mc"]
@@ -331,22 +328,22 @@ class StatisticalErrorEvaluator:
                     energy_range["value"][1] * u.Unit(energy_range["unit"]),
                 )
 
-                valid_errors = [
+                valid_uncertainties = [
                     error
                     for energy, error in zip(
                         self.data["bin_edges_low"],
-                        self.uncertainty_effective_area["relative_errors"],
+                        self.uncertainty_effective_area["relative_uncertainties"],
                     )
                     if min_energy <= energy <= max_energy
                 ]
                 self.uncertainty_effective_area["max_error"] = (
-                    max(valid_errors) if valid_errors else 0.0
+                    max(valid_uncertainties) if valid_uncertainties else 0.0
                 )
                 ref_value = self.metrics.get("uncertainty_effective_area", {}).get("target_error")[
                     "value"
                 ]
                 self._logger.info(
-                    f"Effective Area Error (max in validity range): "
+                    f"Effective Area Uncertainty (max in validity range): "
                     f"{self.uncertainty_effective_area['max_error'].value:.6f}, "
                     f"Reference: {ref_value:.3f}"
                 )
@@ -357,7 +354,8 @@ class StatisticalErrorEvaluator:
             )
             ref_value = self.metrics.get("energy_estimate", {}).get("target_error")["value"]
             self._logger.info(
-                f"Energy Estimate Error: {self.energy_estimate:.3f}, Reference: {ref_value:.3f}"
+                f"Energy Estimate Uncertainty: {self.energy_estimate:.3f}, "
+                f"Reference: {ref_value:.3f}"
             )
         else:
             raise ValueError("Invalid metric specified.")
@@ -376,10 +374,12 @@ class StatisticalErrorEvaluator:
         max_error : float
             Maximum relative error.
         """
-        if "relative_errors" in self.metric_results["uncertainty_effective_area"]:
-            return np.max(self.metric_results["uncertainty_effective_area"]["relative_errors"])
+        if "relative_uncertainties" in self.metric_results["uncertainty_effective_area"]:
+            return np.max(
+                self.metric_results["uncertainty_effective_area"]["relative_uncertainties"]
+            )
         if self.uncertainty_effective_area:
-            return np.max(self.uncertainty_effective_area["relative_errors"])
+            return np.max(self.uncertainty_effective_area["relative_uncertainties"])
         return None
 
     def calculate_overall_metric(self, metric="average"):
@@ -394,30 +394,32 @@ class StatisticalErrorEvaluator:
         Returns
         -------
         dict
-            Dictionary with overall maximum errors for each metric.
+            Dictionary with overall maximum uncertainties for each metric.
         """
         # Decide how to combine the metrics
         if self.metric_results is None:
             raise ValueError("Metrics have not been computed yet.")
 
-        overall_max_errors = {}
+        overall_max_uncertainties = {}
 
         for metric_name, result in self.metric_results.items():
             if metric_name == "uncertainty_effective_area":
-                max_errors = self.calculate_max_error_for_effective_area()
-                overall_max_errors[metric_name] = max_errors if max_errors else 0
+                max_uncertainties = self.calculate_max_error_for_effective_area()
+                overall_max_uncertainties[metric_name] = (
+                    max_uncertainties if max_uncertainties else 0
+                )
             elif metric_name in [
                 "error_gamma_ray_psf",
             ]:
-                overall_max_errors[metric_name] = result
+                overall_max_uncertainties[metric_name] = result
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
-        self._logger.info(f"overall_max_errors {overall_max_errors}")
-        all_max_errors = list(overall_max_errors.values())
+        self._logger.info(f"overall_max_uncertainties {overall_max_uncertainties}")
+        all_max_uncertainties = list(overall_max_uncertainties.values())
         if metric == "average":
-            overall_metric = np.mean(all_max_errors)
+            overall_metric = np.mean(all_max_uncertainties)
         elif metric == "maximum":
-            overall_metric = np.max(all_max_errors)
+            overall_metric = np.max(all_max_uncertainties)
         else:
             raise ValueError(f"Unsupported metric: {metric}")
 

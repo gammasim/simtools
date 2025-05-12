@@ -8,10 +8,10 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 (calculate-statistical-errors-grid-point)=
 
-## calculate_statistical_errors_grid_point
+## calculate_statistical_uncertainties_grid_point
 
 ```{eval-rst}
-.. automodule:: production_configuration.calculate_statistical_errors_grid_point
+.. automodule:: production_configuration.calculate_statistical_uncertainties_grid_point
    :members:
 ```
 

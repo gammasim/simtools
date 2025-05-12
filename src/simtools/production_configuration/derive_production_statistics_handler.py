@@ -1,11 +1,11 @@
 """
-Module to run the StatisticalErrorEvaluator and interpolate results.
+Module to run the StatisticalUncertaintyEvaluator and interpolate results.
 
 This module provides the `ProductionStatisticsHandler` class, which manages the workflow for
 derivation of required number of events for a simulation production using pre-defined metrics.
 
 The module includes functionality to:
-- Initialize evaluators for statistical error calculations based on input parameters.
+- Initialize evaluators for statistical uncertainty calculations based on input parameters.
 - Perform interpolation using the initialized evaluators to estimate production statistics at a
 query point.
 - Write the results of the interpolation to an output file.
@@ -19,8 +19,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
 from simtools.utils.general import collect_data_from_file
@@ -53,7 +53,7 @@ class ProductionStatisticsHandler:
         self.interpolation_handler = None
 
     def initialize_evaluators(self):
-        """Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets."""
+        """Initialize StatisticalUncertaintyEvaluator instances for the given zeniths/offsets."""
         if not (self.args["base_path"] and self.args["zeniths"] and self.args["camera_offsets"]):
             self.logger.warning("No files read")
             self.logger.warning(f"Base Path: {self.args['base_path']}")
@@ -69,7 +69,7 @@ class ProductionStatisticsHandler:
                 self.logger.warning(f"File not found: {file_path}. Skipping.")
                 continue
 
-            evaluator = StatisticalErrorEvaluator(
+            evaluator = StatisticalUncertaintyEvaluator(
                 file_path,
                 metrics=self.metrics,
                 grid_point=(None, None, zenith, None, offset * u.deg),
