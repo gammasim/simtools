@@ -2,6 +2,7 @@
 """Functions for plotting pixel layout information."""
 
 import logging
+from pathlib import Path
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
@@ -9,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PatchCollection
 
+from simtools.db import db_handler
+from simtools.io_operations import io_handler
 from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
@@ -17,7 +20,7 @@ from simtools.visualization import visualize
 logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file):
+def plot(config, output_file, db_config=None):
     """
     Plot pixel layout based on configuration.
 
@@ -25,23 +28,29 @@ def plot(config, output_file):
     ----------
     config : dict
         Configuration dictionary containing:
-        - tables : list of dicts with table configurations
-        - type : str, type of plot
-        - title : str, plot title
-        - xtitle : str, x-axis label
-        - ytitle : str, y-axis label
+        - file_name : str, name of .dat file
+        - column_x : str, x-axis label
+        - column_y : str, y-axis label
+        - parameter_version: str, version of the parameter
+        - telescope : str, name of the telescope
     output_file : str
         Path where to save the plot
     """
-    table_config = config["tables"][0]
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db.export_model_file(
+        parameter=config["parameter"],
+        site=config["site"],
+        array_element_name=config.get("telescope"),
+        parameter_version=config.get("parameter_version"),
+        model_version=config.get("model_version"),
+        export_file_as_table=False,
+    )
+    data_file_path = Path(io_handler.IOHandler().get_output_directory() / f"{config['file_name']}")
 
     fig = plot_pixel_layout_from_file(
-        table_config["file_name"],
-        table_config["telescope"],
+        data_file_path,
+        config["telescope"],
         pixels_id_to_print=80,
-        title=config.get("title"),
-        xtitle=config.get("xtitle"),
-        ytitle=config.get("ytitle"),
     )
     visualize.save_figure(fig, output_file)
 
@@ -124,6 +133,9 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
         "pixels_on": config["pixels_on"],
         "pixel_shape": config["pixel_shape"],
         "pixel_diameter": config["pixel_diameter"],
+        "pixel_spacing": config["pixel_spacing"],
+        "module_number": config["module_number"],
+        "module_gap": config["module_gap"],
         "rotation": total_rotation,
         # Add FOV info
         "fov_diameter": config["fov_diameter"],
@@ -165,6 +177,9 @@ def _create_pixel_plot(
         pixel_data["x"],
         pixel_data["y"],
         pixel_data["pixel_diameter"],
+        pixel_data["module_number"],
+        pixel_data["module_gap"],
+        pixel_data["pixel_spacing"],
         pixel_data["pixel_shape"],
         pixel_data["pixels_on"],
         pixel_data["pixel_ids"],
@@ -231,15 +246,25 @@ def _read_pixel_config(dat_file_path):
         "pixels_on": [],
         "pixel_shape": None,
         "pixel_diameter": None,
+        "pixel_spacing": None,
+        "module_gap": None,
         "trigger_groups": [],
         "rotate_angle": None,
         "fov_diameter": None,
         "focal_length": None,
         "edge_radius": None,
+        "module_number": [],
     }
 
     with open(dat_file_path, encoding="utf-8") as f:
         for line in f:
+            line = line.strip()
+
+            # Skip empty lines or comments
+            if not line:
+                continue
+
+            # Parse specific information from the file
             if "field-of-view diameter of" in line and "focal length of" in line:
                 fov_part = line.split("field-of-view diameter of")[1]
                 config["fov_diameter"] = float(fov_part.split("deg")[0].strip())
@@ -253,19 +278,33 @@ def _read_pixel_config(dat_file_path):
             elif line.startswith("Rotate"):
                 # Parse rotation angle from line like "Rotate 10.893"
                 config["rotate_angle"] = float(line.split()[1].strip())
+
             elif line.startswith("PixType"):
                 parts = line.split()
                 config["pixel_shape"] = int(parts[5].strip())
                 config["pixel_diameter"] = float(parts[6].strip())
+
+            elif "Pixel spacing is" in line:
+                config["pixel_spacing"] = float(line.split("spacing is")[1].strip().split()[0])
+
+            elif "Between modules is an additional gap of" in line:
+                config["module_gap"] = float(line.split("gap of")[1].strip().split()[0])
+
             elif line.startswith("Pixel"):
                 parts = line.split()
                 config["x"].append(float(parts[3].strip()))
                 config["y"].append(float(parts[4].strip()))
+                config["module_number"].append(float(parts[5].strip()))
                 config["pixel_ids"].append(int(parts[1].strip()))
                 if len(parts) >= 9:
                     config["pixels_on"].append(int(parts[9].strip()) != 0)
                 else:
                     config["pixels_on"].append(True)
+
+    # If pixel spacing is not explicitly provided, calculate it as diameter + gap
+    if config["pixel_spacing"] is None and config["pixel_diameter"] is not None:
+        config["pixel_spacing"] = config["pixel_diameter"] + 0.02  # Default gap of 0.02 cm
+    config["module_gap"] = 0.0 if config["module_gap"] is None else config["module_gap"]
 
     return config
 
@@ -299,14 +338,51 @@ def _create_patch(x, y, diameter, shape):
     return mpatches.Rectangle((x - diameter / 2, y - diameter / 2), width=diameter, height=diameter)
 
 
-def _is_edge_pixel(x, y, x_pos, y_pos, diameter, shape):
-    """Determine if a pixel is on the edge based on neighbor count."""
+def _is_edge_pixel(
+    x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, shape, current_module_id
+):
+    """
+    Determine if a pixel is on the edge based on neighbor count.
+
+    Parameters
+    ----------
+    x, y : float
+        Coordinates of the pixel being checked.
+    x_pos, y_pos : array-like
+        Arrays of x and y positions of all pixels.
+    module_ids : array-like
+        Array of module IDs corresponding to each pixel.
+    pixel_spacing : float
+        Center-to-center spacing between pixels.
+    module_gap : float
+        Additional gap between modules.
+    shape : int
+        Pixel shape type (0: circular, 1/3: hexagonal, 2: square).
+    current_module_id : int
+        Module ID of the current pixel.
+
+    Returns
+    -------
+    bool
+        True if the pixel is an edge pixel, False otherwise.
+    """
+    # Determine the maximum number of neighbors based on the pixel shape
     if shape == 0:  # Circular
-        return _count_neighbors(x, y, x_pos, y_pos, diameter * 2) < 6
-    if shape in (1, 3):  # Hexagonal - increase threshold for neighbor detection
-        return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.4) < 6
-    # Square
-    return _count_neighbors(x, y, x_pos, y_pos, diameter * 2.2) < 6
+        max_neighbors = 8
+    elif shape in (1, 3):  # Hexagonal
+        max_neighbors = 6
+    elif shape == 2:  # Square
+        max_neighbors = 4
+    else:
+        raise ValueError(f"Unsupported pixel shape: {shape}")
+
+    # Count the number of neighbors
+    neighbor_count = _count_neighbors(
+        x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, current_module_id
+    )
+
+    # A pixel is an edge pixel if it has fewer neighbors than the maximum
+    return neighbor_count < max_neighbors
 
 
 def _add_pixel_id(x, y, pixel_id, font_size):
@@ -315,7 +391,17 @@ def _add_pixel_id(x, y, pixel_id, font_size):
 
 
 def _create_pixel_patches(
-    x_pos, y_pos, diameter, shape, pixels_on, pixel_ids, pixels_id_to_print, telescope_model_name
+    x_pos,
+    y_pos,
+    diameter,
+    module_number,
+    module_gap,
+    spacing,
+    shape,
+    pixels_on,
+    pixel_ids,
+    pixels_id_to_print,
+    telescope_model_name,
 ):
     """Create matplotlib patches for different pixel types."""
     on_pixels, edge_pixels, off_pixels = [], [], []
@@ -327,7 +413,9 @@ def _create_pixel_patches(
         patch = _create_patch(x, y, diameter, shape)
 
         if pixels_on[i]:
-            if _is_edge_pixel(x, y, x_pos, y_pos, diameter, shape):
+            if _is_edge_pixel(
+                x, y, x_pos, y_pos, module_number, spacing, module_gap, shape, module_number[i]
+            ):
                 edge_pixels.append(patch)
             else:
                 on_pixels.append(patch)
@@ -340,12 +428,53 @@ def _create_pixel_patches(
     return on_pixels, edge_pixels, off_pixels
 
 
-def _count_neighbors(x, y, x_pos, y_pos, max_dist):
-    """Count number of neighboring pixels within max_dist."""
+def _count_neighbors(x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, current_module_id):
+    """
+    Count the number of neighboring pixels within the appropriate distance.
+
+    Parameters
+    ----------
+    x, y : float
+        Coordinates of the pixel being checked.
+    x_pos, y_pos : array-like
+        Arrays of x and y positions of all pixels.
+    module_ids : array-like
+        Array of module IDs corresponding to each pixel.
+    pixel_spacing : float
+        Center-to-center spacing between pixels.
+    module_gap : float
+        Additional gap between modules.
+    shape : int
+        Pixel shape type (0: circular, 1/3: hexagonal, 2: square).
+    current_module_id : int
+        Module ID of the current pixel.
+
+    Returns
+    -------
+    int
+        Number of neighboring pixels.
+    """
     count = 0
-    for x2, y2 in zip(x_pos, y_pos):
-        if (x != x2 or y != y2) and np.sqrt((x - x2) ** 2 + (y - y2) ** 2) <= max_dist:
+    tolerance = 1e-6
+
+    for x2, y2, module_id2 in zip(x_pos, y_pos, module_ids):
+        # Skip the pixel itself
+        if x == x2 and y == y2:
+            continue
+
+        # Calculate the distance between the current pixel and the potential neighbor
+        dist = np.sqrt((x - x2) ** 2 + (y - y2) ** 2)
+
+        if current_module_id == module_id2:
+            # Same module: use pixel spacing
+            max_distance = (pixel_spacing + tolerance) * 1.2
+        else:
+            # Different modules: include module gap
+            max_distance = (pixel_spacing + module_gap + tolerance) * 1.2
+
+        if dist <= max_distance:
             count += 1
+
     return count
 
 
