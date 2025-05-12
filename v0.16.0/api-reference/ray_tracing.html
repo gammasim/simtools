@@ -1,0 +1,1146 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Ray Tracing &#8212; simtools v0.16.1.dev50+gb3036c3ad.d20250512 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=8f5c1652"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/ray_tracing';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reporting" href="reporting.html" />
+    <link rel="prev" title="Production Configuration" href="production_configuration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.16.1.dev50+gb3036c3ad.d20250512 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-validate-optics.html">simtools-validate-optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/productions.html">Simulation Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/docker_files.html">Containers (docker files)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">API Docs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/documentation.html">Generating Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/pull_requests.html">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/api-reference/ray_tracing.md?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fapi-reference/ray_tracing.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api-reference/ray_tracing.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Ray Tracing</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.ray_tracing">ray_tracing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing"><code class="docutils literal notranslate"><span class="pre">RayTracing</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.analyze"><code class="docutils literal notranslate"><span class="pre">RayTracing.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.export_results"><code class="docutils literal notranslate"><span class="pre">RayTracing.export_results()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_mean"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_mean()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_std_dev"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_std_dev()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.images"><code class="docutils literal notranslate"><span class="pre">RayTracing.images()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.plot"><code class="docutils literal notranslate"><span class="pre">RayTracing.plot()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.plot_histogram"><code class="docutils literal notranslate"><span class="pre">RayTracing.plot_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.simulate"><code class="docutils literal notranslate"><span class="pre">RayTracing.simulate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.psf_analysis">psf_analysis</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage"><code class="docutils literal notranslate"><span class="pre">PSFImage</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_cumulative_data"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_cumulative_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_effective_area"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_image_data"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_image_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_psf"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_psf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.plot_cumulative"><code class="docutils literal notranslate"><span class="pre">PSFImage.plot_cumulative()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.plot_image"><code class="docutils literal notranslate"><span class="pre">PSFImage.plot_image()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.process_photon_list"><code class="docutils literal notranslate"><span class="pre">PSFImage.process_photon_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file"><code class="docutils literal notranslate"><span class="pre">PSFImage.read_photon_list_from_simtel_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.set_effective_area"><code class="docutils literal notranslate"><span class="pre">PSFImage.set_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.set_psf"><code class="docutils literal notranslate"><span class="pre">PSFImage.set_psf()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.mirror_panel_psf">mirror_panel_psf</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.derive_random_reflection_angle"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.derive_random_reflection_angle()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.print_results"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.print_results()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.run_simulations_and_analysis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.write_optimization_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="ray-tracing">
+<span id="raytracing"></span><h1>Ray Tracing<a class="headerlink" href="#ray-tracing" title="Link to this heading">#</a></h1>
+<p>The ray-tracing modules handle ray tracing simulations, PSF analysis and I/O.</p>
+<section id="module-ray_tracing.ray_tracing">
+<span id="id1"></span><span id="raytracingmodule"></span><h2>ray_tracing<a class="headerlink" href="#module-ray_tracing.ray_tracing" title="Link to this heading">#</a></h2>
+<p>Ray tracing simulations and analysis.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle=&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle=&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance=&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers='all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
+<dd><p>Ray tracing simulations and analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>telescope model</p>
+</dd>
+<dt><strong>site_model: SiteModel</strong></dt><dd><p>site model</p>
+</dd>
+<dt><strong>simtel_path: str (or Path)</strong></dt><dd><p>Location of sim_telarray installation.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>label used for output file naming.</p>
+</dd>
+<dt><strong>zenith_angle: astropy.units.Quantity</strong></dt><dd><p>Zenith angle.</p>
+</dd>
+<dt><strong>off_axis_angle: list of astropy.units.Quantity</strong></dt><dd><p>Off-axis angles.</p>
+</dd>
+<dt><strong>source_distance: astropy.units.Quantity</strong></dt><dd><p>Source distance.</p>
+</dd>
+<dt><strong>single_mirror_mode: bool</strong></dt><dd><p>Single mirror mode flag.</p>
+</dd>
+<dt><strong>use_random_focal_length: bool</strong></dt><dd><p>Use random focal length flag.</p>
+</dd>
+<dt><strong>mirror_numbers: list, str</strong></dt><dd><p>List of mirror numbers (or ‘all’).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.analyze">
+<span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_tel_transmission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containment_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.analyze" title="Link to this definition">#</a></dt>
+<dd><p>Ray tracing analysis.</p>
+<p>Involves the following: read simtel files, compute PSFs and eff areas, store the
+results in _results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>export: bool</strong></dt><dd><p>If True, results will be exported to a file automatically. Alternatively,
+export_results function can be used.</p>
+</dd>
+<dt><strong>force: bool</strong></dt><dd><p>If True, existing results files will be removed and analysis will be done again.</p>
+</dd>
+<dt><strong>use_rx: bool</strong></dt><dd><p>If True, calculations are done using the rx binary provided by sim_telarray. If False,
+calculations are done internally, by the module psf_analysis.</p>
+</dd>
+<dt><strong>no_tel_transmission: bool</strong></dt><dd><p>If True, the telescope transmission is not applied.</p>
+</dd>
+<dt><strong>containment_fraction: float</strong></dt><dd><p>Containment fraction for PSF containment calculation. Allowed values are in the
+interval [0,1]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.export_results">
+<span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.export_results" title="Link to this definition">#</a></dt>
+<dd><p>Export results to a csv file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.get_mean">
+<span class="sig-name descname"><span class="pre">get_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.get_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.get_mean" title="Link to this definition">#</a></dt>
+<dd><p>Get mean value of key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>d80_cm, d80_deg, eff_area or eff_flen</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Mean value of key.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.get_std_dev">
+<span class="sig-name descname"><span class="pre">get_std_dev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.get_std_dev"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.get_std_dev" title="Link to this definition">#</a></dt>
+<dd><p>Get std dev of key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>d80_cm, d80_deg, eff_area or eff_flen</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Std deviation of key.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.images">
+<span class="sig-name descname"><span class="pre">images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.images" title="Link to this definition">#</a></dt>
+<dd><p>Get list of PSFImages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>List of PSFImages</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d80</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot key vs off-axis angle and save the figure in pdf.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>d80_cm, d80_deg, eff_area or eff_flen</p>
+</dd>
+<dt><strong>save: bool</strong></dt><dd><p>If True, figure will be saved.</p>
+</dd>
+<dt><strong>d80: float</strong></dt><dd><p>d80 for cumulative PSF plot.</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>kwargs for plt.plot</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.plot_histogram">
+<span class="sig-name descname"><span class="pre">plot_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.plot_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.plot_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Plot histogram of key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>d80_cm, d80_deg, eff_area or eff_flen</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>kwargs for plt.hist</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.simulate">
+<span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.simulate" title="Link to this definition">#</a></dt>
+<dd><p>Simulate RayTracing using SimulatorRayTracing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>test: bool</strong></dt><dd><p>Test flag will make it faster by simulating much fewer photons.</p>
+</dd>
+<dt><strong>force: bool</strong></dt><dd><p>Force flag will remove existing files and simulate again.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ray_tracing.psf_analysis">
+<span id="psf-analysis"></span><span id="psfanalysismodule"></span><h2>psf_analysis<a class="headerlink" href="#module-ray_tracing.psf_analysis" title="Link to this heading">#</a></h2>
+<p>Module to analyse psf images (e.g. results from ray tracing simulations).</p>
+<p>Main functionalities are: computing centroids, psf containers etc.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_analysis.</span></span><span class="sig-name descname"><span class="pre">PSFImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focal_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_scattered_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containment_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage" title="Link to this definition">#</a></dt>
+<dd><p>Image composed of list of photon positions (2D).</p>
+<p>Load photon list from sim_telarray file and compute centroids, psf containers, effective area,
+as well as plot the image as a 2D histogram.
+Internal units: photon positions in cm internally.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>focal_length: float</strong></dt><dd><p>Focal length of the system in cm. If not given, PSF can only be computed in cm.</p>
+</dd>
+<dt><strong>total_scattered_area: float</strong></dt><dd><p>Scatter area of all photons in cm^2. If not given, effective area cannot be computed.</p>
+</dd>
+<dt><strong>containment_fraction: float</strong></dt><dd><p>Containment fraction for PSF calculation.</p>
+</dd>
+<dt><strong>simtel_path: str</strong></dt><dd><p>Path to sim_telarray installation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_cumulative_data">
+<span class="sig-name descname"><span class="pre">get_cumulative_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_cumulative_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_cumulative_data" title="Link to this definition">#</a></dt>
+<dd><p>Provide cumulative data (intensity vs radius).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius: array</strong></dt><dd><p>Array with radius calculate the cumulative PSF in distance units.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(radius, intensity)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_effective_area">
+<span class="sig-name descname"><span class="pre">get_effective_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_transmission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_effective_area" title="Link to this definition">#</a></dt>
+<dd><p>Return effective area pre calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_transmission</strong><span class="classifier">float</span></dt><dd><p>Telescope transmission parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Pre-calculated effective area. None if it could not be calculated (e.g because the total
+scattering area was not set).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_image_data">
+<span class="sig-name descname"><span class="pre">get_image_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centralized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_image_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_image_data" title="Link to this definition">#</a></dt>
+<dd><p>Provide image data (2D photon positions in cm) as lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>centralized: bool</strong></dt><dd><p>Centroid of the image is set to (0, 0) if True.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(x, y), the photons positions in cm.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_psf">
+<span class="sig-name descname"><span class="pre">get_psf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_psf" title="Link to this definition">#</a></dt>
+<dd><p>Return PSF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fraction: float</strong></dt><dd><p>Fraction of photons within the containing radius.</p>
+</dd>
+<dt><strong>unit: str</strong></dt><dd><p>‘cm’ or ‘deg’. ‘deg’ will not work if focal length was not set.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float:</dt><dd><p>Containing diameter for a certain intensity fraction (PSF).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.plot_cumulative">
+<span class="sig-name descname"><span class="pre">plot_cumulative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d80</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.plot_cumulative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.plot_cumulative" title="Link to this definition">#</a></dt>
+<dd><p>Plot cumulative data (intensity vs radius).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs:</strong></dt><dd><p>image_* for the histogram plot and psf_* for the psf circle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.plot_image">
+<span class="sig-name descname"><span class="pre">plot_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centralized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.plot_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.plot_image" title="Link to this definition">#</a></dt>
+<dd><p>Plot 2D image as histogram (in cm).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>centralized: bool</strong></dt><dd><p>Centroid of the image is set to (0, 0) if True.</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>image_* for the histogram plot and psf_* for the psf circle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.process_photon_list">
+<span class="sig-name descname"><span class="pre">process_photon_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.process_photon_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.process_photon_list" title="Link to this definition">#</a></dt>
+<dd><p>Read and process a photon list file generated by sim_telarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>photons_file: str</strong></dt><dd><p>Name of sim_telarray file with photon list.</p>
+</dd>
+<dt><strong>use_rx: bool</strong></dt><dd><p>Use the RX method for analysis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file">
+<span class="sig-name descname"><span class="pre">read_photon_list_from_simtel_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photons_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.read_photon_list_from_simtel_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file" title="Link to this definition">#</a></dt>
+<dd><p>Read photon list file generated by sim_telarray and store the photon positions (2D).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>photons_file: str</strong></dt><dd><p>Name of sim_telarray file with photon list.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>RuntimeError</dt><dd><p>If photon positions X and Y are not compatible or are empty.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.set_effective_area">
+<span class="sig-name descname"><span class="pre">set_effective_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.set_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.set_effective_area" title="Link to this definition">#</a></dt>
+<dd><p>Set effective area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>Effective area</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.set_psf">
+<span class="sig-name descname"><span class="pre">set_psf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.set_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.set_psf" title="Link to this definition">#</a></dt>
+<dd><p>Set PSF calculated from other methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>PSF value to be set</p>
+</dd>
+<dt><strong>fraction: float</strong></dt><dd><p>Fraction of photons within the containing radius.</p>
+</dd>
+<dt><strong>unit: str</strong></dt><dd><p>‘cm’ or ‘deg’. ‘deg’ will not work if focal length was not set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ray_tracing.mirror_panel_psf">
+<span id="mirror-panel-psf"></span><span id="mirror-panel-psfmodule"></span><h2>mirror_panel_psf<a class="headerlink" href="#module-ray_tracing.mirror_panel_psf" title="Link to this heading">#</a></h2>
+<p>Mirror panel PSF calculation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.mirror_panel_psf.</span></span><span class="sig-name descname"><span class="pre">MirrorPanelPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF" title="Link to this definition">#</a></dt>
+<dd><p>Mirror panel PSF and random reflection angle calculation.</p>
+<p>This class is used to derive the random reflection angle for the mirror panels in the telescope.</p>
+<p>Known limitations: single Gaussian PSF model, no support for multiple PSF components (as allowed
+in the model parameters).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>label: str</strong></dt><dd><p>Application label.</p>
+</dd>
+<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with input arguments.</p>
+</dd>
+<dt><strong>db_config:</strong></dt><dd><p>Dictionary with database configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.derive_random_reflection_angle">
+<span class="sig-name descname"><span class="pre">derive_random_reflection_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_figures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.derive_random_reflection_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.derive_random_reflection_angle" title="Link to this definition">#</a></dt>
+<dd><p>Minimize the difference between measured and simulated PSF for reflection angle.</p>
+<p>Main loop of the optimization process. The method iterates over different values of the
+random reflection angle until the difference in the mean value of the D80 containment
+is minimal.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.print_results">
+<span class="sig-name descname"><span class="pre">print_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.print_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.print_results" title="Link to this definition">#</a></dt>
+<dd><p>Print results to stdout.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis">
+<span class="sig-name descname"><span class="pre">run_simulations_and_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rnda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_figures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.run_simulations_and_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis" title="Link to this definition">#</a></dt>
+<dd><p>Run ray tracing simulations and analysis for one given value of rnda.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rnda: float</strong></dt><dd><p>Random reflection angle in degrees.</p>
+</dd>
+<dt><strong>save_figures: bool</strong></dt><dd><p>Save figures.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>mean_d80: float</dt><dd><p>Mean value of D80 in cm.</p>
+</dd>
+<dt>sig_d80: float</dt><dd><p>Standard deviation of D80 in cm.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">
+<span class="sig-name descname"><span class="pre">write_optimization_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.write_optimization_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data" title="Link to this definition">#</a></dt>
+<dd><p>Write optimization results to an astropy table (ecsv file).</p>
+<p>Used mostly for debugging of the optimization process.
+The first entry of the table is the best fit result.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="production_configuration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Production Configuration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reporting.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reporting</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.ray_tracing">ray_tracing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing"><code class="docutils literal notranslate"><span class="pre">RayTracing</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.analyze"><code class="docutils literal notranslate"><span class="pre">RayTracing.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.export_results"><code class="docutils literal notranslate"><span class="pre">RayTracing.export_results()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_mean"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_mean()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_std_dev"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_std_dev()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.images"><code class="docutils literal notranslate"><span class="pre">RayTracing.images()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.plot"><code class="docutils literal notranslate"><span class="pre">RayTracing.plot()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.plot_histogram"><code class="docutils literal notranslate"><span class="pre">RayTracing.plot_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.simulate"><code class="docutils literal notranslate"><span class="pre">RayTracing.simulate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.psf_analysis">psf_analysis</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage"><code class="docutils literal notranslate"><span class="pre">PSFImage</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_cumulative_data"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_cumulative_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_effective_area"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_image_data"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_image_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_psf"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_psf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.plot_cumulative"><code class="docutils literal notranslate"><span class="pre">PSFImage.plot_cumulative()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.plot_image"><code class="docutils literal notranslate"><span class="pre">PSFImage.plot_image()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.process_photon_list"><code class="docutils literal notranslate"><span class="pre">PSFImage.process_photon_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file"><code class="docutils literal notranslate"><span class="pre">PSFImage.read_photon_list_from_simtel_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.set_effective_area"><code class="docutils literal notranslate"><span class="pre">PSFImage.set_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.set_psf"><code class="docutils literal notranslate"><span class="pre">PSFImage.set_psf()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.mirror_panel_psf">mirror_panel_psf</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.derive_random_reflection_angle"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.derive_random_reflection_angle()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.print_results"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.print_results()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.run_simulations_and_analysis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.write_optimization_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (CTAO), Tobias Kleiner (DESY), Eshita Joshi (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

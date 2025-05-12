@@ -1,0 +1,846 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visualization.plot_camera &#8212; simtools v0.16.1.dev50+gb3036c3ad.d20250512 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=8f5c1652"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/visualization/plot_camera';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.16.1.dev50+gb3036c3ad.d20250512 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-validate-optics.html">simtools-validate-optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/productions.html">Simulation Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/docker_files.html">Containers (docker files)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/reporting.html">Reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/documentation.html">Generating Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/pull_requests.html">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/visualization/plot_camera.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for visualization.plot_camera</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Plot camera pixel layout.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">PatchCollection</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.visualization.legend_handlers</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">leg_h</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_two_mirror_telescope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_pixel_layout">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_camera.plot_pixel_layout">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_pixel_layout</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">camera_in_sky_coor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the pixel layout for an observer facing the camera.</span>
+
+<span class="sd">    Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,</span>
+<span class="sd">    coordinate systems, FOV, focal length and the average edge radius.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    camera : Camera</span>
+<span class="sd">        Camera object to plot.</span>
+<span class="sd">    camera_in_sky_coor : bool, optional</span>
+<span class="sd">        Flag to plot the camera in the sky coordinate system.</span>
+<span class="sd">    pixels_id_to_print : int, optional</span>
+<span class="sd">        Number of pixel IDs to print in the plot.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : plt.Figure</span>
+<span class="sd">        Figure with the pixel layout.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting the </span><span class="si">{</span><span class="n">camera</span><span class="o">.</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2"> camera&quot;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">telescope_model_name</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">camera_in_sky_coor</span><span class="p">:</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">y_val</span> <span class="k">for</span> <span class="n">y_val</span> <span class="ow">in</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]]</span>
+
+    <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span> <span class="o">=</span> <span class="n">_pixel_type_lists</span><span class="p">(</span><span class="n">camera</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i_pix</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])):</span>
+        <span class="k">if</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pixels_id_to_print</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">font_size</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="mi">4</span>
+                <span class="k">if</span> <span class="s2">&quot;SCT&quot;</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">telescope_model_name</span><span class="p">)</span>
+                <span class="k">else</span> <span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">],</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">font_size</span>
+            <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+        <span class="n">PatchCollection</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+        <span class="n">PatchCollection</span><span class="p">(</span>
+            <span class="n">edge_pixels</span><span class="p">,</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;brown&quot;</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+        <span class="n">PatchCollection</span><span class="p">(</span><span class="n">off_pixels</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">legend_objects</span> <span class="o">=</span> <span class="p">[</span><span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">(),</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">()]</span>
+    <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Pixel&quot;</span><span class="p">,</span> <span class="s2">&quot;Edge pixel&quot;</span><span class="p">]</span>
+    <span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">leg_h</span><span class="o">.</span><span class="n">HexPixelHandler</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquarePixelHandler</span><span class="p">()</span>
+        <span class="p">),</span>
+        <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">leg_h</span><span class="o">.</span><span class="n">HexEdgePixelHandler</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquareEdgePixelHandler</span><span class="p">()</span>
+        <span class="p">),</span>
+        <span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">leg_h</span><span class="o">.</span><span class="n">HexOffPixelHandler</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquareOffPixelHandler</span><span class="p">()</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">off_pixels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">legend_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">())</span>
+        <span class="n">legend_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Disabled pixel&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="nb">min</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]),</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]),</span>
+            <span class="nb">min</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1.42</span><span class="p">,</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1.42</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Horizontal scale [cm]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Vertical scale [cm]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Pixels layout in </span><span class="si">{</span><span class="n">camera</span><span class="o">.</span><span class="n">telescope_model_name</span><span class="si">:</span><span class="s2">s</span><span class="si">}</span><span class="s2"> camera&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+
+    <span class="n">_plot_axes_def</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="kc">False</span><span class="p">:</span> <span class="s2">&quot;For an observer facing the camera&quot;</span><span class="p">,</span>
+        <span class="kc">True</span><span class="p">:</span> <span class="s2">&quot;For an observer behind the camera looking through&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">:</span> <span class="s2">&quot;For an observer looking from secondary to camera&quot;</span><span class="p">,</span>
+    <span class="p">}[</span><span class="n">camera_in_sky_coor</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">telescope_model_name</span><span class="p">)]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="n">fov</span><span class="p">,</span> <span class="n">r_edge_avg</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">calc_fov</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.02</span><span class="p">,</span>
+        <span class="mf">0.96</span><span class="p">,</span>
+        <span class="sa">rf</span><span class="s2">&quot;$f_</span><span class="se">{{</span><span class="s2">\mathrm</span><span class="se">{{</span><span class="s2">eff</span><span class="se">}}}}</span><span class="s2"> = </span><span class="si">{</span><span class="n">camera</span><span class="o">.</span><span class="n">focal_length</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">\,\mathrm</span><span class="se">{{</span><span class="s2">cm</span><span class="se">}}</span><span class="s2">$&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.02</span><span class="p">,</span>
+        <span class="mf">0.92</span><span class="p">,</span>
+        <span class="sa">rf</span><span class="s2">&quot;Avg. edge radius = </span><span class="si">{</span><span class="n">r_edge_avg</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">$\,\mathrm</span><span class="se">{{</span><span class="s2">cm</span><span class="se">}}</span><span class="s2">$&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.02</span><span class="p">,</span>
+        <span class="mf">0.88</span><span class="p">,</span>
+        <span class="sa">rf</span><span class="s2">&quot;FoV = </span><span class="si">{</span><span class="n">fov</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">$\,\mathrm</span><span class="se">{{</span><span class="s2">deg</span><span class="se">}}</span><span class="s2">$&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+        <span class="n">legend_objects</span><span class="p">,</span>
+        <span class="n">legend_labels</span><span class="p">,</span>
+        <span class="n">handler_map</span><span class="o">=</span><span class="n">legend_handler_map</span><span class="p">,</span>
+        <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">},</span>
+        <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="s2">&quot;datalim&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pixel_type_lists</span><span class="p">(</span><span class="n">camera</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return on, off, and edge pixel lists.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    camera : Camera</span>
+<span class="sd">        Camera object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    on_pixels : list</span>
+<span class="sd">        List of on pixels.</span>
+<span class="sd">    edge_pixels : list</span>
+<span class="sd">        List of edge pixels.</span>
+<span class="sd">    off_pixels : list</span>
+<span class="sd">        List of off pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i_pix</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">_pixel_shape</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]:</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">get_neighbor_pixels</span><span class="p">()[</span><span class="n">i_pix</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+                <span class="n">edge_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">edge_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">on_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">off_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pixel_shape</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the shape of the pixel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    camera : Camera</span>
+<span class="sd">        Camera object.</span>
+<span class="sd">    x : float</span>
+<span class="sd">        x-coordinate of the pixel.</span>
+<span class="sd">    y : float</span>
+<span class="sd">        y-coordinate of the pixel.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    shape : matplotlib.patches.Patch</span>
+<span class="sd">        Shape of the pixel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;orientation&quot;</span><span class="p">]),</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">x</span> <span class="o">-</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span>
+                <span class="n">y</span> <span class="o">-</span> <span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">camera</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_axes_def</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot three axes definitions on the pyplot.plt instance provided.</span>
+
+<span class="sd">    The three axes are Alt/Az, the camera coordinate system and the original coordinate</span>
+<span class="sd">    system the pixel list was provided.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    camera : Camera</span>
+<span class="sd">        Camera object.</span>
+<span class="sd">    plot: pyplot.plt instance</span>
+<span class="sd">        A pyplot.plt instance where to add the axes definitions.</span>
+<span class="sd">    rotate_angle: float</span>
+<span class="sd">        The rotation angle applied</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">invert_yaxis</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">x_left</span> <span class="o">=</span> <span class="mf">0.7</span>  <span class="c1"># Position of the left most axis</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">telescope_model_name</span><span class="p">):</span>
+        <span class="n">invert_yaxis</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">x_left</span> <span class="o">=</span> <span class="mf">0.8</span>
+
+    <span class="n">x_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$x_{\!pix}$&quot;</span>
+    <span class="n">y_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$y_{\!pix}$&quot;</span>
+    <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_left</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">)</span>
+    <span class="c1"># The rotation of LST (above 100 degrees) raises the axes.</span>
+    <span class="c1"># In this case, lower the starting point.</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">rotate_angle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">y_pos</span> <span class="o">-=</span> <span class="mf">0.09</span>
+        <span class="n">x_pos</span> <span class="o">-=</span> <span class="mf">0.05</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;x_title&quot;</span><span class="p">:</span> <span class="n">x_title</span><span class="p">,</span>
+        <span class="s2">&quot;y_title&quot;</span><span class="p">:</span> <span class="n">y_title</span><span class="p">,</span>
+        <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
+        <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
+        <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="n">rotate_angle</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+        <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;invert_yaxis&quot;</span><span class="p">:</span> <span class="n">invert_yaxis</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">x_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$x_{\!cam}$&quot;</span>
+    <span class="n">y_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$y_{\!cam}$&quot;</span>
+    <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_left</span> <span class="o">+</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;x_title&quot;</span><span class="p">:</span> <span class="n">x_title</span><span class="p">,</span>
+        <span class="s2">&quot;y_title&quot;</span><span class="p">:</span> <span class="n">y_title</span><span class="p">,</span>
+        <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
+        <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
+        <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+        <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;invert_yaxis&quot;</span><span class="p">:</span> <span class="n">invert_yaxis</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">x_title</span> <span class="o">=</span> <span class="s2">&quot;Alt&quot;</span>
+    <span class="n">y_title</span> <span class="o">=</span> <span class="s2">&quot;Az&quot;</span>
+    <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_left</span> <span class="o">+</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;x_title&quot;</span><span class="p">:</span> <span class="n">x_title</span><span class="p">,</span>
+        <span class="s2">&quot;y_title&quot;</span><span class="p">:</span> <span class="n">y_title</span><span class="p">,</span>
+        <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
+        <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
+        <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+        <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;invert_yaxis&quot;</span><span class="p">:</span> <span class="n">invert_yaxis</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot an axis on the pyplot.plt instance provided.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plot: pyplot.plt instance</span>
+<span class="sd">        A pyplot.plt instance where to add the axes definitions.</span>
+<span class="sd">    **kwargs: dict</span>
+<span class="sd">            x_title: str</span>
+<span class="sd">            x-axis title</span>
+<span class="sd">            y_title: str</span>
+<span class="sd">            y-axis title,</span>
+<span class="sd">            x_pos: float</span>
+<span class="sd">            x position of the axis to draw</span>
+<span class="sd">            y_pos: float</span>
+<span class="sd">            y position of the axis to draw</span>
+<span class="sd">            rotate_angle: float</span>
+<span class="sd">            rotation angle of the axis in radians</span>
+<span class="sd">            fc: str</span>
+<span class="sd">            face colour of the axis</span>
+<span class="sd">            ec: str</span>
+<span class="sd">            edge colour of the axis</span>
+<span class="sd">            invert_yaxis: bool</span>
+<span class="sd">            Flag to invert the y-axis (for dual mirror telescopes).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;x_title&quot;</span><span class="p">]</span>
+    <span class="n">y_title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_title&quot;</span><span class="p">]</span>
+    <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;x_pos&quot;</span><span class="p">],</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_pos&quot;</span><span class="p">])</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># size of arrow</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;invert_yaxis&quot;</span><span class="p">]:</span>
+        <span class="n">sign</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">x_text1</span> <span class="o">=</span> <span class="n">x_pos</span> <span class="o">+</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
+    <span class="n">y_text1</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">0</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
+    <span class="n">x_text2</span> <span class="o">=</span> <span class="n">x_pos</span> <span class="o">+</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
+    <span class="n">y_text2</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
+
+    <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+        <span class="n">x_title</span><span class="p">,</span>
+        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">),</span>
+        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">x_text1</span><span class="p">,</span> <span class="n">y_text1</span><span class="p">),</span>
+        <span class="n">xycoords</span><span class="o">=</span><span class="s2">&quot;axes fraction&quot;</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="s2">&quot;xx-large&quot;</span><span class="p">,</span>
+        <span class="n">arrowprops</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;arrowstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;|-&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;shrinkA&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;shrinkB&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;fc&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ec&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+        <span class="n">y_title</span><span class="p">,</span>
+        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">),</span>
+        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">x_text2</span><span class="p">,</span> <span class="n">y_text2</span><span class="p">),</span>
+        <span class="n">xycoords</span><span class="o">=</span><span class="s2">&quot;axes fraction&quot;</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="s2">&quot;xx-large&quot;</span><span class="p">,</span>
+        <span class="n">arrowprops</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;arrowstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;|-&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;shrinkA&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;shrinkB&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;fc&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ec&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (CTAO), Tobias Kleiner (DESY), Eshita Joshi (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
