@@ -115,6 +115,31 @@ def test_write_multipipe_script(corsika_simtel_runner):
         assert "bin/multipipe_corsika" in script_content
         assert f"-c {multipipe_file}" in script_content
         assert "'Fan-out failed'" in script_content
+        assert "--sequential" not in script_content
+
+
+def test_write_multipipe_script_sequential(corsika_simtel_runner):
+    # Set the sequential attribute
+    corsika_simtel_runner.sequential = "--sequential"
+
+    # Export and write the multipipe script
+    corsika_simtel_runner._export_multipipe_script(run_number=1)
+    multipipe_file = Path(
+        corsika_simtel_runner.base_corsika_config.config_file_path.parent
+    ).joinpath(corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe"))
+    corsika_simtel_runner._write_multipipe_script(multipipe_file)
+    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
+        "run_cta_multipipe"
+    )
+
+    # Assertions
+    assert script.exists()
+    with open(script) as f:
+        script_content = f.read()
+        assert "bin/multipipe_corsika" in script_content
+        assert f"-c {multipipe_file}" in script_content
+        assert "'Fan-out failed'" in script_content
+        assert "--sequential" in script_content
 
 
 def test_get_file_name(corsika_simtel_runner, simulation_file):
