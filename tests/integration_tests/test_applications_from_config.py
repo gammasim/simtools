@@ -69,7 +69,8 @@ def test_applications_from_config(tmp_test_directory, config, request):
 
     logger.info(f"Running application: {cmd}")
     result = subprocess.run(cmd, shell=True, input="y\n", capture_output=True, text=True)
-    assert result.returncode == 0, f"Application failed: {cmd}"
+    msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    assert result.returncode == 0, msg
 
     validate_output.validate_application_output(
         tmp_config,
