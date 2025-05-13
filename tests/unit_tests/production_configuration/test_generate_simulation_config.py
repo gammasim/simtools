@@ -66,11 +66,11 @@ def test_configure_simulation(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 30.0, "elevation": 40.0}
     metrics = {
         "uncertainty_effective_area": {
-            "target_error": {"value": 0.1, "unit": "dimensionless"},
+            "target_uncertainty": {"value": 0.1, "unit": "dimensionless"},
             "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
         "energy_estimate": {
-            "target_error": {"value": 0.2, "unit": "dimensionless"},
+            "target_uncertainty": {"value": 0.2, "unit": "dimensionless"},
             "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
     }
