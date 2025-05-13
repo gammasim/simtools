@@ -218,7 +218,6 @@ def _create_pixel_plot(
     # Configure plot with titles
     _configure_plot(
         ax,
-        telescope_model_name,
         pixel_data["x"],
         pixel_data["y"],
         rotation=pixel_data["rotation"],
@@ -480,7 +479,6 @@ def _count_neighbors(x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, 
 
 def _configure_plot(
     ax,
-    telescope_model_name,
     x_pos,
     y_pos,
     rotation=0,
@@ -510,7 +508,7 @@ def _configure_plot(
     plt.xlabel(xtitle or "Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel(ytitle or "Vertical scale [cm]", fontsize=18, labelpad=0)
     ax.set_title(
-        title or f"Pixels layout in {telescope_model_name} camera",
+        title or "Pixel layout",
         fontsize=15,
         y=1.02,
     )

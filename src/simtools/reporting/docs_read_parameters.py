@@ -14,6 +14,7 @@ import numpy as np
 from simtools.db import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
+from simtools.visualization import plot_pixels
 
 logger = logging.getLogger()
 IMAGE_PATH = "../../_images"
@@ -62,13 +63,35 @@ class ReadParameters:
             )
         self._model_version = model_version
 
-    def _convert_to_md(self, parameter, input_file):
+    def _convert_to_md(self, parameter, parameter_version, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
+        image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
+        image_path = Path(f"../{IMAGE_PATH}/{image_name}")
+
+        if parameter == "camera_config_file" and parameter_version:
+            image_path = Path(self.output_path).parent.parent / "_images" / input_file.stem
+            image_path.mkdir(parents=True, exist_ok=True)
+
+            if not Path(f"{image_path}.png").exists():
+                plot_config = {
+                    "file_name": input_file.name,
+                    "telescope": self.array_element,
+                    "parameter_version": parameter_version,
+                    "site": self.site,
+                    "model_version": self.model_version,
+                    "parameter": parameter,
+                }
+
+                plot_pixels.plot(
+                    config=plot_config,
+                    output_file=str(image_path) + ".png",
+                    db_config=self.db_config,
+                )
 
         try:
             # First try with utf-8
@@ -83,15 +106,12 @@ class ReadParameters:
             if self.model_version is not None:
                 with output_file.open("w", encoding="utf-8") as outfile:
                     outfile.write(f"# {input_file.stem}\n")
+                    outfile.write(f"![Parameter plot.]({image_path}.png)\n\n")
                     outfile.write(
-                        "The full file can be found in the Simulation Model repository [here]"
+                        "\n\nThe full file can be found in the Simulation Model repository [here]"
                         "(https://gitlab.cta-observatory.org/cta-science/simulations/"
                         "simulation-model/simulation-models/-/blob/main/simulation-models/"
                         f"model_parameters/Files/{input_file.name}).\n\n"
-                    )
-                    outfile.write(
-                        f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
-                        f"{parameter}_{self.model_version.replace('.', '-')}.png)\n"
                     )
                     outfile.write("\n\n")
                     outfile.write("The first 30 lines of the file are:\n")
@@ -106,11 +126,19 @@ class ReadParameters:
 
         return f"_data_files/{output_file_name}"
 
-    def _format_parameter_value(self, parameter, value_data, unit, file_flag):
+    def _format_parameter_value(
+        self, parameter, value_data, unit, file_flag, parameter_version=None
+    ):
         """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
-            output_file_name = self._convert_to_md(parameter, input_file_name)
+            if not parameter_version:
+                return (
+                    f"[{Path(value_data).name}](https://gitlab.cta-observatory.org/"
+                    "cta-science/simulations/simulation-model/simulation-models/-/blob/main/"
+                    f"simulation-models/model_parameters/Files/{input_file_name})"
+                ).strip()
+            output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
         if isinstance(value_data, (str | int | float)):
             return f"{value_data} {unit}".strip()
@@ -292,7 +320,9 @@ class ReadParameters:
                 continue
 
             file_flag = parameter_data.get("file", False)
-            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+            value = self._format_parameter_value(
+                parameter, value_data, unit, file_flag, parameter_version
+            )
 
             description = parameter_descriptions[0].get(parameter)
             short_description = parameter_descriptions[1].get(parameter)
@@ -531,7 +561,7 @@ class ReadParameters:
                     file.write(
                         f"| {item['parameter_version']} |"
                         f" {item['model_version']} |"
-                        f"{item['value'].replace('](', '](../')} |\n"
+                        f"{item['value']} |\n"
                     )
 
                 file.write("\n")
