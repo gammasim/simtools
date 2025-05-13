@@ -36,12 +36,7 @@ class StatisticalUncertaintyEvaluator:
 
         self.data = self.load_data_from_file(file_path)
 
-        self.uncertainty_effective_area = None
-        self.energy_estimate = None
-        self.sigma_energy = None
-        self.delta_energy = None
-
-        self.metric_results = None
+        self.metric_results = {}
         self.energy_threshold = None
 
     def _load_event_data(self, hdul, data_type):
@@ -219,10 +214,10 @@ class StatisticalUncertaintyEvaluator:
 
         # Compute relative uncertainties
         relative_uncertainties = np.divide(
-            uncertainties,
+            uncertainties.value,
             np.sqrt(simulated_event_counts.value),
-            out=np.zeros_like(uncertainties, dtype=float),
-            where=uncertainties > 0,
+            out=np.zeros_like(uncertainties.value, dtype=float),
+            where=uncertainties.value > 0,
         )
 
         return efficiencies, relative_uncertainties
@@ -262,7 +257,7 @@ class StatisticalUncertaintyEvaluator:
 
         Returns
         -------
-        uncertainties : dict
+        dict
             Dictionary with uncertainties for the file.
         """
         bin_edges = self.create_bin_edges()
@@ -274,6 +269,34 @@ class StatisticalUncertaintyEvaluator:
             reconstructed_event_histogram, simulated_event_histogram
         )
         return {"relative_uncertainties": relative_uncertainties}
+
+    def calculate_max_error_for_effective_area(self):
+        """
+        Calculate the maximum relative uncertainty for effective area within the validity range.
+
+        Returns
+        -------
+        max_error : float
+            Maximum relative error.
+        """
+        if "uncertainty_effective_area" not in self.metrics:
+            return 0.0
+
+        energy_range = self.metrics.get("uncertainty_effective_area", {}).get("energy_range")
+
+        min_energy, max_energy = (
+            energy_range["value"][0] * u.Unit(energy_range["unit"]),
+            energy_range["value"][1] * u.Unit(energy_range["unit"]),
+        )
+        valid_uncertainties = [
+            error
+            for energy, error in zip(
+                self.data["bin_edges_low"],
+                self.metric_results["uncertainty_effective_area"]["relative_uncertainties"],
+            )
+            if min_energy <= energy <= max_energy
+        ]
+        return max(valid_uncertainties)
 
     def calculate_energy_estimate(self):
         """
@@ -313,74 +336,44 @@ class StatisticalUncertaintyEvaluator:
         # Combine sigma into a single measure
         overall_uncertainty = np.nanmean(sigma_energy)
 
-        return overall_uncertainty, sigma_energy, delta_energy
+        self.metric_results["energy_estimate"] = {
+            "overall_uncertainty": overall_uncertainty,
+            "sigma_energy": sigma_energy,
+            "delta_energy": delta_energy,
+        }
 
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
         if "uncertainty_effective_area" in self.metrics:
-            self.uncertainty_effective_area = self.calculate_uncertainty_effective_area()
-            if self.uncertainty_effective_area:
-                energy_range = self.metrics.get("uncertainty_effective_area", {}).get(
-                    "energy_range"
-                )
-                min_energy, max_energy = (
-                    energy_range["value"][0] * u.Unit(energy_range["unit"]),
-                    energy_range["value"][1] * u.Unit(energy_range["unit"]),
-                )
-
-                valid_uncertainties = [
-                    error
-                    for energy, error in zip(
-                        self.data["bin_edges_low"],
-                        self.uncertainty_effective_area["relative_uncertainties"],
-                    )
-                    if min_energy <= energy <= max_energy
+            self.metric_results["uncertainty_effective_area"] = {
+                "relative_uncertainties": self.calculate_uncertainty_effective_area()[
+                    "relative_uncertainties"
                 ]
-                self.uncertainty_effective_area["max_error"] = (
-                    max(valid_uncertainties) if valid_uncertainties else 0.0
-                )
-                ref_value = self.metrics.get("uncertainty_effective_area", {}).get("target_error")[
-                    "value"
-                ]
-                self._logger.info(
-                    f"Effective Area Uncertainty (max in validity range): "
-                    f"{self.uncertainty_effective_area['max_error'].value:.6f}, "
-                    f"Reference: {ref_value:.3f}"
-                )
+            }
 
-        if "energy_estimate" in self.metrics:
-            self.energy_estimate, self.sigma_energy, self.delta_energy = (
-                self.calculate_energy_estimate()
+            self.metric_results["uncertainty_effective_area"]["max_error"] = (
+                self.calculate_max_error_for_effective_area()
             )
-            ref_value = self.metrics.get("energy_estimate", {}).get("target_error")["value"]
+            ref_value = self.metrics.get("uncertainty_effective_area", {}).get(
+                "target_uncertainty"
+            )["value"]
             self._logger.info(
-                f"Energy Estimate Uncertainty: {self.energy_estimate:.3f}, "
+                f"Effective Area Uncertainty (max in validity range): "
+                f"{self.metric_results['uncertainty_effective_area']['max_error']:.6f}, "
                 f"Reference: {ref_value:.3f}"
             )
-        else:
-            raise ValueError("Invalid metric specified.")
-        self.metric_results = {
-            "uncertainty_effective_area": self.uncertainty_effective_area,
-            "energy_estimate": self.energy_estimate,
-        }
-        return self.metric_results
 
-    def calculate_max_error_for_effective_area(self):
-        """
-        Calculate the maximum relative error for effective area.
-
-        Returns
-        -------
-        max_error : float
-            Maximum relative error.
-        """
-        if "relative_uncertainties" in self.metric_results["uncertainty_effective_area"]:
-            return np.max(
-                self.metric_results["uncertainty_effective_area"]["relative_uncertainties"]
+        if "energy_estimate" in self.metrics:
+            self.calculate_energy_estimate()
+            ref_value = self.metrics.get("energy_estimate", {}).get("target_uncertainty")["value"]
+            self._logger.info(
+                f"Energy Estimate Uncertainty: "
+                f"{self.metric_results['energy_estimate']['overall_uncertainty']:.6f}, "
+                f"Reference: {ref_value:.3f}"
             )
-        if self.uncertainty_effective_area:
-            return np.max(self.uncertainty_effective_area["relative_uncertainties"])
-        return None
+
+        if not ("uncertainty_effective_area" in self.metrics or "energy_estimate" in self.metrics):
+            raise ValueError("Invalid metric specified.")
 
     def calculate_overall_metric(self, metric="average"):
         """
@@ -411,7 +404,7 @@ class StatisticalUncertaintyEvaluator:
             elif metric_name in [
                 "error_gamma_ray_psf",
             ]:
-                overall_max_uncertainties[metric_name] = result
+                overall_max_uncertainties[metric_name] = np.max(result)
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
         self._logger.info(f"overall_max_uncertainties {overall_max_uncertainties}")
