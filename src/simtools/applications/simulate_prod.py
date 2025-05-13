@@ -142,6 +142,17 @@ def _parse(description=None):
         type=int,
         required=False,
     )
+    sim_telarray_seed_group.add_argument(
+        "--sequential",
+        help=(
+            "If set to true, run CORSIKA and sim_telarray instances in sequential order "
+            "as far as possible. This mode is useful particularly on the grid, "
+            "where typically we request a single core per job. "
+            "If not set, the CORSIKA and sim_telarray instances are run in parallel."
+        ),
+        type=bool,
+        default=False,
+    )
     return config.initialize(
         db_config=True,
         job_submission=True,
