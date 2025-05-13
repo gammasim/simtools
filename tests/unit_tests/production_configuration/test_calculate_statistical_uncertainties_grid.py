@@ -54,9 +54,14 @@ def test_calculate_energy_estimate(test_fits_file, metric):
     """Test the calculation of energy estimate uncertainty."""
     evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.calculate_metrics()
-    uncertainty, sigma, delta = evaluator.calculate_energy_estimate()
-    assert isinstance(sigma, list)
-    assert isinstance(delta, list)
+    evaluator.calculate_energy_estimate()
+    assert isinstance(evaluator.metric_results["energy_estimate"], dict)
+    assert isinstance(evaluator.metric_results["energy_estimate"]["overall_uncertainty"], float)
+    assert evaluator.metric_results["energy_estimate"]["overall_uncertainty"] == pytest.approx(
+        0.183, rel=1e-2
+    )
+    assert isinstance(evaluator.metric_results["energy_estimate"]["delta_energy"], list)
+    assert isinstance(evaluator.metric_results["energy_estimate"]["sigma_energy"], list)
 
 
 def test_missing_file():
@@ -91,27 +96,20 @@ def test_calculate_metrics(test_fits_file, metric):
     """Test the calculation of metrics."""
     evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
 
-    evaluator.calculate_energy_estimate = lambda: (
-        0.33,
-        [0.1, 0.2],
-        [0.01, 0.02],
-    )
-
     evaluator.calculate_metrics()
 
     expected_values = np.array([0.40824829, 0.31622776, 0.1796053])
-    computed_values = evaluator.uncertainty_effective_area["relative_uncertainties"].value[
-        : len(expected_values)
+    computed_values_uncertainty_effective_area = evaluator.metric_results[
+        "uncertainty_effective_area"
+    ]["relative_uncertainties"]
+    computed_values_uncertainty_energy_estimate = evaluator.metric_results["energy_estimate"][
+        "overall_uncertainty"
     ]
-    assert computed_values == pytest.approx(expected_values, rel=1e-2)
+    assert computed_values_uncertainty_effective_area[:3] == pytest.approx(
+        expected_values, rel=1e-3
+    )
 
-    assert evaluator.energy_estimate == pytest.approx(0.33, rel=1e-2)
-
-    expected_results = {
-        "uncertainty_effective_area": evaluator.uncertainty_effective_area,
-        "energy_estimate": evaluator.energy_estimate,
-    }
-    assert evaluator.metric_results == expected_results
+    assert computed_values_uncertainty_energy_estimate == pytest.approx(0.183, rel=1e-2)
 
 
 @pytest.fixture
@@ -137,18 +135,16 @@ def test_calculate_overall_metric_average(test_fits_file):
         file_path=test_fits_file,
         metrics={
             "uncertainty_effective_area": {
-                "target_uncertainty": {"value": 0.1, "unit": "dimensionless"}
+                "target_uncertainty": {"value": 0.1, "unit": "dimensionless"},
+                "energy_range": {"value": [0.04, 200], "unit": "TeV"},
             }
         },
     )
-    evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
-    evaluator.metric_results = {
-        "uncertainty_effective_area": {"relative_uncertainties": np.array([0.1, 0.2, 0.3, 0.4])}
-    }
+    evaluator.calculate_metrics()
     overall_metric = evaluator.calculate_overall_metric(metric="average")
-    expected_metric = 0.4
+    expected_metric = 0.999
 
-    assert np.isclose(overall_metric, expected_metric), (
+    assert np.isclose(overall_metric, expected_metric, rtol=1e-2), (
         f"Expected {expected_metric}, got {overall_metric}"
     )
 
@@ -158,20 +154,17 @@ def test_calculate_overall_metric_maximum(test_fits_file):
         file_path=test_fits_file,
         metrics={
             "uncertainty_effective_area": {
-                "target_uncertainty": {"value": 0.1, "unit": "dimensionless"}
+                "target_uncertainty": {"value": 0.1, "unit": "dimensionless"},
+                "energy_range": {"value": [0.04, 200], "unit": "TeV"},
             }
         },
     )
-    evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
-    evaluator.metric_results = {
-        "uncertainty_effective_area": {"relative_uncertainties": np.array([0.1, 0.2, 0.3, 0.4])}
-    }
-    overall_metric = evaluator.calculate_overall_metric(metric="maximum")
-    expected_metric = (
-        0.4  # max and average are the same in this case since there is only one metric
-    )
 
-    assert np.isclose(overall_metric, expected_metric), (
+    evaluator.calculate_metrics()
+    overall_metric = evaluator.calculate_overall_metric(metric="maximum")
+    expected_metric = 0.999
+
+    assert np.isclose(overall_metric, expected_metric, rtol=1e-2), (
         f"Expected {expected_metric}, got {overall_metric}"
     )
 
@@ -179,7 +172,7 @@ def test_calculate_overall_metric_maximum(test_fits_file):
 def test_create_bin_edges(test_fits_file, metric):
     """Test the creation of unique energy bin edges."""
     evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
-
+    # overwrite lower and upper edges for simplicity
     evaluator.data = {
         "bin_edges_low": np.array([1.0, 2.0, 3.0]),
         "bin_edges_high": np.array([2.0, 3.0, 4.0]),
@@ -249,3 +242,12 @@ def test_set_grid_point_single_azimuth_zenith(caplog):
         events_data = {"PNT_AZ": np.array([90.0]), "PNT_ALT": np.array([30.0])}
         evaluator._set_grid_point(events_data)
         assert evaluator.grid_point == (1 * u.TeV, 90 * u.deg, 60 * u.deg, 0, 0 * u.deg)
+
+
+def test_calculate_energy_threshold(test_fits_file, metric):
+    """Test the calculate_energy_threshold method of StatisticalUncertaintyEvaluator."""
+    evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
+    evaluator.calculate_energy_threshold()
+    assert hasattr(evaluator, "energy_threshold")
+    assert hasattr(evaluator.energy_threshold, "unit")
+    assert evaluator.energy_threshold.value == pytest.approx(0.5, rel=1e-1)
