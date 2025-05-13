@@ -84,6 +84,7 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "test-shower-array-simulator"
+    args_dict["sequential"] = True
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
@@ -552,3 +553,74 @@ def test_get_seed_for_random_instrument_instances(shower_simulator):
         shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
     )
     assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
+
+
+def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, mocker):
+    # Mock CorsikaConfig to avoid actual initialization
+    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+    mock_corsika_runner = mocker.patch("simtools.simulator.CorsikaRunner", autospec=True)
+
+    # Call the method
+    simulation_runner = shower_simulator._initialize_simulation_runner(db_config)
+
+    # Assertions
+    assert isinstance(simulation_runner, CorsikaRunner)
+    mock_corsika_config.assert_called_once_with(
+        array_model=shower_simulator.array_models[0],
+        label=shower_simulator.label,
+        args_dict=shower_simulator.args_dict,
+        db_config=db_config,
+    )
+    mock_corsika_runner.assert_called_once_with(
+        label=shower_simulator.label,
+        corsika_config=mock_corsika_config.return_value,
+        simtel_path=shower_simulator.args_dict.get("simtel_path"),
+        use_multipipe=False,
+        keep_seeds=shower_simulator.args_dict.get("corsika_test_seeds", False),
+    )
+
+
+def test_initialize_simulation_runner_with_sim_telarray(array_simulator, db_config, mocker):
+    # Mock SimulatorArray to avoid actual initialization
+    mock_simulator_array = mocker.patch("simtools.simulator.SimulatorArray", autospec=True)
+    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+
+    # Call the method
+    simulation_runner = array_simulator._initialize_simulation_runner(db_config)
+
+    # Assertions
+    assert isinstance(simulation_runner, SimulatorArray)
+    mock_simulator_array.assert_called_once_with(
+        label=array_simulator.label,
+        corsika_config=mock_corsika_config.return_value,
+        simtel_path=array_simulator.args_dict.get("simtel_path"),
+        use_multipipe=False,
+        sim_telarray_seeds=array_simulator.sim_telarray_seeds,
+    )
+
+
+def test_initialize_simulation_runner_with_corsika_sim_telarray(
+    shower_array_simulator, db_config, mocker
+):
+    # Mock CorsikaConfig and CorsikaSimtelRunner to avoid actual initialization
+    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+    mock_corsika_simtel_runner = mocker.patch(
+        "simtools.simulator.CorsikaSimtelRunner", autospec=True
+    )
+
+    # Call the method
+    simulation_runner = shower_array_simulator._initialize_simulation_runner(db_config)
+
+    # Assertions
+    assert isinstance(simulation_runner, CorsikaSimtelRunner)
+    mock_corsika_config.assert_called()
+    mock_corsika_simtel_runner.assert_called_once_with(
+        label=shower_array_simulator.label,
+        corsika_config=[mock_corsika_config.return_value]
+        * len(shower_array_simulator.array_models),
+        simtel_path=shower_array_simulator.args_dict.get("simtel_path"),
+        use_multipipe=True,
+        sim_telarray_seeds=shower_array_simulator.sim_telarray_seeds,
+        sequential=shower_array_simulator.args_dict.get("sequential", False),
+        keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
+    )
