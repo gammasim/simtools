@@ -4,7 +4,7 @@
 uncertainty_effective_area:
   description: |-
     Relative uncertainty on the effective area.
-  target_error:
+  target_uncertainty:
     value: 0.02
   energy_range:
     value:
@@ -14,7 +14,7 @@ uncertainty_effective_area:
 energy_estimate:
   description: |-
     Error in energy estimation.
-  target_error:
+  target_uncertainty:
     value: 0.05
   energy_range:
     value:
