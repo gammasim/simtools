@@ -1,0 +1,39 @@
+# Example .dat file for pixel layout plotting
+# Between pixels is a gap of 0.020 cm. Pixel spacing is 0.640 cm.
+# The camera has a nominal diameter of 0.340 m (radius 0.170 m), resulting in a
+# nominal field-of-view diameter of 9.04 deg at a focal length of 2.150 m.
+# Rotate 0.0   # Not needed if zero.
+
+PixType 1   0  2 0.6   2 0.6 0.000   "funnel_perfect.dat"
+
+Pixel	    0 1	   0.452     0.451	    0   0 0	0x00 1
+Pixel	    1 1	   0.451     1.091	    0   1 0	0x00 0
+Pixel	    2 1	   0.451     1.731	    0   2 0	0x00 1
+Pixel	    3 1	   0.450     2.370	    0   3 0	0x00 1
+Pixel	    4 1	   0.450     3.010	    0   4 0	0x00 1
+Pixel	    5 1	   0.449     3.650	    0   5 0	0x00 1
+Pixel	    6 1	   0.449     4.290	    0   6 0	0x00 1
+Pixel	    7 1	   0.448     4.929	    0   7 0	0x00 1
+Pixel	    8 1	   1.091     0.451	    0   8 0	0x00 1
+Pixel	    9 1	   1.091     1.091	    0   9 0	0x00 1
+Pixel	   10 1	   1.091     1.731	    0  10 0	0x00 1
+Pixel	   11 1	   1.090     2.370	    0  11 0	0x00 1
+Pixel	   12 1	   1.090     3.010	    0  12 0	0x00 1
+Pixel	   13 1	   1.089     3.650	    0  13 0	0x00 1
+Pixel	   14 1	   1.089     4.290	    0  14 0	0x00 1
+Pixel	   15 1	   1.088     4.929	    0  15 0	0x00 1
+Pixel	   16 1	   1.731     0.451	    0  16 0	0x00 1
+Pixel	   17 1	   1.731     1.091	    0  17 0	0x00 1
+Pixel	   18 1	   1.730     1.731	    0  18 0	0x00 1
+Pixel	   19 1	   1.730     2.370	    0  19 0	0x00 1
+Pixel	   20 1	   1.729     3.010	    0  20 0	0x00 1
+Pixel	   21 1	   1.729     3.650	    0  21 0	0x00 1
+Pixel	   22 1	   1.728     4.290	    0  22 0	0x00 1
+Pixel	   23 1	   1.728     4.929	    0  23 0	0x00 1
+Pixel	   24 1	   2.371     0.451	    0  24 0	0x00 1
+Pixel	   25 1	   2.370     1.091	    0  25 0	0x00 1
+Pixel	   26 1	   2.370     1.731	    0  26 0	0x00 1
+Pixel	   27 1	   2.370     2.370	    0  27 0	0x00 1
+Pixel	   28 1	   2.369     3.010	    0  28 0	0x00 1
+Pixel	   29 1	   2.369     3.650	    0  29 0	0x00 1
+Pixel	   30 1	   2.368     4.290	    0  30 0	0x00 1

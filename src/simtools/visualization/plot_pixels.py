@@ -295,10 +295,7 @@ def _read_pixel_config(dat_file_path):
                 config["y"].append(float(parts[4].strip()))
                 config["module_number"].append(float(parts[5].strip()))
                 config["pixel_ids"].append(int(parts[1].strip()))
-                if len(parts) >= 9:
-                    config["pixels_on"].append(int(parts[9].strip()) != 0)
-                else:
-                    config["pixels_on"].append(True)
+                config["pixels_on"].append(int(parts[9].strip()) != 0)
 
     # If pixel spacing is not explicitly provided, calculate it as diameter + gap
     if config["pixel_spacing"] is None and config["pixel_diameter"] is not None:
@@ -384,11 +381,6 @@ def _is_edge_pixel(
     return neighbor_count < max_neighbors
 
 
-def _add_pixel_id(x, y, pixel_id, font_size):
-    """Add pixel ID text to the plot."""
-    plt.text(x, y, pixel_id, ha="center", va="center", fontsize=font_size)
-
-
 def _create_pixel_patches(
     x_pos,
     y_pos,
@@ -422,7 +414,7 @@ def _create_pixel_patches(
             off_pixels.append(patch)
 
         if pixel_ids[i] < pixels_id_to_print:
-            _add_pixel_id(x, y, pixel_ids[i], font_size)
+            plt.text(x, y, pixel_ids[i], ha="center", va="center", fontsize=font_size)
 
     return on_pixels, edge_pixels, off_pixels
 
