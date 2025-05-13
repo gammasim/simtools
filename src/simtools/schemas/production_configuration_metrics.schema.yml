@@ -29,12 +29,12 @@ definitions:
       description:
         type: string
         description: Description of the error metric.
-      target_error:
+      target_uncertainty:
         $ref: '#/definitions/TargetError'
       energy_range:
         $ref: '#/definitions/EnergyRange'
     required:
-      - target_error
+      - target_uncertainty
       - energy_range
 
   TargetError:
