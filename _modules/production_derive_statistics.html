@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=db1f8396"></script>
+    <script src="../_static/documentation_options.js?v=12eed8f7"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_derive_statistics';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g16b4f9b" />
+  <meta name="docsearch:version" content="0.1.dev1+gfbbb9e6" />
   </head>
   
   
@@ -397,7 +397,7 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Application to run the StatisticalErrorEvaluator and interpolate results.</span>
+<span class="sd">Application to run the StatisticalUncertaintyEvaluator and interpolate results.</span>
 
 <span class="sd">This application evaluates statistical uncertainties from DL2 MC event files</span>
 <span class="sd">based on input parameters like zenith angles and camera offsets, and performs interpolation</span>
@@ -442,12 +442,14 @@
 <span class="sd"> the results to the specified output file.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_production_statistics_handler</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ProductionStatisticsHandler</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
@@ -484,6 +486,7 @@
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--query_point&quot;</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;ENERGY&quot;</span><span class="p">,</span> <span class="s2">&quot;AZIMUTH&quot;</span><span class="p">,</span> <span class="s2">&quot;ZENITH&quot;</span><span class="p">,</span> <span class="s2">&quot;NSB&quot;</span><span class="p">,</span> <span class="s2">&quot;OFFSET&quot;</span><span class="p">),</span>
         <span class="n">nargs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Grid point for interpolation (energy, azimuth, zenith, NSB, offset).&quot;</span><span class="p">,</span>
@@ -502,6 +505,14 @@
         <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;prod6_LaPalma-</span><span class="si">{zenith}</span><span class="s2">deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&quot;</span><span class="p">),</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Template for the DL2 MC event file name.&quot;</span><span class="p">),</span>
     <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--plot_production_statistics&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Plot production statistics.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
@@ -514,6 +525,8 @@
         <span class="n">label</span><span class="p">,</span>
         <span class="s2">&quot;Evaluate statistical uncertainties from DL2 MC event files and interpolate results.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
     <span class="n">manager</span> <span class="o">=</span> <span class="n">ProductionStatisticsHandler</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
     <span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>

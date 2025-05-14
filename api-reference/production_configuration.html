@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=db1f8396"></script>
+    <script src="../_static/documentation_options.js?v=12eed8f7"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/production_configuration';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g16b4f9b" />
+  <meta name="docsearch:version" content="0.1.dev1+gfbbb9e6" />
   </head>
   
   
@@ -433,12 +433,12 @@
 <p>Modules provide functionality to configure a simulation production.
 This includes the derivation of energy, viewcone radius, and core scatter ranges and
 the calculation of the number of events to be simulated given a pre-determined metric.</p>
-<section id="module-production_configuration.calculate_statistical_errors_grid_point">
-<span id="id1"></span><span id="calculate-statistical-errors-grid-point"></span><h2>calculate_statistical_errors_grid_point<a class="headerlink" href="#module-production_configuration.calculate_statistical_errors_grid_point" title="Link to this heading">#</a></h2>
+<section id="module-production_configuration.calculate_statistical_uncertainties_grid_point">
+<span id="calculate-statistical-uncertainties-grid-point"></span><span id="calculate-statistical-errors-grid-point"></span><h2>calculate_statistical_uncertainties_grid_point<a class="headerlink" href="#module-production_configuration.calculate_statistical_uncertainties_grid_point" title="Link to this heading">#</a></h2>
 <p>Evaluate statistical uncertainties from DL2 MC event files.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.calculate_statistical_errors_grid_point.</span></span><span class="sig-name descname"><span class="pre">StatisticalErrorEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.calculate_statistical_uncertainties_grid_point.</span></span><span class="sig-name descname"><span class="pre">StatisticalUncertaintyEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator" title="Link to this definition">#</a></dt>
 <dd><p>Evaluates statistical uncertainties from a DL2 MC event file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -453,8 +453,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_estimate">
-<span class="sig-name descname"><span class="pre">calculate_energy_estimate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.calculate_energy_estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_estimate" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_energy_estimate">
+<span class="sig-name descname"><span class="pre">calculate_energy_estimate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.calculate_energy_estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_energy_estimate" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the uncertainties in energy estimation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -467,8 +467,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_threshold">
-<span class="sig-name descname"><span class="pre">calculate_energy_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requested_eff_area_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.calculate_energy_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_threshold" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_energy_threshold">
+<span class="sig-name descname"><span class="pre">calculate_energy_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requested_eff_area_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.calculate_energy_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_energy_threshold" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the energy threshold where the effective area exceeds 10% of its maximum value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -481,9 +481,9 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_max_error_for_effective_area">
-<span class="sig-name descname"><span class="pre">calculate_max_error_for_effective_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.calculate_max_error_for_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_max_error_for_effective_area" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the maximum relative error for effective area.</p>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_max_error_for_effective_area">
+<span class="sig-name descname"><span class="pre">calculate_max_error_for_effective_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.calculate_max_error_for_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_max_error_for_effective_area" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the maximum relative uncertainty for effective area within the validity range.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -495,14 +495,14 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_metrics">
-<span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_metrics" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_metrics">
+<span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_metrics" title="Link to this definition">#</a></dt>
 <dd><p>Calculate all defined metrics as specified in self.metrics and store results.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_overall_metric">
-<span class="sig-name descname"><span class="pre">calculate_overall_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'average'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.calculate_overall_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_overall_metric" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_overall_metric">
+<span class="sig-name descname"><span class="pre">calculate_overall_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'average'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.calculate_overall_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_overall_metric" title="Link to this definition">#</a></dt>
 <dd><p>Calculate an overall metric for the statistical uncertainties.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -513,7 +513,7 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Dictionary with overall maximum errors for each metric.</p>
+<dt>float</dt><dd><p>The overall metric value.</p>
 </dd>
 </dl>
 </dd>
@@ -521,13 +521,13 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_uncertainty_effective_area">
-<span class="sig-name descname"><span class="pre">calculate_uncertainty_effective_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.calculate_uncertainty_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_uncertainty_effective_area" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area">
+<span class="sig-name descname"><span class="pre">calculate_uncertainty_effective_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the uncertainties on the effective collection area.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>errors</strong><span class="classifier">dict</span></dt><dd><p>Dictionary with uncertainties for the file.</p>
+<dt>dict</dt><dd><p>Dictionary with uncertainties for the file.</p>
 </dd>
 </dl>
 </dd>
@@ -535,8 +535,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors">
-<span class="sig-name descname"><span class="pre">compute_efficiency_and_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstructed_event_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_event_counts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.compute_efficiency_and_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties">
+<span class="sig-name descname"><span class="pre">compute_efficiency_and_uncertainties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstructed_event_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_event_counts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties" title="Link to this definition">#</a></dt>
 <dd><p>Compute reconstructed event efficiency and its uncertainty assuming binomial distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -551,7 +551,7 @@ the calculation of the number of events to be simulated given a pre-determined m
 <dd class="field-even"><dl class="simple">
 <dt><strong>efficiencies</strong><span class="classifier">array</span></dt><dd><p>Array of calculated efficiencies.</p>
 </dd>
-<dt><strong>relative_errors</strong><span class="classifier">array</span></dt><dd><p>Array of relative uncertainties.</p>
+<dt><strong>relative_uncertainties</strong><span class="classifier">array</span></dt><dd><p>Array of relative uncertainties.</p>
 </dd>
 </dl>
 </dd>
@@ -559,8 +559,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_reconstructed_event_histogram">
-<span class="sig-name descname"><span class="pre">compute_reconstructed_event_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_energies_reco</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.compute_reconstructed_event_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_reconstructed_event_histogram" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram">
+<span class="sig-name descname"><span class="pre">compute_reconstructed_event_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_energies_reco</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram" title="Link to this definition">#</a></dt>
 <dd><p>Compute histogram of events as function of reconstructed energy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -581,8 +581,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.create_bin_edges">
-<span class="sig-name descname"><span class="pre">create_bin_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.create_bin_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.create_bin_edges" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_bin_edges">
+<span class="sig-name descname"><span class="pre">create_bin_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.create_bin_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_bin_edges" title="Link to this definition">#</a></dt>
 <dd><p>Create unique energy bin edges.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -595,8 +595,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.load_data_from_file">
-<span class="sig-name descname"><span class="pre">load_data_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator.load_data_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.load_data_from_file" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.load_data_from_file">
+<span class="sig-name descname"><span class="pre">load_data_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.load_data_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.load_data_from_file" title="Link to this definition">#</a></dt>
 <dd><p>Load data from the DL2 MC event file and return dictionaries with units.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -612,7 +612,7 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 </section>
 <section id="module-production_configuration.derive_corsika_limits">
-<span id="id2"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
+<span id="id1"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
 <p>Calculate CORSIKA thresholds for energy, radial distance, and viewcone.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator">
@@ -734,7 +734,7 @@ between the triggered events and the simulated events using the shower IDs.</p>
 
 </section>
 <section id="module-production_configuration.derive_production_statistics">
-<span id="id3"></span><span id="derive-production-statistics"></span><h2>derive_production_statistics<a class="headerlink" href="#module-production_configuration.derive_production_statistics" title="Link to this heading">#</a></h2>
+<span id="id2"></span><span id="derive-production-statistics"></span><h2>derive_production_statistics<a class="headerlink" href="#module-production_configuration.derive_production_statistics" title="Link to this heading">#</a></h2>
 <p>Calculate the event production statistics based on metrics.</p>
 <p>Module for calculating the production event statistics based on statistical error metrics.
 Contains the <a class="reference internal" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator" title="production_configuration.derive_production_statistics.ProductionStatisticsDerivator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator</span></code></a> class, which derives the number of events for
@@ -795,12 +795,12 @@ axis as a u.Quantity.</p>
 
 </section>
 <section id="module-production_configuration.derive_production_statistics_handler">
-<span id="id4"></span><span id="derive-production-statistics-handler"></span><h2>derive_production_statistics_handler<a class="headerlink" href="#module-production_configuration.derive_production_statistics_handler" title="Link to this heading">#</a></h2>
-<p>Module to run the StatisticalErrorEvaluator and interpolate results.</p>
+<span id="id3"></span><span id="derive-production-statistics-handler"></span><h2>derive_production_statistics_handler<a class="headerlink" href="#module-production_configuration.derive_production_statistics_handler" title="Link to this heading">#</a></h2>
+<p>Derives the required statistics for a requested set of production parameters through interpolation.</p>
 <p>This module provides the <a class="reference internal" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler" title="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductionStatisticsHandler</span></code></a> class, which manages the workflow for
 derivation of required number of events for a simulation production using pre-defined metrics.</p>
 <p>The module includes functionality to:
-- Initialize evaluators for statistical error calculations based on input parameters.
+- Initialize evaluators for statistical uncertainty calculations based on input parameters.
 - Perform interpolation using the initialized evaluators to estimate production statistics at a
 query point.
 - Write the results of the interpolation to an output file.</p>
@@ -814,13 +814,19 @@ production at a specified query point.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators">
 <span class="sig-name descname"><span class="pre">initialize_evaluators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.initialize_evaluators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators" title="Link to this definition">#</a></dt>
-<dd><p>Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets.</p>
+<dd><p>Initialize StatisticalUncertaintyEvaluator instances for the given zeniths/offsets.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation">
 <span class="sig-name descname"><span class="pre">perform_interpolation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.perform_interpolation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation" title="Link to this definition">#</a></dt>
 <dd><p>Perform interpolation for the query point.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.plot_production_statistics_comparison">
+<span class="sig-name descname"><span class="pre">plot_production_statistics_comparison</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.plot_production_statistics_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.plot_production_statistics_comparison" title="Link to this definition">#</a></dt>
+<dd><p>Plot the derived event statistics.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -839,7 +845,7 @@ production at a specified query point.</p>
 
 </section>
 <section id="module-production_configuration.generate_production_grid">
-<span id="id5"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
+<span id="id4"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
 <p>Module defines the <a class="reference internal" href="#production_configuration.generate_production_grid.GridGeneration" title="production_configuration.generate_production_grid.GridGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GridGeneration</span></code></a> class.</p>
 <p>Used to generate a grid of simulation points based on flexible axes definitions such
 azimuth, zenith angle, night-sky background, and camera offset.
@@ -960,7 +966,7 @@ as keys and axis values as values. Axis values may include units where defined.<
 
 </section>
 <section id="module-production_configuration.generate_simulation_config">
-<span id="id6"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
+<span id="id5"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
 <p>Derives simulation configuration parameters for a grid point based on several metrics.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig">
@@ -1014,12 +1020,12 @@ as keys and axis values as values. Axis values may include units where defined.<
 
 </section>
 <section id="module-production_configuration.interpolation_handler">
-<span id="id7"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
-<p>Handle interpolation between multiple StatisticalErrorEvaluator instances.</p>
+<span id="id6"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
+<p>Handle interpolation between multiple StatisticalUncertaintyEvaluator instances.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.interpolation_handler.</span></span><span class="sig-name descname"><span class="pre">InterpolationHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler" title="Link to this definition">#</a></dt>
-<dd><p>Handle interpolation between multiple StatisticalErrorEvaluator instances.</p>
+<dd><p>Handle interpolation between multiple StatisticalUncertaintyEvaluator instances.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate">
 <span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate" title="Link to this definition">#</a></dt>
@@ -1063,12 +1069,18 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.plot_comparison">
-<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.plot_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison" title="Link to this definition">#</a></dt>
-<dd><p>Plot a comparison between the simulated, derived, and reconstructed events.</p>
+<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.plot_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison" title="Link to this definition">#</a></dt>
+<dd><p>Plot a comparison between the interpolated production statistics and reconstructed events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>evaluator</strong><span class="classifier">StatisticalErrorEvaluator</span></dt><dd><p>The evaluator for which to plot the comparison.</p>
+<dt><strong>evaluator</strong><span class="classifier">StatisticalUncertaintyEvaluator</span></dt><dd><p>The evaluator for which to plot the comparison.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.axes.Axes</dt><dd><p>The Axes object containing the plot.</p>
 </dd>
 </dl>
 </dd>
@@ -1127,18 +1139,18 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.calculate_statistical_errors_grid_point">calculate_statistical_errors_grid_point</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_estimate"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.calculate_energy_estimate()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.calculate_energy_threshold()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_max_error_for_effective_area"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.calculate_max_error_for_effective_area()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.calculate_metrics()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_overall_metric"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.calculate_overall_metric()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_uncertainty_effective_area"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.calculate_uncertainty_effective_area()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.compute_efficiency_and_errors()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_reconstructed_event_histogram"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.compute_reconstructed_event_histogram()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.create_bin_edges"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.create_bin_edges()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.load_data_from_file"><code class="docutils literal notranslate"><span class="pre">StatisticalErrorEvaluator.load_data_from_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.calculate_statistical_uncertainties_grid_point">calculate_statistical_uncertainties_grid_point</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_energy_estimate"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_energy_estimate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_energy_threshold()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_max_error_for_effective_area"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_max_error_for_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_metrics()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_overall_metric"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_overall_metric()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_bin_edges"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.create_bin_edges()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.load_data_from_file"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.load_data_from_file()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1168,6 +1180,7 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.initialize_evaluators()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.perform_interpolation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.plot_production_statistics_comparison"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.plot_production_statistics_comparison()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.run"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.run()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.write_output()</span></code></a></li>
 </ul>
