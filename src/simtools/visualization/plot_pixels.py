@@ -330,7 +330,6 @@ def _read_pixel_config(dat_file_path):
 
             elif line.startswith("Pixel"):
                 parts = line.split()
-                print("line: ", line, parts[9].strip())
                 config["x"].append(float(parts[3].strip()))
                 config["y"].append(float(parts[4].strip()))
                 config["module_number"].append(float(parts[5].strip()))
@@ -620,7 +619,7 @@ def _configure_plot(
     # Add FOV info at top left
     if fov_info and fov_info["diameter"] and fov_info["focal_length"] and fov_info["edge_radius"]:
         info_text = (
-            f"FoV diameter: {fov_info['diameter']:.2f}°\n"
+            f"FoV diameter: {fov_info['diameter']:.2f} deg\n"
             f"Focal length: {fov_info['focal_length']:.2f} m\n"
             f"Edge radius: {fov_info['edge_radius'] * 100:.1f} cm"
         )
