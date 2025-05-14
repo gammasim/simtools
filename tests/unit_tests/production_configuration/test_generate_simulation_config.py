@@ -29,10 +29,7 @@ def mock_statistical_error_evaluator():
             ),
             "uncertainties": np.array([0.01]),
         },
-        "error_sig_eff_gh": 0.02,
         "energy_estimate": 0.2,
-        "error_gamma_ray_psf": 0.01,
-        "error_image_template_methods": 0.05,
     }
 
     mock_evaluator = MagicMock(spec=StatisticalUncertaintyEvaluator)
