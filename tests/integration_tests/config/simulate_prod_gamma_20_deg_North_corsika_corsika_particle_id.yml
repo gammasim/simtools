@@ -11,7 +11,8 @@ CTA_SIMPIPE:
       ARRAY_LAYOUT_NAME: test_layout
       PRIMARY: 1
       PRIMARY_ID_TYPE: corsika7_id
-      RUN_NUMBER_START: 10
+      RUN_NUMBER_OFFSET: 9
+      RUN_NUMBER: 1
       NUMBER_OF_RUNS: 2
       AZIMUTH_ANGLE: North
       ZENITH_ANGLE: 20
