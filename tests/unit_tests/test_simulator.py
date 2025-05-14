@@ -130,6 +130,56 @@ def test_initialize_run_list(shower_simulator, caplog):
     ) in caplog.text
 
 
+def test_initialize_run_list_valid_cases(shower_simulator):
+    # Test case where number_of_runs <= 1
+    shower_simulator.args_dict["number_of_runs"] = 1
+    shower_simulator.args_dict["run_number"] = 5
+    shower_simulator.args_dict["run_number_offset"] = 10
+    result = shower_simulator._initialize_run_list()
+    assert result == [15]  # run_number_offset + run_number
+
+    # Test case where number_of_runs > 1
+    shower_simulator.args_dict["number_of_runs"] = 3
+    shower_simulator.args_dict["run_number"] = 5
+    shower_simulator.args_dict["run_number_offset"] = 10
+    result = shower_simulator._initialize_run_list()
+    assert result == [15, 16, 17]  # range from 15 to 17
+
+
+def test_initialize_run_list_missing_keys(shower_simulator, caplog):
+    # Test missing 'run_number'
+    shower_simulator.args_dict.pop("run_number", None)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            shower_simulator._initialize_run_list()
+    assert (
+        "Error in initializing run list "
+        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
+    ) in caplog.text
+
+    # Test missing 'run_number_offset'
+    shower_simulator.args_dict["run_number"] = 5
+    shower_simulator.args_dict.pop("run_number_offset", None)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            shower_simulator._initialize_run_list()
+    assert (
+        "Error in initializing run list "
+        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
+    ) in caplog.text
+
+    # Test missing 'number_of_runs'
+    shower_simulator.args_dict["run_number_offset"] = 10
+    shower_simulator.args_dict.pop("number_of_runs", None)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            shower_simulator._initialize_run_list()
+    assert (
+        "Error in initializing run list "
+        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
+    ) in caplog.text
+
+
 def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
     for simulator_now in [shower_simulator, shower_array_simulator]:
         assert not simulator_now._validate_run_list_and_range(None, None)
