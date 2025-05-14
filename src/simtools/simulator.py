@@ -195,18 +195,17 @@ class Simulator:
             If 'run_number' is not found in the configuration.
         """
         try:
+            offset_run_number = self.args_dict["run_number_offset"] + self.args_dict["run_number"]
             if self.args_dict["number_of_runs"] <= 1:
                 return self._validate_run_list_and_range(
-                    run_list=self.args_dict["run_number_offset"] + self.args_dict["run_number"],
+                    run_list=offset_run_number,
                     run_range=None,
                 )
             return self._validate_run_list_and_range(
                 run_list=None,
                 run_range=[
-                    self.args_dict["run_number_offset"] + self.args_dict["run_number"],
-                    self.args_dict["run_number_offset"]
-                    + self.args_dict["run_number"]
-                    + self.args_dict["number_of_runs"],
+                    offset_run_number,
+                    offset_run_number + self.args_dict["number_of_runs"],
                 ],
             )
         except KeyError as exc:
