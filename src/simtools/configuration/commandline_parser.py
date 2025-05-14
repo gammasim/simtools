@@ -389,8 +389,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 "type": int,
                 "required": False,
             },
-            "run_number_start": {
-                "help": "Run number for the first run.",
+            "run_number_offset": {
+                "help": "An offset for the run number to be simulated.",
+                "type": int,
+                "required": False,
+                "default": 0,
+            },
+            "run_number": {
+                "help": "Run number to be simulated.",
                 "type": int,
                 "required": True,
                 "default": 1,
