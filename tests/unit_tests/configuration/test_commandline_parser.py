@@ -72,7 +72,7 @@ def test_zenith_angle(caplog):
     assert "The zenith angle provided is not a valid numeric" in caplog.text
 
 
-def test_parse_quantity_pair(caplog):
+def test_parse_quantity_pair():
     for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100GeV 5 TeV"]:
         e_pair = parser.CommandLineParser.parse_quantity_pair(test_string)
         assert pytest.approx(e_pair[0].value) == 100.0
@@ -90,7 +90,7 @@ def test_parse_quantity_pair(caplog):
         parser.CommandLineParser.parse_quantity_pair("a GeV 5 TeV")
 
 
-def test_parse_integer_and_quantity(caplog):
+def test_parse_integer_and_quantity():
     for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m", "(5, <Quantity 1500 m>)"]:
         c_pair = parser.CommandLineParser.parse_integer_and_quantity(test_string)
         assert c_pair[0] == 5
@@ -266,3 +266,92 @@ def test_initialize_db_config_arguments_strip_string():
     for test_string in ["test", " test", "test ", " test "]:
         args = parser_10.parse_args(["--db_simulation_model", test_string])
         assert args.db_simulation_model == "test"
+
+
+def test_get_dictionary_with_corsika_configuration(mocker):
+    # Mock PrimaryParticle.particle_names to return a predefined dictionary
+    mock_particle_names = {"proton": 1, "helium": 2, "iron": 3}
+    mocker.patch(
+        "simtools.corsika.primary_particle.PrimaryParticle.particle_names",
+        return_value=mock_particle_names,
+    )
+
+    # Call the method to get the dictionary
+    corsika_config = parser.CommandLineParser._get_dictionary_with_corsika_configuration()
+
+    # Test the "primary" key
+    assert "primary" in corsika_config
+    assert corsika_config["primary"]["help"].startswith("Primary particle to simulate.")
+    assert "proton" in corsika_config["primary"]["help"]
+    assert "helium" in corsika_config["primary"]["help"]
+    assert "iron" in corsika_config["primary"]["help"]
+    assert corsika_config["primary"]["type"] is str.lower
+    assert corsika_config["primary"]["required"] is True
+
+    # Test the "primary_id_type" key
+    assert "primary_id_type" in corsika_config
+    assert corsika_config["primary_id_type"]["help"] == "Primary particle ID type"
+    assert corsika_config["primary_id_type"]["type"] is str
+    assert corsika_config["primary_id_type"]["required"] is False
+    assert corsika_config["primary_id_type"]["choices"] == ["common_name", "corsika7_id", "pdg_id"]
+    assert corsika_config["primary_id_type"]["default"] == "common_name"
+
+    # Test the "azimuth_angle" key
+    assert "azimuth_angle" in corsika_config
+    assert corsika_config["azimuth_angle"]["help"].startswith(
+        "Telescope pointing direction in azimuth."
+    )
+    assert corsika_config["azimuth_angle"]["type"] == parser.CommandLineParser.azimuth_angle
+    assert corsika_config["azimuth_angle"]["required"] is True
+
+    # Test the "zenith_angle" key
+    assert "zenith_angle" in corsika_config
+    assert corsika_config["zenith_angle"]["help"] == "Zenith angle in degrees (between 0 and 180)."
+    assert corsika_config["zenith_angle"]["type"] == parser.CommandLineParser.zenith_angle
+    assert corsika_config["zenith_angle"]["required"] is True
+
+    # Test the "nshow" key
+    assert "nshow" in corsika_config
+    assert corsika_config["nshow"]["help"] == "Number of showers per run to simulate."
+    assert corsika_config["nshow"]["type"] is int
+    assert corsika_config["nshow"]["required"] is False
+
+    # Test the "run_number_offset" key
+    assert "run_number_offset" in corsika_config
+    assert (
+        corsika_config["run_number_offset"]["help"]
+        == "An offset for the run number to be simulated."
+    )
+    assert corsika_config["run_number_offset"]["type"] is int
+    assert corsika_config["run_number_offset"]["required"] is False
+    assert corsika_config["run_number_offset"]["default"] == 0
+
+    # Test the "run_number" key
+    assert "run_number" in corsika_config
+    assert corsika_config["run_number"]["help"] == "Run number to be simulated."
+    assert corsika_config["run_number"]["type"] is int
+    assert corsika_config["run_number"]["required"] is True
+    assert corsika_config["run_number"]["default"] == 1
+
+    # Test the "number_of_runs" key
+    assert "number_of_runs" in corsika_config
+    assert corsika_config["number_of_runs"]["help"] == "Number of runs to be simulated."
+    assert corsika_config["number_of_runs"]["type"] is int
+    assert corsika_config["number_of_runs"]["required"] is True
+    assert corsika_config["number_of_runs"]["default"] == 1
+
+    # Test the "event_number_first_shower" key
+    assert "event_number_first_shower" in corsika_config
+    assert corsika_config["event_number_first_shower"]["help"] == "Event number of first shower"
+    assert corsika_config["event_number_first_shower"]["type"] is int
+    assert corsika_config["event_number_first_shower"]["required"] is False
+    assert corsika_config["event_number_first_shower"]["default"] == 1
+
+    # Test the "correct_for_b_field_alignment" key
+    assert "correct_for_b_field_alignment" in corsika_config
+    assert (
+        corsika_config["correct_for_b_field_alignment"]["help"] == "Correct for B-field alignment"
+    )
+    assert corsika_config["correct_for_b_field_alignment"]["action"] == "store_true"
+    assert corsika_config["correct_for_b_field_alignment"]["required"] is False
+    assert corsika_config["correct_for_b_field_alignment"]["default"] is True
