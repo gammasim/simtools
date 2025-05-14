@@ -123,8 +123,8 @@ simtools-simulate-prod \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
-    --run_number_offset $((process_id)) \\
-    --run_number {args_dict["run_number"]} \\
+    --run_number $((process_id)) \\
+    --run_number_offset {args_dict["run_number_offset"]} \\
     --number_of_runs 1 \\
     --submit_engine \"local\" \\
     --data_directory /tmp/simtools-data \\
