@@ -2,7 +2,7 @@
 repos:
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.7
+  rev: v0.11.9
   hooks:
   - id: ruff
     args: ["--fix"]
@@ -58,7 +58,7 @@ repos:
     args: ["--disable", "MD041"]
 # yamllint
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.37.0
+  rev: v1.37.1
   hooks:
   - id: yamllint
     args:

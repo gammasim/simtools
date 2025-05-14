@@ -1,11 +1,11 @@
 """
-Module to run the StatisticalErrorEvaluator and interpolate results.
+Derives the required statistics for a requested set of production parameters through interpolation.
 
 This module provides the `ProductionStatisticsHandler` class, which manages the workflow for
 derivation of required number of events for a simulation production using pre-defined metrics.
 
 The module includes functionality to:
-- Initialize evaluators for statistical error calculations based on input parameters.
+- Initialize evaluators for statistical uncertainty calculations based on input parameters.
 - Perform interpolation using the initialized evaluators to estimate production statistics at a
 query point.
 - Write the results of the interpolation to an output file.
@@ -19,8 +19,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
 from simtools.utils.general import collect_data_from_file
@@ -50,9 +50,10 @@ class ProductionStatisticsHandler:
         self.output_filepath = self.output_path.joinpath(f"{self.args['output_file']}")
         self.metrics = collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
+        self.interpolation_handler = None
 
     def initialize_evaluators(self):
-        """Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets."""
+        """Initialize StatisticalUncertaintyEvaluator instances for the given zeniths/offsets."""
         if not (self.args["base_path"] and self.args["zeniths"] and self.args["camera_offsets"]):
             self.logger.warning("No files read")
             self.logger.warning(f"Base Path: {self.args['base_path']}")
@@ -68,7 +69,7 @@ class ProductionStatisticsHandler:
                 self.logger.warning(f"File not found: {file_path}. Skipping.")
                 continue
 
-            evaluator = StatisticalErrorEvaluator(
+            evaluator = StatisticalUncertaintyEvaluator(
                 file_path,
                 metrics=self.metrics,
                 grid_point=(None, None, zenith, None, offset * u.deg),
@@ -82,7 +83,9 @@ class ProductionStatisticsHandler:
             self.logger.error("No evaluators initialized. Cannot perform interpolation.")
             return None
 
-        interpolation_handler = InterpolationHandler(self.evaluator_instances, metrics=self.metrics)
+        self.interpolation_handler = InterpolationHandler(
+            self.evaluator_instances, metrics=self.metrics
+        )
         query_point = self.args.get("query_point")
         if not query_point or len(query_point) != 5:
             raise ValueError(
@@ -90,7 +93,7 @@ class ProductionStatisticsHandler:
                 f"Expected 5 values, got {len(query_point) if query_point else 'None'}."
             )
         query_points = np.array([self.args["query_point"]])
-        return interpolation_handler.interpolate(query_points)
+        return self.interpolation_handler.interpolate(query_points)
 
     def write_output(self, production_statistics):
         """Write the derived event statistics to a file."""
@@ -107,6 +110,14 @@ class ProductionStatisticsHandler:
             f"{self.args['query_point']}: {production_statistics}"
         )
 
+    def plot_production_statistics_comparison(self):
+        """Plot the derived event statistics."""
+        ax = self.interpolation_handler.plot_comparison()
+        plot_path = self.output_path.joinpath("production_statistics_comparison.png")
+        plot_path.parent.mkdir(parents=True, exist_ok=True)
+        ax.figure.savefig(plot_path)
+        self.logger.info(f"Plot saved to {plot_path}")
+
     def run(self):
         """Run the scaling and interpolation workflow."""
         self.logger.info(f"Zeniths: {self.args['zeniths']}")
@@ -116,4 +127,7 @@ class ProductionStatisticsHandler:
 
         self.initialize_evaluators()
         production_statistics = self.perform_interpolation()
+        if self.args.get("plot_production_statistics"):
+            self.plot_production_statistics_comparison()
+
         self.write_output(production_statistics)
