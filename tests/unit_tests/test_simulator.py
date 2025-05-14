@@ -49,7 +49,8 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     args_dict["array_layout_name"] = "test_layout"
     args_dict["site"] = "North"
     args_dict["keep_seeds"] = False
-    args_dict["run_number_start"] = 1
+    args_dict["run_number"] = 1
+    args_dict["run_number_offset"] = 0
     args_dict["nshow"] = 10
     args_dict["submit_engine"] = submit_engine
     args_dict["extra_commands"] = None
@@ -119,14 +120,14 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
 def test_initialize_run_list(shower_simulator, caplog):
     assert shower_simulator._initialize_run_list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     test_shower_simulator = copy.deepcopy(shower_simulator)
-    test_shower_simulator.args_dict.pop("run_number_start", None)
+    test_shower_simulator.args_dict.pop("run_number_offset", None)
     with caplog.at_level(logging.ERROR):
         with pytest.raises(KeyError):
             test_shower_simulator._initialize_run_list()
     assert (
-        "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
-        in caplog.text
-    )
+        "Error in initializing run list "
+        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
+    ) in caplog.text
 
 
 def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):

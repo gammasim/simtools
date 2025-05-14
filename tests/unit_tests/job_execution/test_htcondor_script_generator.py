@@ -16,7 +16,6 @@ def args_dict():
         "output_path": "/test_output",
         "apptainer_image": "/path/to/apptainer_image.sif",
         "priority": 5,
-        "number_of_runs": 10,
         "azimuth_angle": 45 * u.deg,
         "zenith_angle": 20 * u.deg,
         "energy_range": [1 * u.GeV, 10 * u.GeV],
@@ -28,7 +27,9 @@ def args_dict():
         "array_layout_name": "test_layout",
         "primary": "gamma",
         "nshow": 1000,
-        "run_number_start": 0,
+        "run_number_offset": 0,
+        "run_number": 1,
+        "number_of_runs": 10,
         "log_level": "INFO",
     }
 
@@ -53,6 +54,12 @@ def test_generate_submission_script(mock_chmod, mock_open, mock_mkdir, args_dict
 
 
 def test_get_submit_script(args_dict):
+    # Use abbreviated argument names to avoid overly long lines
+    e_range_low = args_dict["energy_range"][0].to(u.GeV).value
+    e_range_high = args_dict["energy_range"][1].to(u.GeV).value
+    core_scatter_low = args_dict["core_scatter"][0]
+    core_scatter_high = args_dict["core_scatter"][1].to(u.m).value
+
     expected_script = f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
@@ -70,9 +77,10 @@ simtools-simulate-prod \\
     --azimuth_angle {args_dict["azimuth_angle"].to(u.deg).value} \\
     --zenith_angle {args_dict["zenith_angle"].to(u.deg).value} \\
     --nshow {args_dict["nshow"]} \\
-    --energy_range "{args_dict["energy_range"][0].to(u.GeV).value} GeV {args_dict["energy_range"][1].to(u.GeV).value} GeV" \\
-    --core_scatter "{args_dict["core_scatter"][0]} {args_dict["core_scatter"][1].to(u.m).value} m" \\
-    --run_number_start $((process_id + {args_dict["run_number_start"]})) \\
+    --energy_range "{e_range_low} GeV {e_range_high} GeV" \\
+    --core_scatter "{core_scatter_low} {core_scatter_high} m" \\
+    --run_number_offset $((process_id)) \\
+    --run_number {args_dict["run_number"]} \\
     --number_of_runs 1 \\
     --submit_engine "local" \\
     --data_directory /tmp/simtools-data \\
