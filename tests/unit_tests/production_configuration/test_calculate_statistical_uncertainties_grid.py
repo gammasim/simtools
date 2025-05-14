@@ -121,10 +121,7 @@ def setup_evaluator(metric):
 
     evaluator.metric_results = {
         "uncertainty_effective_area": {"relative_uncertainties": np.array([0.04, 0.05, 0.06])},
-        "uncertainty_sig_eff_gh": 0.02,
         "energy_estimate": 0.03,
-        "uncertainty_gamma_ray_psf": 0.01,
-        "uncertainty_image_template_methods": 0.04,
     }
 
     return evaluator
@@ -156,7 +153,11 @@ def test_calculate_overall_metric_maximum(test_fits_file):
             "uncertainty_effective_area": {
                 "target_uncertainty": {"value": 0.1, "unit": "dimensionless"},
                 "energy_range": {"value": [0.04, 200], "unit": "TeV"},
-            }
+            },
+            "energy_estimate": {
+                "target_uncertainty": {"value": 0.2, "unit": "dimensionless"},
+                "energy_range": {"value": [0.04, 200], "unit": "TeV"},
+            },
         },
     )
 
