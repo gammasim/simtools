@@ -279,9 +279,6 @@ class StatisticalUncertaintyEvaluator:
         max_error : float
             Maximum relative error.
         """
-        if "uncertainty_effective_area" not in self.metrics:
-            return 0.0
-
         energy_range = self.metrics.get("uncertainty_effective_area", {}).get("energy_range")
 
         min_energy, max_energy = (
@@ -328,10 +325,10 @@ class StatisticalUncertaintyEvaluator:
         ]
 
         # Calculate sigma for each bin
-        sigma_energy = [np.std(d) if len(d) > 0 else np.nan for d in energy_deviation_by_bin]
+        sigma_energy = [np.std(d.value) if len(d) > 0 else np.nan for d in energy_deviation_by_bin]
 
         # Calculate delta_energy as the mean deviation for each bin
-        delta_energy = [np.mean(d) if len(d) > 0 else np.nan for d in energy_deviation_by_bin]
+        delta_energy = [np.mean(d.value) if len(d) > 0 else np.nan for d in energy_deviation_by_bin]
 
         # Combine sigma into a single measure
         overall_uncertainty = np.nanmean(sigma_energy)
@@ -386,8 +383,8 @@ class StatisticalUncertaintyEvaluator:
 
         Returns
         -------
-        dict
-            Dictionary with overall maximum uncertainties for each metric.
+        float
+            The overall metric value.
         """
         # Decide how to combine the metrics
         if self.metric_results is None:
@@ -401,18 +398,19 @@ class StatisticalUncertaintyEvaluator:
                 overall_max_uncertainties[metric_name] = (
                     max_uncertainties if max_uncertainties else 0
                 )
-            elif metric_name in [
-                "error_gamma_ray_psf",
-            ]:
-                overall_max_uncertainties[metric_name] = np.max(result)
+            elif metric_name == "energy_estimate":
+                # Use the "overall_uncertainty"
+                overall_max_uncertainties[metric_name] = result["overall_uncertainty"]
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
+
         self._logger.info(f"overall_max_uncertainties {overall_max_uncertainties}")
         all_max_uncertainties = list(overall_max_uncertainties.values())
+
         if metric == "average":
             overall_metric = np.mean(all_max_uncertainties)
         elif metric == "maximum":
-            overall_metric = np.max(all_max_uncertainties)
+            overall_metric = np.nanmax(all_max_uncertainties)
         else:
             raise ValueError(f"Unsupported metric: {metric}")
 
