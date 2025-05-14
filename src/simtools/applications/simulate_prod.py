@@ -125,10 +125,8 @@ def _parse(description=None):
     config.parser.add_argument(
         "--sequential",
         help=(
-            "If set to true, run CORSIKA and sim_telarray instances in sequential order "
-            "as far as possible. This mode is useful particularly on the grid, "
-            "where typically we request a single core per job. "
-            "If not set, the CORSIKA and sim_telarray instances are run in parallel."
+            "Enables single-core mode (as far as possible); "
+            "otherwise, CORSIKA and sim_telarray run in parallel."
         ),
         action="store_true",
         default=False,
