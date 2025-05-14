@@ -21,6 +21,10 @@ from simtools.simulator import InvalidRunsToSimulateError, Simulator
 logger = logging.getLogger()
 
 CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.CorsikaConfig"
+INITIALIZE_RUN_LIST_ERROR_MSG = (
+    "Error in initializing run list "
+    "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
+)
 
 
 @pytest.fixture
@@ -124,10 +128,7 @@ def test_initialize_run_list(shower_simulator, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(KeyError):
             test_shower_simulator._initialize_run_list()
-    assert (
-        "Error in initializing run list "
-        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
-    ) in caplog.text
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
 
 def test_initialize_run_list_valid_cases(shower_simulator):
@@ -152,10 +153,7 @@ def test_initialize_run_list_missing_keys(shower_simulator, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(KeyError):
             shower_simulator._initialize_run_list()
-    assert (
-        "Error in initializing run list "
-        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
-    ) in caplog.text
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
     # Test missing 'run_number_offset'
     shower_simulator.args_dict["run_number"] = 5
@@ -163,10 +161,7 @@ def test_initialize_run_list_missing_keys(shower_simulator, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(KeyError):
             shower_simulator._initialize_run_list()
-    assert (
-        "Error in initializing run list "
-        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
-    ) in caplog.text
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
     # Test missing 'number_of_runs'
     shower_simulator.args_dict["run_number_offset"] = 10
@@ -174,10 +169,7 @@ def test_initialize_run_list_missing_keys(shower_simulator, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(KeyError):
             shower_simulator._initialize_run_list()
-    assert (
-        "Error in initializing run list "
-        "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
-    ) in caplog.text
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
 
 def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
