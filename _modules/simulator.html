@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=f44f2135"></script>
+    <script src="../_static/documentation_options.js?v=db1f8396"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulator';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g5bd7583" />
+  <meta name="docsearch:version" content="0.1.dev1+g16b4f9b" />
   </head>
   
   
@@ -702,6 +702,8 @@
             <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;keep_seeds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corsika_test_seeds&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">CorsikaRunner</span><span class="p">:</span>
             <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;sim_telarray_seeds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span>
+        <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="n">CorsikaSimtelRunner</span><span class="p">:</span>
+            <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;sequential&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sequential&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">runner_class</span><span class="p">(</span><span class="o">**</span><span class="n">runner_args</span><span class="p">)</span>
 
