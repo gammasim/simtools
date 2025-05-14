@@ -20,6 +20,8 @@ from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
 logger = logging.getLogger()
 
+CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.CorsikaConfig"
+
 
 @pytest.fixture
 def input_file_list():
@@ -557,7 +559,7 @@ def test_get_seed_for_random_instrument_instances(shower_simulator):
 
 def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, mocker):
     # Mock CorsikaConfig to avoid actual initialization
-    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
     mock_corsika_runner = mocker.patch("simtools.simulator.CorsikaRunner", autospec=True)
 
     # Call the method
@@ -583,7 +585,7 @@ def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, 
 def test_initialize_simulation_runner_with_sim_telarray(array_simulator, db_config, mocker):
     # Mock SimulatorArray to avoid actual initialization
     mock_simulator_array = mocker.patch("simtools.simulator.SimulatorArray", autospec=True)
-    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
 
     # Call the method
     simulation_runner = array_simulator._initialize_simulation_runner(db_config)
@@ -603,7 +605,7 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
     shower_array_simulator, db_config, mocker
 ):
     # Mock CorsikaConfig and CorsikaSimtelRunner to avoid actual initialization
-    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
     mock_corsika_simtel_runner = mocker.patch(
         "simtools.simulator.CorsikaSimtelRunner", autospec=True
     )
