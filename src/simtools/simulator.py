@@ -179,7 +179,10 @@ class Simulator:
 
     def _initialize_run_list(self):
         """
-        Initialize run list using the configuration values 'run_number_start' and 'number_of_runs'.
+        Initialize run list using the configuration values.
+
+        Uses 'run_number', 'run_number_offset' and 'number_of_runs' arguments
+        to create a list of run numbers.
 
         Returns
         -------
@@ -189,19 +192,27 @@ class Simulator:
         Raises
         ------
         KeyError
-            If 'run_number_start' or 'number_of_runs' are not found in the configuration.
+            If 'run_number', 'run_number_offset' and 'number_of_runs' are
+            not found in the configuration.
         """
         try:
+            offset_run_number = self.args_dict["run_number_offset"] + self.args_dict["run_number"]
+            if self.args_dict["number_of_runs"] <= 1:
+                return self._validate_run_list_and_range(
+                    run_list=offset_run_number,
+                    run_range=None,
+                )
             return self._validate_run_list_and_range(
                 run_list=None,
                 run_range=[
-                    self.args_dict["run_number_start"],
-                    self.args_dict["run_number_start"] + self.args_dict["number_of_runs"],
+                    offset_run_number,
+                    offset_run_number + self.args_dict["number_of_runs"],
                 ],
             )
         except KeyError as exc:
             self._logger.error(
-                "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
+                "Error in initializing run list "
+                "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
             )
             raise exc
 
