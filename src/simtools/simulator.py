@@ -301,6 +301,8 @@ class Simulator:
             runner_args["keep_seeds"] = self.args_dict.get("corsika_test_seeds", False)
         if runner_class is not CorsikaRunner:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
+        if runner_class is CorsikaSimtelRunner:
+            runner_args["sequential"] = self.args_dict.get("sequential", False)
 
         return runner_class(**runner_args)
 

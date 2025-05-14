@@ -122,6 +122,15 @@ def _parse(description=None):
         required=False,
         default=False,
     )
+    config.parser.add_argument(
+        "--sequential",
+        help=(
+            "Enables single-core mode (as far as possible); "
+            "otherwise, CORSIKA and sim_telarray run in parallel."
+        ),
+        action="store_true",
+        default=False,
+    )
     sim_telarray_seed_group = config.parser.add_argument_group(
         title="Random seeds for sim_telarray instrument setup",
     )
