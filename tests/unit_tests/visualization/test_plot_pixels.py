@@ -10,6 +10,9 @@ from matplotlib.figure import Figure
 
 from simtools.visualization import plot_pixels
 
+# Constants
+DUMMY_DAT_PATH = "tests/resources/pixel_layout.dat"
+
 
 @mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_file")
 @mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
@@ -20,8 +23,8 @@ def test_plot(mock_db_handler, mock_save, mock_plot_layout):
         "parameter": "pixel_layout",
         "site": "North",
         "telescope": "LSTN-01",
-        "parameter_version": "v1",
-        "model_version": "prod5",
+        "parameter_version": "1.0.0",
+        "model_version": "6.0.0",
         "file_name": "test.dat",
     }
 
@@ -47,8 +50,8 @@ def test_plot(mock_db_handler, mock_save, mock_plot_layout):
             parameter="pixel_layout",
             site="North",
             array_element_name="LSTN-01",
-            parameter_version="v1",
-            model_version="prod5",
+            parameter_version="1.0.0",
+            model_version="6.0.0",
             export_file_as_table=False,
         )
 
@@ -58,7 +61,7 @@ def test_plot(mock_db_handler, mock_save, mock_plot_layout):
         mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
-def test_create_patch():
+def test__create_patch():
     """Test patch creation for different pixel shapes."""
     x, y = 1.0, 1.0
     diameter = 2.0
@@ -91,7 +94,7 @@ def test_create_patch():
     assert np.isclose(patch.orientation, np.deg2rad(30))
 
 
-def test_is_edge_pixel():
+def test__is_edge_pixel():
     """Test edge pixel detection."""
     # Create a 3x3 grid with circular pixels
     # Distance between adjacent pixels = 1.0
@@ -289,44 +292,27 @@ def test_create_pixel_plot(mock_subplots):
             assert len(pixel_id_calls) == 2
 
 
-@mock.patch(
-    "builtins.open",
-    mock.mock_open(
-        read_data="""
-Rotate 10.893
-PixType -1 2 0 2 1 0.5
-field-of-view diameter of 4.5 deg focal length of 28.0 m
-Mean radius of camera edge is 1.2 m
-Between modules is an additional gap of 0.2
-Pixel spacing is 0.6
-Pixel 0 1 0.0 0.0 1 1 1 1 1
-Pixel 1 2 1.0 0.0 1 1 1 1 1
-"""
-    ),
-)
-def test_read_pixel_config():
+def test__read_pixel_config():
     """Test reading pixel configuration from file."""
-    config = plot_pixels._read_pixel_config("dummy.dat")
+    config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
 
-    assert config["rotate_angle"] == 10.893
-    assert config["pixel_shape"] == 1
-    assert config["pixel_diameter"] == 0.5
-    assert config["pixel_spacing"] == 0.6
-    assert config["module_gap"] == 0.2
-    assert config["fov_diameter"] == 4.5
-    assert config["focal_length"] == 28.0
-    assert config["edge_radius"] == 1.2
-    assert len(config["x"]) == 2
-    assert len(config["y"]) == 2
-    assert len(config["pixel_ids"]) == 2
-    assert len(config["pixels_on"]) == 2
-    assert len(config["module_number"]) == 2
+    assert config["rotate_angle"] == 10.0
+    assert config["edge_radius"] == 0.170
+    assert config["pixel_shape"] == 2
+    assert config["pixel_spacing"] == 0.640
+    assert config["module_gap"] == 0.02
+    assert config["pixel_diameter"] == 0.6
+    assert config["fov_diameter"] == 9.04
+    assert config["focal_length"] == 2.150
+    assert len(config["pixel_ids"]) == 31
+    assert config["pixels_on"].count(True) == 30
 
 
 @mock.patch("simtools.visualization.plot_pixels._read_pixel_config")
-def test_prepare_pixel_data(mock_read):
+def test__prepare_pixel_data(mock_read):
     """Test pixel data preparation."""
-    mock_data = {
+    # Setup mock return value
+    mock_read.return_value = {
         "x": [0.0, 1.0],
         "y": [0.0, 1.0],
         "pixel_ids": [1, 2],
@@ -342,17 +328,16 @@ def test_prepare_pixel_data(mock_read):
         "edge_radius": 1.2,
     }
 
-    with mock.patch("simtools.visualization.plot_pixels._read_pixel_config") as mock_read:
-        mock_read.return_value = mock_data
-        data = plot_pixels._prepare_pixel_data("dummy.dat", "LSTN-01")
+    # Call the function under test
+    data = plot_pixels._prepare_pixel_data(DUMMY_DAT_PATH, "LSTN-01")
 
-        assert "pixel_spacing" in data
-        assert "module_gap" in data
-        assert "module_number" in data
-        assert data["pixel_spacing"] == 0.6
+    assert "pixel_spacing" in data
+    assert "module_gap" in data
+    assert "module_number" in data
+    assert data["pixel_spacing"] == 0.6
 
 
-def test_add_coordinate_axes():
+def test__add_coordinate_axes():
     """Test coordinate axes addition."""
     mock_ax = mock.MagicMock()
     x_pos = np.array([0.0, 1.0, -1.0])
@@ -414,7 +399,7 @@ def test_prepare_pixel_data_two_mirror(mock_is_two_mirror):
             mock_read.return_value = base_config.copy()
             mock_is_two_mirror.return_value = is_two_mirror
 
-            data = plot_pixels._prepare_pixel_data("dummy.dat", telescope)
+            data = plot_pixels._prepare_pixel_data(DUMMY_DAT_PATH, telescope)
             assert "pixel_spacing" in data
             assert data["pixel_spacing"] == 0.6
 
@@ -422,7 +407,7 @@ def test_prepare_pixel_data_two_mirror(mock_is_two_mirror):
 @mock.patch("simtools.utils.names.get_array_element_type_from_name")
 @mock.patch("simtools.visualization.plot_pixels._is_edge_pixel")
 @mock.patch("simtools.visualization.plot_pixels._create_patch")
-def test_create_pixel_patches(mock_create_patch, mock_is_edge_pixel, mock_get_array_element_type):
+def test__create_pixel_patches(mock_create_patch, mock_is_edge_pixel, mock_get_array_element_type):
     """Test the logic of _create_pixel_patches."""
     # Mock the return values for the patched functions
     mock_get_array_element_type.return_value = "SCT"
@@ -488,7 +473,7 @@ def test_plot_pixel_layout_from_file(mock_figure, mock_subplot):
     assert isinstance(result, Figure)
 
 
-def test_read_pixel_config_malformed():
+def test__read_pixel_config_malformed():
     """Test reading malformed pixel configuration."""
     test_data = """
     InvalidLine
@@ -497,7 +482,7 @@ def test_read_pixel_config_malformed():
     """
 
     with mock.patch("builtins.open", mock.mock_open(read_data=test_data)):
-        config = plot_pixels._read_pixel_config("dummy.dat")
+        config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
         assert isinstance(config, dict)
         assert "x" in config
         assert "y" in config
@@ -529,4 +514,4 @@ def test_plot_pixel_layout_from_file_with_errors(mock_prepare, mock_create_plot)
     }
     mock_create_plot.side_effect = RuntimeError
     with pytest.raises(RuntimeError):
-        plot_pixels.plot_pixel_layout_from_file("test.dat", "LSTN-01")
+        plot_pixels.plot_pixel_layout_from_file(DUMMY_DAT_PATH, "LSTN-01")
