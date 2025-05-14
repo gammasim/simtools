@@ -181,7 +181,7 @@ class Simulator:
         """
         Initialize run list using the configuration values.
 
-        Uses 'run_number_offset', 'run_number' and 'number_of_runs' arguments
+        Uses 'run_number', 'run_number_offset' and 'number_of_runs' arguments
         to create a list of run numbers.
 
         Returns
@@ -192,7 +192,8 @@ class Simulator:
         Raises
         ------
         KeyError
-            If 'run_number' is not found in the configuration.
+            If 'run_number', 'run_number_offset' and 'number_of_runs' are
+            not found in the configuration.
         """
         try:
             offset_run_number = self.args_dict["run_number_offset"] + self.args_dict["run_number"]
