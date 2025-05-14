@@ -10,8 +10,7 @@ CTA_SIMPIPE:
       SITE: South
       ARRAY_LAYOUT_NAME: test_layout
       PRIMARY: gamma
-      RUN_NUMBER_START: 10
-      NUMBER_OF_RUNS: 1
+      RUN_NUMBER: 10
       AZIMUTH_ANGLE: North
       ZENITH_ANGLE: 20
       NSHOW: 5
