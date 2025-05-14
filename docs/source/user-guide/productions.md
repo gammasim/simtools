@@ -27,7 +27,7 @@ Configuration is similar to the `simulate-prod` command, with the following addi
 
 - `APPTAINER_IMAGE` is the path to the Apptainer image to be used for the simulation.
 - `PRIORITY` is the priority of the job in HTCondor.
-- `RUN_NUMBER_START` and `NUMBER_OF_RUNS` are the first run number and the number of runs to be simulated.
+- `RUN_NUMBER` and `NUMBER_OF_RUNS` are the first run number and the number of runs to be simulated.
 
 The `simtools-simulate-prod-htcondor-generator` tool generates two files:
 
