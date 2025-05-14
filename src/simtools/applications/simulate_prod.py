@@ -122,6 +122,17 @@ def _parse(description=None):
         required=False,
         default=False,
     )
+    config.parser.add_argument(
+        "--sequential",
+        help=(
+            "If set to true, run CORSIKA and sim_telarray instances in sequential order "
+            "as far as possible. This mode is useful particularly on the grid, "
+            "where typically we request a single core per job. "
+            "If not set, the CORSIKA and sim_telarray instances are run in parallel."
+        ),
+        action="store_true",
+        default=False,
+    )
     sim_telarray_seed_group = config.parser.add_argument_group(
         title="Random seeds for sim_telarray instrument setup",
     )
@@ -141,17 +152,6 @@ def _parse(description=None):
         help="Number of random instrument instances initialized in sim_telarray.",
         type=int,
         required=False,
-    )
-    sim_telarray_seed_group.add_argument(
-        "--sequential",
-        help=(
-            "If set to true, run CORSIKA and sim_telarray instances in sequential order "
-            "as far as possible. This mode is useful particularly on the grid, "
-            "where typically we request a single core per job. "
-            "If not set, the CORSIKA and sim_telarray instances are run in parallel."
-        ),
-        type=bool,
-        default=False,
     )
     return config.initialize(
         db_config=True,
