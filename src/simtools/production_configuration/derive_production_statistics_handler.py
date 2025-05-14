@@ -1,5 +1,5 @@
 """
-Module to run the StatisticalUncertaintyEvaluator and interpolate results.
+Derives the required statistics for a requested set of production parameters through interpolation.
 
 This module provides the `ProductionStatisticsHandler` class, which manages the workflow for
 derivation of required number of events for a simulation production using pre-defined metrics.
