@@ -35,6 +35,13 @@ def plot(config, output_file, db_config=None):
         - telescope : str, name of the telescope
     output_file : str
         Path where to save the plot
+    db_config : dict, optional
+        Database configuration.
+
+    Returns
+    -------
+    None
+        The function saves the plot to the specified output file.
     """
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     db.export_model_file(
@@ -58,6 +65,9 @@ def plot(config, output_file, db_config=None):
 def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     """
     Plot the pixel layout from a .dat file configuration.
+
+    This function reads the pixel configuration from the specified .dat file and
+    generates a plot of the pixel layout for the given telescope model.
 
     Parameters
     ----------
@@ -99,7 +109,23 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
 
 
 def _prepare_pixel_data(dat_file_path, telescope_model_name):
-    """Prepare pixel data from configuration file."""
+    """Prepare pixel data from configuration file.
+
+    This function reads the pixel configuration from the specified .dat file and
+    prepares the data for plotting, including applying any necessary rotations.
+
+    Parameters
+    ----------
+    dat_file_path : str or Path
+        Path to the .dat file containing pixel configuration
+    telescope_model_name : str
+        Name/model of the telescope
+
+    Returns
+    -------
+    dict
+        Dictionary containing pixel data
+    """
     config = _read_pixel_config(dat_file_path)
     x_pos = np.array(config["x"])
     y_pos = np.array(config["y"])
@@ -137,7 +163,6 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
         "module_number": config["module_number"],
         "module_gap": config["module_gap"],
         "rotation": total_rotation,
-        # Add FOV info
         "fov_diameter": config["fov_diameter"],
         "focal_length": config["focal_length"],
         "edge_radius": config["edge_radius"],
@@ -237,7 +262,22 @@ def _create_pixel_plot(
 
 
 def _read_pixel_config(dat_file_path):
-    """Read pixel configuration from .dat file."""
+    """Read pixel configuration from .dat file.
+
+    This function reads the pixel configuration from the specified .dat file and
+    returns it as a dictionary. It parses information such as pixel positions,
+    module numbers, and other relevant parameters.
+
+    Parameters
+    ----------
+    dat_file_path : str or Path
+        Path to the .dat file containing pixel configuration
+
+    Returns
+    -------
+    dict
+        config containing pixel data
+    """
     config = {
         "x": [],
         "y": [],
@@ -259,7 +299,6 @@ def _read_pixel_config(dat_file_path):
         for line in f:
             line = line.strip()
 
-            # Skip empty lines or comments
             if not line:
                 continue
 
@@ -291,6 +330,7 @@ def _read_pixel_config(dat_file_path):
 
             elif line.startswith("Pixel"):
                 parts = line.split()
+                print("line: ", line, parts[9].strip())
                 config["x"].append(float(parts[3].strip()))
                 config["y"].append(float(parts[4].strip()))
                 config["module_number"].append(float(parts[5].strip()))
@@ -298,7 +338,7 @@ def _read_pixel_config(dat_file_path):
                 config["pixels_on"].append(int(parts[9].strip()) != 0)
 
     # If pixel spacing is not explicitly provided, calculate it as diameter + gap
-    if config["pixel_spacing"] is None and config["pixel_diameter"] is not None:
+    if config["pixel_spacing"] is None:
         config["pixel_spacing"] = config["pixel_diameter"] + 0.02  # Default gap of 0.02 cm
     config["module_gap"] = 0.0 if config["module_gap"] is None else config["module_gap"]
 
@@ -307,6 +347,10 @@ def _read_pixel_config(dat_file_path):
 
 def _create_patch(x, y, diameter, shape):
     """Create a single matplotlib patch for a pixel.
+
+    This function creates a matplotlib patch (shape) for a single pixel based on
+    its position, diameter, and shape type. Supported shapes are circles, squares,
+    and hexagons.
 
     Parameters
     ----------
@@ -320,6 +364,11 @@ def _create_patch(x, y, diameter, shape):
         1: hexagonal (flat x)
         2: square
         3: hexagonal (flat y)
+
+    Returns
+    -------
+    matplotlib.patches.Patch
+        The created patch object for the pixel
     """
     if shape == 0:  # Circular
         return mpatches.Circle((x, y), radius=diameter / 2)
@@ -394,7 +443,40 @@ def _create_pixel_patches(
     pixels_id_to_print,
     telescope_model_name,
 ):
-    """Create matplotlib patches for different pixel types."""
+    """Create matplotlib patches for different pixel types.
+
+    This function creates the matplotlib patches (shapes) for all pixels in the
+    layout, categorizing them into "on", "edge", and "off" pixels based on their
+    status and position.
+
+    Parameters
+    ----------
+    x_pos, y_pos : array-like
+        X and Y coordinates of the pixel centers
+    diameter : float
+        Diameter of the pixels
+    module_number : array-like
+        Module numbers for each pixel
+    module_gap : float
+        Gap between modules
+    spacing : float
+        Pixel spacing
+    shape : array-like
+        Shape types for each pixel
+    pixels_on : array-like
+        Status indicating if each pixel is "on"
+    pixel_ids : array-like
+        Unique IDs for each pixel
+    pixels_id_to_print : int
+        Number of pixel IDs to print on the plot
+    telescope_model_name : str
+        Name of the telescope model
+
+    Returns
+    -------
+    tuple
+        Three lists of patches for "on", "edge", and "off" pixels
+    """
     on_pixels, edge_pixels, off_pixels = [], [], []
 
     array_element_type = names.get_array_element_type_from_name(telescope_model_name)
@@ -435,8 +517,6 @@ def _count_neighbors(x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, 
         Center-to-center spacing between pixels.
     module_gap : float
         Additional gap between modules.
-    shape : int
-        Pixel shape type (0: circular, 1/3: hexagonal, 2: square).
     current_module_id : int
         Module ID of the current pixel.
 
@@ -456,12 +536,10 @@ def _count_neighbors(x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, 
         # Calculate the distance between the current pixel and the potential neighbor
         dist = np.sqrt((x - x2) ** 2 + (y - y2) ** 2)
 
-        if current_module_id == module_id2:
-            # Same module: use pixel spacing
-            max_distance = (pixel_spacing + tolerance) * 1.2
-        else:
-            # Different modules: include module gap
-            max_distance = (pixel_spacing + module_gap + tolerance) * 1.2
+        # Determine max distance based on whether pixels are in same module
+        max_distance = (
+            pixel_spacing + (0 if current_module_id == module_id2 else module_gap) + tolerance
+        ) * 1.2
 
         if dist <= max_distance:
             count += 1
@@ -479,6 +557,31 @@ def _configure_plot(
     ytitle=None,
     fov_info=None,
 ):
+    """Configure the plot with titles, labels, and limits.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to configure
+    x_pos, y_pos : array-like
+        Arrays of x and y positions of pixels
+    rotation : float, optional
+        Rotation angle in degrees, default 0
+    title : str, optional
+        Plot title
+    xtitle : str, optional
+        X-axis label
+    ytitle : str, optional
+        Y-axis label
+    fov_info : dict, optional
+        Information about the field of view, including diameter, focal length,
+        and edge radius
+
+    Returns
+    -------
+    None
+        The function modifies the plot axes in place.
+    """
     # First set the aspect ratio
     ax.set_aspect("equal")
 
@@ -543,13 +646,17 @@ def _add_coordinate_axes(ax, x_pos, y_pos, rotation=0):
         Arrays of x and y positions of pixels
     rotation : float
         Rotation angle in degrees
+
+    Returns
+    -------
+    None
     """
-    # Calculate the length of the axes
+    # Calculate plot dimensions
     x_range = max(x_pos) - min(x_pos)
     y_range = max(y_pos) - min(y_pos)
     axis_length = min(x_range, y_range) * 0.08
 
-    # Find the rightmost and bottom-most pixels
+    # Find position for coordinate system
     rightmost_x = max(x_pos)
     bottommost_y = min(y_pos)
 

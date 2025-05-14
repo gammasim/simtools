@@ -1,8 +1,10 @@
 # Example .dat file for pixel layout plotting
 # Between pixels is a gap of 0.020 cm. Pixel spacing is 0.640 cm.
+# Between modules is an additional gap of 0.02 cm.
 # The camera has a nominal diameter of 0.340 m (radius 0.170 m), resulting in a
 # nominal field-of-view diameter of 9.04 deg at a focal length of 2.150 m.
-# Rotate 0.0   # Not needed if zero.
+# Mean radius of camera edge is 0.170 m.
+Rotate 10.0
 
 PixType 1   0  2 0.6   2 0.6 0.000   "funnel_perfect.dat"
 
