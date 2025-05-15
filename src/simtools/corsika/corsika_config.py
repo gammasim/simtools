@@ -638,9 +638,8 @@ class CorsikaConfig:
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
         """
-        if file_type == "config_tmp":
-            if run_number is None:
-                raise ValueError("Must provide a run number for a temporary CORSIKA config file")
+        if file_type == "config_tmp" and run_number is None:
+            raise ValueError("Must provide a run number for a temporary CORSIKA config file")
 
         file_label = f"_{self.label}" if self.label is not None else ""
 
