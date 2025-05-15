@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-docs-produce-model-parameter-reports
     TEST_NAME: run
+    TEST_USE_CASE: UC-150-2.3
     CONFIGURATION:
       SITE: North
       TELESCOPE: LSTN-01

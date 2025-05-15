@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-docs-produce-simulation-configuration-report
     TEST_NAME: run
+    TEST_USE_CASE: UC-150-2.3
     CONFIGURATION:
       MODEL_VERSION: 6.0.0
       SIMULATION_SOFTWARE: corsika
