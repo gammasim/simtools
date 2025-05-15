@@ -292,7 +292,7 @@ class CameraEfficiency:
                 self._results, self._file["results"], format="basic", overwrite=True
             )
             _results_summary_file = (
-                str(self._file["results"]).replace(".ecsv", ".txt").replace("-table-", "-summary-")
+                str(self._file["results"]).replace(".ecsv", ".txt").replace("_table_", "_summary_")
             )
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
             with open(_results_summary_file, "w", encoding="utf-8") as file:
