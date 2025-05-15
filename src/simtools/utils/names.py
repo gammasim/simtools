@@ -658,7 +658,7 @@ def generate_file_name(
     """
     Generate a file name for output, config, or plotting.
 
-    Used e.g., to generate camera-efficiency and ray-tracing output files.
+    Used e.g., to generate camera_efficiency and ray_tracing output files.
 
     Parameters
     ----------
