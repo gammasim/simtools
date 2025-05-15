@@ -54,7 +54,9 @@ def test_init_zero_focal_length(caplog):
 
 def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, caplog):
     test_file = io_handler.get_input_data_file(
-        file_name="photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz",
+        file_name=(
+            "ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz"
+        ),
         test=True,
     )
     image = PSFImage(focal_length=2800.0)
@@ -69,7 +71,7 @@ def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, 
     # Unzip the file in the temporary test directory
     unzipped_file_path = (
         tmp_test_directory
-        / "photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis"
+        / "ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis"
     )
     with gzip.open(tmp_test_directory / test_file.name, "rb") as f_in:
         with open(unzipped_file_path, "wb") as f_out:
