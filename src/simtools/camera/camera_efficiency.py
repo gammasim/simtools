@@ -114,7 +114,7 @@ class CameraEfficiency:
         ):
             file_name = names.generate_file_name(
                 file_type=(
-                    "camera-efficiency-table" if label == "results" else "camera-efficiency"
+                    "camera_efficiency_table" if label == "results" else "camera_efficiency"
                 ),
                 suffix=suffix,
                 site=self.telescope_model.site,
@@ -126,7 +126,7 @@ class CameraEfficiency:
 
             _file[label] = self.io_handler.get_output_directory(
                 label=self.label,
-                sub_dir="camera-efficiency",
+                sub_dir="camera_efficiency",
             ).joinpath(file_name)
         return _file
 
