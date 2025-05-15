@@ -59,7 +59,7 @@ def runner_service_config_only_diffuse_gamma(corsika_config_mock_array_model):
 def file_base_name(model_version):
     """Base name for simulation test file."""
     return (
-        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}_test-corsika-runner"
+        f"proton_run000001_za20deg_azm000deg_South_test_layout_{model_version}_test-corsika-runner"
     )
 
 
@@ -131,7 +131,7 @@ def test_has_file(io_handler, runner_service, file_base_name):
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
         corsika_file,
-        output_directory.joinpath(f"{file_base_name}.zst"),
+        output_directory.joinpath(f"{file_base_name}.corsika.zst"),
     )
     assert runner_service.has_file(file_type="corsika_output", run_number=1)
     assert not runner_service.has_file(file_type="log", run_number=1234)
@@ -142,7 +142,7 @@ def test_get_file_basename(runner_service, file_base_name, model_version):
     _runner_service_copy = copy.deepcopy(runner_service)
     _runner_service_copy.label = ""
     assert _runner_service_copy._get_file_basename(1) == (
-        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}"
+        f"proton_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
 
@@ -170,7 +170,7 @@ def test_get_data_file_path(runner_service, corsika_runner_mock_array_model, fil
         file_type="corsika_output", file_name=file_base_name, run_number=1
     ) == corsika_runner_mock_array_model._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
-    ).joinpath(f"{file_base_name}.zst")
+    ).joinpath(f"{file_base_name}.corsika.zst")
 
     # simtel output
     assert runner_service._get_data_file_path(
