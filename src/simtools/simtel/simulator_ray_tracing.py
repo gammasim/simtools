@@ -93,7 +93,7 @@ class SimulatorRayTracing(SimtelRunner):
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
         for base_name in ["stars", "photons", "log"]:
             file_name = names.generate_file_name(
-                file_type=base_name,
+                file_type=f"ray_tracing_{base_name}",
                 suffix=".log" if base_name == "log" else ".lis",
                 site=self.telescope_model.site,
                 telescope_model_name=self.telescope_model.name,
@@ -203,7 +203,7 @@ class SimulatorRayTracing(SimtelRunner):
 
         return clear_default_sim_telarray_cfg_directories(command), self._log_file, self._log_file
 
-    def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
+    def _check_run_result(self, _run_number=None):
         """
         Check run results.
 
