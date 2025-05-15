@@ -587,8 +587,8 @@ def test_set_output_file_and_directory(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
     output_file = cc.set_output_file_and_directory()
     assert str(output_file) == (
-        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-10_test"
-        "-corsika-config_South_test_layout_test-corsika-config.zst"
+        "proton_runXXXXXX_za020deg_azm000deg_cone0-10_South_test_layout"
+        "_6.0.0_test-corsika-config.zst"
     )
     assert isinstance(cc.config_file_path, pathlib.Path)
 
