@@ -14,7 +14,7 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: validate_camera_efficiency_MSTx-FlashCam_nsb.png
     - OUTPUT_FILE: validate_camera_efficiency_MSTx-FlashCam_cherenkov.png
     - OUTPUT_FILE: validate_camera_efficiency_MSTx-FlashCam_cherenkov.pdf
-    - OUTPUT_FILE: camera-efficiency-summary-South-MSTx-FlashCam-za20.0deg_azm000deg_validate_camera_efficiency.txt
-    - OUTPUT_FILE: camera-efficiency-table-South-MSTx-FlashCam-za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+    - OUTPUT_FILE: camera_efficiency_summary_South_MSTx-FlashCam_za20.0deg_azm000deg_validate_camera_efficiency.txt
+    - OUTPUT_FILE: camera_efficiency_table_South_MSTx-FlashCam_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
