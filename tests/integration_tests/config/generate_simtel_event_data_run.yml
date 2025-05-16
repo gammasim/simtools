@@ -4,11 +4,12 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-generate-simtel-event-data
     TEST_NAME: run
     CONFIGURATION:
-      PREFIX: tests/resources/
-      WILDCARD: '*proton*.simtel.zst'
+      INPUT: 'tests/resources/*proton*.simtel.zst'
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: output_file.hdf5
-      MAX_FILES: 1
+      USE_PLAIN_OUTPUT_PATH: true
+      MAX_FILES: 2
+      PRINT_DATASET_INFORMATION: 5
     INTEGRATION_TESTS:
     - OUTPUT_FILE: output_file.hdf5
 SCHEMA_NAME: application_workflow.metaschema

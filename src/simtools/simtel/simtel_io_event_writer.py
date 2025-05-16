@@ -1,4 +1,4 @@
-"""Generate a reduced dataset from given simulation event list and save the output to file."""
+"""Generate a reduced dataset containing mostly shower information and triggered telescopes."""
 
 import logging
 from dataclasses import dataclass, field
@@ -49,8 +49,13 @@ class TriggeredEventData:
 
 
 class SimtelIOEventDataWriter:
-    """
-    Generate a reduced dataset from given simulation event list and save the output to file.
+    """Process sim_telarray events and write reduced data to file.
+
+    Extracts essential information from sim_telarray output files:
+
+    - Shower parameters (energy, core location, direction)
+    - Trigger patterns
+    - Telescope pointing
 
     Attributes
     ----------
