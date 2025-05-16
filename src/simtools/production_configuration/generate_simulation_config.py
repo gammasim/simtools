@@ -1,7 +1,7 @@
 """Derives simulation configuration parameters for a grid point based on several metrics."""
 
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.derive_production_statistics import (
     ProductionStatisticsDerivator,
@@ -34,7 +34,7 @@ class SimulationConfig:
         self.grid_point = grid_point
         self.file_path = file_path
         self.metrics = metrics or {}
-        self.evaluator = StatisticalErrorEvaluator(file_path, metrics)
+        self.evaluator = StatisticalUncertaintyEvaluator(file_path, metrics)
         self.derive_production_statistics = ProductionStatisticsDerivator(
             self.evaluator, self.metrics
         )

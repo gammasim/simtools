@@ -20,6 +20,12 @@ from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
 logger = logging.getLogger()
 
+CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.CorsikaConfig"
+INITIALIZE_RUN_LIST_ERROR_MSG = (
+    "Error in initializing run list "
+    "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
+)
+
 
 @pytest.fixture
 def input_file_list():
@@ -47,7 +53,8 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     args_dict["array_layout_name"] = "test_layout"
     args_dict["site"] = "North"
     args_dict["keep_seeds"] = False
-    args_dict["run_number_start"] = 1
+    args_dict["run_number"] = 1
+    args_dict["run_number_offset"] = 0
     args_dict["nshow"] = 10
     args_dict["submit_engine"] = submit_engine
     args_dict["extra_commands"] = None
@@ -84,6 +91,7 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "test-shower-array-simulator"
+    args_dict["sequential"] = True
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
@@ -116,14 +124,52 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
 def test_initialize_run_list(shower_simulator, caplog):
     assert shower_simulator._initialize_run_list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     test_shower_simulator = copy.deepcopy(shower_simulator)
-    test_shower_simulator.args_dict.pop("run_number_start", None)
+    test_shower_simulator.args_dict.pop("run_number_offset", None)
     with caplog.at_level(logging.ERROR):
         with pytest.raises(KeyError):
             test_shower_simulator._initialize_run_list()
-    assert (
-        "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
-        in caplog.text
-    )
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
+
+
+def test_initialize_run_list_valid_cases(shower_simulator):
+    # Test case where number_of_runs <= 1
+    shower_simulator.args_dict["number_of_runs"] = 1
+    shower_simulator.args_dict["run_number"] = 5
+    shower_simulator.args_dict["run_number_offset"] = 10
+    result = shower_simulator._initialize_run_list()
+    assert result == [15]  # run_number_offset + run_number
+
+    # Test case where number_of_runs > 1
+    shower_simulator.args_dict["number_of_runs"] = 3
+    shower_simulator.args_dict["run_number"] = 5
+    shower_simulator.args_dict["run_number_offset"] = 10
+    result = shower_simulator._initialize_run_list()
+    assert result == [15, 16, 17]  # range from 15 to 17
+
+
+def test_initialize_run_list_missing_keys(shower_simulator, caplog):
+    # Test missing 'run_number'
+    shower_simulator.args_dict.pop("run_number", None)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            shower_simulator._initialize_run_list()
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
+
+    # Test missing 'run_number_offset'
+    shower_simulator.args_dict["run_number"] = 5
+    shower_simulator.args_dict.pop("run_number_offset", None)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            shower_simulator._initialize_run_list()
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
+
+    # Test missing 'number_of_runs'
+    shower_simulator.args_dict["run_number_offset"] = 10
+    shower_simulator.args_dict.pop("number_of_runs", None)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            shower_simulator._initialize_run_list()
+    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
 
 def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
@@ -552,3 +598,74 @@ def test_get_seed_for_random_instrument_instances(shower_simulator):
         shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
     )
     assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
+
+
+def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, mocker):
+    # Mock CorsikaConfig to avoid actual initialization
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
+    mock_corsika_runner = mocker.patch("simtools.simulator.CorsikaRunner", autospec=True)
+
+    # Call the method
+    simulation_runner = shower_simulator._initialize_simulation_runner(db_config)
+
+    # Assertions
+    assert isinstance(simulation_runner, CorsikaRunner)
+    mock_corsika_config.assert_called_once_with(
+        array_model=shower_simulator.array_models[0],
+        label=shower_simulator.label,
+        args_dict=shower_simulator.args_dict,
+        db_config=db_config,
+    )
+    mock_corsika_runner.assert_called_once_with(
+        label=shower_simulator.label,
+        corsika_config=mock_corsika_config.return_value,
+        simtel_path=shower_simulator.args_dict.get("simtel_path"),
+        use_multipipe=False,
+        keep_seeds=shower_simulator.args_dict.get("corsika_test_seeds", False),
+    )
+
+
+def test_initialize_simulation_runner_with_sim_telarray(array_simulator, db_config, mocker):
+    # Mock SimulatorArray to avoid actual initialization
+    mock_simulator_array = mocker.patch("simtools.simulator.SimulatorArray", autospec=True)
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
+
+    # Call the method
+    simulation_runner = array_simulator._initialize_simulation_runner(db_config)
+
+    # Assertions
+    assert isinstance(simulation_runner, SimulatorArray)
+    mock_simulator_array.assert_called_once_with(
+        label=array_simulator.label,
+        corsika_config=mock_corsika_config.return_value,
+        simtel_path=array_simulator.args_dict.get("simtel_path"),
+        use_multipipe=False,
+        sim_telarray_seeds=array_simulator.sim_telarray_seeds,
+    )
+
+
+def test_initialize_simulation_runner_with_corsika_sim_telarray(
+    shower_array_simulator, db_config, mocker
+):
+    # Mock CorsikaConfig and CorsikaSimtelRunner to avoid actual initialization
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
+    mock_corsika_simtel_runner = mocker.patch(
+        "simtools.simulator.CorsikaSimtelRunner", autospec=True
+    )
+
+    # Call the method
+    simulation_runner = shower_array_simulator._initialize_simulation_runner(db_config)
+
+    # Assertions
+    assert isinstance(simulation_runner, CorsikaSimtelRunner)
+    mock_corsika_config.assert_called()
+    mock_corsika_simtel_runner.assert_called_once_with(
+        label=shower_array_simulator.label,
+        corsika_config=[mock_corsika_config.return_value]
+        * len(shower_array_simulator.array_models),
+        simtel_path=shower_array_simulator.args_dict.get("simtel_path"),
+        use_multipipe=True,
+        sim_telarray_seeds=shower_array_simulator.sim_telarray_seeds,
+        sequential=shower_array_simulator.args_dict.get("sequential", False),
+        keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
+    )

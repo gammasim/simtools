@@ -13,7 +13,7 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_nsb.png
     - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_cherenkov.png
     - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_cherenkov.pdf
-    - OUTPUT_FILE: camera-efficiency-summary-North-MSTx-NectarCam-za20.0deg_azm000deg_validate_camera_efficiency.txt
-    - OUTPUT_FILE: camera-efficiency-table-North-MSTx-NectarCam-za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+    - OUTPUT_FILE: camera_efficiency_summary_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.txt
+    - OUTPUT_FILE: camera_efficiency_table_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

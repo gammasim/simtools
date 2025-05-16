@@ -42,6 +42,7 @@ class CorsikaSimtelRunner:
         keep_seeds=False,
         use_multipipe=False,
         sim_telarray_seeds=None,
+        sequential=False,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = (
@@ -53,6 +54,7 @@ class CorsikaSimtelRunner:
         self._simtel_path = simtel_path
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
+        self.sequential = "--sequential" if sequential else ""
 
         self.base_corsika_config.set_output_file_and_directory(use_multipipe)
         self.corsika_runner = CorsikaRunner(
@@ -167,7 +169,8 @@ class CorsikaSimtelRunner:
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
             multipipe_command = Path(self._simtel_path).joinpath(
-                f"sim_telarray/bin/multipipe_corsika -c {multipipe_file} || echo 'Fan-out failed'"
+                f"sim_telarray/bin/multipipe_corsika -c {multipipe_file} {self.sequential} "
+                "|| echo 'Fan-out failed'"
             )
             file.write(f"{multipipe_command}")
 

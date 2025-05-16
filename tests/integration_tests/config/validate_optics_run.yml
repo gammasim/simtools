@@ -13,6 +13,6 @@ CTA_SIMPIPE:
       TEST: true
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: results/ray-tracing-North-LSTN-01-d11.0km-za20.0deg_validate_optics.ecsv
+    - OUTPUT_FILE: results/ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics.ecsv
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

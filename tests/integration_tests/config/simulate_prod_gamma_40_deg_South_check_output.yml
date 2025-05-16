@@ -10,8 +10,7 @@ CTA_SIMPIPE:
       SITE: South
       ARRAY_LAYOUT_NAME: beta
       PRIMARY: gamma
-      RUN_NUMBER_START: 1
-      NUMBER_OF_RUNS: 1
+      RUN_NUMBER: 1
       AZIMUTH_ANGLE: South
       ZENITH_ANGLE: 40
       NSHOW: 5
@@ -26,9 +25,9 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za40deg_azm180deg_South_beta_6.0.0_check_output.log_hist.tar.gz
+        FILE: gamma_run000001_za40deg_azm180deg_South_beta_6.0.0_check_output.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za40deg_azm180deg_South_beta_6.0.0_check_output.zst
+        FILE: gamma_run000001_za40deg_azm180deg_South_beta_6.0.0_check_output.zst
         EXPECTED_OUTPUT:
           trigger_time:
           - 0

@@ -3,9 +3,31 @@
 import pytest
 
 from simtools.simtel.simtel_io_metadata import (
+    _decode_dictionary,
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
+
+
+def test_decode_success():
+    test_meta = {b"key1": b"value1", b"key2": b"value2"}
+    result = _decode_dictionary(test_meta)
+    assert result == {"key1": "value1", "key2": "value2"}
+    result = _decode_dictionary(test_meta, encoding="ascii")
+    assert result == {"key1": "value1", "key2": "value2"}
+
+
+def test_decode_with_unicode_error(caplog):
+    # Create metadata with invalid unicode bytes
+    test_meta = {b"key1": b"value1", b"key2": b"\xff\xfe invalid utf8"}
+
+    result = _decode_dictionary(test_meta, encoding="utf-8")
+
+    assert "key1" in result
+    assert "key2" in result
+    assert result["key1"] == "value1"
+    assert result["key2"] == " invalid utf8"
+    assert "Failed to decode metadata with encoding utf-8" in caplog.text
 
 
 @pytest.fixture
