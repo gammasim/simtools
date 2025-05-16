@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 import simtools.utils.general as gen
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
+from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
+    StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
 
@@ -29,13 +29,10 @@ def mock_statistical_error_evaluator():
             ),
             "uncertainties": np.array([0.01]),
         },
-        "error_sig_eff_gh": 0.02,
         "energy_estimate": 0.2,
-        "error_gamma_ray_psf": 0.01,
-        "error_image_template_methods": 0.05,
     }
 
-    mock_evaluator = MagicMock(spec=StatisticalErrorEvaluator)
+    mock_evaluator = MagicMock(spec=StatisticalUncertaintyEvaluator)
     mock_evaluator.metric_results = metric_results
     mock_evaluator.calculate_metrics.return_value = None
     mock_evaluator.calculate_required_events = MagicMock(return_value=1e5)
@@ -66,11 +63,11 @@ def test_configure_simulation(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 30.0, "elevation": 40.0}
     metrics = {
         "uncertainty_effective_area": {
-            "target_error": {"value": 0.1, "unit": "dimensionless"},
+            "target_uncertainty": {"value": 0.1, "unit": "dimensionless"},
             "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
         "energy_estimate": {
-            "target_error": {"value": 0.2, "unit": "dimensionless"},
+            "target_uncertainty": {"value": 0.2, "unit": "dimensionless"},
             "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
     }

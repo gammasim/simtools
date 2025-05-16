@@ -658,7 +658,7 @@ def generate_file_name(
     """
     Generate a file name for output, config, or plotting.
 
-    Used e.g., to generate camera-efficiency and ray-tracing output files.
+    Used e.g., to generate camera_efficiency and ray_tracing output files.
 
     Parameters
     ----------
@@ -690,10 +690,10 @@ def generate_file_name(
     str
         File name.
     """
-    name = f"{file_type}-{site}-{telescope_model_name}"
-    name += f"-d{source_distance:.1f}km" if source_distance is not None else ""
-    name += f"-za{float(zenith_angle):.1f}deg"
-    name += f"-off{off_axis_angle:.3f}deg" if off_axis_angle is not None else ""
+    name = f"{file_type}_{site}_{telescope_model_name}"
+    name += f"_d{source_distance:.1f}km" if source_distance is not None else ""
+    name += f"_za{float(zenith_angle):.1f}deg"
+    name += f"_off{off_axis_angle:.3f}deg" if off_axis_angle is not None else ""
     name += f"_azm{round(azimuth_angle):03}deg" if azimuth_angle is not None else ""
     name += f"_mirror{mirror_number}" if mirror_number is not None else ""
     name += f"_{label}" if label is not None else ""
