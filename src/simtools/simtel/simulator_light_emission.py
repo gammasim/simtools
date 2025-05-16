@@ -46,6 +46,7 @@ class SimulatorLightEmission(SimtelRunner):
         self._telescope_model = telescope_model
 
         self.label = label if label is not None else self._telescope_model.label
+        self.test = test
 
         self._calibration_model = calibration_model
         self._site_model = site_model
@@ -56,7 +57,9 @@ class SimulatorLightEmission(SimtelRunner):
         self._rep_number = 0
         self.runs = 1
         self.photons_per_run = (
-            self._calibration_model.get_parameter_value("photons_per_run") if not test else 1e7
+            (self._calibration_model.get_parameter_value("photons_per_run"))
+            if not self.test
+            else 1e8
         )
 
         self.le_application = le_application
@@ -64,7 +67,6 @@ class SimulatorLightEmission(SimtelRunner):
         self.distance = None
         self.light_source_type = light_source_type
         self._telescope_model.write_sim_telarray_config_file(additional_model=site_model)
-        self.test = test
 
     @staticmethod
     def light_emission_default_configuration():
@@ -196,6 +198,10 @@ class SimulatorLightEmission(SimtelRunner):
         )
         _model_directory = self.io_handler.get_output_directory(self.label, "model")
         _model_directory.mkdir(parents=True, exist_ok=True)
+        if not self.test:
+            config_directory = f"{_model_directory}/{self._telescope_model.model_version}/"
+        else:
+            config_directory = f"{_model_directory}/"
 
         telpos_file = self._write_telpos_file()
 
@@ -224,6 +230,7 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -d {','.join(map(str, pointing_vector))}"
 
                 command += f" -n {self.photons_per_run}"
+                print(f"Photons per run: {self.photons_per_run} ")
 
                 # same wavelength as for laser
                 command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
@@ -234,7 +241,7 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 command += " -a isotropic"  # angular distribution
 
-            command += f" -A {_model_directory}/{self._telescope_model.model_version}/"
+            command += f" -A {config_directory}"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
 
         elif self.light_source_type == "laser":

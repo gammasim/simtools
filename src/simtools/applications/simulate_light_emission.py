@@ -322,6 +322,7 @@ def main():
         simtel_path=args_dict["simtel_path"],
         light_source_type=args_dict["light_source_type"],
         label=label,
+        test=args_dict["test"],
     )
 
     if args_dict["light_source_setup"] == "variable":
