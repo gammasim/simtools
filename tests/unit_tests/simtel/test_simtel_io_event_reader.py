@@ -116,22 +116,11 @@ def test_print_dataset_information(mock_hdf5_file, capsys):
     assert str(reader.triggered_data.array_azimuths[0]) in output
 
 
-@pytest.mark.parametrize(
-    "input_responses",
-    [
-        [""],  # Press Enter to continue
-        ["q"],  # Quit early
-    ],
-)
-def test_print_event_table(mock_hdf5_file, capsys, monkeypatch, input_responses):
+def test_print_event_table(mock_hdf5_file, capsys):
     reader = SimtelIOEventDataReader(mock_hdf5_file)
 
-    # Mock the input() function
-    input_iter = iter(input_responses)
-    monkeypatch.setattr("builtins.input", lambda _: next(input_iter))
-
     # Call with small lines_per_page to trigger pagination
-    reader.print_event_table(lines_per_page=1)
+    reader.print_event_table()
 
     captured = capsys.readouterr()
     output = captured.out
