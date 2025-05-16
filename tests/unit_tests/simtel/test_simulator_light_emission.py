@@ -204,11 +204,11 @@ def test_make_light_emission_script(
         " -y 275.0"
         " -z 13700.0"
         " -d 0.979101,-0.104497,-0.174477"
-        " -n 10000000.0"
+        " -n 100000000.0"
         " -s 300"
         " -p Gauss:0.0"
         " -a isotropic"
-        f" -A {mock_output_path}/model/6.0.0/"
+        f" -A {mock_output_path}/model/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
