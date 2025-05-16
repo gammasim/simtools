@@ -46,6 +46,7 @@ class SimulatorLightEmission(SimtelRunner):
         self._telescope_model = telescope_model
 
         self.label = label if label is not None else self._telescope_model.label
+        self.test = test
 
         self._calibration_model = calibration_model
         self._site_model = site_model
@@ -56,7 +57,9 @@ class SimulatorLightEmission(SimtelRunner):
         self._rep_number = 0
         self.runs = 1
         self.photons_per_run = (
-            self._calibration_model.get_parameter_value("photons_per_run") if not test else 1e7
+            (self._calibration_model.get_parameter_value("photons_per_run"))
+            if not self.test
+            else 1e8
         )
 
         self.le_application = le_application
@@ -64,7 +67,6 @@ class SimulatorLightEmission(SimtelRunner):
         self.distance = None
         self.light_source_type = light_source_type
         self._telescope_model.write_sim_telarray_config_file(additional_model=site_model)
-        self.test = test
 
     @staticmethod
     def light_emission_default_configuration():
@@ -153,6 +155,29 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return pointing_vector.tolist(), [tel_theta, tel_phi, laser_theta, laser_phi]
 
+    def _write_telpos_file(self):
+        """
+        Write the telescope positions to a telpos file.
+
+        The file will contain lines in the format: x y z r in cm
+
+        Returns
+        -------
+        Path
+            The path to the generated telpos file.
+        """
+        telpos_file = self.output_directory.joinpath("telpos.dat")
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+            "array_element_position_ground"
+        )
+        x_tel, y_tel, z_tel = [coord * 100 for coord in (x_tel, y_tel, z_tel)]  # Convert to cm
+        radius = self._telescope_model.get_parameter_value("telescope_sphere_radius")
+        radius = radius * 100  # Convert to cm
+        with telpos_file.open("w", encoding="utf-8") as file:
+            file.write(f"{x_tel} {y_tel} {z_tel} {radius}\n")
+
+        return telpos_file
+
     def _make_light_emission_script(self):
         """
         Create the light emission script to run the light emission package.
@@ -172,10 +197,20 @@ class SimulatorLightEmission(SimtelRunner):
             self._telescope_model.get_parameter_value("array_element_position_ground") * u.m
         )
         _model_directory = self.io_handler.get_output_directory(self.label, "model")
+        _model_directory.mkdir(parents=True, exist_ok=True)
+        if not self.test:
+            config_directory = f"{_model_directory}/{self._telescope_model.model_version}/"
+        else:
+            config_directory = f"{_model_directory}/"
+
+        telpos_file = self._write_telpos_file()
+
         command = f" rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
+        command += f" -h  {self._site_model.get_parameter_value('corsika_observation_level')}"
+        command += f" --telpos-file {telpos_file}"
 
         if self.light_source_type == "led":
             if self.le_application[1] == "variable":
@@ -188,17 +223,14 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self.photons_per_run}"
 
             elif self.le_application[1] == "layout":
-                x_origin = x_cal - x_tel
-                y_origin = y_cal - y_tel
-                z_origin = z_cal - z_tel
-                # light_source coordinates relative to telescope
-                command += f" -x {x_origin.to(u.cm).value}"
-                command += f" -y {y_origin.to(u.cm).value}"
-                command += f" -z {z_origin.to(u.cm).value}"
+                command += f" -x {x_cal.to(u.cm).value}"
+                command += f" -y {y_cal.to(u.cm).value}"
+                command += f" -z {z_cal.to(u.cm).value}"
                 pointing_vector = self.calibration_pointing_direction()[0]
                 command += f" -d {','.join(map(str, pointing_vector))}"
 
                 command += f" -n {self.photons_per_run}"
+                print(f"Photons per run: {self.photons_per_run} ")
 
                 # same wavelength as for laser
                 command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
@@ -209,7 +241,7 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 command += " -a isotropic"  # angular distribution
 
-            command += f" -A {_model_directory}/"
+            command += f" -A {config_directory}"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
 
         elif self.light_source_type == "laser":
@@ -235,7 +267,7 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" --telescope-phi {angle_phi}"
             command += f" --laser-theta {90 - angles[2]}"
             command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
-            command += f" --atmosphere {_model_directory}/"
+            command += f" --atmosphere {_model_directory}/{self._telescope_model.model_version}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"
