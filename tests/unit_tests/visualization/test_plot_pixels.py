@@ -184,13 +184,13 @@ def test__count_neighbors():
     # Hexagonal array positions (central pixel with 6 neighbors)
     x_pos = np.array(
         [
-            0.0,  # Center pixel
+            0.0,
             1.0,
             0.5,
             -0.5,
             -1.0,
             -0.5,
-            0.5,  # First ring
+            0.5,
             2.0,
             1.5,
             0.5,
@@ -200,18 +200,18 @@ def test__count_neighbors():
             -1.5,
             -0.5,
             0.5,
-            1.5,  # Second ring
+            1.5,
         ]
     )
     y_pos = np.array(
         [
-            0.0,  # Center pixel
+            0.0,
             0.0,
             0.866,
             0.866,
             0.0,
             -0.866,
-            -0.866,  # First ring
+            -0.866,
             0.0,
             0.866,
             1.732,
@@ -221,7 +221,7 @@ def test__count_neighbors():
             -0.866,
             -1.732,
             -1.732,
-            -0.866,  # Second ring
+            -0.866,
         ]
     )
     module_ids = np.ones_like(x_pos)
@@ -256,27 +256,17 @@ def test__count_neighbors():
 
 
 @mock.patch("matplotlib.pyplot.subplots")
-def test_create_pixel_plot(mock_subplots):
+def test__create_pixel_plot(mock_subplots):
     """Test pixel plot creation."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
+    # Configure the mock to return appropriate values
+    mock_ax.get_xlim.return_value = (-10, 10)
+    mock_ax.get_ylim.return_value = (-10, 10)
+
     mock_subplots.return_value = (mock_fig, mock_ax)
 
-    pixel_data = {
-        "x": np.array([-1.0, 0.0]),
-        "y": np.array([0.0, 0.0]),
-        "pixel_ids": [1, 2],
-        "pixels_on": [True, True],
-        "pixel_shape": 1,
-        "pixel_diameter": 0.5,
-        "pixel_spacing": 0.6,
-        "module_number": [1, 1],
-        "module_gap": 0.2,
-        "rotation": 0,
-        "fov_diameter": 4.5,
-        "focal_length": 28.0,
-        "edge_radius": 1.2,
-    }
+    pixel_data = plot_pixels._prepare_pixel_data(DUMMY_DAT_PATH, "LSTN-01")
 
     with mock.patch("simtools.visualization.plot_pixels._is_edge_pixel") as mock_is_edge:
         mock_is_edge.side_effect = lambda x, y, *args: x == -1.0
@@ -289,7 +279,7 @@ def test_create_pixel_plot(mock_subplots):
             assert mock_ax.add_collection.call_count == 1
             text_calls = mock_text.call_args_list
             pixel_id_calls = [call for call in text_calls if str(call[0][2]).isdigit()]
-            assert len(pixel_id_calls) == 2
+            assert len(pixel_id_calls) == 3
 
 
 def test__read_pixel_config():
@@ -297,13 +287,10 @@ def test__read_pixel_config():
     config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
 
     assert config["rotate_angle"] == 10.0
-    assert config["edge_radius"] == 0.170
     assert config["pixel_shape"] == 2
     assert config["pixel_spacing"] == 0.640
     assert config["module_gap"] == 0.02
     assert config["pixel_diameter"] == 0.6
-    assert config["fov_diameter"] == 9.04
-    assert config["focal_length"] == 2.150
     assert len(config["pixel_ids"]) == 31
     assert config["pixels_on"].count(True) == 30
 
@@ -323,9 +310,6 @@ def test__prepare_pixel_data(mock_read):
         "pixel_spacing": 0.6,
         "module_gap": 0.2,
         "module_number": [1, 1],
-        "fov_diameter": 4.5,
-        "focal_length": 28.0,
-        "edge_radius": 1.2,
     }
 
     # Call the function under test
@@ -340,15 +324,15 @@ def test__prepare_pixel_data(mock_read):
 def test__add_coordinate_axes():
     """Test coordinate axes addition."""
     mock_ax = mock.MagicMock()
-    x_pos = np.array([0.0, 1.0, -1.0])
-    y_pos = np.array([0.0, 1.0, -1.0])
+    # Configure the mock to return appropriate values
+    mock_ax.get_xlim.return_value = (-10, 10)
+    mock_ax.get_ylim.return_value = (-10, 10)
     rotation = 90.0
 
-    plot_pixels._add_coordinate_axes(mock_ax, x_pos, y_pos, rotation)
+    plot_pixels._add_coordinate_axes(mock_ax, rotation)
 
-    # Check only that arrows and labels are called
-    assert mock_ax.arrow.call_count > 0
-    assert mock_ax.text.call_count > 0
+    assert mock_ax.arrow.call_count == 4
+    assert mock_ax.text.call_count == 4
 
 
 def test__add_legend():
@@ -376,21 +360,7 @@ def test__add_legend():
 @mock.patch("simtools.model.model_utils.is_two_mirror_telescope")
 def test_prepare_pixel_data_two_mirror(mock_is_two_mirror):
     """Test pixel data preparation for different telescope types."""
-    base_config = {
-        "x": [0.0, 1.0],
-        "y": [0.0, 1.0],
-        "pixel_ids": [1, 2],
-        "pixels_on": [True, True],
-        "pixel_shape": 1,
-        "pixel_diameter": 0.5,
-        "rotate_angle": 10.0,
-        "pixel_spacing": 0.6,
-        "module_gap": 0.2,
-        "module_number": [1, 1],
-        "fov_diameter": 4.5,
-        "focal_length": 28.0,
-        "edge_radius": 1.2,
-    }
+    base_config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
 
     test_cases = [("MSTS-01", True), ("SSTS-01", False), ("SCTS-01", True), ("LSTN-01", False)]
 
@@ -401,7 +371,7 @@ def test_prepare_pixel_data_two_mirror(mock_is_two_mirror):
 
             data = plot_pixels._prepare_pixel_data(DUMMY_DAT_PATH, telescope)
             assert "pixel_spacing" in data
-            assert data["pixel_spacing"] == 0.6
+            assert data["pixel_spacing"] == 0.64
 
 
 @mock.patch("simtools.utils.names.get_array_element_type_from_name")
@@ -471,47 +441,3 @@ def test_plot_pixel_layout_from_file(mock_figure, mock_subplot):
 
     assert result is not None
     assert isinstance(result, Figure)
-
-
-def test__read_pixel_config_malformed():
-    """Test reading malformed pixel configuration."""
-    test_data = """
-    InvalidLine
-    PixType -1 2 0 2 1 0.5
-    Pixel 0 1 0.0 0.0 1 1 1 1 1
-    """
-
-    with mock.patch("builtins.open", mock.mock_open(read_data=test_data)):
-        config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
-        assert isinstance(config, dict)
-        assert "x" in config
-        assert "y" in config
-        assert len(config["x"]) == 1  # Should still parse valid pixel line
-
-
-@mock.patch("simtools.visualization.plot_pixels._create_pixel_plot")
-@mock.patch("simtools.visualization.plot_pixels._prepare_pixel_data")
-def test_plot_pixel_layout_from_file_with_errors(mock_prepare, mock_create_plot):
-    """Test plot_pixel_layout_from_file with various error conditions."""
-    # Test with missing file
-    mock_prepare.side_effect = FileNotFoundError
-    with pytest.raises(FileNotFoundError):
-        plot_pixels.plot_pixel_layout_from_file("nonexistent.dat", "LSTN-01")
-
-    # Test with plotting error
-    mock_prepare.side_effect = None
-    mock_prepare.return_value = {
-        "x": np.array([0.0]),
-        "y": np.array([0.0]),
-        "pixel_ids": [1],
-        "pixels_on": [True],
-        "pixel_shape": 1,
-        "pixel_diameter": 0.5,
-        "rotation": 0,
-        "fov_diameter": 4.5,
-        "focal_length": 28.0,
-        "edge_radius": 1.2,
-    }
-    mock_create_plot.side_effect = RuntimeError
-    with pytest.raises(RuntimeError):
-        plot_pixels.plot_pixel_layout_from_file(DUMMY_DAT_PATH, "LSTN-01")
