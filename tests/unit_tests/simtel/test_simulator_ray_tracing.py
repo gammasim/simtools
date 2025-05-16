@@ -10,6 +10,8 @@ from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
 
 logger = logging.getLogger()
 
+LABEL = "test_simulator_ray_tracing"
+
 
 @pytest.fixture
 def ray_tracing_sst(telescope_model_sst, site_model_south, simtel_path):
@@ -17,7 +19,7 @@ def ray_tracing_sst(telescope_model_sst, site_model_south, simtel_path):
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
         simtel_path=simtel_path,
-        label="test-simtel-runner-ray-tracing",
+        label=LABEL,
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
@@ -31,7 +33,7 @@ def ray_tracing_mst(telescope_model_mst, site_model_south, simtel_path):
         telescope_model=telescope_model_mst,
         site_model=site_model_south,
         simtel_path=simtel_path,
-        label="test-simtel-runner-ray-tracing",
+        label=LABEL,
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
@@ -53,7 +55,7 @@ def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_s
             "use_random_focal_length": ray_tracing_sst.use_random_focal_length,
             "mirror_numbers": 0,
         },
-        label="test-simtel-runner-ray-tracing",
+        label=LABEL,
     )
 
 
@@ -73,7 +75,7 @@ def simulator_ray_tracing_single_mirror(
             "use_random_focal_length": ray_tracing_mst.use_random_focal_length,
             "mirror_numbers": 0,
         },
-        label="test-simtel-runner-ray-tracing",
+        label=LABEL,
     )
 
 
@@ -169,9 +171,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
         in command
     )
     assert "altitude=2147.0 -C telescope_theta=20.0 -C star_photons=100000" in command
-    log_file = (
-        "log-South-SSTS-design-d10.0km-za20.0deg-off0.000deg_test-simtel-runner-ray-tracing.log"
-    )
+    log_file = f"ray_tracing_log_South_SSTS-design_d10.0km_za20.0deg_off0.000deg_{LABEL}.log"
     assert stdout_file.name == log_file
     assert stderr_file.name == log_file
 

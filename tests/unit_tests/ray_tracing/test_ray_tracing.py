@@ -16,7 +16,9 @@ from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
 
 @pytest.fixture
 def test_photons_file():
-    return Path("photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz")
+    return Path(
+        "ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz"
+    )
 
 
 @pytest.fixture
@@ -58,11 +60,11 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north, simtel_path):
     output_directory = ray_tracing_lst.output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        "tests/resources/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_validate_optics.ecsv",
+        "tests/resources/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv",
         output_directory.joinpath("results"),
     )
     shutil.copy(
-        "tests/resources/photons-North-LSTN-01-d10.0km-za20.0deg-off0.000"
+        "tests/resources/ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000"
         "deg_validate_optics.lis.gz",
         output_directory,
     )
@@ -643,7 +645,7 @@ def test_plot_valid_key(ray_tracing_lst, mocker, off_axis_string):
 
     mock_visualize_plot_table.assert_called_once()
     mock_generate_file_name.assert_called_once_with(
-        file_type="ray-tracing",
+        file_type="ray_tracing",
         suffix=".pdf",
         extra_label="d80_cm",
     )

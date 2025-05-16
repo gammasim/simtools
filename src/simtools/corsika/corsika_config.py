@@ -638,6 +638,9 @@ class CorsikaConfig:
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
         """
+        if file_type == "config_tmp" and run_number is None:
+            raise ValueError("Must provide a run number for a temporary CORSIKA config file")
+
         file_label = f"_{self.label}" if self.label is not None else ""
 
         _vc_low = self.get_config_parameter("VIEWCONE")[0]
@@ -646,25 +649,27 @@ class CorsikaConfig:
             f"_cone{int(_vc_low):d}-{int(_vc_high):d}" if _vc_low != 0 or _vc_high != 0 else ""
         )
 
+        run_number_in_file_name = ""
+        if file_type == "output_generic":
+            # The XXXXXX will be replaced by the run number after the pfp step with sed
+            run_number_in_file_name = "runXXXXXX_"
+        if file_type == "config_tmp":
+            run_number_in_file_name = f"run{run_number:06}_"
+
         base_name = (
-            f"{self.primary_particle.name}_{self.array_model.site}_{self.array_model.layout_name}_"
-            f"za{int(self.get_config_parameter('THETAP')[0]):03}-"
-            f"azm{self.azimuth_angle:03}deg"
-            f"{view_cone}{file_label}"
+            f"{self.primary_particle.name}_{run_number_in_file_name}"
+            f"za{int(self.get_config_parameter('THETAP')[0]):03}deg_"
+            f"azm{self.azimuth_angle:03}deg{view_cone}_"
+            f"{self.array_model.site}_{self.array_model.layout_name}_"
+            f"{self.array_model.model_version}{file_label}"
         )
 
         if file_type == "config_tmp":
-            if run_number is None:
-                raise ValueError("Must provide a run number for a temporary CORSIKA config file")
-            return f"corsika_config_run{run_number:06}_{base_name}.txt"
+            return f"corsika_config_{base_name}.txt"
         if file_type == "config":
             return f"corsika_config_{base_name}.input"
         if file_type == "output_generic":
-            # The XXXXXX will be replaced by the run number after the pfp step with sed
-            return (
-                f"runXXXXXX_{base_name}_{self.array_model.site}_"
-                f"{self.array_model.layout_name}{file_label}.zst"
-            )
+            return f"{base_name}.zst"
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 

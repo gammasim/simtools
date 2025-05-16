@@ -24,7 +24,7 @@ logger = logging.getLogger()
 @pytest.fixture
 def simtel_io_file(io_handler):
     return io_handler.get_input_data_file(
-        file_name="run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
+        file_name="proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
         test=True,
     )
 
@@ -32,7 +32,7 @@ def simtel_io_file(io_handler):
 @pytest.fixture
 def simtel_io_file_hdata(io_handler):
     return io_handler.get_input_data_file(
-        file_name="run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
+        file_name="gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
         test=True,
     )
 
