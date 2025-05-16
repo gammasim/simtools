@@ -186,7 +186,7 @@ def test_runs(mock_simulator):
 
 
 def test_photons_per_run_default(mock_simulator):
-    assert mock_simulator.photons_per_run == pytest.approx(1e7)
+    assert mock_simulator.photons_per_run == pytest.approx(1e8)
 
 
 def test_make_light_emission_script(
