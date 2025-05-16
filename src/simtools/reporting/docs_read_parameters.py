@@ -111,7 +111,7 @@ class ReadParameters:
                         "\n\nThe full file can be found in the Simulation Model repository [here]"
                         "(https://gitlab.cta-observatory.org/cta-science/simulations/"
                         "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                        f"model_parameters/Files/{input_file.name}).\n\n"
+                        f"model_parameters/Files/{input_file.stem}).\n\n"
                     )
                     outfile.write("\n\n")
                     outfile.write("The first 30 lines of the file are:\n")
