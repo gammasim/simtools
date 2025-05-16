@@ -89,11 +89,11 @@ class RayTracing:
         self.use_random_focal_length = use_random_focal_length
         self.mirrors = self._initialize_mirror_configuration(source_distance, mirror_numbers)
         self.output_directory = self._io_handler.get_output_directory(
-            label=self.label, sub_dir="ray-tracing"
+            label=self.label, sub_dir="ray_tracing"
         )
         self.output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
         self._file_results = self.output_directory.joinpath("results").joinpath(
-            self._generate_file_name(file_type="ray-tracing", suffix=".ecsv")
+            self._generate_file_name(file_type="ray_tracing", suffix=".ecsv")
         )
         self._psf_images = {}
         self._results = None
@@ -513,7 +513,7 @@ class RayTracing:
 
         if save:
             plot_file_name = self._generate_file_name(
-                file_type="ray-tracing",
+                file_type="ray_tracing",
                 suffix=".pdf",
                 extra_label=key,
             )
@@ -524,7 +524,7 @@ class RayTracing:
 
             for off_axis_key, image in self._psf_images.items():
                 image_file_name = self._generate_file_name(
-                    file_type="ray-tracing",
+                    file_type="ray_tracing",
                     off_axis_angle=off_axis_key,
                     suffix=".pdf",
                     extra_label=f"image_{key}",
@@ -534,7 +534,7 @@ class RayTracing:
                 image.plot_image(file_name=image_file)
 
                 image_cumulative_file_name = self._generate_file_name(
-                    file_type="ray-tracing",
+                    file_type="ray_tracing",
                     off_axis_angle=off_axis_key,
                     suffix=".pdf",
                     extra_label=f"cumulative_psf_{key}",
@@ -636,8 +636,9 @@ class RayTracing:
         self, file_type, suffix, off_axis_angle=None, mirror_number=None, extra_label=None
     ):
         """Generate file name for output files."""
+        file_type_prefix = file_type if file_type == "ray_tracing" else f"ray_tracing_{file_type}"
         return names.generate_file_name(
-            file_type=file_type,
+            file_type=file_type_prefix,
             suffix=suffix,
             site=self.telescope_model.site,
             telescope_model_name=self.telescope_model.name,
