@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c2905333"></script>
+    <script src="../../_static/documentation_options.js?v=c4569635"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/corsika/corsika_config';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga0c884e" />
+  <meta name="docsearch:version" content="0.1.dev1+g419689e" />
   </head>
   
   
@@ -1056,6 +1056,9 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            If file_type is unknown or if the run number is not given for file_type==config_tmp.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;config_tmp&quot;</span> <span class="ow">and</span> <span class="n">run_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide a run number for a temporary CORSIKA config file&quot;</span><span class="p">)</span>
+
         <span class="n">file_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
         <span class="n">_vc_low</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s2">&quot;VIEWCONE&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -1064,25 +1067,27 @@
             <span class="sa">f</span><span class="s2">&quot;_cone</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">_vc_low</span><span class="p">)</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">_vc_high</span><span class="p">)</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">_vc_low</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">_vc_high</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="p">)</span>
 
+        <span class="n">run_number_in_file_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;output_generic&quot;</span><span class="p">:</span>
+            <span class="c1"># The XXXXXX will be replaced by the run number after the pfp step with sed</span>
+            <span class="n">run_number_in_file_name</span> <span class="o">=</span> <span class="s2">&quot;runXXXXXX_&quot;</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;config_tmp&quot;</span><span class="p">:</span>
+            <span class="n">run_number_in_file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;run</span><span class="si">{</span><span class="n">run_number</span><span class="si">:</span><span class="s2">06</span><span class="si">}</span><span class="s2">_&quot;</span>
+
         <span class="n">base_name</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">_&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;za</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s1">&#39;THETAP&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">-&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;azm</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">view_cone</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">run_number_in_file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;za</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s1">&#39;THETAP&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg_&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;azm</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg</span><span class="si">{</span><span class="n">view_cone</span><span class="si">}</span><span class="s2">_&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">_&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;config_tmp&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">run_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide a run number for a temporary CORSIKA config file&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;corsika_config_run</span><span class="si">{</span><span class="n">run_number</span><span class="si">:</span><span class="s2">06</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">.txt&quot;</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;corsika_config_</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">.txt&quot;</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;config&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;corsika_config_</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">.input&quot;</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;output_generic&quot;</span><span class="p">:</span>
-            <span class="c1"># The XXXXXX will be replaced by the run number after the pfp step with sed</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;runXXXXXX_</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">.zst&quot;</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">.zst&quot;</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;multipipe&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;multi_cta-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">.cfg&quot;</span>
 

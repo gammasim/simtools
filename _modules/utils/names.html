@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c2905333"></script>
+    <script src="../../_static/documentation_options.js?v=c4569635"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/utils/names';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga0c884e" />
+  <meta name="docsearch:version" content="0.1.dev1+g419689e" />
   </head>
   
   
@@ -1077,7 +1077,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a file name for output, config, or plotting.</span>
 
-<span class="sd">    Used e.g., to generate camera-efficiency and ray-tracing output files.</span>
+<span class="sd">    Used e.g., to generate camera_efficiency and ray_tracing output files.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1109,10 +1109,10 @@
 <span class="sd">    str</span>
 <span class="sd">        File name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-d</span><span class="si">{</span><span class="n">source_distance</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">km&quot;</span> <span class="k">if</span> <span class="n">source_distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-za</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">zenith_angle</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">deg&quot;</span>
-    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-off</span><span class="si">{</span><span class="n">off_axis_angle</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">deg&quot;</span> <span class="k">if</span> <span class="n">off_axis_angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_d</span><span class="si">{</span><span class="n">source_distance</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">km&quot;</span> <span class="k">if</span> <span class="n">source_distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_za</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">zenith_angle</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">deg&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_off</span><span class="si">{</span><span class="n">off_axis_angle</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">deg&quot;</span> <span class="k">if</span> <span class="n">off_axis_angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_azm</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">azimuth_angle</span><span class="p">)</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg&quot;</span> <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_mirror</span><span class="si">{</span><span class="n">mirror_number</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">mirror_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
