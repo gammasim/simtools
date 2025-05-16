@@ -133,20 +133,15 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
     if not is_two_mirror_telescope(telescope_model_name):
         y_pos = -y_pos
 
-    # Apply rotation
-    base_angle = 0.0
-    if "MSTS" in telescope_model_name:
-        base_angle = 270.0
-    elif "SST" in telescope_model_name or "SCT" in telescope_model_name:
-        base_angle = 90.0
+    rotate_angle = config.get("rotate_angle") or 0.0
+
+    # Apply telescope-specific adjustments
+    if "SST" in telescope_model_name or "SCT" in telescope_model_name:
+        total_rotation = 90 - (rotate_angle)
     else:
-        base_angle = 248.2
+        total_rotation = -90 - (rotate_angle)
 
-    # Apply base rotation and any additional rotation from config
-    total_rotation = base_angle
-    if config.get("rotate_angle") is not None:
-        total_rotation += config["rotate_angle"]
-
+    # Apply rotation
     rot_angle = np.deg2rad(total_rotation)
     x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
     y_rot = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
@@ -163,9 +158,6 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
         "module_number": config["module_number"],
         "module_gap": config["module_gap"],
         "rotation": total_rotation,
-        "fov_diameter": config["fov_diameter"],
-        "focal_length": config["focal_length"],
-        "edge_radius": config["edge_radius"],
     }
 
 
@@ -249,11 +241,6 @@ def _create_pixel_plot(
         title=title,
         xtitle=xtitle,
         ytitle=ytitle,
-        fov_info={
-            "diameter": pixel_data.get("fov_diameter"),
-            "focal_length": pixel_data.get("focal_length"),
-            "edge_radius": pixel_data.get("edge_radius"),
-        },
     )
     _add_legend(ax, on_pixels, off_pixels)
 
@@ -289,9 +276,6 @@ def _read_pixel_config(dat_file_path):
         "module_gap": None,
         "trigger_groups": [],
         "rotate_angle": None,
-        "fov_diameter": None,
-        "focal_length": None,
-        "edge_radius": None,
         "module_number": [],
     }
 
@@ -303,17 +287,7 @@ def _read_pixel_config(dat_file_path):
                 continue
 
             # Parse specific information from the file
-            if "field-of-view diameter of" in line and "focal length of" in line:
-                fov_part = line.split("field-of-view diameter of")[1]
-                config["fov_diameter"] = float(fov_part.split("deg")[0].strip())
-                focal_part = line.split("focal length of")[1]
-                config["focal_length"] = float(focal_part.split("m")[0].strip())
-
-            elif "Mean radius of camera edge" in line and "is" in line:
-                radius_part = line.split("is")[1]
-                config["edge_radius"] = float(radius_part.split("m")[0].strip())
-
-            elif line.startswith("Rotate"):
+            if line.startswith("Rotate"):
                 # Parse rotation angle from line like "Rotate 10.893"
                 config["rotate_angle"] = float(line.split()[1].strip())
 
@@ -336,9 +310,9 @@ def _read_pixel_config(dat_file_path):
                 config["pixel_ids"].append(int(parts[1].strip()))
                 config["pixels_on"].append(int(parts[9].strip()) != 0)
 
-    # If pixel spacing is not explicitly provided, calculate it as diameter + gap
-    if config["pixel_spacing"] is None:
-        config["pixel_spacing"] = config["pixel_diameter"] + 0.02  # Default gap of 0.02 cm
+    config["pixel_spacing"] = (
+        config["pixel_diameter"] if config["pixel_spacing"] is None else config["pixel_spacing"]
+    )
     config["module_gap"] = 0.0 if config["module_gap"] is None else config["module_gap"]
 
     return config
@@ -554,7 +528,6 @@ def _configure_plot(
     title=None,
     xtitle=None,
     ytitle=None,
-    fov_info=None,
 ):
     """Configure the plot with titles, labels, and limits.
 
@@ -572,9 +545,7 @@ def _configure_plot(
         X-axis label
     ytitle : str, optional
         Y-axis label
-    fov_info : dict, optional
-        Information about the field of view, including diameter, focal length,
-        and edge radius
+
 
     Returns
     -------
@@ -608,152 +579,75 @@ def _configure_plot(
     )
     plt.tick_params(axis="both", which="major", labelsize=15)
 
-    # Add coordinate system axes
-    _add_coordinate_axes(ax, x_pos, y_pos, rotation)
-
-    # Add observer note at bottom left
-    x_min = min(x_pos) - (max(x_pos) - min(x_pos)) * 0.05  # Use same padding as plot limits
+    _add_coordinate_axes(ax, rotation)
+    x_min = min(x_pos) - (max(x_pos) - min(x_pos)) * 0.05
     y_min = min(y_pos) - (max(y_pos) - min(y_pos)) * 0.05
     ax.text(x_min, y_min, "For an observer facing the camera", fontsize=10, ha="left", va="bottom")
 
-    # Add FOV info at top left
-    if fov_info and fov_info["diameter"] and fov_info["focal_length"] and fov_info["edge_radius"]:
-        info_text = (
-            f"FoV diameter: {fov_info['diameter']:.2f} deg\n"
-            f"Focal length: {fov_info['focal_length']:.2f} m\n"
-            f"Edge radius: {fov_info['edge_radius'] * 100:.1f} cm"
-        )
-        ax.text(
-            x_min + x_padding * 0.2,  # Position near top left
-            y_max - y_padding * 0.1,
-            info_text,
-            fontsize=10,
-            ha="left",
-            va="top",
-            bbox={"facecolor": "white", "alpha": 0.8, "edgecolor": "none"},
-        )
 
+def _add_coordinate_axes(ax, rotation=0):
+    """Add coordinate system axes to the plot."""
+    # Setup dimensions and positions
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+    plot_size = min(x_max - x_min, y_max - y_min)
+    axis_length = plot_size * 0.08
 
-def _add_coordinate_axes(ax, x_pos, y_pos, rotation=0):
-    """Add coordinate system axes to the plot.
+    x_origin = x_max - axis_length * 1.0
+    y_origin_az = y_min + axis_length * 2.5
+    y_origin_pix = y_min + axis_length * 1.2
 
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to draw on
-    x_pos, y_pos : array-like
-        Arrays of x and y positions of pixels
-    rotation : float
-        Rotation angle in degrees
-
-    Returns
-    -------
-    None
-    """
-    # Calculate plot dimensions
-    x_range = max(x_pos) - min(x_pos)
-    y_range = max(y_pos) - min(y_pos)
-    axis_length = min(x_range, y_range) * 0.08
-
-    # Find position for coordinate system
-    rightmost_x = max(x_pos)
-    bottommost_y = min(y_pos)
-
-    # Calculate typical pixel spacing
-    pixel_distances = []
-    for i, (x1, y1) in enumerate(zip(x_pos, y_pos)):
-        for x2, y2 in zip(x_pos[i + 1 :], y_pos[i + 1 :]):
-            dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-            if dist > 0:  # Avoid same pixel
-                pixel_distances.append(dist)
-    pixel_spacing = min(pixel_distances) if pixel_distances else axis_length
-
-    # Position Az-Alt axes further away from pixels
-    x_origin = rightmost_x + pixel_spacing
-    y_origin = bottommost_y + pixel_spacing
-
-    # Adjust position if too close to plot border
-    x_padding = x_range * 0.1
-    if x_origin + axis_length > rightmost_x + x_padding:
-        x_origin = rightmost_x + x_padding - axis_length * 1.5
-
-    # Make arrows thinner and slightly longer
     arrow_style = {
         "head_width": axis_length * 0.15,
         "head_length": axis_length * 0.15,
         "width": axis_length * 0.02,
     }
-
     arrow_length = 0.6
-
-    # Check if this is an SST telescope by looking at the rotation angle
-    # SST telescopes have a base rotation of 90 degrees
     is_sst = abs(rotation - 90.0) < 1.0
-
     az_direction = 1 if is_sst else -1
-    ax.arrow(
+
+    def add_arrow_label(ox, oy, dx, dy, label, offset, color="black", ha="center", va="center"):
+        """Adding arrows with label."""
+        ax.arrow(ox, oy, dx, dy, fc=color, ec=color, **arrow_style)
+        if dx or dy:  # If not zero vector
+            dir_unit = np.sqrt(dx**2 + dy**2)
+            ax.text(
+                ox + dx + dx / dir_unit * axis_length * offset,
+                oy + dy + dy / dir_unit * axis_length * offset,
+                label,
+                ha=ha,
+                va=va,
+                color=color,
+                fontsize=10,
+                fontweight="bold",
+            )
+
+    # Az-Alt axes
+    az_dx = az_direction * axis_length * arrow_length
+    add_arrow_label(
         x_origin,
-        y_origin,
-        az_direction * axis_length * arrow_length,
+        y_origin_az,
+        az_dx,
         0,
-        fc="red",
-        ec="red",
-        **arrow_style,
-    )
-    # Position Az text based on direction
-    ax.text(
-        x_origin + az_direction * axis_length * (arrow_length + 0.2),
-        y_origin,
         "Az",
+        0.25,
+        "red",
         ha="left" if az_direction > 0 else "right",
-        va="center",
-        color="red",
+    )
+    add_arrow_label(
+        x_origin, y_origin_az, 0, -axis_length * arrow_length, "Alt", 0.25, "red", va="top"
     )
 
-    ax.arrow(x_origin, y_origin, 0, -axis_length * arrow_length, fc="red", ec="red", **arrow_style)
-    # Position Alt text slightly further below arrow tip
-    ax.text(
-        x_origin,
-        y_origin - axis_length * (arrow_length + 0.2),
-        "Alt",
-        ha="center",
-        va="top",
-        color="red",
-    )
-
-    # Calculate rotated axes for X_pix and Y_pix
+    # Pixel coordinate axes
     rot_angle = np.deg2rad(rotation)
-
-    # Position x_pix-y_pix with increased separation from Az-Alt
-    x_origin_pix = x_origin - axis_length * 2.0  # Increased separation
-    y_origin_pix = y_origin
-
-    # X_pix axis direction depends on telescope type
-    x_direction = -1 if is_sst else 1  # Invert direction for SST
+    x_direction = -1 if is_sst else 1
     x_dir = x_direction * axis_length * arrow_length * np.cos(rot_angle)
     y_dir = x_direction * axis_length * arrow_length * np.sin(rot_angle)
-    ax.arrow(x_origin_pix, y_origin_pix, x_dir, y_dir, fc="black", ec="black", **arrow_style)
-    # Position X_pix text with more spacing and LaTeX subscript
-    ax.text(
-        x_origin_pix + x_dir * 1.3,
-        y_origin_pix + y_dir * 1.3,
-        "$X_{pix}$",
-        ha="right" if x_dir < 0 else "left",
-        va="center",
-    )
+    add_arrow_label(x_origin, y_origin_pix, x_dir, y_dir, "$\\mathrm{x}_\\mathrm{pix}$", 0.45)
 
-    # Y_pix axis
-    y_x_dir = axis_length * arrow_length * np.sin(rot_angle)
-    y_y_dir = -axis_length * arrow_length * np.cos(rot_angle)
-    ax.arrow(x_origin_pix, y_origin_pix, y_x_dir, y_y_dir, fc="black", ec="black", **arrow_style)
-    # Position Y_pix text with more spacing and LaTeX subscript
-    ax.text(
-        x_origin_pix + y_x_dir * 1.3,
-        y_origin_pix + y_y_dir * 1.3,
-        "$Y_{pix}$",
-        ha="center",
-        va="top" if y_y_dir < 0 else "bottom",
-    )
+    y_dx = axis_length * arrow_length * np.sin(rot_angle)
+    y_dy = -axis_length * arrow_length * np.cos(rot_angle)
+    add_arrow_label(x_origin, y_origin_pix, y_dx, y_dy, "$\\mathrm{y}_\\mathrm{pix}$", 0.45)
 
 
 def _add_legend(ax, on_pixels, off_pixels):
