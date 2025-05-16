@@ -9,21 +9,12 @@ for a specified query point.
 
 Command line arguments
 ----------------------
-base_path (str, required)
-    Path to the directory containing the DL2 MC event file for interpolation.
 grid_points_file (str, required)
     Path to the JSON file containing grid points.
-query_point (list of float, required)
-    Query point for interpolation. The query point must contain exactly 5 values:
-        - Energy (TeV)
-        - Azimuth (degrees)
-        - Zenith (degrees)
-        - NSB (MHz)
-        - Offset (degrees)
-output_file (str, optional)
-    Output file to store the results. Default: 'interpolated_production_statistics.json'.
 metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
+base_path (str, required)
+    Path to the directory containing the DL2 MC event file for interpolation.
 file_name_template (str, optional)
     Template for the file name. Default:
     'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
@@ -34,9 +25,10 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 .. code-block:: console
 
-    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
-        --grid_points_file path/to/grid_points.json --query_point 1 180 30 0 0 \\
+    simtools-production-derive-statistics \\
+        --grid_points_file path/to/grid_points.json \\
         --metrics_file "path/to/metrics.yaml" \\
+        --base_path tests/resources/production_dl2_fits/ \\
         --output_path simtools-output/derived_events \\
         --output_file derived_events.json
 
