@@ -11,6 +11,8 @@ CTA_SIMPIPE:
       LIGHT_SOURCE_SETUP: variable
       MODEL_VERSION: 6.0.0
       LIGHT_SOURCE_TYPE: led
+      OUTPUT_PATH: simtools-output
+      TEST: true
     INTEGRATION_TESTS:
     - OUTPUT_FILE: logfile.log
 SCHEMA_NAME: application_workflow.metaschema
