@@ -138,9 +138,9 @@ class RunnerServices:
         file_label = f"_{info_for_file_name['label']}" if info_for_file_name.get("label") else ""
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
         azimuth = self.corsika_config.azimuth_angle
-        run_dir = self._get_run_number_string(info_for_file_name["run_number"])
+        run_number_string = self._get_run_number_string(info_for_file_name["run_number"])
         return (
-            f"{run_dir}_{info_for_file_name['primary']}_"
+            f"{info_for_file_name['primary']}_{run_number_string}_"
             f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
             f"{info_for_file_name['site']}_{info_for_file_name['array_name']}_"
             f"{info_for_file_name['model_version']}{file_label}"
@@ -189,7 +189,7 @@ class RunnerServices:
         """
         data_suffixes = {
             "output": ".zst",
-            "corsika_output": ".zst",
+            "corsika_output": ".corsika.zst",
             "simtel_output": ".simtel.zst",
         }
         run_dir = self._get_run_number_string(run_number)
