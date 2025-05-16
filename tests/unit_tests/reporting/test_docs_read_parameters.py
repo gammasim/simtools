@@ -136,11 +136,11 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
-        read_parameters._convert_to_md(parameter_name, "invalid-file.dat")
+        read_parameters._convert_to_md(parameter_name, None, "invalid-file.dat")
 
     # testing with valid file
     new_file = read_parameters._convert_to_md(
-        parameter_name, "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
+        parameter_name, None, "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
     )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
@@ -165,7 +165,7 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
 
     # testing with non-utf-8 file
     new_file = read_parameters._convert_to_md(
-        parameter_name, "tests/resources/example_non_utf-8_file.lis"
+        parameter_name, None, "tests/resources/example_non_utf-8_file.lis"
     )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
