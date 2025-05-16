@@ -233,8 +233,8 @@ def test_make_light_emission_script_variable(
         " -y 0.0"
         " -z 100000.0"
         " -d 0,0,-1"
-        " -n 10000000.0"
-        f" -A {mock_output_path}/model/6.0.0/"
+        " -n 100000000.0"
+        f" -A {mock_output_path}/model/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
