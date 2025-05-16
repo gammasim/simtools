@@ -9,23 +9,12 @@ for a specified query point.
 
 Command line arguments
 ----------------------
-base_path (str, required)
-    Path to the directory containing the DL2 MC event file for interpolation.
-zeniths (list of int, required)
-    List of zenith angles to consider.
-camera_offsets (list of int, required)
-    List of offsets in degrees.
-query_point (list of float, required)
-    Query point for interpolation. The query point must contain exactly 5 values:
-        - Energy (TeV)
-        - Azimuth (degrees)
-        - Zenith (degrees)
-        - NSB (MHz)
-        - Offset (degrees)
-output_file (str, optional)
-    Output file to store the results. Default: 'interpolated_production_statistics.json'.
+grid_points_file (str, required)
+    Path to the JSON file containing grid points.
 metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
+base_path (str, required)
+    Path to the directory containing the DL2 MC event file for interpolation.
 file_name_template (str, optional)
     Template for the file name. Default:
     'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
@@ -36,9 +25,10 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 .. code-block:: console
 
-    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
-        --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\
+    simtools-production-derive-statistics \\
+        --grid_points_file path/to/grid_points.json \\
         --metrics_file "path/to/metrics.yaml" \\
+        --base_path tests/resources/production_dl2_fits/ \\
         --output_path simtools-output/derived_events \\
         --output_file derived_events.json
 
@@ -68,32 +58,10 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--base_path",
+        "--grid_points_file",
         type=str,
         required=True,
-        help="Path to the DL2 MC event files for interpolation.",
-    )
-    config.parser.add_argument(
-        "--zeniths",
-        required=True,
-        nargs="+",
-        type=float,
-        help="List of zenith angles.",
-    )
-    config.parser.add_argument(
-        "--camera_offsets",
-        required=True,
-        nargs="+",
-        type=float,
-        help="List of camera offsets in degrees.",
-    )
-    config.parser.add_argument(
-        "--query_point",
-        required=True,
-        metavar=("ENERGY", "AZIMUTH", "ZENITH", "NSB", "OFFSET"),
-        nargs=5,
-        type=float,
-        help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
+        help="Path to the JSON file containing grid points.",
     )
     config.parser.add_argument(
         "--metrics_file",
@@ -101,6 +69,12 @@ def _parse(label, description):
         type=str,
         default="production_simulation_config_metrics.yml",
         help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
+    )
+    config.parser.add_argument(
+        "--base_path",
+        type=str,
+        required=True,
+        help="Path to the DL2 MC event files for interpolation.",
     )
     config.parser.add_argument(
         "--file_name_template",
