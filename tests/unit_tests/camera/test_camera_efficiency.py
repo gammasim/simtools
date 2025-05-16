@@ -39,11 +39,11 @@ def camera_efficiency_lst(io_handler, db_config, simtel_path, config_data_lst):
 def prepare_results_file(io_handler):
     test_file_name = (
         "tests/resources/"
-        "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
+        "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
     output_directory = io_handler.get_output_directory(
         label="validate_camera_efficiency",
-        sub_dir="camera-efficiency",
+        sub_dir="camera_efficiency",
     )
     shutil.copy(test_file_name, output_directory)
     return output_directory.joinpath(test_file_name)
@@ -79,9 +79,9 @@ def test_configuration_from_args_dict(camera_efficiency_lst):
 
 
 def test_load_files(camera_efficiency_lst):
-    _name = "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
+    _name = "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["results"].name == _name + ".ecsv"
-    _name = "camera-efficiency-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
+    _name = "camera_efficiency_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["sim_telarray"].name == _name + ".dat"
     assert camera_efficiency_lst._file["log"].name == _name + ".log"
 
@@ -164,7 +164,7 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
 def test_analyze_from_file(camera_efficiency_lst, mocker):
     camera_efficiency_lst._file["sim_telarray"] = (
         "tests/resources/"
-        "camera-efficiency-North-MSTx-NectarCam-za20.0deg_azm000deg_validate_camera_efficiency.dat"
+        "camera_efficiency_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.dat"
     )
     mocker.patch.object(CameraEfficiency, "results_summary", return_value="summary")
     camera_efficiency_lst.analyze(export=False, force=True)
