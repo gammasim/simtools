@@ -7,7 +7,7 @@ from particle import Corsika7ID, InvalidParticle, Particle
 
 class PrimaryParticle:
     """
-    Primary particle definition using CORSIKA7 or PDG ID.
+    Primary particle definition using CORSIKA7, eventio, or PDG ID.
 
     Uses a dictionary to map particle common names to CORSIKA7 IDs.
     Particles not found in the dictionary are searched in the PDG particle database.
@@ -27,11 +27,12 @@ class PrimaryParticle:
         self._name = None
         self._pdg_id = None
         self._pdg_name = None
+        self._eventio_id = None
 
-        if bool(particle_id_type) != bool(particle_id):
+        if (particle_id_type is None) != (particle_id is None):
             raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided together.")
 
-        valid_id_types = {"corsika7_id", "common_name", "pdg_id"}
+        valid_id_types = {"corsika7_id", "common_name", "pdg_id", "eventio_id"}
         if particle_id_type and particle_id_type not in valid_id_types:
             raise ValueError(f"Particle ID type must be one of {valid_id_types}")
 
@@ -41,6 +42,8 @@ class PrimaryParticle:
             self.name = particle_id
         elif particle_id_type == "pdg_id":
             self.pdg_id = particle_id
+        elif particle_id_type == "eventio_id":
+            self.eventio_id = particle_id
 
     def __str__(self):
         """Return a string representation of the primary particle."""
@@ -69,6 +72,39 @@ class PrimaryParticle:
         except (IndexError, InvalidParticle) as exc:
             raise ValueError(f"Invalid CORSIKA7 ID: {value}") from exc
         self._corsika7_id = int(value)
+
+    @property
+    def eventio_id(self):
+        """
+        EventIO ID of the primary particle.
+
+        0 (gamma), 1(e-), 2(mu-), 100*A+Z for nucleons and nuclei, negative for antimatter.
+        """
+        return self._eventio_id
+
+    @eventio_id.setter
+    def eventio_id(self, value):
+        """Set EventIO ID of the primary particle."""
+        try:
+            if value == 0:
+                self.corsika7_id = 1
+            elif value == 1:
+                self.corsika7_id = 3
+            elif value == -1:
+                self.corsika7_id = 2
+            elif value == 2:
+                self.corsika7_id = 6
+            elif value == -2:
+                self.corsika7_id = 5
+            elif value == 101:
+                self.corsika7_id = 14
+            elif value == -101:
+                self.corsika7_id = 15
+            elif value > 101:
+                self.corsika7_id = value
+        except (ValueError, InvalidParticle) as exc:  # self.corsika7_id raises ValueError
+            raise ValueError(f"Invalid EventIO ID: {value}") from exc
+        self._eventio_id = value
 
     @property
     def name(self):
