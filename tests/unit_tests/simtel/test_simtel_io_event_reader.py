@@ -57,7 +57,7 @@ def test_init(mock_hdf5_file):
 
 def test_read_event_data(mock_hdf5_file):
     reader = SimtelIOEventDataReader(None)
-    shower, triggered_shower, triggered = reader.read_event_data(mock_hdf5_file)
+    _, shower, triggered_shower, triggered = reader.read_event_data(mock_hdf5_file)
 
     assert len(shower.simulated_energy) == 2
     assert len(triggered_shower.simulated_energy) == 2
@@ -139,7 +139,7 @@ def test_print_event_table(mock_hdf5_file, capsys):
 
 def test_read_event_data_loads_all_fields(mock_hdf5_file):
     reader = SimtelIOEventDataReader(None)
-    shower, triggered_shower, triggered = reader.read_event_data(mock_hdf5_file)
+    _, shower, triggered_shower, triggered = reader.read_event_data(mock_hdf5_file)
 
     # Test shower data fields
     assert len(shower.simulated_energy) == 2
@@ -171,7 +171,7 @@ def test_read_event_data_handles_invalid_telescope_index(mock_hdf5_file):
     }[x]
 
     reader = SimtelIOEventDataReader(None)
-    _, _, triggered = reader.read_event_data(mock_hdf5_file)
+    _, _, _, triggered = reader.read_event_data(mock_hdf5_file)
 
     # First telescope list should be empty due to invalid index
     np.testing.assert_array_equal(triggered.trigger_telescope_list_list[0], [])
