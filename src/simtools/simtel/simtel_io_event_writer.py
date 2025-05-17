@@ -1,5 +1,6 @@
 """Generate a reduced dataset containing mostly shower information and triggered telescopes."""
 
+import json
 import logging
 from dataclasses import dataclass, field
 
@@ -14,6 +15,7 @@ from eventio.simtel import (
     TrackingPosition,
     TriggerInformation,
 )
+from tables.nodes import filenode
 
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.simtel.simtel_io_file_info import get_corsika_run_header
@@ -96,14 +98,14 @@ class SimtelIOEventDataWriter:
         self.triggered_data = TriggeredEventData()
         self.file_info = SimulationFileInfo()
 
-    def process_files(self):
+    def process_files(self, metadata=None):
         """
         Process input files and store them in an file.
 
         Parameters
         ----------
-        metadata : MetadataCollector, optional
-            Metadata collector to store metadata.
+        metadata : dict, optional
+            Metadata to be stored in the output file.
 
         """
         self.shower_id_offset = 0
@@ -112,7 +114,7 @@ class SimtelIOEventDataWriter:
             self._logger.info(f"Processing file {i}/{self.max_files}: {file}")
             self._process_file(file)
             if i == 1 or len(self.event_data.simulated_energy) >= 1e7:
-                self._write_data(mode="w" if i == 1 else "a")
+                self._write_data(mode="w" if i == 1 else "a", metadata=metadata)
                 self.shower_id_offset += len(self.event_data.simulated_energy)
                 self._reset_data()
 
@@ -337,20 +339,20 @@ class SimtelIOEventDataWriter:
             )
         triggered_table.flush()
 
-    def _write_metadata(self, data_group):
-        """Write metadata as HDF5 attributes.
+    def _write_metadata(self, file, metadata=None):
+        """Write metadata as json-serialized string to HDF5 file.
 
         Parameters
         ----------
-        data_group : tables.Group
-            HDF5 group to store metadata attributes
+        file : tables.File
+            HDF5 file to store metadata attributes
+        metadata : dict, optional
+            Metadata to be stored in the output file.
         """
-        # TODO
-        metadata = {}
-        for key, value in metadata.items():
-            data_group._v_attrs[key] = value  # pylint: disable=protected-access
+        node = filenode.new_node(file, where="/", name="metadata")
+        node.write(json.dumps(metadata or {}).encode("utf-8"))
 
-    def _write_data(self, mode="a"):
+    def _write_data(self, mode="a", metadata=None):
         """Write data and metadata to HDF5 file."""
         with tables.open_file(self.output_file, mode=mode) as f:
             data_group = (
@@ -360,7 +362,7 @@ class SimtelIOEventDataWriter:
             )
 
             if mode == "w":
-                self._write_metadata(data_group)
+                self._write_metadata(f, metadata)
 
             reduced_table, triggered_table, file_info_table = self._tables(f, data_group, mode)
             self._write_event_data(reduced_table)
