@@ -360,7 +360,9 @@ class MetadataCollector:
             elif Path(metadata_file).suffix == ".ecsv":
                 _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
             elif Path(metadata_file).name.endswith((".simtel.zst", ".simtel")):
-                self._logger.warning("Metadata extraction from simtel files is not supported yet.")
+                self._logger.warning(
+                    "Metadata extraction from sim_telarray files is not supported yet."
+                )
                 continue
             else:
                 raise gen.InvalidConfigDataError(f"Unknown metadata file format: {metadata_file}")
