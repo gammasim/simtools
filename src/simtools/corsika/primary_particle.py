@@ -20,9 +20,15 @@ class PrimaryParticle:
         The actual ID of the primary particle.
     """
 
+    _valid_types = {
+        "corsika7_id": "corsika7_id",
+        "common_name": "name",
+        "pdg_id": "pdg_id",
+        "eventio_id": "eventio_id",
+    }
+
     def __init__(self, particle_id_type=None, particle_id=None):
         self._logger = logging.getLogger(__name__)
-
         self._corsika7_id = None
         self._name = None
         self._pdg_id = None
@@ -32,18 +38,13 @@ class PrimaryParticle:
         if (particle_id_type is None) != (particle_id is None):
             raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided together.")
 
-        valid_id_types = {"corsika7_id", "common_name", "pdg_id", "eventio_id"}
-        if particle_id_type and particle_id_type not in valid_id_types:
-            raise ValueError(f"Particle ID type must be one of {valid_id_types}")
-
-        if particle_id_type == "corsika7_id":
-            self.corsika7_id = particle_id
-        elif particle_id_type == "common_name":
-            self.name = particle_id
-        elif particle_id_type == "pdg_id":
-            self.pdg_id = particle_id
-        elif particle_id_type == "eventio_id":
-            self.eventio_id = particle_id
+        if particle_id_type:
+            try:
+                setattr(self, self._valid_types[particle_id_type], particle_id)
+            except KeyError as exc:
+                raise ValueError(
+                    f"Particle ID type must be one of {set(self._valid_types)}"
+                ) from exc
 
     def __str__(self):
         """Return a string representation of the primary particle."""
@@ -85,24 +86,19 @@ class PrimaryParticle:
     @eventio_id.setter
     def eventio_id(self, value):
         """Set EventIO ID of the primary particle."""
+        mapping = {
+            0: 1,
+            1: 3,
+            -1: 2,
+            2: 6,
+            -2: 5,
+            101: 14,
+            -101: 15,
+        }
+
         try:
-            if value == 0:
-                self.corsika7_id = 1
-            elif value == 1:
-                self.corsika7_id = 3
-            elif value == -1:
-                self.corsika7_id = 2
-            elif value == 2:
-                self.corsika7_id = 6
-            elif value == -2:
-                self.corsika7_id = 5
-            elif value == 101:
-                self.corsika7_id = 14
-            elif value == -101:
-                self.corsika7_id = 15
-            elif value > 101:
-                self.corsika7_id = value
-        except (ValueError, InvalidParticle) as exc:  # self.corsika7_id raises ValueError
+            self.corsika7_id = self.corsika7_id = mapping.get(value, value)
+        except (ValueError, InvalidParticle) as exc:
             raise ValueError(f"Invalid EventIO ID: {value}") from exc
         self._eventio_id = value
 
