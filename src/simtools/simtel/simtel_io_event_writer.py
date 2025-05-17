@@ -349,6 +349,8 @@ class SimtelIOEventDataWriter:
         metadata : dict, optional
             Metadata to be stored in the output file.
         """
+        if not metadata:
+            return
         node = filenode.new_node(file, where="/", name="metadata")
         node.write(json.dumps(metadata or {}).encode("utf-8"))
 
@@ -406,9 +408,12 @@ class SimtelIOEventDataWriter:
         nsb_levels = {"dark": 1.0, "half": 2.0, "full": 5.0}
 
         for key, value in nsb_levels.items():
-            if key in file.lower():
-                self._logger.warning(f"NSB level set to hardwired value of {value}")
-                return value
+            try:
+                if key in file.lower():
+                    self._logger.warning(f"NSB level set to hardwired value of {value}")
+                    return value
+            except AttributeError as exc:
+                raise AttributeError("Invalid file name.") from exc
 
-        self._logger.warning("No NSB level found in filename, defaulting to 1.0")
+        self._logger.warning("No NSB level found in file name, defaulting to 1.0")
         return 1.0

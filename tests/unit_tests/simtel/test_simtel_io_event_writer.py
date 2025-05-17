@@ -1,3 +1,5 @@
+import json
+import logging
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -30,6 +32,17 @@ def mock_eventio_file(tmp_path):
 def lookup_table_generator(mock_eventio_file, tmp_path):
     output_file = tmp_path / OUTPUT_FILE_NAME
     return SimtelIOEventDataWriter([mock_eventio_file], output_file, max_files=1)
+
+
+@pytest.fixture
+def mock_corsika_run_header(mocker):
+    # Mock the get_corsika_run_header function
+    mock_get_header = mocker.patch("simtools.simtel.simtel_io_event_writer.get_corsika_run_header")
+    mock_get_header.return_value = {
+        "direction": [0.0, 70.0 / 57.3],
+        "particle_id": 1,
+    }
+    return mock_get_header
 
 
 def create_mock_eventio_objects(alt_range, az_range):
@@ -87,7 +100,7 @@ def validate_datasets(reduced_data, triggered_data, file_names, trigger_telescop
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
-def test_process_files(mock_eventio_class, lookup_table_generator):
+def test_process_files(mock_eventio_class, lookup_table_generator, mock_corsika_run_header):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         create_mock_eventio_objects([0.1, 0.1], [0.1, 0.1])
     )
@@ -97,11 +110,11 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
         data_group = hdf.root.data
         reduced_data = data_group.reduced_data
         triggered_data = data_group.triggered_data
-        file_names = data_group.file_names
+        file_info = data_group.file_info
         trigger_telescope_list_list = data_group.trigger_telescope_list_list
 
         # Validate datasets using the helper function
-        validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list)
+        validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope_list_list)
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
@@ -111,7 +124,7 @@ def test_no_input_files(mock_eventio_class):
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
-def test_multiple_files(mock_eventio_class, tmp_path):
+def test_multiple_files(mock_eventio_class, tmp_path, mock_corsika_run_header):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         create_mock_eventio_objects([0.1, 0.1], [0.1, 0.1])
     )
@@ -127,16 +140,16 @@ def test_multiple_files(mock_eventio_class, tmp_path):
         data_group = hdf.root.data
         reduced_data = data_group.reduced_data
         triggered_data = data_group.triggered_data
-        file_names = data_group.file_names
+        file_info = data_group.file_info
         trigger_telescope_list_list = data_group.trigger_telescope_list_list
 
         # Validate datasets using the helper function
-        validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list)
+        validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope_list_list)
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
 def test_process_files_with_different_alt_az_ranges(
-    mock_eventio_class, lookup_table_generator, caplog
+    mock_eventio_class, lookup_table_generator, mock_corsika_run_header, caplog
 ):
     """
     Test processing files where alt_range and az_range are different and ensure
@@ -145,17 +158,18 @@ def test_process_files_with_different_alt_az_ranges(
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         create_mock_eventio_objects([0.1, 0.2], [0.3, 0.4])
     )
+
     lookup_table_generator.process_files()
 
     with tables.open_file(lookup_table_generator.output_file, mode="r") as hdf:
         data_group = hdf.root.data
         reduced_data = data_group.reduced_data
         triggered_data = data_group.triggered_data
-        file_names = data_group.file_names
+        file_info = data_group.file_info
         trigger_telescope_list_list = data_group.trigger_telescope_list_list
 
         # Validate datasets using the helper function
-        validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list)
+        validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope_list_list)
 
 
 @patch("simtools.simtel.simtel_io_event_writer.tables")
@@ -173,12 +187,12 @@ def test_write_data(mock_tables, lookup_table_generator, mock_eventio_file):
     # Mock tables and arrays
     mock_reduced_table = MagicMock()
     mock_triggered_table = MagicMock()
-    mock_file_names_table = MagicMock()
+    mock_file_info_table = MagicMock()
     mock_vlarray = MagicMock()
 
     # Setup return values for table creation/getting
     lookup_table_generator._tables = MagicMock(
-        return_value=(mock_reduced_table, mock_triggered_table, mock_file_names_table)
+        return_value=(mock_reduced_table, mock_triggered_table, mock_file_info_table)
     )
     mock_file.create_vlarray.return_value = mock_vlarray
     mock_file.get_node.return_value = mock_vlarray
@@ -195,8 +209,6 @@ def test_write_data(mock_tables, lookup_table_generator, mock_eventio_file):
     mock_tables.open_file.assert_called_with(lookup_table_generator.output_file, mode="w")
     mock_file.create_group.assert_called_with("/", "data", "Data group")
     mock_file.create_vlarray.assert_called()
-    mock_file_names_table.append.assert_called_with([["test.simtel.gz"]])
-    mock_file_names_table.flush.assert_called()
 
     # Test append mode
     mock_file.reset_mock()
@@ -325,7 +337,7 @@ def test_tables(lookup_table_generator):
     assert file_names_table == mock_table
 
     # Verify correct table paths were used
-    expected_paths = ["/data/reduced_data", "/data/triggered_data", "/data/file_names"]
+    expected_paths = ["/data/reduced_data", "/data/triggered_data", "/data/file_info"]
     get_node_calls = [call[0][0] for call in mock_hdf5_file.get_node.call_args_list]
     assert get_node_calls == expected_paths
 
@@ -472,3 +484,40 @@ def test_get_event_data(lookup_table_generator):
     # Verify the returned objects are references to the instance attributes
     assert id(event_data) == id(lookup_table_generator.event_data)
     assert id(triggered_data) == id(lookup_table_generator.triggered_data)
+
+
+def test_get_preliminary_nsb_level(lookup_table_generator, caplog):
+    """Test get_preliminary_nsb_level method."""
+
+    with pytest.raises(AttributeError, match="Invalid file name."):
+        lookup_table_generator._get_preliminary_nsb_level(None)
+
+    with caplog.at_level(logging.WARNING):
+        _nsb = lookup_table_generator._get_preliminary_nsb_level("test.simtel.gz")
+    assert pytest.approx(_nsb) == 1.0
+    assert "No NSB level found in file name" in caplog.text
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        _nsb = lookup_table_generator._get_preliminary_nsb_level("mostly_half_moon")
+    assert pytest.approx(_nsb) == 2.0
+    assert "NSB level set to hardwired value" in caplog.text
+
+
+@patch("simtools.simtel.simtel_io_event_writer.filenode", autospec=True)
+def test_write_metadata(mock_filenode, lookup_table_generator):
+    """Test _write_metadata method."""
+    mock_file = MagicMock()
+    mock_node = MagicMock()
+    mock_filenode.new_node.return_value = mock_node
+
+    lookup_table_generator._write_metadata(mock_file, metadata=None)
+    mock_filenode.new_node.assert_not_called()
+    mock_node.write.assert_not_called()
+
+    mock_filenode.reset_mock()
+    mock_node.reset_mock()
+    test_metadata = {"simulation_type": "gamma", "energy_range": [0.1, 100], "zenith": 20.0}
+    lookup_table_generator._write_metadata(mock_file, metadata=test_metadata)
+    mock_filenode.new_node.assert_called_once_with(mock_file, where="/", name="metadata")
+    mock_node.write.assert_called_once_with(json.dumps(test_metadata).encode("utf-8"))
