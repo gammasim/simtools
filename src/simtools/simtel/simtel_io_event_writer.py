@@ -249,7 +249,7 @@ class SimtelIOEventDataWriter:
             "telescope_list_index": tables.Int32Col(),  # Index into VLArray
         }
         file_info_desc = {
-            "file_names": tables.StringCol(256),
+            "file_name": tables.StringCol(256),
             "particle_id": tables.Int32Col(),
             "zenith": tables.Float32Col(),
             "azimuth": tables.Float32Col(),
@@ -277,7 +277,7 @@ class SimtelIOEventDataWriter:
         """Fill file info table."""
         row = file_info_table.row
         for i, file_name in enumerate(self.file_info.file_name):
-            row["file_names"] = file_name
+            row["file_name"] = file_name
             row["particle_id"] = self.file_info.particle_id[i]
             row["zenith"] = self.file_info.zenith[i]
             row["azimuth"] = self.file_info.azimuth[i]

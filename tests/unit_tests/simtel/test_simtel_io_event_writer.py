@@ -83,7 +83,7 @@ def create_mock_eventio_objects(alt_range, az_range):
     return [mc_run_header, mc_shower, mc_event, array_event]
 
 
-def validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list):
+def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope_list_list):
     """
     Helper function to validate that datasets are not empty.
     """
@@ -94,7 +94,7 @@ def validate_datasets(reduced_data, triggered_data, file_names, trigger_telescop
     assert len(trigger_telescope_list_list) > 0
     assert len(reduced_data.col("x_core")) > 0
     assert len(reduced_data.col("y_core")) > 0
-    assert len(file_names.col("file_names")) > 0
+    assert len(file_info.col("file_name")) > 0
     assert len(reduced_data.col("shower_azimuth")) > 0
     assert len(reduced_data.col("shower_altitude")) > 0
 
@@ -200,7 +200,7 @@ def test_write_data(mock_tables, lookup_table_generator, mock_eventio_file):
     # Add some test data
     lookup_table_generator.event_data.simulated_energy = [1.0]
     lookup_table_generator.triggered_data.triggered_id = [1]
-    lookup_table_generator.file_names = ["test.simtel.gz"]
+    lookup_table_generator.file_name = ["test.simtel.gz"]
 
     # Test write mode
     lookup_table_generator._write_data(mode="w")
