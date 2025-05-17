@@ -160,9 +160,14 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     with pytest.raises(FileNotFoundError, match=r"^No files found:"):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = (
-        "tests/resources/proton_run202_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
-    )
+    with caplog.at_level(logging.WARNING):
+        metadata_1.args_dict["input_meta"] = (
+            "tests/resources/proton_run202_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+        )
+        metadata_1._read_input_metadata_from_file()
+    assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
+
+    metadata_1.args_dict["input_meta"] = "tests/resources/test_file.list"
     with pytest.raises(gen.InvalidConfigDataError, match=r"^Unknown metadata file format:"):
         metadata_1._read_input_metadata_from_file()
 
