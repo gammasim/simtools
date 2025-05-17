@@ -97,7 +97,7 @@ class PrimaryParticle:
         }
 
         try:
-            self.corsika7_id = self.corsika7_id = mapping.get(value, value)
+            self.corsika7_id = mapping.get(value, value)
         except (ValueError, InvalidParticle) as exc:
             raise ValueError(f"Invalid EventIO ID: {value}") from exc
         self._eventio_id = value
