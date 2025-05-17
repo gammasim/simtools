@@ -52,10 +52,11 @@ def get_corsika_run_header(file):
                 mc_run_header = o.parse()
             elif isinstance(o, MCShower):  # get primary_id from first MCShower
                 primary_id = o.parse().get("primary_id")
-            if run_header and mc_run_header and primary_id:
+            if run_header and mc_run_header and primary_id is not None:
                 break
 
     run_header = run_header or {}
     mc_run_header = mc_run_header or {}
-    mc_run_header["primary_id"] = primary_id
+    if primary_id is not None:
+        mc_run_header["primary_id"] = primary_id
     return run_header | mc_run_header or None
