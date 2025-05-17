@@ -1,18 +1,38 @@
 #!/usr/bin/python3
 
 r"""
-Derives the limits for energy, radial distance, and viewcone to be used in CORSIKA simulations.
+Derive CORSIKA configuration limits for energy, core distance, and viewcone angle.
 
-The limits are derived based on the event loss fraction specified by the user.
+This tool determines configuration limits based on triggered events from broad-range
+simulations. It supports setting:
+
+- **ERANGE**: Derives the lower energy limit; upper limit is user-defined.
+- **CSCAT**: Derives the upper core distance; lower limit is user-defined.
+- **VIEWCONE**: Derives the viewcone radius; upper limit is user-defined.
+
+Limits are computed based on a user-defined maximum event loss fraction.
+
+- particle_type: Particle type (e.g., gamma, proton, electron).
+- telescope_ids: List of telescope IDs used in the simulation.
+- zenith: Zenith angle.
+- azimuth: Azimuth angle.
+- nsb: Night sky background level (e.g., 'dark', 'halfmoon', 'moon').
+- layout: Layout of the telescope array used in the simulation.
+- lower_energy_threshold: Derived lower energy limit.
+- upper_radius_threshold: Derived upper radial distance limit.
+- viewcone_radius: Derived viewcone radius limit.
+
+The input event data files are generated using the application simtools-generate-simtel-event-data
+and is required for each point in the lookup table.
 
 Command line arguments
 ----------------------
 event_data_files (str, required)
-    Path to a file containing event data file paths.
+    Path to a file containing event data files derived with 'simtools-generate-simtel-event-data'.
 telescope_ids (str, required)
     Path to a file containing telescope configurations.
 loss_fraction (float, required)
-    Fraction of events to be lost.
+    Maximum event-loss fraction for limit computation.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
 output_file (str, optional)
@@ -49,29 +69,7 @@ _logger = logging.getLogger(__name__)
 
 
 def _parse():
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    event_data_files: str
-        Path to a file listing event data file paths. These files contain the
-        simulation data used for deriving the limits.
-    loss_fraction: float
-        Fraction of events to be excluded during limit computation. Determines
-        thresholds for energy, radial distance, and viewcone.
-    telescope_ids: str
-        Path to a file defining telescope configurations. Specifies telescope
-        arrays or IDs used to filter events during processing.
-    plot_histograms: bool
-        If True, generates and saves histograms of the event data to visualize
-        the computed limits and distributions.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-    """
+    """Parse command line configuration."""
     config = configurator.Configurator(
         description="Derive limits for energy, radial distance, and viewcone."
     )
@@ -88,7 +86,10 @@ def _parse():
         help="Path to a file containing telescope configurations.",
     )
     config.parser.add_argument(
-        "--loss_fraction", type=float, required=True, help="Fraction of events to be lost."
+        "--loss_fraction",
+        type=float,
+        required=True,
+        help="Maximum event-loss fraction for limit computation.",
     )
     config.parser.add_argument(
         "--plot_histograms",
@@ -96,6 +97,7 @@ def _parse():
         action="store_true",
         default=False,
     )
+    # TODO
     config.parser.add_argument(
         "--output_file",
         type=str,
@@ -246,7 +248,7 @@ def create_results_table(results, loss_fraction):
     table.meta["created"] = datetime.datetime.now().isoformat()
     table.meta["description"] = (
         "Lookup table for CORSIKA limits computed from gamma-ray shower simulations "
-        "using simtool production_derive_corsika_limits"
+        "using simtools-production-derive-corsika-limits"
     )
     table.meta["loss_fraction"] = loss_fraction
 
@@ -286,7 +288,6 @@ def main():
 
     metadata_file = f"{output_dir}/metadata.yml"
     MetadataCollector.dump(args_dict, metadata_file)
-    _logger.info(f"Metadata saved to {metadata_file}")
 
 
 if __name__ == "__main__":
