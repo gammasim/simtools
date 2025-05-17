@@ -20,7 +20,12 @@ import tables
 from astropy.coordinates import AltAz, angular_separation
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
-from simtools.simtel.simtel_io_event_writer import ShowerEventData, TriggeredEventData
+from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.simtel.simtel_io_event_writer import (
+    ShowerEventData,
+    SimulationFileInfo,
+    TriggeredEventData,
+)
 
 
 class SimtelIOEventDataReader:
@@ -42,9 +47,12 @@ class SimtelIOEventDataReader:
         self._logger = logging.getLogger(__name__)
         self.telescope_list = telescope_list
 
-        self.shower_data, self.triggered_shower_data, self.triggered_data = self.read_event_data(
-            event_data_file
-        )
+        (
+            self.simulation_file_info,
+            self.shower_data,
+            self.triggered_shower_data,
+            self.triggered_data,
+        ) = self.read_event_data(event_data_file)
         self._derived_event_data()
 
     def read_event_data(self, event_data_file):
@@ -58,46 +66,66 @@ class SimtelIOEventDataReader:
 
         Returns
         -------
-        ShowerEventData, TriggeredEventData
-            Event data and triggered event data.
+        SimulationFileInfo, ShowerEventData, TriggeredEventData
+            Simulation file info, event, and triggered event data.
         """
+        file_info = SimulationFileInfo()
         event_data = ShowerEventData()
         triggered_event_data = TriggeredEventData()
 
         with tables.open_file(event_data_file, mode="r") as f:
-            reduced_data = f.root.data.reduced_data
-            event_data.simulated_energy = reduced_data.col("simulated_energy")
-            event_data.x_core = reduced_data.col("x_core")
-            event_data.y_core = reduced_data.col("y_core")
-            event_data.shower_azimuth = reduced_data.col("shower_azimuth")
-            event_data.shower_altitude = reduced_data.col("shower_altitude")
-            event_data.shower_id = reduced_data.col("shower_id")
-            event_data.area_weight = reduced_data.col("area_weight")
-
-            triggered_data = f.root.data.triggered_data
-            triggered_event_data.triggered_id = triggered_data.col("triggered_id")
-            triggered_event_data.array_altitudes = triggered_data.col("array_altitudes")
-            triggered_event_data.array_azimuths = triggered_data.col("array_azimuths")
-
-            telescope_indices = triggered_data.col("telescope_list_index")
-            telescope_list_array = f.root.data.trigger_telescope_list_list
-
-            triggered_event_data.trigger_telescope_list_list = []
-            for index in telescope_indices:
-                if index < telescope_list_array.nrows:
-                    triggered_event_data.trigger_telescope_list_list.append(
-                        telescope_list_array[index]
-                    )
-                else:
-                    self._logger.warning(f"Invalid telescope list index: {index}")
-                    triggered_event_data.trigger_telescope_list_list.append(
-                        np.array([], dtype=np.int16)
-                    )
+            file_info = self._read_file_info(f, file_info)
+            event_data = self._read_shower_data(f, event_data)
+            triggered_data = self._read_triggered_data(f, triggered_event_data)
 
         triggered_shower, triggered_data = self._reduce_to_triggered_events(
             event_data, triggered_event_data
         )
-        return event_data, triggered_shower, triggered_data
+        return file_info, event_data, triggered_shower, triggered_data
+
+    def _read_file_info(self, file, file_info):
+        """Read file information from the HDF5 file."""
+        file_data = file.root.data.file_info
+        file_info.file_name = file_data.col("file_name")
+        file_info.particle_id = file_data.col("particle_id")
+        file_info.zenith = file_data.col("zenith")
+        file_info.azimuth = file_data.col("azimuth")
+        file_info.nsb_level = file_data.col("nsb_level")
+        return file_info
+
+    def _read_triggered_data(self, file, triggered_event_data):
+        """Read triggered data from the HDF5 file."""
+        triggered_data = file.root.data.triggered_data
+        triggered_event_data.triggered_id = triggered_data.col("triggered_id")
+        triggered_event_data.array_altitudes = triggered_data.col("array_altitudes")
+        triggered_event_data.array_azimuths = triggered_data.col("array_azimuths")
+
+        telescope_indices = triggered_data.col("telescope_list_index")
+        telescope_list_array = file.root.data.trigger_telescope_list_list
+        triggered_event_data.trigger_telescope_list_list = []
+        for index in telescope_indices:
+            if index < telescope_list_array.nrows:
+                triggered_event_data.trigger_telescope_list_list.append(telescope_list_array[index])
+            else:
+                self._logger.warning(f"Invalid telescope list index: {index}")
+                triggered_event_data.trigger_telescope_list_list.append(
+                    np.array([], dtype=np.int16)
+                )
+
+        return triggered_event_data
+
+    @staticmethod
+    def _read_shower_data(file, event_data):
+        """Read shower data from the HDF5 file."""
+        reduced_data = file.root.data.reduced_data
+        event_data.simulated_energy = reduced_data.col("simulated_energy")
+        event_data.x_core = reduced_data.col("x_core")
+        event_data.y_core = reduced_data.col("y_core")
+        event_data.shower_azimuth = reduced_data.col("shower_azimuth")
+        event_data.shower_altitude = reduced_data.col("shower_altitude")
+        event_data.shower_id = reduced_data.col("shower_id")
+        event_data.area_weight = reduced_data.col("area_weight")
+        return event_data
 
     def _reduce_to_triggered_events(self, event_data, triggered_data):
         """
@@ -265,3 +293,37 @@ class SimtelIOEventDataReader:
                 f"{self.triggered_shower_data.core_distance_shower[i]:<20.3f}"
             )
         print("")
+
+    def get_reduced_simulation_file_info(self):
+        """
+        Return reduced simulation file info assuming single-valued parameters.
+
+        Applies rounding and uniqueness checks to extract representative values
+        for zenith, azimuth, and NSB level. Assumes all files share identical
+        simulation parameters except for file names. Returns particle name instead
+        of ID.
+
+        Logs a warning if multiple unique values are found.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the reduced simulation file info.
+        """
+        particle_id = np.unique(self.simulation_file_info.particle_id)
+        zenith = np.unique(np.round(self.simulation_file_info.zenith, decimals=2))
+        azimuth = np.unique(np.round(self.simulation_file_info.azimuth, decimals=2))
+        nsb = np.unique(np.round(self.simulation_file_info.nsb_level, decimals=2))
+        # TODO - check if this should be an error or an warning
+        if any(len(arr) > 1 for arr in (particle_id, zenith, azimuth, nsb)):
+            self._logger.warning("Simulation file info has non-unique values.")
+
+        return {
+            "primary_particle": PrimaryParticle(
+                particle_id_type="corsika7_id",
+                particle_id=particle_id[0],
+            ).name,
+            "zenith": zenith[0],
+            "azimuth": azimuth[0],
+            "nsb_level": nsb[0],
+        }
