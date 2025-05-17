@@ -11,14 +11,14 @@ from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
 
 class LimitCalculator:
     """
-    Compute thresholds for CORSIKA configuration for energy, radial distance, and viewcone.
+    Compute limits for CORSIKA configuration for energy, radial distance, and viewcone.
 
     Event data is read from the reduced MC event data file.
 
     Parameters
     ----------
     event_data_file : str
-        Path to the HDF5 file containing the event data.
+        Path to the event-data file.
     telescope_list : list, optional
         List of telescope IDs to filter the events (default is None).
     """
