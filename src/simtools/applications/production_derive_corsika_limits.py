@@ -16,7 +16,7 @@ Limits are computed based on a user-defined maximum event loss fraction.
 - telescope_ids: List of telescope IDs used in the simulation.
 - zenith: Zenith angle.
 - azimuth: Azimuth angle.
-- nsb: Night sky background level (e.g., 'dark', 'halfmoon', 'moon').
+- nsb: Night sky background level (e.g., 'dark', 'half moon', 'moon').
 - layout: Layout of the telescope array used in the simulation.
 - lower_energy_threshold: Derived lower energy limit.
 - upper_radius_threshold: Derived upper radial distance limit.
@@ -54,9 +54,7 @@ Derive limits for a given file with a specified loss fraction.
 
 import datetime
 import logging
-import re
 
-import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
@@ -110,7 +108,7 @@ def _parse():
 
 def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     """
-    Process a single file and compute limits.
+    Compute limits for a single file.
 
     Parameters
     ----------
@@ -128,129 +126,63 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     dict
         Dictionary containing the computed limits and metadata.
     """
-    # Extract zenith and azimuth from the file path
-    match = re.search(r"za(\d+)deg.*azm(\d+)deg", file_path)
-    if not match:
-        raise ValueError(f"Could not extract zenith and azimuth from file path: {file_path}")
-    zenith = int(match.group(1))
-    azimuth = int(match.group(2))
-
-    if "dark" in file_path:
-        nsb = 1
-    elif "halfmoon" in file_path:
-        nsb = 5
-    elif "moon" in file_path:
-        nsb = 19
-    else:
-        _logger.warning(f"Could not determine NSB from file path: {file_path}")
-        nsb = None
-
-    if "gamma-diffuse" in file_path:
-        particle_type = "gamma-diffuse"
-    elif "gamma" in file_path:
-        particle_type = "gamma"
-    elif "proton" in file_path:
-        particle_type = "proton"
-    elif "electron" in file_path:
-        particle_type = "electron"
-    else:
-        _logger.warning(f"Could not determine particle type from file path: {file_path}")
-        particle_type = "unknown"
-
     calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
-
-    lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
-    upper_radial_distance = calculator.compute_upper_radial_distance(loss_fraction)
-    viewcone = calculator.compute_viewcone(loss_fraction)
+    limits = calculator.compute_limits(loss_fraction)
 
     if plot_histograms:
-        _logger.info(
-            f"Plotting histograms written to {io_handler.IOHandler().get_output_directory()}"
-        )
-        calculator.plot_data(
-            lower_energy_limit,
-            upper_radial_distance,
-            viewcone,
-            io_handler.IOHandler().get_output_directory(),
-        )
+        calculator.plot_data(io_handler.IOHandler().get_output_directory())
 
-    return {
-        "particle_type": particle_type,
-        "telescope_ids": telescope_ids,
-        "zenith": zenith,
-        "azimuth": azimuth,
-        "nsb": nsb,
-        "lower_energy_threshold": lower_energy_limit,
-        "upper_radius_threshold": upper_radial_distance,
-        "viewcone_radius": viewcone,
-    }
+    return limits
 
 
 def create_results_table(results, loss_fraction):
     """
-    Create an Astropy Table from the results.
+    Convert list of simulation results to an Astropy Table with metadata.
 
     Parameters
     ----------
     results : list[dict]
-        List of dictionaries containing the computed limits for each file
-        and telescope configuration.
+        Computed limits per file and telescope configuration.
     loss_fraction : float
-        Fraction of events to be lost, added as metadata to the table.
+        Fraction of lost events (added to metadata).
 
     Returns
     -------
     astropy.table.Table
-        An Astropy Table containing the results with appropriate units and metadata.
+        Table of results with units and metadata.
     """
-    print("results", results)
+    cols = [
+        "primary_particle",
+        "telescope_ids",
+        "zenith",
+        "azimuth",
+        "nsb_level",
+        "lower_energy_threshold",
+        "upper_radius_threshold",
+        "viewcone_radius",
+    ]
     table = Table(
         rows=[
-            (
-                res["particle_type"],
-                res["telescope_ids"],
-                res["zenith"],
-                res["azimuth"],
-                res["nsb"],
-                res["lower_energy_threshold"].value,
-                res["upper_radius_threshold"].value,
-                res["viewcone_radius"].value,
-            )
-            for res in results
+            [res[k].value if hasattr(res[k], "value") else res[k] for k in cols] for res in results
         ],
-        names=[
-            "particle_type",
-            "telescope_ids",
-            "zenith",
-            "azimuth",
-            "nsb",
-            "lower_energy_threshold",
-            "upper_radius_threshold",
-            "viewcone_radius",
-        ],
-        dtype=[
-            "S64",
-            object,
-            np.float64,
-            np.float64,
-            object,
-            np.float64,
-            np.float64,
-            np.float64,
-        ],
+        names=cols,
     )
+
+    # TODO - is there a better way to set units? To know them from the metadata?
+    # TODO - from simtel_config_io_write / reader?
     table["zenith"].unit = "deg"
     table["azimuth"].unit = "deg"
     table["lower_energy_threshold"].unit = "TeV"
     table["upper_radius_threshold"].unit = "m"
     table["viewcone_radius"].unit = "deg"
 
-    table.meta["created"] = datetime.datetime.now().isoformat()
-    table.meta["description"] = (
-        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations "
-        "using simtools-production-derive-corsika-limits"
+    table.meta.update(
+        {
+            "created": datetime.datetime.now().isoformat(),
+            "description": "Lookup table for CORSIKA limits computed from gamma-ray simulations.",
+            "loss_fraction": loss_fraction,
+        }
     )
-    table.meta["loss_fraction"] = loss_fraction
 
     return table
 
@@ -286,6 +218,8 @@ def main():
     table.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Results saved to {output_file}")
 
+    # TODO add metadata to the table
+    # TODO command line arguments should be in metadata?
     metadata_file = f"{output_dir}/metadata.yml"
     MetadataCollector.dump(args_dict, metadata_file)
 
