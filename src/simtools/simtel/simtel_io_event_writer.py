@@ -15,6 +15,8 @@ from eventio.simtel import (
     TriggerInformation,
 )
 
+from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.simtel.simtel_io_file_info import get_corsika_run_header
 from simtools.utils.geometry import calculate_circular_mean
 
 DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bitshuffle=False)
@@ -46,6 +48,17 @@ class TriggeredEventData:
     array_azimuths: list = field(default_factory=list)
     trigger_telescope_list_list: list = field(default_factory=list)
     angular_distance: list = field(default_factory=list)
+
+
+@dataclass
+class SimulationFileInfo:
+    """Simulation file information."""
+
+    file_name: list = field(default_factory=list)
+    particle_id: list = field(default_factory=list)
+    zenith: list = field(default_factory=list)
+    azimuth: list = field(default_factory=list)
+    nsb_level: list = field(default_factory=list)
 
 
 class SimtelIOEventDataWriter:
@@ -81,10 +94,18 @@ class SimtelIOEventDataWriter:
         self.shower_id_offset = 0
         self.event_data = ShowerEventData()
         self.triggered_data = TriggeredEventData()
-        self.file_names = []
+        self.file_info = SimulationFileInfo()
 
     def process_files(self):
-        """Process the input files and store them in an file."""
+        """
+        Process input files and store them in an file.
+
+        Parameters
+        ----------
+        metadata : MetadataCollector, optional
+            Metadata collector to store metadata.
+
+        """
         self.shower_id_offset = 0
 
         for i, file in enumerate(self.input_files[: self.max_files], start=1):
@@ -110,6 +131,7 @@ class SimtelIOEventDataWriter:
 
     def _process_file(self, file):
         """Process a single file and update data lists."""
+        self._process_file_info(file)
         with EventIOFile(file) as f:
             for eventio_object in f:
                 if isinstance(eventio_object, MCRunHeader):
@@ -120,13 +142,27 @@ class SimtelIOEventDataWriter:
                     self._process_mc_event(eventio_object)
                 elif isinstance(eventio_object, ArrayEvent):
                     self._process_array_event(eventio_object)
-            self.file_names.append(str(file))
 
     def _process_mc_run_header(self, eventio_object):
         """Process MC run header and update data lists."""
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
         self._logger.info(f"Shower reuse factor: {self.n_use} (viewcone: {mc_head['viewcone']})")
+
+    def _process_file_info(self, file):
+        """Process file information and update file info list."""
+        run_info = get_corsika_run_header(file)
+        self.file_info.file_name.append(str(file))
+
+        # Get particle ID, defaulting to gamma (1) if not found
+        particle = PrimaryParticle(
+            particle_id_type="eventio_id", particle_id=run_info.get("primary_id", 1)
+        )
+        self.file_info.particle_id.append(particle.corsika7_id)
+
+        self.file_info.zenith.append(90.0 - np.degrees(run_info["direction"][1]))
+        self.file_info.azimuth.append(np.degrees(run_info["direction"][0]))
+        self.file_info.nsb_level.append(self._get_preliminary_nsb_level(str(file)))
 
     def _process_mc_shower(self, eventio_object):
         """
@@ -210,28 +246,42 @@ class SimtelIOEventDataWriter:
             "array_azimuths": tables.Float32Col(),
             "telescope_list_index": tables.Int32Col(),  # Index into VLArray
         }
-        file_names_desc = {
+        file_info_desc = {
             "file_names": tables.StringCol(256),
+            "particle_id": tables.Int32Col(),
+            "zenith": tables.Float32Col(),
+            "azimuth": tables.Float32Col(),
+            "nsb_level": tables.Float32Col(),
         }
-        return shower_data_desc, triggered_data_desc, file_names_desc
+        return shower_data_desc, triggered_data_desc, file_info_desc
 
     def _tables(self, output_file, data_group, mode="a"):
         """Create or get HDF5 tables."""
-        descriptions = self._table_descriptions()
-        table_names = ["reduced_data", "triggered_data", "file_names"]
+        table_info = zip(
+            ["reduced_data", "triggered_data", "file_info"], self._table_descriptions()
+        )
 
-        table_dict = {}
-        for name, desc in zip(table_names, descriptions):
+        def get_or_create(name, desc):
             path = f"/data/{name}"
-            table_dict[name] = (
-                output_file.create_table(
+            if mode == "w" or path not in output_file:
+                return output_file.create_table(
                     data_group, name, desc, name.replace("_", " ").title(), filters=DEFAULT_FILTERS
                 )
-                if mode == "w" or path not in output_file
-                else output_file.get_node(path)
-            )
+            return output_file.get_node(path)
 
-        return table_dict["reduced_data"], table_dict["triggered_data"], table_dict["file_names"]
+        return tuple(get_or_create(name, desc) for name, desc in table_info)
+
+    def _write_file_info(self, file_info_table):
+        """Fill file info table."""
+        row = file_info_table.row
+        for i, file_name in enumerate(self.file_info.file_name):
+            row["file_names"] = file_name
+            row["particle_id"] = self.file_info.particle_id[i]
+            row["zenith"] = self.file_info.zenith[i]
+            row["azimuth"] = self.file_info.azimuth[i]
+            row["nsb_level"] = self.file_info.nsb_level[i]
+            row.append()
+        file_info_table.flush()
 
     def _write_event_data(self, reduced_table):
         """Fill event data tables."""
@@ -287,8 +337,21 @@ class SimtelIOEventDataWriter:
             )
         triggered_table.flush()
 
+    def _write_metadata(self, data_group):
+        """Write metadata as HDF5 attributes.
+
+        Parameters
+        ----------
+        data_group : tables.Group
+            HDF5 group to store metadata attributes
+        """
+        # TODO
+        metadata = {}
+        for key, value in metadata.items():
+            data_group._v_attrs[key] = value  # pylint: disable=protected-access
+
     def _write_data(self, mode="a"):
-        """Write data to HDF5 file."""
+        """Write data and metadata to HDF5 file."""
         with tables.open_file(self.output_file, mode=mode) as f:
             data_group = (
                 f.create_group("/", "data", "Data group")
@@ -296,7 +359,10 @@ class SimtelIOEventDataWriter:
                 else f.get_node("/data")
             )
 
-            reduced_table, triggered_table, file_names_table = self._tables(f, data_group, mode)
+            if mode == "w":
+                self._write_metadata(data_group)
+
+            reduced_table, triggered_table, file_info_table = self._tables(f, data_group, mode)
             self._write_event_data(reduced_table)
 
             vlarray = (
@@ -310,13 +376,37 @@ class SimtelIOEventDataWriter:
                 else f.get_node("/data/trigger_telescope_list_list")
             )
             self._writer_triggered_data(triggered_table, vlarray)
-
-            if self.file_names:
-                file_names_table.append([[name] for name in self.file_names])
-                file_names_table.flush()
+            self._write_file_info(file_info_table)
 
     def _reset_data(self):
         """Reset data structures for batch processing."""
         self.event_data = ShowerEventData()
         self.triggered_data = TriggeredEventData()
-        self.file_names = []
+        self.file_info = SimulationFileInfo()
+
+    def _get_preliminary_nsb_level(self, file):
+        """
+        Return preliminary NSB level from file name.
+
+        Hardwired values are used for "dark", "half", and "full" NSB levels
+        (actual values are made up for this example).
+
+        Parameters
+        ----------
+        file : str
+            File name to extract NSB level from.
+
+        Returns
+        -------
+        float
+            NSB level extracted from file name.
+        """
+        nsb_levels = {"dark": 1.0, "half": 2.0, "full": 5.0}
+
+        for key, value in nsb_levels.items():
+            if key in file.lower():
+                self._logger.warning(f"NSB level set to hardwired value of {value}")
+                return value
+
+        self._logger.warning("No NSB level found in filename, defaulting to 1.0")
+        return 1.0
