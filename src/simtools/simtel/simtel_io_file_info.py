@@ -2,7 +2,7 @@
 """Read file info and run headers from sim_telarray files."""
 
 from eventio import EventIOFile
-from eventio.simtel import MCRunHeader, RunHeader
+from eventio.simtel import MCRunHeader, MCShower, RunHeader
 
 
 def get_corsika_run_number(file):
@@ -25,10 +25,10 @@ def get_corsika_run_number(file):
 
 def get_corsika_run_header(file):
     """
-    Return the CORSIKA run header from a sim_telarray file.
+    Return the CORSIKA run header information from a sim_telarray file.
 
     Reads both RunHeader and MCRunHeader object from file and
-    returns a merged dictionary.
+    returns a merged dictionary. Adds primary id from the first event.
 
     Parameters
     ----------
@@ -42,6 +42,7 @@ def get_corsika_run_header(file):
     """
     run_header = None
     mc_run_header = None
+    primary_id = None
 
     with EventIOFile(file) as f:
         for o in f:
@@ -49,9 +50,12 @@ def get_corsika_run_header(file):
                 run_header = o.parse()
             elif isinstance(o, MCRunHeader) and mc_run_header is None:
                 mc_run_header = o.parse()
-            if run_header and mc_run_header:
+            elif isinstance(o, MCShower):  # get primary_id from first MCShower
+                primary_id = o.parse().get("primary_id")
+            if run_header and mc_run_header and primary_id:
                 break
 
     run_header = run_header or {}
     mc_run_header = mc_run_header or {}
+    mc_run_header["primary_id"] = primary_id
     return run_header | mc_run_header or None
