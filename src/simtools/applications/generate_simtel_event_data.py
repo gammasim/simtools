@@ -39,7 +39,6 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 
@@ -95,14 +94,17 @@ def main():  # noqa: D103
 
     output_filepath = io_handler.IOHandler().get_output_file(args_dict["output_file"])
     generator = SimtelIOEventDataWriter(files, output_filepath, args_dict["max_files"])
-    generator.process_files(
-        metadata=MetadataCollector(args_dict=args_dict).get_top_level_metadata(),
+    tables = generator.process_files()
+    generator.write(
+        tables=tables,
     )
+    MetadataCollector.dump(args_dict=args_dict, output_file=output_filepath.with_suffix(".yml"))
+
     logger.info(f"Reduced dataset saved to: {output_filepath}")
 
     if args_dict["print_dataset_information"] > 0:
-        reader = SimtelIOEventDataReader(output_filepath)
-        reader.print_dataset_information(args_dict.get("print_dataset_information"))
+        for table in tables:
+            table.pprint(max_lines=args_dict["print_dataset_information"], max_width=-1)
 
 
 if __name__ == "__main__":
