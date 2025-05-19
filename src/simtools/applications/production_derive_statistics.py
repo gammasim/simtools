@@ -1,23 +1,26 @@
 #!/usr/bin/python3
 
 r"""
-Application to run the StatisticalUncertaintyEvaluator and interpolate results.
+Application to derive the number of events required for grid points by interpolation.
 
-This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and camera offsets, and performs interpolation
-for a specified query point.
+This application evaluates statistical uncertainties from DL2 MC event files, performs
+interpolation for the given grid points given in a file and saves the grid points with the
+interpolated production events added.
 
 Command line arguments
 ----------------------
-grid_points_file (str, required)
-    Path to the JSON file containing grid points.
-metrics_file (str, optional)
+--grid_points_file (str, required)
+    Path to the file containing grid points. Each grid point should include azimuth, zenith,
+    NSB, offset.
+--metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
-base_path (str, required)
-    Path to the directory containing the DL2 MC event file for interpolation.
-file_name_template (str, optional)
-    Template for the file name. Default:
+--base_path (str, required)
+    Path to the directory containing the DL2 MC event files for interpolation.
+--file_name_template (str, optional)
+    Template for the DL2 MC event file name. Default:
     'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
+--plot_production_statistics (flag, optional)
+    If provided, plots the production statistics. Default: False.
 
 Example
 -------
@@ -29,11 +32,13 @@ To evaluate statistical uncertainties and perform interpolation, run the command
         --grid_points_file path/to/grid_points.json \\
         --metrics_file "path/to/metrics.yaml" \\
         --base_path tests/resources/production_dl2_fits/ \\
-        --output_path simtools-output/derived_events \\
-        --output_file derived_events.json
+        --file_name_template "prod6_LaPalma-{zenith}deg\\
+            _gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits" \\
+        --plot_production_statistics
 
-The output will display the production statistics for the specified query point and save
- the results to the specified output file.
+Output
+------
+The output will be a file containing the grid points with the interpolated production events added.
 """
 
 import logging
