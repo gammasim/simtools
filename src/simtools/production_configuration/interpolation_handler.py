@@ -93,13 +93,13 @@ class InterpolationHandler:
         reduced_grid_points = grid_points[:, non_flat_mask]
         return reduced_grid_points, non_flat_mask
 
-    def interpolate(self, query_points: np.ndarray) -> np.ndarray:
+    def interpolate(self) -> np.ndarray:
         """
         Interpolate the number of simulated events given query points.
 
         Parameters
         ----------
-        query_points : np.ndarray
+        grid_points : np.ndarray
             Array of query points with shape (n, 5), where n is the number of points,
             and 5 represents (energy, azimuth, zenith, nsb, offset).
 
@@ -110,13 +110,14 @@ class InterpolationHandler:
         """
         # Remove flat dimensions for interpolation
         reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(self.grid_points)
-        reduced_query_points = query_points[:, non_flat_mask]
+
+        # reduced_grid_points = self.grid_points[:, non_flat_mask]
 
         # Interpolate using the reduced dimensions
         self.interpolated_production_statistics = griddata(
             reduced_grid_points,
             self.data,
-            reduced_query_points,
+            reduced_grid_points,
             method="linear",
             fill_value=np.nan,
             rescale=True,
@@ -133,7 +134,7 @@ class InterpolationHandler:
             0
         ]:  # assuming here the energy grid is similar for all evaluators
             query_with_energy = np.zeros(len(non_flat_mask))
-            query_with_energy[non_flat_mask] = reduced_query_points[0]
+            query_with_energy[non_flat_mask] = reduced_grid_points[0]
             query_with_energy[0] = energy_bin.to(u.TeV).value
 
             interpolated_value = griddata(
@@ -149,13 +150,13 @@ class InterpolationHandler:
 
         return self.interpolated_production_statistics
 
-    def interpolate_energy_threshold(self, query_point: np.ndarray) -> float:
+    def interpolate_energy_threshold(self, grid_point: np.ndarray) -> float:
         """
         Interpolate the energy threshold for a given grid point.
 
         Parameters
         ----------
-        query_point : np.ndarray
+        grid_point : np.ndarray
             Array specifying the grid point (energy, azimuth, zenith, NSB, offset).
 
         Returns
@@ -180,12 +181,12 @@ class InterpolationHandler:
 
         reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(flat_grid_points)
         full_non_flat_mask = np.concatenate(([False], non_flat_mask))
-        reduced_query_point = query_point[0][full_non_flat_mask]
+        reduced_grid_point = grid_point[0][full_non_flat_mask]
 
         interpolated_threshold = griddata(
             reduced_grid_points,
             flat_energy_thresholds,
-            reduced_query_point,
+            reduced_grid_point,
             method="linear",
             fill_value=np.nan,
             rescale=False,
