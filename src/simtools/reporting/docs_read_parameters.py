@@ -72,10 +72,13 @@ class ReadParameters:
         output_file = output_data_path / output_file_name
         image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
+        Path(self.output_path.parent.parent.parent / "_images").mkdir(parents=True, exist_ok=True)
+        print("output: ", self.output_path, self.output_path.parent.parent.parent)
+        print()
+        Path(IMAGE_PATH).mkdir(parents=True, exist_ok=True)
 
         if parameter == "camera_config_file" and parameter_version:
-            image_path = Path(f"../{IMAGE_PATH}/{input_file.stem}")
-            Path(image_path).parent.absolute().mkdir(parents=True, exist_ok=True)
+            image_path = Path(f"{IMAGE_PATH}/{input_file.stem}")
 
             if not Path(f"{image_path}.png").exists():
                 plot_config = {
@@ -89,7 +92,9 @@ class ReadParameters:
 
                 plot_pixels.plot(
                     config=plot_config,
-                    output_file=str(image_path) + ".png",
+                    output_file=Path(
+                        self.output_path.parent.parent.parent / f"_images/{input_file.stem}"
+                    ),
                     db_config=self.db_config,
                 )
 
@@ -111,7 +116,7 @@ class ReadParameters:
                         "\n\nThe full file can be found in the Simulation Model repository [here]"
                         "(https://gitlab.cta-observatory.org/cta-science/simulations/"
                         "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                        f"model_parameters/Files/{input_file.stem}).\n\n"
+                        f"model_parameters/Files/{input_file.name}).\n\n"
                     )
                     outfile.write("\n\n")
                     outfile.write("The first 30 lines of the file are:\n")
