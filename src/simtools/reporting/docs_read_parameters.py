@@ -73,8 +73,7 @@ class ReadParameters:
         image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
         Path(self.output_path.parent.parent.parent / "_images").mkdir(parents=True, exist_ok=True)
-        print("output: ", self.output_path, self.output_path.parent.parent.parent)
-        print()
+
         Path(IMAGE_PATH).mkdir(parents=True, exist_ok=True)
 
         if parameter == "camera_config_file" and parameter_version:
