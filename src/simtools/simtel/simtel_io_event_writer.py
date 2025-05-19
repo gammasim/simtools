@@ -143,14 +143,14 @@ class SimtelIOEventDataWriter:
 
     def _write_fits(self, tables, output_file):
         """Write tables to a FITS file."""
-        hdulist = [fits.PrimaryHDU()]  # Primary HDU is required
+        hdu_list = [fits.PrimaryHDU()]  # Primary HDU is required
 
         for table in tables:
             hdu = fits.BinTableHDU(data=table.as_array())
             hdu.name = table.meta.get("EXTNAME", "")  # Set extension name if present
-            hdulist.append(hdu)
+            hdu_list.append(hdu)
 
-        fits.HDUList(hdulist).writeto(output_file, overwrite=True)
+        fits.HDUList(hdu_list).writeto(output_file, overwrite=True)
 
     def _write_hdf5(self, astropy_tables, output_file):
         """Write tables to an HDF5 file."""
@@ -179,7 +179,6 @@ class SimtelIOEventDataWriter:
     def _process_file(self, file_id, file):
         """Process a single file and update data lists."""
         self._process_file_info(file_id, file)
-        triggered = False
         with EventIOFile(file) as f:
             for eventio_object in f:
                 if isinstance(eventio_object, MCRunHeader):
@@ -187,10 +186,9 @@ class SimtelIOEventDataWriter:
                 elif isinstance(eventio_object, MCShower):
                     self._process_mc_shower(eventio_object, file_id)
                 elif isinstance(eventio_object, MCEvent):
-                    self._process_mc_event(eventio_object, triggered)
-                    triggered = False
+                    self._process_mc_event(eventio_object)
                 elif isinstance(eventio_object, ArrayEvent):
-                    triggered = self._process_array_event(eventio_object)
+                    self._process_array_event(eventio_object, file_id)
 
     def _process_mc_run_header(self, eventio_object):
         """Process MC run header and update data lists."""
@@ -239,7 +237,7 @@ class SimtelIOEventDataWriter:
             for _ in range(self.n_use)
         )
 
-    def _process_mc_event(self, eventio_object, triggered):
+    def _process_mc_event(self, eventio_object):
         """
         Process MC event and update shower event list.
 
@@ -265,23 +263,9 @@ class SimtelIOEventDataWriter:
                 "area_weight": event["aweight"],
             }
         )
-        if triggered:
-            self.trigger_data[-1].update(
-                {
-                    "event_id": event["event_id"],
-                    "file_id": self.shower_data[shower_data_index]["file_id"],
-                }
-            )
 
-    def _process_array_event(self, eventio_object):
-        """
-        Process array event and update triggered event list.
-
-        Return
-        ------
-        bool
-            True if the event is triggered, False otherwise.
-        """
+    def _process_array_event(self, eventio_object, file_id):
+        """Process array event and update triggered event list."""
         tracking_positions = []
         telescopes = []
 
@@ -303,11 +287,9 @@ class SimtelIOEventDataWriter:
                 )
 
         if len(telescopes) > 0 and tracking_positions:
-            self._fill_array_event(telescopes, tracking_positions)
-            return True
-        return False
+            self._fill_array_event(telescopes, tracking_positions, eventio_object.event_id, file_id)
 
-    def _fill_array_event(self, telescopes, tracking_positions):
+    def _fill_array_event(self, telescopes, tracking_positions, event_id, file_id):
         """Add array event triggered events with tracking positions."""
         altitudes = [pos["altitude"] for pos in tracking_positions]
         azimuths = [pos["azimuth"] for pos in tracking_positions]
@@ -315,8 +297,8 @@ class SimtelIOEventDataWriter:
         self.trigger_data.append(
             {
                 "shower_id": self.shower_data[-1]["shower_id"],
-                "event_id": self.shower_data[-1]["event_id"],  # filled in _process_mc_event
-                "file_id": self.shower_data[-1]["file_id"],
+                "event_id": event_id,
+                "file_id": file_id,
                 "array_altitude": float(np.mean(altitudes)),
                 "array_azimuth": float(calculate_circular_mean(azimuths)),
                 "telescope_list": ",".join(map(str, telescopes)),
