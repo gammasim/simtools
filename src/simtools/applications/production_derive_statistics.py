@@ -34,6 +34,10 @@ To evaluate statistical uncertainties and perform interpolation, run the command
         --base_path tests/resources/production_dl2_fits/ \\
         --file_name_template "prod6_LaPalma-{zenith}deg\\
             _gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits" \\
+        --zeniths 20 40 52 60 \\
+        --offsets 0 \\
+        --azimuths 180 \\
+        --nsb 0.0 \\
         --plot_production_statistics
 
 Output
@@ -45,6 +49,7 @@ import logging
 from pathlib import Path
 
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
 )
@@ -89,6 +94,34 @@ def _parse(label, description):
         help=("Template for the DL2 MC event file name."),
     )
     config.parser.add_argument(
+        "--zeniths",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of zenith angles in deg that describe the supplied DL2 files.",
+    )
+    config.parser.add_argument(
+        "--azimuths",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of azimuth angles in deg that describe the supplied DL2 files.",
+    )
+    config.parser.add_argument(
+        "--nsb",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of nsb values that describe the supplied DL2 files.",
+    )
+    config.parser.add_argument(
+        "--offsets",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of camera offsets in deg that describe the supplied DL2 files..",
+    )
+    config.parser.add_argument(
         "--plot_production_statistics",
         required=False,
         action="store_true",
@@ -102,6 +135,7 @@ def _parse(label, description):
 def main():
     """Run the ProductionStatisticsHandler."""
     label = Path(__file__).stem
+
     args_dict, _ = _parse(
         label,
         "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
@@ -109,7 +143,10 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    manager = ProductionStatisticsHandler(args_dict)
+    _io_handler = io_handler.IOHandler()
+    output_path = _io_handler.get_output_directory(label, sub_dir="")
+
+    manager = ProductionStatisticsHandler(args_dict, output_path=output_path)
     manager.run()
 
 
