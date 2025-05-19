@@ -139,7 +139,6 @@ class SimtelIOEventDataReader:
         """Get shower data corresponding to triggered events."""
         triggered_shower = ShowerEventData()
 
-        # Match shower events in the same order as trigger table
         matched_indices = []
         for tr_shower_id, tr_event_id, tr_file_id in zip(
             trigger_table["shower_id"], trigger_table["event_id"], trigger_table["file_id"]
@@ -158,7 +157,6 @@ class SimtelIOEventDataReader:
                     f" event {tr_event_id} file {tr_file_id}"
                 )
 
-        # Copy data in trigger table order
         for attr in vars(shower_data):
             if not attr.endswith("_unit"):
                 value = getattr(shower_data, attr)
@@ -289,7 +287,7 @@ class SimtelIOEventDataReader:
         """
         Return reduced simulation file info assuming single-valued parameters.
 
-        Applies rounding and uniqueness checks to extract representative values
+        Applies rounding and uniqueness functions extract representative values
         for zenith, azimuth, and NSB level. Assumes all files share identical
         simulation parameters except for file names. Returns particle name instead
         of ID.
