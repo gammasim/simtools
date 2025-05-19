@@ -93,14 +93,13 @@ def main():  # noqa: D103
         return
 
     output_filepath = io_handler.IOHandler().get_output_file(args_dict["output_file"])
-    generator = SimtelIOEventDataWriter(files, output_filepath, args_dict["max_files"])
+    generator = SimtelIOEventDataWriter(files, args_dict["max_files"])
     tables = generator.process_files()
     generator.write(
+        output_filepath,
         tables=tables,
     )
     MetadataCollector.dump(args_dict=args_dict, output_file=output_filepath.with_suffix(".yml"))
-
-    logger.info(f"Reduced dataset saved to: {output_filepath}")
 
     if args_dict["print_dataset_information"] > 0:
         for table in tables:
