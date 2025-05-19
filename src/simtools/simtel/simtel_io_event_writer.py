@@ -1,10 +1,12 @@
 """Generate a reduced dataset from sim_telarray output files using astropy tables."""
 
+import importlib.util
 import logging
 from dataclasses import dataclass
 
 import astropy.units as u
 import numpy as np
+from astropy.io import fits
 from astropy.table import Table
 from eventio import EventIOFile
 from eventio.simtel import (
@@ -26,9 +28,9 @@ class TableSchemas:
     """Define schemas for output tables with units."""
 
     shower_schema = {
-        "shower_id": (int, None),
-        "event_id": (int, None),
-        "file_id": (int, None),
+        "shower_id": (np.uint32, None),
+        "event_id": (np.uint32, None),
+        "file_id": (np.uint32, None),
         "simulated_energy": (float, u.TeV),
         "x_core": (float, u.m),
         "y_core": (float, u.m),
@@ -38,9 +40,9 @@ class TableSchemas:
     }
 
     trigger_schema = {
-        "shower_id": (int, None),
-        "event_id": (int, None),
-        "file_id": (int, None),
+        "shower_id": (np.uint32, None),
+        "event_id": (np.uint32, None),
+        "file_id": (np.uint32, None),
         "array_altitude": (float, u.rad),
         "array_azimuth": (float, u.rad),
         "telescope_list": (str, None),  # Store as comma-separated string
@@ -48,8 +50,8 @@ class TableSchemas:
 
     file_info_schema = {
         "file_name": (str, None),
-        "file_id": (int, None),
-        "particle_id": (int, None),
+        "file_id": (np.uint32, None),
+        "particle_id": (np.uint32, None),
         "zenith": (float, u.deg),
         "azimuth": (float, u.deg),
         "nsb_level": (float, None),
@@ -70,17 +72,14 @@ class SimtelIOEventDataWriter:
     ----------
     input_files : list
         List of input file paths to process.
-    output_file : str
-        Path to the output file.
     max_files : int, optional
         Maximum number of files to process.
     """
 
-    def __init__(self, input_files, output_file, max_files=100):
+    def __init__(self, input_files, max_files=100):
         """Initialize class."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
-        self.output_file = output_file
         try:
             self.max_files = max_files if max_files < len(input_files) else len(input_files)
         except TypeError as exc:
@@ -120,11 +119,62 @@ class SimtelIOEventDataWriter:
             if unit is not None:
                 table[col].unit = unit
 
-    def write(self, tables):
-        """Write tables to FITS file."""
-        tables[0].write(self.output_file, format="fits", overwrite=True)
-        for table in tables[1:]:
-            table.write(self.output_file, format="fits", append=True)
+    def write(self, output_file, tables):
+        """
+        Write tables to file.
+
+        Parameters
+        ----------
+        output_file : Path
+            Path to the output file.
+        tables : list
+            List of astropy tables to write.
+        """
+        self._logger.info(f"Save reduced dataset to: {output_file}")
+        if output_file.name.endswith("fits.gz") or output_file.suffix == ".fits":
+            self._write_fits(tables, output_file)
+        elif output_file.suffix in (".h5", ".hdf5"):
+            self._write_hdf5(tables, output_file)
+        else:
+            raise ValueError(
+                f"Unsupported file format: {output_file.suffix}. "
+                "Supported formats are .fits and .hdf5"
+            )
+
+    def _write_fits(self, tables, output_file):
+        """Write tables to a FITS file."""
+        hdulist = [fits.PrimaryHDU()]  # Primary HDU is required
+
+        for table in tables:
+            hdu = fits.BinTableHDU(data=table.as_array())
+            hdu.name = table.meta.get("EXTNAME", "")  # Set extension name if present
+            hdulist.append(hdu)
+
+        fits.HDUList(hdulist).writeto(output_file, overwrite=True)
+
+    def _write_hdf5(self, astropy_tables, output_file):
+        """Write tables to an HDF5 file."""
+        if importlib.util.find_spec("h5py") is None:
+            raise ImportError("h5py is required to write HDF5 files with Astropy.")
+
+        astropy_tables[0].write(
+            output_file,
+            path=f"/{astropy_tables[0].meta['EXTNAME']}",
+            format="hdf5",
+            overwrite=True,
+            serialize_meta=True,
+            compression=True,
+        )
+
+        for table in astropy_tables[1:]:
+            table.write(
+                output_file,
+                path=f"/{table.meta['EXTNAME']}",
+                format="hdf5",
+                append=True,
+                serialize_meta=True,
+                compression=True,
+            )
 
     def _process_file(self, file_id, file):
         """Process a single file and update data lists."""
@@ -278,7 +328,8 @@ class SimtelIOEventDataWriter:
         Return preliminary NSB level from file name.
 
         Hardwired values are used for "dark", "half", and "full" NSB levels
-        (actual values are made up for this example).
+        (actual values are made up for this example). Will be replaced with
+        reading of sim_telarray metadata entry for NSB level (to be implemented).
 
         Parameters
         ----------
