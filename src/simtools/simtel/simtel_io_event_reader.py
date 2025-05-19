@@ -1,5 +1,5 @@
 """
-Read a reduced dataset from file.
+Read reduced datasets from FITS tables.
 
 Allow to filter the events based on the triggered telescopes.
 Provide functionality to list events, e.g. through
@@ -13,34 +13,51 @@ Provide functionality to list events, e.g. through
 """
 
 import logging
+from dataclasses import dataclass, field
 
 import astropy.units as u
 import numpy as np
-import tables
 from astropy.coordinates import AltAz, angular_separation
+from astropy.io import fits
+from astropy.table import Table
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.simtel.simtel_io_event_writer import (
-    ShowerEventData,
-    SimulationFileInfo,
-    TriggeredEventData,
-)
+
+
+@dataclass
+class ShowerEventData:
+    """Container for shower event data."""
+
+    shower_id: list[np.uint32] = field(default_factory=list)
+    event_id: list[np.uint32] = field(default_factory=list)
+    file_id: list[np.uint32] = field(default_factory=list)
+    simulated_energy: list[float] = field(default_factory=list)
+    x_core: list[float] = field(default_factory=list)
+    y_core: list[float] = field(default_factory=list)
+    shower_azimuth: list[float] = field(default_factory=list)
+    shower_altitude: list[float] = field(default_factory=list)
+    area_weight: list[float] = field(default_factory=list)
+    x_core_shower: list[float] = field(default_factory=list)
+    y_core_shower: list[float] = field(default_factory=list)
+    core_distance_shower: list[float] = field(default_factory=list)
+
+
+@dataclass
+class TriggeredEventData:
+    """Container for triggered event data."""
+
+    shower_id: list[np.uint32] = field(default_factory=list)
+    event_id: list[np.uint32] = field(default_factory=list)
+    file_id: list[np.uint32] = field(default_factory=list)
+    array_altitude: list[float] = field(default_factory=list)
+    array_azimuth: list[float] = field(default_factory=list)
+    telescope_list: list[np.ndarray] = field(default_factory=list)
+    angular_distance: list[float] = field(default_factory=list)
 
 
 class SimtelIOEventDataReader:
-    """
-    Read reduced MC data set from file.
-
-    Calculate some standard derivation like core position in shower coordinates.
-
-    Parameters
-    ----------
-    event_data_file : str
-        Path to the HDF5 file containing the event data.
-    telescope_list : list, optional
-        List of telescope IDs to filter the events (default is None).
-    """
+    """Read reduced MC data set from FITS file."""
 
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize SimtelIOEventDataReader with the given event data file."""
@@ -53,180 +70,152 @@ class SimtelIOEventDataReader:
             self.triggered_shower_data,
             self.triggered_data,
         ) = self.read_event_data(event_data_file)
-        self._derived_event_data()
+
+    def _table_to_shower_data(self, table):
+        """
+        Convert SHOWERS table to ShowerEventData and add derived quantities.
+
+        Parameters
+        ----------
+        table : astropy.table.Table
+            Table "SHOWERS"
+
+        Returns
+        -------
+        ShowerEventData
+            An instance of ShowerEventData with the data from the table.
+        """
+        shower_data = ShowerEventData()
+
+        for col in table.colnames:
+            setattr(shower_data, col, np.array(table[col].data))
+            if table[col].unit:
+                setattr(shower_data, f"{col}_unit", table[col].unit)
+
+        shower_data.x_core_shower, shower_data.y_core_shower = (
+            self._transform_to_shower_coordinates(
+                shower_data.x_core,
+                shower_data.y_core,
+                shower_data.shower_azimuth,
+                shower_data.shower_altitude,
+            )
+        )
+        shower_data.core_distance_shower = np.sqrt(
+            shower_data.x_core_shower**2 + shower_data.y_core_shower**2
+        )
+
+        return shower_data
+
+    def _table_to_triggered_data(self, table):
+        """
+        Convert TRIGGERS table to TriggeredEventData.
+
+        Parameters
+        ----------
+        table : astropy.table.Table
+            Table "TRIGGERS"
+
+        Returns
+        -------
+        TriggeredEventData
+            An instance of TriggeredEventData with the data from the table.
+        """
+        triggered_data = TriggeredEventData()
+        for col in table.colnames:
+            if col == "telescope_list":
+                arrays = [
+                    np.array(list(map(int, tel_list.split(","))), dtype=np.int16)
+                    for tel_list in table[col]
+                ]
+                triggered_data.telescope_list = arrays
+            else:
+                data = np.array(table[col].data)
+                setattr(triggered_data, col, data)
+                if table[col].unit:
+                    setattr(triggered_data, f"{col}_unit", table[col].unit)
+        return triggered_data
+
+    def _get_triggered_shower_data(self, shower_data, trigger_table):
+        """Get shower data corresponding to triggered events."""
+        triggered_shower = ShowerEventData()
+
+        # Match shower events in the same order as trigger table
+        matched_indices = []
+        for tr_shower_id, tr_event_id, tr_file_id in zip(
+            trigger_table["shower_id"], trigger_table["event_id"], trigger_table["file_id"]
+        ):
+            mask = (
+                (shower_data.shower_id == tr_shower_id)
+                & (shower_data.event_id == tr_event_id)
+                & (shower_data.file_id == tr_file_id)
+            )
+            matched_idx = np.where(mask)[0]
+            if len(matched_idx) == 1:
+                matched_indices.append(matched_idx[0])
+            else:
+                self._logger.warning(
+                    f"Found {len(matched_idx)} matches for shower {tr_shower_id}"
+                    f" event {tr_event_id} file {tr_file_id}"
+                )
+
+        # Copy data in trigger table order
+        for attr in vars(shower_data):
+            if not attr.endswith("_unit"):
+                value = getattr(shower_data, attr)
+                if isinstance(value, list | np.ndarray):
+                    setattr(triggered_shower, attr, np.array(value)[matched_indices])
+
+        return triggered_shower
 
     def read_event_data(self, event_data_file):
-        """
-        Read event data from the reduced MC event data file.
+        """Read event data from FITS file."""
+        with fits.open(event_data_file) as hdul:
+            # limitations of pylint static analysis
+            shower_table = Table(hdul["SHOWERS"].data)  # pylint: disable=no-member
+            trigger_table = Table(hdul["TRIGGERS"].data)  # pylint: disable=no-member
+            file_info_table = Table(hdul["FILE_INFO"].data)  # pylint: disable=no-member
 
-        Parameters
-        ----------
-        event_data_file : str, Path
-            Path to the HDF5 file containing the event data.
+            shower_data = self._table_to_shower_data(shower_table)
+            triggered_data = self._table_to_triggered_data(trigger_table)
 
-        Returns
-        -------
-        SimulationFileInfo, ShowerEventData, TriggeredEventData
-            Simulation file info, event, and triggered event data.
-        """
-        file_info = SimulationFileInfo()
-        event_data = ShowerEventData()
-        triggered_event_data = TriggeredEventData()
+            # Get triggered shower data - now matched to trigger table order
+            triggered_shower = self._get_triggered_shower_data(shower_data, trigger_table)
 
-        with tables.open_file(event_data_file, mode="r") as f:
-            file_info = self._read_file_info(f, file_info)
-            event_data = self._read_shower_data(f, event_data)
-            triggered_data = self._read_triggered_data(f, triggered_event_data)
-
-        triggered_shower, triggered_data = self._reduce_to_triggered_events(
-            event_data, triggered_event_data
-        )
-        return file_info, event_data, triggered_shower, triggered_data
-
-    def _read_file_info(self, file, file_info):
-        """Read file information from the HDF5 file."""
-        file_data = file.root.data.file_info
-        file_info.file_name = file_data.col("file_name")
-        file_info.particle_id = file_data.col("particle_id")
-        file_info.zenith = file_data.col("zenith")
-        file_info.azimuth = file_data.col("azimuth")
-        file_info.nsb_level = file_data.col("nsb_level")
-        return file_info
-
-    def _read_triggered_data(self, file, triggered_event_data):
-        """Read triggered data from the HDF5 file."""
-        triggered_data = file.root.data.triggered_data
-        triggered_event_data.triggered_id = triggered_data.col("triggered_id")
-        triggered_event_data.array_altitudes = triggered_data.col("array_altitudes")
-        triggered_event_data.array_azimuths = triggered_data.col("array_azimuths")
-
-        telescope_indices = triggered_data.col("telescope_list_index")
-        telescope_list_array = file.root.data.trigger_telescope_list_list
-        triggered_event_data.trigger_telescope_list_list = []
-        for index in telescope_indices:
-            if index < telescope_list_array.nrows:
-                triggered_event_data.trigger_telescope_list_list.append(telescope_list_array[index])
-            else:
-                self._logger.warning(f"Invalid telescope list index: {index}")
-                triggered_event_data.trigger_telescope_list_list.append(
-                    np.array([], dtype=np.int16)
+            # Calculate angular distances with matched arrays
+            triggered_data.angular_distance = (
+                angular_separation(
+                    triggered_shower.shower_azimuth * u.rad,
+                    triggered_shower.shower_altitude * u.rad,
+                    triggered_data.array_azimuth * u.rad,
+                    triggered_data.array_altitude * u.rad,
                 )
+                .to(u.deg)
+                .value
+            )
 
-        return triggered_event_data
+            if self.telescope_list:
+                triggered_data = self._filter_by_telescopes(triggered_data)
 
-    @staticmethod
-    def _read_shower_data(file, event_data):
-        """Read shower data from the HDF5 file."""
-        reduced_data = file.root.data.reduced_data
-        event_data.simulated_energy = reduced_data.col("simulated_energy")
-        event_data.x_core = reduced_data.col("x_core")
-        event_data.y_core = reduced_data.col("y_core")
-        event_data.shower_azimuth = reduced_data.col("shower_azimuth")
-        event_data.shower_altitude = reduced_data.col("shower_altitude")
-        event_data.shower_id = reduced_data.col("shower_id")
-        event_data.area_weight = reduced_data.col("area_weight")
-        return event_data
+        return file_info_table, shower_data, triggered_shower, triggered_data
 
-    def _reduce_to_triggered_events(self, event_data, triggered_data):
-        """
-        Reduce event data to triggered events only. Apply filter on telescope list if specified.
-
-        Parameters
-        ----------
-        event_data : ShowerEventData
-            Event data.
-        triggered_data : TriggeredEventData
-            Triggered event data.
-
-        Returns
-        -------
-        ShowerEventData, TriggeredEventData
-            Filtered event data and triggered event data
-        """
-        filtered_shower_ids, triggered_indices = self._get_mask_triggered_telescopes(
-            self.telescope_list,
-            triggered_data.triggered_id,
-            triggered_data.trigger_telescope_list_list,
+    def _filter_by_telescopes(self, triggered_data):
+        """Filter triggered data by the specified telescope list."""
+        mask = np.array(
+            [
+                any(tel in event for tel in self.telescope_list)
+                for event in triggered_data.telescope_list
+            ]
         )
-        filtered_event_data = ShowerEventData(
-            x_core=event_data.x_core[filtered_shower_ids],
-            y_core=event_data.y_core[filtered_shower_ids],
-            simulated_energy=event_data.simulated_energy[filtered_shower_ids],
-            shower_azimuth=event_data.shower_azimuth[filtered_shower_ids],
-            shower_altitude=event_data.shower_altitude[filtered_shower_ids],
-        )
-
-        filtered_telescope_list = [
-            triggered_data.trigger_telescope_list_list[i] for i in triggered_indices
-        ]
-
         filtered_triggered_data = TriggeredEventData(
-            array_azimuths=triggered_data.array_azimuths[triggered_indices],
-            array_altitudes=triggered_data.array_altitudes[triggered_indices],
-            trigger_telescope_list_list=filtered_telescope_list,
+            array_altitude=triggered_data.array_altitude[mask],
+            array_azimuth=triggered_data.array_azimuth[mask],
+            telescope_list=[triggered_data.telescope_list[i] for i in np.arange(len(mask))[mask]],
+            angular_distance=triggered_data.angular_distance[mask],
         )
         self._logger.info(
-            f"Events reduced to triggered events: {len(filtered_event_data.simulated_energy)}"
+            f"Events reduced to triggered events: {len(filtered_triggered_data.array_altitude)}"
         )
-        return filtered_event_data, filtered_triggered_data
-
-    def _get_mask_triggered_telescopes(
-        self, telescope_list, triggered_id, trigger_telescope_list_list
-    ):
-        """
-        Return indices of events that triggered the specified telescopes.
-
-        Parameters
-        ----------
-        telescope_list : list
-            List of telescope IDs to filter the events
-        triggered_id : np.ndarray
-            Array of event IDs that triggered.
-        trigger_telescope_list_list : list
-            List of triggered telescopes for each event.
-
-        Returns
-        -------
-        tuple
-            Filtered triggered IDs and indices.
-        """
-        triggered_indices = np.arange(len(triggered_id))
-        if telescope_list:
-            mask = np.array(
-                [
-                    any(tel in event for tel in telescope_list)
-                    for event in trigger_telescope_list_list
-                ]
-            )
-            triggered_indices = triggered_indices[mask]
-            return triggered_id[mask], triggered_indices
-        return triggered_id, triggered_indices
-
-    def _derived_event_data(self):
-        """Calculate core positions in shower coordinates and angular distances."""
-        for event_data in (self.shower_data, self.triggered_shower_data):
-            event_data.x_core_shower, event_data.y_core_shower = (
-                self._transform_to_shower_coordinates(
-                    event_data.x_core,
-                    event_data.y_core,
-                    event_data.shower_azimuth,
-                    event_data.shower_altitude,
-                )
-            )
-            event_data.core_distance_shower = np.sqrt(
-                event_data.x_core_shower**2 + event_data.y_core_shower**2
-            )
-
-        self.triggered_data.angular_distance = (
-            angular_separation(
-                self.triggered_shower_data.shower_azimuth,
-                self.triggered_shower_data.shower_altitude,
-                self.triggered_data.array_azimuths,
-                self.triggered_data.array_altitudes,
-            )
-            * 180
-            / np.pi
-        )
+        return filtered_triggered_data
 
     def _transform_to_shower_coordinates(self, x_core, y_core, shower_azimuth, shower_altitude):
         """
@@ -248,10 +237,12 @@ class SimtelIOEventDataReader:
         tuple
             Core positions in shower coordinates (x, y).
         """
-        pointing = AltAz(az=shower_azimuth * u.rad, alt=shower_altitude * u.rad)
-        ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=0 * u.m)
-        shower_frame = ground.transform_to(TiltedGroundFrame(pointing_direction=pointing))
-
+        ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=np.zeros_like(x_core) * u.m)
+        shower_frame = ground.transform_to(
+            TiltedGroundFrame(
+                pointing_direction=AltAz(az=shower_azimuth * u.rad, alt=shower_altitude * u.rad)
+            )
+        )
         return shower_frame.x.value, shower_frame.y.value
 
     def print_dataset_information(self, n_events=1):
@@ -271,9 +262,9 @@ class SimtelIOEventDataReader:
         print_event_data(
             self.triggered_shower_data.core_distance_shower, "Core distance shower (m)"
         )
-        print_event_data(self.triggered_data.array_azimuths, "Array azimuth (rad)")
-        print_event_data(self.triggered_data.array_altitudes, "Array altitude (rad)")
-        print_event_data(self.triggered_data.trigger_telescope_list_list, "Triggered telescopes")
+        print_event_data(self.triggered_data.array_azimuth, "Array azimuth (rad)")
+        print_event_data(self.triggered_data.array_altitude, "Array altitude (rad)")
+        print_event_data(self.triggered_data.telescope_list, "Triggered telescopes")
         print_event_data(
             self.triggered_data.angular_distance, "Angular distance to pointing direction (deg)"
         )
@@ -286,7 +277,7 @@ class SimtelIOEventDataReader:
             f"{'Core distance shower (m)':<20}"
         )
 
-        for i, telescope_list in enumerate(self.triggered_data.trigger_telescope_list_list):
+        for i, telescope_list in enumerate(self.triggered_data.telescope_list):
             print(
                 f"{i:<10} {self.triggered_shower_data.simulated_energy[i]:<20.3f}"
                 f"{telescope_list} "
@@ -310,20 +301,20 @@ class SimtelIOEventDataReader:
         dict
             Dictionary containing the reduced simulation file info.
         """
-        particle_id = np.unique(self.simulation_file_info.particle_id)
-        zenith = np.unique(np.round(self.simulation_file_info.zenith, decimals=2))
-        azimuth = np.unique(np.round(self.simulation_file_info.azimuth, decimals=2))
-        nsb = np.unique(np.round(self.simulation_file_info.nsb_level, decimals=2))
-        # TODO - check if this should be an error or an warning
+        particle_id = np.unique(self.simulation_file_info["particle_id"].data)
+        zenith = np.unique(np.round(self.simulation_file_info["zenith"].data, decimals=2))
+        azimuth = np.unique(np.round(self.simulation_file_info["azimuth"].data, decimals=2))
+        nsb = np.unique(np.round(self.simulation_file_info["nsb_level"].data, decimals=2))
+
         if any(len(arr) > 1 for arr in (particle_id, zenith, azimuth, nsb)):
             self._logger.warning("Simulation file info has non-unique values.")
 
         return {
             "primary_particle": PrimaryParticle(
                 particle_id_type="corsika7_id",
-                particle_id=particle_id[0],
+                particle_id=int(particle_id[0]),
             ).name,
-            "zenith": zenith[0],
-            "azimuth": azimuth[0],
-            "nsb_level": nsb[0],
+            "zenith": float(zenith[0]),
+            "azimuth": float(azimuth[0]),
+            "nsb_level": float(nsb[0]),
         }
