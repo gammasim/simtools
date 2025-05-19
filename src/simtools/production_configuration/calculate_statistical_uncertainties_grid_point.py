@@ -70,9 +70,11 @@ class StatisticalUncertaintyEvaluator:
         """Set azimuth/zenith angle of grid point."""
         unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
         unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
-        if len(unique_azimuths) > 1 or len(unique_zeniths) > 1:
+        # unique_nsbs = np.unique(events_data["NSB"]) # implement
+        if len(unique_azimuths) > 1 or len(unique_zeniths) > 1:  # or len(unique_nsbs) > 1:
             msg = (
-                f"Multiple values found for azimuth ({unique_azimuths}) zenith ({unique_zeniths})."
+                f"Multiple values found for azimuth ({unique_azimuths}) "
+                f"zenith ({unique_zeniths})"  # nsb ({unique_nsbs}) "
             )
             self._logger.error(msg)
             raise ValueError(msg)
@@ -80,7 +82,7 @@ class StatisticalUncertaintyEvaluator:
             1 * u.TeV,
             unique_azimuths[0],
             unique_zeniths[0],
-            0,
+            0,  # NSB needs to be read and set here
             0 * u.deg,
         )
         self._logger.info(f"Grid point values: {self.grid_point}")
