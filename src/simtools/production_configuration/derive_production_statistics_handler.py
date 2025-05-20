@@ -103,7 +103,9 @@ class ProductionStatisticsHandler:
             return None
 
         self.interpolation_handler = InterpolationHandler(
-            self.evaluator_instances, metrics=self.metrics
+            self.evaluator_instances,
+            metrics=self.metrics,
+            grid_points_production=self.grid_points_production,
         )
         qrid_points_with_statistics = []
 
