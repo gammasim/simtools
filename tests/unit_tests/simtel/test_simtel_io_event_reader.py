@@ -1,179 +1,198 @@
-from unittest.mock import Mock, patch
+import logging
+from unittest.mock import patch
 
-import numpy as np
+import astropy.units as u
 import pytest
+from astropy.table import Table
 
-from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
-from simtools.simtel.simtel_io_event_writer import ShowerEventData, TriggeredEventData
+from simtools.simtel.simtel_io_event_reader import (
+    ShowerEventData,
+    SimtelIOEventDataReader,
+    TriggeredEventData,
+)
 
 
 @pytest.fixture
-def mock_hdf5_file():
-    with patch("tables.open_file") as mock_open:
-        mock_file = Mock()
+def mock_tables():
+    """Create mock tables with test data."""
+    # Create SHOWERS table
+    shower_table = Table()
+    shower_table.meta["EXTNAME"] = "SHOWERS"
+    shower_table["shower_id"] = [1, 2]
+    shower_table["event_id"] = [1, 2]
+    shower_table["file_id"] = [0, 0]
+    shower_table["simulated_energy"] = [1.0, 2.0] * u.TeV
+    shower_table["x_core"] = [100.0, 200.0]
+    shower_table["y_core"] = [150.0, 250.0]
+    shower_table["shower_azimuth"] = [0.1, 0.2]
+    shower_table["shower_altitude"] = [1.0, 1.1]
+    shower_table["area_weight"] = [1.0, 1.0]
 
-        # Mock reduced data
-        mock_reduced = Mock()
-        mock_reduced.nrows = 2
-        mock_reduced.col.side_effect = lambda x: {
-            "simulated_energy": np.array([1.0, 2.0]),
-            "x_core": np.array([100.0, 200.0]),
-            "y_core": np.array([150.0, 250.0]),
-            "shower_azimuth": np.array([0.1, 0.2]),
-            "shower_altitude": np.array([1.0, 1.1]),
-            "shower_id": np.array([1, 2]),
-            "area_weight": np.array([1.0, 1.0]),
-        }[x]
-        # Mock triggered data
-        mock_triggered = Mock()
-        mock_triggered.nrows = 2
-        mock_triggered.col.side_effect = lambda x: {
-            "triggered_id": np.array([0, 1]),
-            "array_altitudes": np.array([1.1, 1.2]),
-            "array_azimuths": np.array([0.2, 0.3]),
-            "telescope_list_index": np.array([0, 1]),
-        }[x]
+    # Create TRIGGERS table
+    trigger_table = Table()
+    trigger_table.meta["EXTNAME"] = "TRIGGERS"
+    trigger_table["shower_id"] = [1, 2]
+    trigger_table["event_id"] = [1, 2]
+    trigger_table["file_id"] = [0, 0]
+    trigger_table["array_altitude"] = [1.1, 1.2] * u.rad
+    trigger_table["array_azimuth"] = [0.2, 0.3] * u.rad
+    trigger_table["telescope_list"] = ["1,2,3", "2,3,4"]
 
-        mock_file.root.data.reduced_data = mock_reduced
-        mock_file.root.data.triggered_data = mock_triggered
-        mock_file.root.data.trigger_telescope_list_list = Mock()
-        mock_file.root.data.trigger_telescope_list_list.__len__ = lambda x: 2
-        mock_file.root.data.trigger_telescope_list_list.nrows = 2
-        mock_file.root.data.trigger_telescope_list_list.__getitem__ = (
-            lambda x, i: np.array([1, 2]) if i == 0 else np.array([2, 3])
-        )
-        mock_open.return_value.__enter__.return_value = mock_file
+    # Create FILE_INFO table
+    file_info_table = Table()
+    file_info_table.meta["EXTNAME"] = "FILE_INFO"
+    file_info_table["file_name"] = ["test.fits"]
+    file_info_table["file_id"] = [0]
+    file_info_table["particle_id"] = [1]
+    file_info_table["zenith"] = [20.0] * u.deg
+    file_info_table["azimuth"] = [0.0] * u.deg
+    file_info_table["nsb_level"] = [1.0]
 
-        yield mock_open
+    return shower_table, trigger_table, file_info_table
 
 
-def test_init(mock_hdf5_file):
-    mock_file = mock_hdf5_file.return_value.__enter__.return_value
-    reader = SimtelIOEventDataReader(mock_file)
+@pytest.fixture
+def mock_fits_file(mock_tables, tmp_path):
+    """Create a mock FITS file with test data."""
+    test_file = tmp_path / "test.fits"
+    shower_table, trigger_table, file_info_table = mock_tables
+
+    shower_table.write(test_file, format="fits", overwrite=True)
+    trigger_table.write(test_file, format="fits", append=True)
+    file_info_table.write(test_file, format="fits", append=True)
+
+    return str(test_file)
+
+
+def test_reader_initialization(mock_fits_file):
+    """Test basic reader initialization."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
     assert isinstance(reader.shower_data, ShowerEventData)
-    assert isinstance(reader.triggered_shower_data, ShowerEventData)
     assert isinstance(reader.triggered_data, TriggeredEventData)
+    assert len(reader.shower_data.simulated_energy) == 2
+    assert len(reader.triggered_data.telescope_list) == 2
 
 
-def test_read_event_data(mock_hdf5_file):
-    reader = SimtelIOEventDataReader(None)
-    _, shower, triggered_shower, triggered = reader.read_event_data(mock_hdf5_file)
+def test_telescope_filtering(mock_fits_file):
+    """Test filtering by telescope list."""
+    # Should only keep events with telescope 1
+    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=[1])
+    assert len(reader.triggered_data.telescope_list) == 1
+    assert 1 in reader.triggered_data.telescope_list[0]  # Compare with integer instead of string
 
-    assert len(shower.simulated_energy) == 2
-    assert len(triggered_shower.simulated_energy) == 2
-    assert len(triggered.array_azimuths) == 2
-
-
-def test_get_mask_triggered_telescopes_no_filter(mock_hdf5_file):
-    reader = SimtelIOEventDataReader(mock_hdf5_file)
-    triggered_id = np.array([1, 2, 3])
-    trigger_list = [np.array([1, 2]), np.array([2, 3]), np.array([1, 3])]
-
-    filtered_id, indices = reader._get_mask_triggered_telescopes(None, triggered_id, trigger_list)
-
-    np.testing.assert_array_equal(filtered_id, triggered_id)
-    np.testing.assert_array_equal(indices, np.array([0, 1, 2]))
+    # Should keep both events (all have telescope 2)
+    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=[2])
+    assert len(reader.triggered_data.telescope_list) == 2
+    for tel_list in reader.triggered_data.telescope_list:
+        assert 2 in tel_list
 
 
-def test_get_mask_triggered_telescopes_with_filter(mock_hdf5_file):
-    reader = SimtelIOEventDataReader(mock_hdf5_file)
-    triggered_id = np.array([1, 2, 3])
-    trigger_list = [np.array([1, 2]), np.array([2, 3]), np.array([1, 3])]
-
-    filtered_id, indices = reader._get_mask_triggered_telescopes([2], triggered_id, trigger_list)
-
-    np.testing.assert_array_equal(filtered_id, np.array([1, 2]))
-    np.testing.assert_array_equal(indices, np.array([0, 1]))
+def test_shower_coordinate_transformation(mock_fits_file):
+    """Test transformation of core positions to shower coordinates."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
+    assert hasattr(reader.triggered_shower_data, "x_core_shower")
+    assert hasattr(reader.triggered_shower_data, "y_core_shower")
+    assert hasattr(reader.triggered_shower_data, "core_distance_shower")
 
 
-def test_get_mask_triggered_telescopes_no_matches(mock_hdf5_file):
-    reader = SimtelIOEventDataReader(mock_hdf5_file)
-    triggered_id = np.array([1, 2, 3])
-    trigger_list = [np.array([1, 2]), np.array([2, 3]), np.array([1, 3])]
-
-    filtered_id, indices = reader._get_mask_triggered_telescopes([4], triggered_id, trigger_list)
-
-    np.testing.assert_array_equal(filtered_id, np.array([]))
-    np.testing.assert_array_equal(indices, np.array([]))
+def test_angular_separation_calculation(mock_fits_file):
+    """Test calculation of angular separation."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
+    assert hasattr(reader.triggered_data, "angular_distance")
+    assert len(reader.triggered_data.angular_distance) == 2
 
 
-def test_print_dataset_information(mock_hdf5_file, capsys):
-    reader = SimtelIOEventDataReader(mock_hdf5_file)
+def test_get_reduced_simulation_info(mock_fits_file):
+    """Test getting reduced simulation information."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
+    info = reader.get_reduced_simulation_file_info()
+
+    assert info["primary_particle"] == "gamma"
+    assert info["zenith"] == 20.0 * u.deg
+    assert info["azimuth"] == 0.0 * u.deg
+    assert info["nsb_level"] == 1.0
+
+
+def test_print_output(mock_fits_file, capsys):
+    """Test print methods don't error and produce output."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
+
     reader.print_dataset_information(n_events=1)
-
-    captured = capsys.readouterr()
-    output = captured.out
-
+    output = capsys.readouterr().out
     assert "Simulated energy (TeV)" in output
-    assert "Core x (m)" in output
-    assert "Core y (m)" in output
-    assert "Shower azimuth (rad)" in output
-    assert "Array azimuth (rad)" in output
-    assert "Array altitude (rad)" in output
-    assert "Triggered telescopes" in output
-
-    assert str(int(reader.triggered_shower_data.x_core[0])) in output
-    assert str(reader.triggered_data.array_azimuths[0]) in output
-
-
-def test_print_event_table(mock_hdf5_file, capsys):
-    reader = SimtelIOEventDataReader(mock_hdf5_file)
-
-    # Call with small lines_per_page to trigger pagination
-    reader.print_event_table()
-
-    captured = capsys.readouterr()
-    output = captured.out
-
-    # Check header is present
-    assert "Counter" in output
-    assert "Simulated Energy (TeV)" in output
-    assert "Triggered Telescopes" in output
     assert "Core distance shower (m)" in output
 
-    # Check data is present (use 'int' to avoid floating point precision issues)
-    assert str(int(reader.triggered_shower_data.simulated_energy[0])) in output
-    assert str(reader.triggered_data.trigger_telescope_list_list[0]) in output
-    assert str(int(reader.triggered_shower_data.core_distance_shower[0])) in output
+    reader.print_event_table()
+    output = capsys.readouterr().out
+    assert "Counter" in output
+    assert "Triggered Telescopes" in output
 
 
-def test_read_event_data_loads_all_fields(mock_hdf5_file):
-    reader = SimtelIOEventDataReader(None)
-    _, shower, triggered_shower, triggered = reader.read_event_data(mock_hdf5_file)
+@patch("simtools.simtel.simtel_io_event_reader.PrimaryParticle")
+def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fits_file, caplog):
+    """Test get_reduced_simulation_info with multiple values that trigger warning."""
 
-    # Test shower data fields
-    assert len(shower.simulated_energy) == 2
-    np.testing.assert_array_equal(shower.simulated_energy, [1.0, 2.0])
-    np.testing.assert_array_equal(shower.x_core, [100.0, 200.0])
-    np.testing.assert_array_equal(shower.y_core, [150.0, 250.0])
-    np.testing.assert_array_equal(shower.shower_azimuth, [0.1, 0.2])
-    np.testing.assert_array_equal(shower.shower_altitude, [1.0, 1.1])
-    np.testing.assert_array_equal(shower.shower_id, [1, 2])
-    np.testing.assert_array_equal(shower.area_weight, [1.0, 1.0])
+    # Create a reader and then create new table with multiple rows
+    reader = SimtelIOEventDataReader(mock_fits_file)
 
-    # Test triggered data fields
-    assert len(triggered.array_azimuths) == 2
-    np.testing.assert_array_equal(triggered.array_azimuths, [0.2, 0.3])
-    np.testing.assert_array_equal(triggered.array_altitudes, [1.1, 1.2])
-    np.testing.assert_array_equal(triggered.trigger_telescope_list_list[0], [1, 2])
-    np.testing.assert_array_equal(triggered.trigger_telescope_list_list[1], [2, 3])
+    # Create a new file_info table with two rows
+    new_file_info = Table()
+    new_file_info.meta["EXTNAME"] = "FILE_INFO"
+    new_file_info["file_name"] = ["test1.fits", "test2.fits"]
+    new_file_info["file_id"] = [0, 1]
+    new_file_info["particle_id"] = [1, 1]  # Same value, no warning
+    new_file_info["zenith"] = [20.0, 30.0]  # Different value, warning
+    new_file_info["azimuth"] = [0.0, 0.0]
+    new_file_info["nsb_level"] = [1.0, 1.0]
+
+    # Replace the existing table
+    reader.simulation_file_info = new_file_info
+    mock_primary_particle.return_value.name = "gamma"
+
+    with caplog.at_level(logging.WARNING):
+        info = reader.get_reduced_simulation_file_info()
+
+    assert "Simulation file info has non-unique values" in caplog.text
+    assert info["primary_particle"] == "gamma"
+    assert info["zenith"] == 20.0  # Should use first value
 
 
-def test_read_event_data_handles_invalid_telescope_index(mock_hdf5_file):
-    mock_file = mock_hdf5_file.return_value.__enter__.return_value
-    mock_triggered = mock_file.root.data.triggered_data
-    # Set an invalid telescope list index
-    mock_triggered.col.side_effect = lambda x: {
-        "triggered_id": np.array([0, 1]),
-        "array_altitudes": np.array([1.1, 1.2]),
-        "array_azimuths": np.array([0.2, 0.3]),
-        "telescope_list_index": np.array([99, 1]),  # Invalid index 99
-    }[x]
+def test_get_triggered_shower_data_single_match(mock_fits_file):
+    """Test _get_triggered_shower_data with single matches."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
 
-    reader = SimtelIOEventDataReader(None)
-    _, _, _, triggered = reader.read_event_data(mock_hdf5_file)
+    # Create test data with proper numpy arrays
+    shower_data = reader.shower_data  # Use existing shower data from reader
 
-    # First telescope list should be empty due to invalid index
-    np.testing.assert_array_equal(triggered.trigger_telescope_list_list[0], [])
-    # Second telescope list should be normal
-    np.testing.assert_array_equal(triggered.trigger_telescope_list_list[1], [2, 3])
+    # Create trigger table with matching IDs
+    trigger_table = Table()
+    trigger_table["shower_id"] = [1]
+    trigger_table["event_id"] = [1]
+    trigger_table["file_id"] = [0]
+
+    # Get triggered shower data
+    triggered_shower = reader._get_triggered_shower_data(shower_data, trigger_table)
+
+    assert len(triggered_shower.shower_id) == 1
+    assert triggered_shower.shower_id[0] == 1
+    assert triggered_shower.simulated_energy[0] == 1.0
+
+
+def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):
+    """Test _get_triggered_shower_data when no matches are found."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
+
+    shower_data = reader.shower_data  # Use existing shower data
+
+    # Create trigger table with non-matching IDs
+    trigger_table = Table()
+    trigger_table["shower_id"] = [999]  # No matching shower_id
+    trigger_table["event_id"] = [999]
+    trigger_table["file_id"] = [999]
+
+    with caplog.at_level(logging.WARNING):
+        triggered_shower = reader._get_triggered_shower_data(shower_data, trigger_table)
+
+        assert len(triggered_shower.shower_id) == 0
+        assert len(triggered_shower.simulated_energy) == 0
+        assert "Found 0 match" in caplog.text
