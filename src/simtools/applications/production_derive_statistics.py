@@ -9,7 +9,7 @@ interpolated production events added.
 
 Command line arguments
 ----------------------
---grid_points_file (str, required)
+--grid_points_production_file (str, required)
     Path to the file containing grid points. Each grid point should include azimuth, zenith,
     NSB, offset.
 --metrics_file (str, optional)
@@ -29,7 +29,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 .. code-block:: console
 
     simtools-production-derive-statistics \\
-        --grid_points_file path/to/grid_points.json \\
+        --grid_points_production_file path/to/grid_points_production.json \\
         --metrics_file "path/to/metrics.yaml" \\
         --base_path tests/resources/production_dl2_fits/ \\
         --file_name_template "prod6_LaPalma-{zenith}deg\\
@@ -68,10 +68,10 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--grid_points_file",
+        "--grid_points_production_file",
         type=str,
         required=True,
-        help="Path to the JSON file containing grid points.",
+        help="Path to the JSON file containing grid points for a production.",
     )
     config.parser.add_argument(
         "--metrics_file",

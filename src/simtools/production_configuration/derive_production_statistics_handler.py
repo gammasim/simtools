@@ -50,12 +50,12 @@ class ProductionStatisticsHandler:
         self.metrics = collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
         self.interpolation_handler = None
-        self.grid_points = self._load_grid_points()
+        self.grid_points_production = self._load_grid_points_production()
 
-    def _load_grid_points(self):
+    def _load_grid_points_production(self):
         """Load grid points from the JSON file."""
-        grid_points_file = self.args["grid_points_file"]
-        with open(grid_points_file, encoding="utf-8") as file:
+        grid_points_production_file = self.args["grid_points_production_file"]
+        with open(grid_points_production_file, encoding="utf-8") as file:
             return json.load(file)
 
     def initialize_evaluators(self):
@@ -106,22 +106,16 @@ class ProductionStatisticsHandler:
             self.evaluator_instances, metrics=self.metrics
         )
         qrid_points_with_statistics = []
-        for grid_point in self.grid_points:
-            azimuth = grid_point["azimuth"]["value"]
-            zenith = grid_point["zenith_angle"]["value"]
-            nsb = grid_point["nsb"]["value"]
-            offset = grid_point["offset"]["value"]
 
-            grid_point = np.array([[azimuth, zenith, nsb, offset]])
-            interpolated_production_statistics = self.interpolation_handler.interpolate(grid_point)
-            qrid_points_with_statistics.append(
-                {
-                    "grid_point": grid_point.tolist(),
-                    "interpolated_production_statistics": float(
-                        np.sum(interpolated_production_statistics)
-                    ),
-                }
-            )
+        interpolated_production_statistics = self.interpolation_handler.interpolate()
+        qrid_points_with_statistics.append(
+            {
+                "grid_point": self.grid_points_production,
+                "interpolated_production_statistics": float(
+                    np.sum(interpolated_production_statistics)
+                ),
+            }
+        )
 
         return qrid_points_with_statistics
 
@@ -144,7 +138,7 @@ class ProductionStatisticsHandler:
 
     def run(self):
         """Run the scaling and interpolation workflow."""
-        self.logger.info(f"Grid Points File: {self.args['grid_points_file']}")
+        self.logger.info(f"Grid Points File: {self.args['grid_points_production_file']}")
         self.logger.info(f"Metrics File: {self.args['metrics_file']}")
 
         self.initialize_evaluators()
