@@ -16,11 +16,13 @@ __all__ = ["InterpolationHandler"]
 class InterpolationHandler:
     """Handle interpolation between multiple StatisticalUncertaintyEvaluator instances."""
 
-    def __init__(self, evaluators, metrics: dict):
+    def __init__(self, evaluators, metrics: dict, grid_points_production: dict):
         self._logger = logging.getLogger(__name__)
 
         self.evaluators = evaluators
         self.metrics = metrics
+        self.grid_points_production = grid_points_production
+
         self.derive_production_statistics = [
             ProductionStatisticsDerivator(e, self.metrics) for e in self.evaluators
         ]
@@ -35,6 +37,10 @@ class InterpolationHandler:
         ]
         self.production_statistics = [
             derivator.derive_statistics(return_sum=False)
+            for derivator in self.derive_production_statistics
+        ]
+        self.production_statistics_sum = [
+            derivator.derive_statistics(return_sum=True)
             for derivator in self.derive_production_statistics
         ]
 
@@ -93,59 +99,109 @@ class InterpolationHandler:
         reduced_grid_points = grid_points[:, non_flat_mask]
         return reduced_grid_points, non_flat_mask
 
+    def build_grid_points_no_energy(self):
+        """
+        Build grid points without energy dimension.
+
+        Returns
+        -------
+        np.ndarray
+            The grid points without the energy dimension.
+        """
+        flat_data_list = []
+        flat_grid_points = []
+
+        for e, production_statistics_sum in zip(self.evaluators, self.production_statistics_sum):
+            az = e.grid_point[1].to(u.deg).value
+            zen = e.grid_point[2].to(u.deg).value
+            nsb = e.grid_point[3]
+            offset = e.grid_point[4].to(u.deg).value
+            flat_data_list.append(production_statistics_sum.value)
+
+            grid_points = np.column_stack([az, zen, nsb, offset])
+            flat_grid_points.append(grid_points)
+
+        flat_grid_points = np.vstack(flat_grid_points)
+        return flat_data_list, flat_grid_points
+
     def interpolate(self) -> np.ndarray:
         """
         Interpolate the number of simulated events given query points.
-
-        Parameters
-        ----------
-        grid_points : np.ndarray
-            Array of query points with shape (n, 5), where n is the number of points,
-            and 5 represents (energy, azimuth, zenith, nsb, offset).
 
         Returns
         -------
         np.ndarray
             Interpolated values at the query points.
         """
+        # Points defining the grid from DL2 and the production statistics
+        production_statistic, reduced_grid_points = self.build_grid_points_no_energy()
+
+        # Convert production_statistic to a proper numpy array
+        production_statistic = np.array(production_statistic, dtype=float)
+
         # Remove flat dimensions for interpolation
-        reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(self.grid_points)
+        reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(reduced_grid_points)
 
-        # reduced_grid_points = self.grid_points[:, non_flat_mask]
+        # Convert grid_points_production to a numerical array
+        production_grid_points = []
+        for point in self.grid_points_production:
+            production_grid_points.append(
+                [
+                    point["azimuth"]["value"],
+                    point["zenith_angle"]["value"],
+                    point["nsb"]["value"],
+                    point["offset"]["value"],
+                ]
+            )
+        production_grid_points = np.array(production_grid_points)
 
-        # Interpolate using the reduced dimensions
+        # Apply the non-flat mask to the production grid points
+        reduced_production_grid_points = production_grid_points[:, non_flat_mask]
+
+        # Debugging output
+        print("reduced_grid_points", reduced_grid_points)
+        print("production_statistic", production_statistic)
+        print("reduced_production_grid_points", reduced_production_grid_points)
+
+        # Perform interpolation
         self.interpolated_production_statistics = griddata(
             reduced_grid_points,
-            self.data,
-            reduced_grid_points,
+            production_statistic,
+            reduced_production_grid_points,
             method="linear",
             fill_value=np.nan,
             rescale=True,
         )
 
+        # Handle energy-dependent statistics
+        reduced_grid_points_energy_dependent, non_flat_mask = self._remove_flat_dimensions(
+            self.grid_points
+        )
         energy_dependent_statistics = []
-        # Check if all energy grids are the same
         if not all(np.array_equal(self.energy_grids[0], grid) for grid in self.energy_grids):
             self._logger.warning(
                 "Energy grids are not identical across evaluators "
                 "(only relevant for comparison plots)."
             )
-        for energy_bin in self.energy_grids[
-            0
-        ]:  # assuming here the energy grid is similar for all evaluators
-            query_with_energy = np.zeros(len(non_flat_mask))
-            query_with_energy[non_flat_mask] = reduced_grid_points[0]
-            query_with_energy[0] = energy_bin.to(u.TeV).value
 
-            interpolated_value = griddata(
-                reduced_grid_points,
-                self.data,
-                query_with_energy[non_flat_mask],
-                method="linear",
-                fill_value=np.nan,
-                rescale=True,
-            )
-            energy_dependent_statistics.append(interpolated_value)
+        energy_query_grid = []
+        for energy in self.energy_grids[0]:
+            for grid_point in reduced_production_grid_points:
+                energy_query_grid.append(np.hstack([energy.to(u.TeV).value, grid_point]))
+        energy_query_grid = np.array(energy_query_grid)
+
+        interpolated_value = griddata(
+            reduced_grid_points_energy_dependent,
+            self.data,
+            energy_query_grid,
+            method="linear",
+            fill_value=np.nan,
+            rescale=True,
+        )
+        energy_dependent_statistics.append(
+            interpolated_value.reshape(len(reduced_production_grid_points), -1)
+        )
+
         self.interpolated_production_statistics_with_energy = np.array(energy_dependent_statistics)
 
         return self.interpolated_production_statistics
@@ -219,7 +275,7 @@ class InterpolationHandler:
 
         ax.plot(
             midpoints,
-            self.interpolated_production_statistics_with_energy,
+            self.interpolated_production_statistics_with_energy[0][10],
             label="Interpolated Production Statistics",
         )
 
