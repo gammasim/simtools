@@ -77,7 +77,7 @@ class ReadParameters:
         Path(IMAGE_PATH).mkdir(parents=True, exist_ok=True)
 
         if parameter == "camera_config_file" and parameter_version:
-            image_path = Path(f"{IMAGE_PATH}/{input_file.stem}")
+            image_path = Path(self.output_path.parent.parent.parent / f"_images/{input_file.stem}")
 
             if not Path(f"{image_path}.png").exists():
                 plot_config = {
