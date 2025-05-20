@@ -17,7 +17,6 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-import numpy as np
 
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
@@ -110,15 +109,15 @@ class ProductionStatisticsHandler:
         qrid_points_with_statistics = []
 
         interpolated_production_statistics = self.interpolation_handler.interpolate()
-        qrid_points_with_statistics.append(
-            {
-                "grid_point": self.grid_points_production,
-                "interpolated_production_statistics": float(
-                    np.sum(interpolated_production_statistics)
-                ),
-            }
-        )
-
+        for grid_point, statistics in zip(
+            self.grid_points_production, interpolated_production_statistics
+        ):
+            qrid_points_with_statistics.append(
+                {
+                    "grid_point": grid_point,
+                    "interpolated_production_statistics": float(statistics),
+                }
+            )
         return qrid_points_with_statistics
 
     def write_output(self, production_statistics):
