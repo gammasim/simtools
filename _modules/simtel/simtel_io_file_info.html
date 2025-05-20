@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c4569635"></script>
+    <script src="../../_static/documentation_options.js?v=a59fedbe"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_io_file_info';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g419689e" />
+  <meta name="docsearch:version" content="0.1.dev1+gd299379" />
   </head>
   
   
@@ -398,7 +398,7 @@
 <span class="sd">&quot;&quot;&quot;Read file info and run headers from sim_telarray files.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCRunHeader</span><span class="p">,</span> <span class="n">RunHeader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCRunHeader</span><span class="p">,</span> <span class="n">MCShower</span><span class="p">,</span> <span class="n">RunHeader</span>
 
 
 <div class="viewcode-block" id="get_corsika_run_number">
@@ -426,10 +426,10 @@
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_file_info.get_corsika_run_header">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_run_header</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the CORSIKA run header from a sim_telarray file.</span>
+<span class="sd">    Return the CORSIKA run header information from a sim_telarray file.</span>
 
 <span class="sd">    Reads both RunHeader and MCRunHeader object from file and</span>
-<span class="sd">    returns a merged dictionary.</span>
+<span class="sd">    returns a merged dictionary. Adds primary id from the first event.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -443,6 +443,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">run_header</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">mc_run_header</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">primary_id</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
@@ -450,11 +451,15 @@
                 <span class="n">run_header</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">MCRunHeader</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mc_run_header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">mc_run_header</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">run_header</span> <span class="ow">and</span> <span class="n">mc_run_header</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">MCShower</span><span class="p">):</span>  <span class="c1"># get primary_id from first MCShower</span>
+                <span class="n">primary_id</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">run_header</span> <span class="ow">and</span> <span class="n">mc_run_header</span> <span class="ow">and</span> <span class="n">primary_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">break</span>
 
     <span class="n">run_header</span> <span class="o">=</span> <span class="n">run_header</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">mc_run_header</span> <span class="o">=</span> <span class="n">mc_run_header</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">primary_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mc_run_header</span><span class="p">[</span><span class="s2">&quot;primary_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">primary_id</span>
     <span class="k">return</span> <span class="n">run_header</span> <span class="o">|</span> <span class="n">mc_run_header</span> <span class="ow">or</span> <span class="kc">None</span></div>
 
 </pre></div>

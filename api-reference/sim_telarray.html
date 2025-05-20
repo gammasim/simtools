@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c4569635"></script>
+    <script src="../_static/documentation_options.js?v=a59fedbe"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/sim_telarray';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Runners for simulation software." href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g419689e" />
+  <meta name="docsearch:version" content="0.1.dev1+gd299379" />
   </head>
   
   
@@ -986,9 +986,9 @@ Only filled if stack_files is False.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="simtel.simtel_io_file_info.get_corsika_run_header">
 <span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_file_info.</span></span><span class="sig-name descname"><span class="pre">get_corsika_run_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_file_info.html#get_corsika_run_header"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_file_info.get_corsika_run_header" title="Link to this definition">#</a></dt>
-<dd><p>Return the CORSIKA run header from a sim_telarray file.</p>
+<dd><p>Return the CORSIKA run header information from a sim_telarray file.</p>
 <p>Reads both RunHeader and MCRunHeader object from file and
-returns a merged dictionary.</p>
+returns a merged dictionary. Adds primary id from the first event.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

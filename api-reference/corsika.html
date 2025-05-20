@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c4569635"></script>
+    <script src="../_static/documentation_options.js?v=a59fedbe"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/corsika';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Configuration" href="configuration_module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g419689e" />
+  <meta name="docsearch:version" content="0.1.dev1+gd299379" />
   </head>
   
   
@@ -682,7 +682,7 @@ the output directly to sim_telarray. Defines directory names.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.primary_particle.</span></span><span class="sig-name descname"><span class="pre">PrimaryParticle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_id_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/primary_particle.html#PrimaryParticle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle" title="Link to this definition">#</a></dt>
-<dd><p>Primary particle definition using CORSIKA7 or PDG ID.</p>
+<dd><p>Primary particle definition using CORSIKA7, eventio, or PDG ID.</p>
 <p>Uses a dictionary to map particle common names to CORSIKA7 IDs.
 Particles not found in the dictionary are searched in the PDG particle database.</p>
 <dl class="field-list simple">
@@ -699,6 +699,13 @@ Particles not found in the dictionary are searched in the PDG particle database.
 <dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.corsika7_id">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">corsika7_id</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.corsika7_id" title="Link to this definition">#</a></dt>
 <dd><p>CORSIKA7 ID of the primary particle.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.eventio_id">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eventio_id</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.eventio_id" title="Link to this definition">#</a></dt>
+<dd><p>EventIO ID of the primary particle.</p>
+<p>0 (gamma), 1(e-), 2(mu-), 100*A+Z for nucleons and nuclei, negative for antimatter.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1910,6 +1917,7 @@ spherical representation of the telescopes.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-corsika.primary_particle">primary_particle</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.corsika7_id"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.corsika7_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.eventio_id"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.eventio_id</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.name"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.particle_names"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.particle_names()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.pdg_id"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.pdg_id</span></code></a></li>
