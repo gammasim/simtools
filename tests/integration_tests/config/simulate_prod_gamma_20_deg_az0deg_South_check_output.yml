@@ -25,7 +25,7 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za20deg_azm000deg_South_alpha_6.0.0_check_output.zst
+        FILE: gamma_run000001_za20deg_azm000deg_South_alpha_6.0.0_check_output.zst
         EXPECTED_OUTPUT:
           trigger_time:
           - 0
@@ -37,6 +37,6 @@ CTA_SIMPIPE:
           - 90
           - 1000
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za20deg_azm000deg_South_alpha_6.0.0_check_output.log_hist.tar.gz
+        FILE: gamma_run000001_za20deg_azm000deg_South_alpha_6.0.0_check_output.log_hist.tar.gz
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
