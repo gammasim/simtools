@@ -146,7 +146,7 @@ class SimtelIOEventDataWriter:
         hdu_list = [fits.PrimaryHDU()]  # Primary HDU is required
 
         for table in tables:
-            hdu = fits.BinTableHDU(data=table.as_array())
+            hdu = fits.table_to_hdu(table)
             hdu.name = table.meta.get("EXTNAME", "")  # Set extension name if present
             hdu_list.append(hdu)
 
