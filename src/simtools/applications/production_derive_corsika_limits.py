@@ -8,22 +8,23 @@ simulations. It supports setting:
 
 - **ERANGE**: Derives the lower energy limit; upper limit is user-defined.
 - **CSCAT**: Derives the upper core distance; lower limit is user-defined.
-- **VIEWCONE**: Derives the viewcone radius; upper limit is user-defined.
+- **VIEWCONE**: Derives the viewcone radius; lower limit is user-defined.
 
-Limits are computed based on a user-defined maximum event loss fraction.
+Limits are computed based on a configurable maximum event loss fraction.
+Results are provided as a table with the following columns:
 
 - particle_type: Particle type (e.g., gamma, proton, electron).
 - telescope_ids: List of telescope IDs used in the simulation.
 - zenith: Zenith angle.
 - azimuth: Azimuth angle.
-- nsb: Night sky background level (e.g., 'dark', 'half moon', 'moon').
+- nsb: Night sky background level
 - layout: Layout of the telescope array used in the simulation.
 - lower_energy_limit: Derived lower energy limit.
 - upper_radius_limit: Derived upper radial distance limit.
-- viewcone_radius: Derived viewcone radius limit.
+- viewcone_radius: Derived upper viewcone radius limit.
 
 The input event data files are generated using the application simtools-generate-simtel-event-data
-and is required for each point in the lookup table.
+and are required for each point in the lookup table.
 
 Command line arguments
 ----------------------
