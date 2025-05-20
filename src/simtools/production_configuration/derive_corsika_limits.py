@@ -44,7 +44,7 @@ class LimitCalculator:
             "telescope_ids": telescope_list,
             "lower_energy_limit": None,
             "upper_radial_distance": None,
-            "viewcone": None,
+            "viewcone_radius": None,
         }
 
     def compute_limits(self, loss_fraction):
@@ -61,8 +61,8 @@ class LimitCalculator:
         dict
             Dictionary containing the computed limits.
         """
-        self.limits["lower_energy_threshold"] = self.compute_lower_energy_limit(loss_fraction)
-        self.limits["upper_radius_threshold"] = self.compute_upper_radial_distance(loss_fraction)
+        self.limits["lower_energy_limit"] = self.compute_lower_energy_limit(loss_fraction)
+        self.limits["upper_radius_limit"] = self.compute_upper_radial_distance(loss_fraction)
         self.limits["viewcone_radius"] = self.compute_viewcone(loss_fraction)
         return self.limits
 
@@ -125,9 +125,10 @@ class LimitCalculator:
     @property
     def core_distance_bins(self):
         """Return bins for the core distance histogram."""
+        core_distances = np.array(self.event_data.core_distance_shower)
         return np.linspace(
-            self.event_data.core_distance_shower.min(),
-            self.event_data.core_distance_shower.max(),
+            core_distances.min(),
+            core_distances.max(),
             1000,
         )
 
@@ -154,9 +155,10 @@ class LimitCalculator:
     @property
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
+        angular_distances = np.array(self.triggered_data.angular_distance)
         return np.linspace(
-            self.triggered_data.angular_distance.min(),
-            self.triggered_data.angular_distance.max(),
+            angular_distances.min(),
+            angular_distances.max(),
             1000,
         )
 
@@ -178,7 +180,9 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        hist, _ = np.histogram(self.triggered_data.angular_distance, bins=self.view_cone_bins)
+        hist, _ = np.histogram(
+            np.array(self.triggered_data.angular_distance), bins=self.view_cone_bins
+        )
         return (
             self._compute_limits(hist, self.view_cone_bins, loss_fraction, limit_type="upper")
             * u.deg
@@ -190,12 +194,6 @@ class LimitCalculator:
 
         Parameters
         ----------
-        lower_energy_limit: astropy.units.Quantity
-            Lower energy limit to display on plots.
-        upper_radial_distance: astropy.units.Quantity
-            Upper radial distance limit to display on plots.
-        viewcone: astropy.units.Quantity
-            Viewcone radius to display on plots.
         output_path: Path or str, optional
             Directory to save plots. If None, plots will be displayed.
         """
@@ -241,7 +239,7 @@ class LimitCalculator:
                     "y": event_counts,
                     "title": "Triggered events: core distance distribution",
                 },
-                "lines": {"x": self.limits["upper_radial_distance"].value},
+                "lines": {"x": self.limits["upper_radius_limit"].value},
                 "filename": "core_distance_distribution.png",
             },
             "core_xy": {
@@ -257,8 +255,8 @@ class LimitCalculator:
                 },
                 "colorbar_label": event_counts,
                 "lines": {
-                    "x": self.limits["upper_radial_distance"].value,
-                    "y": self.limits["upper_radial_distance"].value,
+                    "x": self.limits["upper_radius_limit"].value,
+                    "y": self.limits["upper_radius_limit"].value,
                 },
                 "filename": "core_xy_distribution.png",
             },
@@ -272,7 +270,7 @@ class LimitCalculator:
                     "y": event_counts,
                     "title": "Triggered events: viewcone distribution",
                 },
-                "lines": {"x": self.limits["viewcone"].value},
+                "lines": {"x": self.limits["viewcone_radius"].value},
                 "filename": "viewcone_distribution.png",
             },
         }
