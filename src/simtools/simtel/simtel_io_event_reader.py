@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import AltAz, angular_separation
-from astropy.io import fits
 from astropy.table import Table
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
@@ -167,32 +166,28 @@ class SimtelIOEventDataReader:
 
     def read_event_data(self, event_data_file):
         """Read event data from FITS file."""
-        with fits.open(event_data_file) as hdul:
-            # limitations of pylint static analysis
-            shower_table = Table(hdul["SHOWERS"].data)  # pylint: disable=no-member
-            trigger_table = Table(hdul["TRIGGERS"].data)  # pylint: disable=no-member
-            file_info_table = Table(hdul["FILE_INFO"].data)  # pylint: disable=no-member
+        shower_table = Table.read(event_data_file, hdu="SHOWERS")
+        trigger_table = Table.read(event_data_file, hdu="TRIGGERS")
+        file_info_table = Table.read(event_data_file, hdu="FILE_INFO")
 
-            shower_data = self._table_to_shower_data(shower_table)
-            triggered_data = self._table_to_triggered_data(trigger_table)
+        shower_data = self._table_to_shower_data(shower_table)
+        triggered_data = self._table_to_triggered_data(trigger_table)
+        triggered_shower = self._get_triggered_shower_data(shower_data, trigger_table)
 
-            # Get triggered shower data - now matched to trigger table order
-            triggered_shower = self._get_triggered_shower_data(shower_data, trigger_table)
-
-            # Calculate angular distances with matched arrays
-            triggered_data.angular_distance = (
-                angular_separation(
-                    triggered_shower.shower_azimuth * u.rad,
-                    triggered_shower.shower_altitude * u.rad,
-                    triggered_data.array_azimuth * u.rad,
-                    triggered_data.array_altitude * u.rad,
-                )
-                .to(u.deg)
-                .value
+        triggered_data.angular_distance = (
+            angular_separation(
+                triggered_shower.shower_azimuth * u.rad,
+                triggered_shower.shower_altitude * u.rad,
+                triggered_data.array_azimuth * u.rad,
+                triggered_data.array_altitude * u.rad,
             )
+            .to(u.deg)
+            .value
+        )
 
-            if self.telescope_list:
-                triggered_data = self._filter_by_telescopes(triggered_data)
+        triggered_data = (
+            self._filter_by_telescopes(triggered_data) if self.telescope_list else triggered_data
+        )
 
         return file_info_table, shower_data, triggered_shower, triggered_data
 
@@ -300,19 +295,25 @@ class SimtelIOEventDataReader:
             Dictionary containing the reduced simulation file info.
         """
         particle_id = np.unique(self.simulation_file_info["particle_id"].data)
-        zenith = np.unique(np.round(self.simulation_file_info["zenith"].data, decimals=2))
-        azimuth = np.unique(np.round(self.simulation_file_info["azimuth"].data, decimals=2))
-        nsb = np.unique(np.round(self.simulation_file_info["nsb_level"].data, decimals=2))
+        keys = ["zenith", "azimuth", "nsb_level"]
+        float_arrays = {}
+        for key in keys:
+            float_arrays[key] = np.unique(np.round(self.simulation_file_info[key].data, decimals=2))
 
-        if any(len(arr) > 1 for arr in (particle_id, zenith, azimuth, nsb)):
+        if any(len(arr) > 1 for arr in (particle_id, *(float_arrays[key] for key in keys))):
             self._logger.warning("Simulation file info has non-unique values.")
 
-        return {
+        reduced_info = {
             "primary_particle": PrimaryParticle(
                 particle_id_type="corsika7_id",
                 particle_id=int(particle_id[0]),
             ).name,
-            "zenith": float(zenith[0]),
-            "azimuth": float(azimuth[0]),
-            "nsb_level": float(nsb[0]),
         }
+
+        for key in keys:
+            value = float(float_arrays[key][0])
+            if self.simulation_file_info[key].unit is not None:
+                value = value * self.simulation_file_info[key].unit
+            reduced_info[key] = value
+
+        return reduced_info
