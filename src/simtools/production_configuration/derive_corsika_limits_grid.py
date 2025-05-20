@@ -17,6 +17,8 @@ def generate_corsika_limits_grid(args_dict):
     """
     Generate CORSIKA limits for a grid of parameters.
 
+    Requires at least one event data file per parameter set.
+
     Parameters
     ----------
     args_dict : dict
