@@ -10,7 +10,7 @@ Pre-requisites for running productions:
 - simulation models are accessible through the simulation model database. This includes both the production tables and the model parameters.
 - configuration parameters for the production (see e.g., [simulate_prod_gamma_20_deg_North.yml](../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml))
 
-Productions are configured and submitted using the
+Productions are configured and submitted using the `simtools-simulate-prod` application (or `simtools-simulate-prod-htcondor-generator` for HTCondor jobs).
 
 ## Local productions
 
