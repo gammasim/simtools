@@ -84,7 +84,7 @@ def main():  # noqa: D103
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    logger.info(f"Loading input files with using : {args_dict['input']}")
+    logger.info(f"Loading input files from: {args_dict['input']}")
 
     input_pattern = Path(args_dict["input"])
     files = list(input_pattern.parent.glob(input_pattern.name))
