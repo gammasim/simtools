@@ -2,7 +2,7 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-production-derive-corsika-limits
-    TEST_NAME: simtools-production-derive-corsika-limits
+    TEST_NAME: run
     CONFIGURATION:
       EVENT_DATA_FILES: tests/resources/production_event_data_files.yml
       LOSS_FRACTION: 1.e-3
@@ -11,5 +11,8 @@ CTA_SIMPIPE:
       OUTPUT_FILE: corsika_simulation_limits_lookup.ecsv
       USE_PLAIN_OUTPUT_PATH: true
       PLOT_HISTOGRAMS: true
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: corsika_simulation_limits_lookup.ecsv
+    - OUTPUT_FILE: corsika_simulation_limits_lookup.meta.yml
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
