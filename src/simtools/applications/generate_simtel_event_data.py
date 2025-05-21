@@ -57,7 +57,7 @@ def _parse(label, description):
         "--input",
         type=str,
         required=True,
-        help="Path to input files (wildcards allowed; e.g., '/data_path/gamma_*dark*.simtel.zst')",
+        help="Input file path (wildcards allowed; e.g., '/data_path/gamma_*dark*.simtel.zst')",
     )
     config.parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of input files to process."
