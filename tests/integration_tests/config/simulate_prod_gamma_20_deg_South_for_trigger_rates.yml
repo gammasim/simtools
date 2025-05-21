@@ -23,13 +23,13 @@ CTA_SIMPIPE:
       SAVE_FILE_LISTS: true
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: 'sim_telarray/data/run000001/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.zst
+    - OUTPUT_FILE: 'sim_telarray/data/run000001/proton_run000001_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.zst
 
         '
-    - OUTPUT_FILE: 'sim_telarray/logs/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.log.gz
+    - OUTPUT_FILE: 'sim_telarray/logs/proton_run000001_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.log.gz
 
         '
-    - OUTPUT_FILE: 'sim_telarray/logs/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.hdata.zst
+    - OUTPUT_FILE: 'sim_telarray/logs/proton_run000001_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.hdata.zst
 
         '
     - OUTPUT_FILE: log_files.txt

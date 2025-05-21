@@ -61,7 +61,7 @@ class SimulatorRayTracing(SimtelRunner):
         self.label = label if label is not None else self.telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
-        self._base_directory = self.io_handler.get_output_directory(self.label, "ray-tracing")
+        self._base_directory = self.io_handler.get_output_directory(self.label, "ray_tracing")
 
         self.config = (
             self._config_to_namedtuple(config_data)
@@ -93,7 +93,7 @@ class SimulatorRayTracing(SimtelRunner):
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
         for base_name in ["stars", "photons", "log"]:
             file_name = names.generate_file_name(
-                file_type=base_name,
+                file_type=f"ray_tracing_{base_name}",
                 suffix=".log" if base_name == "log" else ".lis",
                 site=self.telescope_model.site,
                 telescope_model_name=self.telescope_model.name,

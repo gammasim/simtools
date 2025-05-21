@@ -72,7 +72,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         label: str
             Instance label.
         sub_dir: str
-            Name of the subdirectory (ray-tracing, model etc)
+            Name of the subdirectory (ray_tracing, model etc)
 
         Returns
         -------
@@ -116,7 +116,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         label: str
             Instance label.
         sub_dir: str
-            Name of the subdirectory (ray-tracing, model etc)
+            Name of the subdirectory (ray_tracing, model etc)
 
         Returns
         -------
