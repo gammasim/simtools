@@ -31,7 +31,7 @@ def show_all():
 def simulation_file(model_version):
     """Base name for simulation test file."""
     return (
-        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}_"
+        f"proton_run000001_za20deg_azm000deg_South_test_layout_{model_version}_"
         "test-corsika-simtel-runner"
     )
 
