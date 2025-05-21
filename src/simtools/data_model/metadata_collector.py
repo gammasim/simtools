@@ -13,7 +13,6 @@ from pathlib import Path
 
 import yaml
 
-import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
@@ -209,7 +208,7 @@ class MetadataCollector:
             url = self.input_metadata[0][self.observatory]["product"]["data"]["model"]["url"]
             self._logger.debug(f"Schema file from input metadata: {url}")
             return url
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             pass
 
         self._logger.warning("No schema file found.")
@@ -254,7 +253,7 @@ class MetadataCollector:
             )
             if _site is not None:
                 return names.validate_site_name(_site)
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             pass
         return None
 
@@ -360,6 +359,11 @@ class MetadataCollector:
                 _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
             elif Path(metadata_file).suffix == ".ecsv":
                 _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
+            elif Path(metadata_file).name.endswith((".simtel.zst", ".simtel")):
+                self._logger.warning(
+                    "Metadata extraction from sim_telarray files is not supported yet."
+                )
+                continue
             else:
                 raise gen.InvalidConfigDataError(f"Unknown metadata file format: {metadata_file}")
 
