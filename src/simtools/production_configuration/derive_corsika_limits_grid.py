@@ -91,8 +91,7 @@ def write_results(results, args_dict):
     table.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Results saved to {output_file}")
 
-    metadata_file = output_file.with_suffix(".metadata.yml")
-    MetadataCollector.dump(args_dict, metadata_file)
+    MetadataCollector.dump(args_dict, output_file)
 
 
 def _create_results_table(results, loss_fraction):

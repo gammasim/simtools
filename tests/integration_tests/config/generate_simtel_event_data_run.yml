@@ -12,5 +12,6 @@ CTA_SIMPIPE:
       PRINT_DATASET_INFORMATION: 5
     INTEGRATION_TESTS:
     - OUTPUT_FILE: output_file.fits.gz
+    - OUTPUT_FILE: output_file.fits.meta.yml
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
