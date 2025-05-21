@@ -329,3 +329,12 @@ showcontent = true
 [tool.towncrier.fragment.model]
 name = "Simulation model"
 showcontent = true
+
+[tool.sonar]
+projectKey = "gammasim_simtools_AY_ssha9WiFxsX-2oy_w"
+host.url = "https://sonar-cta-dpps.zeuthen.desy.de"
+qualitygate.wait = true
+python.coverage.reportPaths = "coverage.xml"
+python.version = 3.12
+exclusions = "**/docs/**,src/simtools/applications/*,**__init__.py"
+coverage.exclusions = "**/tests/**"
