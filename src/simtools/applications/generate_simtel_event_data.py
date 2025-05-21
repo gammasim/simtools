@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-"""
+r"""
 Generate a reduced dataset of event data from simulated files.
 
-Processes sim_telarray output files (typically of type '*.simtel.zst') and creates a
+Processes sim_telarray output files (typically of type '.simtel.zst') and creates a
 reduced dataset containing shower information, array-level parameters, and data about
 triggered telescopes.
 
@@ -24,11 +24,11 @@ Generate a reduced dataset from input files and save the result.
 
 .. code-block:: console
 
-    simtools-production-extract-mc-event-data \
-    simtools-generate-simtel-event-data \
-        --input 'path/to/input_files/gamma_*dark*.simtel.zst' \
-        --output_file output_file.hdf5 \
-        --max_files 50 \
+    simtools-production-extract-mc-event-data \\
+    simtools-generate-simtel-event-data \\
+        --input 'path/to/input_files/gamma_*dark*.simtel.zst' \\
+        --output_file output_file.hdf5 \\
+        --max_files 50 \\
         --print_dataset_information 10
 """
 

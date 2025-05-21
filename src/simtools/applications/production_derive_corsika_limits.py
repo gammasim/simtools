@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Derive CORSIKA configuration limits for energy, core distance, and viewcone angle.
+Derive CORSIKA configuration limits for energy, core distance, and viewcone radius.
 
 This tool determines configuration limits based on triggered events from broad-range
 simulations. It supports setting:
