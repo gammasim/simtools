@@ -137,7 +137,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey="gammasim_simtools_AY_ssha9WiFxsX-2oy_w"
+            -Dsonar.projectKey=gammasim_simtools_AY_ssha9WiFxsX-2oy_w
             -Dsonar.host.url=https://sonar-cta-dpps.zeuthen.desy.de
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=${{ matrix.python-version }}
