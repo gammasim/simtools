@@ -356,54 +356,6 @@ class InterpolationHandler:
 
         return self.interpolated_production_statistics
 
-    def interpolate_energy_threshold(self, grid_point: np.ndarray) -> float:
-        """
-        Interpolate the energy threshold for a given grid point.
-
-        Parameters
-        ----------
-        grid_point : np.ndarray
-            Array specifying the grid point (azimuth, zenith, NSB, offset).
-
-        Returns
-        -------
-        float
-            Interpolated energy threshold.
-        """
-        if not self.evaluators:
-            self._logger.warning("No evaluators available for interpolation.")
-            return np.nan
-
-        flat_grid_points = []
-        flat_energy_thresholds = []
-
-        for e in self.evaluators:
-            az = e.grid_point[1].to(u.deg).value
-            zen = e.grid_point[2].to(u.deg).value
-            nsb = e.grid_point[3]
-            offset = e.grid_point[4].to(u.deg).value
-            point = np.array([az, zen, nsb, offset])
-            flat_grid_points.append(point)
-            flat_energy_thresholds.append(e.energy_threshold)
-
-        flat_grid_points = np.array(flat_grid_points)
-        flat_energy_thresholds = np.array(flat_energy_thresholds)
-
-        # Remove flat dimensions
-        reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(flat_grid_points)
-
-        # Apply non-flat mask to the query point
-        reduced_grid_point = grid_point[non_flat_mask]
-
-        # Interpolate
-        interpolated_threshold = self._perform_interpolation(
-            reduced_grid_points, flat_energy_thresholds, [reduced_grid_point], method="linear"
-        )
-
-        return (
-            interpolated_threshold.item() if not np.isnan(interpolated_threshold).any() else np.nan
-        )
-
     def plot_comparison(self, grid_point_index=0):
         """
         Plot a comparison between interpolated production statistics and reconstructed events.
