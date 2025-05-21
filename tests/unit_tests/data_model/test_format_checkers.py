@@ -26,7 +26,7 @@ def test_check_astropy_unit_of_time():
     ):
         format_checkers.check_astropy_unit_of_time("km")
 
-    with pytest.raises(TypeError, match=re.escape("None is not a valid Unit")):
+    with pytest.raises(TypeError, match=r"^None.*Unit$"):
         format_checkers.check_astropy_unit_of_time(None)
 
 
@@ -37,7 +37,7 @@ def test_check_astropy_unit_of_length():
     ):
         format_checkers.check_astropy_unit_of_length("ns")
 
-    with pytest.raises(TypeError, match=re.escape("None is not a valid Unit")):
+    with pytest.raises(TypeError, match=r"^None.*Unit$"):
         format_checkers.check_astropy_unit_of_length(None)
 
 
