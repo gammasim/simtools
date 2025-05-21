@@ -135,7 +135,7 @@ jobs:
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: "gammasim_simtools_AY_ssha9WiFxsX-2oy_w"
+          SONAR_PROJECTKEY: "gammasim_simtools_AY_ssha9WiFxsX-2oy_w"
           SONAR_HOST_URL: "https://sonar-cta-dpps.zeuthen.desy.de"
           SONAR_QUALITY_GATE_WAIT: "true"
           SONAR_PYTHON_COVERAGE_REPORT_PATH: "coverage.xml"
