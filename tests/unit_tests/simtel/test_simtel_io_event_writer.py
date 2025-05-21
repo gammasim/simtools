@@ -15,6 +15,7 @@ from eventio.simtel import (
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 OUTPUT_FILE_NAME = "output.fits"
+one_two_three = "1,2,3"
 
 
 @pytest.fixture
@@ -110,7 +111,7 @@ def test_process_files(mock_eventio_class, lookup_table_generator, mock_corsika_
     """Test processing of files and creation of tables."""
     # Create sequence that matches SimtelIOEventDataWriter expectations
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
-        create_mc_run_header(),  # n_use=2
+        create_mc_run_header(),
         create_mc_shower(shower_id=1),  # First shower
         create_mc_event(shower_num=1, event_id=0),  # First event of shower 1
         create_mc_event(shower_num=1, event_id=1),  # Second event of shower 1
@@ -135,7 +136,7 @@ def test_process_files(mock_eventio_class, lookup_table_generator, mock_corsika_
     assert len(tables[1]) > 0
     assert "array_altitude" in tables[1].colnames
     assert "telescope_list" in tables[1].colnames
-    assert "1,2,3" in tables[1]["telescope_list"]
+    assert one_two_three in tables[1]["telescope_list"]
 
 
 def test_no_input_files():
@@ -194,7 +195,7 @@ def test_write_fits(tmp_path, lookup_table_generator):
             "file_id": 0,
             "array_altitude": 1.2,
             "array_azimuth": 0.5,
-            "telescope_list": "1,2,3",
+            "telescope_list": one_two_three,
         }
     )
     lookup_table_generator.file_info.append(
@@ -236,7 +237,7 @@ def test_write_fits_gz(mock_write, tmp_path, lookup_table_generator):
             "file_id": 0,
             "array_altitude": 1.2,
             "array_azimuth": 0.5,
-            "telescope_list": "1,2,3",
+            "telescope_list": one_two_three,
         }
     )
     lookup_table_generator.file_info.append(
@@ -405,7 +406,7 @@ def test_process_mc_event_inconsistent_shower(lookup_table_generator):
 def test_write_hdf5_h5py_not_installed(mock_find_spec, tmp_path, lookup_table_generator):
     """Test _write_hdf5 when h5py is not installed."""
     mock_find_spec.return_value = None
-    output_file = tmp_path / "test.hdf5"
+    output_file = tmp_path / "test_1.hdf5"
 
     with pytest.raises(ImportError, match="h5py is required to write HDF5 files with Astropy."):
         lookup_table_generator._write_hdf5([], output_file)
@@ -419,7 +420,7 @@ def test_write_hdf5_h5py_not_installed(mock_find_spec, tmp_path, lookup_table_ge
 def test_write_hdf5_single_table(mock_write, mock_find_spec, tmp_path, lookup_table_generator):
     """Test _write_hdf5 with a single table."""
     mock_find_spec.return_value = True
-    output_file = tmp_path / "test.hdf5"
+    output_file = tmp_path / "test_2.hdf5"
 
     table = Table()
     table.meta["EXTNAME"] = "TEST"
@@ -442,7 +443,7 @@ def test_write_hdf5_single_table(mock_write, mock_find_spec, tmp_path, lookup_ta
 def test_write_hdf5_multiple_tables(mock_write, mock_find_spec, tmp_path, lookup_table_generator):
     """Test _write_hdf5 with multiple tables."""
     mock_find_spec.return_value = True
-    output_file = tmp_path / "test.hdf5"
+    output_file = tmp_path / "test_3.hdf5"
 
     table1 = Table()
     table1.meta["EXTNAME"] = "TEST1"
