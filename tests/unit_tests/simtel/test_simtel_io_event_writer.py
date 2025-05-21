@@ -283,7 +283,7 @@ def test_process_array_event(lookup_table_generator):
     trigger_event = lookup_table_generator.trigger_data[0]
     assert trigger_event["shower_id"] == 1
     assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == "1,2,3"
+    assert trigger_event["telescope_list"] == one_two_three
 
 
 def test_process_array_event_empty(lookup_table_generator):
@@ -315,7 +315,7 @@ def test_process_array_event_with_trigger_data(lookup_table_generator):
     trigger_event = lookup_table_generator.trigger_data[0]
     assert trigger_event["shower_id"] == 1
     assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == "1,2,3"
+    assert trigger_event["telescope_list"] == one_two_three
 
 
 def test_get_preliminary_nsb_level(lookup_table_generator):
