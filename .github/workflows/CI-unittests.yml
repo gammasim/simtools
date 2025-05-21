@@ -142,7 +142,7 @@ jobs:
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=${{ matrix.python-version }}
             -Dsonar.exclusions="**/docs/**,src/simtools/applications/*,**__init__.py"
-            -Dsonar.coverage.exclusions="**/tests/**""
+            -Dsonar.coverage.exclusions="**/tests/**"
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
