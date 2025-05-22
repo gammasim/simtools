@@ -14,8 +14,21 @@ from simtools.io_operations.io_table_handler import (
 
 # Constants for repeated strings
 TABLE_HANDLER_PATH = "simtools.io_operations.io_table_handler"
+READ_TABLE_FILE_TYPE = f"{TABLE_HANDLER_PATH}.read_table_file_type"
+ASTROPY_TABLE_READ = "astropy.table.Table.read"
+H5PY_FILE = "h5py.File"
 TEST_TABLE_NAME = "test_table"
 FILE_ID = "file_id"
+
+# Test file paths
+TEST_FITS = "test.fits"
+TEST_HDF5 = "test.hdf5"
+TEST_H5 = "test.h5"
+OUTPUT_FITS = "output.fits"
+FILE1_FITS = "file1.fits"
+FILE2_FITS = "file2.fits"
+SOURCE_H5 = "source.h5"
+DEST_H5 = "dest.h5"
 
 
 # Common fixtures for mocked dependencies
@@ -77,17 +90,17 @@ def test_read_table_file_type_empty_list():
 
 
 def test_read_table_file_type_all_fits():
-    input_files = ["test.fits", "test2.fits.gz"]
+    input_files = [TEST_FITS, "test2.fits.gz"]
     assert read_table_file_type(input_files) == "FITS"
 
 
 def test_read_table_file_type_all_hdf5():
-    input_files = ["test.hdf5", "test2.h5"]
+    input_files = [TEST_HDF5, TEST_H5]
     assert read_table_file_type(input_files) == "HDF5"
 
 
 def test_read_table_file_type_mixed_types():
-    input_files = ["test.fits", "test.hdf5"]
+    input_files = [TEST_FITS, TEST_HDF5]
     with pytest.raises(ValueError, match="All input files must be of the same type"):
         read_table_file_type(input_files)
 
@@ -100,7 +113,7 @@ def test_read_table_file_type_unsupported():
 
 def test_read_table_file_type_missing_h5py(mocker):
     mocker.patch("importlib.util.find_spec", return_value=None)
-    input_files = ["test.hdf5"]
+    input_files = [TEST_HDF5]
     with pytest.raises(ImportError, match="h5py is required"):
         read_table_file_type(input_files)
 
@@ -516,7 +529,7 @@ def test_merge_hdf5_multiple_tables(tmp_path, mock_h5py_file, mocker):
     }
     tables2 = {
         "table1": Table({"col1": [3], "file_id": [0]}),
-        "table2": Table({"col2": [4], "file_id": [0]}),
+        "table2": Table({"table2": [4], "file_id": [0]}),
     }
 
     tables1["table1"].meta["EXTNAME"] = "table1"
