@@ -13,6 +13,15 @@ This module include I/O related functionality.
    :members:
 ```
 
+(io_table_handler)=
+
+## io_table_handler
+
+```{eval-rst}
+.. automodule:: io_operations.io_table_handler
+   :members:
+```
+
 (iohdf5)=
 
 ## hdf5_handler
