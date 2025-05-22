@@ -202,11 +202,7 @@ class InterpolationHandler:
             nsb = e.grid_point[3]
             offset = e.grid_point[4].to(u.deg).value
 
-            # Convert to primitive type if necessary
-            if hasattr(production_statistics_sum, "value"):
-                flat_data_list.append(float(production_statistics_sum.value))
-            else:
-                flat_data_list.append(float(production_statistics_sum))
+            flat_data_list.append(float(production_statistics_sum.value))
 
             grid_point = np.array([[az, zen, nsb, offset]])
             flat_grid_points.append(grid_point)
@@ -312,6 +308,11 @@ class InterpolationHandler:
 
         energy_query_grid = np.array(energy_query_grid)
 
+        # Debugging: Print all quantities and their shapes
+        self._logger.debug(f"Grid points with energy shape: {grid_points_energy.shape}")
+        self._logger.debug(f"Data shape: {self.data.shape}")
+        self._logger.debug(f"Energy query grid shape: {energy_query_grid.shape}")
+
         # Perform interpolation
         interpolated_values = self._perform_interpolation(
             grid_points_energy, self.data, energy_query_grid
@@ -319,7 +320,7 @@ class InterpolationHandler:
 
         reshaped = interpolated_values.reshape(
             len(reduced_production_grid_points), len(energy_grid)
-        ).T  # Transpose to match expected shape
+        )
         return np.array([reshaped])
 
     def interpolate(self) -> np.ndarray:
@@ -342,7 +343,6 @@ class InterpolationHandler:
         # Energy-independent interpolation
         production_statistic, grid_points_no_energy = self._prepare_energy_independent_data()
         reduced_production_grid_points = self._prepare_production_grid_points()
-
         # Perform interpolation
         self.interpolated_production_statistics = self._perform_interpolation(
             grid_points_no_energy, production_statistic, reduced_production_grid_points
@@ -396,11 +396,7 @@ class InterpolationHandler:
             self.interpolated_production_statistics_with_energy is not None
             and len(self.interpolated_production_statistics_with_energy) > 0
         ):
-            interpolated_stats = self.interpolated_production_statistics_with_energy[
-                grid_point_index
-            ]
-            print("Interpolated stats:", interpolated_stats)
-
+            interpolated_stats = self.interpolated_production_statistics_with_energy[0][0]
             ax.plot(midpoints, interpolated_stats, label="Interpolated Production Statistics")
 
         reconstructed_event_histogram, _ = np.histogram(
