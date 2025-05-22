@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -253,3 +255,23 @@ def test_empty_grid_points():
     reduced_grid_points, non_flat_mask = handler._remove_flat_dimensions(grid_points.reshape(0, 0))
     assert reduced_grid_points.size == 0
     assert non_flat_mask.size == 0
+
+
+def test_build_grid_points_no_energy_empty_evaluators():
+    """Test build_grid_points_no_energy method with empty evaluators list."""
+    handler = InterpolationHandler(evaluators=[], metrics={}, grid_points_production=[])
+
+    handler._logger = MagicMock()
+
+    data, grid_points = handler.build_grid_points_no_energy()
+
+    handler._logger.error.assert_called_once_with(
+        "No evaluators available for grid point building."
+    )
+
+    assert isinstance(data, np.ndarray)
+    assert isinstance(grid_points, np.ndarray)
+    assert data.size == 0
+    assert grid_points.size == 0
+    assert len(data) == 0
+    assert len(grid_points) == 0
