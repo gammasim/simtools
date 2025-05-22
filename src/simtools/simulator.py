@@ -772,15 +772,17 @@ class Simulator:
                 original_version, model.model_version
             )
 
-            with gzip.open(new_log, "wt") as new_file:
-                new_file.write(
+            with gzip.open(new_log, "wb") as new_file:
+                header = (
                     f"###############################################################\n"
                     f"Copy of CORSIKA log file from model version {original_version}.\n"
                     f"Applicable also for {model.model_version} (same CORSIKA configuration,\n"
                     f"different sim_telarray model versions in the same run).\n"
                     f"###############################################################\n\n"
                 )
-                with gzip.open(original_log, "rt") as orig_file:
+                new_file.write(header.encode("utf-8"))
+
+                with gzip.open(original_log, "rb") as orig_file:
                     shutil.copyfileobj(orig_file, new_file)
 
             corsika_log_files.append(str(new_log))
