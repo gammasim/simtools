@@ -12,6 +12,6 @@ CTA_SIMPIPE:
       PRINT_DATASET_INFORMATION: 5
     INTEGRATION_TESTS:
     - OUTPUT_FILE: output_file.hdf5
-    - OUTPUT_FILE: output_file.fits.meta.yml
+    - OUTPUT_FILE: output_file.meta.yml
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
