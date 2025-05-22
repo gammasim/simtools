@@ -1,8 +1,38 @@
-"""
+r"""
 Merge tables from multiple input files into single tables.
+
+Allows to merge tables from multiple input files into a single file.
+The input files can be in HDF5 or FITS format. The merged tables will be saved in the
+specified output file.
+
+Note that merging large tables in FITS are not recommended, as it may lead to
+performance issues.
 
 Command line arguments
 ----------------------
+input str
+    Input file(s) (e.g., 'file1 file2').
+input_list str
+    File with list of input files with tables.
+table_names str
+    Names of tables to merge from each input file.
+output_file str
+    Output file name.
+output_path str
+    Path to the output file for the merged tables.
+
+Example
+-------
+
+Merge tables from two files into a single file.
+
+.. code-block:: console
+
+    simtools-merge-tables \\
+        --input file1 file2' \\
+        --table_names 'SHOWERS TRIGGERS FILE_INFO' \\
+        --output_file merged_tables.hdf5
+
 
 """
 
