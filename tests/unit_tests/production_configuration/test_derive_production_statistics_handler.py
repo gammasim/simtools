@@ -9,6 +9,13 @@ from simtools.production_configuration.derive_production_statistics_handler impo
     ProductionStatisticsHandler,
 )
 
+# Define constants for frequently used literals
+BASE_PATH = "tests/resources/production_dl2_fits/"
+FILE_NAME_TEMPLATE = "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+MOCK_OPEN_PATH = "builtins.open"
+OUTPUT_FILE = "output.json"
+COLLECT_DATA_PATH = "simtools.utils.general.collect_data_from_file"
+
 
 @pytest.fixture
 def grid_points_content():
@@ -50,7 +57,7 @@ def metrics_file():
 def args_dict(tmp_path, metrics_file, grid_points_file):
     """Fixture to provide a mock args_dict for testing."""
     return {
-        "base_path": "tests/resources/production_dl2_fits/",
+        "base_path": BASE_PATH,
         "zeniths": [20, 40],
         "azimuths": [180],
         "nsb": [0.005],
@@ -60,7 +67,7 @@ def args_dict(tmp_path, metrics_file, grid_points_file):
         "output_path": str(tmp_path),
         "metrics_file": str(metrics_file),
         "grid_points_production_file": str(grid_points_file),
-        "file_name_template": "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        "file_name_template": FILE_NAME_TEMPLATE,
     }
 
 
@@ -76,7 +83,7 @@ def mock_handler(args_dict, tmp_path):
 
 def test_init_with_required_arguments(args_dict, tmp_path, grid_points_content):
     """Test initialization with required arguments."""
-    with patch("builtins.open", mock_open(read_data=json.dumps(grid_points_content))):
+    with patch(MOCK_OPEN_PATH, mock_open(read_data=json.dumps(grid_points_content))):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
         assert handler.args == args_dict
         assert handler.output_path == tmp_path
@@ -167,7 +174,7 @@ def test_perform_interpolation_with_evaluators(mock_interpolate, mock_handler):
     assert result[1]["interpolated_production_statistics"] == 200.0
 
 
-@patch("builtins.open", new_callable=mock_open)
+@patch(MOCK_OPEN_PATH, new_callable=mock_open)
 def test_write_output(mock_file_open, mock_handler):
     """Test the write_output method."""
     production_statistics = [
@@ -237,20 +244,20 @@ def test_run_with_plot_production_statistics(mock_handler):
 def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_path):
     """Test handler initialization with grid points from a file."""
     args_dict = {
-        "base_path": "tests/resources/production_dl2_fits/",
+        "base_path": BASE_PATH,
         "zeniths": [20, 40],
         "offsets": [0.5],
         "azimuths": [0],
         "nsb": [0.005],
         "grid_points_production_file": str(grid_points_file),
         "metrics_file": str(metrics_file),
-        "output_file": "output.json",
-        "file_name_template": "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        "output_file": OUTPUT_FILE,
+        "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch("simtools.utils.general.collect_data_from_file"):
+    with patch(COLLECT_DATA_PATH):
         with patch(
-            "builtins.open", mock_open(read_data=json.dumps({"grid_points": ["test1", "test2"]}))
+            MOCK_OPEN_PATH, mock_open(read_data=json.dumps({"grid_points": ["test1", "test2"]}))
         ):
             handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
@@ -265,7 +272,7 @@ def test_load_grid_points_production_file_not_found(args_dict, tmp_path):
     args_dict["grid_points_production_file"] = "non_existent_file.json"
 
     with pytest.raises(FileNotFoundError):
-        with patch("builtins.open", side_effect=FileNotFoundError()):
+        with patch(MOCK_OPEN_PATH, side_effect=FileNotFoundError()):
             ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
 
@@ -276,18 +283,18 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
         json.dump({"grid_points": []}, f)
 
     args_dict = {
-        "base_path": "tests/resources/production_dl2_fits/",
+        "base_path": BASE_PATH,
         "zeniths": [20, 40],
         "offsets": [0.5],
         "azimuths": [0],
         "nsb": [0.005],
         "grid_points_production_file": str(grid_points_file),
         "metrics_file": str(metrics_file),
-        "output_file": "output.json",
-        "file_name_template": "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        "output_file": OUTPUT_FILE,
+        "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch("simtools.utils.general.collect_data_from_file"):
+    with patch(COLLECT_DATA_PATH):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with an empty grid_points list
@@ -302,18 +309,18 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
         json.dump({"wrong_key": []}, f)
 
     args_dict = {
-        "base_path": "tests/resources/production_dl2_fits/",
+        "base_path": BASE_PATH,
         "zeniths": [20, 40],
         "offsets": [0.5],
         "azimuths": [0],
         "nsb": [0.005],
         "grid_points_production_file": str(grid_points_file),
         "metrics_file": str(metrics_file),
-        "output_file": "output.json",
-        "file_name_template": "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        "output_file": OUTPUT_FILE,
+        "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch("simtools.utils.general.collect_data_from_file"):
+    with patch(COLLECT_DATA_PATH):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with the wrong key
