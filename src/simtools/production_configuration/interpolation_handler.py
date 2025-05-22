@@ -190,6 +190,7 @@ class InterpolationHandler:
             (production_statistics, grid_points_no_energy)
         """
         if not self.evaluators:
+            self._logger.error("No evaluators available for grid point building.")
             return np.array([]), np.array([])
 
         flat_data_list = []
@@ -252,11 +253,7 @@ class InterpolationHandler:
 
         production_grid_points = np.array(production_grid_points)
 
-        # Apply the non-flat mask
-        if hasattr(self, "_non_flat_mask"):
-            return production_grid_points[:, self._non_flat_mask]
-        self._logger.warning("Non-flat mask not available; using all dimensions.")
-        return production_grid_points
+        return production_grid_points[:, self._non_flat_mask]
 
     def _perform_interpolation(self, grid_points, values, query_points, method="linear"):
         """
@@ -378,17 +375,11 @@ class InterpolationHandler:
             ax.text(0.5, 0.5, "No data available", ha="center", va="center")
             return ax
 
-        # Use first evaluator to get energy bins
+        # Use first evaluator for energy bins
         bin_edges_low = self.evaluators[0].data["bin_edges_low"][:-1]
         bin_edges_high = self.evaluators[0].data["bin_edges_high"][:-1]
         midpoints = (bin_edges_low + bin_edges_high) / 2
 
-        # Check if interpolated statistics are available
-        if self.interpolated_production_statistics_with_energy is None:
-            self._logger.warning("No interpolated statistics available. Call interpolate() first.")
-            self.interpolate()
-
-        # Check if selected grid point index is valid
         if (
             self.interpolated_production_statistics_with_energy is None
             or len(self.interpolated_production_statistics_with_energy) == 0
@@ -401,39 +392,23 @@ class InterpolationHandler:
 
         _, ax = plt.subplots()
 
-        # Plot interpolated statistics
         if (
             self.interpolated_production_statistics_with_energy is not None
             and len(self.interpolated_production_statistics_with_energy) > 0
         ):
-            interpolated_stats = self.interpolated_production_statistics_with_energy[0][
+            interpolated_stats = self.interpolated_production_statistics_with_energy[
                 grid_point_index
             ]
+            print("Interpolated stats:", interpolated_stats)
 
-            # Ensure the lengths match
-            if len(midpoints) != len(interpolated_stats):
-                self._logger.warning(
-                    f"Midpoints length ({len(midpoints)}) doesn't match "
-                    f"interpolated statistics length ({len(interpolated_stats)}). "
-                    "Using min length for plotting."
-                )
-                min_len = min(len(midpoints), len(interpolated_stats))
-                ax.plot(
-                    midpoints[:min_len],
-                    interpolated_stats[:min_len],
-                    label="Interpolated Production Statistics",
-                )
-            else:
-                ax.plot(midpoints, interpolated_stats, label="Interpolated Production Statistics")
+            ax.plot(midpoints, interpolated_stats, label="Interpolated Production Statistics")
 
-        # Plot reconstructed events histogram
         reconstructed_event_histogram, _ = np.histogram(
             self.evaluators[0].data["event_energies_reco"],
             bins=self.evaluators[0].data["bin_edges_low"],
         )
         ax.plot(midpoints, reconstructed_event_histogram, label="Reconstructed Events")
 
-        # Configure the plot
         ax.legend()
         ax.set_xscale("log")
         ax.set_yscale("log")
