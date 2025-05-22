@@ -1,34 +1,26 @@
 #!/usr/bin/python3
 
 r"""
-Application to run the StatisticalUncertaintyEvaluator and interpolate results.
+Application to derive the number of events required for grid points by interpolation.
 
-This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and camera offsets, and performs interpolation
-for a specified query point.
+This application evaluates statistical uncertainties from DL2 MC event files, performs
+interpolation for the given grid points given in a file and saves the grid points with the
+interpolated production events added.
 
 Command line arguments
 ----------------------
-base_path (str, required)
-    Path to the directory containing the DL2 MC event file for interpolation.
-zeniths (list of int, required)
-    List of zenith angles to consider.
-camera_offsets (list of int, required)
-    List of offsets in degrees.
-query_point (list of float, required)
-    Query point for interpolation. The query point must contain exactly 5 values:
-        - Energy (TeV)
-        - Azimuth (degrees)
-        - Zenith (degrees)
-        - NSB (MHz)
-        - Offset (degrees)
-output_file (str, optional)
-    Output file to store the results. Default: 'interpolated_production_statistics.json'.
-metrics_file (str, optional)
+--grid_points_production_file (str, required)
+    Path to the file containing grid points. Each grid point should include azimuth, zenith,
+    NSB, offset.
+--metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
-file_name_template (str, optional)
-    Template for the file name. Default:
+--base_path (str, required)
+    Path to the directory containing the DL2 MC event files for interpolation.
+--file_name_template (str, optional)
+    Template for the DL2 MC event file name. Default:
     'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
+--plot_production_statistics (flag, optional)
+    If provided, plots the production statistics. Default: False.
 
 Example
 -------
@@ -36,20 +28,28 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 .. code-block:: console
 
-    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
-        --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\
+    simtools-production-derive-statistics \\
+        --grid_points_production_file path/to/grid_points_production.json \\
         --metrics_file "path/to/metrics.yaml" \\
-        --output_path simtools-output/derived_events \\
-        --output_file derived_events.json
+        --base_path tests/resources/production_dl2_fits/ \\
+        --file_name_template "prod6_LaPalma-{zenith}deg\\
+            _gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits" \\
+        --zeniths 20 40 52 60 \\
+        --offsets 0 \\
+        --azimuths 180 \\
+        --nsb 0.0 \\
+        --plot_production_statistics
 
-The output will display the production statistics for the specified query point and save
- the results to the specified output file.
+Output
+------
+The output will be a file containing the grid points with the interpolated production events added.
 """
 
 import logging
 from pathlib import Path
 
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
 )
@@ -68,32 +68,10 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--base_path",
+        "--grid_points_production_file",
         type=str,
         required=True,
-        help="Path to the DL2 MC event files for interpolation.",
-    )
-    config.parser.add_argument(
-        "--zeniths",
-        required=True,
-        nargs="+",
-        type=float,
-        help="List of zenith angles.",
-    )
-    config.parser.add_argument(
-        "--camera_offsets",
-        required=True,
-        nargs="+",
-        type=float,
-        help="List of camera offsets in degrees.",
-    )
-    config.parser.add_argument(
-        "--query_point",
-        required=True,
-        metavar=("ENERGY", "AZIMUTH", "ZENITH", "NSB", "OFFSET"),
-        nargs=5,
-        type=float,
-        help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
+        help="Path to the JSON file containing grid points for a production.",
     )
     config.parser.add_argument(
         "--metrics_file",
@@ -103,11 +81,45 @@ def _parse(label, description):
         help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
     )
     config.parser.add_argument(
+        "--base_path",
+        type=str,
+        required=True,
+        help="Path to the DL2 MC event files for interpolation.",
+    )
+    config.parser.add_argument(
         "--file_name_template",
         required=False,
         type=str,
         default=("prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"),
         help=("Template for the DL2 MC event file name."),
+    )
+    config.parser.add_argument(
+        "--zeniths",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of zenith angles in deg that describe the supplied DL2 files.",
+    )
+    config.parser.add_argument(
+        "--azimuths",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of azimuth angles in deg that describe the supplied DL2 files.",
+    )
+    config.parser.add_argument(
+        "--nsb",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of nsb values that describe the supplied DL2 files.",
+    )
+    config.parser.add_argument(
+        "--offsets",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of camera offsets in deg that describe the supplied DL2 files..",
     )
     config.parser.add_argument(
         "--plot_production_statistics",
@@ -123,6 +135,7 @@ def _parse(label, description):
 def main():
     """Run the ProductionStatisticsHandler."""
     label = Path(__file__).stem
+
     args_dict, _ = _parse(
         label,
         "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
@@ -130,7 +143,10 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    manager = ProductionStatisticsHandler(args_dict)
+    _io_handler = io_handler.IOHandler()
+    output_path = _io_handler.get_output_directory(label, sub_dir="")
+
+    manager = ProductionStatisticsHandler(args_dict, output_path=output_path)
     manager.run()
 
 

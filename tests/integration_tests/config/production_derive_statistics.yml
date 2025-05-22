@@ -10,14 +10,13 @@ CTA_SIMPIPE:
       - 40
       - 52
       - 60
-      CAMERA_OFFSETS:
+      OFFSETS:
       - 0
-      QUERY_POINT:
-      - 1
+      AZIMUTHS:
       - 180
-      - 30
-      - 0
-      - 0
+      NSB:
+      - 1
+      GRID_POINTS_PRODUCTION_FILE: tests/resources/production_grid_points.json
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: interpolated_production_statistics.json
       METRICS_FILE: tests/resources/production_simulation_config_metrics.yml
