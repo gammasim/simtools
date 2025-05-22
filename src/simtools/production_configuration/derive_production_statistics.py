@@ -100,7 +100,6 @@ class ProductionStatisticsDerivator:
             axis as a u.Quantity.
         """
         scaling_factors = self._compute_scaling_factor()
-        print("Scaling factors:", scaling_factors)
         base_events = self._number_of_simulated_events()
         # currently we use the maximum of the scaling factors to scale the events. This is a soft
         # requirement if we want to keep the power law shape of the production statistics.

@@ -20,7 +20,7 @@ class StatisticalUncertaintyEvaluator:
     metrics : dict
         Dictionary of metrics to evaluate.
     grid_point : tuple, optional
-        Grid point (energy, azimuth, zenith, NSB, offset). Default is None.
+        Grid point (energy, azimuth, zenith, NSB, offset).
     """
 
     def __init__(
