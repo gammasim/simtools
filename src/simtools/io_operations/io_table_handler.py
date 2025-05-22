@@ -4,6 +4,8 @@ import importlib.util
 import logging
 from pathlib import Path
 
+import h5py
+import numpy as np
 from astropy.io import fits
 from astropy.table import Table, vstack
 
@@ -33,8 +35,9 @@ def merge_tables(input_files, input_table_names, output_file):
     _logger.info(f"Merging {len(input_files)} files into {output_file}")
 
     file_type = read_table_file_type(input_files)
-    merged_tables = _merge(input_files, input_table_names, file_type)
-    write_tables(merged_tables, output_file, file_type)
+    merged_tables = _merge(input_files, input_table_names, file_type, output_file)
+    if file_type != "HDF5":
+        write_tables(merged_tables, output_file, file_type)
 
 
 def read_table_file_type(input_files):
@@ -73,7 +76,7 @@ def read_table_file_type(input_files):
     return file_type
 
 
-def _merge(input_files, table_names, file_type):
+def _merge(input_files, table_names, file_type, output_file):
     """
     Merge tables from multiple input files into single tables.
 
@@ -96,12 +99,17 @@ def _merge(input_files, table_names, file_type):
     for idx, file in enumerate(input_files):
         tables = read_tables(file, table_names, file_type)
         for key, table in tables.items():
-            if "file_id" in table.colnames:  # update file file_id
+            if "file_id" in table.colnames:  # update file_id
                 table["file_id"] = idx
-            merged[key].append(table)
+            if file_type == "HDF5":
+                write_table_in_hdf5(table, output_file, key)
+                if idx == 0:
+                    copy_metadata_to_hdf5(file, output_file, key)
+            else:
+                merged[key].append(table)
 
-    for key in merged:
-        merged[key] = vstack(merged[key], metadata_conflicts="silent")
+    if file_type != "HDF5":
+        merged = {k: vstack(v, metadata_conflicts="silent") for k, v in merged.items()}
 
     return merged
 
@@ -160,14 +168,7 @@ def write_tables(tables, output_file, file_type=None):
         _table_name = table.meta.get("EXTNAME")
         _logger.info(f"Writing table {_table_name} of length {len(table)} to {output_file}.")
         if file_type == "HDF5":
-            table.write(
-                output_file,
-                path=f"{_table_name}",
-                append=True,
-                format="hdf5",
-                serialize_meta=True,
-                compression=True,
-            )
+            write_table_in_hdf5(table, output_file, _table_name)
         if file_type == "FITS":
             hdu = fits.table_to_hdu(table)
             hdu.name = _table_name
@@ -175,3 +176,63 @@ def write_tables(tables, output_file, file_type=None):
 
     if file_type == "FITS":
         fits.HDUList(hdus).writeto(output_file, checksum=False)
+
+
+def write_table_in_hdf5(table, output_file, table_name):
+    """
+    Write or append a single astropy table to an HDF5 file.
+
+    Parameters
+    ----------
+    table : astropy.table.Table
+        The astropy table to write.
+    output_file : str or Path
+        Path to the output HDF5 file.
+    table_name : str
+        Name of the table in the HDF5 file.
+
+    Returns
+    -------
+    None
+    """
+    with h5py.File(output_file, "a") as f:
+        data = np.array(table)
+        if table_name not in f:
+            maxshape = (None,) + data.shape[1:]
+            dset = f.create_dataset(
+                table_name,
+                data=data,
+                maxshape=maxshape,
+                chunks=True,
+                compression="gzip",
+                compression_opts=4,
+            )
+            for key, val in table.meta.items():
+                dset.attrs[key] = val
+        else:
+            dset = f[table_name]
+            dset.resize(dset.shape[0] + data.shape[0], axis=0)
+            dset[-data.shape[0] :] = data
+
+
+def copy_metadata_to_hdf5(src_file, dst_file, table_name):
+    """
+    Copy metadata (table column meta) from one HDF5 file to another.
+
+    For merging tables, this function ensures that the metadata is preserved.
+
+    Parameters
+    ----------
+    src_file : str or Path
+        Path to the source HDF5 file.
+    dst_file : str or Path
+        Path to the destination HDF5 file.
+    table_name : str
+        Name of the table whose metadata is to be copied.
+    """
+    with h5py.File(src_file, "r") as src, h5py.File(dst_file, "a") as dst:
+        meta_name = f"{table_name}.__table_column_meta__"
+        if meta_name in src:
+            if meta_name in dst:
+                del dst[meta_name]  # overwrite if exists
+            src.copy(meta_name, dst, name=meta_name)
