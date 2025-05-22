@@ -18,10 +18,10 @@ from dataclasses import dataclass, field
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import AltAz, angular_separation
-from astropy.table import Table
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.io_operations import io_table_handler
 
 
 @dataclass
@@ -164,32 +164,16 @@ class SimtelIOEventDataReader:
 
         return triggered_shower
 
-    def _read_tables(self, event_data_file):
-        """Read tables from the event data file."""
-        if event_data_file.endswith(".hdf5"):
-            return (
-                Table.read(event_data_file, path="SHOWERS"),
-                Table.read(event_data_file, path="TRIGGERS"),
-                Table.read(event_data_file, path="FILE_INFO"),
-            )
-        if event_data_file.endswith(".fits") or event_data_file.endswith(".fits.gz"):
-            return (
-                Table.read(event_data_file, hdu="SHOWERS"),
-                Table.read(event_data_file, hdu="TRIGGERS"),
-                Table.read(event_data_file, hdu="FILE_INFO"),
-            )
-
-        raise ValueError(
-            f"Unsupported file format: {event_data_file}. Supported formats are HDF5 and FITS."
-        )
-
     def read_event_data(self, event_data_file):
         """Read event data from FITS file."""
-        shower_table, trigger_table, file_info_table = self._read_tables(event_data_file)
+        tables = io_table_handler.read_tables(
+            event_data_file,
+            table_names=["SHOWERS", "TRIGGERS", "FILE_INFO"],
+        )
 
-        shower_data = self._table_to_shower_data(shower_table)
-        triggered_data = self._table_to_triggered_data(trigger_table)
-        triggered_shower = self._get_triggered_shower_data(shower_data, trigger_table)
+        shower_data = self._table_to_shower_data(tables["SHOWERS"])
+        triggered_data = self._table_to_triggered_data(tables["TRIGGERS"])
+        triggered_shower = self._get_triggered_shower_data(shower_data, tables["TRIGGERS"])
 
         triggered_data.angular_distance = (
             angular_separation(
@@ -206,7 +190,7 @@ class SimtelIOEventDataReader:
             self._filter_by_telescopes(triggered_data) if self.telescope_list else triggered_data
         )
 
-        return file_info_table, shower_data, triggered_shower, triggered_data
+        return tables["FILE_INFO"], shower_data, triggered_shower, triggered_data
 
     def _filter_by_telescopes(self, triggered_data):
         """Filter triggered data by the specified telescope list."""
