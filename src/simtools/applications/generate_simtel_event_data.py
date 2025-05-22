@@ -38,7 +38,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler
+from simtools.io_operations import io_handler, io_table_handler
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 
@@ -95,10 +95,7 @@ def main():  # noqa: D103
     output_filepath = io_handler.IOHandler().get_output_file(args_dict["output_file"])
     generator = SimtelIOEventDataWriter(files, args_dict["max_files"])
     tables = generator.process_files()
-    generator.write(
-        output_filepath,
-        tables=tables,
-    )
+    io_table_handler.write_tables(tables, output_filepath)
     MetadataCollector.dump(args_dict=args_dict, output_file=output_filepath.with_suffix(".yml"))
 
     if args_dict["print_dataset_information"] > 0:

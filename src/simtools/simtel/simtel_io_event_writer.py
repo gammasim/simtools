@@ -1,12 +1,10 @@
 """Generate a reduced dataset from sim_telarray output files using astropy tables."""
 
-import importlib.util
 import logging
 from dataclasses import dataclass
 
 import astropy.units as u
 import numpy as np
-from astropy.io import fits
 from astropy.table import Table
 from eventio import EventIOFile
 from eventio.simtel import (
@@ -97,9 +95,9 @@ class SimtelIOEventDataWriter:
             self._logger.info(f"Processing file {i + 1}/{self.max_files}: {file}")
             self._process_file(i, file)
 
-        return self._create_tables()
+        return self.create_tables()
 
-    def _create_tables(self):
+    def create_tables(self):
         """Create astropy tables from collected data."""
         tables = []
         for data, schema, name in [
@@ -118,63 +116,6 @@ class SimtelIOEventDataWriter:
         for col, (_, unit) in schema.items():
             if unit is not None:
                 table[col].unit = unit
-
-    def write(self, output_file, tables):
-        """
-        Write tables to file.
-
-        Parameters
-        ----------
-        output_file : Path
-            Path to the output file.
-        tables : list
-            List of astropy tables to write.
-        """
-        self._logger.info(f"Save reduced dataset to: {output_file}")
-        if output_file.name.endswith("fits.gz") or output_file.suffix == ".fits":
-            self._write_fits(tables, output_file)
-        elif output_file.suffix in (".h5", ".hdf5"):
-            self._write_hdf5(tables, output_file)
-        else:
-            raise ValueError(
-                f"Unsupported file format: {output_file.suffix}. "
-                "Supported formats are .fits and .hdf5"
-            )
-
-    def _write_fits(self, tables, output_file):
-        """Write tables to a FITS file."""
-        hdu_list = [fits.PrimaryHDU()]  # Primary HDU is required
-
-        for table in tables:
-            hdu = fits.table_to_hdu(table)
-            hdu.name = table.meta.get("EXTNAME", "")  # Set extension name if present
-            hdu_list.append(hdu)
-
-        fits.HDUList(hdu_list).writeto(output_file, overwrite=True)
-
-    def _write_hdf5(self, astropy_tables, output_file):
-        """Write tables to an HDF5 file."""
-        if importlib.util.find_spec("h5py") is None:
-            raise ImportError("h5py is required to write HDF5 files with Astropy.")
-
-        astropy_tables[0].write(
-            output_file,
-            path=f"/{astropy_tables[0].meta['EXTNAME']}",
-            format="hdf5",
-            overwrite=True,
-            serialize_meta=True,
-            compression=True,
-        )
-
-        for table in astropy_tables[1:]:
-            table.write(
-                output_file,
-                path=f"/{table.meta['EXTNAME']}",
-                format="hdf5",
-                append=True,
-                serialize_meta=True,
-                compression=True,
-            )
 
     def _process_file(self, file_id, file):
         """Process a single file and update data lists."""
