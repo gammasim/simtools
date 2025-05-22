@@ -45,7 +45,7 @@ def mock_table():
 @pytest.fixture
 def mock_read_type(mocker):
     """Mock read_table_file_type."""
-    return mocker.patch("simtools.io_operations.io_table_handler.read_table_file_type")
+    return mocker.patch(READ_TABLE_FILE_TYPE)
 
 
 @pytest.fixture
@@ -134,7 +134,7 @@ def test_merge_single_table(mocker, tmp_path):
         {TEST_TABLE_NAME: table2},
     ]
 
-    output_file = tmp_path / "output.fits"
+    output_file = tmp_path / OUTPUT_FITS
     result = _merge([FILE1_FITS, FILE2_FITS], [TEST_TABLE_NAME], "FITS", output_file)
 
     assert len(result) == 1
@@ -156,7 +156,7 @@ def test_merge_multiple_tables(mocker, tmp_path):
     }
     mock_read.side_effect = [tables1, tables2]
 
-    output_file = tmp_path / "output.fits"
+    output_file = tmp_path / OUTPUT_FITS
     result = _merge([FILE1_FITS, FILE2_FITS], ["table1", "table2"], "FITS", output_file)
 
     assert len(result) == 2
@@ -172,7 +172,7 @@ def test_merge_without_file_id(mocker, tmp_path):
     table2 = Table({"col1": [3, 4]})
     mock_read.side_effect = [{TEST_TABLE_NAME: table1}, {TEST_TABLE_NAME: table2}]
 
-    output_file = tmp_path / "output.fits"
+    output_file = tmp_path / OUTPUT_FITS
     result = _merge([FILE1_FITS, FILE2_FITS], [TEST_TABLE_NAME], "FITS", output_file)
 
     assert len(result) == 1
@@ -188,7 +188,7 @@ def test_read_tables_fits(mocker):
     mock_read.return_value = mock_table
 
     # Mock read_table_file_type
-    mock_file_type = mocker.patch("simtools.io_operations.io_table_handler.read_table_file_type")
+    mock_file_type = mocker.patch(READ_TABLE_FILE_TYPE)
     mock_file_type.return_value = "FITS"
 
     result = read_tables(TEST_FITS, ["table1", "table2"])
@@ -208,7 +208,7 @@ def test_read_tables_hdf5(mocker):
     mock_read.return_value = mock_table
 
     # Mock read_table_file_type
-    mock_file_type = mocker.patch("simtools.io_operations.io_table_handler.read_table_file_type")
+    mock_file_type = mocker.patch(READ_TABLE_FILE_TYPE)
     mock_file_type.return_value = "HDF5"
 
     result = read_tables(TEST_H5, ["table1", "table2"])
@@ -223,7 +223,7 @@ def test_read_tables_hdf5(mocker):
 
 def test_read_tables_unsupported_format(mocker):
     # Mock read_table_file_type
-    mock_file_type = mocker.patch("simtools.io_operations.io_table_handler.read_table_file_type")
+    mock_file_type = mocker.patch(READ_TABLE_FILE_TYPE)
     mock_file_type.return_value = "CSV"
 
     with pytest.raises(ValueError, match="Unsupported file format"):
@@ -237,7 +237,7 @@ def test_read_tables_explicit_file_type(mocker):
     mock_read.return_value = mock_table
 
     # Mock read_table_file_type to ensure it's not called
-    mock_file_type = mocker.patch("simtools.io_operations.io_table_handler.read_table_file_type")
+    mock_file_type = mocker.patch(READ_TABLE_FILE_TYPE)
 
     result = read_tables(TEST_FITS, ["table1"], file_type="FITS")
 
@@ -316,7 +316,7 @@ def test_merge_tables_success(mock_read_type, mock_logger, mocker):
 
     input_files = [FILE1_FITS, FILE2_FITS]
     table_names = ["table1", "table2"]
-    output_file = "output.fits"
+    output_file = OUTPUT_FITS
 
     mock_read_type.return_value = "FITS"
     mock_merge.return_value = {"table1": mocker.Mock(), "table2": mocker.Mock()}
@@ -349,13 +349,13 @@ def test_merge_tables_hdf5(mocker):
 
 def test_merge_tables_propagates_errors(mocker):
     # Mock dependencies to raise errors
-    mock_read_type = mocker.patch("simtools.io_operations.io_table_handler.read_table_file_type")
+    mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE)
     mock_read_type.side_effect = ValueError("Test error")
 
     # Test data
     input_files = ["file1.txt"]
     table_names = ["table1"]
-    output_file = "output.fits"
+    output_file = OUTPUT_FITS
 
     # Verify error propagation
     with pytest.raises(ValueError, match="Test error"):
