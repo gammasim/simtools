@@ -167,7 +167,6 @@ def write_tables(tables, output_file, file_type=None):
     for table in tables:
         _table_name = table.meta.get("EXTNAME")
         _logger.info(f"Writing table {_table_name} of length {len(table)} to {output_file}.")
-        table.info()
         if file_type == "HDF5":
             write_table_in_hdf5(table, output_file, _table_name)
         if file_type == "FITS":
