@@ -89,8 +89,14 @@ class SimtelIOEventDataWriter:
         self.file_info = []
 
     def process_files(self):
-        """Process input files and return tables."""
-        # Process all files
+        """
+        Process input files and return tables.
+
+        Returns
+        -------
+        list
+            List of astropy tables containing processed data.
+        """
         for i, file in enumerate(self.input_files[: self.max_files]):
             self._logger.info(f"Processing file {i + 1}/{self.max_files}: {file}")
             self._process_file(i, file)
