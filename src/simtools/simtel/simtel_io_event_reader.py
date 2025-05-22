@@ -7,7 +7,7 @@ Provide functionality to list events, e.g. through
 .. code-block:: console
 
     from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
-reader = SimtelIOEventDataReader("gamma_diffuse_60deg.hdf5", [1,2,3,4])
+    reader = SimtelIOEventDataReader("gamma_diffuse_60deg.hdf5", [1,2,3,4])
     reader.print_event_table()
 
 """

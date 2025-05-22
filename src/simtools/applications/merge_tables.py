@@ -11,7 +11,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.io_operations import io_table_handler
+from simtools.io_operations import io_handler, io_table_handler
 
 
 def _parse(label, description):
@@ -58,12 +58,15 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     logger.info(f"Loading input files from: {args_dict['input']}")
 
+    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
+
     input_files = args_dict.get("input") or gen.collect_data_from_file(args_dict["input_list"])
 
     io_table_handler.merge_tables(
         input_files,
         input_table_names=args_dict["table_names"],
-        output_file=args_dict["output_file"],
+        output_file=output_filepath,
     )
 
 
