@@ -35,6 +35,51 @@ class ProductionStatisticsDerivator:
         self.evaluator = evaluator
         self.metrics = metrics
 
+    def _compute_scaling_factor(self) -> np.ndarray:
+        """
+        Compute bin-wise scaling factors based on error metrics.
+
+        Takes into account the energy range specified in the metrics and
+        calculates a separate scaling factor for each energy bin.
+
+        Returns
+        -------
+        np.ndarray
+            Array of scaling factors for each energy bin.
+        """
+        uncertainty_effective_area = self.evaluator.metric_results.get("uncertainty_effective_area")
+
+        relative_uncertainties = uncertainty_effective_area.get("relative_uncertainties")
+        energy_range = (
+            self.metrics.get("uncertainty_effective_area").get("energy_range").get("value")
+        )
+        energy_unit = u.Unit(
+            self.metrics.get("uncertainty_effective_area").get("energy_range").get("unit")
+        )
+
+        energy_range_converted = np.array(energy_range) * energy_unit
+
+        bin_edges = self.evaluator.energy_bin_edges
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        # Mask for bins within the metric specified energy range
+        mask = (bin_centers >= energy_range_converted[0]) & (
+            bin_centers <= energy_range_converted[1]
+        )
+
+        scaling_factors = np.zeros_like(relative_uncertainties)
+
+        target_uncertainty = (
+            self.metrics.get("uncertainty_effective_area").get("target_uncertainty").get("value")
+        )
+
+        # Calculate scaling factor only for bins within the energy range
+        # For bins with zero events/uncertainty, use a scaling factor of 0
+        valid_bins = mask & (relative_uncertainties > 0)
+        scaling_factors[valid_bins] = (relative_uncertainties[valid_bins] / target_uncertainty) ** 2
+
+        return scaling_factors
+
     def derive_statistics(self, return_sum: bool = True) -> u.Quantity:
         """
         Derive the production statistics based on statistical error metrics.
@@ -54,31 +99,18 @@ class ProductionStatisticsDerivator:
             If 'return_sum' is False, returns an array of production statistics along the energy
             axis as a u.Quantity.
         """
-        scaling_factor = self._compute_scaling_factor()
-
+        scaling_factors = self._compute_scaling_factor()
+        print("Scaling factors:", scaling_factors)
         base_events = self._number_of_simulated_events()
+        # currently we use the maximum of the scaling factors to scale the events. This is a soft
+        # requirement if we want to keep the power law shape of the production statistics.
+        scaled_events = base_events * np.max(scaling_factors)
+
+        # For debugging
 
         if return_sum:
-            return np.sum(base_events * scaling_factor)
-        return base_events * scaling_factor
-
-    def _compute_scaling_factor(self) -> float:
-        """
-        Compute the scaling factor based on the error metrics.
-
-        Returns
-        -------
-        float
-            The scaling factor.
-        """
-        self.evaluator.calculate_metrics()
-        uncertainty_effective_area = self.evaluator.metric_results.get("uncertainty_effective_area")
-        current_max_error = uncertainty_effective_area.get("max_error")
-        target_max_error = self.metrics.get("uncertainty_effective_area").get("target_uncertainty")[
-            "value"
-        ]
-
-        return (current_max_error / target_max_error) ** 2
+            return np.sum(scaled_events)
+        return scaled_events
 
     def _number_of_simulated_events(self) -> u.Quantity:
         """
@@ -112,13 +144,16 @@ class ProductionStatisticsDerivator:
         bin_edges = self.evaluator.create_bin_edges()
         bin_idx = np.digitize(energy, bin_edges) - 1
 
-        scaling_factor = self._compute_scaling_factor()
+        # Get scaling factors for all bins
+        scaling_factors = self._compute_scaling_factor()
 
         simulated_event_histogram = self.evaluator.data.get("simulated_event_histogram", [])
 
         if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
-            raise ValueError(f"Energy {energy} is outside therange of the simulated events data.")
+            raise ValueError(f"Energy {energy} is outside the range of the simulated events data.")
 
         base_events = self._number_of_simulated_events()
         base_event_at_energy = base_events[bin_idx]
-        return base_event_at_energy * scaling_factor
+        scaling_factor_at_energy = scaling_factors[bin_idx]
+
+        return base_event_at_energy * scaling_factor_at_energy
