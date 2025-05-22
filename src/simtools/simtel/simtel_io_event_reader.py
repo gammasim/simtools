@@ -7,7 +7,7 @@ Provide functionality to list events, e.g. through
 .. code-block:: console
 
     from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
-    reader = SimtelIOEventDataReader("gamma_diffuse_60deg.hdf5", [1,2,3,4])
+reader = SimtelIOEventDataReader("gamma_diffuse_60deg.hdf5", [1,2,3,4])
     reader.print_event_table()
 
 """
@@ -164,11 +164,28 @@ class SimtelIOEventDataReader:
 
         return triggered_shower
 
+    def _read_tables(self, event_data_file):
+        """Read tables from the event data file."""
+        if event_data_file.endswith(".hdf5"):
+            return (
+                Table.read(event_data_file, path="SHOWERS"),
+                Table.read(event_data_file, path="TRIGGERS"),
+                Table.read(event_data_file, path="FILE_INFO"),
+            )
+        if event_data_file.endswith(".fits") or event_data_file.endswith(".fits.gz"):
+            return (
+                Table.read(event_data_file, hdu="SHOWERS"),
+                Table.read(event_data_file, hdu="TRIGGERS"),
+                Table.read(event_data_file, hdu="FILE_INFO"),
+            )
+
+        raise ValueError(
+            f"Unsupported file format: {event_data_file}. Supported formats are HDF5 and FITS."
+        )
+
     def read_event_data(self, event_data_file):
         """Read event data from FITS file."""
-        shower_table = Table.read(event_data_file, hdu="SHOWERS")
-        trigger_table = Table.read(event_data_file, hdu="TRIGGERS")
-        file_info_table = Table.read(event_data_file, hdu="FILE_INFO")
+        shower_table, trigger_table, file_info_table = self._read_tables(event_data_file)
 
         shower_data = self._table_to_shower_data(shower_table)
         triggered_data = self._table_to_triggered_data(trigger_table)
