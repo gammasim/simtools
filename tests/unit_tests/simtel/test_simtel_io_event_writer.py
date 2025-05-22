@@ -2,7 +2,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from astropy.table import Table
 from eventio.simtel import (
     ArrayEvent,
     MCEvent,
@@ -182,83 +181,6 @@ def create_test_data():
     }
 
 
-def test_write_fits(tmp_path, lookup_table_generator):
-    """Test writing tables to FITS file."""
-    output_file = tmp_path / "test.fits"
-
-    # Add test data matching schema
-    lookup_table_generator.shower_data.append(create_test_data())
-    lookup_table_generator.trigger_data.append(
-        {
-            "shower_id": 1,
-            "event_id": 42,
-            "file_id": 0,
-            "array_altitude": 1.2,
-            "array_azimuth": 0.5,
-            "telescope_list": one_two_three,
-        }
-    )
-    lookup_table_generator.file_info.append(
-        {
-            "file_name": "test.simtel.gz",
-            "file_id": 0,
-            "particle_id": 1,
-            "zenith": 20.0,
-            "azimuth": 180.0,
-            "nsb_level": 1.0,
-        }
-    )
-
-    tables = lookup_table_generator._create_tables()
-    lookup_table_generator.write(output_file, tables)
-
-    assert output_file.exists()
-
-
-def test_write_invalid_format(tmp_path, lookup_table_generator):
-    """Test writing tables with invalid file format."""
-    output_file = tmp_path / "test.txt"
-
-    with pytest.raises(ValueError, match="Unsupported file format: .txt"):
-        lookup_table_generator.write(output_file, [])
-
-
-@patch("astropy.io.fits.HDUList.writeto")
-def test_write_fits_gz(mock_write, tmp_path, lookup_table_generator):
-    """Test writing tables to compressed FITS file."""
-    output_file = tmp_path / "test.fits.gz"
-
-    # Add test data matching schema
-    lookup_table_generator.shower_data.append(create_test_data())
-    lookup_table_generator.trigger_data.append(
-        {
-            "shower_id": 1,
-            "event_id": 42,
-            "file_id": 0,
-            "array_altitude": 1.2,
-            "array_azimuth": 0.5,
-            "telescope_list": one_two_three,
-        }
-    )
-    lookup_table_generator.file_info.append(
-        {
-            "file_name": "test.simtel.gz",
-            "file_id": 0,
-            "particle_id": 1,
-            "zenith": 20.0,
-            "azimuth": 180.0,
-            "nsb_level": 1.0,
-        }
-    )
-
-    tables = lookup_table_generator._create_tables()
-    lookup_table_generator.write(output_file, tables)
-
-    mock_write.assert_called_once()
-    args = mock_write.call_args[0]
-    assert str(args[0]) == str(output_file)
-
-
 def test_process_array_event(lookup_table_generator):
     """Test array event processing."""
     mock_array_event = MagicMock(spec=ArrayEvent)
@@ -400,77 +322,3 @@ def test_process_mc_event_inconsistent_shower(lookup_table_generator):
 
     with pytest.raises(IndexError, match="Inconsistent shower and MC event data for shower id 2"):
         lookup_table_generator._process_mc_event(mock_event)
-
-
-@patch("importlib.util.find_spec")
-def test_write_hdf5_h5py_not_installed(mock_find_spec, tmp_path, lookup_table_generator):
-    """Test _write_hdf5 when h5py is not installed."""
-    mock_find_spec.return_value = None
-    output_file = tmp_path / "test_1.hdf5"
-
-    with pytest.raises(ImportError, match="h5py is required to write HDF5 files with Astropy."):
-        lookup_table_generator._write_hdf5([], output_file)
-
-    with pytest.raises(ImportError, match="h5py is required to write HDF5 files with Astropy."):
-        lookup_table_generator.write(output_file, [])
-
-
-@patch("importlib.util.find_spec")
-@patch("astropy.table.Table.write")
-def test_write_hdf5_single_table(mock_write, mock_find_spec, tmp_path, lookup_table_generator):
-    """Test _write_hdf5 with a single table."""
-    mock_find_spec.return_value = True
-    output_file = tmp_path / "test_2.hdf5"
-
-    table = Table()
-    table.meta["EXTNAME"] = "TEST"
-    tables = [table]
-
-    lookup_table_generator._write_hdf5(tables, output_file)
-
-    mock_write.assert_called_once_with(
-        output_file,
-        path="/TEST",
-        format="hdf5",
-        overwrite=True,
-        serialize_meta=True,
-        compression=True,
-    )
-
-
-@patch("importlib.util.find_spec")
-@patch("astropy.table.Table.write")
-def test_write_hdf5_multiple_tables(mock_write, mock_find_spec, tmp_path, lookup_table_generator):
-    """Test _write_hdf5 with multiple tables."""
-    mock_find_spec.return_value = True
-    output_file = tmp_path / "test_3.hdf5"
-
-    table1 = Table()
-    table1.meta["EXTNAME"] = "TEST1"
-    table2 = Table()
-    table2.meta["EXTNAME"] = "TEST2"
-    tables = [table1, table2]
-
-    lookup_table_generator._write_hdf5(tables, output_file)
-
-    assert mock_write.call_count == 2
-
-    # First table called with overwrite=True
-    mock_write.assert_any_call(
-        output_file,
-        path="/TEST1",
-        format="hdf5",
-        overwrite=True,
-        serialize_meta=True,
-        compression=True,
-    )
-
-    # Second table called with append=True
-    mock_write.assert_any_call(
-        output_file,
-        path="/TEST2",
-        format="hdf5",
-        append=True,
-        serialize_meta=True,
-        compression=True,
-    )

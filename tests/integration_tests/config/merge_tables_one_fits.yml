@@ -1,0 +1,18 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-merge-tables
+    TEST_NAME: one_fits
+    CONFIGURATION:
+      INPUT: tests/resources/run202_202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.fits.gz
+      TABLE_NAMES:
+      - SHOWERS
+      - TRIGGERS
+      - FILE_INFO
+      OUTPUT_PATH: simtools-output
+      OUTPUT_FILE: merged.fits.gz
+      USE_PLAIN_OUTPUT_PATH: true
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: merged.fits.gz
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
