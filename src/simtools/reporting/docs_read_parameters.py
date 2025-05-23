@@ -139,7 +139,7 @@ class ReadParameters:
                 return (
                     f"[{Path(value_data).name}](https://gitlab.cta-observatory.org/"
                     "cta-science/simulations/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{input_file_name})"
+                    f"simulation-models/model_parameters/Files/{value_data})"
                 ).strip()
             output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
