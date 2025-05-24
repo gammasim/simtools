@@ -33,6 +33,7 @@ def generate_corsika_limits_grid(args_dict):
             _logger.info(f"Processing file: {file_path} with telescope config: {array_name}")
             result = _process_file(
                 file_path,
+                array_name,
                 telescope_ids,
                 args_dict["loss_fraction"],
                 args_dict["plot_histograms"],
@@ -43,7 +44,7 @@ def generate_corsika_limits_grid(args_dict):
     write_results(results, args_dict)
 
 
-def _process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
+def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_histograms):
     """
     Compute limits for a single file.
 
@@ -51,6 +52,8 @@ def _process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     ----------
     file_path : str
         Path to the event data file.
+    array_name : str
+        Name of the telescope array configuration.
     telescope_ids : list[int]
         List of telescope IDs to filter the events.
     loss_fraction : float
@@ -63,7 +66,7 @@ def _process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     dict
         Dictionary containing the computed limits and metadata.
     """
-    calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
+    calculator = LimitCalculator(file_path, array_name=array_name, telescope_list=telescope_ids)
     limits = calculator.compute_limits(loss_fraction)
 
     if plot_histograms:
@@ -112,6 +115,7 @@ def _create_results_table(results, loss_fraction):
     """
     cols = [
         "primary_particle",
+        "array_name",
         "telescope_ids",
         "zenith",
         "azimuth",

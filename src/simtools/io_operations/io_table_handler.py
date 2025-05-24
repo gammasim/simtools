@@ -12,6 +12,66 @@ from astropy.table import Table, vstack
 _logger = logging.getLogger(__name__)
 
 
+def read_table_list(input_file, table_names, include_indexed_tables=False):
+    """
+    Read available tables found in the input file.
+
+    If table_counter is True, search for tables with the same name
+    but with different suffixes (e.g., "_0", "_1", etc.).
+
+    """
+    file_type = read_table_file_type(input_file)
+    if file_type == "HDF5":
+        return _read_table_list_hdf5(input_file, table_names, include_indexed_tables)
+    if file_type == "FITS":
+        return _read_table_list_fits(input_file, table_names, include_indexed_tables)
+    return None
+
+
+def _read_table_list_hdf5(input_file, table_names, include_indexed_tables):
+    """Read available tables from HDF5 file."""
+    datasets = {name: [] for name in table_names}
+
+    def visitor(name, obj):
+        if not isinstance(obj, h5py.Dataset):
+            return
+
+        for base in datasets:
+            if not include_indexed_tables:
+                if name == base:
+                    datasets[base].append(name)
+            elif name == base or name.startswith(f"{base}_"):
+                suffix = name[len(base) + 1 :]
+                if name == base or suffix.isdigit():
+                    datasets[base].append(name)
+
+    with h5py.File(input_file, "r") as f:
+        f.visititems(visitor)
+
+    return datasets
+
+
+def _read_table_list_fits(input_file, table_names, include_indexed_tables):
+    """Read available tables from FITS file."""
+    datasets = {name: [] for name in table_names}
+
+    with fits.open(input_file) as hdul:
+        for hdu in hdul[1:]:
+            if not isinstance(hdu, fits.BinTableHDU):
+                continue
+            name = hdu.name
+            if name in table_names:
+                datasets[name].append(name)
+                continue
+            if not include_indexed_tables or "_" not in name:
+                continue
+            base, _, suffix = name.rpartition("_")
+            if base in table_names and suffix.isdigit():
+                datasets[base].append(name)
+
+    return datasets
+
+
 def merge_tables(input_files, input_table_names, output_file):
     """
     Merge multiple astropy tables from different files into a single file.
@@ -58,6 +118,7 @@ def read_table_file_type(input_files):
     """
     if not input_files:
         raise ValueError("No input files provided.")
+    input_files = [input_files] if isinstance(input_files, str | Path) else input_files
 
     def get_type(f):
         if f.lower().endswith((".hdf5", ".h5")):
@@ -94,17 +155,19 @@ def _merge(input_files, table_names, file_type, output_file):
     dict
         Dictionary with table names as keys and merged astropy tables as values.
     """
+    add_file_id_to_table_name = True
     merged = {name: [] for name in table_names}
 
     for idx, file in enumerate(input_files):
         tables = read_tables(file, table_names, file_type)
         for key, table in tables.items():
+            table_name = f"{key}_{idx}" if add_file_id_to_table_name else key
             if "file_id" in table.colnames:  # update file_id
                 table["file_id"] = idx
             if file_type == "HDF5":
-                write_table_in_hdf5(table, output_file, key)
+                write_table_in_hdf5(table, output_file, table_name)
                 if idx == 0:
-                    copy_metadata_to_hdf5(file, output_file, key)
+                    copy_metadata_to_hdf5(file, output_file, table_name)
             else:
                 merged[key].append(table)
 

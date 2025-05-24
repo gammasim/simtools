@@ -63,12 +63,43 @@ class SimtelIOEventDataReader:
         self._logger = logging.getLogger(__name__)
         self.telescope_list = telescope_list
 
-        (
-            self.simulation_file_info,
-            self.shower_data,
-            self.triggered_shower_data,
-            self.triggered_data,
-        ) = self.read_event_data(event_data_file)
+        self.data_sets = self.read_table_list(event_data_file)
+
+    def read_table_list(self, event_data_file):
+        """
+        Read available tables from the event data file.
+
+        Rearrange dictionary with tables names into a list of dictionaries
+        under the assumption that the file contains the tables "SHOWERS",
+        "TRIGGERS", and "FILE_INFO".
+
+        Parameters
+        ----------
+        event_data_file : str
+            Path to the event data file.
+
+        Returns
+        -------
+        list
+            List of dictionaries containing the data from the tables.
+        """
+        dataset_dict = io_table_handler.read_table_list(
+            event_data_file,
+            ["SHOWERS", "TRIGGERS", "FILE_INFO"],
+            include_indexed_tables=True,
+        )
+
+        data_sets = []
+        for i in range(len(dataset_dict["SHOWERS"])):
+            data_sets.append(
+                {
+                    "SHOWERS": dataset_dict["SHOWERS"][i],
+                    "TRIGGERS": dataset_dict["TRIGGERS"][i],
+                    "FILE_INFO": dataset_dict["FILE_INFO"][i],
+                }
+            )
+
+        return data_sets
 
     def _table_to_shower_data(self, table):
         """
@@ -164,16 +195,26 @@ class SimtelIOEventDataReader:
 
         return triggered_shower
 
-    def read_event_data(self, event_data_file):
+    def read_event_data(self, event_data_file, table_name_map=None):
         """Read event data from FITS file."""
+        if table_name_map is None:
+            table_name_map = {}
         tables = io_table_handler.read_tables(
             event_data_file,
-            table_names=["SHOWERS", "TRIGGERS", "FILE_INFO"],
+            table_names=[
+                table_name_map.get("SHOWERS", "SHOWERS"),
+                table_name_map.get("TRIGGERS", "TRIGGERS"),
+                table_name_map.get("FILE_INFO", "FILE_INFO"),
+            ],
         )
 
-        shower_data = self._table_to_shower_data(tables["SHOWERS"])
-        triggered_data = self._table_to_triggered_data(tables["TRIGGERS"])
-        triggered_shower = self._get_triggered_shower_data(shower_data, tables["TRIGGERS"])
+        shower_data = self._table_to_shower_data(tables[table_name_map.get("SHOWERS", "SHOWERS")])
+        triggered_data = self._table_to_triggered_data(
+            tables[table_name_map.get("TRIGGERS", "TRIGGERS")]
+        )
+        triggered_shower = self._get_triggered_shower_data(
+            shower_data, tables[table_name_map.get("TRIGGERS", "TRIGGERS")]
+        )
 
         triggered_data.angular_distance = (
             angular_separation(
@@ -187,12 +228,24 @@ class SimtelIOEventDataReader:
         )
 
         triggered_data = (
-            self._filter_by_telescopes(triggered_data) if self.telescope_list else triggered_data
+            self._filter_by_telescopes(triggered_data, triggered_shower)
+            if self.telescope_list
+            else triggered_data
         )
 
-        return tables["FILE_INFO"], shower_data, triggered_shower, triggered_data
+        self._logger.info(f"Number of triggered events: {len(triggered_data.array_altitude)}")
+        self._logger.info(
+            f"Number of triggered shower events: {len(triggered_shower.simulated_energy)}"
+        )
 
-    def _filter_by_telescopes(self, triggered_data):
+        return (
+            tables[table_name_map.get("FILE_INFO", "FILE_INFO")],
+            shower_data,
+            triggered_shower,
+            triggered_data,
+        )
+
+    def _filter_by_telescopes(self, triggered_data, triggered_shower):
         """Filter triggered data by the specified telescope list."""
         mask = np.array(
             [
@@ -201,14 +254,17 @@ class SimtelIOEventDataReader:
             ]
         )
         filtered_triggered_data = TriggeredEventData(
+            shower_id=triggered_data.shower_id[mask],
+            event_id=triggered_data.event_id[mask],
+            file_id=triggered_data.file_id[mask],
             array_altitude=triggered_data.array_altitude[mask],
             array_azimuth=triggered_data.array_azimuth[mask],
             telescope_list=[triggered_data.telescope_list[i] for i in np.arange(len(mask))[mask]],
             angular_distance=triggered_data.angular_distance[mask],
         )
-        self._logger.info(
-            f"Events reduced to triggered events: {len(filtered_triggered_data.array_altitude)}"
-        )
+        if filtered_triggered_data == triggered_shower:
+            self._logger.info("ABC")
+
         return filtered_triggered_data
 
     def _transform_to_shower_coordinates(self, x_core, y_core, shower_azimuth, shower_altitude):
@@ -239,47 +295,7 @@ class SimtelIOEventDataReader:
         )
         return shower_frame.x.value, shower_frame.y.value
 
-    def print_dataset_information(self, n_events=1):
-        """Print information about the datasets."""
-
-        def print_event_data(data, name):
-            """Print event data."""
-            print(f"{name}: {data[:n_events]}")
-
-        print_event_data(self.triggered_shower_data.simulated_energy, "Simulated energy (TeV)")
-        print_event_data(self.triggered_shower_data.x_core, "Core x (m)")
-        print_event_data(self.triggered_shower_data.y_core, "Core y (m)")
-        print_event_data(self.triggered_shower_data.shower_azimuth, "Shower azimuth (rad)")
-        print_event_data(self.triggered_shower_data.shower_altitude, "Shower altitude (rad)")
-        print_event_data(self.triggered_shower_data.x_core_shower, "Core x shower (m)")
-        print_event_data(self.triggered_shower_data.y_core_shower, "Core y shower (m)")
-        print_event_data(
-            self.triggered_shower_data.core_distance_shower, "Core distance shower (m)"
-        )
-        print_event_data(self.triggered_data.array_azimuth, "Array azimuth (rad)")
-        print_event_data(self.triggered_data.array_altitude, "Array altitude (rad)")
-        print_event_data(self.triggered_data.telescope_list, "Triggered telescopes")
-        print_event_data(
-            self.triggered_data.angular_distance, "Angular distance to pointing direction (deg)"
-        )
-        print("")
-
-    def print_event_table(self):
-        """Print event table."""
-        print(
-            f"{'Counter':<10} {'Simulated Energy (TeV)':<20} {'Triggered Telescopes':<20} "
-            f"{'Core distance shower (m)':<20}"
-        )
-
-        for i, telescope_list in enumerate(self.triggered_data.telescope_list):
-            print(
-                f"{i:<10} {self.triggered_shower_data.simulated_energy[i]:<20.3f}"
-                f"{telescope_list} "
-                f"{self.triggered_shower_data.core_distance_shower[i]:<20.3f}"
-            )
-        print("")
-
-    def get_reduced_simulation_file_info(self):
+    def get_reduced_simulation_file_info(self, simulation_file_info):
         """
         Return reduced simulation file info assuming single-valued parameters.
 
@@ -290,16 +306,21 @@ class SimtelIOEventDataReader:
 
         Logs a warning if multiple unique values are found.
 
+        Parameters
+        ----------
+        simulation_file_info : astropy.table.Table
+            Dictionary containing simulation file info.
+
         Returns
         -------
         dict
             Dictionary containing the reduced simulation file info.
         """
-        particle_id = np.unique(self.simulation_file_info["particle_id"].data)
+        particle_id = np.unique(simulation_file_info["particle_id"].data)
         keys = ["zenith", "azimuth", "nsb_level"]
         float_arrays = {}
         for key in keys:
-            float_arrays[key] = np.unique(np.round(self.simulation_file_info[key].data, decimals=2))
+            float_arrays[key] = np.unique(np.round(simulation_file_info[key].data, decimals=2))
 
         if any(len(arr) > 1 for arr in (particle_id, *(float_arrays[key] for key in keys))):
             self._logger.warning("Simulation file info has non-unique values.")
@@ -313,8 +334,8 @@ class SimtelIOEventDataReader:
 
         for key in keys:
             value = float(float_arrays[key][0])
-            if self.simulation_file_info[key].unit is not None:
-                value = value * self.simulation_file_info[key].unit
+            if simulation_file_info[key].unit is not None:
+                value = value * simulation_file_info[key].unit
             reduced_info[key] = value
 
         return reduced_info
