@@ -135,7 +135,7 @@ def _create_results_table(results, loss_fraction):
         for k in cols:
             val = res.get(k, None)
             if val is not None:
-                raw_val = val.value if hasattr(val, "unit") else val
+                raw_val = val
                 if k == "lower_energy_limit":
                     val = np.floor(raw_val * 1e3) / 1e3  # round down to 1 GeV
                 elif k == "upper_radius_limit":

@@ -1,9 +1,9 @@
 """IO operations on astropy tables."""
 
-import importlib.util
 import logging
 from pathlib import Path
 
+import astropy.units as u
 import h5py
 import numpy as np
 from astropy.io import fits
@@ -130,11 +130,7 @@ def read_table_file_type(input_files):
     file_types = {get_type(str(f)) for f in input_files}
     if len(file_types) != 1:
         raise ValueError("All input files must be of the same type (either all HDF5 or all FITS)")
-    file_type = file_types.pop()
-    if file_type == "HDF5" and importlib.util.find_spec("h5py") is None:
-        raise ImportError("h5py is required to write HDF5 files with Astropy.")
-
-    return file_type
+    return file_types.pop()
 
 
 def _merge(input_files, table_names, file_type, output_file):
@@ -197,10 +193,36 @@ def read_tables(file, table_names, file_type=None):
     """
     file_type = file_type or read_table_file_type([file])
     if file_type == "HDF5":
-        return {name: Table.read(file, path=name) for name in table_names}
+        return {name: read_table_from_hdf5(file, name) for name in table_names}
     if file_type == "FITS":
         return {name: Table.read(file, hdu=name) for name in table_names}
     raise ValueError(f"Unsupported file format: {file_type}. Supported formats are HDF5 and FITS.")
+
+
+def read_table_from_hdf5(file, table_name):
+    """
+    Read a single astropy table from an HDF5 file.
+
+    Parameters
+    ----------
+    file : str or Path
+        Path to the input HDF5 file.
+    table_name : str
+        Name of the table to read.
+
+    Returns
+    -------
+    astropy.table.Table
+        The requested astropy table.
+    """
+    table = Table.read(file, path=table_name)
+    with h5py.File(file, "r") as f:
+        dset = f[table_name]
+        for col in table.colnames:
+            unit_key = f"{col}_unit"
+            if unit_key in dset.attrs:
+                table[col].unit = u.Unit(dset.attrs[unit_key])
+    return table
 
 
 def write_tables(tables, output_file, file_type=None):
@@ -276,6 +298,10 @@ def write_table_in_hdf5(table, output_file, table_name):
             )
             for key, val in table.meta.items():
                 dset.attrs[key] = val
+            for col in table.colnames:
+                unit = getattr(table[col], "unit", None)
+                if unit is not None:
+                    dset.attrs[f"{col}_unit"] = str(unit)
         else:
             dset = f[table_name]
             dset.resize(dset.shape[0] + data.shape[0], axis=0)

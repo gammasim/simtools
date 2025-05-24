@@ -198,8 +198,8 @@ class LimitCalculator:
     def energy_bins(self):
         """Return bins for the energy histogram."""
         return np.logspace(
-            np.log10(self.file_info.get("energy_min", 1.0e-3)),
-            np.log10(self.file_info.get("energy_max", 1.0e3)),
+            np.log10(self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value),
+            np.log10(self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value),
             100,
         )
 
@@ -228,8 +228,8 @@ class LimitCalculator:
     def core_distance_bins(self):
         """Return bins for the core distance histogram."""
         return np.linspace(
-            self.file_info.get("core_scatter_min", 0.0),
-            self.file_info.get("core_scatter_max", 1.0e5),
+            self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
+            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
             100,
         )
 
@@ -261,8 +261,8 @@ class LimitCalculator:
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
         return np.linspace(
-            self.file_info.get("viewcone_min", 0.0),
-            self.file_info.get("viewcone_max", 20.0),
+            self.file_info.get("viewcone_min", 0.0 * u.deg).to("deg").value,
+            self.file_info.get("viewcone_max", 20.0 * u.deg).to("deg").value,
             100,
         )
 
