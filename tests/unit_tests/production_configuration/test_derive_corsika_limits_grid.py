@@ -35,6 +35,7 @@ def mock_results():
             "lower_energy_limit": 0.5 * u.TeV,
             "upper_radius_limit": 400.0 * u.m,
             "viewcone_radius": 5.0 * u.deg,
+            "array_name": "LST",
             "layout": "LST",
         }
     ]
@@ -71,13 +72,14 @@ def test_process_file(mocker):
         "simtools.production_configuration.derive_corsika_limits_grid.LimitCalculator"
     )
     mock_calculator.return_value.compute_limits.return_value = {"test": "limits"}
+    mock_calculator.return_value.plot_data.return_value = None
 
     mocker.patch("simtools.io_operations.io_handler.IOHandler")
 
-    result = _process_file("test.fits", [1, 2], 0.2, True)
+    result = _process_file("test.fits", [1, 2], 0.2, True, "array_name")
 
     assert result == {"test": "limits"}
-    mock_calculator.assert_called_once_with("test.fits", telescope_list=[1, 2])
+    mock_calculator.return_value.plot_data.assert_called_once()
 
 
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_path):
@@ -98,6 +100,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_path):
 def test_create_results_table(mock_results):
     """Test _create_results_table function."""
     table = _create_results_table(mock_results, loss_fraction=0.2)
+    table.info()
 
     assert isinstance(table, Table)
     assert len(table) == 1
