@@ -35,6 +35,7 @@ class LimitCalculator:
 
         self.limits = None
         self.histograms = {}
+        self.file_info = {}
 
         self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=telescope_list)
 
@@ -54,12 +55,12 @@ class LimitCalculator:
         dict
             Dictionary containing limits (not yet calculated) and parameter space information.
         """
-        _file_info = self.reader.get_reduced_simulation_file_info(file_info_table)
+        self.file_info = self.reader.get_reduced_simulation_file_info(file_info_table)
         return {
-            "primary_particle": _file_info["primary_particle"],
-            "zenith": _file_info["zenith"],
-            "azimuth": _file_info["azimuth"],
-            "nsb_level": _file_info["nsb_level"],
+            "primary_particle": self.file_info["primary_particle"],
+            "zenith": self.file_info["zenith"],
+            "azimuth": self.file_info["azimuth"],
+            "nsb_level": self.file_info["nsb_level"],
             "array_name": self.array_name,
             "telescope_ids": self.telescope_list,
             "lower_energy_limit": None,
@@ -90,17 +91,32 @@ class LimitCalculator:
         return self.limits
 
     def _fill_histogram_and_bin_edges(self, name, data, bins, hist1d=True):
-        """Fill histogram and bin edges and it both to histogram dictionary."""
-        if hist1d:
-            self.histograms[name], self.histograms[f"{name}_bin_edges"] = np.histogram(
-                data, bins=bins
-            )
+        """
+        Fill histogram and bin edges and it both to histogram dictionary.
+
+        Adds histogram to existing histogram if it exists, otherwise initializes it.
+
+        """
+        if name in self.histograms:
+            if hist1d:
+                bins = self.histograms[f"{name}_bin_edges"]
+                hist, _ = np.histogram(data, bins=bins)
+                self.histograms[name] += hist
+            else:
+                x_bins = self.histograms[f"{name}_bin_x_edges"]
+                y_bins = self.histograms[f"{name}_bin_y_edges"]
+                hist, _, _ = np.histogram2d(data[0], data[1], bins=[x_bins, y_bins])
+                self.histograms[name] += hist
         else:
-            (
-                self.histograms[name],
-                self.histograms[f"{name}_bin_x_edges"],
-                self.histograms[f"{name}_bin_y_edges"],
-            ) = np.histogram2d(data[0], data[1], bins=bins)
+            if hist1d:
+                hist, bin_edges = np.histogram(data, bins=bins)
+                self.histograms[name] = hist
+                self.histograms[f"{name}_bin_edges"] = bin_edges
+            else:
+                hist, x_edges, y_edges = np.histogram2d(data[0], data[1], bins=bins)
+                self.histograms[name] = hist
+                self.histograms[f"{name}_bin_x_edges"] = x_edges
+                self.histograms[f"{name}_bin_y_edges"] = y_edges
 
     def _fill_histograms(self):
         """
@@ -110,11 +126,10 @@ class LimitCalculator:
         limit calculation. Adds the histograms to the histogram dictionary.
         """
         for data_set in self.reader.data_sets:
+            self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
             file_info, _, event_data, triggered_data = self.reader.read_event_data(
                 self.event_data_file, table_name_map=data_set
             )
-            self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
-            # TODO Check that file_info is the same in all data sets
             self.limits = self.limits if self.limits else self._prepare_limit_data(file_info)
 
             self._fill_histogram_and_bin_edges(
@@ -149,6 +164,8 @@ class LimitCalculator:
         """
         Compute the limits based on the loss fraction.
 
+        Add or subtract one bin to be on the safe side of the limit.
+
         Parameters
         ----------
         hist : np.ndarray
@@ -165,21 +182,24 @@ class LimitCalculator:
         float
             Bin edge value corresponding to the threshold.
         """
-        cumulative_sum = np.cumsum(hist) if limit_type == "upper" else np.cumsum(hist[::-1])
         total_events = np.sum(hist)
         threshold = (1 - loss_fraction) * total_events
-        bin_index = np.searchsorted(cumulative_sum, threshold)
-
-        return bin_edges[bin_index] if limit_type == "upper" else bin_edges[-bin_index]
+        if limit_type == "upper":
+            cum = np.cumsum(hist)
+            idx = np.searchsorted(cum, threshold) + 1
+            return bin_edges[min(idx, len(bin_edges) - 1)]
+        if limit_type == "lower":
+            cum = np.cumsum(hist[::-1])
+            idx = np.searchsorted(cum, threshold) + 1
+            return bin_edges[max(len(bin_edges) - 1 - idx, 0)]
+        raise ValueError("limit_type must be 'lower' or 'upper'")
 
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
-        # TODO this needs to be replaced
-        # energy_array = np.array(self.event_data.simulated_energy)
         return np.logspace(
-            np.log10(0.003),
-            np.log10(200.0),
+            np.log10(self.file_info.get("energy_min", 1.0e-3)),
+            np.log10(self.file_info.get("energy_max", 1.0e3)),
             100,
         )
 
@@ -207,11 +227,9 @@ class LimitCalculator:
     @property
     def core_distance_bins(self):
         """Return bins for the core distance histogram."""
-        # TODO this needs to be replaced
-        # core_distances = np.array(self.event_data.core_distance_shower)
         return np.linspace(
-            0.0,
-            2500.0,
+            self.file_info.get("core_scatter_min", 0.0),
+            self.file_info.get("core_scatter_max", 1.0e5),
             100,
         )
 
@@ -242,11 +260,9 @@ class LimitCalculator:
     @property
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
-        # TODO this needs to be replaced
-        # angular_distances = np.array(self.triggered_data.angular_distance)
         return np.linspace(
-            0.0,
-            10.0,
+            self.file_info.get("viewcone_min", 0.0),
+            self.file_info.get("viewcone_max", 20.0),
             100,
         )
 
@@ -396,11 +412,12 @@ class LimitCalculator:
         lines=None,
     ):
         """Create and save a plot with the given parameters."""
-        fig = plt.figure(figsize=(8, 6))
         plot_params = plot_params or {}
         labels = labels or {}
         scales = scales or {}
         lines = lines or {}
+
+        fig, ax = plt.subplots(figsize=(8, 6))
 
         if plot_type == "histogram":
             plt.bar(bins[:-1], data, width=np.diff(bins), **plot_params)
@@ -420,14 +437,13 @@ class LimitCalculator:
             )
             plt.gca().add_artist(circle)
 
-        plt.xlabel(labels.get("x", ""))
-        plt.ylabel(labels.get("y", ""))
-        plt.title(labels.get("title", ""))
-
-        if "x" in scales:
-            plt.xscale(scales["x"])
-        if "y" in scales:
-            plt.yscale(scales["y"])
+        ax.set(
+            xlabel=labels.get("x", ""),
+            ylabel=labels.get("y", ""),
+            title=labels.get("title", ""),
+            xscale=scales.get("x", "linear"),
+            yscale=scales.get("y", "linear"),
+        )
 
         if output_file:
             self._logger.info(f"Saving plot to {output_file}")

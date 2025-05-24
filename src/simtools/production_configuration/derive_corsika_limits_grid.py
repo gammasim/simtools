@@ -3,6 +3,7 @@
 import datetime
 import logging
 
+import numpy as np
 from astropy.table import Column, Table
 
 import simtools.utils.general as gen
@@ -99,7 +100,9 @@ def write_results(results, args_dict):
 
 def _create_results_table(results, loss_fraction):
     """
-    Convert list of simulation results to an Astropy Table with metadata.
+    Convert list of simulation results to an astropy Table with metadata.
+
+    Round values to appropriate precision and add metadata.
 
     Parameters
     ----------
@@ -131,6 +134,17 @@ def _create_results_table(results, loss_fraction):
     for res in results:
         for k in cols:
             val = res.get(k, None)
+            if val is not None:
+                raw_val = val.value if hasattr(val, "unit") else val
+                if k == "lower_energy_limit":
+                    val = np.floor(raw_val * 1e3) / 1e3  # round down to 1 GeV
+                elif k == "upper_radius_limit":
+                    val = np.ceil(raw_val / 25) * 25  # round up to 25 m
+                elif k == "viewcone_radius":
+                    val = np.ceil(raw_val / 0.25) * 0.25  # round up to 0.25 deg
+                else:
+                    val = raw_val
+                _logger.debug(f"Adding {k}: {val} to column data (raw: {raw_val})")
             if hasattr(val, "unit"):
                 columns[k].append(val.value)
                 units[k] = val.unit

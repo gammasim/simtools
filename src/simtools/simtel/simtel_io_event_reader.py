@@ -44,7 +44,7 @@ class TriggeredEventData:
 
 
 class SimtelIOEventDataReader:
-    """Read reduced MC data set from FITS file."""
+    """Read reduced MC data set astropy tables."""
 
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize SimtelIOEventDataReader."""
@@ -348,10 +348,23 @@ class SimtelIOEventDataReader:
             Dictionary containing the reduced simulation file info.
         """
         particle_id = np.unique(simulation_file_info["particle_id"].data)
-        keys = ["zenith", "azimuth", "nsb_level"]
+        keys = [
+            "zenith",
+            "azimuth",
+            "nsb_level",
+            "energy_min",
+            "energy_max",
+            "viewcone_min",
+            "viewcone_max",
+            "core_scatter_min",
+            "core_scatter_max",
+        ]
         float_arrays = {}
         for key in keys:
-            float_arrays[key] = np.unique(np.round(simulation_file_info[key].data, decimals=2))
+            if key == "energy_min":
+                float_arrays[key] = np.unique(np.round(simulation_file_info[key].data, decimals=3))
+            else:
+                float_arrays[key] = np.unique(np.round(simulation_file_info[key].data, decimals=2))
 
         if any(len(arr) > 1 for arr in (particle_id, *(float_arrays[key] for key in keys))):
             self._logger.warning("Simulation file info has non-unique values.")
