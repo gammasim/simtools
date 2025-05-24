@@ -1,16 +1,4 @@
-"""
-Read reduced datasets from FITS tables.
-
-Allow to filter the events based on the triggered telescopes.
-Provide functionality to list events, e.g. through
-
-.. code-block:: console
-
-    from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
-    reader = SimtelIOEventDataReader("gamma_diffuse_60deg.hdf5", [1,2,3,4])
-    reader.print_event_table()
-
-"""
+"""Read reduced datasets in form of astropy tables from file."""
 
 import logging
 from dataclasses import dataclass, field
@@ -59,7 +47,7 @@ class SimtelIOEventDataReader:
     """Read reduced MC data set from FITS file."""
 
     def __init__(self, event_data_file, telescope_list=None):
-        """Initialize SimtelIOEventDataReader with the given event data file."""
+        """Initialize SimtelIOEventDataReader."""
         self._logger = logging.getLogger(__name__)
         self.telescope_list = telescope_list
 
@@ -140,6 +128,8 @@ class SimtelIOEventDataReader:
         """
         Convert TRIGGERS table to TriggeredEventData.
 
+        Converts telescope lists from comma-separated string to numpy array.
+
         Parameters
         ----------
         table : astropy.table.Table
@@ -165,13 +155,36 @@ class SimtelIOEventDataReader:
                     setattr(triggered_data, f"{col}_unit", table[col].unit)
         return triggered_data
 
-    def _get_triggered_shower_data(self, shower_data, trigger_table):
-        """Get shower data corresponding to triggered events."""
+    def _get_triggered_shower_data(
+        self, shower_data, triggered_file_id, triggered_event_id, triggered_shower_id
+    ):
+        """
+        Get shower data corresponding to triggered events.
+
+        Matches triggered events with showers based on shower_id, event_id, and file_id.
+
+        Parameters
+        ----------
+        shower_data : ShowerEventData
+            The shower data containing all showers.
+        triggered_file_id : list
+            List of file IDs for triggered events.
+        triggered_event_id : list
+            List of event IDs for triggered events.
+        triggered_shower_id : list
+            List of shower IDs for triggered events.
+
+        Returns
+        -------
+        ShowerEventData
+            An instance of ShowerEventData containing only the triggered showers.
+
+        """
         triggered_shower = ShowerEventData()
 
         matched_indices = []
         for tr_shower_id, tr_event_id, tr_file_id in zip(
-            trigger_table["shower_id"], trigger_table["event_id"], trigger_table["file_id"]
+            triggered_shower_id, triggered_event_id, triggered_file_id
         ):
             mask = (
                 (shower_data.shower_id == tr_shower_id)
@@ -196,24 +209,42 @@ class SimtelIOEventDataReader:
         return triggered_shower
 
     def read_event_data(self, event_data_file, table_name_map=None):
-        """Read event data from FITS file."""
-        if table_name_map is None:
-            table_name_map = {}
+        """
+        Read event data and file info tables from file and apply transformations.
+
+        Allows to map tables names to their actual names in the file
+        (e.g., "SHOWER" to "SHOWER_1").
+
+        Parameters
+        ----------
+        event_data_file : str
+            Path to the event data file.
+        table_name_map : dict, optional
+            Mapping of table names to their actual names in the file.
+            Defaults to using the standard names "SHOWERS", "TRIGGERS", and "FILE_INFO".
+
+        Returns
+        -------
+        tuple
+            A tuple with file info table, shower, triggered shower, and triggered event data.
+        """
+        table_name_map = table_name_map or {}
+
+        def get_name(key):
+            return table_name_map.get(key, key)
+
         tables = io_table_handler.read_tables(
             event_data_file,
-            table_names=[
-                table_name_map.get("SHOWERS", "SHOWERS"),
-                table_name_map.get("TRIGGERS", "TRIGGERS"),
-                table_name_map.get("FILE_INFO", "FILE_INFO"),
-            ],
+            table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
         )
 
-        shower_data = self._table_to_shower_data(tables[table_name_map.get("SHOWERS", "SHOWERS")])
-        triggered_data = self._table_to_triggered_data(
-            tables[table_name_map.get("TRIGGERS", "TRIGGERS")]
-        )
+        shower_data = self._table_to_shower_data(tables[get_name("SHOWERS")])
+        triggered_data = self._table_to_triggered_data(tables[get_name("TRIGGERS")])
         triggered_shower = self._get_triggered_shower_data(
-            shower_data, tables[table_name_map.get("TRIGGERS", "TRIGGERS")]
+            shower_data,
+            tables[get_name("TRIGGERS")]["file_id"],
+            tables[get_name("TRIGGERS")]["event_id"],
+            tables[get_name("TRIGGERS")]["shower_id"],
         )
 
         triggered_data.angular_distance = (
@@ -227,26 +258,22 @@ class SimtelIOEventDataReader:
             .value
         )
 
-        triggered_data = (
-            self._filter_by_telescopes(triggered_data, triggered_shower)
-            if self.telescope_list
-            else triggered_data
-        )
+        if self.telescope_list:
+            triggered_data, triggered_shower = self._filter_by_telescopes(
+                triggered_data, triggered_shower
+            )
 
         self._logger.info(f"Number of triggered events: {len(triggered_data.array_altitude)}")
-        self._logger.info(
-            f"Number of triggered shower events: {len(triggered_shower.simulated_energy)}"
-        )
 
         return (
-            tables[table_name_map.get("FILE_INFO", "FILE_INFO")],
+            tables[get_name("FILE_INFO")],
             shower_data,
             triggered_shower,
             triggered_data,
         )
 
     def _filter_by_telescopes(self, triggered_data, triggered_shower):
-        """Filter triggered data by the specified telescope list."""
+        """Filter trigger data and triggered shower data by the specified telescope list."""
         mask = np.array(
             [
                 any(tel in event for tel in self.telescope_list)
@@ -262,10 +289,14 @@ class SimtelIOEventDataReader:
             telescope_list=[triggered_data.telescope_list[i] for i in np.arange(len(mask))[mask]],
             angular_distance=triggered_data.angular_distance[mask],
         )
-        if filtered_triggered_data == triggered_shower:
-            self._logger.info("ABC")
+        filtered_triggered_shower_data = self._get_triggered_shower_data(
+            triggered_shower,
+            filtered_triggered_data.file_id,
+            filtered_triggered_data.event_id,
+            filtered_triggered_data.shower_id,
+        )
 
-        return filtered_triggered_data
+        return filtered_triggered_data, filtered_triggered_shower_data
 
     def _transform_to_shower_coordinates(self, x_core, y_core, shower_azimuth, shower_altitude):
         """
