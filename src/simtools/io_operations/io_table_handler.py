@@ -43,9 +43,7 @@ def _read_table_list_hdf5(input_file, table_names, include_indexed_tables):
             return
 
         for base in datasets:
-            if name == base:
-                datasets[base].append(name)
-            elif include_indexed_tables and is_indexed_variant(name, base):
+            if name == base or (include_indexed_tables and is_indexed_variant(name, base)):
                 datasets[base].append(name)
 
     with h5py.File(input_file, "r") as f:
