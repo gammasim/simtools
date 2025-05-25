@@ -1,3 +1,4 @@
+import astropy.units as u
 import h5py
 import numpy as np
 import pytest
@@ -11,6 +12,7 @@ from simtools.io_operations.io_table_handler import (
     copy_metadata_to_hdf5,
     merge_tables,
     read_table_file_type,
+    read_table_from_hdf5,
     read_table_list,
     read_tables,
     write_table_in_hdf5,
@@ -211,6 +213,13 @@ def test_merge_hdf5(mocker, tmp_path):
 
 
 def test_read_tables_hdf5(mocker):
+    """Test reading tables from HDF5 file."""
+    # Mock h5py.File context manager
+    mock_h5file = mocker.MagicMock()
+    mock_h5_context = mocker.MagicMock()
+    mock_h5_context.__enter__.return_value = mock_h5file
+    mocker.patch("h5py.File", return_value=mock_h5_context)
+
     mock_read = mocker.patch(ASTROPY_TABLE_READ)
     mock_table = Table({"col1": [1, 2]})
     mock_read.return_value = mock_table
@@ -722,3 +731,65 @@ def test_write_table_in_hdf5_unicode_append(mock_h5py_file):
     assert isinstance(appended_data, np.ndarray)
     for original in data["unicode_col"]:
         assert original.encode("ascii") in appended_data.tobytes()
+
+
+def test_read_table_from_hdf5_basic(mocker):
+    """Test basic reading from HDF5 without units."""
+    # Mock Table.read
+    mock_table = mocker.MagicMock(spec=Table)
+    mock_table.colnames = ["col1"]
+    mocker.patch(ASTROPY_TABLE_READ, return_value=mock_table)
+
+    # Mock h5py.File context
+    mock_file = mocker.MagicMock()
+    mock_dataset = mocker.MagicMock()
+    mock_dataset.attrs = {}
+    mock_file.__getitem__.return_value = mock_dataset
+    mock_context = mocker.MagicMock()
+    mock_context.__enter__.return_value = mock_file
+    mocker.patch(H5PY_FILE, return_value=mock_context)
+
+    result = read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME)
+
+    # Verify basic calls
+    mock_file.__getitem__.assert_called_once_with(TEST_TABLE_NAME)
+    assert result == mock_table
+
+
+def test_read_table_from_hdf5_with_units(mocker):
+    """Test reading from HDF5 with unit attributes."""
+    # Mock Table.read
+    mock_table = mocker.MagicMock(spec=Table)
+    mock_table.colnames = ["col1"]
+    mocker.patch(ASTROPY_TABLE_READ, return_value=mock_table)
+
+    # Mock h5py.File context
+    mock_file = mocker.MagicMock()
+    mock_dataset = mocker.MagicMock()
+    mock_dataset.attrs = {"col1_unit": "m"}
+    mock_file.__getitem__.return_value = mock_dataset
+    mock_context = mocker.MagicMock()
+    mock_context.__enter__.return_value = mock_file
+    mocker.patch(H5PY_FILE, return_value=mock_context)
+
+    result = read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME)
+
+    # Verify unit assignment
+    mock_table.__getitem__.assert_called_once_with("col1")
+    assert result == mock_table
+
+
+def test_write_table_in_hdf5_with_units(mocker, mock_h5py_file):
+    """Test writing table with units to HDF5."""
+    table = Table({"col1": [1, 2] * u.m, "col2": [3, 4] * u.s})
+    table.meta["EXTNAME"] = "table_with_units"
+
+    mock_dataset = mocker.MagicMock()
+    mock_h5py_file.create_dataset.return_value = mock_dataset
+    mock_h5py_file.__contains__.return_value = False
+
+    write_table_in_hdf5(table, "test.h5", "table_with_units")
+
+    # Verify unit attributes were set
+    mock_dataset.attrs.__setitem__.assert_any_call("col1_unit", "m")
+    mock_dataset.attrs.__setitem__.assert_any_call("col2_unit", "s")
