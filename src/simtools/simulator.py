@@ -751,7 +751,6 @@ class Simulator:
         ----------
         corsika_log_files: list
             List containing the original CORSIKA log file path.
-
         """
         original_log = Path(corsika_log_files[0])
         # Find which model version the original log belongs to
@@ -772,15 +771,20 @@ class Simulator:
                 original_version, model.model_version
             )
 
-            with gzip.open(new_log, "wt") as new_file:
-                new_file.write(
+            with gzip.open(new_log, "wt", encoding="utf-8") as new_file:
+                # Write the header to the new file
+                header = (
                     f"###############################################################\n"
                     f"Copy of CORSIKA log file from model version {original_version}.\n"
                     f"Applicable also for {model.model_version} (same CORSIKA configuration,\n"
                     f"different sim_telarray model versions in the same run).\n"
                     f"###############################################################\n\n"
                 )
-                with gzip.open(original_log, "rt") as orig_file:
-                    shutil.copyfileobj(orig_file, new_file)
+                new_file.write(header)
+
+                # Copy the content of the original log file, ignoring invalid characters
+                with gzip.open(original_log, "rt", encoding="utf-8", errors="ignore") as orig_file:
+                    for line in orig_file:
+                        new_file.write(line)
 
             corsika_log_files.append(str(new_log))
