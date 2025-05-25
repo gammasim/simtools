@@ -43,7 +43,7 @@ class LimitCalculator:
             "nsb_level": _file_info["nsb_level"],
             "telescope_ids": telescope_list,
             "lower_energy_limit": None,
-            "upper_radial_distance": None,
+            "upper_radius_limit": None,
             "viewcone_radius": None,
         }
 
@@ -62,7 +62,7 @@ class LimitCalculator:
             Dictionary containing the computed limits.
         """
         self.limits["lower_energy_limit"] = self.compute_lower_energy_limit(loss_fraction)
-        self.limits["upper_radius_limit"] = self.compute_upper_radial_distance(loss_fraction)
+        self.limits["upper_radius_limit"] = self.compute_upper_radius_limit(loss_fraction)
         self.limits["viewcone_radius"] = self.compute_viewcone(loss_fraction)
         return self.limits
 
@@ -132,7 +132,7 @@ class LimitCalculator:
             1000,
         )
 
-    def compute_upper_radial_distance(self, loss_fraction):
+    def compute_upper_radius_limit(self, loss_fraction):
         """
         Compute the upper radial distance based on the event loss fraction.
 
