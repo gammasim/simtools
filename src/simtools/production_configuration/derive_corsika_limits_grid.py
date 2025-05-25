@@ -132,37 +132,11 @@ def _create_results_table(results, loss_fraction):
     units = {}
 
     for res in results:
-        for k in cols:
-            val = res.get(k, None)
-            if val is not None:
-                raw_val = val
-                if k == "lower_energy_limit":
-                    val = np.floor(raw_val * 1e3) / 1e3  # round down to 1 GeV
-                elif k == "upper_radius_limit":
-                    val = np.ceil(raw_val / 25) * 25  # round up to 25 m
-                elif k == "viewcone_radius":
-                    val = np.ceil(raw_val / 0.25) * 0.25  # round up to 0.25 deg
-                else:
-                    val = raw_val
-                _logger.debug(f"Adding {k}: {val} to column data (raw: {raw_val})")
-            if hasattr(val, "unit"):
-                columns[k].append(val.value)
-                units[k] = val.unit
-            else:
-                columns[k].append(val)
-                if k not in units:
-                    units[k] = None
+        _process_result_row(res, cols, columns, units)
 
-    table_cols = []
-    for k in cols:
-        col_data = columns[k]
-        if any(isinstance(v, list | tuple) for v in col_data):
-            col = Column(data=col_data, name=k, unit=units.get(k), dtype=object)
-        else:
-            col = Column(data=col_data, name=k, unit=units.get(k))
-        table_cols.append(col)
-
+    table_cols = _create_table_columns(cols, columns, units)
     table = Table(table_cols)
+
     table.meta.update(
         {
             "created": datetime.datetime.now().isoformat(),
@@ -172,3 +146,44 @@ def _create_results_table(results, loss_fraction):
     )
 
     return table
+
+
+def _process_result_row(res, cols, columns, units):
+    """Process a single result row and add values to columns."""
+    for k in cols:
+        val = res.get(k, None)
+        if val is not None:
+            val = _round_value(k, val)
+            _logger.debug(f"Adding {k}: {val} to column data")
+
+        if hasattr(val, "unit"):
+            columns[k].append(val.value)
+            units[k] = val.unit
+        else:
+            columns[k].append(val)
+            if k not in units:
+                units[k] = None
+
+
+def _round_value(key, val):
+    """Round value based on key type."""
+    if key == "lower_energy_limit":
+        return np.floor(val * 1e3) / 1e3
+    if key == "upper_radius_limit":
+        return np.ceil(val / 25) * 25
+    if key == "viewcone_radius":
+        return np.ceil(val / 0.25) * 0.25
+    return val
+
+
+def _create_table_columns(cols, columns, units):
+    """Create table columns with appropriate data types."""
+    table_cols = []
+    for k in cols:
+        col_data = columns[k]
+        if any(isinstance(v, list | tuple) for v in col_data):
+            col = Column(data=col_data, name=k, unit=units.get(k), dtype=object)
+        else:
+            col = Column(data=col_data, name=k, unit=units.get(k))
+        table_cols.append(col)
+    return table_cols

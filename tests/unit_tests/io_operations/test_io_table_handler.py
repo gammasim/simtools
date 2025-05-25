@@ -39,6 +39,7 @@ DEST_H5 = "dest.h5"
 FILE1_H5 = "file1.h5"
 FILE2_H5 = "file2.h5"
 OUTPUT_HDF5 = "output.hdf5"
+TEST_CSV = "test.csv"
 
 
 @pytest.fixture
@@ -242,7 +243,7 @@ def test_read_tables_unsupported_format(mocker):
     mock_file_type.return_value = "CSV"
 
     with pytest.raises(ValueError, match="Unsupported file format"):
-        read_tables("test.csv", ["table1"])
+        read_tables(TEST_CSV, ["table1"])
 
 
 def test_read_tables_explicit_file_type(mocker):
@@ -497,10 +498,10 @@ def test_read_table_list_hdf5(mocker):
         return_value={"table1": ["table1"], "table2": ["table2"]},
     )
 
-    result = read_table_list("test.h5", ["table1", "table2"])
+    result = read_table_list(TEST_H5, ["table1", "table2"])
 
-    mock_read_type.assert_called_once_with("test.h5")
-    mock_read_hdf5.assert_called_once_with("test.h5", ["table1", "table2"], False)
+    mock_read_type.assert_called_once_with(TEST_H5)
+    mock_read_hdf5.assert_called_once_with(TEST_H5, ["table1", "table2"], False)
     assert result == {"table1": ["table1"], "table2": ["table2"]}
 
 
@@ -512,10 +513,10 @@ def test_read_table_list_fits(mocker):
         return_value={"table1": ["table1"], "table2": ["table2"]},
     )
 
-    result = read_table_list("test.fits", ["table1", "table2"], True)
+    result = read_table_list(TEST_FITS, ["table1", "table2"], True)
 
-    mock_read_type.assert_called_once_with("test.fits")
-    mock_read_fits.assert_called_once_with("test.fits", ["table1", "table2"], True)
+    mock_read_type.assert_called_once_with(TEST_FITS)
+    mock_read_fits.assert_called_once_with(TEST_FITS, ["table1", "table2"], True)
     assert result == {"table1": ["table1"], "table2": ["table2"]}
 
 
@@ -523,9 +524,9 @@ def test_read_table_list_unsupported_format(mocker):
     """Test read_table_list with unsupported file format."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="CSV")
 
-    result = read_table_list("test.csv", ["table1"])
+    result = read_table_list(TEST_CSV, ["table1"])
 
-    mock_read_type.assert_called_once_with("test.csv")
+    mock_read_type.assert_called_once_with(TEST_CSV)
     assert result is None
 
 
@@ -539,7 +540,7 @@ def test_read_table_list_hdf5_basic(mocker, mock_h5py_file):
         x("table2", dataset2),
     ]
 
-    result = _read_table_list_hdf5("test.h5", ["table1", "table2"], False)
+    result = _read_table_list_hdf5(TEST_H5, ["table1", "table2"], False)
 
     assert result == {"table1": ["table1"], "table2": ["table2"]}
 
@@ -561,7 +562,7 @@ def test_read_table_list_hdf5_with_indexed(mocker, mock_h5py_file):
 
     mock_h5py_file.visititems.side_effect = mock_visititems
 
-    result = _read_table_list_hdf5("test.h5", ["table1", "table2"], True)
+    result = _read_table_list_hdf5(TEST_H5, ["table1", "table2"], True)
 
     assert result == {
         "table1": ["table1", "table1_0", "table1_1"],
@@ -581,7 +582,7 @@ def test_read_table_list_hdf5_ignore_non_datasets(mocker, mock_h5py_file):
 
     mock_h5py_file.visititems.side_effect = mock_visititems
 
-    result = _read_table_list_hdf5("test.h5", ["table1"], False)
+    result = _read_table_list_hdf5(TEST_H5, ["table1"], False)
 
     assert result == {"table1": ["table1"]}
 
@@ -597,7 +598,7 @@ def test_read_table_list_hdf5_ignore_invalid_suffix(mocker, mock_h5py_file):
 
     mock_h5py_file.visititems.side_effect = mock_visititems
 
-    result = _read_table_list_hdf5("test.h5", ["table1"], True)
+    result = _read_table_list_hdf5(TEST_H5, ["table1"], True)
 
     assert result == {"table1": ["table1"]}
 
@@ -606,7 +607,7 @@ def test_read_table_list_hdf5_empty_file(mock_h5py_file):
     """Test reading from an empty HDF5 file."""
     mock_h5py_file.visititems.side_effect = lambda x: None
 
-    result = _read_table_list_hdf5("test.h5", ["table1", "table2"], False)
+    result = _read_table_list_hdf5(TEST_H5, ["table1", "table2"], False)
 
     assert result == {"table1": [], "table2": []}
 
@@ -641,7 +642,7 @@ def test_read_table_list_fits_basic(mocker):
 
     mocker.patch("astropy.io.fits.open", return_value=mock_fits_open)
 
-    result = _read_table_list_fits("test.fits", ["table1", "table2"], False)
+    result = _read_table_list_fits(TEST_FITS, ["table1", "table2"], False)
 
     assert result == {"table1": ["table1"], "table2": ["table2"]}
 
@@ -687,7 +688,7 @@ def test_read_table_list_fits_with_indexed(mocker):
 
     mocker.patch("astropy.io.fits.open", return_value=mock_fits_open)
 
-    result = _read_table_list_fits("test.fits", ["table1", "table2"], True)
+    result = _read_table_list_fits(TEST_FITS, ["table1", "table2"], True)
 
     assert result == {
         "table1": ["table1", "table1_0", "table1_1"],
@@ -788,7 +789,7 @@ def test_write_table_in_hdf5_with_units(mocker, mock_h5py_file):
     mock_h5py_file.create_dataset.return_value = mock_dataset
     mock_h5py_file.__contains__.return_value = False
 
-    write_table_in_hdf5(table, "test.h5", "table_with_units")
+    write_table_in_hdf5(table, TEST_H5, "table_with_units")
 
     # Verify unit attributes were set
     mock_dataset.attrs.__setitem__.assert_any_call("col1_unit", "m")
