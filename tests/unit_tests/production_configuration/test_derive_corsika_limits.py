@@ -244,7 +244,7 @@ def test_create_plot_histogram(
     mock_tight_layout.assert_called_once()
     mock_show.assert_called_once()
 
-    mock_axvline.call_count == 2
+    mock_axvline.assert_called_once()
     mock_circle.assert_called_once()
     assert fig == mock_figure.return_value
 

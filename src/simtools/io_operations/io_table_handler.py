@@ -32,18 +32,21 @@ def _read_table_list_hdf5(input_file, table_names, include_indexed_tables):
     """Read available tables from HDF5 file."""
     datasets = {name: [] for name in table_names}
 
+    def is_indexed_variant(name, base):
+        if not name.startswith(f"{base}_"):
+            return False
+        suffix = name[len(base) + 1 :]
+        return suffix.isdigit()
+
     def visitor(name, obj):
         if not isinstance(obj, h5py.Dataset):
             return
 
         for base in datasets:
-            if not include_indexed_tables:
-                if name == base:
-                    datasets[base].append(name)
-            elif name == base or name.startswith(f"{base}_"):
-                suffix = name[len(base) + 1 :]
-                if name == base or suffix.isdigit():
-                    datasets[base].append(name)
+            if name == base:
+                datasets[base].append(name)
+            elif include_indexed_tables and is_indexed_variant(name, base):
+                datasets[base].append(name)
 
     with h5py.File(input_file, "r") as f:
         f.visititems(visitor)
@@ -133,7 +136,7 @@ def read_table_file_type(input_files):
     return file_types.pop()
 
 
-def _merge(input_files, table_names, file_type, output_file):
+def _merge(input_files, table_names, file_type, output_file, add_file_id_to_table_name=True):
     """
     Merge tables from multiple input files into single tables.
 
@@ -145,27 +148,35 @@ def _merge(input_files, table_names, file_type, output_file):
         List of table names to be merged from each input file.
     file_type : str
         Type of the input files ('HDF5' or 'FITS').
+    add_file_id_to_table_name : bool, optional
+        If True, appends the file index to the table name.
 
     Returns
     -------
     dict
         Dictionary with table names as keys and merged astropy tables as values.
     """
-    add_file_id_to_table_name = True
     merged = {name: [] for name in table_names}
+    is_hdf5 = file_type == "HDF5"
+
+    def update_file_id(table, idx):
+        if "file_id" in table.colnames:
+            table["file_id"] = idx
+
+    def process_table(table, key, idx):
+        table_name = f"{key}_{idx}" if add_file_id_to_table_name else key
+        update_file_id(table, idx)
+        if is_hdf5:
+            write_table_in_hdf5(table, output_file, table_name)
+            if idx == 0:
+                copy_metadata_to_hdf5(input_files[0], output_file, table_name)
+        else:
+            merged[key].append(table)
 
     for idx, file in enumerate(input_files):
         tables = read_tables(file, table_names, file_type)
         for key, table in tables.items():
-            table_name = f"{key}_{idx}" if add_file_id_to_table_name else key
-            if "file_id" in table.colnames:  # update file_id
-                table["file_id"] = idx
-            if file_type == "HDF5":
-                write_table_in_hdf5(table, output_file, table_name)
-                if idx == 0:
-                    copy_metadata_to_hdf5(file, output_file, table_name)
-            else:
-                merged[key].append(table)
+            process_table(table, key, idx)
 
     if file_type != "HDF5":
         merged = {k: vstack(v, metadata_conflicts="silent") for k, v in merged.items()}
