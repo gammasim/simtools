@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=caf8a915"></script>
+    <script src="../_static/documentation_options.js?v=425baead"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/productions';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Simulation Software" href="simulation_software.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gedb2375" />
+  <meta name="docsearch:version" content="0.1.dev1+g2b9be07" />
   </head>
   
   
@@ -466,26 +466,42 @@
   <section id="simulation-productions">
 <h1>Simulation Productions<a class="headerlink" href="#simulation-productions" title="Link to this heading">#</a></h1>
 <p>Simtools allows large-scale productions of simulated events required for the calculation of instrument response functions.
-Simtools is designed to use the CTAO workload management system, but it is flexible enough to work with other job engines such as Grid Engine and HTCondor.</p>
+Simtools is designed to use the CTAO workload management system (WMS) and the HT Condor job submission system.</p>
 <p>Pre-requisites for running productions:</p>
 <ul class="simple">
-<li><p>the required simulation software (typically CORSIKA and sim_telarray) are installed on the system (findable through <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_SIMTEL_PATH</span></code>)</p></li>
-<li><p>a complete simulation model is accessible through the simulation model database</p></li>
-<li><p>production configuration exists (see e.g., <a class="reference internal" href="#../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_gamma_20_deg_North.yml</span></a>)</p></li>
-<li><p>simtools is installed and configured on the job submission host</p></li>
+<li><p>simtools is installed and configured on the job submission host.</p></li>
+<li><p>simulation software (CORSIKA and sim_telarray) are installed on the worker nodes or installed in a container (findable through <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_SIMTEL_PATH</span></code>) .</p></li>
+<li><p>simulation models are accessible through the simulation model database. This includes both the production tables and the model parameters.</p></li>
+<li><p>configuration parameters for the production (see e.g., <a class="reference internal" href="#../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_gamma_20_deg_North.yml</span></a>)</p></li>
 </ul>
-<p>Productions are configured and submitted using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command.
-The submit engine is configured with the <code class="docutils literal notranslate"><span class="pre">--submit_engine</span></code> command line option.</p>
-<section id="running-local-production">
-<h2>Running local production<a class="headerlink" href="#running-local-production" title="Link to this heading">#</a></h2>
-<p>Choose with <code class="docutils literal notranslate"><span class="pre">SUBMIT_ENGINE:</span> <span class="pre">local</span></code> (default value).</p>
-<p>Running a local production is a simple way to test the production system, but too slow for anything else.</p>
+<p>Productions are configured and submitted using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> application (or <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> for HTCondor jobs).</p>
+<section id="local-productions">
+<h2>Local productions<a class="headerlink" href="#local-productions" title="Link to this heading">#</a></h2>
+<p>Configure and submit a local production using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command.
+The submit engine is configured with the <code class="docutils literal notranslate"><span class="pre">--submit_engine</span> <span class="pre">local</span></code> command line option, see
+<a class="reference internal" href="#../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_gamma_20_deg_North.yml</span></a> for an example configuration.</p>
+<p>Running a local production is a simple way to test the production system, but in general too slow to simulate a large number of events.</p>
 </section>
-<section id="running-productions-using-hccondor-or-grid-engine">
-<h2>Running productions using HCCondor or Grid Engine<a class="headerlink" href="#running-productions-using-hccondor-or-grid-engine" title="Link to this heading">#</a></h2>
-<p>Choose with <code class="docutils literal notranslate"><span class="pre">SUBMIT_ENGINE:</span> <span class="pre">htcondor</span></code> or <code class="docutils literal notranslate"><span class="pre">SUBMIT_ENGINE:</span> <span class="pre">gridengine</span></code>.</p>
-<p>HTCondor can be configured with additional options, e.g. <code class="docutils literal notranslate"><span class="pre">SUBMIT_OPTIONS:</span> <span class="pre">&quot;priority</span> <span class="pre">=</span> <span class="pre">50&quot;</span></code></p>
-<p>Job submission using HTCondor or Grid Engine is the preferred way to run medium-scale productions (hundreds of runs). However, the current implementation in simtools is not using any features of those job engines for efficient job submissions (jobs are configured and submitted one-by-one) and therefore probably not suitable for large-scale productions.</p>
+<section id="running-simtools-on-htcondor-using-apptainers">
+<h2>Running simtools on HTCondor using Apptainers<a class="headerlink" href="#running-simtools-on-htcondor-using-apptainers" title="Link to this heading">#</a></h2>
+<p>Simtools can be run using HTCondor and Apptainers. Jobs are configured with the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> command.
+Configuration is similar to the <code class="docutils literal notranslate"><span class="pre">simulate-prod</span></code> command, with the following additions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">APPTAINER_IMAGE</span></code> is the path to the Apptainer image to be used for the simulation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PRIORITY</span></code> is the priority of the job in HTCondor.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUN_NUMBER</span></code> and <code class="docutils literal notranslate"><span class="pre">NUMBER_OF_RUNS</span></code> are the first run number and the number of runs to be simulated.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> tool generates two files:</p>
+<ul class="simple">
+<li><p>a condor submission file to specify the apptainer, the number of jobs (equals the number of runs), the priority, and the output files.</p></li>
+<li><p>a condor submission script with the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command to be run in the apptainer.</p></li>
+</ul>
+<p>An example for the configuration <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> can be found in <a class="reference internal" href="#tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_htcondor_generator_gamma_20_deg_North.yml</span></a>.</p>
+<p>Container images are available from the GitHub and CTAO container registries and can be converted to Apptainer images using the <code class="docutils literal notranslate"><span class="pre">apptainer</span> <span class="pre">build</span></code> command.
+Example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>build<span class="w"> </span>simtools.sif<span class="w"> </span>docker://ghcr.io/gammasim/simtools-prod-250304-corsika-78000-bernlohr-1.69-prod6-baseline-qgs3-avx2:20250507-154410
+</pre></div>
+</div>
 </section>
 <section id="running-grid-productions">
 <h2>Running Grid Productions<a class="headerlink" href="#running-grid-productions" title="Link to this heading">#</a></h2>
@@ -543,8 +559,8 @@ The submit engine is configured with the <code class="docutils literal notransla
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-local-production">Running local production</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-productions-using-hccondor-or-grid-engine">Running productions using HCCondor or Grid Engine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-productions">Local productions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-simtools-on-htcondor-using-apptainers">Running simtools on HTCondor using Apptainers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-grid-productions">Running Grid Productions</a></li>
 </ul>
   </nav></div>
