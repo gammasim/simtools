@@ -132,13 +132,13 @@ def test_compute_lower_energy_limit(mock_reader, hdf5_file_name, mocker):
     assert result == expected
 
 
-def test_compute_upper_radial_distance(mock_reader, hdf5_file_name, mocker):
+def test_compute_upper_radius_limit(mock_reader, hdf5_file_name, mocker):
     calculator = LimitCalculator(hdf5_file_name)
 
     mock_hist = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
     mock_bins = calculator.core_distance_bins
     calculator.histograms = {"core_distance": mock_hist, "core_distance_bin_edges": mock_bins}
-    result = calculator.compute_upper_radial_distance(0.2)
+    result = calculator.compute_upper_radius_limit(0.2)
 
     assert isinstance(result, u.Quantity)
     assert result.unit == u.m
@@ -287,7 +287,7 @@ def test_compute_limits_all_directions(mock_reader, mocker, hdf5_file_name):
         calculator, "compute_lower_energy_limit", return_value=mock_energy_limit
     )
     mock_radius_limit_fn = mocker.patch.object(
-        calculator, "compute_upper_radial_distance", return_value=mock_radius_limit
+        calculator, "compute_upper_radius_limit", return_value=mock_radius_limit
     )
     mock_viewcone_fn = mocker.patch.object(
         calculator, "compute_viewcone", return_value=mock_viewcone_limit
@@ -484,7 +484,7 @@ def test_prepare_limit_data(mock_reader, hdf5_file_name, mocker):
     assert result["array_name"] == calculator.array_name
     assert result["telescope_ids"] == calculator.telescope_list
     assert result["lower_energy_limit"] is None
-    assert result["upper_radial_distance"] is None
+    assert result["upper_radius_limit"] is None
     assert result["viewcone_radius"] is None
 
 
