@@ -119,7 +119,7 @@ def _parse(label, description):
         required=True,
         nargs="+",
         type=float,
-        help="List of camera offsets in deg that describe the supplied DL2 files..",
+        help="List of camera offsets in deg that describe the supplied DL2 files.",
     )
     config.parser.add_argument(
         "--plot_production_statistics",
