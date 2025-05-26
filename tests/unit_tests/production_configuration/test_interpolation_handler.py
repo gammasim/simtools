@@ -43,7 +43,8 @@ def handler(test_fits_file, test_fits_file_2, metric):
     evaluator2 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
-
+    evaluator1.calculate_metrics()
+    evaluator2.calculate_metrics()
     # Sample grid points production
     grid_points_production = [
         {
@@ -189,7 +190,8 @@ def test_handling_of_nonuniform_energy_grids(test_fits_file, test_fits_file_2, m
     evaluator2 = StatisticalUncertaintyEvaluator(
         file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
-
+    evaluator1.calculate_metrics()
+    evaluator2.calculate_metrics()
     # Modify one evaluator's energy grid to force them to be different
     # This is just for testing - in real use they might naturally be different
     if np.array_equal(evaluator1.data["bin_edges_low"], evaluator2.data["bin_edges_low"]):
