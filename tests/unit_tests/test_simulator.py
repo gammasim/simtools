@@ -538,7 +538,41 @@ def test_pack_for_register_with_multiple_versions(
         )
 
 
-def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_test_directory):
+def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_path):
+    original_content = b"Original CORSIKA log content."
+    expected_content = "Original CORSIKA log content."
+    helper_test_copy_corsika_log_file(
+        array_simulator, mocker, tmp_path, original_content, expected_content
+    )
+
+
+def test_copy_corsika_log_file_for_all_versions_with_non_unicode(array_simulator, mocker, tmp_path):
+    original_content = b"Valid line 1\nValid line 2\nInvalid line \x80\x81\n"
+    expected_content = "Valid line 1\nValid line 2\nInvalid line"
+    helper_test_copy_corsika_log_file(
+        array_simulator, mocker, tmp_path, original_content, expected_content
+    )
+
+
+def helper_test_copy_corsika_log_file(
+    array_simulator, mocker, tmp_path, original_content, expected_content
+):
+    """
+    Helper function to test _copy_corsika_log_file_for_all_versions.
+
+    Parameters
+    ----------
+    array_simulator: Simulator
+        The simulator instance.
+    mocker: pytest-mocker
+        The mocker instance for mocking objects.
+    tmp_path: Path
+        Temporary directory for creating test files.
+    original_content: bytes
+        The content to write to the original log file.
+    expected_content: str
+        The expected content in the new log file.
+    """
     # Mock array_models with multiple versions
     array_simulator.array_models = [
         mocker.Mock(model_version="5.0.0"),
@@ -546,13 +580,13 @@ def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_tes
     ]
 
     # Create a temporary directory for log files
-    original_log_dir = tmp_test_directory / "logs"
+    original_log_dir = tmp_path / "logs"
     original_log_dir.mkdir()
 
     # Create a mock original log file
     original_log_file = original_log_dir / "log_file_5.0.0.log.gz"
-    with gzip.open(original_log_file, "wt") as f:
-        f.write("Original CORSIKA log content.")
+    with gzip.open(original_log_file, "wb") as f:
+        f.write(original_content)
 
     # Mock the input corsika_log_files list
     corsika_log_files = [str(original_log_file)]
@@ -565,11 +599,11 @@ def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_tes
     assert new_log_file.exists()
 
     # Verify the content of the new log file
-    with gzip.open(new_log_file, "rt") as f:
+    with gzip.open(new_log_file, "rt", encoding="utf-8") as f:
         content = f.read()
         assert "Copy of CORSIKA log file from model version 5.0.0." in content
         assert "Applicable also for 6.0.0" in content
-        assert "Original CORSIKA log content." in content
+        assert expected_content in content
 
     # Ensure the new log file was added to the corsika_log_files list
     assert str(new_log_file) in corsika_log_files
