@@ -386,3 +386,35 @@ def test_initialize_evaluators_with_valid_files(mock_handler):
         assert len(mock_handler.evaluator_instances) == expected_count
 
         assert mock_evaluator_instance.calculate_metrics.call_count == expected_count
+
+
+def test_perform_interpolation_with_grid_points(mock_handler):
+    """Test perform_interpolation with grid points."""
+    mock_evaluator = MagicMock()
+    mock_evaluator.data = {
+        "bin_edges_low": np.array([1.0, 10.0, 100.0]),
+        "bin_edges_high": np.array([10.0, 100.0, 1000.0]),
+    }
+    mock_handler.evaluator_instances = [mock_evaluator]
+
+    mock_handler.grid_points_production = {
+        "grid_points": [
+            {"azimuth": {"value": 0}, "zenith_angle": {"value": 20}},
+            {"azimuth": {"value": 0}, "zenith_angle": {"value": 40}},
+        ]
+    }
+
+    mock_interp = MagicMock()
+    mock_interp.interpolate.return_value = np.array([100])
+
+    with patch(
+        "simtools.production_configuration.derive_production_statistics_handler.InterpolationHandler",
+        return_value=mock_interp,
+    ):
+        result = mock_handler.perform_interpolation()
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0]["interpolated_production_statistics"] == 100
+
+        assert mock_interp.interpolate.called
