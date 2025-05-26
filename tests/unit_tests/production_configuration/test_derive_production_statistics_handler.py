@@ -165,7 +165,6 @@ def test_perform_interpolation_with_evaluators(mock_interpolate, mock_handler):
     mock_interp_handler = MagicMock()
     mock_interp_handler.interpolate.return_value = np.array([100, 200])
     mock_handler.interpolation_handler = mock_interp_handler
-
     original_method = mock_handler.perform_interpolation
 
     def simplified_perform_interpolation():
