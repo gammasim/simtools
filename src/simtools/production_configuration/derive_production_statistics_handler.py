@@ -124,8 +124,9 @@ class ProductionStatisticsHandler:
         """Write the derived event statistics to a file."""
         output_data = (production_statistics,)
         output_filename = self.args["output_file"]
-        self.output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(f"{self.output_path}/{output_filename}", "w", encoding="utf-8") as f:
+        self.output_path.mkdir(parents=True, exist_ok=True)
+        output_file_path = self.output_path.joinpath(output_filename)
+        with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=4)
         self.logger.info(f"Output saved to {self.output_path}")
 
