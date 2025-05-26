@@ -51,15 +51,6 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(generate-simulation-config)=
-
-## generate_simulation_config
-
-```{eval-rst}
-.. automodule:: production_configuration.generate_simulation_config
-   :members:
-```
-
 (interpolation-handler)=
 
 ## interpolation_handler
