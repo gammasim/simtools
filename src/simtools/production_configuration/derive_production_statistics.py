@@ -48,7 +48,6 @@ class ProductionStatisticsDerivator:
             Array of scaling factors for each energy bin.
         """
         uncertainty_effective_area = self.evaluator.metric_results.get("uncertainty_effective_area")
-
         relative_uncertainties = uncertainty_effective_area.get("relative_uncertainties")
         energy_range = (
             self.metrics.get("uncertainty_effective_area").get("energy_range").get("value")
