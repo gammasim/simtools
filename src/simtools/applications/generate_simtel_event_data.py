@@ -98,6 +98,7 @@ def main():  # noqa: D103
     generator.write(
         output_filepath,
         tables=tables,
+        overwrite_existing=True,
     )
     MetadataCollector.dump(args_dict=args_dict, output_file=output_filepath.with_suffix(".yml"))
 
