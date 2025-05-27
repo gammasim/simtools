@@ -63,9 +63,14 @@ def test_eventio_id():
         -1: "positron",
         2: "muon-",
         -2: "muon+",
+        100: "neutron",
         101: "proton",
         -101: "p~",
         402: "helium",
+        1206: "C12",
+        1407: "nitrogen",
+        2814: "silicon",
+        5626: "iron",
     }
     for eventio_id, name in test_dict.items():
         p = PrimaryParticle(particle_id_type="eventio_id", particle_id=eventio_id)
