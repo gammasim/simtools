@@ -29,20 +29,20 @@ class TableSchemas:
         "shower_id": (np.uint32, None),
         "event_id": (np.uint32, None),
         "file_id": (np.uint32, None),
-        "simulated_energy": (float, u.TeV),
-        "x_core": (float, u.m),
-        "y_core": (float, u.m),
-        "shower_azimuth": (float, u.rad),
-        "shower_altitude": (float, u.rad),
-        "area_weight": (float, None),
+        "simulated_energy": (np.float64, u.TeV),
+        "x_core": (np.float64, u.m),
+        "y_core": (np.float64, u.m),
+        "shower_azimuth": (np.float64, u.rad),
+        "shower_altitude": (np.float64, u.rad),
+        "area_weight": (np.float64, None),
     }
 
     trigger_schema = {
         "shower_id": (np.uint32, None),
         "event_id": (np.uint32, None),
         "file_id": (np.uint32, None),
-        "array_altitude": (float, u.rad),
-        "array_azimuth": (float, u.rad),
+        "array_altitude": (np.float64, u.rad),
+        "array_azimuth": (np.float64, u.rad),
         "telescope_list": (str, None),  # Store as comma-separated string
     }
 
@@ -50,15 +50,15 @@ class TableSchemas:
         "file_name": (str, None),
         "file_id": (np.uint32, None),
         "particle_id": (np.uint32, None),
-        "energy_min": (float, u.TeV),
-        "energy_max": (float, u.TeV),
-        "viewcone_min": (float, u.deg),
-        "viewcone_max": (float, u.deg),
-        "core_scatter_min": (float, u.m),
-        "core_scatter_max": (float, u.m),
-        "zenith": (float, u.deg),
-        "azimuth": (float, u.deg),
-        "nsb_level": (float, None),
+        "energy_min": (np.float64, u.TeV),
+        "energy_max": (np.float64, u.TeV),
+        "viewcone_min": (np.float64, u.deg),
+        "viewcone_max": (np.float64, u.deg),
+        "core_scatter_min": (np.float64, u.m),
+        "core_scatter_max": (np.float64, u.m),
+        "zenith": (np.float64, u.deg),
+        "azimuth": (np.float64, u.deg),
+        "nsb_level": (np.float64, None),
     }
 
 
@@ -233,7 +233,7 @@ class SimtelIOEventDataWriter:
                 trigger_info = obj.parse()
                 telescopes = (
                     trigger_info["triggered_telescopes"]
-                    if len(trigger_info["triggered_telescopes"])
+                    if len(trigger_info["triggered_telescopes"]) > 0
                     else []
                 )
             if isinstance(obj, TrackingPosition):
@@ -270,7 +270,8 @@ class SimtelIOEventDataWriter:
 
         Hardwired values are used for "dark", "half", and "full" NSB levels
         (actual values are made up for this example). Will be replaced with
-        reading of sim_telarray metadata entry for NSB level (to be implemented).
+        reading of sim_telarray metadata entry for NSB level (to be implemented,
+        see issue #1572).
 
         Parameters
         ----------
