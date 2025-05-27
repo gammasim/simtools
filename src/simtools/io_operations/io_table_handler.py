@@ -234,7 +234,7 @@ def read_table_from_hdf5(file, table_name):
     return table
 
 
-def write_tables(tables, output_file, file_type=None):
+def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
     """
     Write tables to file (overwriting if exists).
 
@@ -244,6 +244,8 @@ def write_tables(tables, output_file, file_type=None):
         List or Dictionary with astropy tables as values.
     output_file : str or Path
         Path to the output file.
+    overwrite_existing : bool
+        If True, overwrite the output file if it exists.
     file_type : str
         Type of the output file ('HDF5' or 'FITS').
 
@@ -254,7 +256,10 @@ def write_tables(tables, output_file, file_type=None):
     output_file = Path(output_file)
     file_type = file_type or read_table_file_type([output_file])
     if output_file.exists():
-        output_file.unlink()
+        if overwrite_existing:
+            output_file.unlink()
+        else:
+            raise FileExistsError(f"Output file {output_file} already exists.")
     hdus = [fits.PrimaryHDU()]
     if isinstance(tables, dict):
         tables = list(tables.values())
