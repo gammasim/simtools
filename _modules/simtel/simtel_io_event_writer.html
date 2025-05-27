@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=d94b7da8"></script>
+    <script src="../../_static/documentation_options.js?v=39207ee9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_io_event_writer';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gac809a8" />
+  <meta name="docsearch:version" content="0.1.dev1+gaf90e7e" />
   </head>
   
   
@@ -394,13 +394,16 @@
                 <article class="bd-article">
                   
   <h1>Source code for simtel.simtel_io_event_writer</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Generate a reduced dataset from given simulation event list and save the output to file.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Generate a reduced dataset from sim_telarray output files using astropy tables.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">tables</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ArrayEvent</span><span class="p">,</span>
@@ -411,42 +414,46 @@
     <span class="n">TriggerInformation</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_file_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_corsika_run_header</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_circular_mean</span>
 
-<span class="n">DEFAULT_FILTERS</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Filters</span><span class="p">(</span><span class="n">complevel</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">complib</span><span class="o">=</span><span class="s2">&quot;zlib&quot;</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitshuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="ShowerEventData">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.ShowerEventData">[docs]</a>
+<div class="viewcode-block" id="TableSchemas">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.TableSchemas">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ShowerEventData</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shower event data.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TableSchemas</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define schemas for output tables with units.&quot;&quot;&quot;</span>
 
-    <span class="n">simulated_energy</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">x_core</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">y_core</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">shower_azimuth</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">shower_altitude</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">shower_id</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">area_weight</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">shower_schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;shower_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;simulated_energy&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="s2">&quot;x_core&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s2">&quot;y_core&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s2">&quot;shower_azimuth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">),</span>
+        <span class="s2">&quot;shower_altitude&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">),</span>
+        <span class="s2">&quot;area_weight&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">}</span>
 
-    <span class="n">x_core_shower</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">y_core_shower</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">core_distance_shower</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+    <span class="n">trigger_schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;shower_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;array_altitude&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">),</span>
+        <span class="s2">&quot;array_azimuth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">),</span>
+        <span class="s2">&quot;telescope_list&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>  <span class="c1"># Store as comma-separated string</span>
+    <span class="p">}</span>
 
-
-
-<div class="viewcode-block" id="TriggeredEventData">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.TriggeredEventData">[docs]</a>
-<span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">TriggeredEventData</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Triggered event data.&quot;&quot;&quot;</span>
-
-    <span class="n">triggered_id</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">array_altitudes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">array_azimuths</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">trigger_telescope_list_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">angular_distance</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+    <span class="n">file_info_schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;file_name&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;particle_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+        <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+        <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">}</span></div>
 
 
 
@@ -454,78 +461,141 @@
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SimtelIOEventDataWriter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate a reduced dataset from given simulation event list and save the output to file.</span>
+<span class="sd">    Process sim_telarray events and write tables to file.</span>
+
+<span class="sd">    Extracts essential information from sim_telarray output files:</span>
+
+<span class="sd">    - Shower parameters (energy, core location, direction)</span>
+<span class="sd">    - Trigger patterns</span>
+<span class="sd">    - Telescope pointing</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    input_files : list</span>
 <span class="sd">        List of input file paths to process.</span>
-<span class="sd">    output_file : str</span>
-<span class="sd">        Path to the output file.</span>
 <span class="sd">    max_files : int, optional</span>
 <span class="sd">        Maximum number of files to process.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">max_files</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_files</span><span class="p">,</span> <span class="n">max_files</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_files</span> <span class="o">=</span> <span class="n">input_files</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">output_file</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">max_files</span> <span class="o">=</span> <span class="n">max_files</span> <span class="k">if</span> <span class="n">max_files</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;No input files provided.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shower</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_offset</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span> <span class="o">=</span> <span class="n">ShowerEventData</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span> <span class="o">=</span> <span class="n">TriggeredEventData</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trigger_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="SimtelIOEventDataWriter.process_files">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process the input files and store them in an file.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_offset</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process input files and return tables.&quot;&quot;&quot;</span>
+        <span class="c1"># Process all files</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_files</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_files</span><span class="p">]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing file </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_files</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_file</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_files</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_files</span><span class="p">],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing file </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_files</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_process_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1e7</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_write_data</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_offset</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_reset_data</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_write_data</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_tables</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="SimtelIOEventDataWriter.get_event_data">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_event_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_event_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create astropy tables from collected data.&quot;&quot;&quot;</span>
+        <span class="n">tables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span><span class="p">,</span> <span class="n">TableSchemas</span><span class="o">.</span><span class="n">shower_schema</span><span class="p">,</span> <span class="s2">&quot;SHOWERS&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_data</span><span class="p">,</span> <span class="n">TableSchemas</span><span class="o">.</span><span class="n">trigger_schema</span><span class="p">,</span> <span class="s2">&quot;TRIGGERS&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="p">,</span> <span class="n">TableSchemas</span><span class="o">.</span><span class="n">file_info_schema</span><span class="p">,</span> <span class="s2">&quot;FILE_INFO&quot;</span><span class="p">),</span>
+        <span class="p">]:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">schema</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_units_to_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+            <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tables</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_units_to_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add units to a single table&#39;s columns.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span>
+
+<div class="viewcode-block" id="SimtelIOEventDataWriter.write">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.write">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return shower and triggered event data.</span>
+<span class="sd">        Write tables to file.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ShowerEventData, TriggeredEventData</span>
-<span class="sd">            Shower and triggered event data.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        output_file : Path</span>
+<span class="sd">            Path to the output file.</span>
+<span class="sd">        tables : list</span>
+<span class="sd">            List of astropy tables to write.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Save reduced dataset to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;fits.gz&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">output_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.fits&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fits</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">output_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_hdf5</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unsupported file format: </span><span class="si">{</span><span class="n">output_file</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Supported formats are .fits and .hdf5&quot;</span>
+            <span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write tables to a FITS file.&quot;&quot;&quot;</span>
+        <span class="n">hdu_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">fits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">()]</span>  <span class="c1"># Primary HDU is required</span>
+
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">table_to_hdu</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># Set extension name if present</span>
+            <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdu</span><span class="p">)</span>
+
+        <span class="n">fits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite_existing</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">astropy_tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write tables to an HDF5 file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;h5py&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;h5py is required to write HDF5 files with Astropy.&quot;</span><span class="p">)</span>
+
+        <span class="n">astropy_tables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">output_file</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">astropy_tables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;hdf5&quot;</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite_existing</span><span class="p">,</span>
+            <span class="n">serialize_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">compression</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">astropy_tables</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">output_file</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;hdf5&quot;</span><span class="p">,</span>
+                <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">serialize_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">compression</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a single file and update data lists.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_file_info</span><span class="p">(</span><span class="n">file_id</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">eventio_object</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">MCRunHeader</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_run_header</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">MCShower</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_shower</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_shower</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">file_id</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">MCEvent</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_event</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">ArrayEvent</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_array_event</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">file_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_array_event</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">file_id</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_run_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process MC run header and update data lists.&quot;&quot;&quot;</span>
@@ -533,36 +603,87 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">=</span> <span class="n">mc_head</span><span class="p">[</span><span class="s2">&quot;n_use&quot;</span><span class="p">]</span>  <span class="c1"># reuse factor n_use needed to extend the values below</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shower reuse factor: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span><span class="si">}</span><span class="s2"> (viewcone: </span><span class="si">{</span><span class="n">mc_head</span><span class="p">[</span><span class="s1">&#39;viewcone&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_shower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_file_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process file information and append to file info list.&quot;&quot;&quot;</span>
+        <span class="n">run_info</span> <span class="o">=</span> <span class="n">get_corsika_run_header</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">particle</span> <span class="o">=</span> <span class="n">PrimaryParticle</span><span class="p">(</span>
+            <span class="n">particle_id_type</span><span class="o">=</span><span class="s2">&quot;eventio_id&quot;</span><span class="p">,</span> <span class="n">particle_id</span><span class="o">=</span><span class="n">run_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;file_name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">),</span>
+                <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="n">file_id</span><span class="p">,</span>
+                <span class="s2">&quot;particle_id&quot;</span><span class="p">:</span> <span class="n">particle</span><span class="o">.</span><span class="n">corsika7_id</span><span class="p">,</span>
+                <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="mf">90.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_preliminary_nsb_level</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_shower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">file_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process MC shower and update shower event list.</span>
 
 <span class="sd">        Duplicated entries &#39;self.n_use&#39; times to match the number simulated events with</span>
 <span class="sd">        different core positions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shower</span> <span class="o">=</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="n">shower</span> <span class="o">=</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_azimuth</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_altitude</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;shower_id&quot;</span><span class="p">:</span> <span class="n">shower</span><span class="p">[</span><span class="s2">&quot;shower&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># filled in _process_mc_event</span>
+                <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="n">file_id</span><span class="p">,</span>
+                <span class="s2">&quot;simulated_energy&quot;</span><span class="p">:</span> <span class="n">shower</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;x_core&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># filled in _process_mc_event</span>
+                <span class="s2">&quot;y_core&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># filled in _process_mc_event</span>
+                <span class="s2">&quot;shower_azimuth&quot;</span><span class="p">:</span> <span class="n">shower</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;shower_altitude&quot;</span><span class="p">:</span> <span class="n">shower</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;area_weight&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># filled in _process_mc_event</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process MC event and update shower event list.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process MC event and update shower event list.</span>
+
+<span class="sd">        Expected to be called n_use times after _process_shower.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">event</span> <span class="o">=</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_id</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;shower_num&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">x_core</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;xcore&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">y_core</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;ycore&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">area_weight</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;aweight&quot;</span><span class="p">])</span>
+        <span class="n">shower_data_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">+</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">]</span> <span class="o">%</span> <span class="mi">100</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_array_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span><span class="p">[</span><span class="n">shower_data_index</span><span class="p">][</span><span class="s2">&quot;shower_id&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;shower_num&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span>
+        <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Inconsistent shower and MC event data for shower id </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;shower_num&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span><span class="p">[</span><span class="n">shower_data_index</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;x_core&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;xcore&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;y_core&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;ycore&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;area_weight&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;aweight&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_array_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">file_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process array event and update triggered event list.&quot;&quot;&quot;</span>
         <span class="n">tracking_positions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">telescopes</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">eventio_object</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">TriggerInformation</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_process_trigger_information</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-
+                <span class="n">trigger_info</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+                <span class="n">telescopes</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">trigger_info</span><span class="p">[</span><span class="s2">&quot;triggered_telescopes&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trigger_info</span><span class="p">[</span><span class="s2">&quot;triggered_telescopes&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="k">else</span> <span class="p">[]</span>
+                <span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">TrackingPosition</span><span class="p">):</span>
                 <span class="n">tracking_position</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
                 <span class="n">tracking_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -572,159 +693,56 @@
                     <span class="p">}</span>
                 <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">tracking_positions</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_process_tracking_positions</span><span class="p">(</span><span class="n">tracking_positions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">telescopes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">tracking_positions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_array_event</span><span class="p">(</span><span class="n">telescopes</span><span class="p">,</span> <span class="n">tracking_positions</span><span class="p">,</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span> <span class="n">file_id</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_tracking_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracking_positions</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Process collected tracking positions and update triggered event list.</span>
-
-<span class="sd">        Use mean telescope tracking positions, averaged over all triggered telescopes.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_array_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescopes</span><span class="p">,</span> <span class="n">tracking_positions</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">file_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add array event triggered events with tracking positions.&quot;&quot;&quot;</span>
         <span class="n">altitudes</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">tracking_positions</span><span class="p">]</span>
         <span class="n">azimuths</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">tracking_positions</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">array_altitudes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">altitudes</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">array_azimuths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calculate_circular_mean</span><span class="p">(</span><span class="n">azimuths</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trigger_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;shower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;shower_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="n">file_id</span><span class="p">,</span>
+                <span class="s2">&quot;array_altitude&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">altitudes</span><span class="p">)),</span>
+                <span class="s2">&quot;array_azimuth&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">calculate_circular_mean</span><span class="p">(</span><span class="n">azimuths</span><span class="p">)),</span>
+                <span class="s2">&quot;telescope_list&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">telescopes</span><span class="p">)),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_trigger_information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger_info</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process trigger information and update triggered event list.&quot;&quot;&quot;</span>
-        <span class="n">trigger_info</span> <span class="o">=</span> <span class="n">trigger_info</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
-        <span class="n">telescopes</span> <span class="o">=</span> <span class="n">trigger_info</span><span class="p">[</span><span class="s2">&quot;triggered_telescopes&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">telescopes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># add offset to obtain unique shower IDs among all files</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">triggered_id</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;shower&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_offset</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">trigger_telescope_list_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">telescopes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
-            <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_preliminary_nsb_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return preliminary NSB level from file name.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_table_descriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;HDF5 table descriptions for shower data, triggered data, and file names.&quot;&quot;&quot;</span>
-        <span class="n">shower_data_desc</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;shower_id&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Int32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;simulated_energy&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;x_core&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;y_core&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;area_weight&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;shower_azimuth&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;shower_altitude&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-        <span class="p">}</span>
-        <span class="n">triggered_data_desc</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;triggered_id&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Int32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;array_altitudes&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;array_azimuths&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">(),</span>
-            <span class="s2">&quot;telescope_list_index&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">Int32Col</span><span class="p">(),</span>  <span class="c1"># Index into VLArray</span>
-        <span class="p">}</span>
-        <span class="n">file_names_desc</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;file_names&quot;</span><span class="p">:</span> <span class="n">tables</span><span class="o">.</span><span class="n">StringCol</span><span class="p">(</span><span class="mi">256</span><span class="p">),</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="n">shower_data_desc</span><span class="p">,</span> <span class="n">triggered_data_desc</span><span class="p">,</span> <span class="n">file_names_desc</span>
+<span class="sd">        Hardwired values are used for &quot;dark&quot;, &quot;half&quot;, and &quot;full&quot; NSB levels</span>
+<span class="sd">        (actual values are made up for this example). Will be replaced with</span>
+<span class="sd">        reading of sim_telarray metadata entry for NSB level (to be implemented,</span>
+<span class="sd">        see issue #1572).</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">data_group</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create or get HDF5 tables.&quot;&quot;&quot;</span>
-        <span class="n">descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table_descriptions</span><span class="p">()</span>
-        <span class="n">table_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;reduced_data&quot;</span><span class="p">,</span> <span class="s2">&quot;triggered_data&quot;</span><span class="p">,</span> <span class="s2">&quot;file_names&quot;</span><span class="p">]</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file : str</span>
+<span class="sd">            File name to extract NSB level from.</span>
 
-        <span class="n">table_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">desc</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">table_names</span><span class="p">,</span> <span class="n">descriptions</span><span class="p">):</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/data/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">output_file</span><span class="o">.</span><span class="n">create_table</span><span class="p">(</span>
-                    <span class="n">data_group</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span> <span class="n">filters</span><span class="o">=</span><span class="n">DEFAULT_FILTERS</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;w&quot;</span> <span class="ow">or</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output_file</span>
-                <span class="k">else</span> <span class="n">output_file</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="p">)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            NSB level extracted from file name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nsb_levels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dark&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;half&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">}</span>
 
-        <span class="k">return</span> <span class="n">table_dict</span><span class="p">[</span><span class="s2">&quot;reduced_data&quot;</span><span class="p">],</span> <span class="n">table_dict</span><span class="p">[</span><span class="s2">&quot;triggered_data&quot;</span><span class="p">],</span> <span class="n">table_dict</span><span class="p">[</span><span class="s2">&quot;file_names&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">nsb_levels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NSB level set to hardwired value of </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">value</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Invalid file name.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_event_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduced_table</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill event data tables.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="n">row</span> <span class="o">=</span> <span class="n">reduced_table</span><span class="o">.</span><span class="n">row</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">):</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;shower_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_id</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_id</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;simulated_energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;x_core&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">x_core</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">x_core</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;y_core&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">y_core</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">y_core</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;area_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">area_weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">area_weight</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;shower_azimuth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_azimuth</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_azimuth</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;shower_altitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_altitude</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">shower_altitude</span><span class="p">)</span>
-                <span class="k">else</span> <span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">()</span>
-        <span class="n">reduced_table</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_writer_triggered_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">triggered_table</span><span class="p">,</span> <span class="n">vlarray</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill triggered event data tables.&quot;&quot;&quot;</span>
-        <span class="c1"># Get or create VLArray for telescope lists</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">triggered_id</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="n">row</span> <span class="o">=</span> <span class="n">triggered_table</span><span class="o">.</span><span class="n">row</span>
-        <span class="n">start_idx</span> <span class="o">=</span> <span class="n">vlarray</span><span class="o">.</span><span class="n">nrows</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">triggered_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">triggered_id</span><span class="p">):</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;triggered_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">triggered_id</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">array_altitudes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">array_altitudes</span><span class="p">)</span>
-                <span class="k">else</span> <span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">array_azimuths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">array_azimuths</span><span class="p">)</span>
-                <span class="k">else</span> <span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;telescope_list_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="n">i</span>  <span class="c1"># Index into the VLArray</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">()</span>
-            <span class="n">vlarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">trigger_telescope_list_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">trigger_telescope_list_list</span><span class="p">)</span>
-                <span class="k">else</span> <span class="p">[]</span>
-            <span class="p">)</span>
-        <span class="n">triggered_table</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write data to HDF5 file.&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="n">tables</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">data_group</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;Data group&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;w&quot;</span> <span class="ow">or</span> <span class="s2">&quot;/data&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span>
-                <span class="k">else</span> <span class="n">f</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s2">&quot;/data&quot;</span><span class="p">)</span>
-            <span class="p">)</span>
-
-            <span class="n">reduced_table</span><span class="p">,</span> <span class="n">triggered_table</span><span class="p">,</span> <span class="n">file_names_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">data_group</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_event_data</span><span class="p">(</span><span class="n">reduced_table</span><span class="p">)</span>
-
-            <span class="n">vlarray</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">create_vlarray</span><span class="p">(</span>
-                    <span class="n">data_group</span><span class="p">,</span>
-                    <span class="s2">&quot;trigger_telescope_list_list&quot;</span><span class="p">,</span>
-                    <span class="n">tables</span><span class="o">.</span><span class="n">Int16Atom</span><span class="p">(),</span>
-                    <span class="s2">&quot;List of triggered telescope IDs&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;w&quot;</span> <span class="ow">or</span> <span class="s2">&quot;/data/trigger_telescope_list_list&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span>
-                <span class="k">else</span> <span class="n">f</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s2">&quot;/data/trigger_telescope_list_list&quot;</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_writer_triggered_data</span><span class="p">(</span><span class="n">triggered_table</span><span class="p">,</span> <span class="n">vlarray</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_names</span><span class="p">:</span>
-                <span class="n">file_names_table</span><span class="o">.</span><span class="n">append</span><span class="p">([[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_names</span><span class="p">])</span>
-                <span class="n">file_names_table</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_reset_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset data structures for batch processing.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span> <span class="o">=</span> <span class="n">ShowerEventData</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">triggered_data</span> <span class="o">=</span> <span class="n">TriggeredEventData</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_names</span> <span class="o">=</span> <span class="p">[]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No NSB level found in file name, defaulting to 1.0&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">1.0</span></div>
 
 </pre></div>
 

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=d94b7da8"></script>
+    <script src="../../_static/documentation_options.js?v=39207ee9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-derive-corsika-limits';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="simtools-plot-tabular-data" href="simtools-plot-tabular-data.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gac809a8" />
+  <meta name="docsearch:version" content="0.1.dev1+gaf90e7e" />
   </head>
   
   
@@ -468,16 +468,37 @@
                   
   <section id="module-production_derive_corsika_limits">
 <span id="simtools-production-derive-corsika-limits"></span><h1>simtools-production-derive-corsika-limits<a class="headerlink" href="#module-production_derive_corsika_limits" title="Link to this heading">#</a></h1>
-<p>Derives the limits for energy, radial distance, and viewcone to be used in CORSIKA simulations.</p>
-<p>The limits are derived based on the event loss fraction specified by the user.</p>
+<p>Derive CORSIKA configuration limits for energy, core distance, and viewcone radius.</p>
+<p>This tool determines configuration limits based on triggered events from broad-range
+simulations. It supports setting:</p>
+<ul class="simple">
+<li><p><strong>ERANGE</strong>: Derives the lower energy limit; upper limit is user-defined.</p></li>
+<li><p><strong>CSCAT</strong>: Derives the upper core distance; lower limit is user-defined.</p></li>
+<li><p><strong>VIEWCONE</strong>: Derives the viewcone radius; lower limit is user-defined.</p></li>
+</ul>
+<p>Limits are computed based on a configurable maximum event loss fraction.
+Results are provided as a table with the following columns:</p>
+<ul class="simple">
+<li><p>particle_type: Particle type (e.g., gamma, proton, electron).</p></li>
+<li><p>telescope_ids: List of telescope IDs used in the simulation.</p></li>
+<li><p>zenith: Zenith angle.</p></li>
+<li><p>azimuth: Azimuth angle.</p></li>
+<li><p>nsb: Night sky background level</p></li>
+<li><p>layout: Layout of the telescope array used in the simulation.</p></li>
+<li><p>lower_energy_limit: Derived lower energy limit.</p></li>
+<li><p>upper_radius_limit: Derived upper radial distance limit.</p></li>
+<li><p>viewcone_radius: Derived upper viewcone radius limit.</p></li>
+</ul>
+<p>The input event data files are generated using the application simtools-generate-simtel-event-data
+and are required for each point in the lookup table.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>event_data_files (str, required)</dt><dd><p>Path to a file containing event data file paths.</p>
+<dt>event_data_files (str, required)</dt><dd><p>Path to a file containing event data files derived with ‘simtools-generate-simtel-event-data’.</p>
 </dd>
 <dt>telescope_ids (str, required)</dt><dd><p>Path to a file containing telescope configurations.</p>
 </dd>
-<dt>loss_fraction (float, required)</dt><dd><p>Fraction of events to be lost.</p>
+<dt>loss_fraction (float, required)</dt><dd><p>Maximum event-loss fraction for limit computation.</p>
 </dd>
 <dt>plot_histograms (bool, optional)</dt><dd><p>Plot histograms of the event data.</p>
 </dd>
@@ -498,58 +519,9 @@
 </div>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="production_derive_corsika_limits.create_results_table">
-<span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">create_results_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#create_results_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.create_results_table" title="Link to this definition">#</a></dt>
-<dd><p>Create an Astropy Table from the results.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>results</strong><span class="classifier">list[dict]</span></dt><dd><p>List of dictionaries containing the computed limits for each file
-and telescope configuration.</p>
-</dd>
-<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost, added as metadata to the table.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>astropy.table.Table</dt><dd><p>An Astropy Table containing the results with appropriate units and metadata.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="production_derive_corsika_limits.main">
 <span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.main" title="Link to this definition">#</a></dt>
 <dd><p>Derive limits for energy, radial distance, and viewcone.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="production_derive_corsika_limits.process_file">
-<span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">process_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_histograms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#process_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.process_file" title="Link to this definition">#</a></dt>
-<dd><p>Process a single file and compute limits.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the event data file.</p>
-</dd>
-<dt><strong>telescope_ids</strong><span class="classifier">list[int]</span></dt><dd><p>List of telescope IDs to filter the events.</p>
-</dd>
-<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost.</p>
-</dd>
-<dt><strong>plot_histograms</strong><span class="classifier">bool</span></dt><dd><p>Whether to plot histograms.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Dictionary containing the computed limits and metadata.</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 </section>
@@ -603,9 +575,7 @@ and telescope configuration.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.create_results_table"><code class="docutils literal notranslate"><span class="pre">create_results_table()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.process_file"><code class="docutils literal notranslate"><span class="pre">process_file()</span></code></a></li>
 </ul>
   </nav></div>
 
