@@ -19,15 +19,15 @@ class ShowerEventData:
     shower_id: list[np.uint32] = field(default_factory=list)
     event_id: list[np.uint32] = field(default_factory=list)
     file_id: list[np.uint32] = field(default_factory=list)
-    simulated_energy: list[float] = field(default_factory=list)
-    x_core: list[float] = field(default_factory=list)
-    y_core: list[float] = field(default_factory=list)
-    shower_azimuth: list[float] = field(default_factory=list)
-    shower_altitude: list[float] = field(default_factory=list)
-    area_weight: list[float] = field(default_factory=list)
-    x_core_shower: list[float] = field(default_factory=list)
-    y_core_shower: list[float] = field(default_factory=list)
-    core_distance_shower: list[float] = field(default_factory=list)
+    simulated_energy: list[np.float64] = field(default_factory=list)
+    x_core: list[np.float64] = field(default_factory=list)
+    y_core: list[np.float64] = field(default_factory=list)
+    shower_azimuth: list[np.float64] = field(default_factory=list)
+    shower_altitude: list[np.float64] = field(default_factory=list)
+    area_weight: list[np.float64] = field(default_factory=list)
+    x_core_shower: list[np.float64] = field(default_factory=list)
+    y_core_shower: list[np.float64] = field(default_factory=list)
+    core_distance_shower: list[np.float64] = field(default_factory=list)
 
 
 @dataclass
@@ -44,7 +44,7 @@ class TriggeredEventData:
 
 
 class SimtelIOEventDataReader:
-    """Read reduced MC data set astropy tables."""
+    """Read reduced MC data set stored in astropy tables."""
 
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize SimtelIOEventDataReader."""
@@ -91,7 +91,7 @@ class SimtelIOEventDataReader:
 
     def _table_to_shower_data(self, table):
         """
-        Convert SHOWERS table to ShowerEventData and add derived quantities.
+        Convert tables with shower event data and add derived quantities.
 
         Parameters
         ----------
@@ -126,7 +126,7 @@ class SimtelIOEventDataReader:
 
     def _table_to_triggered_data(self, table):
         """
-        Convert TRIGGERS table to TriggeredEventData.
+        Convert table with triggered event data.
 
         Converts telescope lists from comma-separated string to numpy array.
 
