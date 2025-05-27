@@ -42,6 +42,8 @@ class ProductionStatisticsHandler:
         ----------
         args_dict : dict
             Dictionary of command-line arguments.
+        output_path : Path
+            Path to the directory where the event statistics output file will be saved.
         """
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
