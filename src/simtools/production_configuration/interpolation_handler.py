@@ -396,7 +396,9 @@ class InterpolationHandler:
             self.interpolated_production_statistics_with_energy is not None
             and len(self.interpolated_production_statistics_with_energy) > 0
         ):
-            interpolated_stats = self.interpolated_production_statistics_with_energy[0][0]
+            interpolated_stats = self.interpolated_production_statistics_with_energy[0][
+                grid_point_index
+            ]
             ax.plot(midpoints, interpolated_stats, label="Interpolated Production Statistics")
 
         reconstructed_event_histogram, _ = np.histogram(
