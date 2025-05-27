@@ -263,12 +263,23 @@ def test_read_tables_explicit_file_type(mocker):
 def test_write_tables_fits(tmp_path, mock_table, mock_fits_objects):
     """Test writing tables in FITS format."""
     output_file = tmp_path / TEST_FITS
+
     write_tables([mock_table], output_file, file_type="FITS")
 
     mock_fits_objects["hdul"].assert_called_once()
     mock_fits_objects["hdul"].return_value.writeto.assert_called_once_with(
         output_file, checksum=False
     )
+
+
+def test_write_tables_fits_overwrite_false(tmp_path, mock_table, mock_fits_objects, mocker):
+    """Test writing tables in FITS format when overwrite is False and file exists."""
+    output_file = tmp_path / TEST_FITS
+
+    mocker.patch("pathlib.Path.exists", return_value=True)
+
+    with pytest.raises(FileExistsError, match="^Output file "):
+        write_tables([mock_table], output_file, overwrite_existing=False, file_type="FITS")
 
 
 def test_write_tables_hdf5(tmp_path, mock_table, mock_h5py_file):
