@@ -11,14 +11,14 @@ from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
 
 class LimitCalculator:
     """
-    Compute thresholds for CORSIKA configuration for energy, radial distance, and viewcone.
+    Compute limits for CORSIKA configuration for energy, radial distance, and viewcone.
 
     Event data is read from the reduced MC event data file.
 
     Parameters
     ----------
     event_data_file : str
-        Path to the HDF5 file containing the event data.
+        Path to the event-data file.
     telescope_list : list, optional
         List of telescope IDs to filter the events (default is None).
     """
@@ -27,11 +27,44 @@ class LimitCalculator:
         """Initialize the LimitCalculator with the given event data file."""
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
-        self.telescope_list = telescope_list
 
         self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=telescope_list)
         self.event_data = self.reader.triggered_shower_data
         self.triggered_data = self.reader.triggered_data
+        self.limits = self._prepare_limit_data(telescope_list)
+
+    def _prepare_limit_data(self, telescope_list):
+        """Prepare result data structure for limit calculation."""
+        _file_info = self.reader.get_reduced_simulation_file_info()
+        return {
+            "primary_particle": _file_info["primary_particle"],
+            "zenith": _file_info["zenith"],
+            "azimuth": _file_info["azimuth"],
+            "nsb_level": _file_info["nsb_level"],
+            "telescope_ids": telescope_list,
+            "lower_energy_limit": None,
+            "upper_radius_limit": None,
+            "viewcone_radius": None,
+        }
+
+    def compute_limits(self, loss_fraction):
+        """
+        Compute the limits for energy, radial distance, and viewcone.
+
+        Parameters
+        ----------
+        loss_fraction : float
+            Fraction of events to be lost.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the computed limits.
+        """
+        self.limits["lower_energy_limit"] = self.compute_lower_energy_limit(loss_fraction)
+        self.limits["upper_radius_limit"] = self.compute_upper_radius_limit(loss_fraction)
+        self.limits["viewcone_radius"] = self.compute_viewcone(loss_fraction)
+        return self.limits
 
     def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
         """
@@ -63,9 +96,10 @@ class LimitCalculator:
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
+        energy_array = np.array(self.event_data.simulated_energy)
         return np.logspace(
-            np.log10(self.event_data.simulated_energy.min()),
-            np.log10(self.event_data.simulated_energy.max()),
+            np.log10(energy_array.min()),
+            np.log10(energy_array.max()),
             1000,
         )
 
@@ -91,13 +125,14 @@ class LimitCalculator:
     @property
     def core_distance_bins(self):
         """Return bins for the core distance histogram."""
+        core_distances = np.array(self.event_data.core_distance_shower)
         return np.linspace(
-            self.event_data.core_distance_shower.min(),
-            self.event_data.core_distance_shower.max(),
+            core_distances.min(),
+            core_distances.max(),
             1000,
         )
 
-    def compute_upper_radial_distance(self, loss_fraction):
+    def compute_upper_radius_limit(self, loss_fraction):
         """
         Compute the upper radial distance based on the event loss fraction.
 
@@ -120,9 +155,10 @@ class LimitCalculator:
     @property
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
+        angular_distances = np.array(self.triggered_data.angular_distance)
         return np.linspace(
-            self.triggered_data.angular_distance.min(),
-            self.triggered_data.angular_distance.max(),
+            angular_distances.min(),
+            angular_distances.max(),
             1000,
         )
 
@@ -144,27 +180,24 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        hist, _ = np.histogram(self.triggered_data.angular_distance, bins=self.view_cone_bins)
+        hist, _ = np.histogram(
+            np.array(self.triggered_data.angular_distance), bins=self.view_cone_bins
+        )
         return (
             self._compute_limits(hist, self.view_cone_bins, loss_fraction, limit_type="upper")
             * u.deg
         )
 
-    def plot_data(self, lower_energy_limit, upper_radial_distance, viewcone, output_path=None):
+    def plot_data(self, output_path=None):
         """
         Plot the core distances and energies of triggered events.
 
         Parameters
         ----------
-        lower_energy_limit: astropy.units.Quantity
-            Lower energy limit to display on plots.
-        upper_radial_distance: astropy.units.Quantity
-            Upper radial distance limit to display on plots.
-        viewcone: astropy.units.Quantity
-            Viewcone radius to display on plots.
         output_path: Path or str, optional
             Directory to save plots. If None, plots will be displayed.
         """
+        self._logger.info(f"Plotting histograms written to {output_path}")
         event_counts = "Event Count"
         plots = {
             "core_vs_energy": {
@@ -193,7 +226,7 @@ class LimitCalculator:
                     "title": "Triggered events: energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
-                "lines": {"x": lower_energy_limit.value},
+                "lines": {"x": self.limits["lower_energy_limit"].value},
                 "filename": "energy_distribution.png",
             },
             "core_distance": {
@@ -206,7 +239,7 @@ class LimitCalculator:
                     "y": event_counts,
                     "title": "Triggered events: core distance distribution",
                 },
-                "lines": {"x": upper_radial_distance.value},
+                "lines": {"x": self.limits["upper_radius_limit"].value},
                 "filename": "core_distance_distribution.png",
             },
             "core_xy": {
@@ -221,7 +254,10 @@ class LimitCalculator:
                     "title": "Triggered events: core x vs core y",
                 },
                 "colorbar_label": event_counts,
-                "lines": {"x": upper_radial_distance.value, "y": upper_radial_distance.value},
+                "lines": {
+                    "x": self.limits["upper_radius_limit"].value,
+                    "y": self.limits["upper_radius_limit"].value,
+                },
                 "filename": "core_xy_distribution.png",
             },
             "view-cone": {
@@ -234,7 +270,7 @@ class LimitCalculator:
                     "y": event_counts,
                     "title": "Triggered events: viewcone distribution",
                 },
-                "lines": {"x": viewcone.value},
+                "lines": {"x": self.limits["viewcone_radius"].value},
                 "filename": "viewcone_distribution.png",
             },
         }

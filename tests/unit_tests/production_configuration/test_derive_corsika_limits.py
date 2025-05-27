@@ -22,22 +22,20 @@ def hdf5_file_name():
 
 
 def test_init(mock_reader, hdf5_file_name):
+    """Test initialization with telescope list."""
     test_telescope_list = [1, 2]
-
     calculator = LimitCalculator(hdf5_file_name, test_telescope_list)
 
     assert calculator.event_data_file == hdf5_file_name
-    assert calculator.telescope_list == test_telescope_list
-
-    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=[1, 2])
+    # telescope_list is passed to reader but not stored
+    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=test_telescope_list)
 
 
 def test_init_default_telescope_list(mock_reader, hdf5_file_name):
+    """Test initialization without telescope list."""
     calculator = LimitCalculator(hdf5_file_name)
 
     assert calculator.event_data_file == hdf5_file_name
-    assert calculator.telescope_list is None
-
     mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=None)
 
 
@@ -150,7 +148,7 @@ def test_compute_lower_energy_limit(mock_reader, hdf5_file_name, mocker):
     assert result == expected
 
 
-def test_compute_upper_radial_distance(mock_reader, hdf5_file_name, mocker):
+def test_compute_upper_radius_limit(mock_reader, hdf5_file_name, mocker):
     calculator = LimitCalculator(hdf5_file_name)
 
     # Mock the core distance data
@@ -162,7 +160,7 @@ def test_compute_upper_radial_distance(mock_reader, hdf5_file_name, mocker):
     mocker.patch.object(LimitCalculator, "core_distance_bins", property(lambda self: mock_bins))
 
     # Test with 20% loss fraction
-    result = calculator.compute_upper_radial_distance(0.2)
+    result = calculator.compute_upper_radius_limit(0.2)
 
     # Verify the result
     assert isinstance(result, u.Quantity)
@@ -176,6 +174,7 @@ def test_compute_upper_radial_distance(mock_reader, hdf5_file_name, mocker):
 
 
 def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
+    """Test plotting of data with limits."""
     calculator = LimitCalculator(hdf5_file_name)
 
     # Mock the necessary data attributes
@@ -193,20 +192,20 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     mocker.patch("matplotlib.pyplot.close")
     mock_create_plot = mocker.patch.object(calculator, "_create_plot")
 
-    # Create test input parameters
-    lower_energy_limit = 1.0 * u.TeV
-    upper_radial_distance = 100.0 * u.m
-    viewcone = 2.0 * u.deg
+    calculator.limits = {
+        "lower_energy_limit": 1.0 * u.TeV,
+        "upper_radius_limit": 100.0 * u.m,
+        "viewcone_radius": 2.0 * u.deg,
+    }
 
-    # Test with output path
-    calculator.plot_data(lower_energy_limit, upper_radial_distance, viewcone, output_path=tmp_path)
+    calculator.plot_data(output_path=tmp_path)
 
     # Verify _create_plot was called correct number of times
     assert mock_create_plot.call_count == 5
 
     # Test without output path
     mock_create_plot.reset_mock()
-    calculator.plot_data(lower_energy_limit, upper_radial_distance, viewcone, output_path=None)
+    calculator.plot_data()
 
     # Verify _create_plot was called correct number of times
     assert mock_create_plot.call_count == 5
@@ -373,3 +372,40 @@ def test_create_plot_save_file(mock_reader, hdf5_file_name, mocker, tmp_path):
     mock_logger.info.assert_called_once_with(f"Saving plot to {output_file}")
     mock_savefig.assert_called_once_with(output_file, dpi=300, bbox_inches="tight")
     mock_close.assert_called_once()
+
+
+def test_compute_limits_all_directions(mock_reader, mocker, hdf5_file_name):
+    calculator = LimitCalculator(hdf5_file_name)
+
+    # Mock the return values for different limits
+    mock_energy_limit = 1.0 * u.TeV
+    mock_radius_limit = 100.0 * u.m
+    mock_viewcone_limit = 2.0 * u.deg
+
+    mock_energy_limit_fn = mocker.patch.object(
+        calculator, "compute_lower_energy_limit", return_value=mock_energy_limit
+    )
+    mock_radius_limit_fn = mocker.patch.object(
+        calculator, "compute_upper_radius_limit", return_value=mock_radius_limit
+    )
+    mock_viewcone_fn = mocker.patch.object(
+        calculator, "compute_viewcone", return_value=mock_viewcone_limit
+    )
+
+    loss_fraction = 0.2
+    result = calculator.compute_limits(loss_fraction)
+
+    # Verify all compute functions were called with correct loss fraction
+    mock_energy_limit_fn.assert_called_once_with(loss_fraction)
+    mock_radius_limit_fn.assert_called_once_with(loss_fraction)
+    mock_viewcone_fn.assert_called_once_with(loss_fraction)
+
+    # Verify results match mock return values
+    assert result["lower_energy_limit"] == mock_energy_limit
+    assert result["upper_radius_limit"] == mock_radius_limit
+    assert result["viewcone_radius"] == mock_viewcone_limit
+
+    # Verify limits stored in calculator instance
+    assert calculator.limits["lower_energy_limit"] == mock_energy_limit
+    assert calculator.limits["upper_radius_limit"] == mock_radius_limit
+    assert calculator.limits["viewcone_radius"] == mock_viewcone_limit
