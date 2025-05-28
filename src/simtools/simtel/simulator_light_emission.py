@@ -201,10 +201,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         _model_directory = self.io_handler.get_output_directory(self.label, "model")
         _model_directory.mkdir(parents=True, exist_ok=True)
-        if not self.test:
-            config_directory = f"{_model_directory}/{self._telescope_model.model_version}/"
-        else:
-            config_directory = f"{_model_directory}/"
+        config_directory = f"{_model_directory}/{self._telescope_model.model_version}/"
 
         telpos_file = self._write_telpos_file()
 
