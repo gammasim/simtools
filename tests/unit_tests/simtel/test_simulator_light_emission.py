@@ -269,7 +269,7 @@ def test_make_light_emission_script_laser(
         " --telescope-phi 186.091952"
         " --laser-theta 10.048226999999997"
         " --laser-phi 173.908048"
-        f" --atmosphere {mock_output_path}/model/6.0.0/"
+        f" --atmosphere {mock_output_path}/model/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/ls-beam.iact.gz\n"
     )

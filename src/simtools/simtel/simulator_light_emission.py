@@ -279,7 +279,7 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" --telescope-phi {angle_phi}"
             command += f" --laser-theta {90 - angles[2]}"
             command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
-            command += f" --atmosphere {config_directory}/"
+            command += f" --atmosphere {config_directory}"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"
