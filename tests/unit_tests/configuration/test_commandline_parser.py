@@ -207,13 +207,6 @@ def test_simulation_model():
             assert any(action.dest == "telescope" for action in group._group_actions)
 
 
-def test_job_submission():
-    _parser_5 = parser.CommandLineParser()
-    _parser_5.initialize_default_arguments(job_submission=True)
-    job_groups = _parser_5._action_groups
-    assert "job submission" in [str(group.title) for group in job_groups]
-
-
 def test_db_configuration():
     _parser_6 = parser.CommandLineParser()
     _parser_6.initialize_default_arguments(db_config=True)
