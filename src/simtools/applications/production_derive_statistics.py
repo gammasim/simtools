@@ -9,17 +9,17 @@ interpolated production events added.
 
 Command line arguments
 ----------------------
---grid_points_production_file (str, required)
+grid_points_production_file (str, required)
     Path to the file containing grid points. Each grid point should include azimuth, zenith,
     NSB, offset.
---metrics_file (str, optional)
+metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
---base_path (str, required)
+base_path (str, required)
     Path to the directory containing the DL2 MC event files for interpolation.
---file_name_template (str, optional)
+file_name_template (str, optional)
     Template for the DL2 MC event file name. Default:
     'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
---plot_production_statistics (flag, optional)
+plot_production_statistics (flag, optional)
     If provided, plots the production statistics. Default: False.
 
 Example
