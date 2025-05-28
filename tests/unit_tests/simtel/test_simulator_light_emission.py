@@ -362,7 +362,6 @@ def test_make_simtel_script(mock_simulator):
             )
 
             mock_simulator.output_directory = "/directory"
-            # mock_simulator.le_application = ["xyzls", "layout"]  # Add this line
 
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
@@ -379,8 +378,6 @@ def test_make_simtel_script(mock_simulator):
                 "-C output_file=/directory/xyzls_layout.simtel.gz "
                 "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
             )
-
-            # mock_simulator._remove_line_from_config = MagicMock()
 
             command = mock_simulator._make_simtel_script()
             assert command == expected_command
