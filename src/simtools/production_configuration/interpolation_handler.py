@@ -102,14 +102,13 @@ class InterpolationHandler:
         flat_grid_points = []
 
         # Process each evaluator, energy grid, and production statistics
-        for e, energy_grid, production_statistics in zip(
-            self.evaluators, self.energy_grids, self.production_statistics
+        for i, (energy_grid, production_statistics) in enumerate(
+            zip(self.energy_grids, self.production_statistics)
         ):
-            # Extract grid point values
-            az = e.grid_point[1].to(u.deg).value
-            zen = e.grid_point[2].to(u.deg).value
-            nsb = e.grid_point[3]
-            offset = e.grid_point[4].to(u.deg).value
+            az = self.azimuths[i]
+            zen = self.zeniths[i]
+            nsb = self.nsbs[i]
+            offset = self.offsets[i]
 
             # Create arrays of grid point values repeated for each energy value
             az_array = np.full(len(energy_grid), az)
@@ -184,11 +183,11 @@ class InterpolationHandler:
         flat_data_list = []
         flat_grid_points = []
 
-        for e, production_statistics_sum in zip(self.evaluators, self.production_statistics_sum):
-            az = e.grid_point[1].to(u.deg).value
-            zen = e.grid_point[2].to(u.deg).value
-            nsb = e.grid_point[3]
-            offset = e.grid_point[4].to(u.deg).value
+        for i, production_statistics_sum in enumerate(self.production_statistics_sum):
+            az = self.azimuths[i]
+            zen = self.zeniths[i]
+            nsb = self.nsbs[i]
+            offset = self.offsets[i]
 
             flat_data_list.append(float(production_statistics_sum.value))
 
