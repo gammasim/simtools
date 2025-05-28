@@ -212,7 +212,10 @@ class SimulatorLightEmission(SimtelRunner):
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
-        command += f" -h  {self._site_model.get_parameter_value('corsika_observation_level')}"
+        corsika_observation_level = self._site_model.get_parameter_value_with_unit(
+            "corsika_observation_level"
+        )
+        command += f" -h  {corsika_observation_level.to(u.m).value}"
         command += f" --telpos-file {telpos_file}"
 
         if self.light_source_type == "led":
@@ -235,13 +238,17 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self.photons_per_run}"
                 self._logger.info(f"Photons per run: {self.photons_per_run} ")
 
-                # same wavelength as for laser
-                command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
+                # same wavelength as for laser, need to be given as integer value
+                laser_wavelength = self._calibration_model.get_parameter_value_with_unit(
+                    "laser_wavelength"
+                )
+                command += f" -s {int(laser_wavelength.to(u.nm).value)}"
 
                 # pulse
-                command += (
-                    f" -p Gauss:{self._calibration_model.get_parameter_value('led_pulse_sigtime')}"
+                led_pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
+                    "led_pulse_sigtime"
                 )
+                command += f" -p Gauss:{led_pulse_sigtime.to(u.ns).value}"
                 command += " -a isotropic"  # angular distribution
 
             command += f" -A {config_directory}"
@@ -252,11 +259,13 @@ class SimulatorLightEmission(SimtelRunner):
             command += " --bunches 2500000"
             command += " --step 0.1"
             command += " --bunchsize 1"
-            command += (
-                f" --spectrum {self._calibration_model.get_parameter_value('laser_wavelength')}"
-            )
+            spectrum = self._calibration_model.get_parameter_value_with_unit("laser_wavelength")
+            command += f" --spectrum {int(spectrum.to(u.nm).value)}"
             command += " --lightpulse Gauss:"
-            command += f"{self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+            pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
+                "laser_pulse_sigtime"
+            )
+            command += f"{pulse_sigtime.to(u.ns).value}"
             x_origin = x_cal - x_tel
             y_origin = y_cal - y_tel
             z_origin = z_cal - z_tel
@@ -564,15 +573,18 @@ class SimulatorLightEmission(SimtelRunner):
         """
         if not self.light_emission_config:
             # Layout positions: Use DB coordinates
-            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
+            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
-            x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+            x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
+            x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
+            x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
             tel_vect = np.array([x_tel, y_tel, z_tel])
             cal_vect = np.array([x_cal, y_cal, z_cal])
             distance = np.linalg.norm(cal_vect - tel_vect)
+            print("Distance between telescope and calibration device:", distance * u.m)
             return [distance * u.m]
 
         # Variable positions: Calculate distances for all positions
