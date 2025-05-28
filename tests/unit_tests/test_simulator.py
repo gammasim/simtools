@@ -694,3 +694,49 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
         sequential=shower_array_simulator.args_dict.get("sequential", False),
         keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
     )
+
+
+def test_save_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
+    with caplog.at_level(logging.WARNING):
+        shower_simulator.save_reduced_event_lists()
+    assert "Reduced event lists can only be saved for sim_telarray simulations." in caplog.text
+
+
+def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
+    mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
+    mocker.patch.object(array_simulator, "get_file_list", return_value=mock_output_files)
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.simulator.SimtelIOEventDataWriter", return_value=mock_generator
+    )
+    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+
+    array_simulator.save_reduced_event_lists()
+
+    assert mock_simtel_io_writer.call_count == 2
+    mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
+    mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
+
+    assert mock_io_table_handler.write_tables.call_count == 2
+    mock_io_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("output_file1.simtel.hdf5"),
+        overwrite_existing=True,
+    )
+    mock_io_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("output_file2.simtel.hdf5"),
+        overwrite_existing=True,
+    )
+
+
+def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
+    mocker.patch.object(array_simulator, "get_file_list", return_value=[])
+    mock_simtel_io_writer = mocker.patch("simtools.simulator.SimtelIOEventDataWriter")
+    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+
+    array_simulator.save_reduced_event_lists()
+
+    mock_simtel_io_writer.assert_not_called()
+    mock_io_table_handler.write_tables.assert_not_called()
