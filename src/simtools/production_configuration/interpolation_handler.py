@@ -101,7 +101,6 @@ class InterpolationHandler:
         flat_data_list = []
         flat_grid_points = []
 
-        # Process each evaluator, energy grid, and production statistics
         for i, (energy_grid, production_statistics) in enumerate(
             zip(self.energy_grids, self.production_statistics)
         ):
@@ -110,21 +109,17 @@ class InterpolationHandler:
             nsb = self.nsbs[i]
             offset = self.offsets[i]
 
-            # Create arrays of grid point values repeated for each energy value
             az_array = np.full(len(energy_grid), az)
             zen_array = np.full(len(energy_grid), zen)
             nsb_array = np.full(len(energy_grid), nsb)
             offset_array = np.full(len(energy_grid), offset)
 
-            # Combine into grid points array
             grid_points = np.column_stack(
                 [energy_grid.to(u.TeV).value, az_array, zen_array, nsb_array, offset_array]
             )
 
             flat_grid_points.append(grid_points)
             flat_data_list.append(production_statistics)
-
-        # Flatten the lists and convert to numpy arrays
 
         flat_grid_points = np.vstack(flat_grid_points)
         flat_data = np.hstack(flat_data_list)
@@ -295,12 +290,10 @@ class InterpolationHandler:
 
         energy_query_grid = np.array(energy_query_grid)
 
-        # Debugging: Print all quantities and their shapes
         self._logger.debug(f"Grid points with energy shape: {grid_points_energy.shape}")
         self._logger.debug(f"Data shape: {self.data.shape}")
         self._logger.debug(f"Energy query grid shape: {energy_query_grid.shape}")
 
-        # Perform interpolation
         interpolated_values = self._perform_interpolation(
             grid_points_energy, self.data, energy_query_grid
         )
@@ -330,7 +323,7 @@ class InterpolationHandler:
         # Energy-independent interpolation
         production_statistic, grid_points_no_energy = self._prepare_energy_independent_data()
         reduced_production_grid_points = self._prepare_production_grid_points()
-        # Perform interpolation
+
         self.interpolated_production_statistics = self._perform_interpolation(
             grid_points_no_energy, production_statistic, reduced_production_grid_points
         )
