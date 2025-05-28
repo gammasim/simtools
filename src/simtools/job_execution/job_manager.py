@@ -15,9 +15,9 @@ class JobExecutionError(Exception):
 
 class JobManager:
     """
-    Interface to workload managers like gridengine.
+    Job manager for submitting jobs to a compute node.
 
-    Expects that jobs are described by shell scripts.
+    Expects that jobs can be described by shell scripts.
 
     Parameters
     ----------
