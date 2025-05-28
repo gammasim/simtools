@@ -40,11 +40,9 @@ class InterpolationHandler:
         self.metrics = metrics
         self.grid_points_production = grid_points_production
 
-        # Initialize derivators and extract grid properties
         self._initialize_derivators()
         self._extract_grid_properties()
 
-        # Prepare data arrays for interpolation
         self.data, self.grid_points = self._build_data_array()
         self.interpolated_production_statistics = None
         self.interpolated_production_statistics_with_energy = None
