@@ -15,7 +15,7 @@ __all__ = ["InterpolationHandler"]
 
 class InterpolationHandler:
     """
-    Handle interpolation between multiple StatisticalUncertaintyEvaluator instances.
+    Calculate the required events for production via interpolation from a grid.
 
     This class provides methods to interpolate production statistics across a grid of
     parameter values (azimuth, zenith, NSB, offset) and energy.
