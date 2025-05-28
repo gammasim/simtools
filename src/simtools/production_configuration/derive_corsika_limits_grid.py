@@ -3,6 +3,7 @@
 import datetime
 import logging
 
+import numpy as np
 from astropy.table import Column, Table
 
 import simtools.utils.general as gen
@@ -33,6 +34,7 @@ def generate_corsika_limits_grid(args_dict):
             _logger.info(f"Processing file: {file_path} with telescope config: {array_name}")
             result = _process_file(
                 file_path,
+                array_name,
                 telescope_ids,
                 args_dict["loss_fraction"],
                 args_dict["plot_histograms"],
@@ -43,7 +45,7 @@ def generate_corsika_limits_grid(args_dict):
     write_results(results, args_dict)
 
 
-def _process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
+def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_histograms):
     """
     Compute limits for a single file.
 
@@ -51,6 +53,8 @@ def _process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     ----------
     file_path : str
         Path to the event data file.
+    array_name : str
+        Name of the telescope array configuration.
     telescope_ids : list[int]
         List of telescope IDs to filter the events.
     loss_fraction : float
@@ -63,7 +67,7 @@ def _process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     dict
         Dictionary containing the computed limits and metadata.
     """
-    calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
+    calculator = LimitCalculator(file_path, array_name=array_name, telescope_list=telescope_ids)
     limits = calculator.compute_limits(loss_fraction)
 
     if plot_histograms:
@@ -96,7 +100,9 @@ def write_results(results, args_dict):
 
 def _create_results_table(results, loss_fraction):
     """
-    Convert list of simulation results to an Astropy Table with metadata.
+    Convert list of simulation results to an astropy Table with metadata.
+
+    Round values to appropriate precision and add metadata.
 
     Parameters
     ----------
@@ -112,6 +118,7 @@ def _create_results_table(results, loss_fraction):
     """
     cols = [
         "primary_particle",
+        "array_name",
         "telescope_ids",
         "zenith",
         "azimuth",
@@ -125,26 +132,11 @@ def _create_results_table(results, loss_fraction):
     units = {}
 
     for res in results:
-        for k in cols:
-            val = res.get(k, None)
-            if hasattr(val, "unit"):
-                columns[k].append(val.value)
-                units[k] = val.unit
-            else:
-                columns[k].append(val)
-                if k not in units:
-                    units[k] = None
+        _process_result_row(res, cols, columns, units)
 
-    table_cols = []
-    for k in cols:
-        col_data = columns[k]
-        if any(isinstance(v, list | tuple) for v in col_data):
-            col = Column(data=col_data, name=k, unit=units.get(k), dtype=object)
-        else:
-            col = Column(data=col_data, name=k, unit=units.get(k))
-        table_cols.append(col)
-
+    table_cols = _create_table_columns(cols, columns, units)
     table = Table(table_cols)
+
     table.meta.update(
         {
             "created": datetime.datetime.now().isoformat(),
@@ -154,3 +146,44 @@ def _create_results_table(results, loss_fraction):
     )
 
     return table
+
+
+def _process_result_row(res, cols, columns, units):
+    """Process a single result row and add values to columns."""
+    for k in cols:
+        val = res.get(k, None)
+        if val is not None:
+            val = _round_value(k, val)
+            _logger.debug(f"Adding {k}: {val} to column data")
+
+        if hasattr(val, "unit"):
+            columns[k].append(val.value)
+            units[k] = val.unit
+        else:
+            columns[k].append(val)
+            if k not in units:
+                units[k] = None
+
+
+def _round_value(key, val):
+    """Round value based on key type."""
+    if key == "lower_energy_limit":
+        return np.floor(val * 1e3) / 1e3
+    if key == "upper_radius_limit":
+        return np.ceil(val / 25) * 25
+    if key == "viewcone_radius":
+        return np.ceil(val / 0.25) * 0.25
+    return val
+
+
+def _create_table_columns(cols, columns, units):
+    """Create table columns with appropriate data types."""
+    table_cols = []
+    for k in cols:
+        col_data = columns[k]
+        if any(isinstance(v, list | tuple) for v in col_data):
+            col = Column(data=col_data, name=k, unit=units.get(k), dtype=object)
+        else:
+            col = Column(data=col_data, name=k, unit=units.get(k))
+        table_cols.append(col)
+    return table_cols
