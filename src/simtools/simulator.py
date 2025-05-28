@@ -12,11 +12,12 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_operations import io_handler
+from simtools.io_operations import io_handler, io_table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 
@@ -653,6 +654,28 @@ class Simulator:
                         f.write(f"{line}\n")
             else:
                 self._logger.debug(f"No files to save for {file_type} files.")
+
+    def save_reduced_event_lists(self):
+        """
+        Save reduced event lists with event data on simulated and triggered events.
+
+        The files are saved with the same name as the sim_telarray output file
+        but with a 'hdf5' extension.
+        """
+        if "sim_telarray" not in self.simulation_software:
+            self._logger.warning(
+                "Reduced event lists can only be saved for sim_telarray simulations."
+            )
+            return
+
+        output_files = self.get_file_list(file_type="output")
+        for output_file in output_files:
+            generator = SimtelIOEventDataWriter([output_file])
+            io_table_handler.write_tables(
+                tables=generator.process_files(),
+                output_file=Path(output_file).with_suffix(".hdf5"),
+                overwrite_existing=True,
+            )
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """
