@@ -75,26 +75,23 @@ class ReadParameters:
         Path(self.output_path.parent.parent.parent / "_images").mkdir(parents=True, exist_ok=True)
 
         if parameter == "camera_config_file" and parameter_version:
-            image_path = Path(self.output_path.parent.parent.parent / f"_images/{input_file.stem}")
-            image_path.parent.mkdir(parents=True, exist_ok=True)
+            image_path = Path(f"../../{IMAGE_PATH}/{input_file.stem}")
+            plot_config = {
+                "file_name": input_file.name,
+                "telescope": self.array_element,
+                "parameter_version": parameter_version,
+                "site": self.site,
+                "model_version": self.model_version,
+                "parameter": parameter,
+            }
 
-            if not image_path.with_suffix(".png").exists():
-                plot_config = {
-                    "file_name": input_file.name,
-                    "telescope": self.array_element,
-                    "parameter_version": parameter_version,
-                    "site": self.site,
-                    "model_version": self.model_version,
-                    "parameter": parameter,
-                }
-
-                plot_pixels.plot(
-                    config=plot_config,
-                    output_file=Path(
-                        self.output_path.parent.parent.parent / f"_images/{input_file.stem}"
-                    ),
-                    db_config=self.db_config,
-                )
+            plot_pixels.plot(
+                config=plot_config,
+                output_file=Path(
+                    self.output_path.parent.parent.parent / f"_images/{input_file.stem}"
+                ),
+                db_config=self.db_config,
+            )
 
         try:
             # First try with utf-8
