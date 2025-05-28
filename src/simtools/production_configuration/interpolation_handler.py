@@ -152,7 +152,6 @@ class InterpolationHandler:
         variance = np.var(grid_points, axis=0)
         non_flat_mask = variance > threshold
 
-        # Check if all dimensions are flat
         if not np.any(non_flat_mask):
             self._logger.warning(
                 "All dimensions are flat. Keeping all dimensions for interpolation."
