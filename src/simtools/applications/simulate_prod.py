@@ -153,7 +153,6 @@ def _parse(description=None):
     )
     return config.initialize(
         db_config=True,
-        job_submission=True,
         simulation_model=["site", "layout", "telescope", "model_version"],
         simulation_configuration={"software": None, "corsika_configuration": ["all"]},
     )
@@ -172,23 +171,15 @@ def main():  # noqa: D103
     simulator.simulate()
     simulator.validate_metadata()
 
-    if simulator.submit_engine == "local":
-        logger.info(
-            f"Production run complete for primary {args_dict['primary']} showers "
-            f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
-            f"at {args_dict['site']} site, using {args_dict['model_version']} model."
-        )
-        if args_dict.get("pack_for_grid_register"):
-            simulator.pack_for_register(args_dict["pack_for_grid_register"])
-        if args_dict["save_file_lists"]:
-            simulator.save_file_lists()
-    else:
-        logger.info("Production run submitted to the workload manager")
-        if args_dict["pack_for_grid_register"] or args_dict["save_file_lists"]:
-            logger.warning(
-                "Packing for grid register or saving file lists not supported for "
-                f"{simulator.submit_engine}."
-            )
+    logger.info(
+        f"Production run complete for primary {args_dict['primary']} showers "
+        f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
+        f"at {args_dict['site']} site, using {args_dict['model_version']} model."
+    )
+    if args_dict.get("pack_for_grid_register"):
+        simulator.pack_for_register(args_dict["pack_for_grid_register"])
+    if args_dict["save_file_lists"]:
+        simulator.save_file_lists()
 
 
 if __name__ == "__main__":

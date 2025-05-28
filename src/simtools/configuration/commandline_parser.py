@@ -37,7 +37,6 @@ class CommandLineParser(argparse.ArgumentParser):
         simulation_model=None,
         simulation_configuration=None,
         db_config=False,
-        job_submission=False,
     ):
         """
         Initialize default arguments used by all applications (e.g., log level or test flag).
@@ -55,13 +54,9 @@ class CommandLineParser(argparse.ArgumentParser):
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
-        job_submission: bool
-            Add job submission configuration parameters to list of args.
         """
         self.initialize_simulation_model_arguments(simulation_model)
         self.initialize_simulation_configuration_arguments(simulation_configuration)
-        if job_submission:
-            self.initialize_job_submission_arguments()
         if db_config:
             self.initialize_db_config_arguments()
         if paths:
@@ -226,28 +221,6 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str.strip,
             required=False,
             default=None,
-        )
-
-    def initialize_job_submission_arguments(self):
-        """Initialize job submission arguments for simulator."""
-        _job_group = self.add_argument_group("job submission")
-        _job_group.add_argument(
-            "--submit_engine",
-            help="job submission command",
-            type=str,
-            required=True,
-            choices=[
-                "qsub",
-                "htcondor",
-                "local",
-            ],
-            default="local",
-        )
-        _job_group.add_argument(
-            "--submit_options",
-            help="additional options (comma separated) for submission command",
-            type=str,
-            required=False,
         )
 
     def initialize_simulation_model_arguments(self, model_options):
