@@ -11,16 +11,16 @@ __all__ = ["StatisticalUncertaintyEvaluator"]
 
 class StatisticalUncertaintyEvaluator:
     """
-    Evaluates statistical uncertainties from a DL2 MC event file.
+    Evaluate statistical uncertainties for a metric at a point in the observational parameter grid.
 
     Parameters
     ----------
     file_path : str
         Path to the DL2 MC event file.
-    metrics : dict, optional
-        Dictionary of metrics to evaluate. Default is None.
+    metrics : dict
+        Dictionary of metrics to evaluate.
     grid_point : tuple, optional
-        Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
+        Grid point (energy, azimuth, zenith, NSB, offset).
     """
 
     def __init__(
@@ -35,6 +35,7 @@ class StatisticalUncertaintyEvaluator:
         self.grid_point = grid_point
 
         self.data = self.load_data_from_file(file_path)
+        self.energy_bin_edges = self.create_energy_bin_edges()
 
         self.metric_results = {}
         self.energy_threshold = None
@@ -71,16 +72,14 @@ class StatisticalUncertaintyEvaluator:
         unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
         unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
         if len(unique_azimuths) > 1 or len(unique_zeniths) > 1:
-            msg = (
-                f"Multiple values found for azimuth ({unique_azimuths}) zenith ({unique_zeniths})."
-            )
+            msg = f"Multiple values found for azimuth ({unique_azimuths}) zenith ({unique_zeniths})"
             self._logger.error(msg)
             raise ValueError(msg)
         self.grid_point = (
             1 * u.TeV,
             unique_azimuths[0],
             unique_zeniths[0],
-            0,
+            0,  # NSB needs to be read and set here
             0 * u.deg,
         )
         self._logger.info(f"Grid point values: {self.grid_point}")
@@ -117,7 +116,7 @@ class StatisticalUncertaintyEvaluator:
             raise FileNotFoundError(error_message) from e
         return data
 
-    def create_bin_edges(self):
+    def create_energy_bin_edges(self):
         """
         Create unique energy bin edges.
 
@@ -231,9 +230,8 @@ class StatisticalUncertaintyEvaluator:
         float
             Energy threshold value.
         """
-        bin_edges = self.create_bin_edges()
         reconstructed_event_histogram = self.compute_reconstructed_event_histogram(
-            self.data["event_energies_mc"], bin_edges
+            self.data["event_energies_mc"], self.energy_bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
 
@@ -249,7 +247,7 @@ class StatisticalUncertaintyEvaluator:
         if threshold_index == 0 and efficiencies[0] < threshold_efficiency:
             return
 
-        self.energy_threshold = bin_edges[threshold_index]
+        self.energy_threshold = self.energy_bin_edges[threshold_index]
 
     def calculate_uncertainty_effective_area(self):
         """
@@ -260,9 +258,8 @@ class StatisticalUncertaintyEvaluator:
         dict
             Dictionary with uncertainties for the file.
         """
-        bin_edges = self.create_bin_edges()
         reconstructed_event_histogram = self.compute_reconstructed_event_histogram(
-            self.data["event_energies_mc"], bin_edges
+            self.data["event_energies_mc"], self.energy_bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
         _, relative_uncertainties = self.compute_efficiency_and_uncertainties(
@@ -317,11 +314,10 @@ class StatisticalUncertaintyEvaluator:
 
         energy_deviation = (event_energies_reco - event_energies_mc) / event_energies_mc
 
-        bin_edges = self.create_bin_edges()
-        bin_indices = np.digitize(event_energies_reco, bin_edges) - 1
+        bin_indices = np.digitize(event_energies_reco, self.energy_bin_edges) - 1
 
         energy_deviation_by_bin = [
-            energy_deviation[bin_indices == i] for i in range(len(bin_edges) - 1)
+            energy_deviation[bin_indices == i] for i in range(len(self.energy_bin_edges) - 1)
         ]
 
         # Calculate sigma for each bin

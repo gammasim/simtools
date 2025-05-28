@@ -82,6 +82,7 @@ def test_calculate_production_statistics(test_fits_file, metric):
 
     evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
+    evaluator.calculate_metrics()
 
     derive_production_statistics = ProductionStatisticsDerivator(evaluator, metrics=metric)
 
@@ -118,7 +119,7 @@ def setup_evaluator(metric):
     grid_point = (1.0, 45.0, 30.0, 0.1, 0.05)
 
     evaluator = StatisticalUncertaintyEvaluator(file_path, metrics=metric, grid_point=grid_point)
-
+    evaluator.calculate_metrics()
     evaluator.metric_results = {
         "uncertainty_effective_area": {"relative_uncertainties": np.array([0.04, 0.05, 0.06])},
         "energy_estimate": 0.03,
@@ -170,7 +171,7 @@ def test_calculate_overall_metric_maximum(test_fits_file):
     )
 
 
-def test_create_bin_edges(test_fits_file, metric):
+def test_create_energy_bin_edges(test_fits_file, metric):
     """Test the creation of unique energy bin edges."""
     evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     # overwrite lower and upper edges for simplicity
@@ -179,7 +180,7 @@ def test_create_bin_edges(test_fits_file, metric):
         "bin_edges_high": np.array([2.0, 3.0, 4.0]),
     }
 
-    bin_edges = evaluator.create_bin_edges()
+    bin_edges = evaluator.create_energy_bin_edges()
     expected_bin_edges = np.array([1.0, 2.0, 3.0, 4.0])
 
     assert isinstance(bin_edges, np.ndarray)
@@ -225,7 +226,15 @@ def test_calculate_overall_metric_invalid_metric(test_fits_file):
 
 
 def test_set_grid_point_single_azimuth_zenith(caplog):
-    with patch.object(StatisticalUncertaintyEvaluator, "load_data_from_file", return_value={}):
+    """Test setting grid point with single azimuth and zenith values."""
+    with (
+        patch.object(StatisticalUncertaintyEvaluator, "load_data_from_file", return_value={}),
+        patch.object(
+            StatisticalUncertaintyEvaluator,
+            "create_energy_bin_edges",
+            return_value=np.array([1.0, 10.0, 100.0]),
+        ),
+    ):
         evaluator = StatisticalUncertaintyEvaluator(file_path="", metrics={})
         events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0])}
         evaluator._set_grid_point(events_data)
