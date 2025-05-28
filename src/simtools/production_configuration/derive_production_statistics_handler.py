@@ -59,7 +59,7 @@ class ProductionStatisticsHandler:
         return collect_data_from_file(grid_points_production_file)
 
     def initialize_evaluators(self):
-        """Initialize StatisticalUncertaintyEvaluator instances for the given zeniths/offsets."""
+        """Initialize StatisticalUncertaintyEvaluator instances for the given grid point."""
         if not (
             self.args["base_path"]
             and self.args["zeniths"]
