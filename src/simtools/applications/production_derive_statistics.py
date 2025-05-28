@@ -1,23 +1,27 @@
 #!/usr/bin/python3
 
 r"""
-Application to derive the number of events required for grid points by interpolation.
+Derive the required number of events for MC productions for a grid of observational conditions.
 
-This application evaluates statistical uncertainties from DL2 MC event files, performs
-interpolation for the given grid points given in a file and saves the grid points with the
-interpolated production events added.
+This application evaluates statistical uncertainties from the analysis of events after the
+application of loose gamma/hadron separation cuts, then interpolates the derived number of required
+events for the specified grid points provided in a file. The resulting grid points will have the
+derived number of required events added.
+
+The metric for the required uncertainty is pre-defined and must be configured via the metrics file.
 
 Command line arguments
 ----------------------
 grid_points_production_file (str, required)
-    Path to the file containing grid points. Each grid point should include azimuth, zenith,
-    NSB, offset.
+    Path to the file containing grid points. Each grid point should include azimuth, zenith, NSB,
+    offset.
 metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
 base_path (str, required)
-    Path to the directory containing the DL2 MC event files for interpolation.
+    Path to the directory containing the event files for interpolation (after loose gamma/hadron
+    cuts).
 file_name_template (str, optional)
-    Template for the DL2 MC event file name. Default:
+    Template for the event file name. Default:
     'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
 plot_production_statistics (flag, optional)
     If provided, plots the production statistics. Default: False.
@@ -31,7 +35,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
     simtools-production-derive-statistics \\
         --grid_points_production_file path/to/grid_points_production.json \\
         --metrics_file "path/to/metrics.yaml" \\
-        --base_path tests/resources/production_dl2_fits/ \\
+        --base_path path/to/production_event_files/ \\
         --file_name_template "prod6_LaPalma-{zenith}deg\\
             _gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits" \\
         --zeniths 20 40 52 60 \\
@@ -42,7 +46,8 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 Output
 ------
-The output will be a file containing the grid points with the interpolated production events added.
+The output will be a file containing the grid points with the derived number of required events
+added.
 """
 
 import logging
