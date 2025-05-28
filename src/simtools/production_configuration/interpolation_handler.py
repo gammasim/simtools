@@ -65,16 +65,6 @@ class InterpolationHandler:
 
     def _extract_grid_properties(self):
         """Extract grid properties from evaluators."""
-        if not self.evaluators:
-            self._logger.warning("No evaluators provided.")
-            self.azimuths = []
-            self.zeniths = []
-            self.nsbs = []
-            self.offsets = []
-            self.energy_grids = []
-            self.energy_thresholds = np.array([])
-            return
-
         self.azimuths = [e.grid_point[1].to(u.deg).value for e in self.evaluators]
         self.zeniths = [e.grid_point[2].to(u.deg).value for e in self.evaluators]
         self.nsbs = [e.grid_point[3] for e in self.evaluators]
