@@ -162,11 +162,11 @@ def test_perform_interpolation(handler):
     assert interpolated.shape[0] == query_points.shape[0]
 
 
-def test_interpolate_with_energy(handler):
-    """Test the _interpolate_with_energy method."""
+def test_perform_interpolation_with_energy(handler):
+    """Test the _perform_interpolation_with_energy method."""
     handler.interpolate()
 
-    energy_dependent_results = handler._interpolate_with_energy()
+    energy_dependent_results = handler._perform_interpolation_with_energy()
     assert isinstance(energy_dependent_results, np.ndarray)
     assert energy_dependent_results.ndim == 3  # [1, energy_bins, production_points]
 
