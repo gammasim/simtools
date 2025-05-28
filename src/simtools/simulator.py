@@ -72,8 +72,6 @@ class Simulator:
         self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
         self._test = self.args_dict.get("test", False)
-        self.submit_engine = self.args_dict.get("submit_engine", "local")
-        self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
         self.sim_telarray_seeds = {
@@ -343,8 +341,6 @@ class Simulator:
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
         """
-        self._logger.info(f"Submission command: {self.submit_engine}")
-
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
@@ -358,11 +354,7 @@ class Simulator:
                 run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
             )
 
-            job_manager = JobManager(
-                submit_engine=self.submit_engine,
-                submit_options=self._submit_options,
-                test=self._test,
-            )
+            job_manager = JobManager(test=self._test)
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
