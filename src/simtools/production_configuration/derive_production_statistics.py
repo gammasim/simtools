@@ -104,8 +104,6 @@ class ProductionStatisticsDerivator:
         # requirement if we want to keep the power law shape of the production statistics.
         scaled_events = base_events * np.max(scaling_factors)
 
-        # For debugging
-
         if return_sum:
             return np.sum(scaled_events)
         return scaled_events
