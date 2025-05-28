@@ -2,9 +2,9 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-production-derive-corsika-limits
-    TEST_NAME: run
+    TEST_NAME: fits
     CONFIGURATION:
-      EVENT_DATA_FILES: tests/resources/production_event_data_files.yml
+      EVENT_DATA_FILES: tests/resources/production_event_data_fits_files.yml
       LOSS_FRACTION: 1.e-3
       TELESCOPE_IDS: tests/resources/production_layouts_telescope_ids.yml
       OUTPUT_PATH: simtools-output
