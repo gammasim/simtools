@@ -53,7 +53,6 @@ simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
-simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-print-version <applications/simtools-print-version>
 simtools-run-application <applications/simtools-run-application>

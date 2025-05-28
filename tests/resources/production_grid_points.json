@@ -1,0 +1,66 @@
+[
+    {
+        "azimuth": {
+            "value": 310.0,
+            "unit": "deg"
+        },
+        "zenith_angle": {
+            "value": 30.0,
+            "unit": "deg"
+        },
+        "nsb": {
+            "value": 4.0,
+            "unit": "MHz"
+        },
+        "offset": {
+            "value": 0.0,
+            "unit": "deg"
+        },
+        "energy_threshold": {
+            "lower": {
+                "value": 0.0045877057774406345,
+                "unit": "TeV"
+            }
+        },
+        "radius": {
+            "value": 2047.84819650665,
+            "unit": "m"
+        },
+        "viewcone": {
+            "value": 9.986606094572277,
+            "unit": "deg"
+        }
+    },
+    {
+        "azimuth": {
+            "value": 310.0,
+            "unit": "deg"
+        },
+        "zenith_angle": {
+            "value": 30.0,
+            "unit": "deg"
+        },
+        "nsb": {
+            "value": 4.0,
+            "unit": "MHz"
+        },
+        "offset": {
+            "value": 10.0,
+            "unit": "deg"
+        },
+        "energy_threshold": {
+            "lower": {
+                "value": 0.0045877057774406345,
+                "unit": "TeV"
+            }
+        },
+        "radius": {
+            "value": 2047.84819650665,
+            "unit": "m"
+        },
+        "viewcone": {
+            "value": 9.986606094572277,
+            "unit": "deg"
+        }
+    }
+]
