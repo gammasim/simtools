@@ -265,7 +265,7 @@ class InterpolationHandler:
             rescale=True,
         )
 
-    def _interpolate_with_energy(self):
+    def _perform_interpolation_with_energy(self):
         """
         Perform energy-dependent interpolation.
 
@@ -328,7 +328,9 @@ class InterpolationHandler:
         )
 
         # Energy-dependent interpolation
-        self.interpolated_production_statistics_with_energy = self._interpolate_with_energy()
+        self.interpolated_production_statistics_with_energy = (
+            self._perform_interpolation_with_energy()
+        )
 
         return self.interpolated_production_statistics
 
