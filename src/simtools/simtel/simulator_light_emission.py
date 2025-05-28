@@ -121,14 +121,15 @@ class SimulatorLightEmission(SimtelRunner):
         list
             The pointing vector from the calibration device to the telescope.
         """
-        # use DB coordinates later
-        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
+        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
+        x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
+        x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
 
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
@@ -167,12 +168,13 @@ class SimulatorLightEmission(SimtelRunner):
             The path to the generated telpos file.
         """
         telpos_file = self.output_directory.joinpath("telpos.dat")
-        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
-        x_tel, y_tel, z_tel = [coord * 100 for coord in (x_tel, y_tel, z_tel)]  # Convert to cm
-        radius = self._telescope_model.get_parameter_value("telescope_sphere_radius")
-        radius = radius * 100  # Convert to cm
+        x_tel, y_tel, z_tel = [coord.to(u.cm).value for coord in (x_tel, y_tel, z_tel)]
+
+        radius = self._telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
+        radius = radius.to(u.cm).value  # Convert radius to cm
         with telpos_file.open("w", encoding="utf-8") as file:
             file.write(f"{x_tel} {y_tel} {z_tel} {radius}\n")
 
@@ -190,12 +192,13 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
-        x_cal, y_cal, z_cal = (
-            self._calibration_model.get_parameter_value("array_element_position_ground") * u.m
+        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
         )
-        x_tel, y_tel, z_tel = (
-            self._telescope_model.get_parameter_value("array_element_position_ground") * u.m
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
         )
+
         _model_directory = self.io_handler.get_output_directory(self.label, "model")
         _model_directory.mkdir(parents=True, exist_ok=True)
         if not self.test:
@@ -230,7 +233,7 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -d {','.join(map(str, pointing_vector))}"
 
                 command += f" -n {self.photons_per_run}"
-                print(f"Photons per run: {self.photons_per_run} ")
+                self._logger.info(f"Photons per run: {self.photons_per_run} ")
 
                 # same wavelength as for laser
                 command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
@@ -296,7 +299,10 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -DNUM_TELESCOPES=1"
 
         command += super().get_config_option(
-            "altitude", self._site_model.get_parameter_value("corsika_observation_level")
+            "altitude",
+            self._site_model.get_parameter_value_with_unit("corsika_observation_level")
+            .to(u.m)
+            .value,
         )
         command += super().get_config_option(
             "atmospheric_transmission",
