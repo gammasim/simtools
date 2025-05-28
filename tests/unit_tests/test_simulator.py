@@ -38,12 +38,7 @@ def corsika_file():
 
 
 @pytest.fixture
-def submit_engine():
-    return "local"
-
-
-@pytest.fixture
-def simulations_args_dict(corsika_config_data, model_version, simtel_path, submit_engine):
+def simulations_args_dict(corsika_config_data, model_version, simtel_path):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
     args_dict["simulation_software"] = "sim_telarray"
@@ -56,7 +51,6 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     args_dict["run_number"] = 1
     args_dict["run_number_offset"] = 0
     args_dict["nshow"] = 10
-    args_dict["submit_engine"] = submit_engine
     args_dict["extra_commands"] = None
     return args_dict
 
@@ -213,9 +207,8 @@ def test_fill_results_without_run(array_simulator, input_file_list):
     assert array_simulator.runs == [1, 22, 2]
 
 
-def test_simulate_shower_simulator(shower_simulator, submit_engine):
+def test_simulate_shower_simulator(shower_simulator):
     shower_simulator._test = True
-    shower_simulator._submit_engine = submit_engine
     shower_simulator.simulate()
     assert len(shower_simulator._results["output"]) > 0
     assert len(shower_simulator._results["sub_out"]) > 0
@@ -223,18 +216,16 @@ def test_simulate_shower_simulator(shower_simulator, submit_engine):
     assert Path(run_script).exists()
 
 
-def test_simulate_array_simulator(array_simulator, corsika_file, submit_engine):
+def test_simulate_array_simulator(array_simulator, corsika_file):
     array_simulator._test = True
-    array_simulator._submit_engine = submit_engine
     array_simulator.simulate(input_file_list=corsika_file)
 
     assert len(array_simulator._results["output"]) > 0
     assert len(array_simulator._results["sub_out"]) > 0
 
 
-def test_simulate_shower_array_simulator(shower_array_simulator, submit_engine):
+def test_simulate_shower_array_simulator(shower_array_simulator):
     shower_array_simulator._test = True
-    shower_array_simulator._submit_engine = submit_engine
     shower_array_simulator.simulate()
 
     assert len(shower_array_simulator._results["output"]) > 0
