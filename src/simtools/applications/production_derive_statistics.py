@@ -80,9 +80,9 @@ def _parse(label, description):
     )
     config.parser.add_argument(
         "--metrics_file",
-        required=False,
+        required=True,
         type=str,
-        default="production_simulation_config_metrics.yml",
+        default=None,
         help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
     )
     config.parser.add_argument(
