@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=39207ee9"></script>
+    <script src="../../_static/documentation_options.js?v=b69a9483"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/configuration/configurator';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gaf90e7e" />
+  <meta name="docsearch:version" content="0.1.dev1+g7c8243a" />
   </head>
   
   
@@ -512,7 +512,6 @@
         <span class="n">simulation_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">simulation_configuration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">job_submission</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize application configuration.</span>
@@ -540,8 +539,6 @@
 <span class="sd">            Dict of simulation software configuration parameters to add to list of args.</span>
 <span class="sd">        db_config: bool</span>
 <span class="sd">            Add database configuration parameters to list of args.</span>
-<span class="sd">        job_submission: bool</span>
-<span class="sd">            Add job submission configuration to list of args.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -557,7 +554,6 @@
             <span class="n">simulation_model</span><span class="o">=</span><span class="n">simulation_model</span><span class="p">,</span>
             <span class="n">simulation_configuration</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">,</span>
             <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-            <span class="n">job_submission</span><span class="o">=</span><span class="n">job_submission</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_from_command_line</span><span class="p">(</span><span class="n">require_command_line</span><span class="o">=</span><span class="n">require_command_line</span><span class="p">)</span>

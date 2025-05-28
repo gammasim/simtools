@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=39207ee9"></script>
+    <script src="../_static/documentation_options.js?v=b69a9483"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/job_execution';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="I/O" href="io_operations.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gaf90e7e" />
+  <meta name="docsearch:version" content="0.1.dev1+g7c8243a" />
   </head>
   
   
@@ -432,7 +432,7 @@
 <span id="jobexecution"></span><h1>Job execution and submission<a class="headerlink" href="#job-execution-and-submission" title="Link to this heading">#</a></h1>
 <p>Modules managing the execution and submission of jobs to computing clusters.
 This is mostly used for small productions during the validation or verification phase.</p>
-<p id="module-job_execution.job_manager"><span id="job-manager"></span>Interface to workload managers like gridengine or HTCondor.</p>
+<p id="module-job_execution.job_manager"><span id="job-manager"></span>Interface to workload managers to run jobs on a compute node.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="job_execution.job_manager.JobExecutionError">
 <em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">job_execution.job_manager.</span></span><span class="sig-name descname"><span class="pre">JobExecutionError</span></span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobExecutionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobExecutionError" title="Link to this definition">#</a></dt>
@@ -441,33 +441,17 @@ This is mostly used for small productions during the validation or verification 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="job_execution.job_manager.JobManager">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">job_execution.job_manager.</span></span><span class="sig-name descname"><span class="pre">JobManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">submit_engine</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager" title="Link to this definition">#</a></dt>
-<dd><p>Interface to workload managers like gridengine or HTCondor.</p>
-<p>Expects that jobs are described by shell scripts.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">job_execution.job_manager.</span></span><span class="sig-name descname"><span class="pre">JobManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager" title="Link to this definition">#</a></dt>
+<dd><p>Job manager for submitting jobs to a compute node.</p>
+<p>Expects that jobs can be described by shell scripts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>submit_engine</strong><span class="classifier">str</span></dt><dd><p>Job submission system. Default is local.</p>
-</dd>
 <dt><strong>test</strong><span class="classifier">bool</span></dt><dd><p>Testing mode without sub submission.</p>
 </dd>
 </dl>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobManager.check_submission_system">
-<span class="sig-name descname"><span class="pre">check_submission_system</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager.check_submission_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager.check_submission_system" title="Link to this definition">#</a></dt>
-<dd><p>Check that the requested workload manager exist on the system.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>JobExecutionError</dt><dd><p>if workflow manager is not found.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="job_execution.job_manager.JobManager.submit">
 <span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_script</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager.submit" title="Link to this definition">#</a></dt>
@@ -487,10 +471,25 @@ Provided in order to print the log excerpt in case of run time error.</p>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobManager.submit_engine">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">submit_engine</span></span><a class="headerlink" href="#job_execution.job_manager.JobManager.submit_engine" title="Link to this definition">#</a></dt>
-<dd><p>Get the submit command.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="job_execution.job_manager.JobManager.submit_local">
+<span class="sig-name descname"><span class="pre">submit_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager.submit_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager.submit_local" title="Link to this definition">#</a></dt>
+<dd><p>Run a job script on the command line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>log_file: str or Path</strong></dt><dd><p>The log file of the actual simulator (CORSIKA or sim_telarray).
+Provided in order to print the log excerpt in case of run time error.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>Return code of the executed script</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -561,9 +560,8 @@ Provided in order to print the log excerpt in case of run time error.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobExecutionError"><code class="docutils literal notranslate"><span class="pre">JobExecutionError</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager"><code class="docutils literal notranslate"><span class="pre">JobManager</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.check_submission_system"><code class="docutils literal notranslate"><span class="pre">JobManager.check_submission_system()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit"><code class="docutils literal notranslate"><span class="pre">JobManager.submit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit_engine"><code class="docutils literal notranslate"><span class="pre">JobManager.submit_engine</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit_local"><code class="docutils literal notranslate"><span class="pre">JobManager.submit_local()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.htcondor_script_generator.generate_submission_script"><code class="docutils literal notranslate"><span class="pre">generate_submission_script()</span></code></a></li>
