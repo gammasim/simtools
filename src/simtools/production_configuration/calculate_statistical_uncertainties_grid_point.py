@@ -11,7 +11,7 @@ __all__ = ["StatisticalUncertaintyEvaluator"]
 
 class StatisticalUncertaintyEvaluator:
     """
-    Create an evaluator for a production grid point and calculate uncertainties from a DL2 MC file.
+    Evaluate statistical uncertainties for a metric at a point in the observational parameter grid.
 
     Parameters
     ----------
