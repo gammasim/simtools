@@ -469,7 +469,6 @@ def test_initialize(configurator):
         simulation_model=["site"],
         simulation_configuration={"test": "test"},
         db_config=True,
-        job_submission=True,
     )
 
     # Assert that the methods were called with the correct parameters

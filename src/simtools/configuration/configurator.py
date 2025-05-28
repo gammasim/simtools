@@ -106,7 +106,6 @@ class Configurator:
         simulation_model=None,
         simulation_configuration=None,
         db_config=False,
-        job_submission=False,
     ):
         """
         Initialize application configuration.
@@ -134,8 +133,6 @@ class Configurator:
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
-        job_submission: bool
-            Add job submission configuration to list of args.
 
         Returns
         -------
@@ -151,7 +148,6 @@ class Configurator:
             simulation_model=simulation_model,
             simulation_configuration=simulation_configuration,
             db_config=db_config,
-            job_submission=job_submission,
         )
 
         self._fill_from_command_line(require_command_line=require_command_line)
