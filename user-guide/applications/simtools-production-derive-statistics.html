@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b69a9483"></script>
+    <script src="../../_static/documentation_options.js?v=cf11185d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-derive-statistics';</script>
@@ -52,10 +52,10 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="simtools-print-version" href="simtools-print-version.html" />
-    <link rel="prev" title="simtools-production-generate-simulation-config" href="simtools-production-generate-simulation-config.html" />
+    <link rel="prev" title="simtools-production-generate-grid" href="simtools-production-generate-grid.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7c8243a" />
+  <meta name="docsearch:version" content="0.1.dev1+g4619db0" />
   </head>
   
   
@@ -380,7 +380,6 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-production-derive-statistics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
@@ -468,53 +467,51 @@
                   
   <section id="module-production_derive_statistics">
 <span id="simtools-production-derive-statistics"></span><h1>simtools-production-derive-statistics<a class="headerlink" href="#module-production_derive_statistics" title="Link to this heading">#</a></h1>
-<p>Application to run the StatisticalUncertaintyEvaluator and interpolate results.</p>
-<p>This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and camera offsets, and performs interpolation
-for a specified query point.</p>
+<p>Derive the required number of events for MC productions for a grid of observational conditions.</p>
+<p>This application evaluates statistical uncertainties from the analysis of events after the
+application of loose gamma/hadron separation cuts, then interpolates the derived number of required
+events for the specified grid points provided in a file. The resulting grid points will have the
+derived number of required events added.</p>
+<p>The metric for the required uncertainty is pre-defined and must be configured via the metrics file.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>base_path (str, required)</dt><dd><p>Path to the directory containing the DL2 MC event file for interpolation.</p>
-</dd>
-<dt>zeniths (list of int, required)</dt><dd><p>List of zenith angles to consider.</p>
-</dd>
-<dt>camera_offsets (list of int, required)</dt><dd><p>List of offsets in degrees.</p>
-</dd>
-<dt>query_point (list of float, required)</dt><dd><dl class="simple">
-<dt>Query point for interpolation. The query point must contain exactly 5 values:</dt><dd><ul class="simple">
-<li><p>Energy (TeV)</p></li>
-<li><p>Azimuth (degrees)</p></li>
-<li><p>Zenith (degrees)</p></li>
-<li><p>NSB (MHz)</p></li>
-<li><p>Offset (degrees)</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt>output_file (str, optional)</dt><dd><p>Output file to store the results. Default: ‘interpolated_production_statistics.json’.</p>
+<dt>grid_points_production_file (str, required)</dt><dd><p>Path to the file containing grid points. Each grid point should include azimuth, zenith, NSB,
+offset.</p>
 </dd>
 <dt>metrics_file (str, optional)</dt><dd><p>Path to the metrics definition file. Default: ‘production_simulation_config_metrics.yml’.</p>
 </dd>
-<dt>file_name_template (str, optional)</dt><dd><p>Template for the file name. Default:
+<dt>base_path (str, required)</dt><dd><p>Path to the directory containing the event files for interpolation (after loose gamma/hadron
+cuts).</p>
+</dd>
+<dt>file_name_template (str, optional)</dt><dd><p>Template for the event file name. Default:
 ‘prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits’.</p>
+</dd>
+<dt>plot_production_statistics (flag, optional)</dt><dd><p>If provided, plots the production statistics. Default: False.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>To evaluate statistical uncertainties and perform interpolation, run the command line script:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\</span>
-<span class="go">    --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-statistics \\</span>
+<span class="go">    --grid_points_production_file path/to/grid_points_production.json \\</span>
 <span class="go">    --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
-<span class="go">    --output_path simtools-output/derived_events \\</span>
-<span class="go">    --output_file derived_events.json</span>
+<span class="go">    --base_path path/to/production_event_files/ \\</span>
+<span class="go">    --file_name_template &quot;prod6_LaPalma-{zenith}deg\\</span>
+<span class="go">        _gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&quot; \\</span>
+<span class="go">    --zeniths 20 40 52 60 \\</span>
+<span class="go">    --offsets 0 \\</span>
+<span class="go">    --azimuths 180 \\</span>
+<span class="go">    --nsb 0.0 \\</span>
+<span class="go">    --plot_production_statistics</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>The output will display the production statistics for the specified query point and save</dt><dd><p>the results to the specified output file.</p>
-</dd>
-</dl>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p>The output will be a file containing the grid points with the derived number of required events
+added.</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="production_derive_statistics.main">
@@ -535,12 +532,12 @@ for a specified query point.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-production-generate-simulation-config.html"
+       href="simtools-production-generate-grid.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-production-generate-simulation-config</p>
+        <p class="prev-next-title">simtools-production-generate-grid</p>
       </div>
     </a>
     <a class="right-next"
@@ -573,6 +570,7 @@ for a specified query point.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_statistics.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>

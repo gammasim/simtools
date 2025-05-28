@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b69a9483"></script>
+    <script src="../../_static/documentation_options.js?v=cf11185d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/derive_production_statistics';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7c8243a" />
+  <meta name="docsearch:version" content="0.1.dev1+g4619db0" />
   </head>
   
   
@@ -433,6 +433,50 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">evaluator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_scaling_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute bin-wise scaling factors based on error metrics.</span>
+
+<span class="sd">        Takes into account the energy range specified in the metrics and</span>
+<span class="sd">        calculates a separate scaling factor for each energy bin.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Array of scaling factors for each energy bin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uncertainty_effective_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">metric_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uncertainty_effective_area&quot;</span><span class="p">)</span>
+        <span class="n">relative_uncertainties</span> <span class="o">=</span> <span class="n">uncertainty_effective_area</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;relative_uncertainties&quot;</span><span class="p">)</span>
+        <span class="n">energy_range</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uncertainty_effective_area&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_range&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">energy_unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uncertainty_effective_area&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_range&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">energy_range_converted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">energy_range</span><span class="p">)</span> <span class="o">*</span> <span class="n">energy_unit</span>
+
+        <span class="n">bin_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">energy_bin_edges</span>
+        <span class="n">bin_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bin_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="c1"># Mask for bins within the metric specified energy range</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">bin_centers</span> <span class="o">&gt;=</span> <span class="n">energy_range_converted</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span>
+            <span class="n">bin_centers</span> <span class="o">&lt;=</span> <span class="n">energy_range_converted</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">scaling_factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">relative_uncertainties</span><span class="p">)</span>
+
+        <span class="n">target_uncertainty</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uncertainty_effective_area&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_uncertainty&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate scaling factor only for bins within the energy range</span>
+        <span class="c1"># For bins with zero events/uncertainty, use a scaling factor of 0</span>
+        <span class="n">valid_bins</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">relative_uncertainties</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">scaling_factors</span><span class="p">[</span><span class="n">valid_bins</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">relative_uncertainties</span><span class="p">[</span><span class="n">valid_bins</span><span class="p">]</span> <span class="o">/</span> <span class="n">target_uncertainty</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="n">scaling_factors</span>
+
 <div class="viewcode-block" id="ProductionStatisticsDerivator.derive_statistics">
 <a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.derive_statistics">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">derive_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_sum</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
@@ -454,32 +498,16 @@
 <span class="sd">            If &#39;return_sum&#39; is False, returns an array of production statistics along the energy</span>
 <span class="sd">            axis as a u.Quantity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">scaling_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_scaling_factor</span><span class="p">()</span>
-
+        <span class="n">scaling_factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_scaling_factor</span><span class="p">()</span>
         <span class="n">base_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_simulated_events</span><span class="p">()</span>
+        <span class="c1"># currently we use the maximum of the scaling factors to scale the events. This is a soft</span>
+        <span class="c1"># requirement if we want to keep the power law shape of the production statistics.</span>
+        <span class="n">scaled_events</span> <span class="o">=</span> <span class="n">base_events</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">scaling_factors</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">return_sum</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">base_events</span> <span class="o">*</span> <span class="n">scaling_factor</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">base_events</span> <span class="o">*</span> <span class="n">scaling_factor</span></div>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">scaled_events</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scaled_events</span></div>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_scaling_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the scaling factor based on the error metrics.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        float</span>
-<span class="sd">            The scaling factor.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">()</span>
-        <span class="n">uncertainty_effective_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">metric_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uncertainty_effective_area&quot;</span><span class="p">)</span>
-        <span class="n">current_max_error</span> <span class="o">=</span> <span class="n">uncertainty_effective_area</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_error&quot;</span><span class="p">)</span>
-        <span class="n">target_max_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uncertainty_effective_area&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_uncertainty&quot;</span><span class="p">)[</span>
-            <span class="s2">&quot;value&quot;</span>
-        <span class="p">]</span>
-
-        <span class="k">return</span> <span class="p">(</span><span class="n">current_max_error</span> <span class="o">/</span> <span class="n">target_max_error</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_number_of_simulated_events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -515,16 +543,19 @@
         <span class="n">bin_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">create_bin_edges</span><span class="p">()</span>
         <span class="n">bin_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 
-        <span class="n">scaling_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_scaling_factor</span><span class="p">()</span>
+        <span class="c1"># Get scaling factors for all bins</span>
+        <span class="n">scaling_factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_scaling_factor</span><span class="p">()</span>
 
         <span class="n">simulated_event_histogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulated_event_histogram&quot;</span><span class="p">,</span> <span class="p">[])</span>
 
         <span class="k">if</span> <span class="n">bin_idx</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">bin_idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">simulated_event_histogram</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy </span><span class="si">{</span><span class="n">energy</span><span class="si">}</span><span class="s2"> is outside therange of the simulated events data.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy </span><span class="si">{</span><span class="n">energy</span><span class="si">}</span><span class="s2"> is outside the range of the simulated events data.&quot;</span><span class="p">)</span>
 
         <span class="n">base_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_simulated_events</span><span class="p">()</span>
         <span class="n">base_event_at_energy</span> <span class="o">=</span> <span class="n">base_events</span><span class="p">[</span><span class="n">bin_idx</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">base_event_at_energy</span> <span class="o">*</span> <span class="n">scaling_factor</span></div>
+        <span class="n">scaling_factor_at_energy</span> <span class="o">=</span> <span class="n">scaling_factors</span><span class="p">[</span><span class="n">bin_idx</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">base_event_at_energy</span> <span class="o">*</span> <span class="n">scaling_factor_at_energy</span></div>
 </div>
 
 </pre></div>

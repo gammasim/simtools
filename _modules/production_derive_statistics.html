@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=b69a9483"></script>
+    <script src="../_static/documentation_options.js?v=cf11185d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_derive_statistics';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7c8243a" />
+  <meta name="docsearch:version" content="0.1.dev1+g4619db0" />
   </head>
   
   
@@ -397,34 +397,30 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Application to run the StatisticalUncertaintyEvaluator and interpolate results.</span>
+<span class="sd">Derive the required number of events for MC productions for a grid of observational conditions.</span>
 
-<span class="sd">This application evaluates statistical uncertainties from DL2 MC event files</span>
-<span class="sd">based on input parameters like zenith angles and camera offsets, and performs interpolation</span>
-<span class="sd">for a specified query point.</span>
+<span class="sd">This application evaluates statistical uncertainties from the analysis of events after the</span>
+<span class="sd">application of loose gamma/hadron separation cuts, then interpolates the derived number of required</span>
+<span class="sd">events for the specified grid points provided in a file. The resulting grid points will have the</span>
+<span class="sd">derived number of required events added.</span>
+
+<span class="sd">The metric for the required uncertainty is pre-defined and must be configured via the metrics file.</span>
 
 <span class="sd">Command line arguments</span>
 <span class="sd">----------------------</span>
-<span class="sd">base_path (str, required)</span>
-<span class="sd">    Path to the directory containing the DL2 MC event file for interpolation.</span>
-<span class="sd">zeniths (list of int, required)</span>
-<span class="sd">    List of zenith angles to consider.</span>
-<span class="sd">camera_offsets (list of int, required)</span>
-<span class="sd">    List of offsets in degrees.</span>
-<span class="sd">query_point (list of float, required)</span>
-<span class="sd">    Query point for interpolation. The query point must contain exactly 5 values:</span>
-<span class="sd">        - Energy (TeV)</span>
-<span class="sd">        - Azimuth (degrees)</span>
-<span class="sd">        - Zenith (degrees)</span>
-<span class="sd">        - NSB (MHz)</span>
-<span class="sd">        - Offset (degrees)</span>
-<span class="sd">output_file (str, optional)</span>
-<span class="sd">    Output file to store the results. Default: &#39;interpolated_production_statistics.json&#39;.</span>
+<span class="sd">grid_points_production_file (str, required)</span>
+<span class="sd">    Path to the file containing grid points. Each grid point should include azimuth, zenith, NSB,</span>
+<span class="sd">    offset.</span>
 <span class="sd">metrics_file (str, optional)</span>
 <span class="sd">    Path to the metrics definition file. Default: &#39;production_simulation_config_metrics.yml&#39;.</span>
+<span class="sd">base_path (str, required)</span>
+<span class="sd">    Path to the directory containing the event files for interpolation (after loose gamma/hadron</span>
+<span class="sd">    cuts).</span>
 <span class="sd">file_name_template (str, optional)</span>
-<span class="sd">    Template for the file name. Default:</span>
+<span class="sd">    Template for the event file name. Default:</span>
 <span class="sd">    &#39;prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&#39;.</span>
+<span class="sd">plot_production_statistics (flag, optional)</span>
+<span class="sd">    If provided, plots the production statistics. Default: False.</span>
 
 <span class="sd">Example</span>
 <span class="sd">-------</span>
@@ -432,20 +428,29 @@
 
 <span class="sd">.. code-block:: console</span>
 
-<span class="sd">    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\</span>
-<span class="sd">        --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\</span>
+<span class="sd">    simtools-production-derive-statistics \\</span>
+<span class="sd">        --grid_points_production_file path/to/grid_points_production.json \\</span>
 <span class="sd">        --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
-<span class="sd">        --output_path simtools-output/derived_events \\</span>
-<span class="sd">        --output_file derived_events.json</span>
+<span class="sd">        --base_path path/to/production_event_files/ \\</span>
+<span class="sd">        --file_name_template &quot;prod6_LaPalma-{zenith}deg\\</span>
+<span class="sd">            _gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&quot; \\</span>
+<span class="sd">        --zeniths 20 40 52 60 \\</span>
+<span class="sd">        --offsets 0 \\</span>
+<span class="sd">        --azimuths 180 \\</span>
+<span class="sd">        --nsb 0.0 \\</span>
+<span class="sd">        --plot_production_statistics</span>
 
-<span class="sd">The output will display the production statistics for the specified query point and save</span>
-<span class="sd"> the results to the specified output file.</span>
+<span class="sd">Output</span>
+<span class="sd">------</span>
+<span class="sd">The output will be a file containing the grid points with the derived number of required events</span>
+<span class="sd">added.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_production_statistics_handler</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ProductionStatisticsHandler</span><span class="p">,</span>
 <span class="p">)</span>
@@ -464,39 +469,23 @@
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
 
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--grid_points_production_file&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the JSON file containing grid points for a production.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--metrics_file&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Metrics definition file. (default: production_simulation_config_metrics.yml)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--base_path&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the DL2 MC event files for interpolation.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--zeniths&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of zenith angles.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--camera_offsets&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of camera offsets in degrees.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--query_point&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;ENERGY&quot;</span><span class="p">,</span> <span class="s2">&quot;AZIMUTH&quot;</span><span class="p">,</span> <span class="s2">&quot;ZENITH&quot;</span><span class="p">,</span> <span class="s2">&quot;NSB&quot;</span><span class="p">,</span> <span class="s2">&quot;OFFSET&quot;</span><span class="p">),</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Grid point for interpolation (energy, azimuth, zenith, NSB, offset).&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--metrics_file&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;production_simulation_config_metrics.yml&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Metrics definition file. (default: production_simulation_config_metrics.yml)&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--file_name_template&quot;</span><span class="p">,</span>
@@ -504,6 +493,34 @@
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;prod6_LaPalma-</span><span class="si">{zenith}</span><span class="s2">deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&quot;</span><span class="p">),</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Template for the DL2 MC event file name.&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--zeniths&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of zenith angles in deg that describe the supplied DL2 files.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--azimuths&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of azimuth angles in deg that describe the supplied DL2 files.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--nsb&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of nsb values that describe the supplied DL2 files.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--offsets&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of camera offsets in deg that describe the supplied DL2 files.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--plot_production_statistics&quot;</span><span class="p">,</span>
@@ -521,6 +538,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the ProductionStatisticsHandler.&quot;&quot;&quot;</span>
     <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
         <span class="n">label</span><span class="p">,</span>
         <span class="s2">&quot;Evaluate statistical uncertainties from DL2 MC event files and interpolate results.&quot;</span><span class="p">,</span>
@@ -528,7 +546,10 @@
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
-    <span class="n">manager</span> <span class="o">=</span> <span class="n">ProductionStatisticsHandler</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">_io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">_io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">ProductionStatisticsHandler</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">)</span>
     <span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
 
 

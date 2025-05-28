@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=b69a9483"></script>
+    <script src="../_static/documentation_options.js?v=cf11185d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/production_configuration';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7c8243a" />
+  <meta name="docsearch:version" content="0.1.dev1+g4619db0" />
   </head>
   
   
@@ -439,15 +439,15 @@ the calculation of the number of events to be simulated given a pre-determined m
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.calculate_statistical_uncertainties_grid_point.</span></span><span class="sig-name descname"><span class="pre">StatisticalUncertaintyEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator" title="Link to this definition">#</a></dt>
-<dd><p>Evaluates statistical uncertainties from a DL2 MC event file.</p>
+<dd><p>Evaluate statistical uncertainties for a metric at a point in the observational parameter grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the DL2 MC event file.</p>
 </dd>
-<dt><strong>metrics</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary of metrics to evaluate. Default is None.</p>
+<dt><strong>metrics</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of metrics to evaluate.</p>
 </dd>
-<dt><strong>grid_point</strong><span class="classifier">tuple, optional</span></dt><dd><p>Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).</p>
+<dt><strong>grid_point</strong><span class="classifier">tuple, optional</span></dt><dd><p>Grid point (energy, azimuth, zenith, NSB, offset).</p>
 </dd>
 </dl>
 </dd>
@@ -581,8 +581,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_bin_edges">
-<span class="sig-name descname"><span class="pre">create_bin_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.create_bin_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_bin_edges" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_energy_bin_edges">
+<span class="sig-name descname"><span class="pre">create_energy_bin_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_uncertainties_grid_point.html#StatisticalUncertaintyEvaluator.create_energy_bin_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_energy_bin_edges" title="Link to this definition">#</a></dt>
 <dd><p>Create unique energy bin edges.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -855,7 +855,7 @@ query point.
 - Write the results of the interpolation to an output file.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_production_statistics_handler.</span></span><span class="sig-name descname"><span class="pre">ProductionStatisticsHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_production_statistics_handler.</span></span><span class="sig-name descname"><span class="pre">ProductionStatisticsHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler" title="Link to this definition">#</a></dt>
 <dd><p>Handles the workflow for deriving production statistics.</p>
 <p>This class manages the evaluation of statistical uncertainties from DL2 MC event files
 and performs interpolation to estimate the required number of events for a simulation
@@ -863,7 +863,7 @@ production at a specified query point.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators">
 <span class="sig-name descname"><span class="pre">initialize_evaluators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.initialize_evaluators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators" title="Link to this definition">#</a></dt>
-<dd><p>Initialize StatisticalUncertaintyEvaluator instances for the given zeniths/offsets.</p>
+<dd><p>Initialize StatisticalUncertaintyEvaluator instances for the given grid point.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1014,81 +1014,39 @@ as keys and axis values as values. Axis values may include units where defined.<
 </dd></dl>
 
 </section>
-<section id="module-production_configuration.generate_simulation_config">
-<span id="id6"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
-<p>Derives simulation configuration parameters for a grid point based on several metrics.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.generate_simulation_config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig" title="Link to this definition">#</a></dt>
-<dd><p>Configures simulation parameters for a specific grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>grid_point</strong><span class="classifier">dict</span></dt><dd><p>Dictionary representing a grid point with azimuth, elevation, and night sky background.</p>
-</dd>
-<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the DL2 MC event file for statistical uncertainty evaluation.</p>
-</dd>
-<dt><strong>metrics</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary of metrics to evaluate.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events">
-<span class="sig-name descname"><span class="pre">calculate_required_events</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig.calculate_required_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the required number of simulated events based on statistical error metrics.</p>
-<p>Uses the ProductionStatisticsDerivator to scale the events.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>int</dt><dd><p>The number of simulated events required.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig.configure_simulation">
-<span class="sig-name descname"><span class="pre">configure_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig.configure_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig.configure_simulation" title="Link to this definition">#</a></dt>
-<dd><p>Configure the simulation parameters for the grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>dict</dt><dd><dl class="simple">
-<dt>A dictionary with simulation parameters such as core scatter area,</dt><dd><p>viewcone, and number of simulated events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
 <section id="module-production_configuration.interpolation_handler">
-<span id="id7"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
+<span id="id6"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
 <p>Handle interpolation between multiple StatisticalUncertaintyEvaluator instances.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.interpolation_handler.</span></span><span class="sig-name descname"><span class="pre">InterpolationHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler" title="Link to this definition">#</a></dt>
-<dd><p>Handle interpolation between multiple StatisticalUncertaintyEvaluator instances.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.interpolation_handler.</span></span><span class="sig-name descname"><span class="pre">InterpolationHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_points_production</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the required events for production via interpolation from a grid.</p>
+<p>This class provides methods to interpolate production statistics across a grid of
+parameter values (azimuth, zenith, NSB, offset) and energy.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate">
-<span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate" title="Link to this definition">#</a></dt>
-<dd><p>Interpolate the number of simulated events given query points.</p>
+<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.build_grid_points_no_energy">
+<span class="sig-name descname"><span class="pre">build_grid_points_no_energy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.build_grid_points_no_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.build_grid_points_no_energy" title="Link to this definition">#</a></dt>
+<dd><p>Build grid points without energy dimension.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>query_points</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array of query points with shape (n, 5), where n is the number of points,
-and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
+<dt>tuple</dt><dd><p>(production_statistics, grid_points_no_energy)</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate">
+<span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate" title="Link to this definition">#</a></dt>
+<dd><p>Interpolate production statistics at the grid points specified in grid_points_production.</p>
+<p>This method performs two types of interpolation:
+1. Energy-independent interpolation using the sum of production statistics
+2. Energy-dependent interpolation for each energy bin</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
 <dt>np.ndarray</dt><dd><p>Interpolated values at the query points.</p>
 </dd>
 </dl>
@@ -1097,33 +1055,13 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold">
-<span class="sig-name descname"><span class="pre">interpolate_energy_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate_energy_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold" title="Link to this definition">#</a></dt>
-<dd><p>Interpolate the energy threshold for a given grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>query_point</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array specifying the grid point (energy, azimuth, zenith, NSB, offset).</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>Interpolated energy threshold.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.plot_comparison">
-<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.plot_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison" title="Link to this definition">#</a></dt>
-<dd><p>Plot a comparison between the interpolated production statistics and reconstructed events.</p>
+<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.plot_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison" title="Link to this definition">#</a></dt>
+<dd><p>Plot a comparison between interpolated production statistics and reconstructed events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>evaluator</strong><span class="classifier">StatisticalUncertaintyEvaluator</span></dt><dd><p>The evaluator for which to plot the comparison.</p>
+<dt><strong>grid_point_index</strong><span class="classifier">int, optional</span></dt><dd><p>Index of the grid point to plot, by default 0</p>
 </dd>
 </dl>
 </dd>
@@ -1198,7 +1136,7 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.calculate_uncertainty_effective_area()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_bin_edges"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.create_bin_edges()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_energy_bin_edges"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.create_energy_bin_edges()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.load_data_from_file"><code class="docutils literal notranslate"><span class="pre">StatisticalUncertaintyEvaluator.load_data_from_file()</span></code></a></li>
 </ul>
 </li>
@@ -1254,18 +1192,10 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_simulation_config">generate_simulation_config</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.calculate_required_events()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig.configure_simulation"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.configure_simulation()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.interpolation_handler">interpolation_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.build_grid_points_no_energy"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.build_grid_points_no_energy()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate_energy_threshold()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.plot_comparison()</span></code></a></li>
 </ul>
 </li>
