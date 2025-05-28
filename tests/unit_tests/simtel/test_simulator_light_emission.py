@@ -327,6 +327,11 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator._simtel_path = MagicMock()
         mock_simulator._telescope_model = MagicMock()
         mock_simulator._site_model = MagicMock()
+        mock_simulator._calibration_model = MagicMock()
+
+        mock_simulator.calibration_pointing_direction = MagicMock(
+            return_value=([0, 0, 1], [76.980826, 180.17047, 0, 0])
+        )
 
         mock_simulator._simtel_path.joinpath.return_value = (
             "/path/to/sim_telarray/bin/sim_telarray/"
@@ -351,11 +356,13 @@ def test_make_simtel_script(mock_simulator):
                 get_telescope_model_param
             )
 
+            mock_simulator._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
             mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
                 "999" if param == "corsika_observation_level" else MagicMock()
             )
 
             mock_simulator.output_directory = "/directory"
+            # mock_simulator.le_application = ["xyzls", "layout"]  # Add this line
 
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
@@ -363,7 +370,7 @@ def test_make_simtel_script(mock_simulator):
                 "-I -I/path/to/config/ "
                 "-c /path/to/config/config.cfg "
                 "-DNUM_TELESCOPES=1 "
-                "-C altitude=999 -C atmospheric_transmission=atm_test "
+                "-C altitude=999.0 -C atmospheric_transmission=atm_test "
                 "-C TRIGGER_TELESCOPES=1 "
                 "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
                 "-C MAXIMUM_TELESCOPES=1 "
@@ -373,8 +380,9 @@ def test_make_simtel_script(mock_simulator):
                 "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
             )
 
-            command = mock_simulator._make_simtel_script()
+            # mock_simulator._remove_line_from_config = MagicMock()
 
+            command = mock_simulator._make_simtel_script()
             assert command == expected_command
 
             mock_path_open.assert_has_calls(
@@ -683,24 +691,26 @@ def test_write_telpos_file(mock_simulator, tmp_path):
     # Mock the output directory to use a temporary path
     mock_simulator.output_directory = tmp_path
 
-    # Mock the telescope model's parameter values
-    mock_simulator._telescope_model.get_parameter_value = Mock(
-        side_effect=lambda param: {
-            "array_element_position_ground": (1.0, 2.0, 3.0),  # in meters
-            "telescope_sphere_radius": 4.0,  # in meters
+    # Mock the telescope model
+    mock_simulator._telescope_model = MagicMock()
+
+    mock_simulator._telescope_model.get_parameter_value_with_unit.side_effect = (
+        lambda param, *args: {
+            "array_element_position_ground": (1.0 * u.m, 2.0 * u.m, 3.0 * u.m),
+            "telescope_sphere_radius": 4.0 * u.m,
         }[param]
     )
 
     # Call the method to write the telpos file
     telpos_file = mock_simulator._write_telpos_file()
 
-    # Verify the file was created
+    # Verify the file was created and has the correct content
     assert telpos_file.exists()
 
-    # Read the file and verify its contents
-    with telpos_file.open("r", encoding="utf-8") as file:
-        content = file.read().strip()
+    # Read the content of the file
+    with open(telpos_file) as f:
+        content = f.read().strip()
 
-    # Expected content (converted to cm)
-    expected_content = "100.0 200.0 300.0 400.0"  # x, y, z, r in cm
-    assert content == expected_content
+    # Check that the content contains the expected values converted to cm
+    # 1m = 100cm, 2m = 200cm, 3m = 300cm, 4m = 400cm
+    assert content == "100.0 200.0 300.0 400.0"
