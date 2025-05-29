@@ -186,7 +186,7 @@ def test_runs(mock_simulator):
 
 
 def test_photons_per_run_default(mock_simulator):
-    assert mock_simulator.photons_per_run == pytest.approx(1e7)
+    assert mock_simulator.photons_per_run == pytest.approx(1e8)
 
 
 def test_make_light_emission_script(
@@ -196,17 +196,19 @@ def test_make_light_emission_script(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f" rm {mock_output_path}/xyzls_layout.simtel.gz\n"
+        f"rm {mock_output_path}/xyzls_layout.simtel.gz\n"
         f"sim_telarray/LightEmission/xyzls"
-        " -x -51627.0"
-        " -y 5510.0"
-        " -z 9200.0"
+        f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
+        f" --telpos-file {mock_output_path}/telpos.dat"
+        " -x -58717.99999999999"
+        " -y 275.0"
+        " -z 13700.0"
         " -d 0.979101,-0.104497,-0.174477"
-        " -n 10000000.0"
+        " -n 100000000.0"
         " -s 300"
         " -p Gauss:0.0"
         " -a isotropic"
-        f" -A {mock_output_path}/model/"
+        f" -A {mock_output_path}/model/6.0.0/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
@@ -223,14 +225,16 @@ def test_make_light_emission_script_variable(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f" rm {mock_output_path}/xyzls_variable.simtel.gz\n"
+        f"rm {mock_output_path}/xyzls_variable.simtel.gz\n"
         f"sim_telarray/LightEmission/xyzls"
+        f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
+        f" --telpos-file {mock_output_path}/telpos.dat"
         " -x 0.0"
         " -y 0.0"
         " -z 100000.0"
         " -d 0,0,-1"
-        " -n 10000000.0"
-        f" -A {mock_output_path}/model/"
+        " -n 100000000.0"
+        f" -A {mock_output_path}/model/6.0.0/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
@@ -250,22 +254,22 @@ def test_make_light_emission_script_laser(
     command = mock_simulator_laser._make_light_emission_script()
 
     expected_command = (
-        f" rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
+        f"rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
         f"sim_telarray/LightEmission/ls-beam"
+        f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
+        f" --telpos-file {mock_output_path}/telpos.dat"
         " --events 1"
         " --bunches 2500000"
         " --step 0.1"
         " --bunchsize 1"
-        " --spectrum "
-        f"{mock_simulator_laser._calibration_model.get_parameter_value('laser_wavelength')}"
-        " --lightpulse Gauss:"
-        f"{mock_simulator_laser._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+        " --spectrum 300"
+        " --lightpulse Gauss:0.0"
         " --laser-position '-51627.0,5510.0,9200.0'"
         " --telescope-theta 79.951773"
         " --telescope-phi 186.091952"
         " --laser-theta 10.048226999999997"
         " --laser-phi 173.908048"
-        f" --atmosphere {mock_output_path}/model/"
+        f" --atmosphere {mock_output_path}/model/6.0.0/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/ls-beam.iact.gz\n"
     )
@@ -323,6 +327,11 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator._simtel_path = MagicMock()
         mock_simulator._telescope_model = MagicMock()
         mock_simulator._site_model = MagicMock()
+        mock_simulator._calibration_model = MagicMock()
+
+        mock_simulator.calibration_pointing_direction = MagicMock(
+            return_value=([0, 0, 1], [76.980826, 180.17047, 0, 0])
+        )
 
         mock_simulator._simtel_path.joinpath.return_value = (
             "/path/to/sim_telarray/bin/sim_telarray/"
@@ -347,6 +356,7 @@ def test_make_simtel_script(mock_simulator):
                 get_telescope_model_param
             )
 
+            mock_simulator._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
             mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
                 "999" if param == "corsika_observation_level" else MagicMock()
             )
@@ -359,7 +369,7 @@ def test_make_simtel_script(mock_simulator):
                 "-I -I/path/to/config/ "
                 "-c /path/to/config/config.cfg "
                 "-DNUM_TELESCOPES=1 "
-                "-C altitude=999 -C atmospheric_transmission=atm_test "
+                "-C altitude=999.0 -C atmospheric_transmission=atm_test "
                 "-C TRIGGER_TELESCOPES=1 "
                 "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
                 "-C MAXIMUM_TELESCOPES=1 "
@@ -370,7 +380,6 @@ def test_make_simtel_script(mock_simulator):
             )
 
             command = mock_simulator._make_simtel_script()
-
             assert command == expected_command
 
             mock_path_open.assert_has_calls(
@@ -670,3 +679,35 @@ def test_run_simulation(
 
     # Assert process_simulation_output was called
     mock_process_simulation_output.assert_called_once_with(args_dict, figures)
+
+
+def test_write_telpos_file(mock_simulator, tmp_path):
+    """
+    Test the _write_telpos_file method to ensure it writes the correct telescope positions.
+    """
+    # Mock the output directory to use a temporary path
+    mock_simulator.output_directory = tmp_path
+
+    # Mock the telescope model
+    mock_simulator._telescope_model = MagicMock()
+
+    mock_simulator._telescope_model.get_parameter_value_with_unit.side_effect = (
+        lambda param, *args: {
+            "array_element_position_ground": (1.0 * u.m, 2.0 * u.m, 3.0 * u.m),
+            "telescope_sphere_radius": 4.0 * u.m,
+        }[param]
+    )
+
+    # Call the method to write the telpos file
+    telpos_file = mock_simulator._write_telpos_file()
+
+    # Verify the file was created and has the correct content
+    assert telpos_file.exists()
+
+    # Read the content of the file
+    with open(telpos_file) as f:
+        content = f.read().strip()
+
+    # Check that the content contains the expected values converted to cm
+    # 1m = 100cm, 2m = 200cm, 3m = 300cm, 4m = 400cm
+    assert content == "100.0 200.0 300.0 400.0"
