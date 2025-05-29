@@ -13,6 +13,7 @@ CTA_SIMPIPE:
       LIGHT_SOURCE_TYPE: led
       OUTPUT_PATH: simtools-output
       TEST: true
+      USE_PLAIN_OUTPUT_PATH: true
     INTEGRATION_TESTS:
     - OUTPUT_FILE: logfile.log
 SCHEMA_NAME: application_workflow.metaschema

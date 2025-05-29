@@ -199,13 +199,13 @@ class SimulatorLightEmission(SimtelRunner):
             "array_element_position_ground"
         )
 
-        _model_directory = self.io_handler.get_output_directory(self.label, "model")
-        _model_directory.mkdir(parents=True, exist_ok=True)
-        config_directory = f"{_model_directory}/{self._telescope_model.model_version}/"
+        config_directory = self.io_handler.get_output_directory(
+            label=self.label, sub_dir=f"model/{self._site_model.model_version}"
+        )
 
         telpos_file = self._write_telpos_file()
 
-        command = f" rm {self.output_directory}/"
+        command = f"rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
@@ -235,20 +235,18 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self.photons_per_run}"
                 self._logger.info(f"Photons per run: {self.photons_per_run} ")
 
-                # same wavelength as for laser, need to be given as integer value
                 laser_wavelength = self._calibration_model.get_parameter_value_with_unit(
                     "laser_wavelength"
                 )
                 command += f" -s {int(laser_wavelength.to(u.nm).value)}"
 
-                # pulse
                 led_pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
                     "led_pulse_sigtime"
                 )
                 command += f" -p Gauss:{led_pulse_sigtime.to(u.ns).value}"
-                command += " -a isotropic"  # angular distribution
+                command += " -a isotropic"
 
-            command += f" -A {config_directory}"
+            command += f" -A {config_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
 
         elif self.light_source_type == "laser":
@@ -275,8 +273,8 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" --telescope-theta {angle_theta}"
             command += f" --telescope-phi {angle_phi}"
             command += f" --laser-theta {90 - angles[2]}"
-            command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
-            command += f" --atmosphere {config_directory}"
+            command += f" --laser-phi {angles[3]}"
+            command += f" --atmosphere {config_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"

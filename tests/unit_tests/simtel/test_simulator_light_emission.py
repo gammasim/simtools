@@ -196,7 +196,7 @@ def test_make_light_emission_script(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f" rm {mock_output_path}/xyzls_layout.simtel.gz\n"
+        f"rm {mock_output_path}/xyzls_layout.simtel.gz\n"
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
@@ -225,7 +225,7 @@ def test_make_light_emission_script_variable(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f" rm {mock_output_path}/xyzls_variable.simtel.gz\n"
+        f"rm {mock_output_path}/xyzls_variable.simtel.gz\n"
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
@@ -254,7 +254,7 @@ def test_make_light_emission_script_laser(
     command = mock_simulator_laser._make_light_emission_script()
 
     expected_command = (
-        f" rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
+        f"rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
         f"sim_telarray/LightEmission/ls-beam"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
