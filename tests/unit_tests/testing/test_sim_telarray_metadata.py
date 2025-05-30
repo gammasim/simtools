@@ -17,9 +17,8 @@ from simtools.testing.sim_telarray_metadata import (
 )
 
 
-@pytest.fixture
 def test_metadata(sim_telarray_file_gamma):
-    return read_sim_telarray_metadata(sim_telarray_file_gamma)
+    assert isinstance(read_sim_telarray_metadata(sim_telarray_file_gamma), tuple)
 
 
 def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):

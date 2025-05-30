@@ -473,5 +473,5 @@ def sim_telarray_file_proton():
 
 @pytest.fixture
 def sim_telarray_hdata_file_gamma():
-    """Gamma sim_telarray file for testing."""
+    """Gamma sim_telarray histogram file for testing."""
     return "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst"
