@@ -197,7 +197,7 @@ jobs:
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-            GITLAB_TOKEN_CORSIKA_OPT_PATCHES=${{ secrets.GITLAB_TOKEN_CORSIKA_OPT_PATCHES }}
+            GITLAB_TOKEN_CORSIKA_OPT_PATCHES=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-prod-opt
