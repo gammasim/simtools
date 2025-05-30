@@ -6,6 +6,9 @@ from unittest.mock import Mock, patch
 
 from simtools.model import model_repository
 
+TEST_PRODUCTION_FILE = "test_production.json"
+PATH_PATCH = "simtools.model.model_repository._get_model_parameter_file_path"
+
 
 def test_verify_simulation_model_production_tables_success(tmp_path):
     """Test successful verification of production tables."""
@@ -15,8 +18,8 @@ def test_verify_simulation_model_production_tables_success(tmp_path):
     production_data = {
         "parameters": {"telescope": {"camera_config": "1.0.0", "optics_config": "2.1.0"}}
     }
+    production_file = productions_path / TEST_PRODUCTION_FILE
 
-    production_file = productions_path / "test_production.json"
     production_file.write_text(json.dumps(production_data))
 
     with patch(
@@ -35,7 +38,7 @@ def test_verify_simulation_model_production_tables_missing_files(tmp_path):
     productions_path = tmp_path / "simulation-models" / "productions"
     productions_path.mkdir(parents=True)
 
-    production_file = productions_path / "test_production.json"
+    production_file = productions_path / TEST_PRODUCTION_FILE
     production_file.write_text('{"parameters": {}}')
 
     with patch(
@@ -61,14 +64,15 @@ def test_verify_simulation_model_production_tables_no_production_files(tmp_path)
 @patch("simtools.utils.general.collect_data_from_file")
 def test_verify_model_parameters_for_production_with_missing_files(mock_collect_data, tmp_path):
     """Test verification of model parameters with missing files."""
+
     production_data = {
         "parameters": {"telescope": {"camera_config": "1.0.0", "mirror_config": "2.0.0"}}
     }
     mock_collect_data.return_value = production_data
 
-    production_file = Path("test_production.json")
+    production_file = Path(TEST_PRODUCTION_FILE)
 
-    with patch("simtools.model.model_repository._get_model_parameter_file_path") as mock_get_path:
+    with patch(PATH_PATCH) as mock_get_path:
         mock_file = Mock()
         mock_file.exists.return_value = False
         mock_get_path.return_value = mock_file
@@ -87,9 +91,9 @@ def test_verify_model_parameters_for_production_all_files_exist(mock_collect_dat
     production_data = {"parameters": {"telescope": {"camera_config": "1.0.0"}}}
     mock_collect_data.return_value = production_data
 
-    production_file = Path("test_production.json")
+    production_file = Path(TEST_PRODUCTION_FILE)
 
-    with patch("simtools.model.model_repository._get_model_parameter_file_path") as mock_get_path:
+    with patch(PATH_PATCH) as mock_get_path:
         mock_file = Mock()
         mock_file.exists.return_value = True
         mock_get_path.return_value = mock_file
@@ -108,7 +112,7 @@ def test_verify_model_parameters_for_production_no_parameters(mock_collect_data,
     production_data = {}
     mock_collect_data.return_value = production_data
 
-    production_file = Path("test_production.json")
+    production_file = Path(TEST_PRODUCTION_FILE)
 
     missing_files, total_checked = model_repository._verify_model_parameters_for_production(
         str(tmp_path), production_file
@@ -124,9 +128,9 @@ def test_verify_model_parameters_for_production_non_dict_parameters(mock_collect
     production_data = {"parameters": {"telescope": "not_a_dict", "array": {"valid_param": "1.0.0"}}}
     mock_collect_data.return_value = production_data
 
-    production_file = Path("test_production.json")
+    production_file = Path(TEST_PRODUCTION_FILE)
 
-    with patch("simtools.model.model_repository._get_model_parameter_file_path") as mock_get_path:
+    with patch(PATH_PATCH) as mock_get_path:
         mock_file = Mock()
         mock_file.exists.return_value = True
         mock_get_path.return_value = mock_file
