@@ -41,7 +41,7 @@ RUN cd /tmp && \
 ADD corsika_simtelarray.tar.gz .
 # TODO - replace initial-commit branch with a specific tag / release
 RUN git clone --depth 1 --branch initial-commit  https://oauth2:$GITLAB_TOKEN_CORSIKA_OPT_PATCHES@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git && \
-    cp -r corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION ./corsika-$CORSIKA_VERSION && \
+    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-$CORSIKA_VERSION/ && \
     rm -rf corsika-opt-patches
 
 RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
