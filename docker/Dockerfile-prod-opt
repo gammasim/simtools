@@ -8,7 +8,7 @@
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
 # - SC1091: ignore warning about not being able to source the bashrc
 FROM almalinux:9.5 AS patches_stage
-ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES="token"
+ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES
 ARG CORSIKA_VERSION="78000"
 
 RUN yum update -y && yum install -y git && \
