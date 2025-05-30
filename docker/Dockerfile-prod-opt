@@ -59,8 +59,6 @@ RUN cd /tmp && \
 
 ADD corsika-$CORSIKA_VERSION.tar.gz .
 # TODO - this is a quick fix to get the corsika build working
-ADD conex-7.8000.tar.gz ./corsika-$CORSIKA_VERSION/
-ADD conex_Makefile.am ./corsika-$CORSIKA_VERSION/conex/Makefile.am
 ADD conex_Makefile.in ./corsika-$CORSIKA_VERSION/conex/Makefile.in
 # (end TODO)
 COPY --from=patches_stage /corsika-patches ./corsika-$CORSIKA_VERSION/
@@ -68,7 +66,7 @@ COPY --from=patches_stage /stdtools ./stdtools
 COPY --from=patches_stage /hessioxxx ./hessioxxx
 COPY --from=patches_stage /sim_telarray ./sim_telarray
 
-RUN tar -xf corsika-78000x.tar.xz && \
+RUN tar -xf corsika-${CORSIKA_VERSION}x.tar.xz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
     corsika_simtelarray.tar.gz corsika-$CORSIKA_VERSION.tar.gz \
