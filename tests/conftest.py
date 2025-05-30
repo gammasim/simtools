@@ -453,3 +453,25 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
         label="validate_camera_efficiency",
         test=True,
     )
+
+
+@pytest.fixture
+def sim_telarray_file_gamma():
+    """Gamma sim_telarray file for testing."""
+    return (
+        "tests/resources/"
+        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
+        "_test-production-North.simtel.zst"
+    )
+
+
+@pytest.fixture
+def sim_telarray_file_proton():
+    """Proton sim_telarray file for testing."""
+    return "tests/resources/proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+
+
+@pytest.fixture
+def sim_telarray_hdata_file_gamma():
+    """Gamma sim_telarray histogram file for testing."""
+    return "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst"
