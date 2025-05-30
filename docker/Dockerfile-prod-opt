@@ -7,6 +7,18 @@
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
 # - SC1091: ignore warning about not being able to source the bashrc
+FROM almalinux:9.5 AS patches_stage
+ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES
+ARG CORSIKA_VERSION="77550"
+
+RUN yum update -y && yum install -y git && \
+    yum clean all && \
+    rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
+
+RUN git clone --depth 1 --branch initial-commit https://oauth2:$GITLAB_TOKEN_CORSIKA_OPT_PATCHES@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git && \
+    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-patches/ && \
+    rm -rf corsika-opt-patches
+
 FROM almalinux:9.5 AS build_image
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
@@ -38,7 +50,8 @@ RUN cd /tmp && \
     cd / && rm -rf /tmp/autoconf-2.71*
 
 ADD corsika_simtelarray.tar.gz .
-ADD corsikaOptPatch.tar.gz ./corsika-$CORSIKA_VERSION
+COPY --from=patches_stage /corsika-patches ./corsika-$CORSIKA_VERSION/
+
 RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
