@@ -17,6 +17,7 @@ ARG BERNLOHR_VERSION="1.68"
 ARG BUILD_BRANCH=main
 ARG PYTHON_VERSION=3.12
 ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
+ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES="token"
 
 ENV GCC_PATH="/usr/bin/"
 WORKDIR /workdir/sim_telarray
@@ -24,7 +25,7 @@ WORKDIR /workdir/sim_telarray
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
     automake csh patch perl which bzip2 \
-    wget make tar m4 && \
+    wget make tar m4 git && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
@@ -38,7 +39,11 @@ RUN cd /tmp && \
     cd / && rm -rf /tmp/autoconf-2.71*
 
 ADD corsika_simtelarray.tar.gz .
-ADD corsikaOptPatch.tar.gz ./corsika-$CORSIKA_VERSION
+# TODO - replace initial-commit branch with a specific tag / release
+RUN git clone --depth 1 --branch initial-commit  https://oauth2:$GITLAB_TOKEN_CORSIKA_OPT_PATCHES@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git && \
+    cp -r corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION ./corsika-$CORSIKA_VERSION && \
+    rm -rf corsika-opt-patches
+
 RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \

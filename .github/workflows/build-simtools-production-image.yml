@@ -33,7 +33,6 @@ jobs:
       - name: Download corsika-simtel-package
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_CORSIKA_OPT_{0}', matrix.simtel_version)]}}/download -O corsikaOptPatch_${{ matrix.simtel_version }}.tar.gz
 
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
@@ -41,7 +40,6 @@ jobs:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-            corsikaOptPatch_${{ matrix.simtel_version }}.tar.gz
           retention-days: 1
 
   build-corsika-simtelarray:
@@ -200,6 +198,7 @@ jobs:
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
+            GITLAB_TOKEN_CORSIKA_OPT_PATCHES=${{ secrets.GITLAB_TOKEN_CORSIKA_OPT_PATCHES }}
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-prod-opt
