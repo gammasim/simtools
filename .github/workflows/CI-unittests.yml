@@ -135,6 +135,15 @@ jobs:
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=gammasim_simtools_AY_ssha9WiFxsX-2oy_w
+            -Dsonar.host.url=https://sonar-cta-dpps.zeuthen.desy.de
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.version=${{ matrix.python-version }}
+            -Dsonar.exclusions="**/docs/**,src/simtools/applications/*,**__init__.py"
+            -Dsonar.coverage.exclusions="**/tests/**"
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
