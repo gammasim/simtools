@@ -139,6 +139,7 @@ jobs:
           args: >
             -Dsonar.projectKey=gammasim_simtools_AY_ssha9WiFxsX-2oy_w
             -Dsonar.host.url=https://sonar-cta-dpps.zeuthen.desy.de
+            -Dsonar.qualitygate.wait=true
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=${{ matrix.python-version }}
             -Dsonar.exclusions="**/docs/**,src/simtools/applications/*,**__init__.py"
