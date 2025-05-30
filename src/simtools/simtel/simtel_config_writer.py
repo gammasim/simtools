@@ -556,9 +556,9 @@ class SimtelConfigWriter:
             "disc_bins": 10,
             "fadc_sum_bins": 10,
             "fadc_sum_offset": 0,
-            "asum_threshold": 0,
-            "dsum_threshold": 0,
-            "discriminator_threshold": 1,
+            "asum_threshold": 9999,
+            "dsum_threshold": 9999,
+            "discriminator_threshold": 9999,
             "fadc_amplitude": 1.0,
             "discriminator_amplitude": 1.0,
         }
