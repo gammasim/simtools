@@ -9,7 +9,7 @@
 # - SC1091: ignore warning about not being able to source the bashrc
 FROM almalinux:9.5 AS patches_stage
 ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES="token"
-ARG CORSIKA_VERSION="77550"
+ARG CORSIKA_VERSION="78000"
 
 RUN yum update -y && yum install -y git && \
     yum clean all && \
@@ -19,13 +19,21 @@ RUN git clone --depth 1 --branch initial-commit https://oauth2:$GITLAB_TOKEN_COR
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-patches/ && \
     rm -rf corsika-opt-patches
 
+# TODO - temporary fix until gitlab tokens are set up to clone the following three repositories
+# RUN git clone --depth 1 https://gitlab.cta-observatory.org/Konrad.Bernloehr/stdtools.git
+# RUN git clone --depth 1 https://gitlab.cta-observatory.org/Konrad.Bernloehr/hessio hessioxx
+# RUN git clone --depth 1 https://gitlab.cta-observatory.org/Konrad.Bernloehr/sim_telarray.git
+ADD stdtools ./stdtools/
+ADD hessioxxx ./hessioxxx/
+ADD sim_telarray ./sim_telarray/
+
 FROM almalinux:9.5 AS build_image
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
-ARG HADRONIC_MODEL="qgs2"
+ARG HADRONIC_MODEL="qgs3"
 ARG AVX_FLAG="avx2"
-ARG CORSIKA_VERSION="77550"
-ARG BERNLOHR_VERSION="1.68"
+ARG CORSIKA_VERSION="78000"
+ARG BERNLOHR_VERSION="1.69"
 ARG BUILD_BRANCH=main
 ARG PYTHON_VERSION=3.12
 ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
@@ -49,13 +57,21 @@ RUN cd /tmp && \
     make && make install && \
     cd / && rm -rf /tmp/autoconf-2.71*
 
-ADD corsika_simtelarray.tar.gz .
+ADD corsika-$CORSIKA_VERSION.tar.gz .
+# TODO - this is a quick fix to get the corsika build working
+ADD conex-7.8000.tar.gz ./corsika-$CORSIKA_VERSION/
+ADD conex_Makefile.am ./corsika-$CORSIKA_VERSION/conex/Makefile.am
+ADD conex_Makefile.in ./corsika-$CORSIKA_VERSION/conex/Makefile.in
+# (end TODO)
 COPY --from=patches_stage /corsika-patches ./corsika-$CORSIKA_VERSION/
+COPY --from=patches_stage /stdtools ./stdtools
+COPY --from=patches_stage /hessioxxx ./hessioxxx
+COPY --from=patches_stage /sim_telarray ./sim_telarray
 
-RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
+RUN tar -xf corsika-78000x.tar.xz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
-    corsika_simtelarray.tar.gz  corsika-$CORSIKA_VERSION.tar.gz \
+    corsika_simtelarray.tar.gz corsika-$CORSIKA_VERSION.tar.gz \
     bernlohr-$BERNLOHR_VERSION.tar.gz
 
 # Apply patches for non-optimized / optimized CORSIKA
@@ -111,6 +127,7 @@ RUN mv ./corsika-7*/run corsika-run && \
     find . -name "*.o" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
+# TODO - missing - cp of correct QGSJet tables into image
 # Unzip QGSJet tables; remove tables not needed (e.g. remove qgs3 tables when using qgs2)
 WORKDIR /workdir/sim_telarray/corsika-run
 RUN if [ "$HADRONIC_MODEL" = "qgs3" ]; then \
