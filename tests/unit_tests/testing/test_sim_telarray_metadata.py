@@ -18,20 +18,11 @@ from simtools.testing.sim_telarray_metadata import (
 
 
 @pytest.fixture
-def test_metadata_file():
-    return (
-        "tests/resources/"
-        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
-        "_test-production-North.simtel.zst"
-    )
+def test_metadata(sim_telarray_file_gamma):
+    return read_sim_telarray_metadata(sim_telarray_file_gamma)
 
 
-@pytest.fixture
-def test_metadata(test_metadata_file):
-    return read_sim_telarray_metadata(test_metadata_file)
-
-
-def test_assert_sim_telarray_metadata(test_metadata_file):
+def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):
     """Test assert_sim_telarray_metadata."""
     array_model_mock = MagicMock()
     array_model_mock.site_model.parameters = {
@@ -58,18 +49,13 @@ def test_assert_sim_telarray_metadata(test_metadata_file):
             "Number of telescopes in sim_telarray file (13) does not match number of telescopes in array model (3)"
         ),
     ):
-        assert_sim_telarray_metadata(test_metadata_file, array_model_mock)
+        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mock)
 
 
-def test_assert_sim_telarray_metadata_using_array_model(test_metadata_file, array_model_north):
+def test_assert_sim_telarray_metadata_using_array_model(sim_telarray_file_gamma, array_model_north):
     """Test assert_sim_telarray_metadata with different number of telescopes."""
 
-    assert_sim_telarray_metadata(
-        "tests/resources/"
-        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
-        "_test-production-North.simtel.zst",
-        array_model_north,
-    ) is None
+    assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_north) is None
 
     # rename one telescope
     array_model_north_renamed_telescope = copy.deepcopy(array_model_north)
@@ -81,11 +67,11 @@ def test_assert_sim_telarray_metadata_using_array_model(test_metadata_file, arra
     with pytest.raises(
         ValueError, match=re.escape("Telescope tel_LSTN-01 not found in sim_telarray file metadata")
     ):
-        assert_sim_telarray_metadata(test_metadata_file, array_model_north_renamed_telescope)
+        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_north_renamed_telescope)
 
 
 def test_assert_sim_telarray_metadata_with_mismatched_parameters(
-    test_metadata_file, array_model_north
+    sim_telarray_file_gamma, array_model_north
 ):
     """Test assert_sim_telarray_metadata with mismatched parameters."""
     array_model_mismatched_site = copy.deepcopy(array_model_north)
@@ -95,7 +81,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
 
     mismatch_message = r"^Telescope or site model parameters do not match sim_telarray "
     with pytest.raises(ValueError, match=mismatch_message):
-        assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_site)
+        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched_site)
 
     array_model_mismatched_telescope = copy.deepcopy(array_model_north)
     array_model_mismatched_telescope.telescope_model["LSTN-02"].parameters[
@@ -103,7 +89,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
     ]["value"] = 0.99
 
     with pytest.raises(ValueError, match=mismatch_message):
-        assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_telescope)
+        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched_telescope)
 
 
 def test_sim_telarray_name_from_parameter_name():
@@ -160,7 +146,7 @@ def test_assert_sim_telarray_seed(caplog):
     assert _assert_sim_telarray_seed(metadata, None) is None
 
 
-def test_assert_sim_telarray_metadata_seed_mismatch(test_metadata_file, array_model_north):
+def test_assert_sim_telarray_metadata_seed_mismatch(sim_telarray_file_gamma, array_model_north):
     """Test assert_sim_telarray_metadata with mismatched seeds."""
     array_model_mismatched_seed = copy.deepcopy(array_model_north)
     array_model_mismatched_seed.sim_telarray_seeds = {"seed": "54321"}
@@ -172,7 +158,7 @@ def test_assert_sim_telarray_metadata_seed_mismatch(test_metadata_file, array_mo
         with pytest.raises(
             ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
         ):
-            assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_seed)
+            assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched_seed)
 
 
 def test_assert_sim_telarray_seed_with_rng_select_seed(caplog):
