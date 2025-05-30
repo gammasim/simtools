@@ -8,8 +8,7 @@ This is a python project in the context of Monte Carlo simulations and high-ener
 - Use pathlib, not os.path
 - Use logging, not print
 - Use f-strings for formatting of log messages and other strings.
-- Avoid hardcode files.
-
+- Avoid hardcoding file paths
 ##  Tests
 
 
