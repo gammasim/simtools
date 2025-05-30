@@ -36,7 +36,7 @@ WORKDIR /workdir/sim_telarray
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
     automake csh patch perl which bzip2 \
-    wget make tar m4 git && \
+    wget make tar m4 && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
