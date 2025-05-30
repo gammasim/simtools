@@ -40,9 +40,12 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    model_repository.verify_simulation_model_production_tables(
+    if not model_repository.verify_simulation_model_production_tables(
         simulation_models_path=args_dict["simulation_models_path"]
-    )
+    ):
+        raise RuntimeError(
+            "Verification failed: Some model parameters are missing in the repository."
+        )
 
 
 if __name__ == "__main__":
