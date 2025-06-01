@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.db import db_handler
+from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 from simtools.visualization import plot_pixels
@@ -66,16 +67,18 @@ class ReadParameters:
     def _convert_to_md(self, parameter, parameter_version, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
+
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
         image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
-        Path(self.output_path.parent.parent.parent / "_images").mkdir(parents=True, exist_ok=True)
 
         if parameter == "camera_config_file" and parameter_version:
-            image_path = Path(f"../../{IMAGE_PATH}/{input_file.stem}")
+            outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+            outpath.mkdir(parents=True, exist_ok=True)
+            image_path = Path(f"{outpath}/{input_file.stem}")
             plot_config = {
                 "file_name": input_file.name,
                 "telescope": self.array_element,
@@ -87,9 +90,7 @@ class ReadParameters:
 
             plot_pixels.plot(
                 config=plot_config,
-                output_file=Path(
-                    self.output_path.parent.parent.parent / f"_images/{input_file.stem}"
-                ),
+                output_file=image_path,
                 db_config=self.db_config,
             )
 
