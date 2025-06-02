@@ -79,20 +79,21 @@ class ReadParameters:
             outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
             outpath.mkdir(parents=True, exist_ok=True)
             image_path = Path(f"{outpath}/{input_file.stem}")
-            plot_config = {
-                "file_name": input_file.name,
-                "telescope": self.array_element,
-                "parameter_version": parameter_version,
-                "site": self.site,
-                "model_version": self.model_version,
-                "parameter": parameter,
-            }
+            if not Path(f"{outpath}/{input_file.stem}.png").exists():
+                plot_config = {
+                    "file_name": input_file.name,
+                    "telescope": self.array_element,
+                    "parameter_version": parameter_version,
+                    "site": self.site,
+                    "model_version": self.model_version,
+                    "parameter": parameter,
+                }
 
-            plot_pixels.plot(
-                config=plot_config,
-                output_file=image_path,
-                db_config=self.db_config,
-            )
+                plot_pixels.plot(
+                    config=plot_config,
+                    output_file=image_path,
+                    db_config=self.db_config,
+                )
 
         try:
             # First try with utf-8
