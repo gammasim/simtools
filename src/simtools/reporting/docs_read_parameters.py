@@ -72,14 +72,14 @@ class ReadParameters:
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
-        image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
+        image_name = f"{self.array_element}_{parameter}_{parameter_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
 
         if parameter == "camera_config_file" and parameter_version:
             outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
             outpath.mkdir(parents=True, exist_ok=True)
             image_path = Path(f"{outpath}/{input_file.stem}")
-            if not Path(f"{outpath}/{input_file.stem}.png").exists():
+            if not (image_path.with_suffix(".png")).exists():
                 plot_config = {
                     "file_name": input_file.name,
                     "telescope": self.array_element,
