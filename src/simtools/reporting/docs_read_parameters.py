@@ -72,10 +72,10 @@ class ReadParameters:
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
-        image_name = f"{self.array_element}_{parameter}_{parameter_version.replace('.', '-')}"
+        image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
 
-        if parameter == "camera_config_file":
+        if parameter == "camera_config_file" and parameter_version:
             outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
             outpath.mkdir(parents=True, exist_ok=True)
             image_path = Path(f"{outpath}/{input_file.stem}")
@@ -128,11 +128,13 @@ class ReadParameters:
 
         return f"_data_files/{output_file_name}"
 
-    def _format_parameter_value(self, parameter, value_data, unit, file_flag, parameter_version):
+    def _format_parameter_value(
+        self, parameter, value_data, unit, file_flag, parameter_version=None
+    ):
         """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
-            if parameter != "camera_config_file":
+            if parameter_version is None:
                 return (
                     f"[{Path(value_data).name}](https://gitlab.cta-observatory.org/"
                     "cta-science/simulations/simulation-model/simulation-models/-/blob/main/"
@@ -247,7 +249,7 @@ class ReadParameters:
                 file_flag = parameter_data.get("file", False)
                 parameter_version = parameter_data.get("parameter_version")
                 value = self._format_parameter_value(
-                    parameter_name, value_data, unit, file_flag, parameter_version
+                    parameter_name, value_data, unit, file_flag, parameter_version=None
                 )
                 model_version = version
 
