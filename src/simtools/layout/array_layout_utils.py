@@ -1,4 +1,4 @@
-"""Retrieve, merge, and write layouts from CTAO common identifiers repository."""
+"""Retrieve, merge, and write layout dictionaries."""
 
 import logging
 from pathlib import Path
@@ -12,7 +12,7 @@ from simtools.utils import names
 _logger = logging.getLogger(__name__)
 
 
-def retrieve_array_layouts(site, repository_url, branch_name="main"):
+def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
     """
     Retrieve array layouts from CTAO common identifiers repository.
 
@@ -45,10 +45,10 @@ def retrieve_array_layouts(site, repository_url, branch_name="main"):
         )
         sub_arrays = gen.collect_data_from_file(Path(repository_url) / "subarray-ids.json")
 
-    return _get_layouts_per_site(site, sub_arrays, array_element_ids)
+    return _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
 
 
-def _get_layouts_per_site(site, sub_arrays, array_element_ids):
+def _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids):
     """
     Get array layouts for CTAO sites.
 
@@ -71,7 +71,7 @@ def _get_layouts_per_site(site, sub_arrays, array_element_ids):
     for array in sub_arrays.get("subarrays", []):
         elements = []
         for ids in array.get("array_element_ids", []):
-            element_name = _get_array_element_name(ids, array_element_ids)
+            element_name = _get_ctao_array_element_name(ids, array_element_ids)
             if names.get_site_from_array_element_name(element_name) != site:
                 break
             elements.append(element_name)
@@ -86,7 +86,7 @@ def _get_layouts_per_site(site, sub_arrays, array_element_ids):
     return layouts_per_site
 
 
-def _get_array_element_name(ids, array_element_ids):
+def _get_ctao_array_element_name(ids, array_element_ids):
     """Return array element name for common identifier."""
     for element in array_element_ids.get("array_elements", []):
         if element.get("id") == ids:
@@ -96,7 +96,7 @@ def _get_array_element_name(ids, array_element_ids):
 
 def merge_array_layouts(layouts_1, layouts_2):
     """
-    Compare array layout dictionaries and merge them.
+    Compare two array layout dictionaries and merge them.
 
     Parameters
     ----------
