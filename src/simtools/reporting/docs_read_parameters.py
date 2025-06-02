@@ -132,7 +132,7 @@ class ReadParameters:
         """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
-            if not parameter_version:
+            if parameter != "camera_config_file":
                 return (
                     f"[{Path(value_data).name}](https://gitlab.cta-observatory.org/"
                     "cta-science/simulations/simulation-model/simulation-models/-/blob/main/"
