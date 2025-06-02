@@ -145,7 +145,8 @@ def write_array_layouts(array_layouts, args_dict, db_config):
     db_config : dict
         Database configuration.
     """
-    _logger.info(f"Writing updated array layouts to the database for site {args_dict['site']}.")
+    site = args_dict.get("site") or array_layouts.get("site")
+    _logger.info(f"Writing updated array layouts to the database for site {site}.")
 
     io_handler_instance = io_handler.IOHandler()
     io_handler_instance.set_paths(
@@ -159,7 +160,7 @@ def write_array_layouts(array_layouts, args_dict, db_config):
     ModelDataWriter.dump_model_parameter(
         parameter_name="array_layouts",
         value=array_layouts["value"],
-        instrument=args_dict["site"],
+        instrument=site,
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
         use_plain_output_path=args_dict["use_plain_output_path"],
@@ -170,3 +171,37 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         output_file,
         add_activity_name=True,
     )
+
+
+def validate_array_layouts_with_db(production_table, array_layouts):
+    """
+    Validate array layouts against the production table in the database.
+
+    Confirm that every telescope defined in the array layouts exist in the
+    production table.
+
+    Parameters
+    ----------
+    production_table : dict
+        Production table from the database.
+    array_layouts : dict
+        Array layouts to be validated.
+
+    Returns
+    -------
+    dict
+        Validated array layouts.
+    """
+    db_elements = set(production_table.get("parameters", {}).keys())
+
+    invalid_array_elements = [
+        e
+        for layout in array_layouts.get("value", [])
+        for e in layout.get("elements", [])
+        if e not in db_elements
+    ]
+
+    if invalid_array_elements:
+        raise ValueError(f"Invalid array elements found: {invalid_array_elements}. ")
+
+    return array_layouts
