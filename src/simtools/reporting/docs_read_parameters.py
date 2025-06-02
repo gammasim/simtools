@@ -75,7 +75,7 @@ class ReadParameters:
         image_name = f"{self.array_element}_{parameter}_{parameter_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
 
-        if parameter == "camera_config_file" and parameter_version:
+        if parameter == "camera_config_file":
             outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
             outpath.mkdir(parents=True, exist_ok=True)
             image_path = Path(f"{outpath}/{input_file.stem}")
@@ -128,9 +128,7 @@ class ReadParameters:
 
         return f"_data_files/{output_file_name}"
 
-    def _format_parameter_value(
-        self, parameter, value_data, unit, file_flag, parameter_version=None
-    ):
+    def _format_parameter_value(self, parameter, value_data, unit, file_flag, parameter_version):
         """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
@@ -247,8 +245,10 @@ class ReadParameters:
                     continue
 
                 file_flag = parameter_data.get("file", False)
-                value = self._format_parameter_value(parameter_name, value_data, unit, file_flag)
                 parameter_version = parameter_data.get("parameter_version")
+                value = self._format_parameter_value(
+                    parameter_name, value_data, unit, file_flag, parameter_version
+                )
                 model_version = version
 
                 # Group the data by parameter version and store model versions as a list
@@ -423,7 +423,9 @@ class ReadParameters:
                 unit = parameter_data.get("unit") or " "
                 file_flag = parameter_data.get("file", False)
                 parameter_version = parameter_data.get("parameter_version")
-                value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+                value = self._format_parameter_value(
+                    parameter, value_data, unit, file_flag, parameter_version
+                )
 
                 data.append(
                     [
@@ -645,7 +647,9 @@ class ReadParameters:
                     f"(#array-trigger-configurations) | {parameter_version} |\n"
                 )
             else:
-                formatted_value = self._format_parameter_value(param_name, value, unit, file_flag)
+                formatted_value = self._format_parameter_value(
+                    param_name, value, unit, file_flag, parameter_version
+                )
                 file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
         file.write("\n")
 
@@ -706,7 +710,9 @@ class ReadParameters:
                 continue
 
             file_flag = parameter_data.get("file", False)
-            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+            value = self._format_parameter_value(
+                parameter, value_data, unit, file_flag, parameter_version
+            )
 
             description = parameter_descriptions.get("description")
             short_description = parameter_descriptions.get("short_description") or description
