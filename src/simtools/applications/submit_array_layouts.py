@@ -38,7 +38,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.layout.ctao_array_layouts import validate_array_layouts_with_db, write_array_layouts
+from simtools.layout.array_layout_utils import validate_array_layouts_with_db, write_array_layouts
 
 
 def _parse(label, description):

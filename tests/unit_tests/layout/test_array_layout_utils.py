@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import simtools.layout.ctao_array_layouts as cta_array_layouts
-from simtools.layout.ctao_array_layouts import merge_array_layouts, write_array_layouts
+import simtools.layout.array_layout_utils as cta_array_layouts
+from simtools.layout.array_layout_utils import merge_array_layouts, write_array_layouts
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def test_output():
 
 @pytest.fixture
 def mock_io_handler(test_output):
-    with patch("simtools.layout.ctao_array_layouts.io_handler.IOHandler") as mock:
+    with patch("simtools.layout.array_layout_utils.io_handler.IOHandler") as mock:
         instance = Mock()
         instance.get_output_file.return_value = test_output
         mock.return_value = instance
@@ -24,13 +24,13 @@ def mock_io_handler(test_output):
 
 @pytest.fixture
 def mock_model_data_writer():
-    with patch("simtools.layout.ctao_array_layouts.ModelDataWriter") as mock:
+    with patch("simtools.layout.array_layout_utils.ModelDataWriter") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_metadata_collector():
-    with patch("simtools.layout.ctao_array_layouts.MetadataCollector") as mock:
+    with patch("simtools.layout.array_layout_utils.MetadataCollector") as mock:
         yield mock
 
 
@@ -113,30 +113,30 @@ def test_merge_array_layouts():
     )
 
 
-def test_get_array_element_name():
+def test_get_ctao_array_element_name():
     """Test getting array element name from common identifier."""
     # Test normal case
     array_element_ids = {
         "array_elements": [{"id": "T1", "name": "telescope1"}, {"id": "T2", "name": "telescope2"}]
     }
 
-    assert cta_array_layouts._get_array_element_name("T1", array_element_ids) == "telescope1"
-    assert cta_array_layouts._get_array_element_name("T2", array_element_ids) == "telescope2"
+    assert cta_array_layouts._get_ctao_array_element_name("T1", array_element_ids) == "telescope1"
+    assert cta_array_layouts._get_ctao_array_element_name("T2", array_element_ids) == "telescope2"
 
     # Test non-existent id
-    assert cta_array_layouts._get_array_element_name("T3", array_element_ids) is None
+    assert cta_array_layouts._get_ctao_array_element_name("T3", array_element_ids) is None
 
     # Test empty array elements
     empty_elements = {"array_elements": []}
-    assert cta_array_layouts._get_array_element_name("T1", empty_elements) is None
+    assert cta_array_layouts._get_ctao_array_element_name("T1", empty_elements) is None
 
     # Test missing array_elements key
     empty_dict = {}
-    assert cta_array_layouts._get_array_element_name("T1", empty_dict) is None
+    assert cta_array_layouts._get_ctao_array_element_name("T1", empty_dict) is None
 
 
-@patch("simtools.layout.ctao_array_layouts.names")
-def test_get_layouts_per_site(mock_names):
+@patch("simtools.layout.array_layout_utils.names")
+def test_get_ctao_layouts_per_site(mock_names):
     """Test getting array layouts per site."""
     # Mock site determination function
     mock_names.get_site_from_array_element_name.side_effect = (
@@ -161,7 +161,7 @@ def test_get_layouts_per_site(mock_names):
     }
 
     # Call function
-    layouts = cta_array_layouts._get_layouts_per_site(site, sub_arrays, array_element_ids)
+    layouts = cta_array_layouts._get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
 
     # Assert results
     assert len(layouts) == 1
@@ -169,16 +169,18 @@ def test_get_layouts_per_site(mock_names):
     assert layouts[0]["elements"] == ["N_tel1", "N_tel2"]
 
     # Test empty subarrays
-    layouts = cta_array_layouts._get_layouts_per_site(site, {"subarrays": []}, array_element_ids)
+    layouts = cta_array_layouts._get_ctao_layouts_per_site(
+        site, {"subarrays": []}, array_element_ids
+    )
     assert len(layouts) == 0
 
     # Test missing keys
-    layouts = cta_array_layouts._get_layouts_per_site(site, {}, array_element_ids)
+    layouts = cta_array_layouts._get_ctao_layouts_per_site(site, {}, array_element_ids)
     assert len(layouts) == 0
 
     # Test array with no matching elements
     site = "south"
-    layouts = cta_array_layouts._get_layouts_per_site(
+    layouts = cta_array_layouts._get_ctao_layouts_per_site(
         site,
         {"subarrays": [{"name": "array1", "array_element_ids": ["T1", "T2"]}]},
         array_element_ids,
@@ -186,12 +188,12 @@ def test_get_layouts_per_site(mock_names):
     assert len(layouts) == 0
 
 
-def test_retrieve_array_layouts_from_url():
+def test_retrieve_ctao_array_layouts_from_url():
     """Test retrieving array layouts from URL."""
-    with patch("simtools.layout.ctao_array_layouts.gen") as mock_gen:
+    with patch("simtools.layout.array_layout_utils.gen") as mock_gen:
         mock_gen.is_url.return_value = True
 
-        cta_array_layouts.retrieve_array_layouts(
+        cta_array_layouts.retrieve_ctao_array_layouts(
             site="north", repository_url="https://test.com", branch_name="test-branch"
         )
 
@@ -201,12 +203,12 @@ def test_retrieve_array_layouts_from_url():
         )
 
 
-def test_retrieve_array_layouts_from_file(test_path):
+def test_retrieve_ctao_array_layouts_from_file(test_path):
     """Test retrieving array layouts from local file."""
-    with patch("simtools.layout.ctao_array_layouts.gen") as mock_gen:
+    with patch("simtools.layout.array_layout_utils.gen") as mock_gen:
         mock_gen.is_url.return_value = False
 
-        cta_array_layouts.retrieve_array_layouts(
+        cta_array_layouts.retrieve_ctao_array_layouts(
             site="north", repository_url=test_path, branch_name="test-branch"
         )
 

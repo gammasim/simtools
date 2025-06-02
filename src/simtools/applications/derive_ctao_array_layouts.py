@@ -48,9 +48,9 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.layout.ctao_array_layouts import (
+from simtools.layout.array_layout_utils import (
     merge_array_layouts,
-    retrieve_array_layouts,
+    retrieve_ctao_array_layouts,
     write_array_layouts,
 )
 
@@ -91,7 +91,7 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    ctao_array_layouts = retrieve_array_layouts(
+    ctao_array_layouts = retrieve_ctao_array_layouts(
         site=args_dict["site"],
         repository_url=args_dict["repository_url"],
         branch_name=args_dict["repository_branch"],
