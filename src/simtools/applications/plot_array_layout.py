@@ -31,6 +31,8 @@ array_layout_file : str
     File (astropy table compatible) with a list of array elements.
 array_layout_name : str
     Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
+array_layout_name_background: str, optional
+    Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
     List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 coordinate_system : str, optional
@@ -80,7 +82,7 @@ from simtools.configuration import configurator
 from simtools.io_operations import io_handler
 from simtools.model.array_model import ArrayModel
 from simtools.utils import names
-from simtools.visualization.visualize import plot_array
+from simtools.visualization.plot_array_layout import plot_array_layout
 
 
 def _parse(label, description, usage):
@@ -143,6 +145,13 @@ def _parse(label, description, usage):
         "--axes_range",
         help="Range of the both axes in meters.",
         type=float,
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--array_layout_name_background",
+        help="Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).",
+        type=str,
         required=False,
         default=None,
     )
@@ -327,12 +336,14 @@ def _layouts_from_list(args_dict, db_config, rotate_angle):
     ]
 
 
-def _layouts_from_db(args_dict, db_config, rotate_angle):
+def _layouts_from_db(layout_name, args_dict, db_config, rotate_angle):
     """
     Read array elements and their positions from data base using the layout name.
 
     Parameters
     ----------
+    layout_name : str
+        Name of the layout to be plotted.
     args_dict : dict
         Dictionary with the command line arguments.
     db_config : dict
@@ -350,7 +361,7 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
         site=args_dict["site"],
-        layout_name=args_dict["array_layout_name"],
+        layout_name=layout_name,
     )
     layouts.append(
         {
@@ -359,7 +370,7 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
             ),
             "plot_file_name": _get_plot_file_name(
                 figure_name=args_dict["figure_name"],
-                layout_name=args_dict["array_layout_name"],
+                layout_name=layout_name,
                 site=args_dict["site"],
                 coordinate_system=args_dict["coordinate_system"],
                 rotate_angle=rotate_angle,
@@ -390,7 +401,9 @@ def main():
     layouts = []
     if args_dict["array_layout_name"] is not None:
         logger.info("Plotting array from layout array name.")
-        layouts = _layouts_from_db(args_dict, db_config, rotate_angle)
+        layouts = _layouts_from_db(
+            args_dict["array_layout_name"], args_dict, db_config, rotate_angle
+        )
     elif args_dict["array_layout_file"] is not None:
         logger.info("Plotting array from telescope list file.")
         layouts = _layouts_from_array_layout_file(args_dict, db_config, rotate_angle)
@@ -398,20 +411,29 @@ def main():
         logger.info("Plotting array from list of array elements.")
         layouts = _layouts_from_list(args_dict, db_config, rotate_angle)
 
+    if args_dict.get("array_layout_name_background"):
+        background_layout = _layouts_from_db(
+            args_dict["array_layout_name_background"], args_dict, db_config, rotate_angle
+        )[0]["array_elements"]
+    else:
+        background_layout = None
+
     mpl.use("Agg")
     for layout in layouts:
-        fig_out = plot_array(
+        fig_out = plot_array_layout(
             telescopes=layout["array_elements"],
             rotate_angle=rotate_angle,
             show_tel_label=args_dict["show_labels"],
             axes_range=args_dict["axes_range"],
             marker_scaling=args_dict["marker_scaling"],
+            background_telescopes=background_layout,
         )
         _plot_files = _get_list_of_plot_files(
             layout["plot_file_name"],
             io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
         )
 
+        # use visualize.save_figure??
         for file in _plot_files:
             logger.info(f"Saving figure as {file}")
             plt.savefig(file, bbox_inches="tight", dpi=400)
