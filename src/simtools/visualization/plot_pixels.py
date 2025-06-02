@@ -53,13 +53,13 @@ def plot(config, output_file, db_config=None):
         export_file_as_table=False,
     )
     data_file_path = Path(io_handler.IOHandler().get_output_directory() / f"{config['file_name']}")
-
     fig = plot_pixel_layout_from_file(
         data_file_path,
         config["telescope"],
         pixels_id_to_print=80,
     )
     visualize.save_figure(fig, output_file)
+    plt.close(fig)
 
 
 def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
