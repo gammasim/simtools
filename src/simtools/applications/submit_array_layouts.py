@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-    Submit array-layouts definition and corresponding metadata through the command line.
+    Submit array-layouts definition and corresponding metadata and validate list of telescopes.
 
     Includes validation that all defined telescope exists.
 
