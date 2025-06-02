@@ -18,7 +18,7 @@ r"""
         Model parameter version.
     repository_url (str)
         URL or path of the CTAO common identifiers repository.
-    repository_branch (str )
+    repository_branch (str)
         Repository branch to use for CTAO common identifiers.
     updated_parameter_version (str)
         Updated parameter version.
@@ -107,7 +107,7 @@ def main():  # noqa: D103
     )
     db_array_layouts["array_layouts"].pop("_id", None)
     db_array_layouts["array_layouts"].pop("entry_date", None)
-    logger.info(f"Layouts from DB: {db_array_layouts}")
+    logger.info(f"Layouts from model parameter database: {db_array_layouts}")
 
     write_array_layouts(
         array_layouts=merge_array_layouts(db_array_layouts["array_layouts"], ctao_array_layouts),
