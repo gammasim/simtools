@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-submit-array-layouts
     TEST_NAME: north
+    MODEL_VERSION_USE_CURRENT: true
     CONFIGURATION:
       ARRAY_LAYOUTS: tests/resources/model_parameters/array_layouts-2.0.1.json
       MODEL_VERSION: 6.0.0
@@ -11,6 +12,6 @@ CTA_SIMPIPE:
       USE_PLAIN_OUTPUT_PATH: true
     INTEGRATION_TESTS:
     - OUTPUT_FILE: array-layouts-1.0.98.json
-    - OUTPUT_FILE: array-layouts-1.0.98.derive_ctao_array_layouts.meta.yml
+    - OUTPUT_FILE: array-layouts-1.0.98.submit_array_layouts.meta.yml
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
