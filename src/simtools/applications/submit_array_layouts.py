@@ -26,7 +26,7 @@ r"""
         simtools-submit-array-layouts \
             --array_layouts array_layouts.json \\
             --model_version 6.0.0 \\
-            --parameter_version 0.1.0 \\
+            --updated_parameter_version 0.1.0 \\
             --input_meta array_layouts.metadata.yml
 
 
@@ -86,11 +86,7 @@ def main():  # noqa: D103
         array_layouts=gen.collect_data_from_file(args_dict["array_layouts"]),
     )
 
-    write_array_layouts(
-        array_layouts=array_layouts,
-        args_dict=args_dict,
-        db_config=db_config,
-    )
+    write_array_layouts(array_layouts=array_layouts, args_dict=args_dict, db_config=db_config)
 
 
 if __name__ == "__main__":
