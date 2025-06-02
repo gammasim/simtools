@@ -214,3 +214,103 @@ def test_retrieve_ctao_array_layouts_from_file(test_path):
 
         mock_gen.is_url.assert_called_once_with(test_path)
         mock_gen.collect_data_from_file.assert_called()
+
+
+def test_validate_array_layouts_with_db_valid():
+    """Test validation with valid array layouts."""
+    production_table = {"parameters": {"tel1": {}, "tel2": {}, "tel3": {}, "tel4": {}}}
+
+    array_layouts = {
+        "value": [
+            {"name": "array1", "elements": ["tel1", "tel2"]},
+            {"name": "array2", "elements": ["tel3", "tel4"]},
+        ]
+    }
+
+    result = cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+    assert result == array_layouts
+
+
+def test_validate_array_layouts_with_db_invalid():
+    """Test validation with invalid array layouts."""
+    production_table = {"parameters": {"tel1": {}, "tel2": {}}}
+
+    array_layouts = {
+        "value": [
+            {"name": "array1", "elements": ["tel1", "tel2"]},
+            {"name": "array2", "elements": ["tel3", "tel4"]},  # tel3, tel4 not in DB
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel3', 'tel4'\\]"):
+        cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+
+
+def test_validate_array_layouts_with_db_empty_production_table():
+    """Test validation with empty production table."""
+    production_table = {"parameters": {}}
+
+    array_layouts = {
+        "value": [
+            {"name": "array1", "elements": ["tel1"]},
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel1'\\]"):
+        cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+
+
+def test_validate_array_layouts_with_db_empty_array_layouts():
+    """Test validation with empty array layouts."""
+    production_table = {"parameters": {"tel1": {}, "tel2": {}}}
+
+    array_layouts = {"value": []}
+
+    result = cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+    assert result == array_layouts
+
+
+def test_validate_array_layouts_with_db_missing_keys():
+    """Test validation with missing keys in dictionaries."""
+    # Missing parameters key
+    production_table = {}
+    array_layouts = {
+        "value": [
+            {"name": "array1", "elements": ["tel1"]},
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel1'\\]"):
+        cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+
+    # Missing value key
+    production_table = {"parameters": {"tel1": {}}}
+    array_layouts = {}
+
+    result = cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+    assert result == array_layouts
+
+    # Missing elements key in layout
+    array_layouts = {
+        "value": [
+            {"name": "array1"},  # No elements key
+        ]
+    }
+
+    result = cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
+    assert result == array_layouts
+
+
+def test_validate_array_layouts_with_db_partial_invalid():
+    """Test validation with partially invalid array layouts."""
+    production_table = {"parameters": {"tel1": {}, "tel2": {}}}
+
+    array_layouts = {
+        "value": [
+            {"name": "array1", "elements": ["tel1", "tel2"]},  # Valid
+            {"name": "array2", "elements": ["tel1", "tel3"]},  # tel3 invalid
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel3'\\]"):
+        cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
