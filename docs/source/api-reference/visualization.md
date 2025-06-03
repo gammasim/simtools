@@ -35,7 +35,7 @@ the visualization module.
    :members:
 ```
 
-(plot-tables)=
+(plot-camera)=
 
 ## plot_camera
 
