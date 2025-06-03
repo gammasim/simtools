@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest import mock
 
+import astropy.units as u
 import matplotlib.patches as mpatches
 import numpy as np
 import pytest
@@ -286,7 +287,7 @@ def test__read_pixel_config():
     """Test reading pixel configuration from file."""
     config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
 
-    assert config["rotate_angle"] == 10.0
+    assert config["rotate_angle"] == 10.0 * u.deg
     assert config["pixel_shape"] == 2
     assert config["pixel_spacing"] == 0.640
     assert config["module_gap"] == 0.02
@@ -306,7 +307,7 @@ def test__prepare_pixel_data(mock_read):
         "pixels_on": [True, True],
         "pixel_shape": 1,
         "pixel_diameter": 0.5,
-        "rotate_angle": 10.0,
+        "rotate_angle": 10.0 * u.deg,
         "pixel_spacing": 0.6,
         "module_gap": 0.2,
         "module_number": [1, 1],
@@ -327,7 +328,7 @@ def test__add_coordinate_axes():
     # Configure the mock to return appropriate values
     mock_ax.get_xlim.return_value = (-10, 10)
     mock_ax.get_ylim.return_value = (-10, 10)
-    rotation = 90.0
+    rotation = 90.0 * u.deg
 
     plot_pixels._add_coordinate_axes(mock_ax, rotation)
 

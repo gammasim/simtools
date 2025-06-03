@@ -611,7 +611,7 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
     def add_arrow_label(ox, oy, dx, dy, label, offset, color="black", ha="center", va="center"):
         """Adding arrows with label."""
         ax.arrow(ox, oy, dx, dy, fc=color, ec=color, **arrow_style)
-        if not dx or dy:  # If not zero vector
+        if np.sqrt(dx**2 + dy**2) > 0:  # If not zero vector
             dir_unit = np.sqrt(dx**2 + dy**2)
             ax.text(
                 ox + dx + dx / dir_unit * axis_length * offset,
