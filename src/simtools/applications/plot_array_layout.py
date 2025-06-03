@@ -31,6 +31,7 @@ array_layout_file : str
     File (astropy table compatible) with a list of array elements.
 array_layout_name : str
     Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
+    Use 'plot_all' to plot all layouts from the database for the given site and model version.
 array_layout_name_background: str, optional
     Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
@@ -79,13 +80,14 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.model.array_model import ArrayModel
 from simtools.utils import names
 from simtools.visualization.plot_array_layout import plot_array_layout
 
 
-def _parse(label, description, usage):
+def _parse(label, description, usage=None):
     """
     Parse command line configuration.
 
@@ -356,28 +358,54 @@ def _layouts_from_db(layout_name, args_dict, db_config, rotate_angle):
     list
         List of array layouts.
     """
+    layout_names = (
+        _read_all_layout_names_from_db(args_dict, db_config)
+        if layout_name == "plot_all"
+        else [layout_name]
+    )
+
     layouts = []
+    for _layout_name in layout_names:
+        layouts.append(_read_layout_from_db(_layout_name, args_dict, db_config, rotate_angle))
+    return layouts
+
+
+def _read_all_layout_names_from_db(args_dict, db_config):
+    """Read all layout names for a given site and model version from the database."""
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    array_layouts = db.get_model_parameter(
+        parameter="array_layouts",
+        site=args_dict["site"],
+        array_element_name=None,
+        model_version=args_dict["model_version"],
+    )
+    layout_names = []
+    for data in array_layouts.get("array_layouts", {}).get("value", {}):
+        layout_names.append(data["name"])
+
+    return layout_names
+
+
+def _read_layout_from_db(layout_name, args_dict, db_config, rotate_angle):
+    """Read array elements and their positions from data base using the layout name."""
     array_model = ArrayModel(
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
         site=args_dict["site"],
         layout_name=layout_name,
     )
-    layouts.append(
-        {
-            "array_elements": array_model.export_array_elements_as_table(
-                coordinate_system=args_dict["coordinate_system"]
-            ),
-            "plot_file_name": _get_plot_file_name(
-                figure_name=args_dict["figure_name"],
-                layout_name=layout_name,
-                site=args_dict["site"],
-                coordinate_system=args_dict["coordinate_system"],
-                rotate_angle=rotate_angle,
-            ),
-        }
-    )
-    return layouts
+    return {
+        "array_elements": array_model.export_array_elements_as_table(
+            coordinate_system=args_dict["coordinate_system"]
+        ),
+        "plot_file_name": _get_plot_file_name(
+            figure_name=args_dict["figure_name"],
+            layout_name=layout_name,
+            site=args_dict["site"],
+            coordinate_system=args_dict["coordinate_system"],
+            rotate_angle=rotate_angle,
+        ),
+    }
 
 
 def main():
@@ -385,8 +413,11 @@ def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(
         label,
-        "Plots array layout.",
-        "python applications/plot_array_layout.py --array_layout_name test_layout",
+        (
+            "Plots array layout."
+            "Use '--array_layout_name plot_all' to plot all layouts for the given site "
+            "and model version."
+        ),
     )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
