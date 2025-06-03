@@ -16,10 +16,9 @@ from simtools.visualization import legend_handlers as leg_h
 __all__ = ["get_telescope_patch", "plot_array_layout"]
 
 
-@u.quantity_input(rotate_angle=u.deg)
 def plot_array_layout(
     telescopes,
-    rotate_angle=0,
+    rotate_angle=0.0 * u.deg,
     show_tel_label=False,
     axes_range=None,
     marker_scaling=1.0,
