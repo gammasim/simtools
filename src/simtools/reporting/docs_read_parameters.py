@@ -14,6 +14,7 @@ import numpy as np
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
+from simtools.utils import general as gen
 from simtools.utils import names
 from simtools.visualization import plot_pixels
 
@@ -74,6 +75,7 @@ class ReadParameters:
         output_file = output_data_path / output_file_name
         image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
         image_path = Path(f"../{IMAGE_PATH}/{image_name}")
+        image_path.parent.mkdir(parents=True, exist_ok=True)
 
         if parameter == "camera_config_file" and parameter_version:
             outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
@@ -96,14 +98,8 @@ class ReadParameters:
                 )
 
         try:
-            # First try with utf-8
-            try:
-                with input_file.open("r", encoding="utf-8") as infile:
-                    file_contents = infile.read()
-            except UnicodeDecodeError:
-                # If utf-8 fails, try with latin-1 (which can read any byte sequence)
-                with input_file.open("r", encoding="latin-1") as infile:
-                    file_contents = infile.read()
+            # with input_file.open("r", encoding="utf-8") as infile:
+            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
 
             if self.model_version is not None:
                 with output_file.open("w", encoding="utf-8") as outfile:
@@ -118,7 +114,7 @@ class ReadParameters:
                     outfile.write("\n\n")
                     outfile.write("The first 30 lines of the file are:\n")
                     outfile.write("```\n")
-                    first_30_lines = "\n".join(file_contents.splitlines()[:30])
+                    first_30_lines = "".join(file_contents[:30])
                     outfile.write(first_30_lines)
                     outfile.write("\n```")
 
