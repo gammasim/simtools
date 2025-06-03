@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=6004df38"></script>
+    <script src="../_static/documentation_options.js?v=bc9f16cc"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/array_layout';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Job execution and submission" href="job_execution.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g497309e" />
+  <meta name="docsearch:version" content="0.1.dev1+gf4dbfb4" />
   </head>
   
   
@@ -982,13 +982,13 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 </dd></dl>
 
 </section>
-<section id="module-layout.ctao_array_layouts">
-<span id="ctao-array-layouts"></span><span id="ctaoarraylayoutsmodule"></span><h2>ctao_array_layouts<a class="headerlink" href="#module-layout.ctao_array_layouts" title="Link to this heading">#</a></h2>
-<p>Retrieve, merge, and write layouts from CTAO common identifiers repository.</p>
+<section id="module-layout.array_layout_utils">
+<span id="array-layout-utils"></span><span id="array-layout-utils-module"></span><h2>array_layout_utils<a class="headerlink" href="#module-layout.array_layout_utils" title="Link to this heading">#</a></h2>
+<p>Retrieve, merge, and write layout dictionaries.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="layout.ctao_array_layouts.merge_array_layouts">
-<span class="sig-prename descclassname"><span class="pre">layout.ctao_array_layouts.</span></span><span class="sig-name descname"><span class="pre">merge_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layouts_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layouts_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/ctao_array_layouts.html#merge_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.ctao_array_layouts.merge_array_layouts" title="Link to this definition">#</a></dt>
-<dd><p>Compare array layout dictionaries and merge them.</p>
+<dt class="sig sig-object py" id="layout.array_layout_utils.merge_array_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">merge_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layouts_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layouts_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#merge_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.merge_array_layouts" title="Link to this definition">#</a></dt>
+<dd><p>Compare two array layout dictionaries and merge them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1008,8 +1008,8 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="layout.ctao_array_layouts.retrieve_array_layouts">
-<span class="sig-prename descclassname"><span class="pre">layout.ctao_array_layouts.</span></span><span class="sig-name descname"><span class="pre">retrieve_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/ctao_array_layouts.html#retrieve_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.ctao_array_layouts.retrieve_array_layouts" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="layout.array_layout_utils.retrieve_ctao_array_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">retrieve_ctao_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#retrieve_ctao_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.retrieve_ctao_array_layouts" title="Link to this definition">#</a></dt>
 <dd><p>Retrieve array layouts from CTAO common identifiers repository.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1032,8 +1032,32 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="layout.ctao_array_layouts.write_array_layouts">
-<span class="sig-prename descclassname"><span class="pre">layout.ctao_array_layouts.</span></span><span class="sig-name descname"><span class="pre">write_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_layouts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/ctao_array_layouts.html#write_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.ctao_array_layouts.write_array_layouts" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="layout.array_layout_utils.validate_array_layouts_with_db">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">validate_array_layouts_with_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">production_table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_layouts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#validate_array_layouts_with_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.validate_array_layouts_with_db" title="Link to this definition">#</a></dt>
+<dd><p>Validate array layouts against the production table in the database.</p>
+<p>Confirm that every telescope defined in the array layouts exist in the
+production table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>production_table</strong><span class="classifier">dict</span></dt><dd><p>Production table from the database.</p>
+</dd>
+<dt><strong>array_layouts</strong><span class="classifier">dict</span></dt><dd><p>Array layouts to be validated.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Validated array layouts.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.array_layout_utils.write_array_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">write_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_layouts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#write_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.write_array_layouts" title="Link to this definition">#</a></dt>
 <dd><p>Write array layouts as model parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1143,10 +1167,11 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.ctao_array_layouts">ctao_array_layouts</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.merge_array_layouts"><code class="docutils literal notranslate"><span class="pre">merge_array_layouts()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.retrieve_array_layouts"><code class="docutils literal notranslate"><span class="pre">retrieve_array_layouts()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.write_array_layouts"><code class="docutils literal notranslate"><span class="pre">write_array_layouts()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.array_layout_utils">array_layout_utils</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.merge_array_layouts"><code class="docutils literal notranslate"><span class="pre">merge_array_layouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.retrieve_ctao_array_layouts"><code class="docutils literal notranslate"><span class="pre">retrieve_ctao_array_layouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.validate_array_layouts_with_db"><code class="docutils literal notranslate"><span class="pre">validate_array_layouts_with_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.write_array_layouts"><code class="docutils literal notranslate"><span class="pre">write_array_layouts()</span></code></a></li>
 </ul>
 </li>
 </ul>

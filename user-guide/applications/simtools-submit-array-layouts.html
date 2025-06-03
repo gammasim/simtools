@@ -2,13 +2,13 @@
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="../" >
+<html lang="en" data-content_root="../../" >
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer guidelines &#8212; simtools</title>
+    <title>simtools-submit-array-layouts &#8212; simtools</title>
   
   
   
@@ -27,21 +27,21 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=bc9f16cc"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/index';</script>
+    <script src="../../_static/documentation_options.js?v=bc9f16cc"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-submit-array-layouts';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json';
@@ -49,10 +49,10 @@
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Getting Started" href="getting_started.html" />
-    <link rel="prev" title="Visualization" href="../api-reference/visualization.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="simtools-submit-data-from-external" href="simtools-submit-data-from-external.html" />
+    <link rel="prev" title="simtools-simulate-prod-htcondor-generator" href="simtools-simulate-prod-htcondor-generator.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+gf4dbfb4" />
@@ -74,7 +74,7 @@
   <dialog id="pst-search-dialog">
     
 <form class="bd-search d-flex align-items-center"
-      action="../search.html"
+      action="../../search.html"
       method="get">
   <i class="fa-solid fa-magnifying-glass"></i>
   <input type="search"
@@ -113,7 +113,7 @@
     
   
 
-<a class="navbar-brand logo" href="../index.html">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -154,22 +154,22 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user-guide/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
     User Guide
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
     API Docs
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
     Developer Guide
   </a>
 </li>
@@ -274,22 +274,22 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user-guide/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
     User Guide
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
     API Docs
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
     Developer Guide
   </a>
 </li>
@@ -348,15 +348,61 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../applications.html">simtools Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-submit-array-layouts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-optics.html">simtools-validate-optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../productions.html">Simulation Productions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker_files.html">Containers (docker files)</a></li>
 </ul>
 </div>
 </nav></div>
@@ -393,11 +439,17 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="../index.html" class="nav-link" aria-label="Home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Developer guidelines</span></li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">simtools Applications</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-submit-array-layouts</span></li>
   </ul>
 </nav>
 </div>
@@ -414,20 +466,34 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="developer-guidelines">
-<h1>Developer guidelines<a class="headerlink" href="#developer-guidelines" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
-</ul>
+  <section id="module-submit_array_layouts">
+<span id="simtools-submit-array-layouts"></span><h1>simtools-submit-array-layouts<a class="headerlink" href="#module-submit_array_layouts" title="Link to this heading">#</a></h1>
+<p>Submit array-layouts definition and corresponding metadata and validate list of telescopes.</p>
+<p>Includes validation that all defined telescope exists.</p>
+<section id="command-line-arguments">
+<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>array_layouts (str, required)</dt><dd><p>Array layouts file.</p>
+</dd>
+<dt>updated_parameter_version (str, optional)</dt><dd><p>Updated parameter version.</p>
+</dd>
+<dt>input_meta (str, optional)</dt><dd><p>Input meta data file(s) associated to input data (wildcards or list of files allowed).</p>
+</dd>
+<dt>model_version (str, required)</dt><dd><p>Model version.</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<p>Submit a new array layout dictionary:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-submit-array-layouts \</span>
+<span class="go">    --array_layouts array_layouts.json \\</span>
+<span class="go">    --model_version 6.0.0 \\</span>
+<span class="go">    --updated_parameter_version 0.1.0 \\</span>
+<span class="go">    --input_meta array_layouts.metadata.yml</span>
+</pre></div>
 </div>
+</section>
 </section>
 
 
@@ -441,20 +507,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../api-reference/visualization.html"
+       href="simtools-simulate-prod-htcondor-generator.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Visualization</p>
+        <p class="prev-next-title">simtools-simulate-prod-htcondor-generator</p>
       </div>
     </a>
     <a class="right-next"
-       href="getting_started.html"
+       href="simtools-submit-data-from-external.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Getting Started</p>
+        <p class="prev-next-title">simtools-submit-data-from-external</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -470,10 +536,23 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/developer-guide/index.md.txt"
+      <li><a href="../../_sources/user-guide/applications/simtools-submit-array-layouts.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
@@ -491,8 +570,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">

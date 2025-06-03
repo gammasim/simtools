@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6004df38"></script>
+    <script src="../../_static/documentation_options.js?v=bc9f16cc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/db/db_handler';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g497309e" />
+  <meta name="docsearch:version" content="0.1.dev1+gf4dbfb4" />
   </head>
   
   
@@ -617,7 +617,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;Only one model version can be passed to get_model_parameter, not a list.&quot;</span>
                 <span class="p">)</span>
-            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span>
+            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span>
                 <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span>
             <span class="p">)</span>
             <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
@@ -666,7 +666,7 @@
 <span class="sd">        dict containing the parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pars</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
             <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection</span>
         <span class="p">)</span>
@@ -937,9 +937,11 @@
             <span class="n">parameters</span><span class="p">[</span><span class="n">par_now</span><span class="p">][</span><span class="s2">&quot;entry_date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ObjectId</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">generation_time</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">parameters</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">parameters</span><span class="p">)}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseHandler.read_production_table_from_mongo_db">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.read_production_table_from_mongo_db">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_production_table_from_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Read production table from MongoDB.</span>
+<span class="sd">        Read production table for the given collection from MongoDB.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -972,7 +974,8 @@
             <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">],</span>
             <span class="s2">&quot;design_model&quot;</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;design_model&quot;</span><span class="p">,</span> <span class="p">{}),</span>
             <span class="s2">&quot;entry_date&quot;</span><span class="p">:</span> <span class="n">ObjectId</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">generation_time</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="p">}</span></div>
+
 
 <div class="viewcode-block" id="DatabaseHandler.get_model_versions">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_model_versions">[docs]</a>
@@ -1015,7 +1018,7 @@
 <span class="sd">        list</span>
 <span class="sd">            Sorted list of all array elements found in collection</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;-design&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">])</span></div>
 
 
@@ -1040,7 +1043,7 @@
 <span class="sd">        str</span>
 <span class="sd">            Design model for a given array element.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;design_model&quot;</span><span class="p">][</span><span class="n">array_element_name</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1071,7 +1074,7 @@
 <span class="sd">        list</span>
 <span class="sd">            Sorted list of all array element names found in collection</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="n">all_array_elements</span> <span class="o">=</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
             <span class="p">[</span>
@@ -1407,7 +1410,7 @@
             <span class="k">return</span> <span class="p">[</span><span class="n">array_element_name</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">:</span>
             <span class="c1"># get design model from &#39;telescope&#39; or &#39;calibration_device&#39; production tables</span>
-            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span>
+            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span>
                 <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">),</span>
                 <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
             <span class="p">)</span>
