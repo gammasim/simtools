@@ -19,7 +19,6 @@ from simtools.utils import names
 from simtools.visualization import plot_pixels
 
 logger = logging.getLogger()
-IMAGE_PATH = "../../_images"
 
 
 class ReadParameters:
@@ -74,14 +73,14 @@ class ReadParameters:
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
         image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
-        image_path = Path(f"../{IMAGE_PATH}/{image_name}")
-        image_path.parent.mkdir(parents=True, exist_ok=True)
+        outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+        outpath.mkdir(parents=True, exist_ok=True)
+        image_path = Path(f"{outpath}/{image_name}")
 
         if parameter == "camera_config_file" and parameter_version:
-            outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
-            outpath.mkdir(parents=True, exist_ok=True)
             image_path = Path(f"{outpath}/{input_file.stem.replace('.', '-')}")
             if not (image_path.with_suffix(".png")).exists():
+                logger.info("Plotting camera configuration file: %s", input_file.name)
                 plot_config = {
                     "file_name": input_file.name,
                     "telescope": self.array_element,
@@ -95,6 +94,11 @@ class ReadParameters:
                     config=plot_config,
                     output_file=image_path,
                     db_config=self.db_config,
+                )
+            else:
+                logger.info(
+                    "Camera configuration file plot already exists: %s",
+                    image_path.with_suffix(".png"),
                 )
 
         try:
@@ -578,9 +582,7 @@ class ReadParameters:
 
                 file.write("\n")
                 if comparison_data.get(parameter)[0]["file_flag"]:
-                    file.write(
-                        f"![Parameter plot.]({IMAGE_PATH}/{self.array_element}_{parameter}.png)"
-                    )
+                    file.write(f"![Parameter plot.](/_images/{self.array_element}_{parameter}.png)")
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
@@ -595,7 +597,7 @@ class ReadParameters:
             file.write("\n")
             version = self.model_version.replace(".", "-")
             filename = f"OBS-{self.site}_{layout_name}_{version}.png"
-            image_path = f"{IMAGE_PATH}/{filename}"
+            image_path = f"/_images/{filename}"
             file.write(f"![{layout_name} Layout]({image_path})\n\n")
             file.write("\n")
 
