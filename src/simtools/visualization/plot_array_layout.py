@@ -84,13 +84,15 @@ def get_patches(ax, telescopes, rotate_angle, show_tel_label, axes_range, marker
 
     patches, radii = create_patches(telescopes, marker_scaling, show_tel_label, ax)
 
-    if axes_range is None:
-        r = max(radii).value
-        max_x = max(abs(pos_x.min().value), abs(pos_x.max().value)) + r
-        max_y = max(abs(pos_y.min().value), abs(pos_y.max().value)) + r
-        axes_range = max(max_x, max_y) * 1.1
+    if axes_range:
+        return patches, axes_range
 
-    return patches, axes_range
+    r = max(radii).value
+    max_x = max(abs(pos_x.min().value), abs(pos_x.max().value)) + r
+    max_y = max(abs(pos_y.min().value), abs(pos_y.max().value)) + r
+    updated_axes_range = max(max_x, max_y) * 1.1
+
+    return patches, updated_axes_range
 
 
 @u.quantity_input(x=u.m, y=u.m, radius=u.m)
