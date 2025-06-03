@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Plot array element layout."""
+"""Plot array elements for a layout."""
 
 from collections import Counter
 
