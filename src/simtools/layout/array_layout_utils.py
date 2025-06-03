@@ -1,4 +1,4 @@
-"""Retrieve, merge, and write layouts from CTAO common identifiers repository."""
+"""Retrieve, merge, and write layout dictionaries."""
 
 import logging
 from pathlib import Path
@@ -12,7 +12,7 @@ from simtools.utils import names
 _logger = logging.getLogger(__name__)
 
 
-def retrieve_array_layouts(site, repository_url, branch_name="main"):
+def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
     """
     Retrieve array layouts from CTAO common identifiers repository.
 
@@ -45,10 +45,10 @@ def retrieve_array_layouts(site, repository_url, branch_name="main"):
         )
         sub_arrays = gen.collect_data_from_file(Path(repository_url) / "subarray-ids.json")
 
-    return _get_layouts_per_site(site, sub_arrays, array_element_ids)
+    return _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
 
 
-def _get_layouts_per_site(site, sub_arrays, array_element_ids):
+def _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids):
     """
     Get array layouts for CTAO sites.
 
@@ -71,7 +71,7 @@ def _get_layouts_per_site(site, sub_arrays, array_element_ids):
     for array in sub_arrays.get("subarrays", []):
         elements = []
         for ids in array.get("array_element_ids", []):
-            element_name = _get_array_element_name(ids, array_element_ids)
+            element_name = _get_ctao_array_element_name(ids, array_element_ids)
             if names.get_site_from_array_element_name(element_name) != site:
                 break
             elements.append(element_name)
@@ -86,7 +86,7 @@ def _get_layouts_per_site(site, sub_arrays, array_element_ids):
     return layouts_per_site
 
 
-def _get_array_element_name(ids, array_element_ids):
+def _get_ctao_array_element_name(ids, array_element_ids):
     """Return array element name for common identifier."""
     for element in array_element_ids.get("array_elements", []):
         if element.get("id") == ids:
@@ -96,7 +96,7 @@ def _get_array_element_name(ids, array_element_ids):
 
 def merge_array_layouts(layouts_1, layouts_2):
     """
-    Compare array layout dictionaries and merge them.
+    Compare two array layout dictionaries and merge them.
 
     Parameters
     ----------
@@ -145,7 +145,8 @@ def write_array_layouts(array_layouts, args_dict, db_config):
     db_config : dict
         Database configuration.
     """
-    _logger.info(f"Writing updated array layouts to the database for site {args_dict['site']}.")
+    site = args_dict.get("site") or array_layouts.get("site")
+    _logger.info(f"Writing updated array layouts to the database for site {site}.")
 
     io_handler_instance = io_handler.IOHandler()
     io_handler_instance.set_paths(
@@ -159,7 +160,7 @@ def write_array_layouts(array_layouts, args_dict, db_config):
     ModelDataWriter.dump_model_parameter(
         parameter_name="array_layouts",
         value=array_layouts["value"],
-        instrument=args_dict["site"],
+        instrument=site,
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
         use_plain_output_path=args_dict["use_plain_output_path"],
@@ -170,3 +171,37 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         output_file,
         add_activity_name=True,
     )
+
+
+def validate_array_layouts_with_db(production_table, array_layouts):
+    """
+    Validate array layouts against the production table in the database.
+
+    Confirm that every telescope defined in the array layouts exist in the
+    production table.
+
+    Parameters
+    ----------
+    production_table : dict
+        Production table from the database.
+    array_layouts : dict
+        Array layouts to be validated.
+
+    Returns
+    -------
+    dict
+        Validated array layouts.
+    """
+    db_elements = set(production_table.get("parameters", {}).keys())
+
+    invalid_array_elements = [
+        e
+        for layout in array_layouts.get("value", [])
+        for e in layout.get("elements", [])
+        if e not in db_elements
+    ]
+
+    if invalid_array_elements:
+        raise ValueError(f"Invalid array elements found: {invalid_array_elements}. ")
+
+    return array_layouts

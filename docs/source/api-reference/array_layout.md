@@ -33,11 +33,11 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
    :members:
 ```
 
-(ctaoarraylayoutsmodule)=
+(array_layout_utils_module)=
 
-## ctao_array_layouts
+## array_layout_utils
 
 ```{eval-rst}
-.. automodule:: layout.ctao_array_layouts
+.. automodule:: layout.array_layout_utils
    :members:
 ```
