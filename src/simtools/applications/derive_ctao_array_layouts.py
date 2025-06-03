@@ -18,7 +18,7 @@ r"""
         Model parameter version.
     repository_url (str)
         URL or path of the CTAO common identifiers repository.
-    repository_branch (str )
+    repository_branch (str)
         Repository branch to use for CTAO common identifiers.
     updated_parameter_version (str)
         Updated parameter version.
@@ -48,9 +48,9 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.layout.ctao_array_layouts import (
+from simtools.layout.array_layout_utils import (
     merge_array_layouts,
-    retrieve_array_layouts,
+    retrieve_ctao_array_layouts,
     write_array_layouts,
 )
 
@@ -91,7 +91,7 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    ctao_array_layouts = retrieve_array_layouts(
+    ctao_array_layouts = retrieve_ctao_array_layouts(
         site=args_dict["site"],
         repository_url=args_dict["repository_url"],
         branch_name=args_dict["repository_branch"],
@@ -107,7 +107,7 @@ def main():  # noqa: D103
     )
     db_array_layouts["array_layouts"].pop("_id", None)
     db_array_layouts["array_layouts"].pop("entry_date", None)
-    logger.info(f"Layouts from DB: {db_array_layouts}")
+    logger.info(f"Layouts from model parameter database: {db_array_layouts}")
 
     write_array_layouts(
         array_layouts=merge_array_layouts(db_array_layouts["array_layouts"], ctao_array_layouts),
