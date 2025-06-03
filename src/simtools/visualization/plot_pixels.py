@@ -4,6 +4,7 @@
 import logging
 from pathlib import Path
 
+import astropy.units as u
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ def plot(config, output_file, db_config=None):
     ----------
     config : dict
         Configuration dictionary containing:
-        - file_name : str, name of .dat file
+        - file_name : str, name of camera config file
         - column_x : str, x-axis label
         - column_y : str, y-axis label
         - parameter_version: str, version of the parameter
@@ -64,15 +65,15 @@ def plot(config, output_file, db_config=None):
 
 def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     """
-    Plot the pixel layout from a .dat file configuration.
+    Plot the pixel layout from a camera config file.
 
-    This function reads the pixel configuration from the specified .dat file and
+    This function reads the pixel configuration from the specified camera config file and
     generates a plot of the pixel layout for the given telescope model.
 
     Parameters
     ----------
     dat_file_path : str or Path
-        Path to the .dat file containing pixel configuration
+        Path to the camera config file containing pixel configuration
     telescope_model_name : str
         Name/model of the telescope
     **kwargs
@@ -92,7 +93,6 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     """
     logger.info(f"Plotting pixel layout for {telescope_model_name} from {dat_file_path}")
 
-    # Read configuration and prepare data
     pixel_data = _prepare_pixel_data(
         dat_file_path,
         telescope_model_name,
@@ -111,13 +111,13 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
 def _prepare_pixel_data(dat_file_path, telescope_model_name):
     """Prepare pixel data from configuration file.
 
-    This function reads the pixel configuration from the specified .dat file and
+    This function reads the pixel configuration from the specified camera config file and
     prepares the data for plotting, including applying any necessary rotations.
 
     Parameters
     ----------
     dat_file_path : str or Path
-        Path to the .dat file containing pixel configuration
+        Path to the camera config file containing pixel configuration
     telescope_model_name : str
         Name/model of the telescope
 
@@ -133,16 +133,19 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
     if not is_two_mirror_telescope(telescope_model_name):
         y_pos = -y_pos
 
-    rotate_angle = config.get("rotate_angle") or 0.0
+    rotate_angle = (
+        config.get("rotate_angle") if config.get("rotate_angle") is not None else (0.0 * u.deg)
+    )
+    # rotate_angle = rotate_angle * u.deg
 
     # Apply telescope-specific adjustments
     if "SST" in telescope_model_name or "SCT" in telescope_model_name:
-        total_rotation = 90 - (rotate_angle)
+        total_rotation = (90 * u.deg) - (rotate_angle)
     else:
-        total_rotation = -90 - (rotate_angle)
+        total_rotation = (-90 * u.deg) - (rotate_angle)
 
     # Apply rotation
-    rot_angle = np.deg2rad(total_rotation)
+    rot_angle = total_rotation.to(u.rad).value
     x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
     y_rot = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
     x_pos, y_pos = x_rot, y_rot
@@ -249,16 +252,16 @@ def _create_pixel_plot(
 
 
 def _read_pixel_config(dat_file_path):
-    """Read pixel configuration from .dat file.
+    """Read pixel configuration from a camera configuration file.
 
-    This function reads the pixel configuration from the specified .dat file and
+    This function reads the pixel configuration from the specified camera config file and
     returns it as a dictionary. It parses information such as pixel positions,
     module numbers, and other relevant parameters.
 
     Parameters
     ----------
     dat_file_path : str or Path
-        Path to the .dat file containing pixel configuration
+        Path to the camera config file containing pixel configuration
 
     Returns
     -------
@@ -288,8 +291,8 @@ def _read_pixel_config(dat_file_path):
 
             # Parse specific information from the file
             if line.startswith("Rotate"):
-                # Parse rotation angle from line like "Rotate 10.893"
-                config["rotate_angle"] = float(line.split()[1].strip())
+                # Parse rotation angle from line like "Rotate 10.893" (u.deg)
+                config["rotate_angle"] = float(line.split()[1].strip()) * u.deg
 
             elif line.startswith("PixType"):
                 parts = line.split()
@@ -394,7 +397,6 @@ def _is_edge_pixel(
     else:
         raise ValueError(f"Unsupported pixel shape: {shape}")
 
-    # Count the number of neighbors
     neighbor_count = _count_neighbors(
         x, y, x_pos, y_pos, module_ids, pixel_spacing, module_gap, current_module_id
     )
@@ -524,7 +526,7 @@ def _configure_plot(
     ax,
     x_pos,
     y_pos,
-    rotation=0,
+    rotation=0 * u.deg,
     title=None,
     xtitle=None,
     ytitle=None,
@@ -537,7 +539,7 @@ def _configure_plot(
         The axes to configure
     x_pos, y_pos : array-like
         Arrays of x and y positions of pixels
-    rotation : float, optional
+    rotation : Astropy quantity in degrees, optional
         Rotation angle in degrees, default 0
     title : str, optional
         Plot title
@@ -585,7 +587,7 @@ def _configure_plot(
     ax.text(x_min, y_min, "For an observer facing the camera", fontsize=10, ha="left", va="bottom")
 
 
-def _add_coordinate_axes(ax, rotation=0):
+def _add_coordinate_axes(ax, rotation=0 * u.deg):
     """Add coordinate system axes to the plot."""
     # Setup dimensions and positions
     x_min, x_max = ax.get_xlim()
@@ -603,13 +605,13 @@ def _add_coordinate_axes(ax, rotation=0):
         "width": axis_length * 0.02,
     }
     arrow_length = 0.6
-    is_sst = abs(rotation - 90.0) < 1.0
+    is_sst = abs(rotation - (90.0 * u.deg)).value < 1.0
     az_direction = 1 if is_sst else -1
 
     def add_arrow_label(ox, oy, dx, dy, label, offset, color="black", ha="center", va="center"):
         """Adding arrows with label."""
         ax.arrow(ox, oy, dx, dy, fc=color, ec=color, **arrow_style)
-        if dx or dy:  # If not zero vector
+        if not dx or dy:  # If not zero vector
             dir_unit = np.sqrt(dx**2 + dy**2)
             ax.text(
                 ox + dx + dx / dir_unit * axis_length * offset,
@@ -639,7 +641,7 @@ def _add_coordinate_axes(ax, rotation=0):
     )
 
     # Pixel coordinate axes
-    rot_angle = np.deg2rad(rotation)
+    rot_angle = rotation.to(u.rad).value
     x_direction = -1 if is_sst else 1
     x_dir = x_direction * axis_length * arrow_length * np.cos(rot_angle)
     y_dir = x_direction * axis_length * arrow_length * np.sin(rot_angle)
