@@ -433,7 +433,6 @@ def main():
             io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
         )
 
-        # use visualize.save_figure??
         for file in _plot_files:
             logger.info(f"Saving figure as {file}")
             plt.savefig(file, bbox_inches="tight", dpi=400)
