@@ -726,7 +726,7 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     return fig
 
 
-def save_figure(fig, output_file, figure_format=None, log_title=""):
+def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"):
     """
     Save figure to output file(s).
 
@@ -744,7 +744,7 @@ def save_figure(fig, output_file, figure_format=None, log_title=""):
     figure_format = figure_format or ["pdf", "png"]
     for fmt in figure_format:
         _file = Path(output_file).with_suffix(f".{fmt}")
-        fig.savefig(_file, format=fmt, bbox_inches="tight")
+        fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()

@@ -78,14 +78,11 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from astropy import units as u
 
+import simtools.layout.array_layout_utils as layout_utils
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.layout.array_layout_utils import (
-    get_array_layouts_from_db,
-    get_array_layouts_from_file,
-    get_array_layouts_using_telescope_lists_from_db,
-)
+from simtools.visualization import visualize
 from simtools.visualization.plot_array_layout import plot_array_layout
 
 
@@ -165,70 +162,6 @@ def _parse(label, description, usage=None):
     )
 
 
-def _get_list_of_plot_files(plot_file_name, output_dir):
-    """
-    Get list of output file names for plotting.
-
-    Parameters
-    ----------
-    plot_file_name : str
-        Name of the plot file.
-    output_dir : str
-        Output directory.
-
-    Returns
-    -------
-    list
-        List of output file names.
-
-    Raises
-    ------
-    NameError
-        If the file extension is not valid.
-    """
-    plot_file = output_dir.joinpath(plot_file_name)
-
-    if len(plot_file.suffix) == 0:
-        return [plot_file.with_suffix(f".{ext}") for ext in ["pdf", "png"]]
-
-    allowed_extensions = [".jpeg", ".jpg", ".png", ".tiff", ".ps", ".pdf", ".bmp"]
-    if plot_file.suffix in allowed_extensions:
-        return [plot_file]
-    msg = f"Extension in {plot_file} is not valid. Valid extensions are: {allowed_extensions}."
-    raise NameError(msg)
-
-
-def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotate_angle):
-    """
-    Generate and return the file name for plots.
-
-    Parameters
-    ----------
-    figure_name : str
-        Figure name given through command line.
-    layout_name : str
-        Name of the layout.
-    site : str
-        Site name.
-    coordinate_system : str
-        Coordinate system for the array layout.
-    rotate_angle : float
-        Angle to rotate the array before plotting.
-
-    Returns
-    -------
-    str
-        Plot file name.
-    """
-    if figure_name is not None:
-        return figure_name
-
-    return (
-        f"array_layout_{layout_name}_{site}_{coordinate_system}_"
-        f"{round(rotate_angle.to(u.deg).value)!s}deg"
-    )
-
-
 def main():
     """Plot array layout application."""
     label = Path(__file__).stem
@@ -244,10 +177,9 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     io_handler_instance = io_handler.IOHandler()
 
-    layouts = []
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
         logger.info("Plotting array from DB using layout array name(s).")
-        layouts = get_array_layouts_from_db(
+        layouts = layout_utils.get_array_layouts_from_db(
             args_dict["array_layout_name"],
             args_dict["site"],
             args_dict["model_version"],
@@ -256,19 +188,21 @@ def main():
         )
     elif args_dict["array_layout_file"] is not None:
         logger.info("Plotting array from telescope table file(s).")
-        layouts = get_array_layouts_from_file(args_dict["array_layout_file"])
+        layouts = layout_utils.get_array_layouts_from_file(args_dict["array_layout_file"])
     elif args_dict["array_element_list"] is not None:
         logger.info("Plotting array from list of array elements.")
-        layouts = get_array_layouts_using_telescope_lists_from_db(
+        layouts = layout_utils.get_array_layouts_using_telescope_lists_from_db(
             [args_dict["array_element_list"]],
             args_dict["site"],
             args_dict["model_version"],
             db_config,
             args_dict["coordinate_system"],
         )
+    else:
+        layouts = []
 
     if args_dict.get("array_layout_name_background"):
-        background_layout = get_array_layouts_from_db(
+        background_layout = layout_utils.get_array_layouts_from_db(
             args_dict["array_layout_name_background"],
             args_dict["site"],
             args_dict["model_version"],
@@ -294,22 +228,18 @@ def main():
             marker_scaling=args_dict["marker_scaling"],
             background_telescopes=background_layout,
         )
-        plot_file_name = _get_plot_file_name(
-            args_dict["figure_name"],
-            layout["name"],
-            args_dict["site"],
-            args_dict["coordinate_system"],
-            rotate_angle,
-        )
-        _plot_files = _get_list_of_plot_files(
-            plot_file_name,
-            io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
+        plot_file_name = args_dict["figure_name"] or (
+            f"array_layout_{layout['name']}_{args_dict['site']}_"
+            f"{args_dict['coordinate_system']}_"
+            f"{round(rotate_angle.to(u.deg).value)!s}deg"
         )
 
-        for file in _plot_files:
-            logger.info(f"Saving figure as {file}")
-            plt.savefig(file, bbox_inches="tight", dpi=400)
-        fig_out.clf()
+        visualize.save_figure(
+            fig_out,
+            io_handler_instance.get_output_directory(label, sub_dir="application-plots")
+            / plot_file_name,
+            dpi=400,
+        )
         plt.close()
 
 
