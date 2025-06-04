@@ -579,7 +579,7 @@ def test__write_array_layouts_section(io_handler, db_config, mocker):
     assert "[MST2](MST2.md)" in output
 
     # Verify image links
-    assert "![Layout1 Layout](../../_images/OBS-North_Layout1_6-0-0.png)" in output
+    assert "![Layout1 Layout](/_images/OBS-North_Layout1_6-0-0.png)" in output
 
 
 def test__write_array_triggers_section(io_handler, db_config):
