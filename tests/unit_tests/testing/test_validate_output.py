@@ -21,9 +21,9 @@ PATH_CFG_7 = "/path/to/simtel_cfg_7.0.0.cfg"
 @pytest.fixture
 def create_json_file(tmp_test_directory):
     def _create_json_file(file_name, content):
-        file = tmp_test_directory / file_name
-        file.write_text(json.dumps(content), encoding="utf-8")
-        return file
+        _file = tmp_test_directory / file_name
+        _file.write_text(json.dumps(content), encoding="utf-8")
+        return _file
 
     return _create_json_file
 
@@ -31,10 +31,10 @@ def create_json_file(tmp_test_directory):
 @pytest.fixture
 def create_yaml_file(tmp_path):
     def _create_yaml_file(file_name, content):
-        file = tmp_path / file_name
-        with open(file, "w", encoding="utf-8") as f:
+        _file = tmp_path / file_name
+        with open(_file, "w", encoding="utf-8") as f:
             yaml.dump(content, f)
-        return file
+        return _file
 
     return _create_yaml_file
 
@@ -390,6 +390,20 @@ def test_validate_application_output_with_reference_output_file(
 
     validate_output.validate_application_output(config, "6.0.0")
     mock_validate_simtel_cfg_files.assert_called_once()
+
+
+def test_validate_application_output_with_assertion_error(output_path):
+    test_path = "not_there"
+    config = {
+        "CONFIGURATION": {"OUTPUT_PATH": output_path},
+        "TEST_OUTPUT_FILES": [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": test_path}],
+    }
+    with pytest.raises(
+        AssertionError, match="Output file /path/to/output/not_there does not exist."
+    ):
+        validate_output._validate_output_path_and_file(
+            config, [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": test_path}]
+        )
 
 
 def test_validate_application_output_with_file_type(
