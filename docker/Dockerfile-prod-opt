@@ -15,7 +15,7 @@ ARG AVX_FLAG="avx2"
 ARG BERNLOHR_VERSION="1.68"
 ARG PYTHON_VERSION=3.12
 ARG BUILD_BRANCH=main
-ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
+ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 
 #
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
