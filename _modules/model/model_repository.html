@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.calibration_model &#8212; simtools</title>
+    <title>model.model_repository &#8212; simtools</title>
   
   
   
@@ -40,7 +40,7 @@
     <script src="../../_static/documentation_options.js?v=b8325316"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/model/calibration_model';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/model/model_repository';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json';
@@ -376,7 +376,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">model.calibration_model</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">model.model_repository</span></li>
   </ul>
 </nav>
 </div>
@@ -393,60 +393,144 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for model.calibration_model</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Definition and modeling of a calibration device.&quot;&quot;&quot;</span>
+  <h1>Source code for model.model_repository</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utilities for managing the simulation models repository.</span>
+
+<span class="sd">Simulation model parameters and production tables are managed through</span>
+<span class="sd">a gitlab repository (&#39;SimulationModels&#39;). This module provides service</span>
+<span class="sd">functions to interact with and verify the repository.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelParameter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CalibrationModel&quot;</span><span class="p">]</span>
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="CalibrationModel">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.calibration_model.CalibrationModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">CalibrationModel</span><span class="p">(</span><span class="n">ModelParameter</span><span class="p">):</span>
+<div class="viewcode-block" id="verify_simulation_model_production_tables">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_repository.verify_simulation_model_production_tables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_simulation_model_production_tables</span><span class="p">(</span><span class="n">simulation_models_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    CalibrationModel represents the MC model of an individual calibration device.</span>
+<span class="sd">    Verify the simulation model production tables in the specified path.</span>
 
-<span class="sd">    It provides functionality to read the required parameters from the DB.</span>
+<span class="sd">    Checks that all model parameters defined in the production tables are</span>
+<span class="sd">    present in the simulation models repository.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    site: str</span>
-<span class="sd">        Site name (e.g., South or North).</span>
-<span class="sd">    calibration_device_model_name: str</span>
-<span class="sd">        Calibration device model name (ex. ILLS-01, ILLN-01, ...).</span>
-<span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        MongoDB configuration.</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Model version.</span>
-<span class="sd">    label: str, optional</span>
-<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    simulation_models_path : str</span>
+<span class="sd">        Path to the simulation models repository.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if all parameters found, False if any missing.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">productions_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simulation_models_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;simulation-models&quot;</span> <span class="o">/</span> <span class="s2">&quot;productions&quot;</span>
+    <span class="n">production_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">productions_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">site</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">calibration_device_model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize CalibrationModel.&quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-            <span class="n">array_element_name</span><span class="o">=</span><span class="n">calibration_device_model_name</span><span class="p">,</span>
-            <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-            <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Verifying </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">production_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> simulation model production &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;tables in </span><span class="si">{</span><span class="n">simulation_models_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">missing_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total_checked</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">production_file</span> <span class="ow">in</span> <span class="n">production_files</span><span class="p">:</span>
+        <span class="n">file_missing</span><span class="p">,</span> <span class="n">file_checked</span> <span class="o">=</span> <span class="n">_verify_model_parameters_for_production</span><span class="p">(</span>
+            <span class="n">simulation_models_path</span><span class="p">,</span> <span class="n">production_file</span>
         <span class="p">)</span>
+        <span class="n">missing_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">file_missing</span><span class="p">)</span>
+        <span class="n">total_checked</span> <span class="o">+=</span> <span class="n">file_checked</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CalibrationModel </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">calibration_device_model_name</span><span class="p">)</span></div>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checked </span><span class="si">{</span><span class="n">total_checked</span><span class="si">}</span><span class="s2"> parameters, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> missing&quot;</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">missing_files</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">missing_file</span> <span class="ow">in</span> <span class="n">missing_files</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing: </span><span class="si">{</span><span class="n">missing_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Verification passed: All parameters found&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verify_model_parameters_for_production</span><span class="p">(</span><span class="n">simulation_models_path</span><span class="p">,</span> <span class="n">production_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify that model parameters defined in the production tables exist.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simulation_models_path : str</span>
+<span class="sd">        Path to the simulation models repository.</span>
+<span class="sd">    production_file : Path</span>
+<span class="sd">        Path to the production file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (missing_files_list, total_checked_count)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">production_table</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">production_file</span><span class="p">)</span>
+    <span class="n">missing_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total_checked</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">parameters</span> <span class="o">=</span> <span class="n">production_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">for</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">par_dict</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_version</span> <span class="ow">in</span> <span class="n">par_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">total_checked</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">parameter_file</span> <span class="o">=</span> <span class="n">_get_model_parameter_file_path</span><span class="p">(</span>
+                    <span class="n">simulation_models_path</span><span class="p">,</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_version</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">parameter_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">parameter_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="n">missing_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">parameter_file</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">missing_files</span><span class="p">,</span> <span class="n">total_checked</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_model_parameter_file_path</span><span class="p">(</span>
+    <span class="n">simulation_models_path</span><span class="p">,</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">parameter_version</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the file path for a model parameter.</span>
+
+<span class="sd">    Take into account path structure based on collections and array elements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simulation_models_path : str</span>
+<span class="sd">        Path to the simulation models repository.</span>
+<span class="sd">    array_element : str</span>
+<span class="sd">        Name of the array element (e.g., &#39;telescope&#39;).</span>
+<span class="sd">    parameter_name : str</span>
+<span class="sd">        Name of the parameter.</span>
+<span class="sd">    parameter_version : str</span>
+<span class="sd">        Version of the parameter.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Path</span>
+<span class="sd">        The file path to the model parameter JSON file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">collection</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">simulation_models_path</span><span class="p">)</span>
+        <span class="o">/</span> <span class="s2">&quot;simulation-models&quot;</span>
+        <span class="o">/</span> <span class="s2">&quot;model_parameters&quot;</span>
+        <span class="o">/</span> <span class="p">(</span>
+            <span class="n">collection</span>
+            <span class="k">if</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">)</span>
+        <span class="o">/</span> <span class="p">(</span><span class="n">array_element</span> <span class="k">if</span> <span class="n">collection</span> <span class="o">!=</span> <span class="s2">&quot;configuration_corsika&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="o">/</span> <span class="n">parameter_name</span>
+        <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2">.json&quot;</span>
+    <span class="p">)</span>
 </pre></div>
 
                 </article>

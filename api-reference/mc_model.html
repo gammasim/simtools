@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=43e41f80"></script>
+    <script src="../_static/documentation_options.js?v=b8325316"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/mc_model';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Layout" href="array_layout.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8a9c29b" />
+  <meta name="docsearch:version" content="0.1.dev1+g207a5db" />
   </head>
   
   
@@ -1245,6 +1245,35 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd></dl>
 
 </section>
+<section id="model-repository">
+<h2>model_repository<a class="headerlink" href="#model-repository" title="Link to this heading">#</a></h2>
+<p id="module-model.model_repository"><span id="id3"></span>Utilities for managing the simulation models repository.</p>
+<p>Simulation model parameters and production tables are managed through
+a gitlab repository (‘SimulationModels’). This module provides service
+functions to interact with and verify the repository.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="model.model_repository.verify_simulation_model_production_tables">
+<span class="sig-prename descclassname"><span class="pre">model.model_repository.</span></span><span class="sig-name descname"><span class="pre">verify_simulation_model_production_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_models_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_repository.html#verify_simulation_model_production_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_repository.verify_simulation_model_production_tables" title="Link to this definition">#</a></dt>
+<dd><p>Verify the simulation model production tables in the specified path.</p>
+<p>Checks that all model parameters defined in the production tables are
+present in the simulation models repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simulation_models_path</strong><span class="classifier">str</span></dt><dd><p>Path to the simulation models repository.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if all parameters found, False if any missing.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="model-utilities">
 <h2>model utilities<a class="headerlink" href="#model-utilities" title="Link to this heading">#</a></h2>
 <p id="module-model.model_utils"><span id="model-utils"></span>Helper functions related to model parameters.</p>
@@ -1294,7 +1323,7 @@ of the database structure is needed when accessing the model parameters.</p>
 </section>
 <section id="site-model">
 <h2>site_model<a class="headerlink" href="#site-model" title="Link to this heading">#</a></h2>
-<p id="module-model.site_model"><span id="id3"></span>Definition of site model.</p>
+<p id="module-model.site_model"><span id="id4"></span>Definition of site model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.site_model.SiteModel">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
@@ -1406,7 +1435,7 @@ This method allows to export it explicitly.</p>
 </section>
 <section id="telescope-model">
 <h2>telescope_model<a class="headerlink" href="#telescope-model" title="Link to this heading">#</a></h2>
-<p id="module-model.telescope_model"><span id="id4"></span>MC model of a telescope.</p>
+<p id="module-model.telescope_model"><span id="id5"></span>MC model of a telescope.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Link to this definition">#</a></dt>
@@ -1766,6 +1795,10 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.write_sim_telarray_config_file()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-repository">model_repository</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_repository.verify_simulation_model_production_tables"><code class="docutils literal notranslate"><span class="pre">verify_simulation_model_production_tables()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-utilities">model utilities</a><ul class="nav section-nav flex-column">
