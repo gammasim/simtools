@@ -498,14 +498,13 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     assert result == expected
 
 
-def test_get_array_layouts_using_telescope_lists_from_db_with_site(mocker):
+def test_get_array_layouts_using_telescope_lists_from_db_with_site(mocker, mock_array_model):
     telescope_lists = [["tel1", "tel2"], ["tel3", "tel4"]]
     site = "North"
     db_config = {"config": "dummy"}
     fake_table = ["fake", "elements"]
 
     # Patch ArrayModel to return a fake table via export_array_elements_as_table.
-    mock_array_model = mocker.patch("simtools.layout.array_layout_utils.ArrayModel")
     instance = MagicMock()
     instance.export_array_elements_as_table.return_value = fake_table
     mock_array_model.return_value = instance
@@ -524,7 +523,9 @@ def test_get_array_layouts_using_telescope_lists_from_db_with_site(mocker):
     assert mock_array_model.call_count == 2
 
 
-def test_get_array_layouts_using_telescope_lists_from_db_without_site_single(mocker):
+def test_get_array_layouts_using_telescope_lists_from_db_without_site_single(
+    mocker, mock_array_model
+):
     # Case where site is None and all telescope list elements originate from the same site.
     telescope_lists = [["N_tel1", "N_tel2"]]
     site = None
@@ -535,7 +536,6 @@ def test_get_array_layouts_using_telescope_lists_from_db_without_site_single(moc
     mock_names = mocker.patch("simtools.layout.array_layout_utils.names")
     mock_names.get_site_from_array_element_name.return_value = "north"
 
-    mock_array_model = mocker.patch("simtools.layout.array_layout_utils.ArrayModel")
     instance = MagicMock()
     instance.export_array_elements_as_table.return_value = fake_table
     mock_array_model.return_value = instance
