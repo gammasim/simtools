@@ -71,9 +71,7 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
 
-    def write_telescope_config_file(
-        self, config_file_path, parameters, telescope_name=None, write_dummy_config=False
-    ):
+    def write_telescope_config_file(self, config_file_path, parameters, telescope_name=None):
         """
         Write the sim_telarray config file for a single telescope.
 
@@ -85,8 +83,6 @@ class SimtelConfigWriter:
             Model parameters
         telescope_name: str
             Name of the telescope (use self._telescope_model_name if None)
-        write_dummy_config: bool
-            Flag to write a dummy telescope configuration file.
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
@@ -97,8 +93,6 @@ class SimtelConfigWriter:
             file.write("#ifdef TELESCOPE\n")
             file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
             file.write("#endif\n\n")
-            if write_dummy_config:
-                file.write("#define DUMMY_CONFIG 1\n")
 
             for par, value in parameters.items():
                 simtel_name, value = self._convert_model_parameters_to_simtel_format(
@@ -567,9 +561,7 @@ class SimtelConfigWriter:
             if key in parameters:
                 parameters[key]["value"] = val
 
-        self.write_telescope_config_file(
-            config_file_path, parameters, telescope_name, write_dummy_config=True
-        )
+        self.write_telescope_config_file(config_file_path, parameters, telescope_name)
 
         config_file_directory = Path(config_file_path).parent
         self._write_dummy_mirror_list_files(config_file_directory, telescope_name)
