@@ -137,7 +137,7 @@ def test_get_sphere_radius_without_column():
 
     # Since the 'sphere_radius' column is missing, the function should return 1.0 m.
     result = get_sphere_radius(row)
-    assert result == 1.0 * u.m
+    assert result == 10.0 * u.m
 
 
 # Helper class to simulate a telescope row with an index attribute

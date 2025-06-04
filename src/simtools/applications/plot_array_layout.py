@@ -80,10 +80,12 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.db import db_handler
 from simtools.io_operations import io_handler
-from simtools.model.array_model import ArrayModel
-from simtools.utils import names
+from simtools.layout.array_layout_utils import (
+    get_array_layouts_from_db,
+    get_array_layouts_from_file,
+    get_array_layouts_using_telescope_lists_from_db,
+)
 from simtools.visualization.plot_array_layout import plot_array_layout
 
 
@@ -158,28 +160,9 @@ def _parse(label, description, usage=None):
         default=None,
     )
     return config.initialize(
-        db_config=True, simulation_model=["site", "model_version", "layout", "layout_file"]
+        db_config=True,
+        simulation_model=["site", "model_version", "layout", "layout_file", "plot_all_layouts"],
     )
-
-
-def _get_site_from_telescope_list_name(telescope_list_file):
-    """
-    Get the site name from the telescope list file name.
-
-    Parameters
-    ----------
-    telescope_list_file : str
-        Telescope list file name.
-
-    Returns
-    -------
-    str
-        Site name.
-    """
-    for _site in names.site_names():
-        if _site in str(telescope_list_file):
-            return _site
-    return None
 
 
 def _get_list_of_plot_files(plot_file_name, output_dir):
@@ -246,168 +229,6 @@ def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotat
     )
 
 
-def _layouts_from_array_layout_file(args_dict, db_config, rotate_angle):
-    """
-    Read array layout positions from file(s) and return a list of layouts.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Dictionary with the command line arguments.
-    db_config : dict
-        Database configuration.
-    rotate_angle : float
-        Angle to rotate the array before plotting (in degrees).
-
-    Returns
-    -------
-    list
-        List of array layouts.
-    """
-    layouts = []
-    telescope_files = args_dict["array_layout_file"]
-    for one_file in telescope_files:
-        site = (
-            _get_site_from_telescope_list_name(one_file)
-            if args_dict["site"] is None
-            else args_dict["site"]
-        )
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=args_dict["model_version"],
-            site=site,
-            array_elements=one_file,
-        )
-        layouts.append(
-            {
-                "array_elements": array_model.export_array_elements_as_table(),
-                "plot_file_name": _get_plot_file_name(
-                    args_dict["figure_name"],
-                    (Path(one_file).name).split(".")[0],
-                    site,
-                    args_dict["coordinate_system"],
-                    rotate_angle,
-                ),
-            }
-        )
-    return layouts
-
-
-def _layouts_from_list(args_dict, db_config, rotate_angle):
-    """
-    Read positions for a list of array elements from the database and return a list of layouts.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Dictionary with the command line arguments.
-    db_config : dict
-        Database configuration.
-    rotate_angle : float
-        Angle to rotate the array before plotting (in degrees).
-
-    Returns
-    -------
-    list
-        List of array layouts.
-    """
-    site = (
-        names.get_site_from_array_element_name(args_dict["array_element_list"][0])
-        if args_dict["site"] is None
-        else args_dict["site"]
-    )
-    array_model = ArrayModel(
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        site=site,
-        array_elements=args_dict["array_element_list"],
-    )
-    return [
-        {
-            "array_elements": array_model.export_array_elements_as_table(
-                coordinate_system=args_dict["coordinate_system"]
-            ),
-            "plot_file_name": _get_plot_file_name(
-                args_dict["figure_name"],
-                "list",
-                site,
-                args_dict["coordinate_system"],
-                rotate_angle,
-            ),
-        }
-    ]
-
-
-def _layouts_from_db(layout_name, args_dict, db_config, rotate_angle):
-    """
-    Read array elements and their positions from data base using the layout name.
-
-    Parameters
-    ----------
-    layout_name : str
-        Name of the layout to be plotted.
-    args_dict : dict
-        Dictionary with the command line arguments.
-    db_config : dict
-        Database configuration.
-    rotate_angle : float
-        Angle to rotate the array before plotting (in degrees).
-
-    Returns
-    -------
-    list
-        List of array layouts.
-    """
-    layout_names = (
-        _read_all_layout_names_from_db(args_dict, db_config)
-        if layout_name == "plot_all"
-        else [layout_name]
-    )
-
-    layouts = []
-    for _layout_name in layout_names:
-        layouts.append(_read_layout_from_db(_layout_name, args_dict, db_config, rotate_angle))
-    return layouts
-
-
-def _read_all_layout_names_from_db(args_dict, db_config):
-    """Read all layout names for a given site and model version from the database."""
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    array_layouts = db.get_model_parameter(
-        parameter="array_layouts",
-        site=args_dict["site"],
-        array_element_name=None,
-        model_version=args_dict["model_version"],
-    )
-    layout_names = []
-    for data in array_layouts.get("array_layouts", {}).get("value", {}):
-        layout_names.append(data["name"])
-
-    return layout_names
-
-
-def _read_layout_from_db(layout_name, args_dict, db_config, rotate_angle):
-    """Read array elements and their positions from data base using the layout name."""
-    array_model = ArrayModel(
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        site=args_dict["site"],
-        layout_name=layout_name,
-    )
-    return {
-        "array_elements": array_model.export_array_elements_as_table(
-            coordinate_system=args_dict["coordinate_system"]
-        ),
-        "plot_file_name": _get_plot_file_name(
-            figure_name=args_dict["figure_name"],
-            layout_name=layout_name,
-            site=args_dict["site"],
-            coordinate_system=args_dict["coordinate_system"],
-            rotate_angle=rotate_angle,
-        ),
-    }
-
-
 def main():
     """Plot array layout application."""
     label = Path(__file__).stem
@@ -423,31 +244,45 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     io_handler_instance = io_handler.IOHandler()
 
+    layouts = []
+    if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
+        logger.info("Plotting array from DB using layout array name(s).")
+        layouts = get_array_layouts_from_db(
+            args_dict["array_layout_name"],
+            args_dict["site"],
+            args_dict["model_version"],
+            db_config,
+            args_dict["coordinate_system"],
+        )
+    elif args_dict["array_layout_file"] is not None:
+        logger.info("Plotting array from telescope table file(s).")
+        layouts = get_array_layouts_from_file(args_dict["array_layout_file"])
+    elif args_dict["array_element_list"] is not None:
+        logger.info("Plotting array from list of array elements.")
+        layouts = get_array_layouts_using_telescope_lists_from_db(
+            [args_dict["array_element_list"]],
+            args_dict["site"],
+            args_dict["model_version"],
+            db_config,
+            args_dict["coordinate_system"],
+        )
+
+    if args_dict.get("array_layout_name_background"):
+        background_layout = get_array_layouts_from_db(
+            args_dict["array_layout_name_background"],
+            args_dict["site"],
+            args_dict["model_version"],
+            db_config,
+            args_dict["coordinate_system"],
+        )[0]["array_elements"]
+    else:
+        background_layout = None
+
     rotate_angle = (
         0.0 * u.deg
         if args_dict["rotate_angle"] is None
         else float(args_dict["rotate_angle"]) * u.deg
     )
-
-    layouts = []
-    if args_dict["array_layout_name"] is not None:
-        logger.info("Plotting array from layout array name.")
-        layouts = _layouts_from_db(
-            args_dict["array_layout_name"], args_dict, db_config, rotate_angle
-        )
-    elif args_dict["array_layout_file"] is not None:
-        logger.info("Plotting array from telescope list file.")
-        layouts = _layouts_from_array_layout_file(args_dict, db_config, rotate_angle)
-    elif args_dict["array_element_list"] is not None:
-        logger.info("Plotting array from list of array elements.")
-        layouts = _layouts_from_list(args_dict, db_config, rotate_angle)
-
-    if args_dict.get("array_layout_name_background"):
-        background_layout = _layouts_from_db(
-            args_dict["array_layout_name_background"], args_dict, db_config, rotate_angle
-        )[0]["array_elements"]
-    else:
-        background_layout = None
 
     mpl.use("Agg")
     for layout in layouts:
@@ -459,8 +294,15 @@ def main():
             marker_scaling=args_dict["marker_scaling"],
             background_telescopes=background_layout,
         )
+        plot_file_name = _get_plot_file_name(
+            args_dict["figure_name"],
+            layout["name"],
+            args_dict["site"],
+            args_dict["coordinate_system"],
+            rotate_angle,
+        )
         _plot_files = _get_list_of_plot_files(
-            layout["plot_file_name"],
+            plot_file_name,
             io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
         )
 
