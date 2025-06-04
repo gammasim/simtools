@@ -214,7 +214,7 @@ def get_sphere_radius(tel):
     radius : Quantity
         Radius with units.
     """
-    return tel["sphere_radius"] if "sphere_radius" in tel.colnames else 1.0 * u.m
+    return tel["sphere_radius"] if "sphere_radius" in tel.colnames else 10.0 * u.m
 
 
 def update_legend(ax, telescopes):
