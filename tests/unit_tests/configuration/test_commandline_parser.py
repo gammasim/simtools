@@ -232,6 +232,21 @@ def test_layout_parsers():
             assert any(action.dest == "array_element_list" for action in group._group_actions)
             assert any(action.dest == "array_layout_file" for action in group._group_actions)
 
+    _parser_9 = parser.CommandLineParser()
+    _parser_9.initialize_default_arguments(
+        simulation_model=["layout", "layout_file", "plot_all_layouts", "layout_parameter_file"]
+    )
+    job_groups = _parser_9._action_groups
+    for group in job_groups:
+        if str(group.title) == SIMULATION_MODEL_STRING:
+            assert any(action.dest == "array_layout_name" for action in group._group_actions)
+            assert any(action.dest == "array_element_list" for action in group._group_actions)
+            assert any(action.dest == "array_layout_file" for action in group._group_actions)
+            assert any(action.dest == "plot_all_layouts" for action in group._group_actions)
+            assert any(
+                action.dest == "array_layout_parameter_file" for action in group._group_actions
+            )
+
 
 def test_simulation_configuration():
     _parser_9 = parser.CommandLineParser()
