@@ -169,10 +169,10 @@ def add_parameter_mocks(db, mocker, test_db, value_unit_type, validate_model_par
 
 @pytest.fixture
 def common_mock_read_production_table(mocker, db):
-    """Common fixture for mocking _read_production_table_from_mongo_db."""
+    """Common fixture for mocking read_production_table_from_mongo_db."""
     return mocker.patch.object(
         db,
-        "_read_production_table_from_mongo_db",
+        "read_production_table_from_mongo_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
 
@@ -463,7 +463,7 @@ def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
 
     mock_get_production_table = mocker.patch.object(
         db,
-        "_read_production_table_from_mongo_db",
+        "read_production_table_from_mongo_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
     mock_get_array_element_list = mocker.patch.object(
@@ -497,7 +497,7 @@ def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
     collection = standard_test_params["collection"]
 
     mock_get_production_table = mocker.patch.object(
-        db, "_read_production_table_from_mongo_db", return_value={"parameters": {}}
+        db, "read_production_table_from_mongo_db", return_value={"parameters": {}}
     )
     mock_get_array_element_list = mocker.patch.object(
         db, "_get_array_element_list", return_value=["LSTN-01"]
@@ -531,7 +531,7 @@ def test_get_model_parameter_with_model_version_list(
     # Mock the production table reading
     mock_read_production_table = mocker.patch.object(
         db,
-        "_read_production_table_from_mongo_db",
+        "read_production_table_from_mongo_db",
         return_value={
             "parameters": {
                 "LSTN-design": {"test_param": "2.0.0"},
@@ -798,8 +798,8 @@ def setup_production_table_cached(cache_key, model_version, param):
     return db_handler.DatabaseHandler.production_table_cached[cache_key]
 
 
-def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock_collection_setup):
-    """Test _read_production_table_from_mongo_db method with cache."""
+def testread_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock_collection_setup):
+    """Test read_production_table_from_mongo_db method with cache."""
     collection_name = "telescopes"
     model_version = "1.0.0"
     param = {"param1": "value1"}
@@ -808,7 +808,7 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, moc
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
     cached_result = setup_production_table_cached("cache_key", model_version, param)
 
-    result = db._read_production_table_from_mongo_db(collection_name, model_version)
+    result = db.read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
     assert result == cached_result
@@ -828,7 +828,7 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, moc
         },
     )
 
-    result = db._read_production_table_from_mongo_db(collection_name, model_version)
+    result = db.read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
     mock_collection_setup["get_collection"].assert_called_once_with(test_db, "production_tables")
@@ -848,7 +848,7 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, moc
         match=r"The following query returned zero results: "
         r"{'model_version': '1.0.0', 'collection': 'telescopes'}",
     ):
-        db._read_production_table_from_mongo_db(collection_name, model_version)
+        db.read_production_table_from_mongo_db(collection_name, model_version)
 
 
 def test_get_array_elements_of_type(db, mocker):
@@ -869,7 +869,7 @@ def test_get_array_elements_of_type(db, mocker):
 
     for prod_table, expected in test_cases:
         mock_get_production_table = mocker.patch.object(
-            db, "_read_production_table_from_mongo_db", return_value=prod_table
+            db, "read_production_table_from_mongo_db", return_value=prod_table
         )
         result = db.get_array_elements_of_type(array_element_type, model_version, collection)
         mock_get_production_table.assert_called_once_with(collection, model_version)
@@ -879,7 +879,7 @@ def test_get_array_elements_of_type(db, mocker):
     array_element_type = "MSTS"
     mocker.patch.object(
         db,
-        "_read_production_table_from_mongo_db",
+        "read_production_table_from_mongo_db",
         return_value={
             "parameters": {"LSTN-01": "value1", "MSTS-01": "value3", "MSTS-02": "value4"}
         },
@@ -1358,7 +1358,7 @@ def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test
     if "setup" in test_case:
         mocker.patch.object(
             db,
-            "_read_production_table_from_mongo_db",
+            "read_production_table_from_mongo_db",
             return_value=test_case["setup"]["prod_table"],
         )
         mocker.patch.object(
@@ -1469,7 +1469,7 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
     mock_read_production_table = mocker.patch.object(
         db,
-        "_read_production_table_from_mongo_db",
+        "read_production_table_from_mongo_db",
         return_value={"design_model": {"LSTN-01": "LSTN-design"}},
     )
 
