@@ -228,10 +228,19 @@ def main():
             marker_scaling=args_dict["marker_scaling"],
             background_telescopes=background_layout,
         )
-        plot_file_name = args_dict["figure_name"] or (
-            f"array_layout_{layout['name']}_{args_dict['site']}_"
+        site_string = ""
+        if layout.get("site") is not None:
+            site_string = f"_{layout['site']}"
+        elif args_dict["site"] is not None:
+            site_string = f"_{args_dict['site']}"
+        coordinate_system_string = (
             f"{args_dict['coordinate_system']}_"
-            f"{round(rotate_angle.to(u.deg).value)!s}deg"
+            if args_dict["coordinate_system"] not in layout["name"]
+            else ""
+        )
+        plot_file_name = args_dict["figure_name"] or (
+            f"array_layout_{layout['name']}{site_string}_"
+            f"{coordinate_system_string}{round(rotate_angle.to(u.deg).value)!s}deg"
         )
 
         visualize.save_figure(
