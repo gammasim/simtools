@@ -7,7 +7,7 @@ from particle import Corsika7ID, InvalidParticle, Particle
 
 class PrimaryParticle:
     """
-    Primary particle definition using CORSIKA7 or PDG ID.
+    Primary particle definition using CORSIKA7, eventio, or PDG ID.
 
     Uses a dictionary to map particle common names to CORSIKA7 IDs.
     Particles not found in the dictionary are searched in the PDG particle database.
@@ -20,27 +20,31 @@ class PrimaryParticle:
         The actual ID of the primary particle.
     """
 
+    _valid_types = {
+        "corsika7_id": "corsika7_id",
+        "common_name": "name",
+        "pdg_id": "pdg_id",
+        "eventio_id": "eventio_id",
+    }
+
     def __init__(self, particle_id_type=None, particle_id=None):
         self._logger = logging.getLogger(__name__)
-
         self._corsika7_id = None
         self._name = None
         self._pdg_id = None
         self._pdg_name = None
+        self._eventio_id = None
 
-        if bool(particle_id_type) != bool(particle_id):
+        if (particle_id_type is None) != (particle_id is None):
             raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided together.")
 
-        valid_id_types = {"corsika7_id", "common_name", "pdg_id"}
-        if particle_id_type and particle_id_type not in valid_id_types:
-            raise ValueError(f"Particle ID type must be one of {valid_id_types}")
-
-        if particle_id_type == "corsika7_id":
-            self.corsika7_id = particle_id
-        elif particle_id_type == "common_name":
-            self.name = particle_id
-        elif particle_id_type == "pdg_id":
-            self.pdg_id = particle_id
+        if particle_id_type:
+            try:
+                setattr(self, self._valid_types[particle_id_type], particle_id)
+            except KeyError as exc:
+                raise ValueError(
+                    f"Particle ID type must be one of {set(self._valid_types)}"
+                ) from exc
 
     def __str__(self):
         """Return a string representation of the primary particle."""
@@ -69,6 +73,35 @@ class PrimaryParticle:
         except (IndexError, InvalidParticle) as exc:
             raise ValueError(f"Invalid CORSIKA7 ID: {value}") from exc
         self._corsika7_id = int(value)
+
+    @property
+    def eventio_id(self):
+        """
+        EventIO ID of the primary particle.
+
+        0 (gamma), 1(e-), 2(mu-), 100*A+Z for nucleons and nuclei, negative for antimatter.
+        """
+        return self._eventio_id
+
+    @eventio_id.setter
+    def eventio_id(self, value):
+        """Set EventIO ID of the primary particle."""
+        mapping = {
+            0: 1,
+            1: 3,
+            -1: 2,
+            2: 6,
+            -2: 5,
+            100: 13,
+            101: 14,
+            -101: 15,
+        }
+
+        try:
+            self.corsika7_id = mapping.get(value, value)
+        except (ValueError, InvalidParticle) as exc:
+            raise ValueError(f"Invalid EventIO ID: {value}") from exc
+        self._eventio_id = value
 
     @property
     def name(self):

@@ -36,3 +36,4 @@ def test_get_corsika_run_header(test_file):
     run_header = get_corsika_run_header(test_file)
     assert isinstance(run_header, dict)
     assert run_header["run"] == 10
+    assert run_header["primary_id"] == 0
