@@ -136,7 +136,6 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
     rotate_angle = (
         config.get("rotate_angle") if config.get("rotate_angle") is not None else (0.0 * u.deg)
     )
-    # rotate_angle = rotate_angle * u.deg
 
     # Apply telescope-specific adjustments
     if "SST" in telescope_model_name or "SCT" in telescope_model_name:
