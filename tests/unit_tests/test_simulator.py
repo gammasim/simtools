@@ -38,12 +38,7 @@ def corsika_file():
 
 
 @pytest.fixture
-def submit_engine():
-    return "local"
-
-
-@pytest.fixture
-def simulations_args_dict(corsika_config_data, model_version, simtel_path, submit_engine):
+def simulations_args_dict(corsika_config_data, model_version, simtel_path):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
     args_dict["simulation_software"] = "sim_telarray"
@@ -56,7 +51,6 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     args_dict["run_number"] = 1
     args_dict["run_number_offset"] = 0
     args_dict["nshow"] = 10
-    args_dict["submit_engine"] = submit_engine
     args_dict["extra_commands"] = None
     return args_dict
 
@@ -213,9 +207,8 @@ def test_fill_results_without_run(array_simulator, input_file_list):
     assert array_simulator.runs == [1, 22, 2]
 
 
-def test_simulate_shower_simulator(shower_simulator, submit_engine):
+def test_simulate_shower_simulator(shower_simulator):
     shower_simulator._test = True
-    shower_simulator._submit_engine = submit_engine
     shower_simulator.simulate()
     assert len(shower_simulator._results["output"]) > 0
     assert len(shower_simulator._results["sub_out"]) > 0
@@ -223,18 +216,16 @@ def test_simulate_shower_simulator(shower_simulator, submit_engine):
     assert Path(run_script).exists()
 
 
-def test_simulate_array_simulator(array_simulator, corsika_file, submit_engine):
+def test_simulate_array_simulator(array_simulator, corsika_file):
     array_simulator._test = True
-    array_simulator._submit_engine = submit_engine
     array_simulator.simulate(input_file_list=corsika_file)
 
     assert len(array_simulator._results["output"]) > 0
     assert len(array_simulator._results["sub_out"]) > 0
 
 
-def test_simulate_shower_array_simulator(shower_array_simulator, submit_engine):
+def test_simulate_shower_array_simulator(shower_array_simulator):
     shower_array_simulator._test = True
-    shower_array_simulator._submit_engine = submit_engine
     shower_array_simulator.simulate()
 
     assert len(shower_array_simulator._results["output"]) > 0
@@ -538,7 +529,41 @@ def test_pack_for_register_with_multiple_versions(
         )
 
 
-def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_test_directory):
+def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_path):
+    original_content = b"Original CORSIKA log content."
+    expected_content = "Original CORSIKA log content."
+    helper_test_copy_corsika_log_file(
+        array_simulator, mocker, tmp_path, original_content, expected_content
+    )
+
+
+def test_copy_corsika_log_file_for_all_versions_with_non_unicode(array_simulator, mocker, tmp_path):
+    original_content = b"Valid line 1\nValid line 2\nInvalid line \x80\x81\n"
+    expected_content = "Valid line 1\nValid line 2\nInvalid line"
+    helper_test_copy_corsika_log_file(
+        array_simulator, mocker, tmp_path, original_content, expected_content
+    )
+
+
+def helper_test_copy_corsika_log_file(
+    array_simulator, mocker, tmp_path, original_content, expected_content
+):
+    """
+    Helper function to test _copy_corsika_log_file_for_all_versions.
+
+    Parameters
+    ----------
+    array_simulator: Simulator
+        The simulator instance.
+    mocker: pytest-mocker
+        The mocker instance for mocking objects.
+    tmp_path: Path
+        Temporary directory for creating test files.
+    original_content: bytes
+        The content to write to the original log file.
+    expected_content: str
+        The expected content in the new log file.
+    """
     # Mock array_models with multiple versions
     array_simulator.array_models = [
         mocker.Mock(model_version="5.0.0"),
@@ -546,13 +571,13 @@ def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_tes
     ]
 
     # Create a temporary directory for log files
-    original_log_dir = tmp_test_directory / "logs"
+    original_log_dir = tmp_path / "logs"
     original_log_dir.mkdir()
 
     # Create a mock original log file
     original_log_file = original_log_dir / "log_file_5.0.0.log.gz"
-    with gzip.open(original_log_file, "wt") as f:
-        f.write("Original CORSIKA log content.")
+    with gzip.open(original_log_file, "wb") as f:
+        f.write(original_content)
 
     # Mock the input corsika_log_files list
     corsika_log_files = [str(original_log_file)]
@@ -565,11 +590,11 @@ def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_tes
     assert new_log_file.exists()
 
     # Verify the content of the new log file
-    with gzip.open(new_log_file, "rt") as f:
+    with gzip.open(new_log_file, "rt", encoding="utf-8") as f:
         content = f.read()
         assert "Copy of CORSIKA log file from model version 5.0.0." in content
         assert "Applicable also for 6.0.0" in content
-        assert "Original CORSIKA log content." in content
+        assert expected_content in content
 
     # Ensure the new log file was added to the corsika_log_files list
     assert str(new_log_file) in corsika_log_files

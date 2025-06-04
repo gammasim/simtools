@@ -56,6 +56,31 @@ def test_corsika7_id():
     assert eta.pdg_id == 221
 
 
+def test_eventio_id():
+    test_dict = {
+        0: "gamma",
+        1: "electron",
+        -1: "positron",
+        2: "muon-",
+        -2: "muon+",
+        100: "neutron",
+        101: "proton",
+        -101: "p~",
+        402: "helium",
+        1206: "C12",
+        1407: "nitrogen",
+        2814: "silicon",
+        5626: "iron",
+    }
+    for eventio_id, name in test_dict.items():
+        p = PrimaryParticle(particle_id_type="eventio_id", particle_id=eventio_id)
+        assert p.eventio_id == eventio_id
+        assert p.name == name
+
+    with pytest.raises(ValueError, match="Invalid EventIO ID: 9999"):
+        PrimaryParticle(particle_id_type="eventio_id", particle_id=9999)
+
+
 def test_common_name():
     p = PrimaryParticle(particle_id_type="common_name", particle_id="proton")
 

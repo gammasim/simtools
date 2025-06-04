@@ -217,7 +217,7 @@ class DatabaseHandler:
                 raise ValueError(
                     "Only one model version can be passed to get_model_parameter, not a list."
                 )
-            production_table = self._read_production_table_from_mongo_db(
+            production_table = self.read_production_table_from_mongo_db(
                 collection_name, model_version
             )
             array_element_list = self._get_array_element_list(
@@ -263,7 +263,7 @@ class DatabaseHandler:
         dict containing the parameters
         """
         pars = {}
-        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_mongo_db(collection, model_version)
         array_element_list = self._get_array_element_list(
             array_element_name, site, production_table, collection
         )
@@ -518,9 +518,9 @@ class DatabaseHandler:
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
         return {k: parameters[k] for k in sorted(parameters)}
 
-    def _read_production_table_from_mongo_db(self, collection_name, model_version):
+    def read_production_table_from_mongo_db(self, collection_name, model_version):
         """
-        Read production table from MongoDB.
+        Read production table for the given collection from MongoDB.
 
         Parameters
         ----------
@@ -591,7 +591,7 @@ class DatabaseHandler:
         list
             Sorted list of all array elements found in collection
         """
-        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_mongo_db(collection, model_version)
         return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
 
     def get_design_model(self, model_version, array_element_name, collection="telescopes"):
@@ -613,7 +613,7 @@ class DatabaseHandler:
         str
             Design model for a given array element.
         """
-        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_mongo_db(collection, model_version)
         try:
             return production_table["design_model"][array_element_name]
         except KeyError:
@@ -641,7 +641,7 @@ class DatabaseHandler:
         list
             Sorted list of all array element names found in collection
         """
-        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_mongo_db(collection, model_version)
         all_array_elements = production_table["parameters"]
         return sorted(
             [
@@ -964,7 +964,7 @@ class DatabaseHandler:
             return [array_element_name]
         if collection == "configuration_sim_telarray":
             # get design model from 'telescope' or 'calibration_device' production tables
-            production_table = self._read_production_table_from_mongo_db(
+            production_table = self.read_production_table_from_mongo_db(
                 names.get_collection_name_from_array_element_name(array_element_name),
                 production_table["model_version"],
             )

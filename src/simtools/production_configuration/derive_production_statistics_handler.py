@@ -17,7 +17,6 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-import numpy as np
 
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
@@ -35,7 +34,7 @@ class ProductionStatisticsHandler:
     production at a specified query point.
     """
 
-    def __init__(self, args_dict):
+    def __init__(self, args_dict, output_path):
         """
         Initialize the manager with the provided arguments.
 
@@ -43,26 +42,46 @@ class ProductionStatisticsHandler:
         ----------
         args_dict : dict
             Dictionary of command-line arguments.
+        output_path : Path
+            Path to the directory where the event statistics output file will be saved.
         """
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
-        self.output_path = Path(self.args.get("output_path", "."))
-        self.output_filepath = self.output_path.joinpath(f"{self.args['output_file']}")
+        self.output_path = output_path
         self.metrics = collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
         self.interpolation_handler = None
+        self.grid_points_production = self._load_grid_points_production()
+
+    def _load_grid_points_production(self):
+        """Load grid points from the JSON file."""
+        grid_points_production_file = self.args["grid_points_production_file"]
+        return collect_data_from_file(grid_points_production_file)
 
     def initialize_evaluators(self):
-        """Initialize StatisticalUncertaintyEvaluator instances for the given zeniths/offsets."""
-        if not (self.args["base_path"] and self.args["zeniths"] and self.args["camera_offsets"]):
+        """Initialize StatisticalUncertaintyEvaluator instances for the given grid point."""
+        if not (
+            self.args["base_path"]
+            and self.args["zeniths"]
+            and self.args["azimuths"]
+            and self.args["nsb"]
+            and self.args["offsets"]
+        ):
             self.logger.warning("No files read")
             self.logger.warning(f"Base Path: {self.args['base_path']}")
             self.logger.warning(f"Zeniths: {self.args['zeniths']}")
-            self.logger.warning(f"Camera offsets: {self.args['camera_offsets']}")
+            self.logger.warning(f"Camera offsets: {self.args['offsets']}")
             return
 
-        for zenith, offset in itertools.product(self.args["zeniths"], self.args["camera_offsets"]):
-            file_name = self.args["file_name_template"].format(zenith=int(zenith))
+        for zenith, azimuth, nsb, offset in itertools.product(
+            self.args["zeniths"], self.args["azimuths"], self.args["nsb"], self.args["offsets"]
+        ):
+            file_name = self.args["file_name_template"].format(
+                zenith=int(zenith),
+                azimuth=azimuth,
+                nsb=nsb,
+                offset=offset,
+            )
             file_path = Path(self.args["base_path"]).joinpath(file_name)
 
             if not file_path.exists():
@@ -72,7 +91,7 @@ class ProductionStatisticsHandler:
             evaluator = StatisticalUncertaintyEvaluator(
                 file_path,
                 metrics=self.metrics,
-                grid_point=(None, None, zenith, None, offset * u.deg),
+                grid_point=(None, azimuth, zenith, nsb, offset * u.deg),
             )
             evaluator.calculate_metrics()
             self.evaluator_instances.append(evaluator)
@@ -84,31 +103,33 @@ class ProductionStatisticsHandler:
             return None
 
         self.interpolation_handler = InterpolationHandler(
-            self.evaluator_instances, metrics=self.metrics
+            self.evaluator_instances,
+            metrics=self.metrics,
+            grid_points_production=self.grid_points_production,
         )
-        query_point = self.args.get("query_point")
-        if not query_point or len(query_point) != 5:
-            raise ValueError(
-                "Invalid query point format. "
-                f"Expected 5 values, got {len(query_point) if query_point else 'None'}."
+        qrid_points_with_statistics = []
+
+        interpolated_production_statistics = self.interpolation_handler.interpolate()
+        for grid_point, statistics in zip(
+            self.grid_points_production, interpolated_production_statistics
+        ):
+            qrid_points_with_statistics.append(
+                {
+                    "grid_point": grid_point,
+                    "interpolated_production_statistics": float(statistics),
+                }
             )
-        query_points = np.array([self.args["query_point"]])
-        return self.interpolation_handler.interpolate(query_points)
+        return qrid_points_with_statistics
 
     def write_output(self, production_statistics):
         """Write the derived event statistics to a file."""
-        output_data = {
-            "query_point": self.args["query_point"],
-            "production_statistics": production_statistics.tolist(),
-        }
-        self.output_filepath.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.output_filepath, "w", encoding="utf-8") as f:
+        output_data = (production_statistics,)
+        output_filename = self.args["output_file"]
+        self.output_path.mkdir(parents=True, exist_ok=True)
+        output_file_path = self.output_path.joinpath(output_filename)
+        with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=4)
-        self.logger.info(f"Output saved to {self.output_filepath}")
-        self.logger.info(
-            f"production statistics for grid point "
-            f"{self.args['query_point']}: {production_statistics}"
-        )
+        self.logger.info(f"Output saved to {self.output_path}")
 
     def plot_production_statistics_comparison(self):
         """Plot the derived event statistics."""
@@ -120,9 +141,7 @@ class ProductionStatisticsHandler:
 
     def run(self):
         """Run the scaling and interpolation workflow."""
-        self.logger.info(f"Zeniths: {self.args['zeniths']}")
-        self.logger.info(f"Camera offsets: {self.args['camera_offsets']}")
-        self.logger.info(f"Query Point: {self.args['query_point']}")
+        self.logger.info(f"Grid Points File: {self.args['grid_points_production_file']}")
         self.logger.info(f"Metrics File: {self.args['metrics_file']}")
 
         self.initialize_evaluators()

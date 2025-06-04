@@ -1,7 +1,7 @@
 import logging
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, call, mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
@@ -19,7 +19,6 @@ logger = logging.getLogger()
 def job_submitter():
     submitter = jm.JobManager()
     submitter._logger = MagicMock()
-    submitter.submit_engine = "local"
     submitter.test = True
     return submitter
 
@@ -65,42 +64,6 @@ def job_messages(script_file):
     }
 
 
-def test_test_submission_system():
-    jm.JobManager(submit_engine=None)
-    jm.JobManager(submit_engine="local")
-    with pytest.raises(ValueError, match="Invalid submit command: not_a_real_engine"):
-        jm.JobManager(submit_engine="not_a_real_engine")
-
-
-def test_submit_engine():
-    j = jm.JobManager()
-    assert j.submit_engine == "local"
-    for engine in ["local", "htcondor", "gridengine"]:
-        j.submit_engine = engine
-        assert j.submit_engine == engine
-
-    with pytest.raises(ValueError, match="Invalid submit command: abc"):
-        j.submit_engine = "abc"
-
-
-@patch("simtools.job_execution.job_manager.gen.program_is_executable", return_value=True)
-def test_check_submission_system(mock_program_is_executable, job_submitter):
-    job_submitter.submit_engine = "local"
-    job_submitter.check_submission_system()
-    job_submitter.submit_engine = "test_wms"
-    job_submitter.check_submission_system()
-    job_submitter.submit_engine = "htcondor"
-    job_submitter.check_submission_system()
-    assert job_submitter._logger.error.call_count == 0
-
-
-@patch("simtools.job_execution.job_manager.gen.program_is_executable", return_value=False)
-def test_check_submission_system_not_an_engine(mock_program_is_executable, job_submitter):
-    job_submitter._submit_engine = "not_an_engine"  # bypass the @setter command
-    with pytest.raises(JobExecutionError, match="Submit engine not_an_engine not found"):
-        job_submitter.check_submission_system()
-
-
 @patch("simtools.utils.general")
 def test_submit_local(
     mock_gen, job_submitter, mocker, output_log, logfile_log, script_file, job_messages
@@ -119,96 +82,10 @@ def test_submit_local(
     job_submitter._logger.info.assert_any_call("Testing (local)")
 
 
-@patch("simtools.utils.general")
-def test_submit_htcondor(mock_gen, job_submitter, mocker, output_log, logfile_log, script_file):
-    job_submitter.submit_engine = "htcondor"
-    mock_file = mocker.mock_open()
-    mocker.patch("builtins.open", mock_file)
-    mock_execute = mocker.patch.object(job_submitter, "_execute", return_value=0)
-
-    job_submitter.submit(script_file, output_log, logfile_log)
-
-    mock_execute.assert_called_with(
-        "htcondor", [job_submitter.engines["htcondor"], f"{script_file}.condor"]
-    )
-    mock_file().write.assert_has_calls(
-        [
-            call(
-                "Executable = script.sh\nOutput = output.out\nError = output.err\nLog = output.job\nqueue 1\n"
-            )
-        ],
-    )
-
-    # extra submit options
-    job_submitter.submit_options = "max_materialize = 800, priority = 5"
-    job_submitter.submit(script_file, output_log, logfile_log)
-    mock_file().write.assert_has_calls(
-        [
-            call(
-                "Executable = script.sh\nOutput = output.out\nError = output.err\nLog = output.job\nqueue 1\n"
-            ),
-            call(
-                "Executable = script.sh\nOutput = output.out\nError = output.err\nLog = output.job\nmax_materialize = 800\npriority = 5\nqueue 1\n"
-            ),
-        ]
-    )
-
-
-def mock_open_side_effect(*args, **kwargs):
-    """Mock open function that raises FileNotFoundError when the file is opened in write mode."""
-    if "w" in args[1] or "w" in kwargs.get("mode", ""):
-        raise FileNotFoundError(f"No such file or directory: {args[0]}")
-    return mock_open()(*args, **kwargs)
-
-
-@patch("builtins.open", side_effect=mock_open_side_effect)
-def test_submit_htcondor_no_script(mock_gen, job_submitter, mocker, output_log, logfile_log):
-    job_submitter.submit_engine = "htcondor"
-
-    with pytest.raises(JobExecutionError):
-        job_submitter.submit("invalid_path/non_existent_script.sh", output_log, logfile_log)
-
-    job_submitter._logger.error.assert_any_call(
-        "Failed creating condor submission file invalid_path/non_existent_script.sh.condor"
-    )
-
-
-@patch("simtools.utils.general")
-def test_submit_gridengine(mock_gen, job_submitter, mocker, output_log, logfile_log, script_file):
-    job_submitter.submit_engine = "gridengine"
-    mock_execute = mocker.patch.object(job_submitter, "_execute", return_value=0)
-
-    job_submitter.submit(script_file, output_log, logfile_log)
-
-    expected_command = [
-        f"{job_submitter.engines['gridengine']}",
-        "-o",
-        "output.out",
-        "-e",
-        "output.err",
-        str(script_file),
-    ]
-    mock_execute.assert_called_with("gridengine", expected_command)
-
-
-@patch("simtools.job_execution.job_manager.subprocess.run")
-def test_execute(mock_subprocess_run, job_submitter, job_submitter_real):
-    shell_command = "echo Hello World"
-    job_submitter._execute("local", shell_command)
-
-    job_submitter._logger.info.assert_any_call("Submitting script to local")
-    job_submitter._logger.debug.assert_called_with(shell_command)
-    job_submitter._logger.info.assert_any_call("Testing (local: echo Hello World)")
-
-    job_submitter_real._execute("local", shell_command)
-    mock_subprocess_run.assert_called_once_with(shell_command, check=True, shell=True)
-
-
 @pytest.fixture
 def job_submitter_real():
     submitter = jm.JobManager()
     submitter._logger = MagicMock()
-    submitter.submit_engine = "local"
     submitter.test = False
     return submitter
 
