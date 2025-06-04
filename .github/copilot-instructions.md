@@ -9,11 +9,11 @@ This is a python project in the context of Monte Carlo simulations and high-ener
 - Use logging, not print
 - Use f-strings for formatting of log messages and other strings.
 - Avoid hardcoding file paths
+
 ##  Tests
 
-
-Unit test files should be in the ./tests/unit_tests/ directory and the directory structure there should follow that of the python package.
-For unit tests, do not use test classes but simple test functions.
-When writing unit tests, take care of the indentation of the method and the correct formatting.
-
-Check conftest.py for the pytest configuration and common fixtures.
+- unit test files should be in the ./tests/unit_tests/ directory and the directory structure there should follow that of the python package.
+- for unit tests, do not use test classes but simple test functions.
+- when writing unit tests, take care of the indentation of the method and the correct formatting.
+- check conftest.py for the pytest configuration and common fixtures.
+- put import statements at the top of the file. Avoid duplications of import statements.
