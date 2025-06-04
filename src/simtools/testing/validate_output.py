@@ -102,7 +102,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
 
         output_file_path = Path(output_path) / file_test["FILE"]
         _logger.info(f"Checking path: {output_file_path}")
-        assert output_file_path.exists()
+        try:
+            assert output_file_path.exists()
+        except AssertionError as exc:
+            raise AssertionError(f"Output file {output_file_path} does not exist. ") from exc
 
         if "EXPECTED_OUTPUT" in file_test:
             assert assertions.check_output_from_sim_telarray(
