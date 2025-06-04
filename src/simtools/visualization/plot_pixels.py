@@ -109,7 +109,7 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
 
 
 def _prepare_pixel_data(dat_file_path, telescope_model_name):
-    """Prepare pixel data from configuration file.
+    """Prepare pixel data from sim_telarray camera configuration file.
 
     This function reads the pixel configuration from the specified camera config file and
     prepares the data for plotting, including applying any necessary rotations.
