@@ -210,6 +210,56 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     return array_layouts
 
 
+def get_array_layouts_from_parameter_file(
+    file_path, model_version, db_config, coordinate_system="ground"
+):
+    """
+    Retrieve array layouts from parameter file.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the array layout parameter file.
+    model_version : str
+        Model version to retrieve.
+    db_config : dict
+        Database configuration.
+    coordinate_system : str
+        Coordinate system to use for the array elements (default is "ground").
+
+    Returns
+    -------
+    list
+        List of dictionaries containing array layout names and their elements.
+    """
+    array_layouts = gen.collect_data_from_file(file_path)
+    try:
+        value = array_layouts["value"]
+    except KeyError as exc:
+        raise ValueError("Missing 'value' key in layout file.") from exc
+    site = array_layouts.get("site")
+
+    layouts = []
+    for layout in value:
+        layout_name = layout["name"]
+        array_model = ArrayModel(
+            mongo_db_config=db_config,
+            model_version=model_version,
+            site=site,
+            layout_name=layout_name,
+        )
+        layouts.append(
+            {
+                "name": layout_name,
+                "site": site,
+                "array_elements": array_model.export_array_elements_as_table(
+                    coordinate_system=coordinate_system
+                ),
+            }
+        )
+    return layouts
+
+
 def get_array_layouts_from_db(
     layout_name, site, model_version, db_config, coordinate_system="ground"
 ):
