@@ -66,3 +66,4 @@ simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema  <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-verify-simulation-model-production-tables <applications/simtools-verify-simulation-model-production-tables>
