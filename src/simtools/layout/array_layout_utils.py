@@ -252,6 +252,7 @@ def get_array_layouts_from_db(
         layouts.append(
             {
                 "name": _layout_name,
+                "site": site,
                 "array_elements": array_model.export_array_elements_as_table(
                     coordinate_system=coordinate_system
                 ),
@@ -306,6 +307,7 @@ def get_array_layouts_using_telescope_lists_from_db(
         layouts.append(
             {
                 "name": "list",
+                "site": _site,
                 "array_elements": array_model.export_array_elements_as_table(
                     coordinate_system=coordinate_system
                 ),
