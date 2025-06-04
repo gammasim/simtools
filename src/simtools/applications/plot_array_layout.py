@@ -32,6 +32,8 @@ array_layout_file : str
 array_layout_name : str
     Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
     Use 'plot_all' to plot all layouts from the database for the given site and model version.
+array_layout_parameter_file : str, optional
+    File with array layouts similar in the model parameter file format (typically JSON).
 array_layout_name_background: str, optional
     Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
@@ -158,8 +160,69 @@ def _parse(label, description, usage=None):
     )
     return config.initialize(
         db_config=True,
-        simulation_model=["site", "model_version", "layout", "layout_file", "plot_all_layouts"],
+        simulation_model=[
+            "site",
+            "model_version",
+            "layout",
+            "layout_file",
+            "plot_all_layouts",
+            "layout_parameter_file",
+        ],
     )
+
+
+def read_layouts(args_dict, db_config, logger):
+    """
+    Read array layouts from the database or parameter file.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with command line arguments.
+    db_config : dict
+        Database configuration.
+    logger : logging.Logger
+        Logger instance.
+
+    Returns
+    -------
+    list
+        List of array layouts.
+    """
+    if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
+        logger.info("Plotting array from DB using layout array name(s).")
+        return layout_utils.get_array_layouts_from_db(
+            args_dict["array_layout_name"],
+            args_dict["site"],
+            args_dict["model_version"],
+            db_config,
+            args_dict["coordinate_system"],
+        )
+
+    if args_dict["array_layout_parameter_file"] is not None:
+        logger.info("Plotting array from parameter file(s).")
+        return layout_utils.get_array_layouts_from_parameter_file(
+            args_dict["array_layout_parameter_file"],
+            args_dict["model_version"],
+            db_config,
+            args_dict["coordinate_system"],
+        )
+
+    if args_dict["array_layout_file"] is not None:
+        logger.info("Plotting array from telescope table file(s).")
+        return layout_utils.get_array_layouts_from_file(args_dict["array_layout_file"])
+
+    if args_dict["array_element_list"] is not None:
+        logger.info("Plotting array from list of array elements.")
+        return layout_utils.get_array_layouts_using_telescope_lists_from_db(
+            [args_dict["array_element_list"]],
+            args_dict["site"],
+            args_dict["model_version"],
+            db_config,
+            args_dict["coordinate_system"],
+        )
+
+    return []
 
 
 def main():
@@ -177,29 +240,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     io_handler_instance = io_handler.IOHandler()
 
-    if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
-        logger.info("Plotting array from DB using layout array name(s).")
-        layouts = layout_utils.get_array_layouts_from_db(
-            args_dict["array_layout_name"],
-            args_dict["site"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
-        )
-    elif args_dict["array_layout_file"] is not None:
-        logger.info("Plotting array from telescope table file(s).")
-        layouts = layout_utils.get_array_layouts_from_file(args_dict["array_layout_file"])
-    elif args_dict["array_element_list"] is not None:
-        logger.info("Plotting array from list of array elements.")
-        layouts = layout_utils.get_array_layouts_using_telescope_lists_from_db(
-            [args_dict["array_element_list"]],
-            args_dict["site"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
-        )
-    else:
-        layouts = []
+    layouts = read_layouts(args_dict, db_config, logger)
 
     if args_dict.get("array_layout_name_background"):
         background_layout = layout_utils.get_array_layouts_from_db(

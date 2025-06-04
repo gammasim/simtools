@@ -495,6 +495,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 required=False,
                 default=None,
             )
+        if "layout_parameter_file" in model_options:
+            _layout_group.add_argument(
+                "--array_layout_parameter_file",
+                help="Array layout model parameter file (typically in JSON format).",
+                type=str,
+                required=False,
+                default=None,
+            )
         if "plot_all_layouts" in model_options:
             _layout_group.add_argument(
                 "--plot_all_layouts",
