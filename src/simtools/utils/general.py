@@ -178,7 +178,7 @@ def _collect_data_from_different_file_types(file, file_name, suffix, yaml_docume
     """Collect data from different file types."""
     if suffix == ".json":
         return json.load(file)
-    if suffix == ".list":
+    if suffix in (".list", ".txt"):
         return [line.strip() for line in file.readlines()]
     if suffix in [".yml", ".yaml"]:
         return _collect_data_from_yaml_file(file, file_name, yaml_document)
