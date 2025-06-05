@@ -33,6 +33,7 @@ dependencies:
   - ruff
   - scipy
   - sphinx
+  - sphinx-design
   - towncrier
   - toml
   - pip:

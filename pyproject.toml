@@ -54,6 +54,7 @@ optional-dependencies."doc" = [
   "numpydoc",
   "pydata-sphinx-theme",
   "sphinx",
+  "sphinx-design",
   "towncrier",
 ]
 optional-dependencies."tests" = [
