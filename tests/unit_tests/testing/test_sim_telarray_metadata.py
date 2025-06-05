@@ -8,17 +8,12 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.testing.sim_telarray_metadata import (
     _assert_sim_telarray_seed,
     _sim_telarray_name_from_parameter_name,
     assert_sim_telarray_metadata,
     is_equal,
 )
-
-
-def test_metadata(sim_telarray_file_gamma):
-    assert isinstance(read_sim_telarray_metadata(sim_telarray_file_gamma), tuple)
 
 
 def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):
