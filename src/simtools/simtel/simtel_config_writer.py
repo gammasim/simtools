@@ -54,12 +54,20 @@ class SimtelConfigWriter:
         Layout name.
     label: str
         Instance label. Important for output file naming.
+    simtel_path: str or Path
+        Path to the sim_telarray installation directory.
     """
 
     TAB = " " * 3
 
     def __init__(
-        self, site, model_version, layout_name=None, telescope_model_name=None, label=None
+        self,
+        site,
+        model_version,
+        layout_name=None,
+        telescope_model_name=None,
+        label=None,
+        simtel_path=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -70,6 +78,7 @@ class SimtelConfigWriter:
         self._label = label
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
+        self._simtel_path = simtel_path
 
     def write_telescope_config_file(self, config_file_path, parameters, telescope_name=None):
         """
@@ -246,6 +255,8 @@ class SimtelConfigWriter:
             file.write(self.TAB + f"echo ModelVersion: {self._model_version}\n")
             file.write(self.TAB + "echo *****************************\n\n")
 
+            self._write_simtools_parameters(file)
+
             self._write_site_parameters(
                 file,
                 site_model.parameters,
@@ -385,6 +396,23 @@ class SimtelConfigWriter:
         header += f"{comment_char}{50 * '='}\n"
         header += f"{comment_char}\n"
         file.write(header)
+
+    def _write_simtools_parameters(self, file):
+        """Write simtools-specific parameters."""
+        meta_items = {
+            "simtools_version": simtools.version.__version__,
+            "simtools_model_production_version": self._model_version,
+        }
+        try:
+            build_opts = gen.collect_data_from_file(Path(self._simtel_path) / "build_opts.yml")
+            for key, value in build_opts.items():
+                meta_items[f"simtools_{key}"] = value
+        except (FileNotFoundError, TypeError):
+            pass  # don't expect build_opts.yml to be present on all systems
+
+        file.write(f"{self.TAB}% Simtools parameters\n")
+        for key, value in meta_items.items():
+            file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, sim_telarray_seeds=None

@@ -143,6 +143,7 @@ class Simulator:
                     ],
                     "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
                 },
+                simtel_path=self.args_dict.get("simtel_path", None),
             )
             for version in versions
         ]
