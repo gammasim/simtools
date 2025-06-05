@@ -38,6 +38,8 @@ class ArrayModel:
         the array element positions).
     sim_telarray_seeds : dict, optional
         Dictionary with configuration for sim_telarray random instrument setup.
+    simtel_path: str, Path, optional
+        Path to the sim_telarray installation directory.
     """
 
     def __init__(
@@ -49,6 +51,7 @@ class ArrayModel:
         layout_name: str | None = None,
         array_elements: str | Path | list[str] | None = None,
         sim_telarray_seeds: dict | None = None,
+        simtel_path: str | Path | None = None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
@@ -69,6 +72,7 @@ class ArrayModel:
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
         self.sim_telarray_seeds = sim_telarray_seeds
+        self.simtel_path = simtel_path
 
     def _initialize(self, site: str, array_elements_config: str | Path | list[str]):
         """
@@ -258,6 +262,7 @@ class ArrayModel:
             layout_name=self.layout_name,
             model_version=self.model_version,
             label=self.label,
+            simtel_path=self.simtel_path,
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.config_file_path,
