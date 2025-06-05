@@ -81,6 +81,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "myst_parser",
     "numpydoc",
+    "sphinx_design",
 ]
 
 # Display todos by setting to True
@@ -124,8 +125,8 @@ html_title = f"{project}"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "navbar_start": ["navbar-logo", "version-switcher"],
-    "navbar_end": ["navbar-icon-links"],
+    "navbar_start": ["navbar-logo"],
+    "navbar_end": ["version-switcher", "navbar-icon-links"],
     "show_toc_level": 1,
     "icon_links": [
         {
@@ -164,9 +165,16 @@ locale_dirs = []
 
 # myst (markdown options)
 myst_heading_anchors = 3
-myst_enable_extensions = {
+myst_enable_extensions = [
     "colon_fence",
+    "deflist",
+    "html_admonition",
+    "html_image",
     "substitution",
-}
+    "tasklist",
+    "attrs_block",
+    "attrs_inline",
+]
+
 
 suppress_warnings = ["myst.*", "myst.duplicate_def"]
