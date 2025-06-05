@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-docs-produce-calibration-reports
     TEST_NAME: run
+    TEST_USE_CASE: UC-150-2.3
     MODEL_VERSION_USE_CURRENT: true
     CONFIGURATION:
       MODEL_VERSION: 6.0.0
