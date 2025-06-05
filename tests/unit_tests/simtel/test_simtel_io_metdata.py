@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import pytest
 
 from simtools.simtel.simtel_io_metadata import (
     _decode_dictionary,
@@ -30,17 +29,8 @@ def test_decode_with_unicode_error(caplog):
     assert "Failed to decode metadata with encoding utf-8" in caplog.text
 
 
-@pytest.fixture
-def test_sim_telarray_file():
-    return (
-        "tests/resources/"
-        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
-        "_test-production-North.simtel.zst"
-    )
-
-
-def test_read_sim_telarray_metadata(test_sim_telarray_file):
-    global_meta, telescope_meta = read_sim_telarray_metadata(test_sim_telarray_file)
+def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
+    global_meta, telescope_meta = read_sim_telarray_metadata(sim_telarray_file_gamma)
     assert global_meta is not None
     assert len(telescope_meta) > 0
     assert isinstance(telescope_meta, dict)
@@ -56,7 +46,7 @@ def test_read_sim_telarray_metadata(test_sim_telarray_file):
     assert global_meta["array_config_name"] == "test_layout"
 
 
-def test_get_sim_telarray_telescope_id(test_sim_telarray_file):
-    assert get_sim_telarray_telescope_id("LSTN-01", test_sim_telarray_file) == 1
-    assert get_sim_telarray_telescope_id("MSTN-01", test_sim_telarray_file) == 5
-    assert get_sim_telarray_telescope_id("MSTS-01", test_sim_telarray_file) is None
+def test_get_sim_telarray_telescope_id(sim_telarray_file_gamma):
+    assert get_sim_telarray_telescope_id("LSTN-01", sim_telarray_file_gamma) == 1
+    assert get_sim_telarray_telescope_id("MSTN-01", sim_telarray_file_gamma) == 5
+    assert get_sim_telarray_telescope_id("MSTS-01", sim_telarray_file_gamma) is None
