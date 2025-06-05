@@ -41,3 +41,10 @@ the visualization module.
 .. automodule:: visualization.plot_tables
    :members:
 ```
+
+## plot_pixels
+
+```{eval-rst}
+.. automodule:: visualization.plot_pixels
+   :members:
+```

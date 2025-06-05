@@ -46,6 +46,7 @@ class SimulatorLightEmission(SimtelRunner):
         self._telescope_model = telescope_model
 
         self.label = label if label is not None else self._telescope_model.label
+        self.test = test
 
         self._calibration_model = calibration_model
         self._site_model = site_model
@@ -56,7 +57,9 @@ class SimulatorLightEmission(SimtelRunner):
         self._rep_number = 0
         self.runs = 1
         self.photons_per_run = (
-            self._calibration_model.get_parameter_value("photons_per_run") if not test else 1e7
+            (self._calibration_model.get_parameter_value("photons_per_run"))
+            if not self.test
+            else 1e8
         )
 
         self.le_application = le_application
@@ -64,7 +67,6 @@ class SimulatorLightEmission(SimtelRunner):
         self.distance = None
         self.light_source_type = light_source_type
         self._telescope_model.write_sim_telarray_config_file(additional_model=site_model)
-        self.test = test
 
     @staticmethod
     def light_emission_default_configuration():
@@ -119,14 +121,15 @@ class SimulatorLightEmission(SimtelRunner):
         list
             The pointing vector from the calibration device to the telescope.
         """
-        # use DB coordinates later
-        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
+        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
+        x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
+        x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
 
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
@@ -153,6 +156,30 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return pointing_vector.tolist(), [tel_theta, tel_phi, laser_theta, laser_phi]
 
+    def _write_telpos_file(self):
+        """
+        Write the telescope positions to a telpos file.
+
+        The file will contain lines in the format: x y z r in cm
+
+        Returns
+        -------
+        Path
+            The path to the generated telpos file.
+        """
+        telpos_file = self.output_directory.joinpath("telpos.dat")
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
+        )
+        x_tel, y_tel, z_tel = [coord.to(u.cm).value for coord in (x_tel, y_tel, z_tel)]
+
+        radius = self._telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
+        radius = radius.to(u.cm).value  # Convert radius to cm
+        with telpos_file.open("w", encoding="utf-8") as file:
+            file.write(f"{x_tel} {y_tel} {z_tel} {radius}\n")
+
+        return telpos_file
+
     def _make_light_emission_script(self):
         """
         Create the light emission script to run the light emission package.
@@ -165,17 +192,28 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
-        x_cal, y_cal, z_cal = (
-            self._calibration_model.get_parameter_value("array_element_position_ground") * u.m
+        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
         )
-        x_tel, y_tel, z_tel = (
-            self._telescope_model.get_parameter_value("array_element_position_ground") * u.m
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
         )
-        _model_directory = self.io_handler.get_output_directory(self.label, "model")
-        command = f" rm {self.output_directory}/"
+
+        config_directory = self.io_handler.get_output_directory(
+            label=self.label, sub_dir=f"model/{self._site_model.model_version}"
+        )
+
+        telpos_file = self._write_telpos_file()
+
+        command = f"rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
+        corsika_observation_level = self._site_model.get_parameter_value_with_unit(
+            "corsika_observation_level"
+        )
+        command += f" -h  {corsika_observation_level.to(u.m).value}"
+        command += f" --telpos-file {telpos_file}"
 
         if self.light_source_type == "led":
             if self.le_application[1] == "variable":
@@ -188,28 +226,27 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self.photons_per_run}"
 
             elif self.le_application[1] == "layout":
-                x_origin = x_cal - x_tel
-                y_origin = y_cal - y_tel
-                z_origin = z_cal - z_tel
-                # light_source coordinates relative to telescope
-                command += f" -x {x_origin.to(u.cm).value}"
-                command += f" -y {y_origin.to(u.cm).value}"
-                command += f" -z {z_origin.to(u.cm).value}"
+                command += f" -x {x_cal.to(u.cm).value}"
+                command += f" -y {y_cal.to(u.cm).value}"
+                command += f" -z {z_cal.to(u.cm).value}"
                 pointing_vector = self.calibration_pointing_direction()[0]
                 command += f" -d {','.join(map(str, pointing_vector))}"
 
                 command += f" -n {self.photons_per_run}"
+                self._logger.info(f"Photons per run: {self.photons_per_run} ")
 
-                # same wavelength as for laser
-                command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
-
-                # pulse
-                command += (
-                    f" -p Gauss:{self._calibration_model.get_parameter_value('led_pulse_sigtime')}"
+                laser_wavelength = self._calibration_model.get_parameter_value_with_unit(
+                    "laser_wavelength"
                 )
-                command += " -a isotropic"  # angular distribution
+                command += f" -s {int(laser_wavelength.to(u.nm).value)}"
 
-            command += f" -A {_model_directory}/"
+                led_pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
+                    "led_pulse_sigtime"
+                )
+                command += f" -p Gauss:{led_pulse_sigtime.to(u.ns).value}"
+                command += " -a isotropic"
+
+            command += f" -A {config_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
 
         elif self.light_source_type == "laser":
@@ -217,11 +254,13 @@ class SimulatorLightEmission(SimtelRunner):
             command += " --bunches 2500000"
             command += " --step 0.1"
             command += " --bunchsize 1"
-            command += (
-                f" --spectrum {self._calibration_model.get_parameter_value('laser_wavelength')}"
-            )
+            spectrum = self._calibration_model.get_parameter_value_with_unit("laser_wavelength")
+            command += f" --spectrum {int(spectrum.to(u.nm).value)}"
             command += " --lightpulse Gauss:"
-            command += f"{self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+            pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
+                "laser_pulse_sigtime"
+            )
+            command += f"{pulse_sigtime.to(u.ns).value}"
             x_origin = x_cal - x_tel
             y_origin = y_cal - y_tel
             z_origin = z_cal - z_tel
@@ -234,8 +273,8 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" --telescope-theta {angle_theta}"
             command += f" --telescope-phi {angle_phi}"
             command += f" --laser-theta {90 - angles[2]}"
-            command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
-            command += f" --atmosphere {_model_directory}/"
+            command += f" --laser-phi {angles[3]}"
+            command += f" --atmosphere {config_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"
@@ -264,7 +303,10 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -DNUM_TELESCOPES=1"
 
         command += super().get_config_option(
-            "altitude", self._site_model.get_parameter_value("corsika_observation_level")
+            "altitude",
+            self._site_model.get_parameter_value_with_unit("corsika_observation_level")
+            .to(u.m)
+            .value,
         )
         command += super().get_config_option(
             "atmospheric_transmission",
@@ -526,15 +568,18 @@ class SimulatorLightEmission(SimtelRunner):
         """
         if not self.light_emission_config:
             # Layout positions: Use DB coordinates
-            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
+            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
-            x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+            x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
+            x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
+            x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
             tel_vect = np.array([x_tel, y_tel, z_tel])
             cal_vect = np.array([x_cal, y_cal, z_cal])
             distance = np.linalg.norm(cal_vect - tel_vect)
+            print("Distance between telescope and calibration device:", distance * u.m)
             return [distance * u.m]
 
         # Variable positions: Calculate distances for all positions

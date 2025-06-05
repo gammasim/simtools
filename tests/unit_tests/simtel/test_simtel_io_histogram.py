@@ -15,41 +15,25 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simtel_io_file(io_handler):
-    return io_handler.get_input_data_file(
-        file_name="proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
-        test=True,
-    )
+def simtel_hist_io_instance(sim_telarray_file_proton):
+    return SimtelIOHistogram(histogram_file=sim_telarray_file_proton)
 
 
 @pytest.fixture
-def simtel_io_file_hdata(io_handler):
-    return io_handler.get_input_data_file(
-        file_name="gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
-        test=True,
-    )
-
-
-@pytest.fixture
-def simtel_hist_io_instance(simtel_io_file):
-    return SimtelIOHistogram(histogram_file=simtel_io_file)
-
-
-@pytest.fixture
-def simtel_hist_hdata_io_instance(simtel_io_file_hdata):
+def simtel_hist_hdata_io_instance(sim_telarray_hdata_file_gamma):
     return SimtelIOHistogram(
-        histogram_file=simtel_io_file_hdata, view_cone=[0, 10], energy_range=[0.008, 300]
+        histogram_file=sim_telarray_hdata_file_gamma, view_cone=[0, 10], energy_range=[0.008, 300]
     )
 
 
-def test_init_errors(simtel_io_file_hdata, caplog):
+def test_init_errors(sim_telarray_hdata_file_gamma, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError, match=r"view_cone needs to be passed as argument"):
-            _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata)
+            _ = SimtelIOHistogram(histogram_file=sim_telarray_hdata_file_gamma)
     assert "view_cone needs to be passed as argument" in caplog.text
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError, match=r"energy_range needs to be passed as argument"):
-            _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata, view_cone=[0, 10])
+            _ = SimtelIOHistogram(histogram_file=sim_telarray_hdata_file_gamma, view_cone=[0, 10])
     assert "energy_range needs to be passed as argument" in caplog.text
 
 
@@ -222,16 +206,16 @@ def test_compute_system_trigger_rate_with_input(simtel_hist_io_instance):
     assert new_instance.trigger_rate_uncertainty.unit == 1 / u.s
 
 
-def test_produce_trigger_meta_data(simtel_hist_io_instance, simtel_io_file):
+def test_produce_trigger_meta_data(simtel_hist_io_instance, sim_telarray_file_proton):
     trigger_rate = 1000  # Hz
 
-    simtel_hist_io_instance.histogram_file = simtel_io_file
+    simtel_hist_io_instance.histogram_file = sim_telarray_file_proton
     simtel_hist_io_instance.trigger_rate = trigger_rate * u.Hz  # Convert to astropy Quantity
 
     result = simtel_hist_io_instance.produce_trigger_meta_data()
 
     expected_result = {
-        "sim_telarray_file": simtel_io_file,
+        "sim_telarray_file": sim_telarray_file_proton,
         "simulation_input": simtel_hist_io_instance.print_info(mode="silent"),
         "system_trigger_rate (Hz)": trigger_rate,
     }
@@ -244,11 +228,13 @@ def test_print_info(simtel_hist_io_instance):
     assert "energy_range" in info_dict
 
 
-def test_total_area(simtel_hist_io_instance, simtel_io_file):
+def test_total_area(simtel_hist_io_instance, sim_telarray_file_proton):
     total_area = simtel_hist_io_instance.total_area
     assert total_area.unit == u.cm**2
     assert pytest.approx(total_area.value, 0.05) == 1.25e11
-    new_instance = SimtelIOHistogram(histogram_file=simtel_io_file, area_from_distribution=True)
+    new_instance = SimtelIOHistogram(
+        histogram_file=sim_telarray_file_proton, area_from_distribution=True
+    )
     assert pytest.approx(new_instance.total_area.value, 0.05) == 1.3e11
 
 
