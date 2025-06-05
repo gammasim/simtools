@@ -44,7 +44,15 @@ GitHub Repository
 :class: sd-rounded-pill sd-mr-3
 :external:
 
-View License
+License BSD-3
+```
+
+```{button-link} https://github.com/gammasim/simtools/blob/main/CHANGELOG.md
+:color: warning
+:class: sd-rounded-pill sd-mr-3
+:external:
+
+Changelog
 ```
 ````
 
@@ -60,6 +68,7 @@ Data Model <data-model/index>
 Build <building-simtools/index>
 Developer Guide <developer-guide/index>
 API Docs <api-reference/index>
+Changelog <changelog>
 ```
 
 ---
@@ -174,5 +183,5 @@ To the API docs
 
 ::::
 
-:::{danger} simtools is currently under heavy development with continuous changes and additions planned. Please contact the developers before using it: simtools-developer@desy.de.
+:::{danger} simtools is currently under heavy development with continuous changes and additions applied. Please contact the developers before using it: simtools-developer@desy.de.
 :::
