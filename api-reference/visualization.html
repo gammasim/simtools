@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=3ed28bc8"></script>
+    <script src="../_static/documentation_options.js?v=e1a59fa9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/visualization';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gdf72bf0" />
+  <meta name="docsearch:version" content="0.1.dev1+g449b1ae" />
   </head>
   
   
@@ -933,6 +933,74 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 </dd></dl>
 
 </section>
+<section id="module-visualization.plot_pixels">
+<span id="plot-pixels"></span><h2>plot_pixels<a class="headerlink" href="#module-visualization.plot_pixels" title="Link to this heading">#</a></h2>
+<p>Functions for plotting pixel layout information.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_pixels.plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_pixels.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_pixels.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_pixels.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot pixel layout based on configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config</strong><span class="classifier">dict</span></dt><dd><p>Configuration dictionary containing:
+- file_name : str, name of camera config file
+- column_x : str, x-axis label
+- column_y : str, y-axis label
+- parameter_version: str, version of the parameter
+- telescope : str, name of the telescope</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>Path where to save the plot</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict, optional</span></dt><dd><p>Database configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>The function saves the plot to the specified output file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_pixels.plot_pixel_layout_from_file">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_pixels.</span></span><span class="sig-name descname"><span class="pre">plot_pixel_layout_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dat_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_pixels.html#plot_pixel_layout_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_pixels.plot_pixel_layout_from_file" title="Link to this definition">#</a></dt>
+<dd><p>Plot the pixel layout from a camera config file.</p>
+<p>This function reads the pixel configuration from the specified camera config file and
+generates a plot of the pixel layout for the given telescope model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dat_file_path</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the camera config file containing pixel configuration</p>
+</dd>
+<dt><strong>telescope_model_name</strong><span class="classifier">str</span></dt><dd><p>Name/model of the telescope</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><dl class="simple">
+<dt>pixels_id_to_print<span class="classifier">int</span></dt><dd><p>Number of pixel IDs to print in the plot</p>
+</dd>
+<dt>title<span class="classifier">str</span></dt><dd><p>Plot title</p>
+</dd>
+<dt>xtitle<span class="classifier">str</span></dt><dd><p>X-axis label</p>
+</dd>
+<dt>ytitle<span class="classifier">str</span></dt><dd><p>Y-axis label</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The generated figure</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1025,6 +1093,11 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_tables">plot_tables</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_tables.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_tables.read_table_data"><code class="docutils literal notranslate"><span class="pre">read_table_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_pixels">plot_pixels</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_pixels.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_pixels.plot_pixel_layout_from_file"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout_from_file()</span></code></a></li>
 </ul>
 </li>
 </ul>
