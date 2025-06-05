@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-generate-regular-arrays &#8212; simtools</title>
+    <title>simtools-merge-tables &#8212; simtools</title>
   
   
   
@@ -41,7 +41,7 @@
     <script src="../../_static/documentation_options.js?v=9dced5b8"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-generate-regular-arrays';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-merge-tables';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json';
@@ -51,8 +51,8 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-generate-sim-telarray-histograms" href="simtools-generate-sim-telarray-histograms.html" />
-    <link rel="prev" title="simtools-generate-default-metadata" href="simtools-generate-default-metadata.html" />
+    <link rel="next" title="simtools-plot-array-layout" href="simtools-plot-array-layout.html" />
+    <link rel="prev" title="simtools-generate-sim-telarray-histograms" href="simtools-generate-sim-telarray-histograms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g00b9ce6" />
@@ -374,9 +374,9 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-merge-tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
@@ -451,7 +451,7 @@
     
     <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">simtools Applications</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-generate-regular-arrays</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-merge-tables</span></li>
   </ul>
 </nav>
 </div>
@@ -468,34 +468,39 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-generate_regular_arrays">
-<span id="simtools-generate-regular-arrays"></span><h1>simtools-generate-regular-arrays<a class="headerlink" href="#module-generate_regular_arrays" title="Link to this heading">#</a></h1>
-<p>Make a regular array of telescopes and save it as astropy table.</p>
-<p>The arrays consist of one telescope at the center of the array and or of 4 telescopes
-in a square grid. These arrays are used for trigger rate simulations.</p>
-<p>The array layout files created will be available at the data/layout directory.</p>
+  <section id="module-merge_tables">
+<span id="simtools-merge-tables"></span><h1>simtools-merge-tables<a class="headerlink" href="#module-merge_tables" title="Link to this heading">#</a></h1>
+<p>Merge tables from multiple input files into single tables.</p>
+<p>Allows to merge tables from multiple input files into a single file.
+The input files can be in HDF5 or FITS format. The merged tables will be saved in the
+specified output file.</p>
+<p>Note that merging large tables in FITS are not recommended, as it may lead to
+performance issues.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>site (str, required)</dt><dd><p>observatory site (e.g., North or South).</p>
+<dt>input str</dt><dd><p>Input file(s) (e.g., ‘file1 file2’).</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version to use (e.g., 6.0.0). If not provided, the latest version is used.</p>
+<dt>input_list str</dt><dd><p>File with list of input files with tables.</p>
+</dd>
+<dt>table_names str</dt><dd><p>Names of tables to merge from each input file.</p>
+</dd>
+<dt>output_file str</dt><dd><p>Output file name.</p>
+</dd>
+<dt>output_path str</dt><dd><p>Path to the output file for the merged tables.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Runtime &lt; 10 s.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-regular-arrays --site=North</span>
+<p>Merge tables from two files into a single file.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-merge-tables \\</span>
+<span class="go">    --input file1 file2&#39; \\</span>
+<span class="go">    --table_names &#39;SHOWERS TRIGGERS FILE_INFO&#39; \\</span>
+<span class="go">    --output_file merged_tables.hdf5</span>
 </pre></div>
 </div>
 </section>
-<dl class="py function">
-<dt class="sig sig-object py" id="generate_regular_arrays.main">
-<span class="sig-prename descclassname"><span class="pre">generate_regular_arrays.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/generate_regular_arrays.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_regular_arrays.main" title="Link to this definition">#</a></dt>
-<dd><p>Create layout array files (ecsv) of regular arrays.</p>
-</dd></dl>
-
 </section>
 
 
@@ -509,20 +514,20 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-generate-default-metadata.html"
+       href="simtools-generate-sim-telarray-histograms.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-generate-default-metadata</p>
+        <p class="prev-next-title">simtools-generate-sim-telarray-histograms</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-generate-sim-telarray-histograms.html"
+       href="simtools-plot-array-layout.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-generate-sim-telarray-histograms</p>
+        <p class="prev-next-title">simtools-plot-array-layout</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -547,7 +552,6 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_regular_arrays.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -555,7 +559,7 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/user-guide/applications/simtools-generate-regular-arrays.rst.txt"
+      <li><a href="../../_sources/user-guide/applications/simtools-merge-tables.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

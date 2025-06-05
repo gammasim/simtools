@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=5d58775f"></script>
+    <script src="_static/documentation_options.js?v=9dced5b8"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfcdb2db" />
+  <meta name="docsearch:version" content="0.1.dev1+g00b9ce6" />
   </head>
   
   
@@ -574,10 +574,10 @@
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties">compute_efficiency_and_uncertainties() (production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_limits">compute_limits() (production_configuration.derive_corsika_limits.LimitCalculator method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit">compute_lower_energy_limit() (production_configuration.derive_corsika_limits.LimitCalculator method)</a>
@@ -662,6 +662,8 @@
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">convert_telescope_altitude_to_corsika_system() (layout.telescope_position.TelescopePosition static method)</a>
 </li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.copy_metadata_to_hdf5">copy_metadata_to_hdf5() (in module io_operations.io_table_handler)</a>
+</li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins">core_distance_bins (production_configuration.derive_corsika_limits.LimitCalculator property)</a>
 </li>
       <li>
@@ -709,6 +711,8 @@
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.create_energy_bin_edges">create_energy_bin_edges() (production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-generate-sim-telarray-histograms.html#generate_sim_telarray_histograms.create_pdf">create_pdf() (in module generate_sim_telarray_histograms)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.create_tables">create_tables() (simtel.simtel_io_event_writer.SimtelIOEventDataWriter method)</a>
 </li>
       <li><a href="api-reference/testing.html#testing.configuration.create_tmp_output_path">create_tmp_output_path() (in module testing.configuration)</a>
 </li>
@@ -1395,10 +1399,10 @@
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">InvalidConfigurationParameterError</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.InvalidCoordSystemErrorError">InvalidCoordSystemErrorError</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.InvalidCorsikaInputError">InvalidCorsikaInputError</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.mirrors.InvalidMirrorListFileError">InvalidMirrorListFileError</a>
@@ -1423,6 +1427,13 @@
 
       <ul>
         <li><a href="api-reference/io_operations.html#module-io_operations.io_handler">module</a>
+</li>
+      </ul></li>
+      <li>
+    io_operations.io_table_handler
+
+      <ul>
+        <li><a href="api-reference/io_operations.html#module-io_operations.io_table_handler">module</a>
 </li>
       </ul></li>
       <li>
@@ -1575,6 +1586,15 @@
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeObject">MeanRadiusOuterEdgeObject (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.array_layout_utils.merge_array_layouts">merge_array_layouts() (in module layout.array_layout_utils)</a>
+</li>
+      <li>
+    merge_tables
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-merge-tables.html#module-merge_tables">module</a>
+</li>
+      </ul></li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.merge_tables">merge_tables() (in module io_operations.io_table_handler)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_collector.MetadataCollector">MetadataCollector (class in data_model.metadata_collector)</a>
 </li>
@@ -1757,6 +1777,8 @@
 </li>
         <li><a href="api-reference/io_operations.html#module-io_operations.io_handler">io_operations.io_handler</a>
 </li>
+        <li><a href="api-reference/io_operations.html#module-io_operations.io_table_handler">io_operations.io_table_handler</a>
+</li>
         <li><a href="api-reference/io_operations.html#module-io_operations.legacy_data_handler">io_operations.legacy_data_handler</a>
 </li>
         <li><a href="api-reference/job_execution.html#module-job_execution.htcondor_script_generator">job_execution.htcondor_script_generator</a>
@@ -1770,6 +1792,8 @@
         <li><a href="api-reference/array_layout.html#module-layout.geo_coordinates">layout.geo_coordinates</a>
 </li>
         <li><a href="api-reference/array_layout.html#module-layout.telescope_position">layout.telescope_position</a>
+</li>
+        <li><a href="user-guide/applications/simtools-merge-tables.html#module-merge_tables">merge_tables</a>
 </li>
         <li><a href="api-reference/mc_model.html#module-model.array_model">model.array_model</a>
 </li>
@@ -2082,10 +2106,6 @@
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.print_config_parameter">print_config_parameter() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_dataset_information">print_dataset_information() (simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_event_table">print_event_table() (simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
-</li>
       <li><a href="user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.print_list_of_files">print_list_of_files() (in module convert_all_model_parameters_from_simtel)</a>
 
       <ul>
@@ -2270,16 +2290,28 @@
 </li>
       <li><a href="api-reference/visualization.html#visualization.plot_tables.read_table_data">read_table_data() (in module visualization.plot_tables)</a>
 </li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.read_table_file_type">read_table_file_type() (in module io_operations.io_table_handler)</a>
+</li>
       <li><a href="api-reference/data_model.html#data_model.data_reader.read_table_from_file">read_table_from_file() (in module data_model.data_reader)</a>
+</li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.read_table_from_hdf5">read_table_from_hdf5() (in module io_operations.io_table_handler)</a>
+</li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.read_table_list">read_table_list() (in module io_operations.io_table_handler)</a>
+
+      <ul>
+        <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_table_list">(simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
+</li>
+      </ul></li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.read_tables">read_tables() (in module io_operations.io_table_handler)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle">read_two_dim_wavelength_angle() (model.telescope_model.TelescopeModel method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/data_model.html#data_model.data_reader.read_value_from_file">read_value_from_file() (in module data_model.data_reader)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters">ReadParameters (class in reporting.docs_read_parameters)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/utils.html#utils.general.remove_substring_recursively_from_dict">remove_substring_recursively_from_dict() (in module utils.general)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_auto_report_generator.ReportGenerator">ReportGenerator (class in reporting.docs_auto_report_generator)</a>
@@ -2870,8 +2902,6 @@
       <ul>
         <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.write">(data_model.model_data_writer.ModelDataWriter method)</a>
 </li>
-        <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.write">(simtel.simtel_io_event_writer.SimtelIOEventDataWriter method)</a>
-</li>
       </ul></li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">write_array_config_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>
 </li>
@@ -2881,10 +2911,10 @@
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_dummy_telescope_configuration_file">write_dummy_telescope_configuration_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">write_optimization_data() (ray_tracing.mirror_panel_psf.MirrorPanelPSF method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output">write_output() (production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits_grid.write_results">write_results() (in module production_configuration.derive_corsika_limits_grid)</a>
@@ -2894,6 +2924,10 @@
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_single_mirror_list_file">write_single_mirror_list_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>
 </li>
       <li><a href="api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.write_single_pe_spectrum">write_single_pe_spectrum() (camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum method)</a>
+</li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.write_table_in_hdf5">write_table_in_hdf5() (in module io_operations.io_table_handler)</a>
+</li>
+      <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.write_tables">write_tables() (in module io_operations.io_table_handler)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file">write_telescope_config_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>
 </li>

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5d58775f"></script>
+    <script src="../_static/documentation_options.js?v=9dced5b8"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/io_operations';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Database support" href="db_handler.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfcdb2db" />
+  <meta name="docsearch:version" content="0.1.dev1+g00b9ce6" />
   </head>
   
   
@@ -548,6 +548,177 @@
 </dd></dl>
 
 </section>
+<section id="io-table-handler">
+<span id="id1"></span><h2>io_table_handler<a class="headerlink" href="#io-table-handler" title="Link to this heading">#</a></h2>
+<p id="module-io_operations.io_table_handler">IO operations on astropy tables.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.copy_metadata_to_hdf5">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">copy_metadata_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#copy_metadata_to_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.copy_metadata_to_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Copy metadata (table column meta) from one HDF5 file to another.</p>
+<p>For merging tables, this function ensures that the metadata is preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>src_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the source HDF5 file.</p>
+</dd>
+<dt><strong>dst_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the destination HDF5 file.</p>
+</dd>
+<dt><strong>table_name</strong><span class="classifier">str</span></dt><dd><p>Name of the table whose metadata is to be copied.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.merge_tables">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">merge_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_table_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#merge_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.merge_tables" title="Link to this definition">#</a></dt>
+<dd><p>Merge multiple astropy tables from different files into a single file.</p>
+<p>Handles multiple tables per file and supports both HDF5 and FITS formats.
+Updates ‘file_id’ column if present to maintain file origin tracking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_files</strong><span class="classifier">list of str</span></dt><dd><p>List of input file paths to be merged.</p>
+</dd>
+<dt><strong>input_table_names</strong><span class="classifier">list of str</span></dt><dd><p>List of table names to be merged from each input file.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>Path to the output file where the merged data will be saved.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.read_table_file_type">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">read_table_file_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#read_table_file_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.read_table_file_type" title="Link to this definition">#</a></dt>
+<dd><p>Determine the file type of the input files.</p>
+<p>All input files must be of the same type (either all HDF5 or all FITS).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_files</strong><span class="classifier">list of str</span></dt><dd><p>List of input file paths.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>File type (‘HDF5’ or ‘FITS’).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.read_table_from_hdf5">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">read_table_from_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#read_table_from_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.read_table_from_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Read a single astropy table from an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the input HDF5 file.</p>
+</dd>
+<dt><strong>table_name</strong><span class="classifier">str</span></dt><dd><p>Name of the table to read.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table</dt><dd><p>The requested astropy table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.read_table_list">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">read_table_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_indexed_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#read_table_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.read_table_list" title="Link to this definition">#</a></dt>
+<dd><p>Read available tables found in the input file.</p>
+<p>If table_counter is True, search for tables with the same name
+but with different suffixes (e.g., “_0”, “_1”, etc.).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.read_tables">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">read_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#read_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.read_tables" title="Link to this definition">#</a></dt>
+<dd><p>Read tables from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file</strong><span class="classifier">str</span></dt><dd><p>Path to the input file.</p>
+</dd>
+<dt><strong>table_names</strong><span class="classifier">list of str</span></dt><dd><p>List of table names to read.</p>
+</dd>
+<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>Type of the input file (‘HDF5’ or ‘FITS’).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with table names as keys and astropy tables as values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.write_table_in_hdf5">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">write_table_in_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#write_table_in_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.write_table_in_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Write or append a single astropy table to an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>table</strong><span class="classifier">astropy.table.Table</span></dt><dd><p>The astropy table to write.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the output HDF5 file.</p>
+</dd>
+<dt><strong>table_name</strong><span class="classifier">str</span></dt><dd><p>Name of the table in the HDF5 file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="io_operations.io_table_handler.write_tables">
+<span class="sig-prename descclassname"><span class="pre">io_operations.io_table_handler.</span></span><span class="sig-name descname"><span class="pre">write_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_table_handler.html#write_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_table_handler.write_tables" title="Link to this definition">#</a></dt>
+<dd><p>Write tables to file (overwriting if exists).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tables</strong><span class="classifier">list or dict</span></dt><dd><p>List or Dictionary with astropy tables as values.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the output file.</p>
+</dd>
+<dt><strong>overwrite_existing</strong><span class="classifier">bool</span></dt><dd><p>If True, overwrite the output file if it exists.</p>
+</dd>
+<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>Type of the output file (‘HDF5’ or ‘FITS’).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-io_operations.hdf5_handler">
 <span id="hdf5-handler"></span><span id="iohdf5"></span><h2>hdf5_handler<a class="headerlink" href="#module-io_operations.hdf5_handler" title="Link to this heading">#</a></h2>
 <p>Helper module for reading and writing in hd5 format.</p>
@@ -712,6 +883,17 @@ in the hdf5 file.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandlerSingleton"><code class="docutils literal notranslate"><span class="pre">IOHandlerSingleton</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#io-table-handler">io_table_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.copy_metadata_to_hdf5"><code class="docutils literal notranslate"><span class="pre">copy_metadata_to_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.merge_tables"><code class="docutils literal notranslate"><span class="pre">merge_tables()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.read_table_file_type"><code class="docutils literal notranslate"><span class="pre">read_table_file_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.read_table_from_hdf5"><code class="docutils literal notranslate"><span class="pre">read_table_from_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.read_table_list"><code class="docutils literal notranslate"><span class="pre">read_table_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.read_tables"><code class="docutils literal notranslate"><span class="pre">read_tables()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.write_table_in_hdf5"><code class="docutils literal notranslate"><span class="pre">write_table_in_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_table_handler.write_tables"><code class="docutils literal notranslate"><span class="pre">write_tables()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.hdf5_handler">hdf5_handler</a><ul class="nav section-nav flex-column">

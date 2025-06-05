@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5d58775f"></script>
+    <script src="../_static/documentation_options.js?v=9dced5b8"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/production_configuration';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfcdb2db" />
+  <meta name="docsearch:version" content="0.1.dev1+g00b9ce6" />
   </head>
   
   
@@ -616,13 +616,15 @@ the calculation of the number of events to be simulated given a pre-determined m
 <p>Calculate CORSIKA thresholds for energy, radial distance, and viewcone.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">LimitCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">LimitCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator" title="Link to this definition">#</a></dt>
 <dd><p>Compute limits for CORSIKA configuration for energy, radial distance, and viewcone.</p>
 <p>Event data is read from the reduced MC event data file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>event_data_file</strong><span class="classifier">str</span></dt><dd><p>Path to the event-data file.</p>
+</dd>
+<dt><strong>array_name</strong><span class="classifier">str, optional</span></dt><dd><p>Name of the telescope array configuration (default is None).</p>
 </dd>
 <dt><strong>telescope_list</strong><span class="classifier">list, optional</span></dt><dd><p>List of telescope IDs to filter the events (default is None).</p>
 </dd>
@@ -727,7 +729,7 @@ between the triggered events and the simulated events using the shower IDs.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.plot_data">
 <span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
-<dd><p>Plot the core distances and energies of triggered events.</p>
+<dd><p>Histogram plotting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

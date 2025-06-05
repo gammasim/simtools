@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=5d58775f"></script>
+    <script src="../../_static/documentation_options.js?v=9dced5b8"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_io_event_writer';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfcdb2db" />
+  <meta name="docsearch:version" content="0.1.dev1+g00b9ce6" />
   </head>
   
   
@@ -396,13 +396,11 @@
   <h1>Source code for simtel.simtel_io_event_writer</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Generate a reduced dataset from sim_telarray output files using astropy tables.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -450,6 +448,12 @@
         <span class="s2">&quot;file_name&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
         <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
         <span class="s2">&quot;particle_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;energy_min&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="s2">&quot;energy_max&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="s2">&quot;viewcone_min&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+        <span class="s2">&quot;viewcone_max&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+        <span class="s2">&quot;core_scatter_min&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
         <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
         <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
         <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
@@ -494,16 +498,24 @@
 <div class="viewcode-block" id="SimtelIOEventDataWriter.process_files">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process input files and return tables.&quot;&quot;&quot;</span>
-        <span class="c1"># Process all files</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process input files and return tables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of astropy tables containing processed data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_files</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_files</span><span class="p">]):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing file </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_files</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_process_file</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_tables</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelIOEventDataWriter.create_tables">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.create_tables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create astropy tables from collected data.&quot;&quot;&quot;</span>
         <span class="n">tables</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span>
@@ -515,73 +527,14 @@
             <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_units_to_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
             <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tables</span>
+        <span class="k">return</span> <span class="n">tables</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_add_units_to_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add units to a single table&#39;s columns.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span>
-
-<div class="viewcode-block" id="SimtelIOEventDataWriter.write">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.write">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Write tables to file.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        output_file : Path</span>
-<span class="sd">            Path to the output file.</span>
-<span class="sd">        tables : list</span>
-<span class="sd">            List of astropy tables to write.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Save reduced dataset to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;fits.gz&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">output_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.fits&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fits</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">output_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_hdf5</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unsupported file format: </span><span class="si">{</span><span class="n">output_file</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">. &quot;</span>
-                <span class="s2">&quot;Supported formats are .fits and .hdf5&quot;</span>
-            <span class="p">)</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write tables to a FITS file.&quot;&quot;&quot;</span>
-        <span class="n">hdu_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">fits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">()]</span>  <span class="c1"># Primary HDU is required</span>
-
-        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
-            <span class="n">hdu</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">table_to_hdu</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-            <span class="n">hdu</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># Set extension name if present</span>
-            <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdu</span><span class="p">)</span>
-
-        <span class="n">fits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite_existing</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">astropy_tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write tables to an HDF5 file.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;h5py&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;h5py is required to write HDF5 files with Astropy.&quot;</span><span class="p">)</span>
-
-        <span class="n">astropy_tables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-            <span class="n">output_file</span><span class="p">,</span>
-            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">astropy_tables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;hdf5&quot;</span><span class="p">,</span>
-            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite_existing</span><span class="p">,</span>
-            <span class="n">serialize_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">compression</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">astropy_tables</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-            <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                <span class="n">output_file</span><span class="p">,</span>
-                <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;EXTNAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;hdf5&quot;</span><span class="p">,</span>
-                <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">serialize_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">compression</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a single file and update data lists.&quot;&quot;&quot;</span>
@@ -614,6 +567,12 @@
                 <span class="s2">&quot;file_name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">),</span>
                 <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="n">file_id</span><span class="p">,</span>
                 <span class="s2">&quot;particle_id&quot;</span><span class="p">:</span> <span class="n">particle</span><span class="o">.</span><span class="n">corsika7_id</span><span class="p">,</span>
+                <span class="s2">&quot;energy_min&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;energy_max&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;viewcone_min&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;viewcone_max&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;core_scatter_min&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;core_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;core_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
                 <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="mf">90.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
                 <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
                 <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_preliminary_nsb_level</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)),</span>
