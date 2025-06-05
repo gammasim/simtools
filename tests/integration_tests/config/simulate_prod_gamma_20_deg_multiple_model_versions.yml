@@ -24,16 +24,18 @@ CTA_SIMPIPE:
       SAVE_REDUCED_EVENT_LISTS: true
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: 'sim_telarray/data/run000001/gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.hdf5'
-    - OUTPUT_FILE: 'sim_telarray/data/run000001/gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.hdf5'
     - TEST_OUTPUT_FILES:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.zst
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.hdf5
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.zst
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.hdf5
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

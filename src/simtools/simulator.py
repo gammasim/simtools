@@ -461,62 +461,53 @@ class Simulator:
             run number
 
         """
-        keys = ["output", "sub_out", "log", "input", "hist", "corsika_log"]
+        keys = ["output", "sub_out", "log", "input", "hist", "corsika_log", "event_data"]
         results = {key: [] for key in keys}
+
+        def get(name, **kwargs):
+            return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
 
         if "sim_telarray" in self.simulation_software:
             results["input"].append(str(file))
 
-        results["sub_out"].append(
-            str(
-                self._simulation_runner.get_file_name(
-                    file_type="sub_log",
-                    mode="out",
-                    run_number=run_number,
-                )
-            )
-        )
+        results["sub_out"].append(get("sub_log", mode="out", run_number=run_number))
 
-        for model_version_index, _ in enumerate(self.array_models):
-            results["output"].append(
-                str(
-                    self._simulation_runner.get_file_name(
-                        file_type="output",
-                        run_number=run_number,
-                        model_version_index=model_version_index,
-                    )
-                )
-            )
+        for i in range(len(self.array_models)):
+            results["output"].append(get("output", run_number=run_number, model_version_index=i))
+
             if "sim_telarray" in self.simulation_software:
                 results["log"].append(
-                    str(
-                        self._simulation_runner.get_file_name(
-                            file_type="log",
-                            simulation_software="sim_telarray",
-                            run_number=run_number,
-                            model_version_index=model_version_index,
-                        )
+                    get(
+                        "log",
+                        simulation_software="sim_telarray",
+                        run_number=run_number,
+                        model_version_index=i,
                     )
                 )
                 results["hist"].append(
-                    str(
-                        self._simulation_runner.get_file_name(
-                            file_type="histogram",
-                            simulation_software="sim_telarray",
-                            run_number=run_number,
-                            model_version_index=model_version_index,
-                        )
+                    get(
+                        "histogram",
+                        simulation_software="sim_telarray",
+                        run_number=run_number,
+                        model_version_index=i,
                     )
                 )
+                results["event_data"].append(
+                    get(
+                        "event_data",
+                        simulation_software="sim_telarray",
+                        run_number=run_number,
+                        model_version_index=i,
+                    )
+                )
+
             if "corsika" in self.simulation_software:
                 results["corsika_log"].append(
-                    str(
-                        self._simulation_runner.get_file_name(
-                            file_type="corsika_log",
-                            simulation_software="corsika",
-                            run_number=run_number,
-                            model_version_index=model_version_index,
-                        )
+                    get(
+                        "corsika_log",
+                        simulation_software="corsika",
+                        run_number=run_number,
+                        model_version_index=i,
                     )
                 )
 
@@ -697,6 +688,11 @@ class Simulator:
         log_files = self.get_file_list(file_type="log")
         corsika_log_files = self.get_file_list(file_type="corsika_log")
         histogram_files = self.get_file_list(file_type="hist")
+        reduced_event_files = (
+            self.get_file_list(file_type="event_data")
+            if self.args_dict.get("save_reduced_event_lists")
+            else []
+        )
 
         directory_for_grid_upload = (
             Path(directory_for_grid_upload)
@@ -726,11 +722,12 @@ class Simulator:
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
 
                 with tarfile.open(tar_file_path, "w:gz") as tar:
+                    # Don't add to tar file
                     files_to_tar = model_logs + model_hists + model_corsika_logs
                     for file_to_tar in files_to_tar:
                         tar.add(file_to_tar, arcname=Path(file_to_tar).name)
 
-        for file_to_move in output_files:
+        for file_to_move in output_files + reduced_event_files:
             source_file = Path(file_to_move)
             destination_file = directory_for_grid_upload / source_file.name
             if destination_file.exists():
