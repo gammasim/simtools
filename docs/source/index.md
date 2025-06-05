@@ -57,7 +57,7 @@ View License
 User Guide <user-guide/index>
 Components <components/index>
 Data Model <data-model/index>
-Build <build/index>
+Build <building-simtools/index>
 Developer Guide <developer-guide/index>
 API Docs <api-reference/index>
 ```
@@ -123,13 +123,13 @@ To the data model guide
 :::
 
 :::{grid-item-card} {fas}`hammer;pst-color-primary` Build
-:link: build/index
+:link: building-simtools/index
 :link-type: doc
 :class-card: sd-d-flex-column
 
 Learn how to build simtools and its components from source.
 +++
-```{button-ref} build/index
+```{button-ref} building-simtools/index
 :expand:
 :color: primary
 :click-parent:
