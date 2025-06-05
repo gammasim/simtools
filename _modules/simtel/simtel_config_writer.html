@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=46c35693"></script>
+    <script src="../../_static/documentation_options.js?v=5d58775f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_config_writer';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g399a60e" />
+  <meta name="docsearch:version" content="0.1.dev1+gfcdb2db" />
   </head>
   
   
@@ -452,12 +452,20 @@
 <span class="sd">        Layout name.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    simtel_path: str or Path</span>
+<span class="sd">        Path to the sim_telarray installation directory.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">TAB</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelConfigWriter.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -468,6 +476,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span> <span class="o">=</span> <span class="n">layout_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="n">telescope_model_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">simtel_path</span>
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_telescope_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file">[docs]</a>
@@ -649,6 +658,8 @@
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;echo ModelVersion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;echo *****************************</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_simtools_parameters</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_site_parameters</span><span class="p">(</span>
                 <span class="n">file</span><span class="p">,</span>
                 <span class="n">site_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
@@ -792,6 +803,23 @@
         <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}{</span><span class="mi">50</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="s1">&#39;=&#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_simtools_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write simtools-specific parameters.&quot;&quot;&quot;</span>
+        <span class="n">meta_items</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;simtools_version&quot;</span><span class="p">:</span> <span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+            <span class="s2">&quot;simtools_model_production_version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">build_opts</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;build_opts.yml&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">build_opts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">meta_items</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;simtools_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>  <span class="c1"># don&#39;t expect build_opts.yml to be present on all systems</span>
+
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}</span><span class="s2">% Simtools parameters</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">meta_items</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}</span><span class="s2">metaparam global set </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_write_site_parameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span>

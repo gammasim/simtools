@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=46c35693"></script>
+    <script src="../_static/documentation_options.js?v=5d58775f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/sim_telarray';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Runners for simulation software." href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g399a60e" />
+  <meta name="docsearch:version" content="0.1.dev1+gfcdb2db" />
   </head>
   
   
@@ -526,7 +526,7 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 <p id="module-simtel.simtel_config_writer"><span id="simtel-config-writer-1"></span>Configuration file writer for sim_telarray.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_config_writer.SimtelConfigWriter">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_writer.</span></span><span class="sig-name descname"><span class="pre">SimtelConfigWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_writer.</span></span><span class="sig-name descname"><span class="pre">SimtelConfigWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter" title="Link to this definition">#</a></dt>
 <dd><p>SimtelConfigWriter writes sim_telarray configuration files.</p>
 <p>It is designed to be used by model classes (TelescopeModel and ArrayModel) only.</p>
 <dl class="field-list simple">
@@ -541,6 +541,8 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 <dt><strong>layout_name: str</strong></dt><dd><p>Layout name.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+</dd>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Path to the sim_telarray installation directory.</p>
 </dd>
 </dl>
 </dd>
