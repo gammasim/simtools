@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=392afdb8"></script>
+    <script src="../_static/documentation_options.js?v=7efee4d0"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/visualization';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga5073a9" />
+  <meta name="docsearch:version" content="0.1.dev1+gfa3f752" />
   </head>
   
   
@@ -495,32 +495,6 @@ the visualization module.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="visualization.visualize.get_telescope_patch">
-<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">get_telescope_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#get_telescope_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.get_telescope_patch" title="Link to this definition">#</a></dt>
-<dd><p>Collect the patch of one telescope to be plotted by plot_array.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Name of the telescope (type).</p>
-</dd>
-<dt><strong>x: astropy.units.Quantity</strong></dt><dd><p>x position of the telescope usually in meters.</p>
-</dd>
-<dt><strong>y: astropy.units.Quantity</strong></dt><dd><p>y position of the telescope usually in meters.</p>
-</dd>
-<dt><strong>radius: astropy.units.Quantity</strong></dt><dd><p>Radius of the telescope sphere usually in meters.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>patch</dt><dd><p>Instance of mpatches.Circle.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="visualization.visualize.plot_1d">
 <span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">plot_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#plot_1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.plot_1d" title="Link to this definition">#</a></dt>
 <dd><p>Produce a high contrast one dimensional plot from multiple data sets.</p>
@@ -571,43 +545,6 @@ If data dictionary is not an OrderedDict, the reference will be random.</p></li>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>ValueError</dt><dd><p>if asked to plot a ratio or difference with just one set of data</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="visualization.visualize.plot_array">
-<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">plot_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotate_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#plot_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.plot_array" title="Link to this definition">#</a></dt>
-<dd><p>Plot the array of telescopes.</p>
-<p>The x axis gives the easting direction and y axis gives the northing direction.
-Note that in order to convert from the CORSIKA coordinate system to the ‘conventional’ system
-of North/East, a 90 degree rotation is always applied.
-Rotation of the array elements is possible through the ‘rotate_angle’ given either in degrees,
-or in radians.
-The direction of rotation of the array elements is counterclockwise.
-The rotation does not change Telescope instance attributes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>telescopes: astropy.table</strong></dt><dd><p>Table with the telescope position and names. Note the orientation of the axes.</p>
-</dd>
-<dt><strong>rotate_angle:</strong></dt><dd><p>Angle to rotate the plot. For rotate_angle = 0 the resulting plot will have
-the x-axis pointing towards the east, and the y-axis pointing towards the North.</p>
-</dd>
-<dt><strong>show_tel_label: bool</strong></dt><dd><p>If True it will print the label of the individual telescopes in the plot.
-While it works well for the smaller arrays, it gets crowded for larger arrays.</p>
-</dd>
-<dt><strong>axes_range</strong><span class="classifier">float</span></dt><dd><p>Axis range for both axes. Range is from -plot_range to plot_range.</p>
-</dd>
-<dt><strong>maker_scaling</strong><span class="classifier">float</span></dt><dd><p>Scaling factor for marker size to be plotted.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>plt.figure</dt><dd><p>Instance of plt.figure with the array of telescopes plotted.</p>
 </dd>
 </dl>
 </dd>
@@ -688,7 +625,7 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.visualize.save_figure">
-<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">save_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#save_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.save_figure" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">save_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figure'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#save_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.save_figure" title="Link to this definition">#</a></dt>
 <dd><p>Save figure to output file(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -863,8 +800,54 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dd></dl>
 
 </section>
+<section id="module-visualization.plot_array_layout">
+<span id="id2"></span><span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-visualization.plot_array_layout" title="Link to this heading">#</a></h2>
+<p>Plot array elements for a layout.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.get_telescope_patch">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_telescope_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_telescope_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_telescope_patch" title="Link to this definition">#</a></dt>
+<dd><p>Create patch for a telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>patch</strong><span class="classifier">Patch</span></dt><dd><p>Circle or rectangle patch.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.plot_array_layout">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">plot_array_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#plot_array_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.plot_array_layout" title="Link to this definition">#</a></dt>
+<dd><p>Plot telescope array layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescopes</strong><span class="classifier">Table</span></dt><dd><p>Telescope data table.</p>
+</dd>
+<dt><strong>show_tel_label</strong><span class="classifier">bool</span></dt><dd><p>Show telescope labels (default False).</p>
+</dd>
+<dt><strong>axes_range</strong><span class="classifier">float or None</span></dt><dd><p>Axis range, auto if None.</p>
+</dd>
+<dt><strong>marker_scaling</strong><span class="classifier">float</span></dt><dd><p>Marker size scale factor.</p>
+</dd>
+<dt><strong>background_telescopes</strong><span class="classifier">Table or None</span></dt><dd><p>Optional background telescope table.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fig</strong><span class="classifier">Figure</span></dt><dd><p>Matplotlib figure object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-visualization.plot_camera">
-<span id="plot-camera"></span><h2>plot_camera<a class="headerlink" href="#module-visualization.plot_camera" title="Link to this heading">#</a></h2>
+<span id="id3"></span><span id="plot-camera"></span><h2>plot_camera<a class="headerlink" href="#module-visualization.plot_camera" title="Link to this heading">#</a></h2>
 <p>Plot camera pixel layout.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_camera.plot_pixel_layout">
@@ -894,7 +877,7 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 
 </section>
 <section id="module-visualization.plot_tables">
-<span id="id2"></span><span id="plot-tables"></span><h2>plot_tables<a class="headerlink" href="#module-visualization.plot_tables" title="Link to this heading">#</a></h2>
+<span id="id4"></span><span id="plot-tables"></span><h2>plot_tables<a class="headerlink" href="#module-visualization.plot_tables" title="Link to this heading">#</a></h2>
 <p>Plot tabular data.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_tables.plot">
@@ -1054,9 +1037,7 @@ generates a plot of the pixel layout for the given telescope model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_colors"><code class="docutils literal notranslate"><span class="pre">get_colors()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_lines"><code class="docutils literal notranslate"><span class="pre">get_lines()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_markers"><code class="docutils literal notranslate"><span class="pre">get_markers()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_telescope_patch"><code class="docutils literal notranslate"><span class="pre">get_telescope_patch()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_1d"><code class="docutils literal notranslate"><span class="pre">plot_1d()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_array"><code class="docutils literal notranslate"><span class="pre">plot_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_hist_2d"><code class="docutils literal notranslate"><span class="pre">plot_hist_2d()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_table"><code class="docutils literal notranslate"><span class="pre">plot_table()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.save_figure"><code class="docutils literal notranslate"><span class="pre">save_figure()</span></code></a></li>
@@ -1084,6 +1065,11 @@ generates a plot of the pixel layout for the given telescope model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareOffPixelHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquarePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquarePixelHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.TelescopeHandler"><code class="docutils literal notranslate"><span class="pre">TelescopeHandler</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_array_layout">plot_array_layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_telescope_patch"><code class="docutils literal notranslate"><span class="pre">get_telescope_patch()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.plot_array_layout"><code class="docutils literal notranslate"><span class="pre">plot_array_layout()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_camera">plot_camera</a><ul class="nav section-nav flex-column">

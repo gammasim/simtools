@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=392afdb8"></script>
+    <script src="../_static/documentation_options.js?v=7efee4d0"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/array_layout';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Job execution and submission" href="job_execution.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga5073a9" />
+  <meta name="docsearch:version" content="0.1.dev1+gfa3f752" />
   </head>
   
   
@@ -986,6 +986,108 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 <span id="array-layout-utils"></span><span id="array-layout-utils-module"></span><h2>array_layout_utils<a class="headerlink" href="#module-layout.array_layout_utils" title="Link to this heading">#</a></h2>
 <p>Retrieve, merge, and write layout dictionaries.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="layout.array_layout_utils.get_array_layouts_from_db">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">get_array_layouts_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ground'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#get_array_layouts_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.get_array_layouts_from_db" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve all array layouts from the database and return as list of astropy tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>layout_name</strong><span class="classifier">str</span></dt><dd><p>Name of the array layout to retrieve (for None, all layouts are retrieved).</p>
+</dd>
+<dt><strong>site</strong><span class="classifier">str</span></dt><dd><p>Site identifier.</p>
+</dd>
+<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Model version to retrieve.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration.</p>
+</dd>
+<dt><strong>coordinate_system</strong><span class="classifier">str</span></dt><dd><p>Coordinate system to use for the array elements (default is “ground”).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of dictionaries containing array layout names and their elements.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.array_layout_utils.get_array_layouts_from_file">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">get_array_layouts_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#get_array_layouts_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.get_array_layouts_from_file" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve array layout(s) from astropy table file(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path</strong><span class="classifier">str or Path or list of str or list of Path</span></dt><dd><p>Path(s) to array layout files(s).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of dictionaries containing array layout names and their elements.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.array_layout_utils.get_array_layouts_from_parameter_file">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">get_array_layouts_from_parameter_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ground'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#get_array_layouts_from_parameter_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.get_array_layouts_from_parameter_file" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve array layouts from parameter file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the array layout parameter file.</p>
+</dd>
+<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Model version to retrieve.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration.</p>
+</dd>
+<dt><strong>coordinate_system</strong><span class="classifier">str</span></dt><dd><p>Coordinate system to use for the array elements (default is “ground”).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of dictionaries containing array layout names and their elements.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.array_layout_utils.get_array_layouts_using_telescope_lists_from_db">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">get_array_layouts_using_telescope_lists_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ground'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#get_array_layouts_using_telescope_lists_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.get_array_layouts_using_telescope_lists_from_db" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve array layouts from the database using telescope lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_lists</strong><span class="classifier">list</span></dt><dd><p>List of telescope lists to retrieve array layouts for.</p>
+</dd>
+<dt><strong>site</strong><span class="classifier">str</span></dt><dd><p>Site identifier.</p>
+</dd>
+<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Model version to retrieve.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration.</p>
+</dd>
+<dt><strong>coordinate_system</strong><span class="classifier">str</span></dt><dd><p>Coordinate system to use for the array elements (default is “ground”).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of dictionaries containing array layout names and their elements.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="layout.array_layout_utils.merge_array_layouts">
 <span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">merge_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layouts_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layouts_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#merge_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.merge_array_layouts" title="Link to this definition">#</a></dt>
 <dd><p>Compare two array layout dictionaries and merge them.</p>
@@ -1168,6 +1270,10 @@ production table.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.array_layout_utils">array_layout_utils</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_from_db"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_from_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_from_file"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_from_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_from_parameter_file"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_from_parameter_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_using_telescope_lists_from_db"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_using_telescope_lists_from_db()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.merge_array_layouts"><code class="docutils literal notranslate"><span class="pre">merge_array_layouts()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.retrieve_ctao_array_layouts"><code class="docutils literal notranslate"><span class="pre">retrieve_ctao_array_layouts()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.validate_array_layouts_with_db"><code class="docutils literal notranslate"><span class="pre">validate_array_layouts_with_db()</span></code></a></li>

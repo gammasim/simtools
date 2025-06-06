@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=392afdb8"></script>
+    <script src="../../_static/documentation_options.js?v=7efee4d0"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-plot-array-layout';</script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="simtools-merge-tables" href="simtools-merge-tables.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga5073a9" />
+  <meta name="docsearch:version" content="0.1.dev1+gfa3f752" />
   </head>
   
   
@@ -470,19 +470,26 @@
                   
   <section id="module-plot_array_layout">
 <span id="simtools-plot-array-layout"></span><h1>simtools-plot-array-layout<a class="headerlink" href="#module-plot_array_layout" title="Link to this heading">#</a></h1>
-<p>Plot array elements (array layout).</p>
-<p>Plot an array layout and save it to file (e.g., pdf). Layouts are defined in the database,
-or given as command line arguments (explicit listing or telescope list file). A list of input
-files is also accepted.
-Layouts can be plotted in ground or UTM coordinate systems.</p>
-<p>Listing of array elements follows this logic:</p>
+<p>Plot array elements (array layouts).</p>
+<p>Plot array layouts in ground or UTM coordinate systems from multiple sources.</p>
+<p>For the following options, array element positions are retrieved from the model parameter database:</p>
 <ul class="simple">
-<li><p>explicit listing: e.g., <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN-01,</span> <span class="pre">MSTN05</span></code></p></li>
-<li><p>listing of types: e.g, <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN</span></code> plots all telescopes of type MSTN.</p></li>
+<li><p>from the model parameter database using the layout name (e.g., <code class="docutils literal notranslate"><span class="pre">-array_layout_name</span> <span class="pre">alpha</span></code>)</p></li>
+<li><p>from the model parameter data, retrieving all layouts for the given site and model version
+(<code class="docutils literal notranslate"><span class="pre">--plot_all_layouts</span></code>)</p></li>
+<li><p>from a model parameter file
+(e.g., <code class="docutils literal notranslate"><span class="pre">-array_layout_parameter_file</span> <span class="pre">tests/resources/model_parameters/array_layouts-2.0.1.json</span></code>)</p></li>
+<li><p>from a list of array elements (e.g., <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN-01,</span> <span class="pre">MSTN-02</span></code>).
+Positions are retrieved from the database.
+* explicit listing: e.g., <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN-01,</span> <span class="pre">MSTN05</span></code>
+* listing of types: e.g, <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN</span></code> plots all telescopes of type MSTN.</p></li>
 </ul>
-<p>A rotation angle in degrees allows to rotate the array before plotting.
-The typical image formats (e.g., pdf, png, jpg) are allowed for the output figures.
-If no <code class="docutils literal notranslate"><span class="pre">figure_name</span></code> is given as output, layouts are plotted in pdf and png format.</p>
+<p>For this option, array element positions are retrieved from the input file:</p>
+<ul class="simple">
+<li><p>from a file containing an astropy table with a list of array elements and their positions
+(e.g., <code class="docutils literal notranslate"><span class="pre">-array_layout_file</span> <span class="pre">tests/resources/telescope_positions-North-ground.ecsv</span></code>)</p></li>
+</ul>
+<p>Plots are saved as pdf and png files in the output directory.</p>
 <p>Example of a layout plot:</p>
 <a class="reference internal image-reference" href="../../_images/plot_array_layout_example.png" id="plot-array-layout-plot"><img alt="../../_images/plot_array_layout_example.png" id="plot-array-layout-plot" src="../../_images/plot_array_layout_example.png" style="width: 49%;" />
 </a>
@@ -493,13 +500,16 @@ If no <code class="docutils literal notranslate"><span class="pre">figure_name</
 </dd>
 <dt>array_layout_file<span class="classifier">str</span></dt><dd><p>File (astropy table compatible) with a list of array elements.</p>
 </dd>
-<dt>array_layout_name<span class="classifier">str</span></dt><dd><p>Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).</p>
+<dt>array_layout_name<span class="classifier">str</span></dt><dd><p>Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
+Use ‘plot_all’ to plot all layouts from the database for the given site and model version.</p>
+</dd>
+<dt>array_layout_parameter_file<span class="classifier">str, optional</span></dt><dd><p>File with array layouts similar in the model parameter file format (typically JSON).</p>
+</dd>
+<dt>array_layout_name_background: str, optional</dt><dd><p>Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).</p>
 </dd>
 <dt>array_element_list<span class="classifier">list</span></dt><dd><p>List of array elements (e.g., telescopes) to plot (e.g., <code class="docutils literal notranslate"><span class="pre">LSTN-01</span> <span class="pre">LSTN-02</span> <span class="pre">MSTN</span></code>).</p>
 </dd>
 <dt>coordinate_system<span class="classifier">str, optional</span></dt><dd><p>Coordinate system for the array layout (ground or utm).</p>
-</dd>
-<dt>rotate_angle<span class="classifier">float, optional</span></dt><dd><p>Angle to rotate the array before plotting (in degrees).</p>
 </dd>
 <dt>show_labels<span class="classifier">bool, optional</span></dt><dd><p>Shows the telescope labels in the plot.</p>
 </dd>
@@ -511,18 +521,32 @@ If no <code class="docutils literal notranslate"><span class="pre">figure_name</
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
-<p>Plot layout with the name “test_layout”:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha</span>
-<span class="go">                           --array_layout_name test_layout</span>
+<p>Plot “alpha” layout for the North site with model version 6.0.0:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout --site North</span>
+<span class="go">                           --array_layout_name alpha</span>
+<span class="go">                           --model_version=6.0.0</span>
 </pre></div>
 </div>
-<p>Plot layout with 2 LSTs and all northern MSTs in UTM coordinates:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --array_element_list LSTN-01 LSTN-02 MSTN</span>
-<span class="go">                           --coordinate_system utm</span>
+<p>Plot layout with 2 LSTs on top of north alpha layout:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout --site North</span>
+<span class="go">                           --array_element_list LSTN-01,LSTN-02</span>
+<span class="go">                           --model_version=6.0.0</span>
+<span class="go">                           --array_layout_name_background alpha</span>
 </pre></div>
 </div>
-<p>Plot layout from a file with the list of telescopes:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --array_element_list telescope_positions-test_layout.ecsv</span>
+<p>Plot layout from a file with a list of telescopes:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout</span>
+<span class="go">    --array_layout_file tests/resources/telescope_positions-North-ground.ecsv</span>
+</pre></div>
+</div>
+<p>Plot layout from a parameter file with a list of telescopes:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout</span>
+<span class="go">    --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.1.json</span>
+<span class="go">    --model_version 6.0.0</span>
+</pre></div>
+</div>
+<p>Plot all layouts for the North site and model version 6.0.0:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout --site North --plot_all_layouts --model_version=6.0.0</span>
 </pre></div>
 </div>
 </section>
@@ -530,6 +554,30 @@ If no <code class="docutils literal notranslate"><span class="pre">figure_name</
 <dt class="sig sig-object py" id="plot_array_layout.main">
 <span class="sig-prename descclassname"><span class="pre">plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/plot_array_layout.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plot_array_layout.main" title="Link to this definition">#</a></dt>
 <dd><p>Plot array layout application.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_array_layout.read_layouts">
+<span class="sig-prename descclassname"><span class="pre">plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">read_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/plot_array_layout.html#read_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plot_array_layout.read_layouts" title="Link to this definition">#</a></dt>
+<dd><p>Read array layouts from the database or parameter file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary with command line arguments.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration.</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>Logger instance.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of array layouts.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -584,6 +632,7 @@ If no <code class="docutils literal notranslate"><span class="pre">figure_name</
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_array_layout.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_array_layout.read_layouts"><code class="docutils literal notranslate"><span class="pre">read_layouts()</span></code></a></li>
 </ul>
   </nav></div>
 
