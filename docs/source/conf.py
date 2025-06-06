@@ -124,6 +124,7 @@ html_title = f"{project}"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
+html_logo = "../_static/simtools_logo.png"
 html_theme_options = {
     "navbar_start": ["navbar-logo"],
     "navbar_end": ["version-switcher", "navbar-icon-links"],
@@ -141,6 +142,9 @@ html_theme_options = {
         "version_match": "dev",
     },
     "check_switcher": True,
+    "logo": {
+        "alt_text": "simtools",
+    },
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
