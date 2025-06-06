@@ -9,7 +9,7 @@ CTA_SIMPIPE:
       ARRAY_LAYOUT_NAME: subsystem_lsts
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground_0deg.png
-    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground_0deg.pdf
+    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground.png
+    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground.pdf
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

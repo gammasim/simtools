@@ -5,7 +5,6 @@ CTA_SIMPIPE:
     TEST_NAME: one_file_with_name
     CONFIGURATION:
       ARRAY_LAYOUT_FILE: tests/resources/telescope_positions-North-ground.ecsv
-      MODEL_VERSION: 6.0.0
       FIGURE_NAME: test
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:

@@ -276,7 +276,7 @@ class CommandLineParser(argparse.ArgumentParser):
         if "layout" in model_options or "layout_file" in model_options:
             _job_group = self._add_model_option_layout(
                 job_group=_job_group,
-                add_layout_file="layout_file" in model_options,
+                model_options=model_options,
                 # layout info is always required for layout related tasks with the exception
                 # of listing the available layouts in the DB
                 required="--list_available_layouts" not in self._option_string_actions,
@@ -456,7 +456,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 pass
 
     @staticmethod
-    def _add_model_option_layout(job_group, add_layout_file, required=True):
+    def _add_model_option_layout(job_group, model_options, required=True):
         """
         Add layout option to the job group.
 
@@ -464,8 +464,8 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         job_group: argparse.ArgumentParser
             Job group
-        add_layout_file: bool
-            Add layout file option
+        model_options: list
+            List of model options.
 
         Returns
         -------
@@ -486,7 +486,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
             default=None,
         )
-        if add_layout_file:
+        if "layout_file" in model_options:
             _layout_group.add_argument(
                 "--array_layout_file",
                 help="file(s) with the list of array elements (astropy table format).",
@@ -494,6 +494,21 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=str,
                 required=False,
                 default=None,
+            )
+        if "layout_parameter_file" in model_options:
+            _layout_group.add_argument(
+                "--array_layout_parameter_file",
+                help="Array layout model parameter file (typically in JSON format).",
+                type=str,
+                required=False,
+                default=None,
+            )
+        if "plot_all_layouts" in model_options:
+            _layout_group.add_argument(
+                "--plot_all_layouts",
+                help="plot all available layouts",
+                action="store_true",
+                required=False,
             )
         return job_group
 

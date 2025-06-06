@@ -22,23 +22,7 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simtel_io_file(io_handler):
-    return io_handler.get_input_data_file(
-        file_name="proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
-        test=True,
-    )
-
-
-@pytest.fixture
-def simtel_io_file_hdata(io_handler):
-    return io_handler.get_input_data_file(
-        file_name="gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
-        test=True,
-    )
-
-
-@pytest.fixture
-def simtel_io_file_list(io_handler):
+def sim_telarray_file_proton_list(io_handler):
     return io_handler.get_input_data_file(
         file_name="simtel_output_files.txt",
         test=True,
@@ -46,20 +30,22 @@ def simtel_io_file_list(io_handler):
 
 
 @pytest.fixture
-def simtel_hists_hdata_io_instance(simtel_io_file_hdata):
+def simtel_hists_hdata_io_instance(sim_telarray_hdata_file_gamma):
     return SimtelIOHistograms(
-        histogram_files=simtel_io_file_hdata, view_cone=[0, 10], energy_range=[0.001, 300]
+        histogram_files=sim_telarray_hdata_file_gamma, view_cone=[0, 10], energy_range=[0.001, 300]
     )
 
 
 @pytest.fixture
-def sim_telarray_histograms_instance(simtel_io_file):
-    return SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
+def sim_telarray_histograms_instance(sim_telarray_file_proton):
+    return SimtelIOHistograms(
+        histogram_files=[sim_telarray_file_proton, sim_telarray_file_proton], test=True
+    )
 
 
 @pytest.fixture
-def sim_telarray_histograms_instance_file_list(simtel_io_file_list):
-    return SimtelIOHistograms(histogram_files=simtel_io_file_list, test=True)
+def sim_telarray_histograms_instance_file_list(sim_telarray_file_proton_list):
+    return SimtelIOHistograms(histogram_files=sim_telarray_file_proton_list, test=True)
 
 
 def test_file_does_not_exist(caplog):
@@ -203,12 +189,14 @@ def test_list_of_histograms(sim_telarray_histograms_instance):
     assert len(list_of_histograms) == 2
 
 
-def test_combine_histogram_files(simtel_io_file, caplog):
+def test_combine_histogram_files(sim_telarray_file_proton, caplog):
     # Reading one histogram file
-    instance_alone = SimtelIOHistograms(histogram_files=simtel_io_file, test=True)
+    instance_alone = SimtelIOHistograms(histogram_files=sim_telarray_file_proton, test=True)
 
     # Passing the same file twice
-    instance_all = SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
+    instance_all = SimtelIOHistograms(
+        histogram_files=[sim_telarray_file_proton, sim_telarray_file_proton], test=True
+    )
     assert (
         2 * instance_alone.combined_hists[0]["data"] == instance_all.combined_hists[0]["data"]
     ).all()
