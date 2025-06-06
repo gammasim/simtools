@@ -287,6 +287,8 @@ def get_array_layouts_from_db(
                 db_config, model_version, site, None, _layout_name, coordinate_system
             )
         )
+    if len(layouts) == 1:
+        return layouts[0]
     return layouts
 
 
