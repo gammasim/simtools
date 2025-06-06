@@ -722,7 +722,7 @@ class Simulator:
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
 
                 with tarfile.open(tar_file_path, "w:gz") as tar:
-                    # Don't add to tar file
+                    # Add all relevant log, histogram, and CORSIKA log files to the tarball
                     files_to_tar = model_logs + model_hists + model_corsika_logs
                     for file_to_tar in files_to_tar:
                         tar.add(file_to_tar, arcname=Path(file_to_tar).name)
