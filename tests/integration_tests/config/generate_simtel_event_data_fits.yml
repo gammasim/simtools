@@ -2,7 +2,7 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-generate-simtel-event-data
-    TEST_NAME: run
+    TEST_NAME: fits
     CONFIGURATION:
       INPUT: 'tests/resources/*proton*.simtel.zst'
       OUTPUT_PATH: simtools-output

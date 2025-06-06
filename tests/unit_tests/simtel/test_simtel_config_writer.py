@@ -310,3 +310,39 @@ def test_sim_telarray_random_seeds():
     number = 0
     seeds = sim_telarray_random_seeds(seed, number)
     assert len(seeds) == number
+
+
+def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text):
+    # Create a mock file to write to
+    test_file = tmp_path / "test_simtools_params.txt"
+    with open(test_file, "w") as f:
+        simtel_config_writer._write_simtools_parameters(f)
+
+    # Check basic parameters are written
+    assert file_has_text(test_file, "% Simtools parameters")
+    assert file_has_text(test_file, "metaparam global set simtools_version")
+    assert file_has_text(
+        test_file,
+        f"metaparam global set simtools_model_production_version = {simtel_config_writer._model_version}",
+    )
+
+    # Test with simtel_path and build_opts.yml
+    build_opts_file = tmp_path / "build_opts.yml"
+    with open(build_opts_file, "w") as f:
+        f.write("build_date: 2023-01-01\nversion: 1.0.0")
+
+    simtel_config_writer._simtel_path = tmp_path
+    with open(test_file, "w") as f:
+        simtel_config_writer._write_simtools_parameters(f)
+
+    # Check build_opts parameters are included
+    assert file_has_text(test_file, "metaparam global set simtools_build_date = 2023-01-01")
+    assert file_has_text(test_file, "metaparam global set simtools_version = 1.0.0")
+
+    # Test with invalid simtel_path
+    simtel_config_writer._simtel_path = tmp_path / "nonexistent"
+    with open(test_file, "w") as f:
+        simtel_config_writer._write_simtools_parameters(f)
+    # Should still write basic parameters without build_opts
+    assert file_has_text(test_file, "% Simtools parameters")
+    assert file_has_text(test_file, "metaparam global set simtools_version")
