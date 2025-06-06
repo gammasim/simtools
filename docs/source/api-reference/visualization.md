@@ -26,6 +26,17 @@ the visualization module.
    :members:
 ```
 
+(plot-array-layout)=
+
+## plot_array_layout
+
+```{eval-rst}
+.. automodule:: visualization.plot_array_layout
+   :members:
+```
+
+(plot-camera)=
+
 ## plot_camera
 
 ```{eval-rst}
