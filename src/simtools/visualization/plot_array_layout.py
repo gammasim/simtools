@@ -18,7 +18,6 @@ __all__ = ["get_telescope_patch", "plot_array_layout"]
 
 def plot_array_layout(
     telescopes,
-    rotate_angle=0.0 * u.deg,
     show_tel_label=False,
     axes_range=None,
     marker_scaling=1.0,
@@ -31,8 +30,6 @@ def plot_array_layout(
     ----------
     telescopes : Table
         Telescope data table.
-    rotate_angle : Quantity
-        Rotation angle (default 0).
     show_tel_label : bool
         Show telescope labels (default False).
     axes_range : float or None
@@ -49,13 +46,11 @@ def plot_array_layout(
     """
     fig, ax = plt.subplots(1)
 
-    patches, plot_range = get_patches(
-        ax, telescopes, rotate_angle, show_tel_label, axes_range, marker_scaling
-    )
+    patches, plot_range = get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling)
 
     if background_telescopes is not None:
         bg_patches, bg_range = get_patches(
-            ax, background_telescopes, rotate_angle, False, axes_range, marker_scaling
+            ax, background_telescopes, False, axes_range, marker_scaling
         )
         ax.add_collection(PatchCollection(bg_patches, match_original=True, alpha=0.1))
         if axes_range is None:
@@ -67,7 +62,7 @@ def plot_array_layout(
     return fig
 
 
-def get_patches(ax, telescopes, rotate_angle, show_tel_label, axes_range, marker_scaling):
+def get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling):
     """
     Get plot patches and axis range.
 
@@ -78,7 +73,7 @@ def get_patches(ax, telescopes, rotate_angle, show_tel_label, axes_range, marker
     axes_range : float
         Calculated or input axis range.
     """
-    pos_x, pos_y = get_rotated_positions(telescopes, rotate_angle)
+    pos_x, pos_y = get_positions(telescopes)
     telescopes["pos_x_rotated"] = Column(pos_x)
     telescopes["pos_y_rotated"] = Column(pos_y)
 
@@ -126,21 +121,23 @@ def get_telescope_patch(name, x, y, radius):
     )
 
 
-def get_rotated_positions(telescopes, rotate_angle):
+def get_positions(telescopes):
     """
-    Get rotated X/Y positions.
+    Get X/Y positions depending on coordinate system.
+
+    For ground coordinates, rotates the positions by 90 degrees.
 
     Returns
     -------
     x_rot, y_rot : Quantity
-        Rotated coordinates.
+        Position coordinates.
     """
     if "position_x" in telescopes.colnames:
         x, y = telescopes["position_x"], telescopes["position_y"]
-        locale_rotate_angle = rotate_angle + 90 * u.deg
+        locale_rotate_angle = 90 * u.deg
     elif "utm_east" in telescopes.colnames:
         x, y = telescopes["utm_east"], telescopes["utm_north"]
-        locale_rotate_angle = rotate_angle
+        locale_rotate_angle = 0 * u.deg
     else:
         raise ValueError("Missing required position columns.")
 

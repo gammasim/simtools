@@ -602,3 +602,73 @@ def test_get_array_layouts_from_file_list(mocker, mock_read_table_from_file):
     assert layouts[1]["name"] == "file2"  # from "file2.csv"
     assert layouts[0]["array_elements"] == fake_table1
     assert layouts[1]["array_elements"] == fake_table2
+
+
+def test_get_array_layout_dict_with_layout_name(mock_array_model):
+    """Test _get_array_layout_dict with a layout name provided."""
+    # Setup test data
+    db_config = {"db": "config"}
+    model_version = "6.0.0"
+    site = "north"
+    layout_name = "test_layout"
+    fake_table = ["tel1", "tel2"]
+
+    # Mock ArrayModel instance
+    instance = MagicMock()
+    instance.export_array_elements_as_table.return_value = fake_table
+    mock_array_model.return_value = instance
+
+    # Call function
+    result = cta_array_layouts._get_array_layout_dict(
+        db_config, model_version, site, None, layout_name, "ground"
+    )
+
+    # Verify ArrayModel initialization
+    mock_array_model.assert_called_once_with(
+        mongo_db_config=db_config,
+        model_version=model_version,
+        site=site,
+        array_elements=None,
+        layout_name=layout_name,
+    )
+
+    # Verify export_array_elements_as_table call
+    instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
+
+    # Check result
+    assert result == {"name": layout_name, "site": site, "array_elements": fake_table}
+
+
+def test_get_array_layout_dict_with_telescope_list(mock_array_model):
+    """Test _get_array_layout_dict with a telescope list provided."""
+    # Setup test data
+    db_config = {"db": "config"}
+    model_version = "6.0.0"
+    site = "south"
+    telescope_list = ["tel1", "tel2", "tel3"]
+    fake_table = ["tel_data1", "tel_data2", "tel_data3"]
+
+    # Mock ArrayModel instance
+    instance = MagicMock()
+    instance.export_array_elements_as_table.return_value = fake_table
+    mock_array_model.return_value = instance
+
+    # Call function
+    result = cta_array_layouts._get_array_layout_dict(
+        db_config, model_version, site, telescope_list, None, "ground"
+    )
+
+    # Verify ArrayModel initialization
+    mock_array_model.assert_called_once_with(
+        mongo_db_config=db_config,
+        model_version=model_version,
+        site=site,
+        array_elements=telescope_list,
+        layout_name=None,
+    )
+
+    # Verify export_array_elements_as_table call
+    instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
+
+    # Check result
+    assert result == {"name": "list", "site": site, "array_elements": fake_table}

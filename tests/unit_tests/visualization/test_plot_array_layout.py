@@ -14,7 +14,7 @@ from simtools.visualization.plot_array_layout import (
     create_patches,
     finalize_plot,
     get_patches,
-    get_rotated_positions,
+    get_positions,
     get_sphere_radius,
     get_telescope_name,
     get_telescope_patch,
@@ -185,15 +185,14 @@ def dummy_rotate(x, y, angle):
     return x * 2, y * 2
 
 
-def test_get_rotated_positions_with_position_columns(monkeypatch):
+def test_get_positions_with_position_columns(monkeypatch):
     # Test branch when table has "position_x" and "position_y".
     x = [1, -2, 3] * u.m
     y = [4, 5, -6] * u.m
     tbl = QTable({"position_x": x, "position_y": y})
-    # For "position_x" branch, locale_rotate_angle = rotate_angle + 90 deg.
-    rotate_angle = 0 * u.deg
+    # For "position_x" branch, locale_rotate_angle = 90 deg.
     monkeypatch.setattr(transf, "rotate", dummy_rotate)
-    rotated_x, rotated_y = get_rotated_positions(tbl, rotate_angle)
+    rotated_x, rotated_y = get_positions(tbl)
     # Expect dummy_rotate to be used: x*2, y*2.
     for orig, rot in zip(x, rotated_x):
         assert rot == orig * 2
@@ -201,27 +200,18 @@ def test_get_rotated_positions_with_position_columns(monkeypatch):
         assert rot == orig * 2
 
 
-def test_get_rotated_positions_with_utm_columns(monkeypatch):
+def test_get_positions_with_utm_columns(monkeypatch):
     # Test branch when table has "utm_east" and "utm_north".
     x = [10, 20, 30] * u.m
     y = [40, 50, 60] * u.m
     tbl = QTable({"utm_east": x, "utm_north": y})
-    # For utm branch, locale_rotate_angle = rotate_angle.
-    # Use rotate_angle = 0 so that no rotation is applied.
-    rotate_angle = 0 * u.deg
-
-    # Create a dummy rotate to verify it is not called.
-    was_called = False
 
     def dummy_rotate_no_call(x_val, y_val, angle):
-        nonlocal was_called
-        was_called = True
         return x_val * 3, y_val * 3
 
     monkeypatch.setattr(transf, "rotate", dummy_rotate_no_call)
-    rotated_x, rotated_y = get_rotated_positions(tbl, rotate_angle)
+    rotated_x, rotated_y = get_positions(tbl)
     # Since locale_rotate_angle is 0, transf.rotate should not be called.
-    assert not was_called
     # Returned values should be unchanged.
     for orig, rot in zip(x, rotated_x):
         assert rot == orig
@@ -229,11 +219,11 @@ def test_get_rotated_positions_with_utm_columns(monkeypatch):
         assert rot == orig
 
 
-def test_get_rotated_positions_missing_columns():
+def test_get_positions_missing_columns():
     # Test that a table missing required position columns raises ValueError.
     tbl = QTable({"some_column": [1, 2, 3] * u.m})
     with pytest.raises(ValueError, match="Missing required position columns."):
-        get_rotated_positions(tbl, 0 * u.deg)
+        get_positions(tbl)
 
 
 def test_get_patches_simplest(monkeypatch):
@@ -248,7 +238,7 @@ def test_get_patches_simplest(monkeypatch):
     dummy_x = u.Quantity([1, 2], u.m)
     dummy_y = u.Quantity([3, 4], u.m)
 
-    def dummy_get_rotated_positions(telescopes, rotate_angle):
+    def dummy_get_positions(telescopes):
         return dummy_x, dummy_y
 
     dummy_patches = ["dummy_patch1", "dummy_patch2"]  # Two patches
@@ -258,8 +248,8 @@ def test_get_patches_simplest(monkeypatch):
         return dummy_patches, dummy_radii
 
     monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.get_rotated_positions",
-        dummy_get_rotated_positions,
+        "simtools.visualization.plot_array_layout.get_positions",
+        dummy_get_positions,
     )
     monkeypatch.setattr(
         "simtools.visualization.plot_array_layout.create_patches", dummy_create_patches
@@ -268,7 +258,7 @@ def test_get_patches_simplest(monkeypatch):
     _, ax = plt.subplots()
 
     provided_range = 50
-    patches, returned_range = get_patches(ax, telescopes, 10 * u.deg, False, provided_range, 1.0)
+    patches, returned_range = get_patches(ax, telescopes, False, provided_range, 1.0)
 
     # Verify that get_patches returns the dummy patches and the provided axes_range
     assert patches == dummy_patches
@@ -278,7 +268,7 @@ def test_get_patches_simplest(monkeypatch):
     assert "pos_x_rotated" in telescopes.colnames
     assert "pos_y_rotated" in telescopes.colnames
 
-    patches, returned_range = get_patches(ax, telescopes, 10 * u.deg, False, None, 1.0)
+    patches, returned_range = get_patches(ax, telescopes, False, None, 1.0)
     assert pytest.approx(returned_range) == 7.7
 
 
@@ -368,7 +358,7 @@ def test_get_telescope_patch_circle(monkeypatch):
 def test_plot_array_layout_calls_helpers(monkeypatch):
     calls = {"get_patches_count": 0, "update_legend_called": False, "finalize_plot_called": False}
 
-    def dummy_get_patches(ax, telescopes, rotate_angle, show_tel_label, axes_range, marker_scaling):
+    def dummy_get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling):
         calls["get_patches_count"] += 1
         # Create real patch objects instead of strings
         dummy_patch = mpatches.Circle((0, 0), 1)  # Simple circle patch
@@ -399,7 +389,6 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
 
     fig = plot_array_layout(
         dummy_telescopes,
-        rotate_angle=10,
         show_tel_label=True,
         axes_range=100,
         marker_scaling=2.0,
@@ -423,7 +412,6 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
 
     _ = plot_array_layout(
         dummy_telescopes,
-        rotate_angle=10,
         show_tel_label=True,
         axes_range=None,
         marker_scaling=2.0,

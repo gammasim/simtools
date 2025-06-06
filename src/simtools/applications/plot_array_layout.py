@@ -4,7 +4,6 @@
 Plot array elements (array layouts).
 
 Plot array layouts in ground or UTM coordinate systems from multiple sources.
-A rotation angle in degrees allows to rotate the array before plotting.
 
 For the following options, array element positions are retrieved from the model parameter database:
 
@@ -51,8 +50,6 @@ array_element_list : list
     List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 coordinate_system : str, optional
     Coordinate system for the array layout (ground or utm).
-rotate_angle : float, optional
-    Angle to rotate the array before plotting (in degrees).
 show_labels : bool, optional
     Shows the telescope labels in the plot.
 axes_range : float, optional
@@ -107,7 +104,6 @@ from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from astropy import units as u
 
 import simtools.layout.array_layout_utils as layout_utils
 import simtools.utils.general as gen
@@ -140,13 +136,6 @@ def _parse(label, description, usage=None):
     config.parser.add_argument(
         "--figure_name",
         help="Name of the output figure to be saved into as a pdf.",
-        type=str,
-        required=False,
-        default=None,
-    )
-    config.parser.add_argument(
-        "--rotate_angle",
-        help="Angle to rotate the array (in degrees).",
         type=str,
         required=False,
         default=None,
@@ -282,17 +271,10 @@ def main():
     else:
         background_layout = None
 
-    rotate_angle = (
-        0.0 * u.deg
-        if args_dict["rotate_angle"] is None
-        else float(args_dict["rotate_angle"]) * u.deg
-    )
-
     mpl.use("Agg")
     for layout in layouts:
         fig_out = plot_array_layout(
             telescopes=layout["array_elements"],
-            rotate_angle=rotate_angle,
             show_tel_label=args_dict["show_labels"],
             axes_range=args_dict["axes_range"],
             marker_scaling=args_dict["marker_scaling"],
@@ -304,13 +286,12 @@ def main():
         elif args_dict["site"] is not None:
             site_string = f"_{args_dict['site']}"
         coordinate_system_string = (
-            f"{args_dict['coordinate_system']}_"
+            f"_{args_dict['coordinate_system']}"
             if args_dict["coordinate_system"] not in layout["name"]
             else ""
         )
         plot_file_name = args_dict["figure_name"] or (
-            f"array_layout_{layout['name']}{site_string}_"
-            f"{coordinate_system_string}{round(rotate_angle.to(u.deg).value)!s}deg"
+            f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
         )
 
         visualize.save_figure(

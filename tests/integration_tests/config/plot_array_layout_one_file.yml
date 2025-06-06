@@ -7,7 +7,7 @@ CTA_SIMPIPE:
       ARRAY_LAYOUT_FILE: tests/resources/telescope_positions-North-ground.ecsv
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_telescope_positions-North-ground_0deg.pdf
-    - OUTPUT_FILE: array_layout_telescope_positions-North-ground_0deg.png
+    - OUTPUT_FILE: array_layout_telescope_positions-North-ground.pdf
+    - OUTPUT_FILE: array_layout_telescope_positions-North-ground.png
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
