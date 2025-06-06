@@ -241,21 +241,10 @@ def get_array_layouts_from_parameter_file(
 
     layouts = []
     for layout in value:
-        layout_name = layout["name"]
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site=site,
-            layout_name=layout_name,
-        )
         layouts.append(
-            {
-                "name": layout_name,
-                "site": site,
-                "array_elements": array_model.export_array_elements_as_table(
-                    coordinate_system=coordinate_system
-                ),
-            }
+            _get_array_layout_dict(
+                db_config, model_version, site, None, layout["name"], coordinate_system
+            )
         )
     return layouts
 
@@ -293,20 +282,10 @@ def get_array_layouts_from_db(
 
     layouts = []
     for _layout_name in layout_names:
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site=site,
-            layout_name=_layout_name,
-        )
         layouts.append(
-            {
-                "name": _layout_name,
-                "site": site,
-                "array_elements": array_model.export_array_elements_as_table(
-                    coordinate_system=coordinate_system
-                ),
-            }
+            _get_array_layout_dict(
+                db_config, model_version, site, None, _layout_name, coordinate_system
+            )
         )
     return layouts
 
@@ -348,20 +327,10 @@ def get_array_layouts_using_telescope_lists_from_db(
                 )
             _site = sites.pop()
 
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site=_site,
-            array_elements=telescope_list,
-        )
         layouts.append(
-            {
-                "name": "list",
-                "site": _site,
-                "array_elements": array_model.export_array_elements_as_table(
-                    coordinate_system=coordinate_system
-                ),
-            }
+            _get_array_layout_dict(
+                db_config, model_version, _site, telescope_list, None, coordinate_system
+            )
         )
     return layouts
 
@@ -392,3 +361,23 @@ def get_array_layouts_from_file(file_path):
             }
         )
     return layouts
+
+
+def _get_array_layout_dict(
+    db_config, model_version, site, telescope_list, layout_name, coordinate_system
+):
+    """Return array layout dictionary for a given telescope list."""
+    array_model = ArrayModel(
+        mongo_db_config=db_config,
+        model_version=model_version,
+        site=site,
+        array_elements=telescope_list,
+        layout_name=layout_name,
+    )
+    return {
+        "name": layout_name if layout_name else "list",
+        "site": site,
+        "array_elements": array_model.export_array_elements_as_table(
+            coordinate_system=coordinate_system
+        ),
+    }

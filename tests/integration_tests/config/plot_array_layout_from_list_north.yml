@@ -12,7 +12,7 @@ CTA_SIMPIPE:
       AXES_RANGE: 500.0
       SHOW_LABELS: true
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_list_North_ground_0deg.pdf
-    - OUTPUT_FILE: array_layout_list_North_ground_0deg.png
+    - OUTPUT_FILE: array_layout_list_North_ground.pdf
+    - OUTPUT_FILE: array_layout_list_North_ground.png
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

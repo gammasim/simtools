@@ -2,17 +2,16 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-plot-array-layout
-    TEST_NAME: two_files_rotate
+    TEST_NAME: two_files
     CONFIGURATION:
       ARRAY_LAYOUT_FILE:
       - tests/resources/telescope_positions-North-ground.ecsv
       - tests/resources/telescope_positions-South-ground.ecsv
-      ROTATE_ANGLE: 20
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_telescope_positions-North-ground_20deg.pdf
-    - OUTPUT_FILE: array_layout_telescope_positions-North-ground_20deg.png
-    - OUTPUT_FILE: array_layout_telescope_positions-South-ground_20deg.pdf
-    - OUTPUT_FILE: array_layout_telescope_positions-South-ground_20deg.png
+    - OUTPUT_FILE: array_layout_telescope_positions-North-ground.pdf
+    - OUTPUT_FILE: array_layout_telescope_positions-North-ground.png
+    - OUTPUT_FILE: array_layout_telescope_positions-South-ground.pdf
+    - OUTPUT_FILE: array_layout_telescope_positions-South-ground.png
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

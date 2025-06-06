@@ -8,7 +8,7 @@ CTA_SIMPIPE:
       MODEL_VERSION: 6.0.0
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_hyper_array_North_ground_0deg.pdf
-    - OUTPUT_FILE: array_layout_4mst_North_ground_0deg.pdf
+    - OUTPUT_FILE: array_layout_hyper_array_North_ground.pdf
+    - OUTPUT_FILE: array_layout_4mst_North_ground.pdf
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
