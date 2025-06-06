@@ -209,13 +209,16 @@ def read_layouts(args_dict, db_config, logger):
     """
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
         logger.info("Plotting array from DB using layout array name(s).")
-        return layout_utils.get_array_layouts_from_db(
+        layouts = layout_utils.get_array_layouts_from_db(
             args_dict["array_layout_name"],
             args_dict["site"],
             args_dict["model_version"],
             db_config,
             args_dict["coordinate_system"],
         )
+        if isinstance(layouts, list):
+            return layouts
+        return [layouts]
 
     if args_dict["array_layout_parameter_file"] is not None:
         logger.info("Plotting array from parameter file(s).")
@@ -267,7 +270,7 @@ def main():
             args_dict["model_version"],
             db_config,
             args_dict["coordinate_system"],
-        )[0]["array_elements"]
+        )["array_elements"]
     else:
         background_layout = None
 

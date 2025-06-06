@@ -365,12 +365,14 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
             mongo_db_config=db_config,
             model_version=model_version,
             site="north",
+            array_elements=None,
             layout_name="array1",
         ),
         mocker.call(
             mongo_db_config=db_config,
             model_version=model_version,
             site="north",
+            array_elements=None,
             layout_name="array2",
         ),
     ]
@@ -411,19 +413,18 @@ def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
     )
 
     # Expected: a list with one dict corresponding to the provided layout_name.
-    expected = [
-        {
-            "name": layout_name,
-            "site": site,
-            "array_elements": fake_table,
-        }
-    ]
+    expected = {
+        "name": layout_name,
+        "site": site,
+        "array_elements": fake_table,
+    }
 
     # Assert that ArrayModel was initialized with the correct parameters.
     mock_array_model.assert_called_once_with(
         mongo_db_config=db_config,
         model_version=model_version,
         site=site,
+        array_elements=None,
         layout_name=layout_name,
     )
     instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
@@ -483,12 +484,14 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
             mongo_db_config=db_config,
             model_version=model_version,
             site=site,
+            array_elements=None,
             layout_name="layout1",
         ),
         mocker.call(
             mongo_db_config=db_config,
             model_version=model_version,
             site=site,
+            array_elements=None,
             layout_name="layout2",
         ),
     ]
