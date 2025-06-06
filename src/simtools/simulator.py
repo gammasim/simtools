@@ -464,20 +464,22 @@ class Simulator:
         keys = ["output", "sub_out", "log", "input", "hist", "corsika_log", "event_data"]
         results = {key: [] for key in keys}
 
-        def get(name, **kwargs):
+        def get_file_name(name, **kwargs):
             return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
 
         if "sim_telarray" in self.simulation_software:
             results["input"].append(str(file))
 
-        results["sub_out"].append(get("sub_log", mode="out", run_number=run_number))
+        results["sub_out"].append(get_file_name("sub_log", mode="out", run_number=run_number))
 
         for i in range(len(self.array_models)):
-            results["output"].append(get("output", run_number=run_number, model_version_index=i))
+            results["output"].append(
+                get_file_name("output", run_number=run_number, model_version_index=i)
+            )
 
             if "sim_telarray" in self.simulation_software:
                 results["log"].append(
-                    get(
+                    get_file_name(
                         "log",
                         simulation_software="sim_telarray",
                         run_number=run_number,
@@ -485,7 +487,7 @@ class Simulator:
                     )
                 )
                 results["hist"].append(
-                    get(
+                    get_file_name(
                         "histogram",
                         simulation_software="sim_telarray",
                         run_number=run_number,
@@ -493,7 +495,7 @@ class Simulator:
                     )
                 )
                 results["event_data"].append(
-                    get(
+                    get_file_name(
                         "event_data",
                         simulation_software="sim_telarray",
                         run_number=run_number,
@@ -503,7 +505,7 @@ class Simulator:
 
             if "corsika" in self.simulation_software:
                 results["corsika_log"].append(
-                    get(
+                    get_file_name(
                         "corsika_log",
                         simulation_software="corsika",
                         run_number=run_number,
