@@ -704,7 +704,10 @@ def test_save_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
 
 def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
-    mock_event_data_files = ["output_file1.event_data.hdf5", "output_file2.event_data.hdf5"]
+    mock_event_data_files = [
+        "output_file1.reduced_event_data.hdf5",
+        "output_file2.reduced_event_data.hdf5",
+    ]
     mocker.patch.object(
         array_simulator,
         "get_file_list",
@@ -728,12 +731,12 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     assert mock_io_table_handler.write_tables.call_count == 2
     mock_io_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
-        output_file=Path("output_file1.event_data.hdf5"),
+        output_file=Path("output_file1.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
     mock_io_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
-        output_file=Path("output_file2.event_data.hdf5"),
+        output_file=Path("output_file2.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
 

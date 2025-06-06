@@ -191,7 +191,7 @@ class RunnerServices:
             "output": ".zst",
             "corsika_output": ".corsika.zst",
             "simtel_output": ".simtel.zst",
-            "event_data": ".event_data.hdf5",
+            "event_data": ".reduced_event_data.hdf5",
         }
         run_dir = self._get_run_number_string(run_number)
         data_run_dir = self.directory["data"].joinpath(run_dir)
