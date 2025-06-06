@@ -4,9 +4,12 @@ import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io_operations import io_handler
+from simtools.model.array_model import ArrayModel
+from simtools.model.site_model import SiteModel
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
@@ -205,3 +208,178 @@ def validate_array_layouts_with_db(production_table, array_layouts):
         raise ValueError(f"Invalid array elements found: {invalid_array_elements}. ")
 
     return array_layouts
+
+
+def get_array_layouts_from_parameter_file(
+    file_path, model_version, db_config, coordinate_system="ground"
+):
+    """
+    Retrieve array layouts from parameter file.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the array layout parameter file.
+    model_version : str
+        Model version to retrieve.
+    db_config : dict
+        Database configuration.
+    coordinate_system : str
+        Coordinate system to use for the array elements (default is "ground").
+
+    Returns
+    -------
+    list
+        List of dictionaries containing array layout names and their elements.
+    """
+    array_layouts = gen.collect_data_from_file(file_path)
+    try:
+        value = array_layouts["value"]
+    except KeyError as exc:
+        raise ValueError("Missing 'value' key in layout file.") from exc
+    site = array_layouts.get("site")
+
+    layouts = []
+    for layout in value:
+        layouts.append(
+            _get_array_layout_dict(
+                db_config, model_version, site, None, layout["name"], coordinate_system
+            )
+        )
+    return layouts
+
+
+def get_array_layouts_from_db(
+    layout_name, site, model_version, db_config, coordinate_system="ground"
+):
+    """
+    Retrieve all array layouts from the database and return as list of astropy tables.
+
+    Parameters
+    ----------
+    layout_name : str
+        Name of the array layout to retrieve (for None, all layouts are retrieved).
+    site : str
+        Site identifier.
+    model_version : str
+        Model version to retrieve.
+    db_config : dict
+        Database configuration.
+    coordinate_system : str
+        Coordinate system to use for the array elements (default is "ground").
+
+    Returns
+    -------
+    list
+        List of dictionaries containing array layout names and their elements.
+    """
+    layout_names = []
+    if layout_name:
+        layout_names.append(layout_name)
+    else:
+        site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
+        layout_names = site_model.get_list_of_array_layouts()
+
+    layouts = []
+    for _layout_name in layout_names:
+        layouts.append(
+            _get_array_layout_dict(
+                db_config, model_version, site, None, _layout_name, coordinate_system
+            )
+        )
+    if len(layouts) == 1:
+        return layouts[0]
+    return layouts
+
+
+def get_array_layouts_using_telescope_lists_from_db(
+    telescope_lists, site, model_version, db_config, coordinate_system="ground"
+):
+    """
+    Retrieve array layouts from the database using telescope lists.
+
+    Parameters
+    ----------
+    telescope_lists : list
+        List of telescope lists to retrieve array layouts for.
+    site : str
+        Site identifier.
+    model_version : str
+        Model version to retrieve.
+    db_config : dict
+        Database configuration.
+    coordinate_system : str
+        Coordinate system to use for the array elements (default is "ground").
+
+    Returns
+    -------
+    list
+        List of dictionaries containing array layout names and their elements.
+
+    """
+    layouts = []
+    for telescope_list in telescope_lists:
+        _site = site
+        if _site is None:
+            sites = {names.get_site_from_array_element_name(t) for t in telescope_list}
+            if len(sites) != 1:
+                raise ValueError(
+                    f"Telescope list contains elements from multiple sites: {sites}."
+                    "Please specify a site."
+                )
+            _site = sites.pop()
+
+        layouts.append(
+            _get_array_layout_dict(
+                db_config, model_version, _site, telescope_list, None, coordinate_system
+            )
+        )
+    return layouts
+
+
+def get_array_layouts_from_file(file_path):
+    """
+    Retrieve array layout(s) from astropy table file(s).
+
+    Parameters
+    ----------
+    file_path : str or Path or list of str or list of Path
+        Path(s) to array layout files(s).
+
+    Returns
+    -------
+    list
+        List of dictionaries containing array layout names and their elements.
+    """
+    if isinstance(file_path, str | Path):
+        file_path = [file_path]
+
+    layouts = []
+    for _file in file_path:
+        layouts.append(
+            {
+                "name": (Path(_file).name).split(".")[0],
+                "array_elements": data_reader.read_table_from_file(file_name=_file),
+            }
+        )
+    return layouts
+
+
+def _get_array_layout_dict(
+    db_config, model_version, site, telescope_list, layout_name, coordinate_system
+):
+    """Return array layout dictionary for a given telescope list."""
+    array_model = ArrayModel(
+        mongo_db_config=db_config,
+        model_version=model_version,
+        site=site,
+        array_elements=telescope_list,
+        layout_name=layout_name,
+    )
+    return {
+        "name": layout_name if layout_name else "list",
+        "site": site,
+        "array_elements": array_model.export_array_elements_as_table(
+            coordinate_system=coordinate_system
+        ),
+    }

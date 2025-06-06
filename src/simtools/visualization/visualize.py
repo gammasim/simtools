@@ -8,24 +8,16 @@ from collections import OrderedDict
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from astropy.table import Column, QTable
+from astropy.table import QTable
 from cycler import cycler
 from matplotlib import gridspec
-from matplotlib.collections import PatchCollection
-
-from simtools.utils import geometry as transf
-from simtools.utils import names
-from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
     "get_colors",
     "get_lines",
     "get_markers",
-    "get_telescope_patch",
     "plot_1d",
-    "plot_array",
     "plot_hist_2d",
     "plot_table",
     "save_figure",
@@ -635,214 +627,6 @@ def plot_hist_2d(data, **kwargs):
     return fig
 
 
-@u.quantity_input(x=u.m, y=u.m, radius=u.m)
-def get_telescope_patch(name, x, y, radius):
-    """
-    Collect the patch of one telescope to be plotted by plot_array.
-
-    Parameters
-    ----------
-    name: str
-        Name of the telescope (type).
-    x: astropy.units.Quantity
-        x position of the telescope usually in meters.
-    y: astropy.units.Quantity
-        y position of the telescope usually in meters.
-    radius: astropy.units.Quantity
-        Radius of the telescope sphere usually in meters.
-
-    Returns
-    -------
-    patch
-        Instance of mpatches.Circle.
-    """
-    tel_obj = leg_h.TelescopeHandler()
-    valid_name = names.get_array_element_type_from_name(name)
-    fill_flag = False
-
-    x = x.to(u.m)
-    y = y.to(u.m)
-    radius = radius.to(u.m)
-
-    if valid_name.startswith("MST"):
-        fill_flag = True
-    if valid_name == "SCTS":
-        patch = mpatches.Rectangle(
-            ((x - radius / 2).value, (y - radius / 2).value),
-            width=radius.value,
-            height=radius.value,
-            fill=False,
-            color=tel_obj.colors_dict["SCTS"],
-        )
-    else:
-        patch = mpatches.Circle(
-            (x.value, y.value),
-            radius=radius.value,
-            fill=fill_flag,
-            color=tel_obj.colors_dict[valid_name],
-        )
-    return patch
-
-
-@u.quantity_input(rotate_angle=u.deg)
-def plot_array(
-    telescopes, rotate_angle=0, show_tel_label=False, axes_range=None, marker_scaling=1.0
-):
-    """
-    Plot the array of telescopes.
-
-    The x axis gives the easting direction and y axis gives the northing direction.
-    Note that in order to convert from the CORSIKA coordinate system to the 'conventional' system
-    of North/East, a 90 degree rotation is always applied.
-    Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
-    or in radians.
-    The direction of rotation of the array elements is counterclockwise.
-    The rotation does not change Telescope instance attributes.
-
-    Parameters
-    ----------
-    telescopes: astropy.table
-        Table with the telescope position and names. Note the orientation of the axes.
-    rotate_angle:
-        Angle to rotate the plot. For rotate_angle = 0 the resulting plot will have
-        the x-axis pointing towards the east, and the y-axis pointing towards the North.
-    show_tel_label: bool
-        If True it will print the label of the individual telescopes in the plot.
-        While it works well for the smaller arrays, it gets crowded for larger arrays.
-    axes_range : float
-        Axis range for both axes. Range is from -plot_range to plot_range.
-    maker_scaling : float
-        Scaling factor for marker size to be plotted.
-
-    Returns
-    -------
-    plt.figure
-        Instance of plt.figure with the array of telescopes plotted.
-    """
-    fig, ax = plt.subplots(1)
-    legend_objects = []
-    legend_labels = []
-    tel_counters = initialize_tel_counters()
-
-    pos_x_rotated, pos_y_rotated = get_rotated_positions(telescopes, rotate_angle)
-    telescopes.add_column(Column(pos_x_rotated, name="pos_x_rotated"))
-    telescopes.add_column(Column(pos_y_rotated, name="pos_y_rotated"))
-
-    fontsize, scale = get_plot_params(len(pos_x_rotated))
-    patches = create_patches(
-        telescopes, scale, marker_scaling, show_tel_label, ax, fontsize, tel_counters
-    )
-
-    update_legend(ax, tel_counters, legend_objects, legend_labels)
-    finalize_plot(ax, patches, x_title="Easting [m]", y_title="Northing [m]", axes_range=axes_range)
-
-    return fig
-
-
-def initialize_tel_counters():
-    return dict.fromkeys(names.get_list_of_array_element_types(), 0)
-
-
-def get_rotated_positions(telescopes, rotate_angle):
-    pos_x_rotated = pos_y_rotated = None
-    if "position_x" in telescopes.colnames and "position_y" in telescopes.colnames:
-        pos_x_rotated, pos_y_rotated = telescopes["position_x"], telescopes["position_y"]
-        rotate_angle = rotate_angle + 90.0 * u.deg
-    elif "utm_east" in telescopes.colnames and "utm_north" in telescopes.colnames:
-        pos_x_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
-    else:
-        raise ValueError(
-            "Telescopes table must contain either 'position_x'/'position_y'"
-            "or 'utm_east'/'utm_north' columns"
-        )
-    if rotate_angle != 0:
-        pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, rotate_angle)
-    return pos_x_rotated, pos_y_rotated
-
-
-def get_plot_params(position_length):
-    if position_length > 30:
-        return 4, 2
-    return 8, 1
-
-
-def create_patches(telescopes, scale, marker_scaling, show_tel_label, ax, fontsize, tel_counters):
-    patches = []
-    for tel_now in telescopes:
-        telescope_name = get_telescope_name(tel_now)
-        update_tel_counters(tel_counters, telescope_name)
-        sphere_radius = get_sphere_radius(tel_now)
-        i_tel_name = names.get_array_element_type_from_name(telescope_name)
-        patches.append(
-            get_telescope_patch(
-                i_tel_name,
-                tel_now["pos_x_rotated"],
-                tel_now["pos_y_rotated"],
-                scale * sphere_radius * marker_scaling,
-            )
-        )
-        if show_tel_label:
-            ax.text(
-                tel_now["pos_x_rotated"].value,
-                tel_now["pos_y_rotated"].value + scale * sphere_radius.value,
-                telescope_name,
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                fontsize=fontsize,
-            )
-    return patches
-
-
-def get_telescope_name(tel_now):
-    """Get the telescope name from the table row."""
-    try:
-        return tel_now["telescope_name"]
-    except KeyError:
-        return tel_now["asset_code"] + "-" + tel_now["sequence_number"]
-
-
-def update_tel_counters(tel_counters, telescope_name):
-    """Update the counter for the given telescope type."""
-    for tel_type in tel_counters:
-        if tel_type in telescope_name:
-            tel_counters[tel_type] += 1
-
-
-def get_sphere_radius(tel_now):
-    """Get the sphere radius of the telescope."""
-    return 1.0 * u.m if "sphere_radius" not in tel_now.colnames else tel_now["sphere_radius"]
-
-
-def update_legend(ax, tel_counters, legend_objects, legend_labels):
-    """Update the legend with the telescope counts."""
-    for one_telescope in names.get_list_of_array_element_types():
-        if tel_counters[one_telescope] > 0:
-            legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
-            legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
-    legend_handler_map = {k: v() for k, v in leg_h.legend_handler_map.items()}
-    ax.legend(
-        legend_objects,
-        legend_labels,
-        handler_map=legend_handler_map,
-        prop={"size": 11},
-        loc="best",
-    )
-
-
-def finalize_plot(ax, patches, x_title, y_title, axes_range):
-    """Finalize the plot by adding titles, setting limits, and adding patches."""
-    ax.add_collection(PatchCollection(patches, match_original=True))
-    ax.set_xlabel(x_title, fontsize=12, labelpad=0)
-    ax.set_ylabel(y_title, fontsize=12, labelpad=0)
-    ax.tick_params(axis="both", which="major", labelsize=8)
-    ax.set_axisbelow(True)
-    ax.axis("square")
-    if axes_range is not None:
-        ax.set_xlim(-axes_range, axes_range)
-        ax.set_ylim(-axes_range, axes_range)
-    plt.tight_layout()
-
-
 def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):
     """
     Read in a sim_telarray file and plots reconstructed photoelectrons via ctapipe.
@@ -942,7 +726,7 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     return fig
 
 
-def save_figure(fig, output_file, figure_format=None, log_title=""):
+def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"):
     """
     Save figure to output file(s).
 
@@ -960,7 +744,7 @@ def save_figure(fig, output_file, figure_format=None, log_title=""):
     figure_format = figure_format or ["pdf", "png"]
     for fmt in figure_format:
         _file = Path(output_file).with_suffix(f".{fmt}")
-        fig.savefig(_file, format=fmt, bbox_inches="tight")
+        fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
