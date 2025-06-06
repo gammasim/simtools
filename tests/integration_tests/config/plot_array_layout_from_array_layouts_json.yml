@@ -2,13 +2,13 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-plot-array-layout
-    TEST_NAME: one_file_with_name_with_extension
+    TEST_NAME: from_array_layouts_json
     CONFIGURATION:
-      ARRAY_LAYOUT_FILE: tests/resources/telescope_positions-North-ground.ecsv
+      ARRAY_LAYOUT_PARAMETER_FILE: tests/resources/model_parameters/array_layouts-2.0.1.json
       MODEL_VERSION: 6.0.0
-      FIGURE_NAME: test.png
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: test.png
+    - OUTPUT_FILE: array_layout_hyper_array_North_ground.pdf
+    - OUTPUT_FILE: array_layout_4mst_North_ground.pdf
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
