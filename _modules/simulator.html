@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=7efee4d0"></script>
+    <script src="../_static/documentation_options.js?v=98f05ceb"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulator';</script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfa3f752" />
+  <meta name="docsearch:version" content="0.1.dev1+geaf24ea" />
   </head>
   
   
@@ -408,11 +408,12 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.corsika_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span><span class="p">,</span> <span class="n">io_table_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.job_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">JobManager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.array_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.corsika_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.corsika_simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaSimtelRunner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventDataWriter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_array</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorArray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.testing.sim_telarray_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_sim_telarray_metadata</span>
 
@@ -864,62 +865,55 @@
 <span class="sd">            run number</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;sub_out&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">,</span> <span class="s2">&quot;sub_out&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="s2">&quot;event_data&quot;</span><span class="p">]</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_file_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
             <span class="n">results</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
 
-        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span>
-                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span>
-                    <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_file_name</span><span class="p">(</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">))</span>
 
-        <span class="k">for</span> <span class="n">model_version_index</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">):</span>
-            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="nb">str</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
-                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
-                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">)):</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">get_file_name</span><span class="p">(</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span> <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
             <span class="p">)</span>
+
             <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
                 <span class="n">results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="nb">str</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
-                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
-                            <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
-                            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
-                        <span class="p">)</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;log&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">results</span><span class="p">[</span><span class="s2">&quot;hist&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="nb">str</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
-                            <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
-                            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
-                        <span class="p">)</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;event_data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;event_data&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
             <span class="k">if</span> <span class="s2">&quot;corsika&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
                 <span class="n">results</span><span class="p">[</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="nb">str</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span>
-                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span>
-                            <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
-                            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
-                        <span class="p">)</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
@@ -928,11 +922,11 @@
 
 <div class="viewcode-block" id="Simulator.get_file_list">
 <a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.get_file_list">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of files generated by simulations.</span>
 
-<span class="sd">        Options are &quot;input&quot;, &quot;output&quot;, &quot;hist&quot;, &quot;log&quot;, &quot;corsika_log&quot;.</span>
+<span class="sd">        Options are &quot;input&quot;, &quot;simtel_output&quot;, &quot;hist&quot;, &quot;log&quot;, &quot;corsika_log&quot;.</span>
 <span class="sd">        Not all file types are available for all simulation types.</span>
 <span class="sd">        Returns an empty list for an unknown file type.</span>
 
@@ -953,11 +947,11 @@
 
 <div class="viewcode-block" id="Simulator.print_list_of_files">
 <a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.print_list_of_files">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">print_list_of_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_list_of_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print list of output files generated by simulations.</span>
 
-<span class="sd">        Options are &quot;input&quot;, &quot;output&quot;, &quot;hist&quot;, &quot;log&quot;.</span>
+<span class="sd">        Options are &quot;input&quot;, &quot;simtel_output&quot;, &quot;hist&quot;, &quot;log&quot;.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1057,7 +1051,7 @@
 <a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.save_file_lists">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_file_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Save files lists for output and log files.&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">file_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">file_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">]:</span>
             <span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">_files.txt&quot;</span>
             <span class="p">)</span>
@@ -1069,6 +1063,32 @@
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files to save for </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulator.save_reduced_event_lists">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.save_reduced_event_lists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_reduced_event_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save reduced event lists with event data on simulated and triggered events.</span>
+
+<span class="sd">        The files are saved with the same name as the sim_telarray output file</span>
+<span class="sd">        but with a &#39;hdf5&#39; extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Reduced event lists can only be saved for sim_telarray simulations.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">input_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
+        <span class="n">output_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;event_data&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_files</span><span class="p">):</span>
+            <span class="n">generator</span> <span class="o">=</span> <span class="n">SimtelIOEventDataWriter</span><span class="p">([</span><span class="n">input_file</span><span class="p">])</span>
+            <span class="n">io_table_handler</span><span class="o">.</span><span class="n">write_tables</span><span class="p">(</span>
+                <span class="n">tables</span><span class="o">=</span><span class="n">generator</span><span class="o">.</span><span class="n">process_files</span><span class="p">(),</span>
+                <span class="n">output_file</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">),</span>
+                <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Simulator.pack_for_register">
@@ -1088,10 +1108,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Packing the output files for registering on the grid (</span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
-        <span class="n">output_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
+        <span class="n">output_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
         <span class="n">log_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
         <span class="n">corsika_log_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">)</span>
         <span class="n">histogram_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;hist&quot;</span><span class="p">)</span>
+        <span class="n">reduced_event_files</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;event_data&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save_reduced_event_lists&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
 
         <span class="n">directory_for_grid_upload</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">directory_for_grid_upload</span><span class="p">)</span>
@@ -1121,11 +1146,12 @@
                 <span class="n">tar_file_path</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">)</span>
 
                 <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_file_path</span><span class="p">,</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                    <span class="c1"># Add all relevant log, histogram, and CORSIKA log files to the tarball</span>
                     <span class="n">files_to_tar</span> <span class="o">=</span> <span class="n">model_logs</span> <span class="o">+</span> <span class="n">model_hists</span> <span class="o">+</span> <span class="n">model_corsika_logs</span>
                     <span class="k">for</span> <span class="n">file_to_tar</span> <span class="ow">in</span> <span class="n">files_to_tar</span><span class="p">:</span>
                         <span class="n">tar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">file_to_move</span> <span class="ow">in</span> <span class="n">output_files</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file_to_move</span> <span class="ow">in</span> <span class="n">output_files</span> <span class="o">+</span> <span class="n">reduced_event_files</span><span class="p">:</span>
             <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_to_move</span><span class="p">)</span>
             <span class="n">destination_file</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span> <span class="o">/</span> <span class="n">source_file</span><span class="o">.</span><span class="n">name</span>
             <span class="k">if</span> <span class="n">destination_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -1144,7 +1170,7 @@
             <span class="k">return</span>
 
         <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
-            <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
             <span class="n">output_file</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating metadata for </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
