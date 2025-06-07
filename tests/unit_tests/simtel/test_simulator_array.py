@@ -37,7 +37,7 @@ def test_make_run_command(simtel_runner):
     assert "sim_telarray" in run_command
     assert "-run" in run_command
     assert "3" in run_command
-    assert "test-simtel-runner.zst" in run_command
+    assert "test-simtel-runner.simtel.zst" in run_command
     assert "test_make_run_command.inp" in run_command
     assert "random_seed" not in run_command
 

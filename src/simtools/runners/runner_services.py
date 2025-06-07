@@ -191,6 +191,7 @@ class RunnerServices:
             "output": ".zst",
             "corsika_output": ".corsika.zst",
             "simtel_output": ".simtel.zst",
+            "event_data": ".reduced_event_data.hdf5",
         }
         run_dir = self._get_run_number_string(run_number)
         data_run_dir = self.directory["data"].joinpath(run_dir)
@@ -261,7 +262,7 @@ class RunnerServices:
         if file_type in ["log", "histogram", "corsika_log"]:
             return self._get_log_file_path(file_type, file_name)
 
-        if file_type in ["output", "corsika_output", "simtel_output"]:
+        if file_type in ["output", "corsika_output", "simtel_output", "event_data"]:
             return self._get_data_file_path(file_type, file_name, run_number)
 
         if file_type in ("sub_log", "sub_script"):
