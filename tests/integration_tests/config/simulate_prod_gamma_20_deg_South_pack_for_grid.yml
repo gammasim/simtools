@@ -26,6 +26,6 @@ CTA_SIMPIPE:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.zst
+        FILE: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.simtel.zst
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
