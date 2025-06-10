@@ -116,6 +116,16 @@ def _parse(description=None):
         default=False,
     )
     config.parser.add_argument(
+        "--save_reduced_event_lists",
+        help=(
+            "Save reduced event lists with event data on simulated and triggered events. "
+            "Saved with the same name as the sim_telarray output file (different extension). "
+        ),
+        action="store_true",
+        required=False,
+        default=False,
+    )
+    config.parser.add_argument(
         "--corsika_test_seeds",
         help="Use predefined random seeds for CORSIKA for testing purposes.",
         action="store_true",
@@ -176,6 +186,8 @@ def main():  # noqa: D103
         f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
         f"at {args_dict['site']} site, using {args_dict['model_version']} model."
     )
+    if args_dict["save_reduced_event_lists"]:
+        simulator.save_reduced_event_lists()
     if args_dict.get("pack_for_grid_register"):
         simulator.pack_for_register(args_dict["pack_for_grid_register"])
     if args_dict["save_file_lists"]:
