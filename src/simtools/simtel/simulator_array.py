@@ -71,7 +71,7 @@ class SimulatorArray(SimtelRunner):
         config_dir = self.corsika_config.array_model.get_config_directory()
         self._log_file = self.get_file_name(file_type="log", run_number=run_number)
         histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
-        output_file = self.get_file_name(file_type="output", run_number=run_number)
+        output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
         self.corsika_config.array_model.export_all_simtel_config_files()
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
@@ -124,7 +124,7 @@ class SimulatorArray(SimtelRunner):
         InvalidOutputFileError
             If simtel output file does not exist.
         """
-        output_file = self.get_file_name(file_type="output", run_number=run_number)
+        output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
         if not output_file.exists():
             msg = f"sim_telarray output file {output_file} does not exist."
             self._logger.error(msg)
