@@ -12,11 +12,12 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_operations import io_handler
+from simtools.io_operations import io_handler, io_table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 
@@ -143,6 +144,7 @@ class Simulator:
                     ],
                     "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
                 },
+                simtel_path=self.args_dict.get("simtel_path", None),
             )
             for version in versions
         ]
@@ -459,73 +461,66 @@ class Simulator:
             run number
 
         """
-        keys = ["output", "sub_out", "log", "input", "hist", "corsika_log"]
+        keys = ["simtel_output", "sub_out", "log", "input", "hist", "corsika_log", "event_data"]
         results = {key: [] for key in keys}
+
+        def get_file_name(name, **kwargs):
+            return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
 
         if "sim_telarray" in self.simulation_software:
             results["input"].append(str(file))
 
-        results["sub_out"].append(
-            str(
-                self._simulation_runner.get_file_name(
-                    file_type="sub_log",
-                    mode="out",
-                    run_number=run_number,
-                )
-            )
-        )
+        results["sub_out"].append(get_file_name("sub_log", mode="out", run_number=run_number))
 
-        for model_version_index, _ in enumerate(self.array_models):
-            results["output"].append(
-                str(
-                    self._simulation_runner.get_file_name(
-                        file_type="output",
-                        run_number=run_number,
-                        model_version_index=model_version_index,
-                    )
-                )
+        for i in range(len(self.array_models)):
+            results["simtel_output"].append(
+                get_file_name("simtel_output", run_number=run_number, model_version_index=i)
             )
+
             if "sim_telarray" in self.simulation_software:
                 results["log"].append(
-                    str(
-                        self._simulation_runner.get_file_name(
-                            file_type="log",
-                            simulation_software="sim_telarray",
-                            run_number=run_number,
-                            model_version_index=model_version_index,
-                        )
+                    get_file_name(
+                        "log",
+                        simulation_software="sim_telarray",
+                        run_number=run_number,
+                        model_version_index=i,
                     )
                 )
                 results["hist"].append(
-                    str(
-                        self._simulation_runner.get_file_name(
-                            file_type="histogram",
-                            simulation_software="sim_telarray",
-                            run_number=run_number,
-                            model_version_index=model_version_index,
-                        )
+                    get_file_name(
+                        "histogram",
+                        simulation_software="sim_telarray",
+                        run_number=run_number,
+                        model_version_index=i,
                     )
                 )
+                results["event_data"].append(
+                    get_file_name(
+                        "event_data",
+                        simulation_software="sim_telarray",
+                        run_number=run_number,
+                        model_version_index=i,
+                    )
+                )
+
             if "corsika" in self.simulation_software:
                 results["corsika_log"].append(
-                    str(
-                        self._simulation_runner.get_file_name(
-                            file_type="corsika_log",
-                            simulation_software="corsika",
-                            run_number=run_number,
-                            model_version_index=model_version_index,
-                        )
+                    get_file_name(
+                        "corsika_log",
+                        simulation_software="corsika",
+                        run_number=run_number,
+                        model_version_index=i,
                     )
                 )
 
         for key in keys:
             self._results[key].extend(results[key])
 
-    def get_file_list(self, file_type="output"):
+    def get_file_list(self, file_type="simtel_output"):
         """
         Get list of files generated by simulations.
 
-        Options are "input", "output", "hist", "log", "corsika_log".
+        Options are "input", "simtel_output", "hist", "log", "corsika_log".
         Not all file types are available for all simulation types.
         Returns an empty list for an unknown file type.
 
@@ -543,11 +538,11 @@ class Simulator:
         self._logger.info(f"Getting list of {file_type} files")
         return self._results[file_type]
 
-    def print_list_of_files(self, file_type="output"):
+    def print_list_of_files(self, file_type="simtel_output"):
         """
         Print list of output files generated by simulations.
 
-        Options are "input", "output", "hist", "log".
+        Options are "input", "simtel_output", "hist", "log".
 
         Parameters
         ----------
@@ -641,7 +636,7 @@ class Simulator:
 
     def save_file_lists(self):
         """Save files lists for output and log files."""
-        for file_type in ["output", "log", "corsika_log", "hist"]:
+        for file_type in ["simtel_output", "log", "corsika_log", "hist"]:
             file_name = self.io_handler.get_output_directory(label=self.label).joinpath(
                 f"{file_type}_files.txt"
             )
@@ -653,6 +648,29 @@ class Simulator:
                         f.write(f"{line}\n")
             else:
                 self._logger.debug(f"No files to save for {file_type} files.")
+
+    def save_reduced_event_lists(self):
+        """
+        Save reduced event lists with event data on simulated and triggered events.
+
+        The files are saved with the same name as the sim_telarray output file
+        but with a 'hdf5' extension.
+        """
+        if "sim_telarray" not in self.simulation_software:
+            self._logger.warning(
+                "Reduced event lists can only be saved for sim_telarray simulations."
+            )
+            return
+
+        input_files = self.get_file_list(file_type="simtel_output")
+        output_files = self.get_file_list(file_type="event_data")
+        for input_file, output_file in zip(input_files, output_files):
+            generator = SimtelIOEventDataWriter([input_file])
+            io_table_handler.write_tables(
+                tables=generator.process_files(),
+                output_file=Path(output_file),
+                overwrite_existing=True,
+            )
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """
@@ -669,10 +687,15 @@ class Simulator:
         self._logger.info(
             f"Packing the output files for registering on the grid ({directory_for_grid_upload})"
         )
-        output_files = self.get_file_list(file_type="output")
+        output_files = self.get_file_list(file_type="simtel_output")
         log_files = self.get_file_list(file_type="log")
         corsika_log_files = self.get_file_list(file_type="corsika_log")
         histogram_files = self.get_file_list(file_type="hist")
+        reduced_event_files = (
+            self.get_file_list(file_type="event_data")
+            if self.args_dict.get("save_reduced_event_lists")
+            else []
+        )
 
         directory_for_grid_upload = (
             Path(directory_for_grid_upload)
@@ -702,11 +725,12 @@ class Simulator:
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
 
                 with tarfile.open(tar_file_path, "w:gz") as tar:
+                    # Add all relevant log, histogram, and CORSIKA log files to the tarball
                     files_to_tar = model_logs + model_hists + model_corsika_logs
                     for file_to_tar in files_to_tar:
                         tar.add(file_to_tar, arcname=Path(file_to_tar).name)
 
-        for file_to_move in output_files:
+        for file_to_move in output_files + reduced_event_files:
             source_file = Path(file_to_move)
             destination_file = directory_for_grid_upload / source_file.name
             if destination_file.exists():
@@ -722,7 +746,7 @@ class Simulator:
             return
 
         for model in self.array_models:
-            files = self.get_file_list(file_type="output")
+            files = self.get_file_list(file_type="simtel_output")
             output_file = next((f for f in files if model.model_version in f), None)
             if output_file:
                 self._logger.info(f"Validating metadata for {output_file}")

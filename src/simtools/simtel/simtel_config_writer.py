@@ -54,12 +54,20 @@ class SimtelConfigWriter:
         Layout name.
     label: str
         Instance label. Important for output file naming.
+    simtel_path: str or Path
+        Path to the sim_telarray installation directory.
     """
 
     TAB = " " * 3
 
     def __init__(
-        self, site, model_version, layout_name=None, telescope_model_name=None, label=None
+        self,
+        site,
+        model_version,
+        layout_name=None,
+        telescope_model_name=None,
+        label=None,
+        simtel_path=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -70,10 +78,9 @@ class SimtelConfigWriter:
         self._label = label
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
+        self._simtel_path = simtel_path
 
-    def write_telescope_config_file(
-        self, config_file_path, parameters, telescope_name=None, write_dummy_config=False
-    ):
+    def write_telescope_config_file(self, config_file_path, parameters, telescope_name=None):
         """
         Write the sim_telarray config file for a single telescope.
 
@@ -85,8 +92,6 @@ class SimtelConfigWriter:
             Model parameters
         telescope_name: str
             Name of the telescope (use self._telescope_model_name if None)
-        write_dummy_config: bool
-            Flag to write a dummy telescope configuration file.
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
@@ -97,8 +102,6 @@ class SimtelConfigWriter:
             file.write("#ifdef TELESCOPE\n")
             file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
             file.write("#endif\n\n")
-            if write_dummy_config:
-                file.write("#define DUMMY_CONFIG 1\n")
 
             for par, value in parameters.items():
                 simtel_name, value = self._convert_model_parameters_to_simtel_format(
@@ -252,6 +255,8 @@ class SimtelConfigWriter:
             file.write(self.TAB + f"echo ModelVersion: {self._model_version}\n")
             file.write(self.TAB + "echo *****************************\n\n")
 
+            self._write_simtools_parameters(file)
+
             self._write_site_parameters(
                 file,
                 site_model.parameters,
@@ -391,6 +396,23 @@ class SimtelConfigWriter:
         header += f"{comment_char}{50 * '='}\n"
         header += f"{comment_char}\n"
         file.write(header)
+
+    def _write_simtools_parameters(self, file):
+        """Write simtools-specific parameters."""
+        meta_items = {
+            "simtools_version": simtools.version.__version__,
+            "simtools_model_production_version": self._model_version,
+        }
+        try:
+            build_opts = gen.collect_data_from_file(Path(self._simtel_path) / "build_opts.yml")
+            for key, value in build_opts.items():
+                meta_items[f"simtools_{key}"] = value
+        except (FileNotFoundError, TypeError):
+            pass  # don't expect build_opts.yml to be present on all systems
+
+        file.write(f"{self.TAB}% Simtools parameters\n")
+        for key, value in meta_items.items():
+            file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, sim_telarray_seeds=None
@@ -556,9 +578,9 @@ class SimtelConfigWriter:
             "disc_bins": 10,
             "fadc_sum_bins": 10,
             "fadc_sum_offset": 0,
-            "asum_threshold": 0,
-            "dsum_threshold": 0,
-            "discriminator_threshold": 1,
+            "asum_threshold": 9999,
+            "dsum_threshold": 9999,
+            "discriminator_threshold": 9999,
             "fadc_amplitude": 1.0,
             "discriminator_amplitude": 1.0,
         }
@@ -567,9 +589,7 @@ class SimtelConfigWriter:
             if key in parameters:
                 parameters[key]["value"] = val
 
-        self.write_telescope_config_file(
-            config_file_path, parameters, telescope_name, write_dummy_config=True
-        )
+        self.write_telescope_config_file(config_file_path, parameters, telescope_name)
 
         config_file_directory = Path(config_file_path).parent
         self._write_dummy_mirror_list_files(config_file_directory, telescope_name)

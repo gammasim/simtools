@@ -5,14 +5,11 @@ from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from astropy.table import QTable
 
 import simtools.utils.general as gen
-from simtools.utils import names
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
@@ -96,40 +93,6 @@ def test_add_unit(caplog, wavelength):
 
     value_with_unit = [30, 40] * u.cm**2
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
-
-
-def test_get_telescope_patch(io_handler):
-    def test_one_site(x, y):
-        _test_radius = 15.0
-        for tel_type in names.get_list_of_array_element_types():
-            patch = visualize.get_telescope_patch(tel_type, x, y, _test_radius * u.m)
-            if mpatches.Circle is type(patch):
-                assert patch.radius == _test_radius
-            else:
-                assert isinstance(patch, mpatches.Rectangle)
-
-    test_one_site(0 * u.m, 0 * u.m)
-    test_one_site(0 * u.m, 0 * u.m)
-    # Test passing other units
-    test_one_site(0 * u.m, 0 * u.km)
-    test_one_site(0 * u.cm, 0 * u.km)
-    with pytest.raises(TypeError):
-        test_one_site(0, 0)
-
-
-def test_plot_array(
-    telescope_north_test_file,
-    telescope_south_test_file,
-    telescope_north_utm_test_file,
-):
-    def test_one_site(test_table):
-        fig_out = visualize.plot_array(QTable.read(test_table), rotate_angle=0 * u.deg)
-        assert isinstance(fig_out, type(plt.figure()))
-        plt.close()
-
-    test_one_site(telescope_north_test_file)
-    test_one_site(telescope_south_test_file)
-    test_one_site(telescope_north_utm_test_file)
 
 
 def test_save_figure(tmp_test_directory, io_handler):

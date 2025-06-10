@@ -48,6 +48,7 @@ simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
+simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
@@ -58,6 +59,7 @@ simtools-run-application <applications/simtools-run-application>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
+simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
 simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
 simtools-validate-camera-efficiency <applications/simtools-validate-camera-efficiency>
@@ -65,3 +67,4 @@ simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema  <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-verify-simulation-model-production-tables <applications/simtools-verify-simulation-model-production-tables>
