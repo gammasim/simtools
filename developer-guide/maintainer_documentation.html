@@ -38,14 +38,14 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1ceae671"></script>
+    <script src="../_static/documentation_options.js?v=2f380abe"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/maintainer_documentation';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Continuous Integration" href="continuous_integration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfba31bf" />
+  <meta name="docsearch:version" content="0.1.dev1+g57c70dd" />
   </head>
   
   
@@ -434,6 +434,7 @@ The change files in the <code class="docutils literal notranslate"><span class="
 <p>To prepare a release, the following steps are required:</p>
 <ol class="arabic simple">
 <li><p>Open a pull request to prepare a release.  Run the changelog workflow using Towncrier to add entries to <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code>. This should be the last pull request to be merged before making the actual release.</p></li>
+<li><p>Add a new line to <a class="reference internal" href="#docs/_static/switcher.json"><span class="xref myst">docs/_static/switcher.json</span></a> indicating the new version.</p></li>
 <li><p>Prepare a GitHub release with the version number and a summary of the changes.</p></li>
 <li><p>Pypi deployment is done automatically by the CI/CD pipeline.</p></li>
 <li><p>Docker images are automatically built, tagged with the version number, and pushed to the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">gammasim/simtools</a>.</p></li>
