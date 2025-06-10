@@ -86,6 +86,7 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL"
 
       - name: Create environment file (local DB)
         if: github.event_name != 'schedule'

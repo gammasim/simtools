@@ -210,7 +210,7 @@ def test_fill_results_without_run(array_simulator, input_file_list):
 def test_simulate_shower_simulator(shower_simulator):
     shower_simulator._test = True
     shower_simulator.simulate()
-    assert len(shower_simulator._results["output"]) > 0
+    assert len(shower_simulator._results["simtel_output"]) > 0
     assert len(shower_simulator._results["sub_out"]) > 0
     run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
     assert Path(run_script).exists()
@@ -220,7 +220,7 @@ def test_simulate_array_simulator(array_simulator, corsika_file):
     array_simulator._test = True
     array_simulator.simulate(input_file_list=corsika_file)
 
-    assert len(array_simulator._results["output"]) > 0
+    assert len(array_simulator._results["simtel_output"]) > 0
     assert len(array_simulator._results["sub_out"]) > 0
 
 
@@ -228,7 +228,7 @@ def test_simulate_shower_array_simulator(shower_array_simulator):
     shower_array_simulator._test = True
     shower_array_simulator.simulate()
 
-    assert len(shower_array_simulator._results["output"]) > 0
+    assert len(shower_array_simulator._results["simtel_output"]) > 0
     assert len(shower_array_simulator._results["sub_out"]) > 0
 
 
@@ -284,7 +284,7 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
     for simulator_now in [array_simulator, shower_array_simulator]:
         for run_number in [1, 2, 22]:
             simulator_now._fill_results(input_file_list[1], run_number=run_number)
-        assert len(simulator_now.get_file_list("output")) == 3
+        assert len(simulator_now.get_file_list("simtel_output")) == 3
         assert len(simulator_now._results["sub_out"]) == 3
         assert len(simulator_now.get_file_list("log")) == 3
         assert len(simulator_now.get_file_list("input")) == 3
@@ -293,15 +293,15 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
         assert simulator_now.get_file_list("input")[1] == "abc_run22"
 
     shower_simulator._fill_results(input_file_list[1], run_number=5)
-    assert len(shower_simulator.get_file_list("output")) == 1
+    assert len(shower_simulator.get_file_list("simtel_output")) == 1
     assert len(shower_simulator.get_file_list("corsika_log")) == 1
     assert len(shower_simulator.get_file_list("hist")) == 0
 
 
 def test_get_list_of_files(shower_simulator):
     test_shower_simulator = copy.deepcopy(shower_simulator)
-    test_shower_simulator._results["output"] = ["file_name"] * 10
-    assert len(test_shower_simulator.get_file_list("output")) == len(shower_simulator.runs)
+    test_shower_simulator._results["simtel_output"] = ["file_name"] * 10
+    assert len(test_shower_simulator.get_file_list("simtel_output")) == len(shower_simulator.runs)
     assert len(test_shower_simulator.get_file_list("not_a_valid_file_type")) == 0
 
 
@@ -361,19 +361,19 @@ def test_get_runs_to_simulate(shower_simulator):
 def test_save_file_lists(shower_simulator, mocker, caplog):
     with caplog.at_level(logging.DEBUG):
         shower_simulator.save_file_lists()
-    assert "No files to save for output files." in caplog.text
+    assert "No files to save for simtel_output files." in caplog.text
 
     mock_shower_simulator = copy.deepcopy(shower_simulator)
     mocker.patch.object(mock_shower_simulator, "get_file_list", return_value=["file1", "file2"])
 
     with caplog.at_level(logging.INFO):
         mock_shower_simulator.save_file_lists()
-    assert "Saving list of output files to" in caplog.text
+    assert "Saving list of simtel_output files to" in caplog.text
 
     mocker.patch.object(mock_shower_simulator, "get_file_list", return_value=[None, None])
     with caplog.at_level(logging.DEBUG):
         mock_shower_simulator.save_file_lists()
-    assert "No files to save for output files." in caplog.text
+    assert "No files to save for simtel_output files." in caplog.text
 
 
 def test_pack_for_register(array_simulator, mocker, model_version, caplog):
@@ -694,3 +694,59 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
         sequential=shower_array_simulator.args_dict.get("sequential", False),
         keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
     )
+
+
+def test_save_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
+    with caplog.at_level(logging.WARNING):
+        shower_simulator.save_reduced_event_lists()
+    assert "Reduced event lists can only be saved for sim_telarray simulations." in caplog.text
+
+
+def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
+    mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
+    mock_event_data_files = [
+        "output_file1.reduced_event_data.hdf5",
+        "output_file2.reduced_event_data.hdf5",
+    ]
+    mocker.patch.object(
+        array_simulator,
+        "get_file_list",
+        side_effect=lambda file_type: mock_output_files
+        if file_type == "simtel_output"
+        else mock_event_data_files,
+    )
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.simulator.SimtelIOEventDataWriter", return_value=mock_generator
+    )
+    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+
+    array_simulator.save_reduced_event_lists()
+
+    assert mock_simtel_io_writer.call_count == 2
+    mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
+    mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
+
+    assert mock_io_table_handler.write_tables.call_count == 2
+    mock_io_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("output_file1.reduced_event_data.hdf5"),
+        overwrite_existing=True,
+    )
+    mock_io_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("output_file2.reduced_event_data.hdf5"),
+        overwrite_existing=True,
+    )
+
+
+def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
+    mocker.patch.object(array_simulator, "get_file_list", return_value=[])
+    mock_simtel_io_writer = mocker.patch("simtools.simulator.SimtelIOEventDataWriter")
+    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+
+    array_simulator.save_reduced_event_lists()
+
+    mock_simtel_io_writer.assert_not_called()
+    mock_io_table_handler.write_tables.assert_not_called()
