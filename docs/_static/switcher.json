@@ -1,4 +1,5 @@
 [
-  {"version": "dev", "url": "https://gammasim.github.io/simtools/", "preferred": true},
-  {"version": "v0.16.0", "url": "https://gammasim.github.io/simtools/v0.16.0/"}
+  {"version": "latest", "url": "https://gammasim.github.io/simtools/", "preferred": true},
+  {"version": "v0.16.0", "url": "https://gammasim.github.io/simtools/v0.16.0/"},
+  {"version": "v0.17.0", "url": "https://gammasim.github.io/simtools/v0.17.0/"}
 ]
