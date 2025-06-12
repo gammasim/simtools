@@ -13,7 +13,7 @@ There are four options to install simtools for users:
 
 - [using conda](condainstallation)
 - [using pip](pipinstallation)
-- using Git and pip (this is the recommended method for developers) (see [Developer Installation](../developer-guide/getting_started.md))
+- using Git and pip (this is the recommended method for developers) (see [Developer Installation](../developer-guide/getting_started_as_developer.md))
 - [using a docker container](dockerinstallation) with all software installed
 
 All simtools applications are available as command-line tools.
