@@ -246,7 +246,6 @@ def _create_pixel_plot(
     )
     _add_legend(ax, on_pixels, off_pixels)
 
-    plt.tight_layout()
     return fig
 
 

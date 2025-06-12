@@ -7,6 +7,57 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.17.0](https://github.com/gammasim/simtools/tree/0.17.0) - 2025-06-10
+
+### Bugfixes
+
+- Fix data type of 'dsum_threshold' parameter. ([#1557](https://github.com/gammasim/simtools/pull/1557))
+- Add missing neutrons to eventio particle IDs. ([#1584](https://github.com/gammasim/simtools/pull/1584))
+- Fix suffix for sim_telarray output files: no correctly `simtel.zst` (was `.zst` only) ([#1588](https://github.com/gammasim/simtools/pull/1588))
+
+### Documentation
+
+- Change documentation theme to pydata and add version switcher. ([#1560](https://github.com/gammasim/simtools/pull/1560))
+- Update documentation on how to run jobs using HT Condor. ([#1563](https://github.com/gammasim/simtools/pull/1563))
+
+### New Features
+
+- Add pixel layout plotting. ([#1541](https://github.com/gammasim/simtools/pull/1541))
+- Enable docker-image generation for vector-optimized CORSIKA 7.8. ([#1550](https://github.com/gammasim/simtools/pull/1550))
+- Add the sequential option to simulations using multipipe. With this option the CORSIKA and sim_telarray instances run in sequential order as far as possible. This mode is useful particularly on the grid, where typically we request a single core per job. ([#1561](https://github.com/gammasim/simtools/pull/1561))
+- Add reading and conversion of primary_id from sim_telarray output. ([#1570](https://github.com/gammasim/simtools/pull/1570))
+- Update `simtools-generate-simtel-event-data` to use astropy tables. ([#1573](https://github.com/gammasim/simtools/pull/1573))
+- Generalize table reading and writing. Add application to merge tables. ([#1580](https://github.com/gammasim/simtools/pull/1580))
+- Write reduced event data file as part of the cleanup stage of the simtools-simulate-prod application. ([#1588](https://github.com/gammasim/simtools/pull/1588))
+- Use patches for optimized CORSIKA from gitlab repository instead of cloud download. ([#1589](https://github.com/gammasim/simtools/pull/1589))
+- New utility simtools-verify-simulation-model-production-tables to verify completeness of model parameter repository. ([#1592](https://github.com/gammasim/simtools/pull/1592))
+- Add custom copilot instructions to support AI used by developers. ([#1594](https://github.com/gammasim/simtools/pull/1594))
+- Add new application `simtools-submit-array-layouts` to submit new array-layouts definition and validate the telescopes listed. ([#1596](https://github.com/gammasim/simtools/pull/1596))
+- Improve layout plotting; adding plotting of background layout. Add plotting of all layouts. ([#1597](https://github.com/gammasim/simtools/pull/1597))
+- Improve printout for assertion error for testing. ([#1598](https://github.com/gammasim/simtools/pull/1598))
+- Add production version and build options to sim_telarrary metadata. ([#1601](https://github.com/gammasim/simtools/pull/1601))
+
+### Maintenance
+
+- Add unit tests to increase coverage in interpolation handler. ([#1504](https://github.com/gammasim/simtools/pull/1504))
+- Docker file improvements: linter application; bugfix in extra flags for optimized CORSIKA compilation. ([#1544](https://github.com/gammasim/simtools/pull/1544))
+- Include stdout and stderr in error message of integration test. ([#1555](https://github.com/gammasim/simtools/pull/1555))
+- Add pytest-retry package for 'flaky test'. ([#1558](https://github.com/gammasim/simtools/pull/1558))
+- Reduce number of log-messages (INFO) for uploaded model parameters to DB. ([#1559](https://github.com/gammasim/simtools/pull/1559))
+- Replace the "run_number_start" argument with "run_number_offset" (clearer) and re-introduce the "run_number" argument to allow specifying a run number (to which the offset is added). ([#1562](https://github.com/gammasim/simtools/pull/1562))
+- Use telescope position files for setup in illuminator application and set correct obs level. ([#1566](https://github.com/gammasim/simtools/pull/1566))
+- Improve the names of the various simulation output files. They now follow the current convention in current productions, they contain a bit more information (e.g., the model version where it wasn't there before), and they are more consistent with each other. ([#1568](https://github.com/gammasim/simtools/pull/1568))
+- Improved interface and interpolation routines to derive production configuration. This creates a pipeline for lookup table generation, production grid generation, creating a grid with limits, which is then further complemented by the production statistics per grid point. ([#1569](https://github.com/gammasim/simtools/pull/1569))
+- Fix unit test to run with astropy 7.1 (and earlier versions) (see #1574). ([#1575](https://github.com/gammasim/simtools/pull/1575))
+- Simplified Sonar setup by moving properties into GitHub workflow. ([#1578](https://github.com/gammasim/simtools/pull/1578))
+- Introduce simplified Codecov configuration. ([#1579](https://github.com/gammasim/simtools/pull/1579))
+- Copy the CORSIKA log in binary mode instead of text mode. ([#1582](https://github.com/gammasim/simtools/pull/1582))
+- Protect against non-unicode characters in CORSIKA log file. ([#1583](https://github.com/gammasim/simtools/pull/1583))
+- Remove obsolete code on submission systems in JobManager. ([#1586](https://github.com/gammasim/simtools/pull/1586))
+- Change dummy trigger thresholds to easier-to-spot values. ([#1591](https://github.com/gammasim/simtools/pull/1591))
+- Fix duplication of some sim_telarray test files in './tests/resources' and corresponding test fixtures. ([#1593](https://github.com/gammasim/simtools/pull/1593))
+
+
 ## [v0.16.0](https://github.com/gammasim/simtools/tree/v0.16.0) - 2025-05-05
 
 ### Documentation

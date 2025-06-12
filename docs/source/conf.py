@@ -138,8 +138,8 @@ html_theme_options = {
     ],
     "navigation_with_keys": False,
     "switcher": {
-        "json_url": "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json",
-        "version_match": "dev",
+        "json_url": "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json",
+        "version_match": "latest",
     },
     "check_switcher": True,
     "logo": {
