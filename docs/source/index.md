@@ -6,12 +6,10 @@ sphinx:
   config:
     html_theme_options:
       show_toc: false
-      secondary_sidebar_title: ""
+      secondary_sidebar_title: "simtools"
       secondary_sidebar_items: []
 html_theme.sidebar_secondary.remove: true
 ---
-
-(simtools)=
 
 ```{image} ../_static/simtools_logo.png
 :align: center
@@ -24,8 +22,6 @@ html_theme.sidebar_secondary.remove: true
 
 **simtools** is toolkit for model parameter management, production configuration, setting, validation workflows.
 It is part of the simulation pipeline [SimPipe](http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/) of the [Cherenkov Telescope Array Observatory (CTAO)](https://www.cta-observatory.org/).
-
-
 
 ````{div} sd-d-flex-row
 ```{button-ref} user-guide/getting_started
