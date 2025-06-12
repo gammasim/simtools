@@ -28,6 +28,6 @@ CTA_SIMPIPE:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.zst
+        FILE: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.simtel.zst
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

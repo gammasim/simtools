@@ -22,10 +22,11 @@ Simtools releases are versioned following the [Semantic Versioning 2.0.0](https:
 To prepare a release, the following steps are required:
 
 1. Open a pull request to prepare a release.  Run the changelog workflow using Towncrier to add entries to `CHANGELOG.md`. This should be the last pull request to be merged before making the actual release.
-2. Prepare a GitHub release with the version number and a summary of the changes.
-3. Pypi deployment is done automatically by the CI/CD pipeline.
-4. Docker images are automatically built, tagged with the version number, and pushed to the [gammasim/simtools](https://github.com/orgs/gammasim/packages?repo_name=simtools).
-5. A DOI is issued automatically by Zenodo.
+2. Add a new line to [docs/_static/switcher.json](docs/_static/switcher.json) indicating the new version.
+3. Prepare a GitHub release with the version number and a summary of the changes.
+4. Pypi deployment is done automatically by the CI/CD pipeline.
+5. Docker images are automatically built, tagged with the version number, and pushed to the [gammasim/simtools](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+6. A DOI is issued automatically by Zenodo.
 
 ## Conda feedstock
 
