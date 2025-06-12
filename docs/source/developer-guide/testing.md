@@ -2,9 +2,9 @@
 
 Automatic code testing is absolutely essential for the development of simtools. It ensures that the code is working as expected and that new features do not break existing functionality.
 
-:::{important}
+```{important}
 Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.
-:::
+```
 
 The testing should be done at two levels:
 
@@ -41,11 +41,11 @@ Fixtures should therefore include a docstring.
 Unit tests should be written for every module and function and should test the result of individual functions ("units").
 It is recommended to write unit tests in parallel with the modules to assure that the code is testable.
 
-:::{warning}
+```{important}
 The simtools project aims for a high test coverage.
 Code lines without coverage should be the exception and the aim should be to achieve a coverage close to 100%
 (the CTAO quality requirements aim for a coverage of at least 80%).
-:::
+```
 
 Check the test coverage with `pytest -n auto --cov-report-html  tests/unit_tests/ tests/integration_tests/`.
 Coverage reports can be accessed through the `htmlcov/index.html` file.

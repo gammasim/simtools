@@ -1,5 +1,3 @@
-(pull-requests)=
-
 # Pull requests
 
 Pull requests are one of our most important and powerful development tools.
