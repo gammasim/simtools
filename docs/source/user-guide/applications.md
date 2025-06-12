@@ -8,7 +8,7 @@ Application are the building blocks of simtools.
 Important: depending on the installation type, applications are named differently:
 
 - users (see {ref}`InstallationForUsers`) call applications directly as command-line tool. Applications names `simtools-<application name` (with all `_` replaced by `-`)
-- developers (see [installation for developers](../developer-guide/getting_started.md#devinstallationfordevelopers)) call applications as described throughout this documentation: `python src/simtools/applications/<application name> ....`
+- developers call applications as described throughout this documentation: `python src/simtools/applications/<application name> ....`
 
 Each application is configured as described in {ref}`Configuration`.
 The available arguments can be accessed by calling the `<application name> --help`.
