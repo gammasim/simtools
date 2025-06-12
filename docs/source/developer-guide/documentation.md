@@ -10,19 +10,19 @@ Docstrings are written in RST format following the [numpydoc](https://numpydoc.r
 Documentation pages are written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html), although RST
 is also possible (but not preferred)).
 
-:::{Caution}
+```{caution}
 Each application requires a small RST file (e.g., [get_file_from_db.rst](https://github.com/gammasim/simtools/tree/main/docs/source/get_file_from_db.rst]))
 to avoid Sphinx warnings regarding duplicated labels (sphinx generates those pages using the sphinx.autodoc extension)
-:::
+```
 
 ## Building
 
 For writing and testing documentation locally:
 
 ```bash
-    cd docs
-    make clean
-    make html
+cd docs
+make clean
+make html
 ```
 
 This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted
