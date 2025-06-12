@@ -118,10 +118,6 @@ These files should be kept at minimum and are stored in the [tests/resources](ht
 
 Data files required by integration tests are downloaded during testing from the simulation model database.
 
-Some auxiliary files can be found in the
-[data directory](https://github.com/gammasim/simtools/tree/main/data).
-Note that this is under review and might go away in near future.
-
 ## Input validation
 
 ```{warning}

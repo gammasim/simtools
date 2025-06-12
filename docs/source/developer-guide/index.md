@@ -1,6 +1,6 @@
 # Developer Guide
 
-## Contributing to `simtools`
+## Contribute
 
 This section outlines how to contribute effectively to the `simtools` project.
 
@@ -8,7 +8,7 @@ This section outlines how to contribute effectively to the `simtools` project.
 - [First Steps](developer_guidelines.md): How to begin contributing.
 - [Coding Guidelines](coding_guidelines.md): Code style and best practices.
 - [Pull Requests](pull_requests.md): How to open a PR via [GitHub](https://github.com/gammasim/simtools/pulls).
-- [Documentation](documentation.md): Contributing to user and developer docs.
+- [Documentation](documentation.md): Contributing to user and developer documentation.
 - [Testing](testing.md): Writing unit and integration tests.
 
 ## Automatic Processes
@@ -27,6 +27,10 @@ All software components of `simtools` are available through containers.
 
 - [Release Process](releases.md): How to prepare and publish a release.
 
+## Working with Databases
+
+- [Simulation Models Database](databases_for_developers.md): How to setup, test, and update the simulation models database.
+
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -39,4 +43,5 @@ testing.md
 continuous_integration.md
 build.md
 releases.md
+databases_for_developers.md
 ```

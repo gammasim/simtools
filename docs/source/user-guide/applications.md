@@ -1,21 +1,48 @@
-(applications)=
+# `simtools` command-line tools
 
-# simtools Applications
+`simtools` are applications that execute a well defined task.
+The naming convention for simtools is `simtools-<application name>`, where `<application name>` is the name of the application in lower-case snake-case format.
 
-Applications are python scripts built on the {ref}`Library` that execute a well defined task.
-Application are the building blocks of simtools.
+## Configuration
 
-Important: depending on the installation type, applications are named differently:
+Applications in simtools are configured by the following four equivalent approaches:
 
-- users (see {ref}`InstallationForUsers`) call applications directly as command-line tool. Applications names `simtools-<application name` (with all `_` replaced by `-`)
-- developers call applications as described throughout this documentation: `python src/simtools/applications/<application name> ....`
+1. command-line arguments
+2. configuration files (in yaml format)
+3. configuration dictionary when calling the {ref}`Configurator <configurationconfigurator>` class
+4. environment variables
 
-Each application is configured as described in {ref}`Configuration`.
-The available arguments can be accessed by calling the `<application name> --help`.
+To illustrate this, the example below sets the path pointing towards the directory for all data products.
 
-Some applications require one or multiple filenames as input from the command-line options. The system will
-first search on main simtools directory for these files, and in case it is not found, it will
-search into the directories given by the config parameter *model_path*.
+Set the output directory using a command-line argument:
+
+```console
+python applications/<application_name> --output_path <path name>
+```
+
+Set the output directory using a configuration file in yaml format:
+
+```yaml
+config_file: <path name>
+```
+
+Load the yaml configuration file into the application with:
+
+```console
+python applications/<application_name> --config <my_config.yml>
+```
+
+Configuration parameter read from a environmental variable:
+
+```console
+EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
+```
+
+Configuration methods can be combined; conflicting configuration settings raise an Exception.
+Configuration parameters are generally expected in lower-case snake-make case.
+Configuration parameters for each application are printed to screen when executing the application with the `--help` option.
+Parameters with the same functionality are named consistently the same among all applications.
+
 
 ## List of applications
 
