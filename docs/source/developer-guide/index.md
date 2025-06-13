@@ -21,11 +21,7 @@ This section outlines how to contribute effectively to the `simtools` project.
 All software components of `simtools` are available through containers.
 
 - using simtools containers: [Docker files](../user-guide/docker_files.md)
-- building containers: [Building Docker Containers](build.md):
-
-## Release Management
-
-- [Release Process](releases.md): How to prepare and publish a release.
+- building containers: [Building Docker Containers](../build-simtools/build.md):
 
 ## Working with Databases
 
@@ -41,7 +37,5 @@ pull_requests.md
 documentation.md
 testing.md
 continuous_integration.md
-build.md
-releases.md
 databases_for_developers.md
 ```
