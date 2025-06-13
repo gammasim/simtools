@@ -1,6 +1,4 @@
-(releases)=
-
-# Prepare and Deploy a Release of simtools
+# Prepare and Deploy
 
 ```{note}
 The steps described in this document are intended for maintainers of the simtools project.

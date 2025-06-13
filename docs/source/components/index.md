@@ -4,12 +4,12 @@ simtools provides tools to configure, run, and analyze simulations and to manage
 
 ## Simulation Software
 
-- [CORSIKA](corsika.md): Air shower simulation software.
-- [sim_telarray](sim_telarray.md): Telescope simulation software for ray tracing, triggering, and camera-level simulation.
-
 ```{note}
 Simulation software is external to simtools and developed by the respective teams. The integration of these components into simtools is done through interfaces, allowing for flexibility and future updates.
 ```
+
+- [CORSIKA](corsika.md): Air shower simulation software.
+- [sim_telarray](sim_telarray.md): Telescope simulation software for ray tracing, triggering, and camera-level simulation.
 
 ## Simulation Models
 
