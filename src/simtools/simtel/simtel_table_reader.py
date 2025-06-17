@@ -159,7 +159,7 @@ def _data_columns_mirror_reflectivity(n_dim=None):
             _columns.append(
                 {
                     "name": f"reflectivity_{angle}deg",
-                    "description": f"Mirror reflectivity at {angle}°",
+                    "description": f"Mirror reflectivity at {angle} deg",
                     "unit": None,
                 }
             )
@@ -282,7 +282,7 @@ def _data_columns_secondary_mirror_reflectivity(n_dim=None):
             columns.append(
                 {
                     "name": f"reflectivity_{angle}deg",
-                    "description": f"Reflectivity at {angle}°",
+                    "description": f"Reflectivity at {angle} deg",
                     "unit": None,
                 }
             )

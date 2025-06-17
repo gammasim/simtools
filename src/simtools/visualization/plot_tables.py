@@ -82,7 +82,7 @@ def _handle_reflectivity_data(table, config):
     angle_columns = [c for c in table.colnames if c.startswith("reflectivity_")]
     for col in angle_columns:
         angle = col.replace("reflectivity_", "").replace("deg", "")
-        label = f"{config.get('label', '')} {angle}°"
+        label = f"{config.get('label', '')} {angle} deg"
         data[label] = gen.get_structure_array_from_table(table, ["wavelength", col])
     return data
 
