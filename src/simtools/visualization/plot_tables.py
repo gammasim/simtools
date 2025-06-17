@@ -82,7 +82,7 @@ def _handle_reflectivity_data(table, config):
     angle_columns = [c for c in table.colnames if c.startswith("reflectivity_")]
     for col in angle_columns:
         angle = col.replace("reflectivity_", "").replace("deg", "")
-        label = f"{config.get('label', '')} {angle} deg"
+        label = f"{config.get('label', '')} {angle}°"
         data[label] = gen.get_structure_array_from_table(table, ["wavelength", col])
     return data
 
@@ -156,6 +156,9 @@ def read_table_data(config, db_config):
             elif not table_config.get("label"):
                 table_config["label"] = parameter
 
+            # For mirror list plots, set linestyle to empty string (dots only)
+            if parameter and "mirror_list" in parameter:
+                updated_config["linestyle"] = ""
             # Prepare and store data
             data[table_config["label"]] = _prepare_table_data(table, table_config)
 

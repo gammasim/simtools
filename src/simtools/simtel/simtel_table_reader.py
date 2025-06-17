@@ -189,7 +189,6 @@ def _data_columns_primary_mirror_segmentation():
 def _data_columns_mirror_list():
     """Column description for mirror list parameters."""
     return [
-        {"name": "mirror_id", "description": "Mirror ID", "unit": None},
         {"name": "x_pos", "description": "X position", "unit": "m"},
         {"name": "y_pos", "description": "Y position", "unit": "m"},
         {"name": "z_pos", "description": "Z position", "unit": "m"},
@@ -265,7 +264,6 @@ def _data_columns_dsum_shaping():
 def _data_columns_fake_mirror_list():
     """Column description for fake mirror list parameters."""
     return [
-        {"name": "mirror_id", "description": "Mirror ID", "unit": None},
         {"name": "x_pos", "description": "X Position", "unit": "m"},
         {"name": "y_pos", "description": "Y Position", "unit": "m"},
         {"name": "z_pos", "description": "Z Position", "unit": "m"},
