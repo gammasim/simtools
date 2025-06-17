@@ -67,7 +67,11 @@ class ReadParameters:
     def _convert_to_md(self, parameter, parameter_version, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
+        if not input_file.exists():
+            self._logger.exception(f"Data file not found: {input_file}.")
+            raise FileNotFoundError(f"Data file not found: {input_file}.")
 
+        logger.info(f"Plotting parameter file {input_file}")
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
@@ -138,30 +142,24 @@ class ReadParameters:
                     "Parameter file plot already exists: %s", image_path.with_suffix(".png")
                 )
 
-        try:
-            # with input_file.open("r", encoding="utf-8") as infile:
-            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+        file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
 
-            if self.model_version is not None:
-                with output_file.open("w", encoding="utf-8") as outfile:
-                    outfile.write(f"# {input_file.stem}\n")
-                    outfile.write(f"![Parameter plot.]({image_path}.png)\n\n")
-                    outfile.write(
-                        "\n\nThe full file can be found in the Simulation Model repository [here]"
-                        "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                        "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                        f"model_parameters/Files/{input_file.name}).\n\n"
-                    )
-                    outfile.write("\n\n")
-                    outfile.write("The first 30 lines of the file are:\n")
-                    outfile.write("```\n")
-                    first_30_lines = "".join(file_contents[:30])
-                    outfile.write(first_30_lines)
-                    outfile.write("\n```")
-
-        except FileNotFoundError as exc:
-            self._logger.exception(f"Data file not found: {input_file}.")
-            raise FileNotFoundError(f"Data file not found: {input_file}.") from exc
+        if self.model_version is not None:
+            with output_file.open("w", encoding="utf-8") as outfile:
+                outfile.write(f"# {input_file.stem}\n")
+                outfile.write(f"![Parameter plot.]({image_path}.png)\n\n")
+                outfile.write(
+                    "\n\nThe full file can be found in the Simulation Model repository [here]"
+                    "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                    "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                    f"model_parameters/Files/{input_file.name}).\n\n"
+                )
+                outfile.write("\n\n")
+                outfile.write("The first 30 lines of the file are:\n")
+                outfile.write("```\n")
+                first_30_lines = "".join(file_contents[:30])
+                outfile.write(first_30_lines)
+                outfile.write("\n```")
 
         return f"_data_files/{output_file_name}"
 
