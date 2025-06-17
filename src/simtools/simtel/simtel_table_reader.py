@@ -16,24 +16,27 @@ logger = logging.getLogger(__name__)
 def _data_columns(parameter_name, n_columns, n_dim):
     """Get column definitions for parameter type."""
     parameter_handlers = {
+        "primary_mirror_segmentation": _data_columns_primary_mirror_segmentation,
         "secondary_mirror_segmentation": _data_columns_secondary_mirror_segmentation,
         "fake_mirror_list": _data_columns_fake_mirror_list,
         "lightguide_efficiency_vs_wavelength": _data_columns_lightguide_efficiency_vs_wavelength,
         "mirror_list": _data_columns_mirror_list,
         "camera_filter": _data_columns_camera_filter,
         "quantum_efficiency": _data_columns_quantum_efficiency,
-        # Only keep lambdas for functions that use n_columns or n_dim
+        "discriminator_pulse_shape": _data_columns_pulse_shape,
+        "fadc_pulse_shape": _data_columns_pulse_shape,
+        "dsum_shaping": _data_columns_pulse_shape,
+        "pm_photoelectron_spectrum": _data_columns_pm_photoelectron_spectrum,
+        "atmospheric_profile": _data_columns_atmospheric_profile,
+        "nsb_reference_spectrum": _data_columns_nsb_reference_spectrum,
+        "mirror_segmentation": _data_columns_mirror_segmentation,
         "lightguide_efficiency_vs_incidence_angle": (
             lambda: _data_columns_lightguide_efficiency_vs_incidence_angle(n_columns)
         ),
         "mirror_reflectivity": lambda: _data_columns_mirror_reflectivity(n_dim),
-        "discriminator_pulse_shape": _data_columns_pulse_shape(),
-        "fadc_pulse_shape": _data_columns_pulse_shape(),
         "secondary_mirror_reflectivity": (
             lambda: _data_columns_secondary_mirror_reflectivity(n_dim)
         ),
-        "dsum_shaping": _data_columns_pulse_shape(),
-        "pm_photoelectron_spectrum": _data_columns_pm_photoelectron_spectrum,
     }
 
     if parameter_name in parameter_handlers:
@@ -296,17 +299,6 @@ def _data_columns_mirror_segmentation():
         {"name": "y_pos", "description": "Y position", "unit": "m"},
         {"name": "z_pos", "description": "Z position", "unit": "m"},
     ], "Primary mirror segmentation layout"
-
-
-def _handle_hex_format(value):
-    """Handle hex format in data files."""
-    try:
-        if isinstance(value, str) and value.lower() == "hex":
-            return 0.0  # Default value for hex format
-        return float(value)
-    except ValueError:
-        logger.warning(f"Could not convert value '{value}' to float")
-        return 0.0
 
 
 def read_simtel_table(parameter_name, file_path):
