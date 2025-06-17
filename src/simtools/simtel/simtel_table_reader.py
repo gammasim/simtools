@@ -14,35 +14,33 @@ logger = logging.getLogger(__name__)
 
 
 def _data_columns(parameter_name, n_columns, n_dim):
-    """
-    Get column information for a given parameter.
+    """Get column definitions for parameter type."""
+    parameter_handlers = {
+        "secondary_mirror_segmentation": _data_columns_secondary_mirror_segmentation,
+        "fake_mirror_list": _data_columns_fake_mirror_list,
+        "lightguide_efficiency_vs_wavelength": _data_columns_lightguide_efficiency_vs_wavelength,
+        "mirror_list": _data_columns_mirror_list,
+        "camera_filter": _data_columns_camera_filter,
+        "quantum_efficiency": _data_columns_quantum_efficiency,
+        # Only keep lambdas for functions that use n_columns or n_dim
+        "lightguide_efficiency_vs_incidence_angle": (
+            lambda: _data_columns_lightguide_efficiency_vs_incidence_angle(n_columns)
+        ),
+        "mirror_reflectivity": lambda: _data_columns_mirror_reflectivity(n_dim),
+        "discriminator_pulse_shape": _data_columns_pulse_shape(),
+        "fadc_pulse_shape": _data_columns_pulse_shape(),
+        "secondary_mirror_reflectivity": (
+            lambda: _data_columns_secondary_mirror_reflectivity(n_dim)
+        ),
+        "dsum_shaping": _data_columns_pulse_shape(),
+        "pm_photoelectron_spectrum": _data_columns_pm_photoelectron_spectrum,
+    }
 
-    Individual functions are adapted to the specific format of the sim_telarray tables.
+    if parameter_name in parameter_handlers:
+        handler = parameter_handlers[parameter_name]
+        return handler() if callable(handler) else handler
 
-    Parameters
-    ----------
-    parameter_name: str
-        Model parameter name.
-    n_columns: int
-        Number of columns in the table.
-    n_dim: list
-        List of columns for n-dimensional tables defined by RPOL lines.
-
-    Returns
-    -------
-    list, str
-        List of columns for n-dimensional tables, description.
-    """
-    if parameter_name == "mirror_reflectivity":
-        return _data_columns_mirror_reflectivity(n_columns, n_dim)
-    if parameter_name in ("discriminator_pulse_shape", "fadc_pulse_shape"):
-        return _data_columns_pulse_shape(n_columns)
-    try:
-        return globals()[f"_data_columns_{parameter_name}"]()
-    except KeyError as exc:
-        raise ValueError(
-            f"Unsupported parameter for sim_telarray table reading: {parameter_name}"
-        ) from exc
+    raise ValueError(f"Unsupported parameter for sim_telarray table reading: {parameter_name}")
 
 
 def _data_columns_atmospheric_profile():
@@ -78,43 +76,21 @@ def _data_columns_atmospheric_profile():
 
 
 def _data_columns_pm_photoelectron_spectrum():
-    """Column description for parameter pm_photoelectron_spectrum."""
-    return (
-        [
-            {"name": "amplitude", "description": "Signal amplitude", "unit": None},
-            {
-                "name": "response",
-                "description": "response without afterpulsing component",
-                "unit": None,
-            },
-            {
-                "name": "response_with_ap",
-                "description": "response including afterpulsing component",
-                "unit": None,
-            },
-        ],
-        "Photoelectron spectrum",
-    )
+    """Column description for PM photoelectron spectrum."""
+    return [
+        {"name": "amplitude", "description": "Signal amplitude", "unit": "pe"},
+        {"name": "response", "description": "Response", "unit": None},
+        {"name": "response_with_ap", "description": "Response with afterpulsing", "unit": None},
+    ], "Photoelectron spectrum"
 
 
 def _data_columns_quantum_efficiency():
     """Column description for parameter quantum_efficiency."""
-    return (
-        [
-            {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
-            {
-                "name": "efficiency",
-                "description": "Quantum efficiency",
-                "unit": None,
-            },
-            {
-                "name": "efficiency_rms",
-                "description": "Quantum efficiency (standard deviation)",
-                "unit": None,
-            },
-        ],
-        "Quantum efficiency",
-    )
+    return [
+        {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+        {"name": "efficiency", "description": "Quantum Efficiency", "unit": None},
+        {"name": "efficiency_rms", "description": "Quantum Efficiency RMS", "unit": None},
+    ], "Quantum efficiency vs wavelength"
 
 
 def _data_columns_camera_filter():
@@ -134,93 +110,108 @@ def _data_columns_camera_filter():
 
 def _data_columns_lightguide_efficiency_vs_wavelength():
     """Column description for parameter lightguide_efficiency_vs_wavelength."""
-    return _data_columns_lightguide_efficiency_vs_incidence_angle()
-
-
-def _data_columns_lightguide_efficiency_vs_incidence_angle():
-    """Column description for (parameter lightguide_efficiency_vs_incidence_angle."""
-    return (
-        [
-            {"name": "angle", "description": "Incidence angle", "unit": "deg"},
-            {
-                "name": "efficiency",
-                "description": "Light guide efficiency",
-                "unit": None,
-            },
-        ],
-        "Light guide efficiency vs incidence angle",
-    )
-
-
-def _data_columns_mirror_reflectivity(n_columns, n_dim):
-    """Column description for parameter mirror_reflectivity."""
-    _columns = [
+    return [
         {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+        {"name": "efficiency", "description": "Light collection efficiency", "unit": None},
+    ], "Light guide efficiency vs wavelength"
+
+
+def _data_columns_lightguide_efficiency_vs_incidence_angle(n_columns=2):
+    """Column description for lightguide efficiency vs incidence angle parameters."""
+    _columns = [
+        {"name": "angle", "description": "Incidence angle", "unit": "deg"},
+        {"name": "efficiency", "description": "Light collection efficiency", "unit": None},
     ]
+    if n_columns == 3:
+        _columns.append(
+            {
+                "name": "efficiency_rms",
+                "description": "Light guide efficiency RMS",
+                "unit": None,
+            }
+        )
+    return _columns, "Light guide efficiency vs incidence angle"
+
+
+def _data_columns_mirror_reflectivity(n_dim=None):
+    """Column description for mirror reflectivity parameters.
+
+    Parameters
+    ----------
+    n_columns : int
+        Number of columns in the data (2 or 3 for RMS)
+    n_dim : list, optional
+        List of angles for multi-dimensional reflectivity data
+
+    Returns
+    -------
+    tuple
+        (column definitions, description string)
+    """
+    _columns = [{"name": "wavelength", "description": "Wavelength", "unit": "nm"}]
+
     if n_dim:
-        for angle in n_dim:
+        # Multi-dimensional data with angles
+        for angle in [0, 10, 20, 30, 40, 50, 60, 70, 80]:
             _columns.append(
                 {
                     "name": f"reflectivity_{angle}deg",
-                    "description": f"Mirror reflectivity at {angle} deg",
+                    "description": f"Mirror reflectivity at {angle}°",
                     "unit": None,
-                },
+                }
             )
     else:
+        # Standard reflectivity data
         _columns.append(
             {
                 "name": "reflectivity",
                 "description": "Mirror reflectivity",
                 "unit": None,
-            },
+            }
         )
-        if n_columns == 3:
-            _columns.append(
-                {
-                    "name": "reflectivity_rms",
-                    "description": "Mirror reflectivity (standard deviation)",
-                    "unit": None,
-                },
-            )
-        if n_columns == 4:
-            _columns.append(
-                {
-                    "name": "reflectivity_min",
-                    "description": "Mirror reflectivity (min)",
-                    "unit": None,
-                },
-            )
-            _columns.append(
-                {
-                    "name": "reflectivity_max",
-                    "description": "Mirror reflectivity (max)",
-                    "unit": None,
-                },
-            )
 
     return _columns, "Mirror reflectivity"
 
 
-def _data_columns_pulse_shape(n_columns):
-    """Column description for parameters discriminator_pulse_shape, fadc_pulse_shape."""
-    _columns = [
-        {"name": "time", "description": "Time", "unit": "ns"},
-        {
-            "name": "amplitude",
-            "description": "Amplitude",
-            "unit": None,
-        },
-    ]
-    if n_columns == 3:
-        _columns.append(
-            {
-                "name": "amplitude (low gain)",
-                "description": "Amplitude (low gain)",
-                "unit": None,
-            },
-        )
+def _data_columns_primary_mirror_segmentation():
+    """Column description for primary mirror segmentation parameters."""
+    return [
+        {"name": "segment_id", "description": "Mirror segment ID", "unit": None},
+        {"name": "x_pos", "description": "X position", "unit": "m"},
+        {"name": "y_pos", "description": "Y Position", "unit": "m"},
+        {"name": "z_pos", "description": "Z Position", "unit": "m"},
+    ], "Primary mirror segmentation layout"
 
-    return _columns, "Pulse shape"
+
+def _data_columns_mirror_list():
+    """Column description for mirror list parameters."""
+    return [
+        {"name": "mirror_id", "description": "Mirror ID", "unit": None},
+        {"name": "x_pos", "description": "X position", "unit": "m"},
+        {"name": "y_pos", "description": "Y position", "unit": "m"},
+        {"name": "z_pos", "description": "Z position", "unit": "m"},
+        {"name": "size", "description": "Mirror size", "unit": "m"},
+    ], "Mirror positions and sizes"
+
+
+def _data_columns_pulse_shape():
+    """Column description for pulse shape parameters.
+
+    Parameters
+    ----------
+    n_columns : int, optional
+        Number of columns in the data file (default: 2)
+
+    Returns
+    -------
+    tuple
+        (column definitions, description string)
+    """
+    columns = [
+        {"name": "time", "description": "Time", "unit": "ns"},
+        {"name": "amplitude", "description": "Amplitude", "unit": None},
+    ]
+    return columns, "Pulse shape vs time"
 
 
 def _data_columns_nsb_reference_spectrum():
@@ -238,27 +229,120 @@ def _data_columns_nsb_reference_spectrum():
     )
 
 
+def _data_columns_secondary_mirror_segmentation():
+    """Column description for secondary mirror segmentation parameters."""
+    return [
+        {"name": "segment_id", "description": "Mirror segment ID", "unit": None},
+        {"name": "x_pos", "description": "X Position", "unit": "m"},
+        {"name": "y_pos", "description": "Y Position", "unit": "m"},
+        {"name": "z_pos", "description": "Z Position", "unit": "m"},
+        {"name": "size", "description": "Segment size", "unit": "m"},
+    ], "Secondary mirror segmentation layout"
+
+
+def _data_columns_ray_tracing():
+    """Column description for ray tracing parameters."""
+    return [
+        {"name": "Off-axis angle", "unit": "deg"},
+        {"name": "d80_cm", "unit": "cm"},
+        {"name": "d80_deg", "unit": "deg"},
+        {"name": "eff_area", "unit": "m2"},
+        {"name": "eff_flen", "unit": "cm"},
+    ], "Ray Tracing Data"
+
+
+def _data_columns_dsum_shaping():
+    """Column description for digital sum shaping parameters."""
+    return [
+        {"name": "time", "description": "Time", "unit": "ns"},
+        {"name": "amplitude", "description": "Digital sum shaping amplitude", "unit": None},
+    ], "Digital sum shaping function"
+
+
+def _data_columns_fake_mirror_list():
+    """Column description for fake mirror list parameters."""
+    return [
+        {"name": "mirror_id", "description": "Mirror ID", "unit": None},
+        {"name": "x_pos", "description": "X Position", "unit": "m"},
+        {"name": "y_pos", "description": "Y Position", "unit": "m"},
+        {"name": "z_pos", "description": "Z Position", "unit": "m"},
+        {"name": "size", "description": "Mirror size", "unit": "m"},
+    ], "Fake mirror positions and sizes"
+
+
+def _data_columns_secondary_mirror_reflectivity(n_dim=None):
+    """Column description for secondary mirror reflectivity."""
+    columns = [{"name": "wavelength", "description": "Wavelength", "unit": "nm"}]
+
+    if n_dim:
+        for angle in range(0, 90, 10):
+            columns.append(
+                {
+                    "name": f"reflectivity_{angle}deg",
+                    "description": f"Reflectivity at {angle}°",
+                    "unit": None,
+                }
+            )
+    else:
+        columns.append({"name": "reflectivity", "description": "Reflectivity", "unit": None})
+    return columns, "Secondary mirror reflectivity vs wavelength"
+
+
+def _data_columns_mirror_segmentation():
+    """Column description for primary mirror segmentation parameters."""
+    return [
+        {"name": "segment_id", "description": "Mirror segment ID", "unit": None},
+        {"name": "x_pos", "description": "X position", "unit": "m"},
+        {"name": "y_pos", "description": "Y position", "unit": "m"},
+        {"name": "z_pos", "description": "Z position", "unit": "m"},
+    ], "Primary mirror segmentation layout"
+
+
+def _handle_hex_format(value):
+    """Handle hex format in data files."""
+    try:
+        if isinstance(value, str) and value.lower() == "hex":
+            return 0.0  # Default value for hex format
+        return float(value)
+    except ValueError:
+        logger.warning(f"Could not convert value '{value}' to float")
+        return 0.0
+
+
 def read_simtel_table(parameter_name, file_path):
-    """
-    Read sim_telarray table file for a given parameter.
-
-    Parameters
-    ----------
-    parameter_name: str
-        Model parameter name.
-    file_path: Path
-        Name (full path) of the sim_telarray table file.
-
-    Returns
-    -------
-    Table
-        Astropy table.
-    """
+    """Read sim_telarray table file for a given parameter."""
     if Path(file_path).suffix == ".ecsv":  # table is already in correct format
         return Table.read(file_path, format="ascii.ecsv")
 
     if parameter_name == "atmospheric_transmission":
         return _read_simtel_data_for_atmospheric_transmission(file_path)
+
+    if parameter_name == "dsum_shaping":
+        columns, description = _data_columns_dsum_shaping()
+        rows, meta_from_simtel, n_columns, _ = _read_simtel_data(file_path)
+
+        # Ensure rows match column count
+        rows = _adjust_columns_length(rows, len(columns))
+
+        # Create table with metadata
+        table = Table(rows=rows, names=[col["name"] for col in columns])
+
+        # Set units and descriptions
+        for col, info in zip(table.colnames, columns):
+            table[col].unit = info.get("unit")
+            table[col].description = info.get("description")
+
+        # Add metadata
+        table.meta.update(
+            {
+                "Name": parameter_name,
+                "File": str(file_path),
+                "Description": description,
+                "Context_from_sim_telarray": meta_from_simtel,
+            }
+        )
+
+        return table
 
     rows, meta_from_simtel, n_columns, n_dim = _read_simtel_data(file_path)
     columns_info, description = _data_columns(parameter_name, n_columns, n_dim)
@@ -281,6 +365,44 @@ def read_simtel_table(parameter_name, file_path):
     return table
 
 
+def get_column_definitions(parameter_name, n_columns=None, n_dim=None):
+    """Get column definitions for a parameter type.
+
+    Parameters
+    ----------
+    parameter_name : str
+        Name of the parameter to get column definitions for
+    n_columns : int, optional
+        Number of columns in the data
+    n_dim : list, optional
+        List of dimensions for multi-dimensional data
+
+    Returns
+    -------
+    tuple
+        (columns, description)
+    """
+    if parameter_name == "ray-tracing":
+        return _data_columns_ray_tracing()
+    return _data_columns(parameter_name, n_columns, n_dim)
+
+
+def read_data(file_path):
+    """Read data from sim_telarray format file.
+
+    Parameters
+    ----------
+    file_path : Path
+        Path to the file to read
+
+    Returns
+    -------
+    tuple
+        (data_lines, metadata, n_columns, n_dim)
+    """
+    return _read_simtel_data(file_path)
+
+
 def _adjust_columns_length(rows, n_columns):
     """
     Adjust row lengths to match the specified column count.
@@ -292,44 +414,58 @@ def _adjust_columns_length(rows, n_columns):
 
 
 def _read_simtel_data(file_path):
-    """
-    Read data, comments, and (if available) axis definition from sim_telarray table.
+    """Read data from sim_telarray table file.
 
     Parameters
     ----------
-    file_path: Path
-        Path to the sim_telarray table file.
+    file_path : Path or str
+        Path to the file to read
 
     Returns
     -------
-    str, str, int, str
-        data, metadata (comments), number of columns (max value), n-dimensional axis description.
+    tuple
+        (data_lines, meta_lines, n_columns, n_dim_axis)
     """
+
+    def _convert_value(value: str):
+        """Convert string value to numeric type, handling special cases."""
+        value = value.strip()
+
+        # Skip comment markers and metadata markers without warning
+        if any(marker in value for marker in ["%%%", "original:", "#"]):
+            return None
+
+        # Handle special markers
+        if value.lower() in ("hex", "+-", "na", "null"):
+            return 0.0
+
+        try:
+            return float(value)
+        except ValueError:
+            logger.warning(f"Could not convert '{value}' to float")
+            return None
+
     logger.debug(f"Reading sim_telarray table from {file_path}")
     meta_lines = []
     data_lines = []
     n_dim_axis = None
-    r_pol_axis = None
 
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    with Path(file_path).open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("#"):
+                meta_lines.append(line.lstrip("#").strip())
+            else:
+                data = line.split("#")[0].strip()
+                if data:
+                    values = [_convert_value(v) for v in data.split()]
+                    if values:
+                        data_lines.append(values)
 
-    for line in lines:
-        stripped = line.strip()
-        if "@RPOL@" in stripped:  # RPOL description for N-dimensional tables
-            match = re.search(r"#@RPOL@\[(\w+)=\]", stripped)
-            if match:
-                r_pol_axis = match.group(1)
-        elif r_pol_axis and r_pol_axis in stripped:  # N-dimensional axis description
-            n_dim_axis = stripped.split("=")[1].split()
-        elif stripped.startswith("#"):  # Metadata
-            meta_lines.append(stripped.lstrip("#").strip())
-        elif stripped:  # Data
-            data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
-
-    rows = [[float(part) for part in line.split()] for line in data_lines]
-    n_columns = max(len(row) for row in rows) if rows else 0
-
-    return rows, "\n".join(meta_lines), n_columns, n_dim_axis
+    max_cols = max(len(row) for row in data_lines) if data_lines else 0
+    return data_lines, "\n".join(meta_lines), max_cols, n_dim_axis
 
 
 def _read_simtel_data_for_atmospheric_transmission(file_path):
