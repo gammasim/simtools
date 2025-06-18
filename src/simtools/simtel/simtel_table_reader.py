@@ -13,6 +13,14 @@ from simtools.utils import general as gen
 logger = logging.getLogger(__name__)
 
 
+def _data_columns_nsb_altitude_correction():
+    """Column description for NSB spectrum altitude correction."""
+    return [
+        {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+        {"name": "transmission", "description": "Atmospheric transmission", "unit": None},
+    ], "Night Sky Background spectrum correction for telescope altitude"
+
+
 def _data_columns(parameter_name, n_columns, n_dim):
     """Get column definitions for parameter type."""
     parameter_handlers = {
@@ -30,6 +38,7 @@ def _data_columns(parameter_name, n_columns, n_dim):
         "atmospheric_profile": _data_columns_atmospheric_profile,
         "nsb_reference_spectrum": _data_columns_nsb_reference_spectrum,
         "mirror_segmentation": _data_columns_mirror_segmentation,
+        "correct_nsb_spectrum_to_telescope_altitude": _data_columns_nsb_altitude_correction,
         "lightguide_efficiency_vs_incidence_angle": (
             lambda: _data_columns_lightguide_efficiency_vs_incidence_angle(n_columns)
         ),

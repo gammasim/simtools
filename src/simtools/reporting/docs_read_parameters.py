@@ -431,6 +431,8 @@ class ReadParameters:
 
         def get_param_data(telescope, site):
             """Retrieve and format parameter data for one telescope-site combo."""
+            self.array_element = telescope
+            self.site = site
             param_dict = self.db.get_simulation_configuration_parameters(
                 simulation_software=self.software,
                 site=site,
