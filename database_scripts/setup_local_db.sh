@@ -17,14 +17,14 @@ else
     exit 1
 fi
 
-echo "Create network $SIMTOOLS_NETWORK"
+echo "Creating network $SIMTOOLS_NETWORK"
 $CMD network create $SIMTOOLS_NETWORK
 
-echo "Data directory ./mongo-data"
+echo "Creating data directory ./mongo-data"
 mkdir -p "$(pwd)"/mongo-data
 chmod 755 "$(pwd)"/mongo-data
 
-# Start mongoDB
+echo "Starting MongoDB container..."
 $CMD run -d \
   --name $CONTAINER_NAME \
   --network $SIMTOOLS_NETWORK \
@@ -35,29 +35,23 @@ $CMD run -d \
   -v "$(pwd)"/mongo-data:/data/db \
   mongo:latest
 
-echo "Waiting for MongoDB to start..."
-sleep 5
-# Loop until MongoDB is ready
+echo "Waiting for MongoDB to be fully ready and root user to be available..."
 RETRIES=30
-until $CMD exec $CONTAINER_NAME mongosh --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1 || [ $RETRIES -eq 0 ]; do
-  echo "Waiting for MongoDB to be ready... ($((RETRIES--)) retries left)"
+until $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "db.runCommand({ connectionStatus: 1 })" >/dev/null 2>&1 || [ $RETRIES -eq 0 ]; do
+  echo "Waiting for MongoDB to be ready and root authable... ($((RETRIES--)) retries left)"
   sleep 2
 done
 if [ $RETRIES -eq 0 ]; then
   echo "MongoDB did not start in time."
-  exit 1
-fi
-
-# Verify root authentication
-echo "Verifying root authentication..."
-if ! $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "db.runCommand({ connectionStatus: 1 })"; then
-  echo "Error: Root authentication failed."
   $CMD logs $CONTAINER_NAME
   exit 1
 fi
+echo "MongoDB is ready and root authentication is working."
 
-echo "Create admin user"
-$CMD exec -it $CONTAINER_NAME mongosh admin -u root -p example --eval "
+echo "Creating 'api' user..."
+# This command *requires* the root user to be able to authenticate and have userAdminAnyDatabase role.
+# If this fails, the root setup was indeed the problem.
+if ! $CMD exec -it $CONTAINER_NAME mongosh admin -u root -p example --eval "
 db.createUser({
   user: 'api',
   pwd: 'password',
@@ -67,4 +61,9 @@ db.createUser({
     { role: 'userAdminAnyDatabase', db: 'admin' },
   ]
 });
-"
+"; then
+  echo "Error: Failed to create 'api' user. Check root credentials or MongoDB logs."
+  $CMD logs $CONTAINER_NAME
+  exit 1
+fi
+echo "'api' user created successfully."
