@@ -1,4 +1,6 @@
-# Containers (docker files)
+# Containers
+
+% TODO understand if it should be images or containers
 
 Container images are available for [simtools](https://github.com/gammasim/simtools) for both development and applications through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 [Podman](https://podman.io/), [apptainer](https://apptainer.org/), [Docker](https://www.docker.com/community-edition#/download) or any compatible software can be used to run the containers.

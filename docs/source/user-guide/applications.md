@@ -1,4 +1,4 @@
-# `simtools` command-line tools
+# Applications
 
 `simtools` are applications that execute a well defined task.
 The naming convention for simtools is `simtools-<application name>`, where `<application name>` is the name of the application in lower-case snake-case format.
@@ -42,7 +42,6 @@ Configuration methods can be combined; conflicting configuration settings raise 
 Configuration parameters are generally expected in lower-case snake-make case.
 Configuration parameters for each application are printed to screen when executing the application with the `--help` option.
 Parameters with the same functionality are named consistently the same among all applications.
-
 
 ## List of applications
 
