@@ -18,14 +18,14 @@ This section outlines how to contribute effectively to the `simtools` project.
 
 ## Containers
 
+% TODO cross check if it is containers or images.
+
 All software components of `simtools` are available through containers.
 
-- using simtools containers: [Docker files](../user-guide/docker_files.md)
-- building containers: [Building Docker Containers](../build-simtools/build.md):
+- using simtools containers: [Docker files](../user-guide/simtools_containers.md)
+- building containers: [Building Docker Containers](build.md):
 
-## Working with Databases
-
-- [Simulation Models Database](databases_for_developers.md): How to setup, test, and update the simulation models database.
+## Preparing new Releases
 
 ```{toctree}
 :hidden:
@@ -37,5 +37,6 @@ pull_requests.md
 documentation.md
 testing.md
 continuous_integration.md
-databases_for_developers.md
+build.md
+release.md
 ```

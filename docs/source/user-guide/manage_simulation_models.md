@@ -1,0 +1,36 @@
+# Manage simulation models
+
+## Main steps
+
+### Receive
+
+- setting workflows
+- Interface to CalibPipe / other pipelines / telescope teams
+- Input data description (e.g., what calibration data is required to derive the optical PSF or the single photo-electron spectrum)
+
+### Derive
+
+- detailed description of each setting workflows
+
+### Validate
+
+- validation workflows
+
+### View
+
+- reporting on model parameters
+- reporting on setting and validation
+
+## Maintenance
+
+- [Maintenance of simulation models databases](manage_simulation_models/simulation_models_database.md)
+- [Import simulation model parameters from sim_telarray](manage_simulation_models/sim_telarray_import.md)
+
+
+```{toctree}
+:hidden:
+:glob: true
+:maxdepth: 1
+manage_simulation_models/simulation_models_database.md
+manage_simulation_models/sim_telarray_import.md
+```

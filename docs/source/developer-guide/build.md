@@ -1,4 +1,4 @@
-# Build
+# Build Images
 
 Pre-built images are available from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 Replace the docker command by the container run engine of your choice (e.g., podman).

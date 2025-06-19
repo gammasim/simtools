@@ -11,3 +11,5 @@ The following executables from the `sim_telarray` package are used by `simtools`
 - `pfp`: Preprocessor for `sim_telarray`.
 - `xyzls`: Simulates a calibration light source at a specified position.
 - `ls-beam`: Simulates a laser beam calibration light source.
+
+% TODO add references
