@@ -33,7 +33,7 @@ $CMD run -d \
   -e MONGO_INITDB_ROOT_PASSWORD=example \
   -p 27017:27017 \
   -v "$(pwd)"/mongo-data:/data/db \
-  mongo:latest
+  mongo:8.0.10
 
 echo "Waiting for MongoDB to be fully ready and root user to be available..."
 RETRIES=30
