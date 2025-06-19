@@ -324,10 +324,8 @@ def get_log_level_from_user(log_level):
     possible_levels = {
         "info": logging.INFO,
         "debug": logging.DEBUG,
-        "warn": logging.WARNING,
         "warning": logging.WARNING,
         "error": logging.ERROR,
-        "critical": logging.CRITICAL,
     }
     try:
         log_level_lower = log_level.lower()
