@@ -51,7 +51,7 @@ echo "MongoDB is ready and root authentication is working."
 echo "Creating 'api' user..."
 # This command *requires* the root user to be able to authenticate and have userAdminAnyDatabase role.
 # If this fails, the root setup was indeed the problem.
-if ! $CMD exec -it $CONTAINER_NAME mongosh admin -u root -p example --eval "
+if ! $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "
 db.createUser({
   user: 'api',
   pwd: 'password',
