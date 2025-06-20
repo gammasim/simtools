@@ -24,7 +24,7 @@
 ## Maintenance
 
 - [Maintenance of simulation models databases](manage_simulation_models/simulation_models_database.md)
-- [Import simulation model parameters from sim_telarray](manage_simulation_models/sim_telarray_import.md)
+- [Import simulation model parameters](manage_simulation_models/model_import.md)
 
 
 ```{toctree}
@@ -32,5 +32,5 @@
 :glob: true
 :maxdepth: 1
 manage_simulation_models/simulation_models_database.md
-manage_simulation_models/sim_telarray_import.md
+manage_simulation_models/model_import.md
 ```

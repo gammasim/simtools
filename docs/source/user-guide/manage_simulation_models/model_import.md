@@ -1,4 +1,6 @@
-# Import simulation model parameters from sim_telarray
+# Import of simulation model parameters
+
+## Import simulation model parameters from sim_telarray
 
 The general use case for simtools is to generate sim_telarray configurations using
 the simulation models databases. This page describes the reverse process, i.e. generating
@@ -10,7 +12,7 @@ for verification.
 TODO missing description of simtools applications
 ```
 
-## Import Prod6 model parameters
+### Import Prod6 model parameters
 
 Prod6 model parameters can be extracted from `sim_telarray` using the following commands.
 
@@ -32,7 +34,7 @@ Prod6 model parameters can be extracted from `sim_telarray` using the following 
    /dev/null 2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_paranal.cfg
 ```
 
-## Import Prod5 model parameters
+### Import Prod5 model parameters
 
 Prod5 model parameters can be extracted from `sim_telarray` using the following commands.
 
@@ -52,4 +54,18 @@ Prod5 model parameters can be extracted from `sim_telarray` using the following 
    -C maximum_telescopes=120 -DNSB_AUTOSCALE \
    -DNECTARCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=120 \
    /dev/null 2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_paranal_prod5.cfg
+```
+
+## Import telescope positions
+
+Positions of array elements like telescopes are provided by CTAO in form of tables (typically ecsv files).
+To import these positions into the model parameter repository, see the following example:
+
+```bash
+simtools-write-array-element-positions-to-repository \
+    --input /path/to/positions.txt \
+    --repository_path /path/to/repository \
+    --model_version 1.0.0 \
+    --coordinate_system ground \
+    --site North
 ```
