@@ -22,10 +22,12 @@ This section outlines how to contribute effectively to the `simtools` project.
 
 All software components of `simtools` are available through containers.
 
-- using simtools containers: [Docker files](../user-guide/simtools_containers.md)
-- building containers: [Building Docker Containers](build.md):
+- [Running simtools containers](../user-guide/simtools_containers.md)
+- [Building simtools images](simtools_build_images.md):
 
-## Preparing new Releases
+## Preparing simtools Releases
+
+- [Prepare and Deploy](release.md): How to prepare and deploy a new release of `simtools`.
 
 ```{toctree}
 :hidden:
@@ -37,6 +39,6 @@ pull_requests.md
 documentation.md
 testing.md
 continuous_integration.md
-build.md
+simtools_build_images.md
 release.md
 ```
