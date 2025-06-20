@@ -66,7 +66,6 @@ Changelog
 User Guide <user-guide/index>
 Components <components/index>
 Data Model <data-model/index>
-Build <build-simtools/index>
 Developer Guide <developer-guide/index>
 API Docs <api-reference/index>
 Changelog <changelog>
@@ -132,20 +131,6 @@ To the data model guide
 ```
 :::
 
-:::{grid-item-card} {fas}`hammer;pst-color-primary` Build
-:link: build-simtools/index
-:link-type: doc
-:class-card: sd-d-flex-column
-
-Learn how to build simtools and its components from source.
-+++
-```{button-ref} build-simtools/index
-:expand:
-:color: primary
-:click-parent:
-To the build guide
-```
-:::
 
 :::{grid-item-card} {fas}`code;pst-color-primary` Developer Guide
 :link: developer-guide/index
@@ -179,6 +164,21 @@ classes, and methods.
 :click-parent:
 
 To the API docs
+```
+:::
+
+:::{grid-item-card} {fas}`hammer;pst-color-primary` Changelog
+:link: changelog
+:link-type: doc
+:class-card: sd-d-flex-column
+
+Learn what has changed in simtools.
++++
+```{button-ref} changelog
+:expand:
+:color: primary
+:click-parent:
+To the changelog
 ```
 :::
 
