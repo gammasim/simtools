@@ -9,7 +9,7 @@ This is useful for e.g., for the initial generation of the simulation models dat
 for verification.
 
 ```{warning}
-TODO missing description of simtools applications
+Incomplete documentation. Missing description of simtools applications.
 ```
 
 ### Import Prod6 model parameters
