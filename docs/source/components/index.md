@@ -34,3 +34,7 @@ sim_telarray.md
 simulation_models.md
 databases.md
 ```
+
+## I/O using pyeventio
+
+[pyeventio](https://github.com/cta-observatory/pyeventio) is a python library for reading the output of the simulation software (EventIO data format used by sim_telarray). *pyeventio* is external to simtools, but an essential component for reading simulation output data by the CTAO pipelines.
