@@ -18,9 +18,7 @@ This section outlines how to contribute effectively to the `simtools` project.
 
 ## Containers
 
-% TODO cross check if it is containers or images.
-
-All software components of `simtools` are available through containers.
+All software components of `simtools` are available as OCI-compatible container images.
 
 - [Running simtools containers](../user-guide/simtools_containers.md)
 - [Building simtools images](simtools_build_images.md):
