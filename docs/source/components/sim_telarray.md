@@ -12,4 +12,6 @@ The following executables from the `sim_telarray` package are used by `simtools`
 - `xyzls`: Simulates a calibration light source at a specified position.
 - `ls-beam`: Simulates a laser beam calibration light source.
 
-% TODO add references
+```{warning}
+Incomplete documentation - missing references
+```

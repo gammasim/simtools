@@ -8,7 +8,7 @@ The naming convention for simtools is `simtools-<application name>`, where `<app
 Applications in simtools are configured by the following four equivalent approaches:
 
 1. command-line arguments
-2. configuration files (in yaml format)
+2. configuration files (in YAML format)
 3. configuration dictionary when calling the {ref}`Configurator <configurationconfigurator>` class
 4. environment variables
 
@@ -20,13 +20,13 @@ Set the output directory using a command-line argument:
 python applications/<application_name> --output_path <path name>
 ```
 
-Set the output directory using a configuration file in yaml format:
+Set the output directory using a configuration file in YAML format:
 
 ```yaml
 config_file: <path name>
 ```
 
-Load the yaml configuration file into the application with:
+Load the YAML configuration file into the application with:
 
 ```console
 python applications/<application_name> --config <my_config.yml>
