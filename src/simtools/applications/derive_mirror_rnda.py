@@ -59,7 +59,7 @@ r"""
     .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
       :width: 49 %
 
-    This application uses the following :ref:`SimulationSoftware` tools:
+    This application uses the following software tools:
 
         - sim_telarray/bin/sim_telarray
         - sim_telarray/bin/rx (optional)

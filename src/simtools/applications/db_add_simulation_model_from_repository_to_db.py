@@ -18,7 +18,16 @@ r"""
 
     Examples
     --------
-    Upload model data repository to the DB:
+    Upload model data repository to the DB
+    Loops over all subdirectories in 'input_path' and uploads all json files to the
+    database 'new_db_name' (or updates an existing database with the same name):
+
+    * subdirectories starting with 'OBS' are uploaded to the 'sites' collection
+    * json files from the subdirectory 'configuration_sim_telarray/configuration_corsika'
+      are uploaded to the 'configuration_sim_telarray/configuration_corsika' collection
+    * 'Files' are added to the 'files' collection
+    * all other json files are uploaded to collection defined in the array element description
+      in 'simtools/schemas/array_elements.yml'
 
     .. code-block:: console
 
