@@ -32,13 +32,13 @@ Configuration triggers the following automated steps:
     2. the application [simtools-production-generate-grid](production_generate_grid) to determine configuration parameters from these lookup tables
 2. Calculate required event statistics for each grid point (if not user-specified) using:
     1. metric parameters for statistical requirements (e.g., effective collection area uncertainty after gamma/hadron separation)
-    2. DL2 event data (with or without gamma/hadron cuts applied) **TODO clear definition needed**
+    2. DL2 event data (with or without gamma/hadron cuts applied) **todo clear definition needed**
     3. the application [simtools-production-derive-statistics](production_derive_statistics) to calculate required event statistics
 3. Estimate required computing resources (optional) using:
     1. resource lookup tables
     2. (a missing simtools)
 4. Configure production models
-5. Write configuration files to SimPipe Production Configuration GitLab (energy ranges, versions, etc.) **TODO to be defined**
+5. Write configuration files to SimPipe Production Configuration GitLab (energy ranges, versions, etc.) **todo: to be defined**
     1. includes configuration parameter versioning
     2. writing of CWL files here?
 
@@ -99,9 +99,9 @@ apptainer build simtools.sif docker://ghcr.io/gammasim/simtools-prod-250304-cors
 
 #### Running Grid Productions
 
-:::{warning}
+```{warning}
 Incomplete Documentation.
-:::
+```
 
 ### Verify and Report
 

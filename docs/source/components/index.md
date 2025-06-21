@@ -15,8 +15,6 @@ The following simulation software packages are used by simtools:
 - [sim_telarray](sim_telarray.md): Telescope simulation software for ray tracing, triggering, and camera-level simulation.
 - ROBAST
 
-% TODO add link and description to ROBAST
-
 ```{note}
 Simulation software is external to simtools and developed by the respective teams. The integration of these components into simtools is done through interfaces, allowing for flexibility and future updates.
 ```
