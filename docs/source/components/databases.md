@@ -1,7 +1,7 @@
 # Databases
 
 Simulation model parameters and production configurations are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
-The simtools package uses a MongoDB database to store production tables simulation model parameters.
+The simtools package uses a MongoDB database to store production tables and simulation model parameters.
 
 ```{important}
 No direct write access to the simulation model database is allowed.
@@ -56,7 +56,7 @@ The mongoDB database can be accessed via the command-line interface `mongo` or v
 ## Setup a local copy of the model parameter database
 
 The production version of model-parameter database is a mongoDB instance running on a server at DESY.
-For testing and development,to work with a local copy of the database.
+For testing and development, it is recommend to work with a local copy of the database.
 The following scripts allow to setup and fill a local database running in a container.
 
 All scripts to setup and fill a local database instance are located in the [database_scripts](../../database_scripts/) directory.

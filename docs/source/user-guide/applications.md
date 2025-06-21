@@ -1,7 +1,7 @@
 # Applications
 
 `simtools` are applications that execute a well defined task.
-The naming convention for simtools is `simtools-<application name>`, where `<application name>` is the name of the application in lower-case snake-case format.
+The naming convention for simtools is `simtools-<application name>`, where `<application name>` is the name of the application in lower-case snake_case format.
 
 ## Configuration
 
