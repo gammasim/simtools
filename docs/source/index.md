@@ -48,13 +48,6 @@ GitHub Repository
 License BSD-3
 ```
 
-```{button-link} https://github.com/gammasim/simtools/blob/main/CHANGELOG.md
-:color: warning
-:class: sd-rounded-pill sd-mr-3
-:external:
-
-Changelog
-```
 ````
 
 (simtools_docs)=

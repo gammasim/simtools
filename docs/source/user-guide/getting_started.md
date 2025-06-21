@@ -1,30 +1,45 @@
-(getting-started)=
-
 # Getting Started
 
-The usage of simtools requires the installation of the [simtools package](installationforusers), its dependencies (mostly [CORISKA/sim_telarray](corsikasimtelarrayinstallation)),
-and the setting of environment variables to [connect to the model database](modeldatabaseaccess).
+The usage of simtools requires the installation and/or access to all [major components](../components/index.md) of simtools.
+This includes the [simtools package](#installation) itself, the simulation software
+[CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray),
+and the setting of environment variables to [connect to the simulation models model database](model-database-access).
 
-(installationforusers)=
+For developers, please see the [Getting started as developer](../developer-guide/getting_started_as_developer.md) section.
 
 ## Installation
 
-There are four options to install simtools for users:
+These are the options to install simtools:
 
-- [using conda](condainstallation)
-- [using pip](pipinstallation)
-- using Git and pip (this is the recommended method for developers) (see [Developer Installation](../developer-guide/getting_started_as_developer.md))
-- [using a docker container](dockerinstallation) with all software installed
+- [using a docker image](container-docker) with all software installed (recommended option)
+- [pip](pip-installation)
+- [conda](conda-installation)
 
-All simtools applications are available as command-line tools.
-Note the naming of the tool, starting with `simtools-` followed by the application name.
-See the [applications](applications.md) section for more details.
+The conda/pip installation method requires to install CORSIKA and sim_telarray separately, see [section below](#installation-of-corsika-and-sim_telarray).
 
-Note to update the `.env` file with the credentials for database access (see [Model Database Access](databases.md)).
+### Container (docker)
 
-The conda/pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].
+OCI-compatible images are available for simtools users, developers, and for CORSIKA/sim_telarray from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+These allows to skip all installation steps and run simtools applications directly.
 
-(condainstallation)=
+See the [running simtools using containers](simtools_containers.md) page for more details.
+
+### Pip Installation
+
+simtools is available as a Python package from [PypPi](https://pypi.org/project/gammasimtools/).
+
+To install, prepare a python environment, e.g.:
+
+```console
+mamba create --name simtools-prod python=3.11
+mamba activate simtools-prod
+```
+
+Install simtools and its dependencies:
+
+```console
+pip install gammasimtools
+```
 
 ### Conda Installation
 
@@ -36,40 +51,10 @@ conda install gammasimtools --channel conda-forge
 conda activate gammasimtools
 ```
 
-(pipinstallation)=
-
-### Pip Installation
-
-Prepare a python environment (in this example for python version 3.11):
-
-```console
-mamba create --name simtools-prod python=3.11
-mamba activate simtools-prod
-```
-
-Use pip to install simtools and its dependencies:
-
-```console
-pip install gammasimtools
-```
-
-The pip installation method requires to [install CORSIKA/sim_telarray](corsikasimtelarrayinstallation) separately.
-
-(dockerinstallation)=
-
-### Container (docker)
-
-OCI-compatible images are available for simtools users, developers, and for CORSIKA/sim_telarray from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
-These allows to skip all installation steps and run simtools applications directly.
-
-See the [Docker description](docker_files.md) for more details.
-
-(corsikasimtelarrayinstallation)=
-
 ## Installation of CORSIKA and sim_telarray
 
 CORSIKA and sim_telarray are external tools to simtools and are required dependencies for many applications.
-Recommended is to use the Docker environment, see description in [Docker Environment for Developers](docker_files.md).
+The installation requires some preparation, this is why it is recommended to use the Docker environment
 
 For a non-Docker setup, follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTAO users can download both packages from the [sim_telarray web page](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
@@ -82,8 +67,6 @@ tar -czf corsika7.7_simtelarray.tar.gz
 
 The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORSIKA/sim_telarray installation
 (recommended to include it in the .env file with all other environment variables).
-
-(modeldatabaseaccess)=
 
 ## Model Database Access
 
