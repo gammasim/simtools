@@ -3,7 +3,7 @@
 ## Installation
 
 For instructions on installing **simtools** and its components, see the [Getting Started](getting_started.md) guide.
-All required software, including **CORSIKA**, **sim_telarray**, and **simtools**, is available as [pre-built container images](simtools_containers.md).
+All required software, including **CORSIKA**, **sim_telarray**, and **simtools**, is available as [pre-built container images](getting_started.md#container-images).
 A full list of simtools applications is provided in the [Applications](applications.md) section.
 
 ## Main Use Cases
@@ -20,5 +20,4 @@ productions.md
 manage_simulation_models.md
 simulate_calibration_data
 applications.md
-simtools_containers.md
 ```

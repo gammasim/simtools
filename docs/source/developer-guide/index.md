@@ -20,7 +20,7 @@ This section outlines how to contribute effectively to the `simtools` project.
 
 All software components of `simtools` are available as OCI-compatible container images.
 
-- [Running simtools containers](../user-guide/simtools_containers.md)
+- [Running simtools containers](../user-guide/getting_started.md#container-images)
 - [Building simtools images](simtools_build_images.md):
 
 ## Preparing simtools Releases

@@ -27,13 +27,9 @@ These images eliminate all manual installation steps and allow direct execution 
 
 Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login`).
 
-### Running a simtools Production Image (`simtools-prod`)
+### Running a simtools Production Image
 
-```{warning}
-todo - where is the env described?
-```
-
-**Prerequisite**: Configure simulation model database access (see the simtools documentation). An example `.env` file is available [here](https://github.com/gammasim/simtools/blob/main/.env_template).
+**Prerequisite**: Configure [simulation model database access](model-database-access).
 
 Start an Interactive Container:
 
