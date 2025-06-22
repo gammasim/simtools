@@ -1,6 +1,6 @@
 # Data Model
 
-- [model parameter format / schema](model_parameters.md)
+- Description of [simulation model parameters](model_parameters.md) through schema files
 - description of simulation data format
 - description of metadata
 
