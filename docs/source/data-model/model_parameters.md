@@ -1,6 +1,6 @@
-# Simulation Model
+# Simulation Model Parameters
 
-## Description of model parameters through schemas
+## Introduction
 
 Model parameter data structures are defined in schema files.
 To ensure consistency and correctness of the model parameters, these schema files are used to validate the model parameter files with `simtools-validate-file-using-schema`.
@@ -32,7 +32,7 @@ Two types of schema definitions need to be distinguished:
 
 The metaschema [model_parameter.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml) defines the json data structure used for model parameters. This meta schema defines e.g., that `parameter` must be a string or `file` a boolean. No additional properties are allowed.
 
-Model parameter schemas are defined in YAML format and located in the `simtools/schemas/model_parameters` directory. Each schema file specifies fields such as `name`, `type`, `format`, `units`, and applicable telescopes.  Schemas also include metadata on default values, validation rules, data sources, and links to relevant simulation software.  Model parameter descriptions are primarily derived from the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/), ensuring alignment with its definitions and conventions.
+Model parameter schemas are defined in YAML format and located in the [src/simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/src/simtools/schemas/model_parameters) directory. Each schema file specifies fields such as `name`, `type`, `format`, `units`, and applicable telescopes.  Schemas also include metadata on default values, validation rules, data sources, and links to relevant simulation software.  Model parameter descriptions are primarily derived from the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/), ensuring alignment with its definitions and conventions.
 
 For above example the schema file [num_gains.schema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameters/num_gains.schema.yml) is:
 
@@ -75,11 +75,11 @@ simulation_software:
 
 Model parameter schema files follow the fixed meta schema (see `meta_schema`, `meta_schema_url`, and `meta_schema_version` fields in above example and [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml)).
 
-### Valid Keys
+## Valid Keys
 
 Valid keys are described in detail in [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml). The most important parameters are:
 
-#### Header section
+### Header section
 
 - `title`: Title of the schema file.
 - `version`: Version of this schema file.
@@ -87,13 +87,13 @@ Valid keys are described in detail in [model_parameter_and_data_schema.metaschem
 - `meta_schema_url`: URL of the base schema.
 - `meta_schema_version`: Version of the base schema.
 
-#### Parameter description
+### Parameter description
 
 - `name`: Name of the parameter.
 - `description`: Description of the parameter.
 - `short_description`: Short description of the parameter (optional).
 
-#### Parameter data
+### Parameter data
 
 The `data` field is used to describe the actual type, format, and allowed values of the parameter.
 
@@ -136,13 +136,13 @@ Input processing in form of sorting, removing of duplicates, etc. can be specifi
 The `data_table` field is not yet implemented in the simtools schema and parameter files.
 :::
 
-#### Instrument description
+### Instrument description
 
 - `class`: Instrument class. Allow values are *Camera*, *Site*, *Structure*, *Telescope*
 - `type`: Instrument type following CTAO Naming.
 - `site`: CTAO site. Allowed values are *North* and *South*.
 
-### Activity description
+## Activity description
 
 Describes setting and validation activities. Each activity corresponds to a workflow as described in the [simtools workflows repository](https://github.com/gammasim/workflows).
 
@@ -150,11 +150,11 @@ Describes setting and validation activities. Each activity corresponds to a work
 The implementation of activities and workflows is incomplete and in progress.
 :::
 
-### Data source description
+## Data source description
 
 Describes the source of the data or parameter (e.g., *Calibration*)
 
-### Simulation software description
+## Simulation software description
 
 Describes the simulation software (e.g., *sim_telarray* or *corsika*) the parameter is used for.
 

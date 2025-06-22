@@ -108,6 +108,32 @@ Ask one of the developers for the credentials to access the database.
 :::
 
 Credentials for database access are passed on to simtools applications using environmental variables stored
-in a file named `.env`.
-Copy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template)
-to a new file named `.env` and update it with the credentials.
+in a file named `.env`, see the [Environment Variables](#environment-variables) section below.
+
+## Environment Variables
+
+The environment variables listed below are used by simtools applications and defined by the user in a `.env` file to be placed in the working directory. opy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named `.env` and update it accordingly.
+
+```console
+# Hostname of the MongoDB server
+SIMTOOLS_DB_SERVER=<hostname>
+# Port on the MongoDB server
+SIMTOOLS_DB_API_PORT=<integer>
+# Username for MongoDB
+SIMTOOLS_DB_API_USER=<username>
+# Password for MongoDB
+SIMTOOLS_DB_API_PW=<password>
+SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
+# Name of the simulation model database
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-v0-7-0'
+# Path to the sim_telarray installation
+SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
+# User name of the user running the application
+SIMTOOLS_USER_NAME='Max Mustermann'
+# ORCID of the user running the application
+SIMTOOLS_USER_ORCID='0000-1234-5678-0000'
+```
+
+```{note}
+Any simtools application command line argument can be set as an environment variable, see the [application configuration](applications.md#configuration) section.
+```
