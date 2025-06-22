@@ -1,28 +1,62 @@
 # Getting Started
 
-The usage of simtools requires the installation and access to the [major components](../components/index.md) of simtools:
-the [simtools package](#installation) itself, the simulation software
-[CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray),
-and the [simulation models model database](model-database-access).
+Using simtools requires installing and accessing its [main components](../components/index.md):
+the [simtools package](#installation), the simulation software  [CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray), and the [simulation model database](model-database-access).
 
-For developers, please see the [Getting started as developer](../developer-guide/getting_started_as_developer.md) section.
+For development-related information, see [Getting Started as a Developer](../developer-guide/getting_started_as_developer.md).
 
 ## Installation
 
-These are the options to install simtools:
+simtools can be installed using one of the following methods:
 
-- [using a docker image](container-docker) with all software installed (recommended)
-- [pip](pip-installation)
-- [conda](conda-installation)
+- Using a [container image](container-images) with all software pre-installed (**recommended**)
+- Via [pip](pip-installation) or [conda](conda-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details.
 
-The conda/pip installation method requires to compile and install CORSIKA and sim_telarray separately, see [section below](#installation-of-corsika-and-sim_telarray).
+## Container Images
 
-### Container (docker)
+OCI-compatible container images are available for simtools users and support both application and development use cases.  Any runtime such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
+These images eliminate all manual installation steps and allow direct execution of simtools applications.
 
-OCI-compatible images are available for simtools users, developers, and for CORSIKA/sim_telarray from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
-These allows to skip all installation steps and run simtools applications directly.
+### Pre-built Images
 
-See the [running simtools using containers](simtools_containers.md) page for more details.
+- **Production images** (`simtools-prod`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
+  - Different CORSIKA/sim_telarray versions
+  - Compile options (e.g., `prod5`, `prod6`)
+  - CPU optimizations (e.g., `avx2`, `avx512`, `no_opt`)
+- **Development images** (`simtools-dev`): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.
+
+Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login`).
+
+### Running a simtools Production Image (`simtools-prod`)
+
+```{warning}
+todo - where is the env described?
+```
+
+**Prerequisite**: Configure simulation model database access (see the simtools documentation). An example `.env` file is available [here](https://github.com/gammasim/simtools/blob/main/.env_template).
+
+Start an Interactive Container:
+
+```bash
+docker run --rm -it \
+    --env-file .env \
+    -v "$(pwd):/workdir/external" \
+    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
+    bash
+```
+
+Run a simtools application:
+
+```bash
+docker run --rm -it \
+    --env-file .env \
+    -v "$(pwd):/workdir/external" \
+    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
+    simtools-convert-geo-coordinates-of-array-elements \
+    --input ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
+    --export ground \
+    --output_path /workdir/external/
+```
 
 ### Pip Installation
 
