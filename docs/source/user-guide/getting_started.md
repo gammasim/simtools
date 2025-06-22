@@ -1,9 +1,9 @@
 # Getting Started
 
-The usage of simtools requires the installation and/or access to all [major components](../components/index.md) of simtools.
-This includes the [simtools package](#installation) itself, the simulation software
+The usage of simtools requires the installation and access to the [major components](../components/index.md) of simtools:
+the [simtools package](#installation) itself, the simulation software
 [CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray),
-and the setting of environment variables to [connect to the simulation models model database](model-database-access).
+and the [simulation models model database](model-database-access).
 
 For developers, please see the [Getting started as developer](../developer-guide/getting_started_as_developer.md) section.
 
@@ -11,11 +11,11 @@ For developers, please see the [Getting started as developer](../developer-guide
 
 These are the options to install simtools:
 
-- [using a docker image](container-docker) with all software installed (recommended option)
+- [using a docker image](container-docker) with all software installed (recommended)
 - [pip](pip-installation)
 - [conda](conda-installation)
 
-The conda/pip installation method requires to install CORSIKA and sim_telarray separately, see [section below](#installation-of-corsika-and-sim_telarray).
+The conda/pip installation method requires to compile and install CORSIKA and sim_telarray separately, see [section below](#installation-of-corsika-and-sim_telarray).
 
 ### Container (docker)
 
