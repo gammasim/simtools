@@ -1,5 +1,3 @@
-(guidelines)=
-
 # Developer Guidelines
 
 This section provides guidelines for developers of simtools. Great that you want to contribute!

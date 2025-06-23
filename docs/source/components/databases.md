@@ -8,8 +8,6 @@ No direct write access to the simulation model database is allowed.
 Updates to the simulation models should be done via merge requests to the [CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
 ```
 
-For a discussion on how to use a local copy of the database for testing and development, see the [databases for developers](developer_guide/databases_for_developers.md) section.
-
 ## Simulation Models Database
 
 The name of the model parameter database needs to be indicated by `$SIMTOOLS_DB_SIMULATION_MODEL` environmental variable and defined e.g., in the `.env` file. Use `CTAO-Simulation-ModelParameters-LATEST` to use the latest version of the CTAO simulation model database (simtools will replace `LATEST` with the latest version number).
