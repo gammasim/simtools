@@ -4,13 +4,13 @@
 The steps described in this document are intended for maintainers of the simtools project.
 ```
 
-Simtools releases follow the [Semantic Versioning 2.0.0](https://semver.org/) guidelines.
+Simtools releases follow the [Semantic Versioning 2.0.0](https://semver.org/) guidelines with a version string format of `vMAJOR.MINOR.PATCH` (e.g., `v2.1.3`).
 Note that `simtools` is named `gammasimtools` on PyPi and in the conda.
 
 ## Release Preparation
 
 1. Consider a release only after all tests are passing.
-2. Open a pull request to prepare the release with the branch name `<version string>-rc` (e.g., `2.1.3-rc`). This should be the final pull request before a release.
+2. Open a pull request to prepare the release with the branch name `<version string>-rc` (e.g., `v2.1.3-rc`). This should be the final pull request before a release.
 3. All notable changes to the simtools project must be documented in the [CHANGELOG.md](https://github.com/gammasim/simtools/blob/main/CHANGELOG.md) file. To update the changelog, run the changelog workflow using [towncrier](https://towncrier.readthedocs.io/en/stable/):
 
    ```bash
