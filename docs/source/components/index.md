@@ -4,8 +4,9 @@ simtools provides tools to configure, run, and analyze simulations and to manage
 
 The main components are:
 
-- simulation software
+- simulation software like CORSIKA and sim_telarray
 - simulation models and parameters, associated databases, setting and validation procedures
+- reading and writing simulation data
 
 ## Simulation Software
 
@@ -40,3 +41,11 @@ databases.md
 ## I/O using pyeventio
 
 [pyeventio](https://github.com/cta-observatory/pyeventio) is a python library for reading the output of the simulation software (EventIO data format used by sim_telarray). *pyeventio* is external to simtools, but an essential component for reading simulation output data by the CTAO pipelines.
+
+## Additional Components
+
+```{warning}
+Incomplete documentation
+```
+
+- software tool for geomagnetic field determination

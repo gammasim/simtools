@@ -17,7 +17,7 @@ To illustrate this, the example below sets the path pointing towards the directo
 Set the output directory using a command-line argument:
 
 ```console
-python applications/<application_name> --output_path <path name>
+<application_name> --output_path <path name>
 ```
 
 Set the output directory using a configuration file in YAML format:
@@ -29,7 +29,7 @@ config_file: <path name>
 Load the YAML configuration file into the application with:
 
 ```console
-python applications/<application_name> --config <my_config.yml>
+<application_name> --config <my_config.yml>
 ```
 
 Configuration parameter read from a environmental variable:
