@@ -14,7 +14,8 @@ from eventio.simtel import (
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 OUTPUT_FILE_NAME = "output.fits"
-one_two_three = "1,2,3"
+one_two_three = "LST1,LST2,MST1"
+unknown_one_two_three = "Unknown_1,Unknown_2,Unknown_3"
 
 
 @pytest.fixture
@@ -43,6 +44,21 @@ def mock_corsika_run_header(mocker):
         "core_range": [0.0, 1000.0],
     }
     return mock_get_header
+
+
+@pytest.fixture
+def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
+    """Mock the get_sim_telarray_telescope_id_to_telescope_name_mapping."""
+    mock_get_mapping = mocker.patch(
+        "simtools.simtel.simtel_io_event_writer.get_sim_telarray_telescope_id_to_telescope_name_mapping"
+    )
+    mock_get_mapping.return_value = {
+        1: "LST1",
+        2: "LST2",
+        3: "MST1",
+        4: "MST2",
+    }
+    return mock_get_mapping
 
 
 def create_mc_run_header():
@@ -109,7 +125,12 @@ def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
-def test_process_files(mock_eventio_class, lookup_table_generator, mock_corsika_run_header):
+def test_process_files(
+    mock_eventio_class,
+    lookup_table_generator,
+    mock_corsika_run_header,
+    mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
+):
     """Test processing of files and creation of tables."""
     # Create sequence that matches SimtelIOEventDataWriter expectations
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
@@ -147,7 +168,12 @@ def test_no_input_files():
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
-def test_multiple_files(mock_eventio_class, tmp_path, mock_corsika_run_header):
+def test_multiple_files(
+    mock_eventio_class,
+    tmp_path,
+    mock_corsika_run_header,
+    mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
+):
     """Test processing multiple input files."""
     # Create mock events for each file
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
@@ -204,7 +230,7 @@ def test_process_array_event(lookup_table_generator):
     trigger_event = lookup_table_generator.trigger_data[0]
     assert trigger_event["shower_id"] == 1
     assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == one_two_three
+    assert trigger_event["telescope_list"] == unknown_one_two_three
 
 
 def test_process_array_event_empty(lookup_table_generator):
@@ -231,7 +257,7 @@ def test_process_array_event_with_trigger_data(lookup_table_generator):
     trigger_event = lookup_table_generator.trigger_data[0]
     assert trigger_event["shower_id"] == 1
     assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == one_two_three
+    assert trigger_event["telescope_list"] == unknown_one_two_three
 
 
 def test_get_preliminary_nsb_level(lookup_table_generator):
@@ -312,3 +338,27 @@ def test_process_mc_event_inconsistent_shower(lookup_table_generator):
 
     with pytest.raises(IndexError, match="Inconsistent shower and MC event data for shower id 2"):
         lookup_table_generator._process_mc_event(mock_event)
+
+
+def test_map_telescope_names(lookup_table_generator):
+    """Test mapping of telescope IDs to names."""
+    # Set up test mapping
+    lookup_table_generator.telescope_id_to_name = {1: "LST1", 2: "LST2", 3: "MST1", 4: "MST2"}
+
+    # Test with known IDs
+    telescope_ids = [1, 2, 3]
+    expected = ["LST1", "LST2", "MST1"]
+    assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
+
+    # Test with unknown ID
+    telescope_ids = [1, 99]
+    expected = ["LST1", "Unknown_99"]
+    assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
+
+    # Test with empty list
+    assert lookup_table_generator._map_telescope_names([]) == []
+
+    # Test with all unknown IDs
+    telescope_ids = [98, 99]
+    expected = ["Unknown_98", "Unknown_99"]
+    assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
