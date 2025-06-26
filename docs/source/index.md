@@ -29,7 +29,7 @@ It is part of the simulation pipeline [SimPipe](http://cta-computing.gitlab-page
 :color: primary
 :class: sd-rounded-pill sd-mr-3
 
-Get Started
+Getting Started
 ```
 
 ```{button-link} https://github.com/gammasim/simtools
@@ -177,5 +177,5 @@ To the changelog
 
 ::::
 
-:::{danger} simtools is currently under heavy development with continuous changes and additions applied. Please contact the developers before using it: simtools-developer@desy.de.
+:::{warning} simtools is currently under heavy development with continuous changes and additions applied. Please contact the developers before using it: simtools-developer@desy.de.
 :::
