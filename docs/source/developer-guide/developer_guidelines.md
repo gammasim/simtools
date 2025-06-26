@@ -1,5 +1,3 @@
-(guidelines)=
-
 # Developer Guidelines
 
 This section provides guidelines for developers of simtools. Great that you want to contribute!
@@ -32,7 +30,7 @@ It is recommended to discuss any code changes with the simtools team before star
 
 The following steps outline how to contribute code to simtools:
 
-01. Set up your coding environment as outlined in the [getting started](getting_started.md#dvgetting-started) section.
+01. Set up your coding environment as outlined in the [getting started](getting_started_as_developer.md) section.
 02. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
 03. Implement your code changes.
 04. Add unit tests for new modules and functions (see [unit test section](testing.md#unit-tests)).
@@ -118,15 +116,11 @@ These files should be kept at minimum and are stored in the [tests/resources](ht
 
 Data files required by integration tests are downloaded during testing from the simulation model database.
 
-Some auxiliary files can be found in the
-[data directory](https://github.com/gammasim/simtools/tree/main/data).
-Note that this is under review and might go away in near future.
-
 ## Input validation
 
-:::{warning}
+```{warning}
 This section is deprecated and will be removed in the future.
-:::
+```
 
 Any configurable inputs (e.g. physical parameters) to modules
 must have them validated. The validation assures that the units, type and

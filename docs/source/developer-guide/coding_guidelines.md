@@ -1,5 +1,3 @@
-(codingguidelines)=
-
 # Coding Guidelines
 
 This document describes the coding guidelines for the project.
@@ -50,7 +48,7 @@ To run ruff locally, use:
 ruff check
 ```
 
-Note the options defined in pyproject.toml for both ruff and pylint.
+The options for ruff and pylint are defined in `pyproject.toml`.
 
 ### API documentation
 
