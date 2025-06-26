@@ -20,7 +20,7 @@ html_theme.sidebar_secondary.remove: true
 .. currentmodule:: simtools
 ```
 
-**simtools** is a toolkit for model parameter management, production configuration, setting, validation workflows.
+**simtools** is a toolkit for model parameter management, configuring simulation productions, setting, validation workflows.
 It is part of the simulation pipeline [SimPipe](http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/) of the [Cherenkov Telescope Array Observatory (CTAO)](https://www.cta-observatory.org/).
 
 ````{div} sd-d-flex-row

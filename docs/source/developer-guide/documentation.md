@@ -31,4 +31,4 @@ file `./build/html/index.html`.
 
 ## Hints for Markdown
 
-- links to other files relative to current file: ``[mongoDB databases](../user-guide/databases.md#databases)`` results in [mongoDB databases](../user-guide/databases.md#databases).
+- links to other files relative to current file: ``[databases](../user-guide/databases.md#databases)`` results in [databases](../user-guide/databases.md#databases).

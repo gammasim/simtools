@@ -41,6 +41,8 @@ docker run --rm -it \
     bash
 ```
 
+Any simtools application can be run inside the container.
+
 Run a simtools application:
 
 ```bash
@@ -100,7 +102,7 @@ The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORS
 
 ## Model Database Access
 
-Simulation model parameters are stored in a MongoDB-type database.
+Simulation model parameters are stored in database.
 Many simtools applications depend on access to this database.
 
 :::{note}
@@ -112,16 +114,16 @@ in a file named `.env`, see the [Environment Variables](#environment-variables) 
 
 ## Environment Variables
 
-The environment variables listed below are used by simtools applications and defined by the user in a `.env` file to be placed in the working directory. opy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named `.env` and update it accordingly.
+The environment variables listed below are used by simtools applications and defined by the user in a `.env` file to be placed in the working directory. Copy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named `.env` and update it accordingly.
 
 ```console
-# Hostname of the MongoDB server
+# Hostname of the database server
 SIMTOOLS_DB_SERVER=<hostname>
-# Port on the MongoDB server
+# Port on the database server
 SIMTOOLS_DB_API_PORT=<integer>
-# Username for MongoDB
+# Username for database
 SIMTOOLS_DB_API_USER=<username>
-# Password for MongoDB
+# Password for database
 SIMTOOLS_DB_API_PW=<password>
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 # Name of the simulation model database
