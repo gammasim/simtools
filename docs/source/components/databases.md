@@ -38,10 +38,10 @@ A simulation models database is located at DESY. Access to the database is restr
 Database and access configuration is given in the `.env` file, see the [.env_template](../../.env_template) file as example:
 
 ```console
-SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server
-SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
-SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person
-SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person
+SIMTOOLS_DB_API_PORT=27017 # Port on the database server
+SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongodatabaseDB server
+SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for database: ask the responsible person
+SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible person
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-LATEST'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
@@ -94,10 +94,10 @@ This requires the following changes to the settings of the environmental variabl
 
 ```console
 # Environmental variables
-SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server
+SIMTOOLS_DB_API_PORT=27017 # Port on the database server
 SIMTOOLS_DB_SERVER='localhost'
-SIMTOOLS_DB_API_USER='api' # username for MongoDB
-SIMTOOLS_DB_API_PW='password' # Password for MongoDB
+SIMTOOLS_DB_API_USER='api' # username for database
+SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL='STAGING-CTA-Simulation-Model-LATEST'
 ```
@@ -117,10 +117,10 @@ For completeness, here the full `.env` file to be used with a container:
 
 ```console
 # Environmental variables
-SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server
+SIMTOOLS_DB_API_PORT=27017 # Port on the database server
 SIMTOOLS_DB_SERVER='simtools-mongodb'
-SIMTOOLS_DB_API_USER='api' # username for MongoDB
-SIMTOOLS_DB_API_PW='password' # Password for MongoDB
+SIMTOOLS_DB_API_USER='api' # username for database
+SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-LATEST'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
