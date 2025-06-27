@@ -31,6 +31,7 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -38,9 +39,10 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0a1cd533"></script>
+    <script src="../_static/documentation_options.js?v=df51b3de"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/getting_started';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -51,11 +53,11 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="simtools Applications" href="applications.html" />
+    <link rel="next" title="Simulation Productions" href="productions.html" />
     <link rel="prev" title="User Guide" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g11645d3" />
+  <meta name="docsearch:version" content="0.1.dev1+g2fedc9e" />
   </head>
   
   
@@ -93,9 +95,6 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
-</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -119,30 +118,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
   
-    <p class="title logo__title">simtools</p>
   
 </a></div>
-    
-      <div class="navbar-item">
-<div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-2"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-2"
-    aria-label="Version switcher list"
-  >
-    Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-2"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-2">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
-</div></div>
     
   </div>
   
@@ -162,8 +147,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -174,6 +166,30 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -194,12 +210,24 @@
       
       
         <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -214,17 +242,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
       
@@ -282,8 +299,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -291,6 +315,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../developer-guide/index.html">
     Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -305,12 +343,24 @@
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -326,17 +376,6 @@
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
         </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
-        </li>
 </ul></div>
         
       </div>
@@ -350,7 +389,14 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting Started</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1"><a class="reference internal" href="productions.html">Simulation Productions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="manage_simulation_models.html">Manage simulation models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="manage_simulation_models/simulation_models_database.html">Simulation Models Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage_simulation_models/model_import.html">Import of simulation model parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="simulate_calibration_data.html">Simulate Calibration Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
@@ -398,13 +444,6 @@
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-verify-simulation-model-production-tables.html">simtools-verify-simulation-model-production-tables</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="productions.html">Simulation Productions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 </ul>
 </div>
 </nav></div>
@@ -466,25 +505,75 @@
                 <article class="bd-article">
                   
   <section id="getting-started">
-<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
-<p>The usage of simtools requires the installation of the <a class="reference internal" href="#installationforusers"><span class="std std-ref">simtools package</span></a>, its dependencies (mostly <a class="reference internal" href="#corsikasimtelarrayinstallation"><span class="std std-ref">CORISKA/sim_telarray</span></a>),
-and the setting of environment variables to <a class="reference internal" href="#modeldatabaseaccess"><span class="std std-ref">connect to the model database</span></a>.</p>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
+<p>Using simtools requires installing and accessing its <a class="reference internal" href="../components/index.html"><span class="std std-doc">main components</span></a>:
+the <a class="reference internal" href="#installation">simtools package</a>, the simulation software  <a class="reference internal" href="#installation-of-corsika-and-sim-telarray">CORSIKA and sim_telarray</a>, and the <a class="reference internal" href="#model-database-access"><span class="xref myst">simulation model database</span></a>.</p>
+<p>For development-related information, see <a class="reference internal" href="../developer-guide/getting_started_as_developer.html"><span class="std std-doc">Getting Started as a Developer</span></a>.</p>
 <section id="installation">
-<span id="installationforusers"></span><h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>There are four options to install simtools for users:</p>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>simtools can be installed using one of the following methods:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#condainstallation"><span class="std std-ref">using conda</span></a></p></li>
-<li><p><a class="reference internal" href="#pipinstallation"><span class="std std-ref">using pip</span></a></p></li>
-<li><p>using Git and pip (this is the recommended method for developers) (see <a class="reference internal" href="../developer-guide/getting_started.html"><span class="std std-doc">Developer Installation</span></a>)</p></li>
-<li><p><a class="reference internal" href="#dockerinstallation"><span class="std std-ref">using a docker container</span></a> with all software installed</p></li>
+<li><p>Using a <a class="reference internal" href="#container-images"><span class="xref myst">container image</span></a> with all software pre-installed (<strong>recommended</strong>)</p></li>
+<li><p>Via <a class="reference internal" href="#pip-installation"><span class="xref myst">pip</span></a> or <a class="reference internal" href="#conda-installation"><span class="xref myst">conda</span></a>. Requires manual compilation and installation of <strong>CORSIKA</strong> and <strong>sim_telarray</strong>. See the <a class="reference internal" href="#installation-of-corsika-and-sim-telarray">section below</a> for details.</p></li>
 </ul>
-<p>All simtools applications are available as command-line tools.
-Note the naming of the tool, starting with <code class="docutils literal notranslate"><span class="pre">simtools-</span></code> followed by the application name.
-See the <a class="reference internal" href="applications.html"><span class="std std-doc">applications</span></a> section for more details.</p>
-<p>Note to update the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file with the credentials for database access (see <a class="reference internal" href="databases.html"><span class="std std-doc">Model Database Access</span></a>).</p>
-<p>The conda/pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].</p>
+</section>
+<section id="container-images">
+<h2>Container Images<a class="headerlink" href="#container-images" title="Link to this heading">#</a></h2>
+<p>OCI-compatible container images are available for simtools users and support both application and development use cases.  Any runtime such as <a class="reference external" href="https://www.docker.com/products/docker-desktop">Docker</a>, <a class="reference external" href="https://podman.io/">Podman</a>, or <a class="reference external" href="https://apptainer.org/">Apptainer</a> can be used.
+These images eliminate all manual installation steps and allow direct execution of simtools applications.</p>
+<section id="pre-built-images">
+<h3>Pre-built Images<a class="headerlink" href="#pre-built-images" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Production images</strong> (<code class="docutils literal notranslate"><span class="pre">simtools-prod</span></code>): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:</p>
+<ul>
+<li><p>Different CORSIKA/sim_telarray versions</p></li>
+<li><p>Compile options (e.g., <code class="docutils literal notranslate"><span class="pre">prod5</span></code>, <code class="docutils literal notranslate"><span class="pre">prod6</span></code>)</p></li>
+<li><p>CPU optimizations (e.g., <code class="docutils literal notranslate"><span class="pre">avx2</span></code>, <code class="docutils literal notranslate"><span class="pre">avx512</span></code>, <code class="docutils literal notranslate"><span class="pre">no_opt</span></code>)</p></li>
+</ul>
+</li>
+<li><p><strong>Development images</strong> (<code class="docutils literal notranslate"><span class="pre">simtools-dev</span></code>): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.</p></li>
+</ul>
+<p>Pre-built images are hosted on the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools package registry</a>. Authentication may be required; follow <a class="reference external" href="https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry">GitHub’s guide</a> to configure access (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span></code>).</p>
+</section>
+<section id="running-a-simtools-production-image">
+<h3>Running a simtools Production Image<a class="headerlink" href="#running-a-simtools-production-image" title="Link to this heading">#</a></h3>
+<p><strong>Prerequisite</strong>: Configure <a class="reference internal" href="#model-database-access"><span class="xref myst">simulation model database access</span></a>.</p>
+<p>Start an Interactive Container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--env-file<span class="w"> </span>.env<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bash
+</pre></div>
+</div>
+<p>Any simtools application can be run inside the container.</p>
+<p>Run a simtools application:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--env-file<span class="w"> </span>.env<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>simtools-convert-geo-coordinates-of-array-elements<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--input<span class="w"> </span>./simtools/tests/resources/telescope_positions-North-utm.ecsv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--export<span class="w"> </span>ground<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output_path<span class="w"> </span>/workdir/external/
+</pre></div>
+</div>
+</section>
+<section id="pip-installation">
+<h3>Pip Installation<a class="headerlink" href="#pip-installation" title="Link to this heading">#</a></h3>
+<p>simtools is available as a Python package from <a class="reference external" href="https://pypi.org/project/gammasimtools/">PypPi</a>.</p>
+<p>To install, prepare a python environment, e.g.:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba create --name simtools-prod python=3.11</span>
+<span class="go">mamba activate simtools-prod</span>
+</pre></div>
+</div>
+<p>Install simtools and its dependencies:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install gammasimtools</span>
+</pre></div>
+</div>
+</section>
 <section id="conda-installation">
-<span id="condainstallation"></span><h3>Conda Installation<a class="headerlink" href="#conda-installation" title="Link to this heading">#</a></h3>
+<h3>Conda Installation<a class="headerlink" href="#conda-installation" title="Link to this heading">#</a></h3>
 <p>Prepare and install a conda environment with the simtools package:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda env create -n gammasimtools</span>
 <span class="go">conda install gammasimtools --channel conda-forge</span>
@@ -492,30 +581,11 @@ See the <a class="reference internal" href="applications.html"><span class="std 
 </pre></div>
 </div>
 </section>
-<section id="pip-installation">
-<span id="pipinstallation"></span><h3>Pip Installation<a class="headerlink" href="#pip-installation" title="Link to this heading">#</a></h3>
-<p>Prepare a python environment (in this example for python version 3.11):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba create --name simtools-prod python=3.11</span>
-<span class="go">mamba activate simtools-prod</span>
-</pre></div>
-</div>
-<p>Use pip to install simtools and its dependencies:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install gammasimtools</span>
-</pre></div>
-</div>
-<p>The pip installation method requires to <a class="reference internal" href="#corsikasimtelarrayinstallation"><span class="std std-ref">install CORSIKA/sim_telarray</span></a> separately.</p>
-</section>
-<section id="container-docker">
-<span id="dockerinstallation"></span><h3>Container (docker)<a class="headerlink" href="#container-docker" title="Link to this heading">#</a></h3>
-<p>OCI-compatible images are available for simtools users, developers, and for CORSIKA/sim_telarray from the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools package registry</a>.
-These allows to skip all installation steps and run simtools applications directly.</p>
-<p>See the <a class="reference internal" href="docker_files.html"><span class="std std-doc">Docker description</span></a> for more details.</p>
-</section>
 </section>
 <section id="installation-of-corsika-and-sim-telarray">
-<span id="corsikasimtelarrayinstallation"></span><h2>Installation of CORSIKA and sim_telarray<a class="headerlink" href="#installation-of-corsika-and-sim-telarray" title="Link to this heading">#</a></h2>
+<h2>Installation of CORSIKA and sim_telarray<a class="headerlink" href="#installation-of-corsika-and-sim-telarray" title="Link to this heading">#</a></h2>
 <p>CORSIKA and sim_telarray are external tools to simtools and are required dependencies for many applications.
-Recommended is to use the Docker environment, see description in <a class="reference internal" href="docker_files.html"><span class="std std-doc">Docker Environment for Developers</span></a>.</p>
+The installation requires some preparation, this is why it is recommended to use the Docker environment</p>
 <p>For a non-Docker setup, follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTAO users can download both packages from the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/">sim_telarray web page</a>
 (CTAO password applies) and install the package with:</p>
@@ -527,17 +597,42 @@ CTAO users can download both packages from the <a class="reference external" hre
 (recommended to include it in the .env file with all other environment variables).</p>
 </section>
 <section id="model-database-access">
-<span id="modeldatabaseaccess"></span><h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Link to this heading">#</a></h2>
-<p>Simulation model parameters are stored in a MongoDB-type database.
+<h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Link to this heading">#</a></h2>
+<p>Simulation model parameters are stored in database.
 Many simtools applications depend on access to this database.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Ask one of the developers for the credentials to access the database.</p>
 </div>
 <p>Credentials for database access are passed on to simtools applications using environmental variables stored
-in a file named <code class="docutils literal notranslate"><span class="pre">.env</span></code>.
-Copy the template file <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.env_template">.env_template</a>
-to a new file named <code class="docutils literal notranslate"><span class="pre">.env</span></code> and update it with the credentials.</p>
+in a file named <code class="docutils literal notranslate"><span class="pre">.env</span></code>, see the <a class="reference internal" href="#environment-variables">Environment Variables</a> section below.</p>
+</section>
+<section id="environment-variables">
+<h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Link to this heading">#</a></h2>
+<p>The environment variables listed below are used by simtools applications and defined by the user in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to be placed in the working directory. Copy the template file <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.env_template">.env_template</a> to a new file named <code class="docutils literal notranslate"><span class="pre">.env</span></code> and update it accordingly.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Hostname<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>database<span class="w"> </span>server
+<span class="go">SIMTOOLS_DB_SERVER=&lt;hostname&gt;</span>
+<span class="gp"># </span>Port<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>database<span class="w"> </span>server
+<span class="go">SIMTOOLS_DB_API_PORT=&lt;integer&gt;</span>
+<span class="gp"># </span>Username<span class="w"> </span><span class="k">for</span><span class="w"> </span>database
+<span class="go">SIMTOOLS_DB_API_USER=&lt;username&gt;</span>
+<span class="gp"># </span>Password<span class="w"> </span><span class="k">for</span><span class="w"> </span>database
+<span class="go">SIMTOOLS_DB_API_PW=&lt;password&gt;</span>
+<span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
+<span class="gp"># </span>Name<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>simulation<span class="w"> </span>model<span class="w"> </span>database
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-ModelParameters-v0-7-0&#39;</span>
+<span class="gp"># </span>Path<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>sim_telarray<span class="w"> </span>installation
+<span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
+<span class="gp"># </span>User<span class="w"> </span>name<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>user<span class="w"> </span>running<span class="w"> </span>the<span class="w"> </span>application
+<span class="go">SIMTOOLS_USER_NAME=&#39;Max Mustermann&#39;</span>
+<span class="gp"># </span>ORCID<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>user<span class="w"> </span>running<span class="w"> </span>the<span class="w"> </span>application
+<span class="go">SIMTOOLS_USER_ORCID=&#39;0000-1234-5678-0000&#39;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Any simtools application command line argument can be set as an environment variable, see the <a class="reference internal" href="applications.html#configuration"><span class="std std-ref">application configuration</span></a> section.</p>
+</div>
 </section>
 </section>
 
@@ -561,11 +656,11 @@ to a new file named <code class="docutils literal notranslate"><span class="pre"
       </div>
     </a>
     <a class="right-next"
-       href="applications.html"
+       href="productions.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools Applications</p>
+        <p class="prev-next-title">Simulation Productions</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -588,14 +683,17 @@ to a new file named <code class="docutils literal notranslate"><span class="pre"
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-installation">Conda Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-images">Container Images</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-built-images">Pre-built Images</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-a-simtools-production-image">Running a simtools Production Image</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip-installation">Pip Installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-docker">Container (docker)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-installation">Conda Installation</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-of-corsika-and-sim-telarray">Installation of CORSIKA and sim_telarray</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-database-access">Model Database Access</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment Variables</a></li>
 </ul>
   </nav></div>
 
@@ -633,7 +731,7 @@ to a new file named <code class="docutils literal notranslate"><span class="pre"
 
   <p class="copyright">
     
-      © Copyright 2024, gammasim-tools, simtools developers.
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
       <br/>
     
   </p>

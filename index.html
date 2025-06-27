@@ -7,8 +7,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="Documentation for simtools" lang="en" name="description" xml:lang="en" />
 
-    <title>simtools &#8212; simtools</title>
+    <title>&lt;no title&gt; &#8212; simtools</title>
   
   
   
@@ -31,6 +32,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -38,9 +40,10 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=0a1cd533"></script>
+    <script src="_static/documentation_options.js?v=df51b3de"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -54,7 +57,7 @@
     <link rel="next" title="User Guide" href="user-guide/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g11645d3" />
+  <meta name="docsearch:version" content="0.1.dev1+g2fedc9e" />
   </head>
   
   
@@ -92,9 +95,6 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
-</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -118,30 +118,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
   
-    <p class="title logo__title">simtools</p>
   
 </a></div>
-    
-      <div class="navbar-item">
-<div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-2"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-2"
-    aria-label="Version switcher list"
-  >
-    Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-2"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-2">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
-</div></div>
     
   </div>
   
@@ -161,8 +147,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -173,6 +166,30 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -193,12 +210,24 @@
       
       
         <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -213,17 +242,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
       
@@ -242,10 +260,6 @@
     </div>
   
 
-  
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
-      <span class="fa-solid fa-outdent"></span>
-    </button>
   
 </div>
 
@@ -283,8 +297,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -292,6 +313,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="developer-guide/index.html">
     Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -306,12 +341,24 @@
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -326,17 +373,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
         
@@ -372,101 +408,104 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="simtools">
-<h1>simtools<a class="headerlink" href="#simtools" title="Link to this heading">#</a></h1>
-<p><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/badge/License-BSD_3--Clause-blue.svg" /></a>
-<a class="reference external" href="https://github.com/gammasim/simtools/releases"><img alt="release" src="https://img.shields.io/github/v/release/gammasim/simtools" /></a>
-<a class="reference external" href="https://zenodo.org/badge/latestdoi/195011575"><img alt="DOI" src="https://zenodo.org/badge/195011575.svg" /></a></p>
-<p><a class="reference external" href="https://anaconda.org/conda-forge/gammasimtools"><img alt="conda" src="https://anaconda.org/conda-forge/gammasimtools/badges/version.svg" /></a>
-<a class="reference external" href="https://badge.fury.io/py/gammasimtools"><img alt="pypyi" src="https://badge.fury.io/py/gammasimtools.svg" /></a></p>
-<p><a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml"><img alt="CI" src="https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml/badge.svg" /></a>
-<a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml"><img alt="CI-integrationtest" src="https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml/badge.svg" /></a>
-<a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml"><img alt="CI-docs" src="https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg" /></a></p>
-<p><a class="reference external" href="https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&amp;amp;utm_medium=referral&amp;amp;utm_content=&amp;amp;utm_campaign=Badge_grade"><img alt="Quality" src="https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7" /></a>
-<a class="reference external" href="https://codecov.io/gh/gammasim/simtools"><img alt="Coverage" src="https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH" /></a>
-<a class="reference external" href="https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w"><img alt="Coverage" src="https://sonar-cta-dpps.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_AY_ssha9WiFxsX-2oy_w&amp;metric=coverage&amp;token=sqb_ef68b705c0bc7f9800f4ff3f087f1d7f7471ff0e" /></a>
-<a class="reference external" href="https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w"><img alt="Quality Gate Status" src="https://sonar-cta-dpps.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_AY_ssha9WiFxsX-2oy_w&amp;metric=alert_status&amp;token=sqb_ef68b705c0bc7f9800f4ff3f087f1d7f7471ff0e" /></a></p>
-<p>Simulation tools and applications for the <a class="reference external" href="https://www.cta-observatory.org">Cherenkov Telescope Array (CTAO)</a>.</p>
-<p>simtools provides:</p>
-<ul class="simple">
-<li><p>libraries for simulation model definition and management</p></li>
-<li><p>model database interfaces</p></li>
-<li><p>tools for the preparation and configuration of simulation productions</p></li>
-<li><p>applications for simulation model parameter derivation and validation</p></li>
-<li><p>standardized interfaces and data products independent of the underlying simulation software (e.g., <a class="reference external" href="https://www.iap.kit.edu/corsika/">CORSIKA</a>, <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray</a>)</p></li>
-<li><p>I/O and reporting tools for the MC simulation model parameter and production database</p></li>
-</ul>
-<p>simtools is one part of the CTAO Simulation Pipeline, which consist of the following components:</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://www.iap.kit.edu/corsika/">CORSIKA</a> air shower simulation code and the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray</a> telescope simulation code</p></li>
-<li><p><a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">simulation models</a></p></li>
-<li><p><a class="reference external" href="https://gammasim.github.io/simtools/databases.html">databases</a>, especially the model parameter database</p></li>
-</ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>simtools is currently under heavy development with continuous changes and additions planned.
-Please contact the developers before using it: <a class="reference external" href="mailto:simtools-developer&#37;&#52;&#48;desy&#46;de">simtools-developer<span>&#64;</span>desy<span>&#46;</span>de</a>.</p>
+  <img alt="simtools logo" class="align-center" src="_images/simtools_logo.png" />
+<p><strong>simtools</strong> is a toolkit for model parameter management, configuring simulation productions, setting, validation workflows.
+It is part of the simulation pipeline <a class="reference external" href="http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/">SimPipe</a> of the <a class="reference external" href="https://www.cta-observatory.org/">Cherenkov Telescope Array Observatory (CTAO)</a>.</p>
+<div class="sd-d-flex-row docutils">
+<p><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-rounded-pill sd-mr-3 reference internal" href="user-guide/getting_started.html"><span class="doc">Getting Started</span></a></p>
+<p><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-success sd-rounded-pill sd-mr-3 reference external" href="https://github.com/gammasim/simtools"><span>GitHub Repository</span></a></p>
+<p><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-info sd-rounded-pill sd-mr-3 reference external" href="https://github.com/gammasim/simtools/blob/main/LICENSE"><span>License BSD-3</span></a></p>
 </div>
-<section id="quick-start">
-<h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
-<section id="installation-for-users">
-<h3>Installation for users<a class="headerlink" href="#installation-for-users" title="Link to this heading">#</a></h3>
-<p>Install simtools with pypi:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>gammasimtools
-</pre></div>
+<div class="toctree-wrapper compound" id="simtools-docs">
 </div>
-<p>or using conda/mamba:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>gammasimtools
-conda<span class="w"> </span>install<span class="w"> </span>gammasimtools<span class="w"> </span>--channel<span class="w"> </span>conda-forge
-conda<span class="w"> </span>activate<span class="w"> </span>gammasimtools
-</pre></div>
+<hr class="docutils" />
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 cards docutils">
+<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-2 sd-row-cols-lg-3 docutils">
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-d-flex-column docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<span class="fas fa-bolt pst-color-primary"></span> User Guide</div>
+<p class="sd-card-text">Learn how to get started as a user.
+This guide will cover how to install simtools,
+and introduce the main functionalities.</p>
 </div>
-<p>See the <a class="reference external" href="https://gammasim.github.io/simtools/user-guide/getting_started.html">user’s guide</a> for more details.</p>
-</section>
-<section id="installation-for-developers">
-<h3>Installation for developers<a class="headerlink" href="#installation-for-developers" title="Link to this heading">#</a></h3>
-<p>Install simtools from GitHub with conda/mamba:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git
-<span class="nb">cd</span><span class="w"> </span>simtools
-mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
-conda<span class="w"> </span>activate<span class="w"> </span>simtools
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</pre></div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-stretched-link sd-mt-auto reference internal" href="user-guide/index.html"><span class="doc">To the user guide</span></a></span></p>
 </div>
-<p>See the <a class="reference external" href="https://gammasim.github.io/simtools/developer-guide/getting_started.html">developer’s guide</a> for more details.</p>
-</section>
-</section>
-<section id="authors">
-<h2>Authors<a class="headerlink" href="#authors" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Raul R Prado (DESY)</p></li>
-<li><p>Orel Gueta (DESY)</p></li>
-<li><p>Eshita Joshi (DESY)</p></li>
-<li><p>Tobias Kleiner (DESY)</p></li>
-<li><p>Victor B. Martins (DESY)</p></li>
-<li><p>Gernot Maier (DESY)</p></li>
-</ul>
-</section>
-<section id="citing-this-software">
-<h2>Citing this Software<a class="headerlink" href="#citing-this-software" title="Link to this heading">#</a></h2>
-<p>Please cite this software if it is used for a publication, see the <a class="reference external" href="https://doi.org/10.5281/zenodo.6346696">Zenodo record</a> and <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/CITATION.cff">CITATION.cff</a> .</p>
-</section>
-<section id="acknowledgements">
-<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading">#</a></h2>
-<p>This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (<em>PUNCH4NFDI <a class="reference external" href="https://www.punch4nfdi.de/">https://www.punch4nfdi.de/</a></em>).</p>
-</section>
-<section id="table-of-contents">
-<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading">#</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="user-guide/index.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api-reference/index.html">API Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer-guide/index.html">Developer Guide</a></li>
-</ul>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="user-guide/index.html"><span class="doc">User Guide</span></a></div>
 </div>
-<p><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/CHANGELOG.md">Changelog</a></p>
-</section>
-</section>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-d-flex-column docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<span class="fas fa-puzzle-piece pst-color-primary"></span> Components</div>
+<p class="sd-card-text">Learn about the main components working together with simtools:
+simulation software and data bases.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-stretched-link sd-mt-auto reference internal" href="components/index.html"><span class="doc">To the components guide</span></a></span></p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="components/index.html"><span class="doc">Components</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-d-flex-column docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<span class="fas fa-database pst-color-primary"></span> Data Model</div>
+<p class="sd-card-text">Learn about the data model used by simtools for its input,
+simulation model parameters, and output.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-stretched-link sd-mt-auto reference internal" href="data-model/index.html"><span class="doc">To the data model guide</span></a></span></p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="data-model/index.html"><span class="doc">Data Model</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-d-flex-column docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<span class="fas fa-code pst-color-primary"></span> Developer Guide</div>
+<p class="sd-card-text">Learn how to contribute to simtools.
+This guide will cover how to set up a development environment,
+how to add code, and how to run tests.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-stretched-link reference internal" href="developer-guide/index.html"><span class="doc">To the developer guide</span></a></span></p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="developer-guide/index.html"><span class="doc">Developer Guide</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-d-flex-column docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<span class="fas fa-book pst-color-primary"></span> API Reference</div>
+<p class="sd-card-text">Learn about the details of the simtools API, its functions,
+classes, and methods.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-stretched-link reference internal" href="api-reference/index.html"><span class="doc">To the API docs</span></a></span></p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="api-reference/index.html"><span class="doc">API</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-d-flex-column docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<span class="fas fa-hammer pst-color-primary"></span> Changelog</div>
+<p class="sd-card-text">Learn what has changed in simtools.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-stretched-link reference internal" href="changelog.html"><span class="doc">To the changelog</span></a></span></p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="changelog.html"><span class="doc">CHANGELOG</span></a></div>
+</div>
+</div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>simtools is currently under heavy development with continuous changes and additions applied. Please contact the developers before using it: simtools-developer&#64;desy.de.</p>
+</div>
 
 
                 </article>
@@ -494,41 +533,6 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-users">Installation for users</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-developers">Installation for developers</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">Authors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#citing-this-software">Citing this Software</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acknowledgements">Acknowledgements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-of-contents">Table of Contents</a></li>
-</ul>
-  </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.md.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
-
-</div></div>
-              
             
           </div>
           <footer class="bd-footer-content">
@@ -552,7 +556,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 
   <p class="copyright">
     
-      © Copyright 2024, gammasim-tools, simtools developers.
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
       <br/>
     
   </p>

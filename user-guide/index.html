@@ -31,6 +31,7 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -38,9 +39,10 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0a1cd533"></script>
+    <script src="../_static/documentation_options.js?v=df51b3de"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/index';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -52,10 +54,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Getting Started" href="getting_started.html" />
-    <link rel="prev" title="simtools" href="../index.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g11645d3" />
+  <meta name="docsearch:version" content="0.1.dev1+g2fedc9e" />
   </head>
   
   
@@ -93,9 +95,6 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
-</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -119,30 +118,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
   
-    <p class="title logo__title">simtools</p>
   
 </a></div>
-    
-      <div class="navbar-item">
-<div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-2"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-2"
-    aria-label="Version switcher list"
-  >
-    Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-2"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-2">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
-</div></div>
     
   </div>
   
@@ -162,8 +147,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -174,6 +166,30 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -194,12 +210,24 @@
       
       
         <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -214,17 +242,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
       
@@ -282,8 +299,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -291,6 +315,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../developer-guide/index.html">
     Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -305,12 +343,24 @@
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -326,17 +376,6 @@
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
         </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
-        </li>
 </ul></div>
         
       </div>
@@ -350,7 +389,14 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1"><a class="reference internal" href="productions.html">Simulation Productions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="manage_simulation_models.html">Manage simulation models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="manage_simulation_models/simulation_models_database.html">Simulation Models Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage_simulation_models/model_import.html">Import of simulation model parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="simulate_calibration_data.html">Simulate Calibration Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
@@ -398,13 +444,6 @@
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-verify-simulation-model-production-tables.html">simtools-verify-simulation-model-production-tables</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="productions.html">Simulation Productions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 </ul>
 </div>
 </nav></div>
@@ -464,56 +503,22 @@
                   
   <section id="user-guide">
 <h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>For instructions on installing <strong>simtools</strong> and its components, see the <a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> guide.
+All required software, including <strong>CORSIKA</strong>, <strong>sim_telarray</strong>, and <strong>simtools</strong>, is available as <a class="reference internal" href="getting_started.html#container-images"><span class="std std-ref">pre-built container images</span></a>.
+A full list of simtools applications is provided in the <a class="reference internal" href="applications.html"><span class="std std-doc">Applications</span></a> section.</p>
+</section>
+<section id="main-use-cases">
+<h2>Main Use Cases<a class="headerlink" href="#main-use-cases" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="productions.html"><span class="std std-doc">Generate simulated events</span></a>: Configure and run large-scale productions of simulated event data.</p></li>
+<li><p><a class="reference internal" href="manage_simulation_models.html"><span class="std std-doc">Manage simulation models and parameters</span></a>: Derive, validate, and maintain simulation models and associated parameters.</p></li>
+<li><p><a class="reference internal" href="simulate_calibration_data.html"><span class="doc std std-doc">Simulate calibration data</span></a>: Produce calibration datasets, including artificial light sources and pedestal events.</p></li>
+</ul>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-of-corsika-and-sim-telarray">Installation of CORSIKA and sim_telarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#model-database-access">Model Database Access</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="applications.html#list-of-applications">List of applications</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#description-of-model-parameters-through-schemas">Description of model parameters through schemas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#updating-the-model-database">Updating the model database</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#import-simulation-model-parameters">Import simulation model parameters</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="databases.html#database-structure">Database structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="databases.html#using-the-remote-database-located-at-desy">Using the remote database located at DESY</a></li>
-<li class="toctree-l2"><a class="reference internal" href="databases.html#browse-the-database">Browse the database</a></li>
-<li class="toctree-l2"><a class="reference internal" href="databases.html#update-the-database">Update the database</a></li>
-<li class="toctree-l2"><a class="reference internal" href="databases.html#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="simulation_software.html#corsika">CORSIKA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation_software.html#sim-telarray">sim_telarray</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="productions.html">Simulation Productions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="productions.html#local-productions">Local productions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="productions.html#running-simtools-on-htcondor-using-apptainers">Running simtools on HTCondor using Apptainers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="productions.html#running-grid-productions">Running Grid Productions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="docker_files.html#simtools-package-registry">Simtools package registry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_files.html#container-for-simtools-users-no-opt-images">Container for simtools users (‘no opt’ images)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_files.html#container-for-simtools-developers-simtools-dev">Container for simtools developers (simtools-dev)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_files.html#container-for-corsika-and-simtelarray">Container for CORSIKA and simtelarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="docker_files.html#build-a-new-container-locally">Build a new container locally</a></li>
-</ul>
-</li>
-</ul>
 </div>
+</section>
 </section>
 
 
@@ -532,7 +537,7 @@
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools</p>
+        <p class="prev-next-title">&lt;no title&gt;</p>
       </div>
     </a>
     <a class="right-next"
@@ -554,6 +559,19 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-use-cases">Main Use Cases</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
@@ -589,7 +607,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, gammasim-tools, simtools developers.
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
       <br/>
     
   </p>

@@ -31,6 +31,7 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -38,9 +39,10 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0a1cd533"></script>
+    <script src="../_static/documentation_options.js?v=df51b3de"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/productions';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -51,11 +53,11 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Containers (docker files)" href="docker_files.html" />
-    <link rel="prev" title="Simulation Software" href="simulation_software.html" />
+    <link rel="next" title="Manage simulation models" href="manage_simulation_models.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g11645d3" />
+  <meta name="docsearch:version" content="0.1.dev1+g2fedc9e" />
   </head>
   
   
@@ -93,9 +95,6 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
-</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -119,30 +118,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
   
-    <p class="title logo__title">simtools</p>
   
 </a></div>
-    
-      <div class="navbar-item">
-<div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-2"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-2"
-    aria-label="Version switcher list"
-  >
-    Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-2"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-2">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
-</div></div>
     
   </div>
   
@@ -162,8 +147,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -174,6 +166,30 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -194,12 +210,24 @@
       
       
         <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -214,17 +242,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
       
@@ -282,8 +299,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -291,6 +315,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../developer-guide/index.html">
     Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -305,12 +343,24 @@
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -326,17 +376,6 @@
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
         </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
-        </li>
 </ul></div>
         
       </div>
@@ -350,7 +389,14 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Simulation Productions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="manage_simulation_models.html">Manage simulation models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="manage_simulation_models/simulation_models_database.html">Simulation Models Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage_simulation_models/model_import.html">Import of simulation model parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="simulate_calibration_data.html">Simulate Calibration Data</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-calculate-trigger-rate.html">simtools-calculate-trigger-rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
@@ -398,13 +444,6 @@
 <li class="toctree-l2"><a class="reference internal" href="applications/simtools-verify-simulation-model-production-tables.html">simtools-verify-simulation-model-production-tables</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Simulation Productions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 </ul>
 </div>
 </nav></div>
@@ -467,38 +506,100 @@
                   
   <section id="simulation-productions">
 <h1>Simulation Productions<a class="headerlink" href="#simulation-productions" title="Link to this heading">#</a></h1>
-<p>Simtools allows large-scale productions of simulated events required for the calculation of instrument response functions.
-Simtools is designed to use the CTAO workload management system (WMS) and the HT Condor job submission system.</p>
-<p>Pre-requisites for running productions:</p>
+<p>The production of large sets of simulated events is the core functionality of the simtools framework.
+Simtools is designed to use the CTAO workload management system (WMS) and (especially for testing) the HT Condor job submission system.</p>
+<section id="configure-and-produce-simulations">
+<h2>Configure and Produce Simulations<a class="headerlink" href="#configure-and-produce-simulations" title="Link to this heading">#</a></h2>
+<p>The following steps are executed for each new simulation production in the order <a class="reference internal" href="#configure">Configure</a>, <a class="reference internal" href="#produce">Produce</a>, <a class="reference internal" href="#verify-and-report">Verify and Report</a>.</p>
+<section id="configure">
+<h3>Configure<a class="headerlink" href="#configure" title="Link to this heading">#</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Incomplete documentation:</p>
 <ul class="simple">
-<li><p>simtools is installed and configured on the job submission host.</p></li>
-<li><p>simulation software (CORSIKA and sim_telarray) are installed on the worker nodes or installed in a container (findable through <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_SIMTEL_PATH</span></code>) .</p></li>
-<li><p>simulation models are accessible through the simulation model database. This includes both the production tables and the model parameters.</p></li>
-<li><p>configuration parameters for the production (see e.g., <a class="reference internal" href="#../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_gamma_20_deg_North.yml</span></a>)</p></li>
+<li><p>description of job configuration.</p></li>
+<li><p>concept of Production Configuration repository.</p></li>
+<li><p>…</p></li>
 </ul>
-<p>Productions are configured and submitted using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> application (or <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> for HTCondor jobs).</p>
+</div>
+<p>New productions are configured using templates from the simulation production configuration repository.
+The configuration defines primary particles, observation parameters (zenith angle ranges, night-sky background (NSB) levels, array layouts), and production parameters including:</p>
+<ul class="simple">
+<li><p>simtools and Simulation Models versions</p></li>
+<li><p>Simulation production version</p></li>
+<li><p>Observational parameter grid definition (e.g., zenith angle binning)</p></li>
+<li><p>Required statistics or metric values for production sizing</p></li>
+</ul>
+<p>Defining a new configuration triggers the following steps:</p>
+<ol class="arabic simple">
+<li><p>Derive CORSIKA configuration limits (e.g., energy ranges or maximum core scatter radius) for the production grid using the application <a class="reference internal" href="applications/simtools-production-generate-grid.html#module-production_generate_grid" title="production_generate_grid"><span class="xref myst py py-mod">simtools-production-generate-grid</span></a> to determine configuration parameters from <a class="reference internal" href="#corsika-configuration-lookup-tables">CORSIKA configuration lookup tables</a></p></li>
+<li><p>Calculate required event statistics for each grid point (if not user-specified) using the application <a class="reference internal" href="applications/simtools-production-generate-grid.html#module-production_generate_grid" title="production_generate_grid"><span class="xref myst py py-mod">simtools-production-generate-grid</span></a> and the following inputs:</p>
+<ol class="arabic simple">
+<li><p>metric parameters for statistical requirements (e.g., effective collection area uncertainty after gamma/hadron separation)</p></li>
+<li><p>DL2 event data (with or without gamma/hadron cuts applied) <strong>todo clear definition needed</strong></p></li>
+</ol>
+</li>
+<li><p>Estimate required computing resources (optional) using:</p>
+<ol class="arabic simple">
+<li><p>resource lookup tables</p></li>
+<li><p>(a missing simtools)</p></li>
+</ol>
+</li>
+<li><p>Choose or set the correct production model for the period of interest from the production tables defined in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models/-/tree/main/simulation-models/productions?ref_type=heads">Simulation Models database</a>.</p></li>
+<li><p>Write configuration files to SimPipe Production Configuration GitLab (energy ranges, versions, etc.) <strong>todo: to be defined</strong></p>
+<ol class="arabic simple">
+<li><p>includes configuration parameter versioning</p></li>
+<li><p>writing of CWL files here?</p></li>
+</ol>
+</li>
+</ol>
+</section>
+<section id="produce">
+<h3>Produce<a class="headerlink" href="#produce" title="Link to this heading">#</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Incomplete documentation:</p>
+<ul class="simple">
+<li><p>description of interface to WMS and how to submit jobs.</p></li>
+<li><p>description of interface to BDMS and how output files are stored.</p></li>
+</ul>
+</div>
+<p>Uses <a class="reference external" href="https://gammasim.github.io/simtools/user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a>
+to execute for each production run on the compute nodes:</p>
+<ul class="simple">
+<li><p>queries the Simulation Models database to generate CORSIKA and sim_telarray configuration and model files</p></li>
+<li><p>generates run scripts for CORSIKA and sim_telarray (includes “multi-pipe” setup, meaning several sim_telarray for a single CORSIKA run)</p></li>
+<li><p>executes the air shower, telescopes, and array simulations</p></li>
+<li><p>collects final results including reduced event data and log files</p></li>
+</ul>
+<p>The <em>Produce</em> step generates the following output files:</p>
+<ul class="simple">
+<li><p>log files from CORSIKA, sim_telarray, and simtools</p></li>
+<li><p>sim_telarray output files in eventio format (includes event data and histogram files)</p></li>
+<li><p>reduced event data files in HDF5 format generated by simtools using <a class="reference external" href="https://gammasim.github.io/simtools/user-guide/applications/simtools-generate-event-data.html">simtools-generate-simtel-event-data</a></p></li>
+</ul>
 <section id="local-productions">
-<h2>Local productions<a class="headerlink" href="#local-productions" title="Link to this heading">#</a></h2>
-<p>Configure and submit a local production using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command.
+<h4>Local productions<a class="headerlink" href="#local-productions" title="Link to this heading">#</a></h4>
+<p>Configure and submit a local production using the <a class="reference internal" href="applications/simtools-simulate-prod.html#simulate-prod"><span class="std std-ref">simtools-simulate-prod</span></a> command.
 The submit engine is configured with the <code class="docutils literal notranslate"><span class="pre">--submit_engine</span> <span class="pre">local</span></code> command line option, see
-<a class="reference internal" href="#../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_gamma_20_deg_North.yml</span></a> for an example configuration.</p>
+<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml">simulate_prod_gamma_20_deg_North.yml</a> for an example configuration.</p>
 <p>Running a local production is a simple way to test the production system, but in general too slow to simulate a large number of events.</p>
 </section>
 <section id="running-simtools-on-htcondor-using-apptainers">
-<h2>Running simtools on HTCondor using Apptainers<a class="headerlink" href="#running-simtools-on-htcondor-using-apptainers" title="Link to this heading">#</a></h2>
-<p>Simtools can be run using HTCondor and Apptainers. Jobs are configured with the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> command.
-Configuration is similar to the <code class="docutils literal notranslate"><span class="pre">simulate-prod</span></code> command, with the following additions:</p>
+<h4>Running simtools on HTCondor using Apptainers<a class="headerlink" href="#running-simtools-on-htcondor-using-apptainers" title="Link to this heading">#</a></h4>
+<p>Simtools can be run using HTCondor and Apptainers. Jobs are configured with the <a class="reference internal" href="applications/simtools-simulate-prod-htcondor-generator.html#module-simulate_prod_htcondor_generator" title="simulate_prod_htcondor_generator"><span class="xref myst py py-mod">simtools-simulate-prod-htcondor-generator</span></a> command.
+Configuration is similar to the <a class="reference internal" href="applications/simtools-simulate-prod.html#simulate-prod"><span class="std std-ref">simtools-simulate-prod</span></a> command, with the following additions:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">APPTAINER_IMAGE</span></code> is the path to the Apptainer image to be used for the simulation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">PRIORITY</span></code> is the priority of the job in HTCondor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">RUN_NUMBER</span></code> and <code class="docutils literal notranslate"><span class="pre">NUMBER_OF_RUNS</span></code> are the first run number and the number of runs to be simulated.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> tool generates two files:</p>
+<p>The <a class="reference internal" href="applications/simtools-simulate-prod-htcondor-generator.html#module-simulate_prod_htcondor_generator" title="simulate_prod_htcondor_generator"><span class="xref myst py py-mod">simtools-simulate-prod-htcondor-generator</span></a> tool generates two files:</p>
 <ul class="simple">
 <li><p>a condor submission file to specify the apptainer, the number of jobs (equals the number of runs), the priority, and the output files.</p></li>
-<li><p>a condor submission script with the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command to be run in the apptainer.</p></li>
+<li><p>a condor submission script with the <a class="reference internal" href="applications/simtools-simulate-prod.html#simulate-prod"><span class="std std-ref">simtools-simulate-prod</span></a> command to be run in the apptainer.</p></li>
 </ul>
-<p>An example for the configuration <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod-htcondor-generator</span></code> can be found in <a class="reference internal" href="#tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_htcondor_generator_gamma_20_deg_North.yml</span></a>.</p>
+<p>An example for the configuration <a class="reference internal" href="applications/simtools-simulate-prod-htcondor-generator.html#module-simulate_prod_htcondor_generator" title="simulate_prod_htcondor_generator"><span class="xref myst py py-mod">simtools-simulate-prod-htcondor-generator</span></a> can be found in <a class="reference internal" href="#%5Btests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml%5D(https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml)"><span class="xref myst">simulate_prod_htcondor_generator_gamma_20_deg_North.yml</span></a>.</p>
 <p>Container images are available from the GitHub and CTAO container registries and can be converted to Apptainer images using the <code class="docutils literal notranslate"><span class="pre">apptainer</span> <span class="pre">build</span></code> command.
 Example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>build<span class="w"> </span>simtools.sif<span class="w"> </span>docker://ghcr.io/gammasim/simtools-prod-250304-corsika-78000-bernlohr-1.69-prod6-baseline-qgs3-avx2:20250507-154410
@@ -506,11 +607,44 @@ Example:</p>
 </div>
 </section>
 <section id="running-grid-productions">
-<h2>Running Grid Productions<a class="headerlink" href="#running-grid-productions" title="Link to this heading">#</a></h2>
-<div class="admonition danger">
-<p class="admonition-title">Danger</p>
-<p>Missing Documentation.</p>
+<h4>Running Grid Productions<a class="headerlink" href="#running-grid-productions" title="Link to this heading">#</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Incomplete Documentation.</p>
 </div>
+</section>
+</section>
+<section id="verify-and-report">
+<h3>Verify and Report<a class="headerlink" href="#verify-and-report" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Verification of sim_telarray meta-parameters</p></li>
+<li><p>Verification for each sim_telarray output file (includes log files)</p></li>
+<li><p>Comparison with reference productions</p></li>
+</ul>
+</section>
+</section>
+<section id="production-preparatory-steps">
+<h2>Production Preparatory Steps<a class="headerlink" href="#production-preparatory-steps" title="Link to this heading">#</a></h2>
+<section id="corsika-configuration-lookup-tables">
+<h3>CORSIKA configuration lookup tables<a class="headerlink" href="#corsika-configuration-lookup-tables" title="Link to this heading">#</a></h3>
+<p>Generate lookup tables for CORSIKA configuration limits as a function of zenith angle, night-sky background (NSB) level, and array layout.
+Limits on energy, core scatter radius, and viewcone radius are derived from triggered simulation events generated from
+simulation runs with generous settings.
+Executed for major releases or significant configuration changes (e.g., changes in telescope array):</p>
+<ul class="simple">
+<li><p>uses reduced event data files generated by <a class="reference internal" href="applications/simtools-generate-simtel-event-data.html#module-generate_simtel_event_data" title="generate_simtel_event_data"><span class="xref myst py py-mod">simtools-generate-simtel-event-data</span></a> as input for each simulation run</p></li>
+<li><p><a class="reference internal" href="applications/simtools-merge-tables.html#module-merge_tables" title="merge_tables"><span class="xref myst py py-mod">simtools-merge-tables</span></a> merges sufficient reduced event data files into larger files (HDF5 format)</p></li>
+<li><p><a class="reference internal" href="applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits" title="production_derive_corsika_limits"><span class="xref myst py py-mod">simtools-production-derive-corsika-limits</span></a> derives CORSIKA configuration limits for each zenith angle, NSB level, and array layout and generates lookup tables</p></li>
+</ul>
+<p>Lookup tables are stored in the SimPipe Production Configuration gitlab repository.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Incomplete documentation and unclear:</p>
+<ul class="simple">
+<li><p>where are merged tables stored? Or temporarily generated and not stored?</p></li>
+</ul>
+</div>
+</section>
 </section>
 </section>
 
@@ -525,20 +659,20 @@ Example:</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simulation_software.html"
+       href="getting_started.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Simulation Software</p>
+        <p class="prev-next-title">Getting Started</p>
       </div>
     </a>
     <a class="right-next"
-       href="docker_files.html"
+       href="manage_simulation_models.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Containers (docker files)</p>
+        <p class="prev-next-title">Manage simulation models</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -561,9 +695,21 @@ Example:</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-productions">Local productions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-simtools-on-htcondor-using-apptainers">Running simtools on HTCondor using Apptainers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-grid-productions">Running Grid Productions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-produce-simulations">Configure and Produce Simulations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configure">Configure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#produce">Produce</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#local-productions">Local productions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#running-simtools-on-htcondor-using-apptainers">Running simtools on HTCondor using Apptainers</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#running-grid-productions">Running Grid Productions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-and-report">Verify and Report</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production-preparatory-steps">Production Preparatory Steps</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-configuration-lookup-tables">CORSIKA configuration lookup tables</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
@@ -601,7 +747,7 @@ Example:</p>
 
   <p class="copyright">
     
-      © Copyright 2024, gammasim-tools, simtools developers.
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
       <br/>
     
   </p>
