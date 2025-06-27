@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-generate-simtel-event-data
     TEST_NAME: hdf5
     CONFIGURATION:
-      INPUT: 'tests/resources/*proton*.simtel.zst'
+      INPUT: 'tests/resources/*proton*North_alpha_*.simtel.zst'
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: output_file.hdf5
       USE_PLAIN_OUTPUT_PATH: true
