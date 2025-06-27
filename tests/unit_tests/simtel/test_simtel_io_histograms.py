@@ -70,7 +70,7 @@ def test_calculate_trigger_rates(
         ) = sim_telarray_histograms_instance.calculate_trigger_rates(print_info=False)
     assert pytest.approx(sim_event_rates[0].value, 0.2) == 2e7
     assert sim_event_rates[0].unit == 1 / u.s
-    assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 9008
+    assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 11515
     assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
     assert "Histogram" in caplog.text
     assert "Total number of simulated events" in caplog.text
@@ -115,7 +115,7 @@ def test_rates_for_each_file(sim_telarray_histograms_instance):
         triggered_event_rate_uncertainty,
     ) = sim_telarray_histograms_instance._rates_for_stacked_files()
     assert isinstance(sim_event_rate, list)
-    assert pytest.approx(triggered_event_rate_uncertainty[0].value, 0.1) == 6370  # uncertainty
+    assert pytest.approx(triggered_event_rate_uncertainty[0].value, 0.1) == 8142  # uncertainty
     # decreased by stacking files
 
 
@@ -178,7 +178,7 @@ def test_export_histograms(sim_telarray_histograms_instance, io_handler):
 
     # Read sim_telarray file
     list_of_tables = read_hdf5(file_with_path)
-    assert len(list_of_tables) == 10
+    assert len(list_of_tables) == 13
     for table in list_of_tables:
         assert isinstance(table, Table)
 
