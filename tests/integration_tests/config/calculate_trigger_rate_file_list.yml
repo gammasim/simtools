@@ -9,7 +9,7 @@ CTA_SIMPIPE:
       SAVE_TABLES: true
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.ecsv
-    - OUTPUT_FILE: proton_run202_za20deg_azm0deg_North_test_layout_test-prod.simtel.ecsv
+    - OUTPUT_FILE: proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.ecsv
+    - OUTPUT_FILE: proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.ecsv
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

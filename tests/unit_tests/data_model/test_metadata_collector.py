@@ -117,7 +117,9 @@ def test_get_site(args_dict_site):
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
 
 
-def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplog):
+def test_read_input_metadata_from_file(
+    args_dict_site, tmp_test_directory, caplog, sim_telarray_file_proton
+):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
 
@@ -161,9 +163,7 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
         metadata_1._read_input_metadata_from_file()
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = (
-            "tests/resources/proton_run202_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
-        )
+        metadata_1.args_dict["input_meta"] = sim_telarray_file_proton
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
 
