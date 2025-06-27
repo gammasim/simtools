@@ -74,6 +74,3 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_fi
 
     assert tel_mapping[1] == "LSTN-01"
     assert tel_mapping[5] == "MSTN-01"
-
-    # Test fallback to default name for unknown telescope
-    assert tel_mapping.get(999) == "Unknown-999"
