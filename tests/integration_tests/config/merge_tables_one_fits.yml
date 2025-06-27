@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-merge-tables
     TEST_NAME: one_fits
     CONFIGURATION:
-      INPUT: tests/resources/run202_202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.fits.gz
+      INPUT: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
       TABLE_NAMES:
       - SHOWERS
       - TRIGGERS
