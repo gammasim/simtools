@@ -4,34 +4,51 @@ r"""
 Derive CORSIKA configuration limits for energy, core distance, and viewcone radius.
 
 This tool determines configuration limits based on triggered events from broad-range
-simulations. It supports setting:
+simulations. It supports the derivation of the following CORSIKA configuration parameters:
 
-- **ERANGE**: Derives the lower energy limit; upper limit is user-defined.
-- **CSCAT**: Derives the upper core distance; lower limit is user-defined.
-- **VIEWCONE**: Derives the viewcone radius; lower limit is user-defined.
+- **ERANGE**: lower energy limit
+- **CSCAT**: upper core distance
+- **VIEWCONE**: viewcone radius
 
+Broad-range simulations in this context are simulation sets generated with wide-ranging
+definitions for above parameters.
 Limits are computed based on a configurable maximum event loss fraction.
 Results are provided as a table with the following columns:
 
-- particle_type: Particle type (e.g., gamma, proton, electron).
-- telescope_ids: List of telescope IDs used in the simulation.
-- zenith: Zenith angle.
-- azimuth: Azimuth angle.
-- nsb: Night sky background level
-- layout: Layout of the telescope array used in the simulation.
-- lower_energy_limit: Derived lower energy limit.
-- upper_radius_limit: Derived upper radial distance limit.
-- viewcone_radius: Derived upper viewcone radius limit.
++---------------------+-----------+--------+-----------------------------------------------+
+| Field               | Data Type | Units  | Description                                   |
++=====================+===========+========+===============================================+
+| primary_particle    | string    |        | Particle type (e.g., gamma, proton).          |
++---------------------+-----------+--------+-----------------------------------------------+
+| array_name          | string    |        | Array name (custom or as defined in           |
+|                     |           |        | 'array_layouts').                             |
++---------------------+-----------+--------+-----------------------------------------------+
+| telescope_ids       | string    |        | Comma-separated list of telescope IDs         |
+|                     |           |        | of this array.                                |
++---------------------+-----------+--------+-----------------------------------------------+
+| zenith              | float64   | deg    | Direction of array pointing zenith.           |
++---------------------+-----------+--------+-----------------------------------------------+
+| azimuth             | float64   | deg    | Direction of array pointing azimuth.          |
++---------------------+-----------+--------+-----------------------------------------------+
+| nsb_level           | float64   |        | Night sky background level.                   |
++---------------------+-----------+--------+-----------------------------------------------+
+| lower_energy_limit  | float64   | TeV    | Derived lower energy limit (**ERANGE**)       |
++---------------------+-----------+--------+-----------------------------------------------+
+| upper_radius_limit  | float64   | m      | Derived upper core distance limit (**CSCAT**) |
++---------------------+-----------+--------+-----------------------------------------------+
+| viewcone_radius     | float64   | deg    | Derived viewcone radius limit (**VIEWCONE**)  |
++---------------------+-----------+--------+-----------------------------------------------+
 
 The input event data files are generated using the application simtools-generate-simtel-event-data
-and are required for each point in the lookup table.
+and are required for each point in the observational parameter space (e.g., array pointing
+directions, level of night sky background, etc.).
 
 Command line arguments
 ----------------------
 event_data_files (str, required)
-    Path to a file containing event data files derived with 'simtools-generate-simtel-event-data'.
+    Path to reduced event data file.
 telescope_ids (str, required)
-    Path to a file containing telescope configurations.
+    Custom array layout file containing telescope IDs.
 loss_fraction (float, required)
     Maximum event-loss fraction for limit computation.
 plot_histograms (bool, optional)
@@ -76,8 +93,18 @@ def _parse():
     config.parser.add_argument(
         "--telescope_ids",
         type=str,
-        required=True,
+        required=False,
         help="Path to a file containing telescope configurations.",
+    )
+    config.parser.add_argument(
+        "--layouts",
+        type=str,
+        nargs="+",
+        required=False,
+        help=(
+            "List of array layouts as defined in the model parameters database. "
+            "Use 'all' to include all available layouts."
+        ),
     )
     config.parser.add_argument(
         "--loss_fraction",
@@ -91,7 +118,7 @@ def _parse():
         action="store_true",
         default=False,
     )
-    return config.initialize(db_config=False, output=True)
+    return config.initialize(db_config=True, output=True)
 
 
 def main():
