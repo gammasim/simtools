@@ -1,0 +1,31 @@
+---
+CTA:
+  REFERENCE:
+    VERSION: 1.0.0
+  CONTACT:
+    ORGANIZATION: CTAO
+    NAME: G.Maier
+    ORCID: 0000-0001-9868-4700
+  PRODUCT:
+    CREATION_TIME: '2025-06-27T15:50:54+00:00'
+    ID: 6f942e76-4772-46bf-a2d5-5bd0eae7e749
+    DATA:
+      CATEGORY: SIM
+      LEVEL: R1
+      TYPE: Service
+      MODEL:
+        NAME: undefined_model_name
+        VERSION: 0.0.0
+    FORMAT: ecsv
+    FILENAME: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+  PROCESS:
+    TYPE: simulation
+  ACTIVITY:
+    NAME: generate_simtel_event_data
+    TYPE: software
+    ID: 041d04bd-96e1-48e1-85b3-437f05fee974
+    SOFTWARE:
+      NAME: simtools
+      VERSION: 0.17.1.dev44+gb4c83759b
+    START: '2025-06-27T15:50:54+00:00'
+    END: '2025-06-27T15:50:54+00:00'

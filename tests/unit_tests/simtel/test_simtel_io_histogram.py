@@ -15,6 +15,11 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
+def trigger_rate():
+    return 22984
+
+
+@pytest.fixture
 def simtel_hist_io_instance(sim_telarray_file_proton):
     return SimtelIOHistogram(histogram_file=sim_telarray_file_proton)
 
@@ -45,7 +50,7 @@ def test_file_does_not_exist(caplog):
 
 
 def test_number_of_histogram_types(simtel_hist_io_instance):
-    assert simtel_hist_io_instance.number_of_histogram_types == 10
+    assert simtel_hist_io_instance.number_of_histogram_types == 13
 
 
 def test_get_histogram_type_title(simtel_hist_io_instance):
@@ -66,8 +71,8 @@ def test_config_hdata(simtel_hist_hdata_io_instance):
 
 def test_total_num_events(simtel_hist_io_instance):
     _simulated, _triggered = simtel_hist_io_instance.total_number_of_events
-    assert _simulated == 2000
-    assert _triggered == 1.0
+    assert _simulated == 1000
+    assert _triggered == 4.0
 
 
 def test_fill_event_histogram_dicts(simtel_hist_io_instance, caplog):
@@ -76,9 +81,9 @@ def test_fill_event_histogram_dicts(simtel_hist_io_instance, caplog):
         triggered_events_histogram,
     ) = simtel_hist_io_instance.fill_event_histogram_dicts()
     assert events_histogram is not None
-    assert events_histogram["content_inside"] == 2000.0
+    assert events_histogram["content_inside"] == 1000.0
     assert triggered_events_histogram is not None
-    assert triggered_events_histogram["content_inside"] == 1.0
+    assert triggered_events_histogram["content_inside"] == 4.0
 
     # Test defect histograms
     new_instance = copy.copy(simtel_hist_io_instance)
@@ -173,16 +178,16 @@ def test_view_cone(simtel_hist_io_instance, simtel_hist_hdata_io_instance):
     assert (simtel_hist_hdata_io_instance.view_cone == [0, 10] * u.deg).all()
 
 
-def test_compute_system_trigger_rate_and_table(simtel_hist_io_instance):
+def test_compute_system_trigger_rate_and_table(simtel_hist_io_instance, trigger_rate):
     assert simtel_hist_io_instance.trigger_rate is None
     assert simtel_hist_io_instance.trigger_rate_uncertainty is None
     assert simtel_hist_io_instance.trigger_rate_per_energy_bin is None
     simtel_hist_io_instance.compute_system_trigger_rate()
-    assert pytest.approx(simtel_hist_io_instance.trigger_rate.value, 0.1) == 9006
+    assert pytest.approx(simtel_hist_io_instance.trigger_rate.value, 0.1) == trigger_rate
     assert simtel_hist_io_instance.trigger_rate.unit == 1 / u.s
-    assert pytest.approx(simtel_hist_io_instance.trigger_rate_uncertainty.value, 0.1) == 9008
+    assert pytest.approx(simtel_hist_io_instance.trigger_rate_uncertainty.value, 0.1) == 11515
     assert simtel_hist_io_instance.trigger_rate_uncertainty.unit == 1 / u.s
-    assert len(simtel_hist_io_instance.trigger_rate_per_energy_bin.value) == 120
+    assert len(simtel_hist_io_instance.trigger_rate_per_energy_bin.value) == 140
 
     events_histogram, triggered_events_histogram = (
         simtel_hist_io_instance.fill_event_histogram_dicts()
@@ -192,7 +197,7 @@ def test_compute_system_trigger_rate_and_table(simtel_hist_io_instance):
     assert table["Energy (TeV)"].value[0] == 1.00000000e-03
 
 
-def test_compute_system_trigger_rate_with_input(simtel_hist_io_instance):
+def test_compute_system_trigger_rate_with_input(simtel_hist_io_instance, trigger_rate):
     new_instance = copy.copy(simtel_hist_io_instance)
     events_histogram, triggered_events_histogram = new_instance.fill_event_histogram_dicts()
     new_events_histogram = copy.copy(events_histogram)
@@ -200,9 +205,9 @@ def test_compute_system_trigger_rate_with_input(simtel_hist_io_instance):
     new_triggered_events_histogram = copy.copy(triggered_events_histogram)
     new_triggered_events_histogram["data"] = 1e-8 * new_triggered_events_histogram["data"]
     new_instance.compute_system_trigger_rate(new_events_histogram, new_triggered_events_histogram)
-    assert pytest.approx(new_instance.trigger_rate.value, 0.1) == 9006 * 10
+    assert pytest.approx(new_instance.trigger_rate.value, 0.1) == trigger_rate * 10
     assert new_instance.trigger_rate.unit == 1 / u.s
-    assert pytest.approx(new_instance.trigger_rate_uncertainty.value, 0.1) == 902892137
+    assert pytest.approx(new_instance.trigger_rate_uncertainty.value, 0.1) == 1171962343
     assert new_instance.trigger_rate_uncertainty.unit == 1 / u.s
 
 
@@ -254,7 +259,7 @@ def test_solid_angle(simtel_hist_io_instance):
 def test_estimate_observation_time(simtel_hist_io_instance):
     observation_time = simtel_hist_io_instance.estimate_observation_time()
     assert observation_time.unit == u.s
-    assert pytest.approx(observation_time.value, 0.1) == 9.4e-5
+    assert pytest.approx(observation_time.value, 0.1) == 4.7e-5
     observation_time = simtel_hist_io_instance.estimate_observation_time(
         stacked_num_simulated_events=100
     )
@@ -271,7 +276,7 @@ def test_estimate_trigger_rate_uncertainty(simtel_hist_io_instance):
         _triggered,
     )
     assert trigger_rate_uncertainty.unit == 1 / u.s
-    assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 9008
+    assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 11514
     trigger_rate_uncertainty = simtel_hist_io_instance.estimate_trigger_rate_uncertainty(
         1e4 / u.s, 100, 10
     )

@@ -1,0 +1,26 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-simulate-prod
+    CONFIGURATION:
+      SIMULATION_SOFTWARE: corsika_sim_telarray
+      LABEL: test_file
+      MODEL_VERSION: 6.0.0
+      SITE: North
+      ARRAY_LAYOUT_NAME: alpha
+      PRIMARY: proton
+      RUN_NUMBER: 201
+      AZIMUTH_ANGLE: 0
+      ZENITH_ANGLE: 20
+      NSHOW: 50
+      VIEW_CONE: 0 deg 10 deg
+      ENERGY_RANGE: 30 GeV 600000 GeV
+      CORE_SCATTER: 20 2000 m
+      DATA_DIRECTORY: simtools-data
+      OUTPUT_PATH: simtools-output
+      SIM_TELARRAY_INSTRUMENT_SEEDS: 1745,290
+      CORSIKA_TEST_SEEDS: true
+      PACK_FOR_GRID_REGISTER: simtools-grid-output
+      LOG_LEVEL: DEBUG
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

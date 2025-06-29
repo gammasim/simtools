@@ -18,6 +18,9 @@ from eventio.simtel import (
 
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.simtel.simtel_io_file_info import get_corsika_run_header
+from simtools.simtel.simtel_io_metadata import (
+    get_sim_telarray_telescope_id_to_telescope_name_mapping,
+)
 from simtools.utils.geometry import calculate_circular_mean
 
 
@@ -93,6 +96,7 @@ class SimtelIOEventDataWriter:
         self.shower_data = []
         self.trigger_data = []
         self.file_info = []
+        self.telescope_id_to_name = {}
 
     def process_files(self):
         """
@@ -152,6 +156,7 @@ class SimtelIOEventDataWriter:
     def _process_file_info(self, file_id, file):
         """Process file information and append to file info list."""
         run_info = get_corsika_run_header(file)
+        self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(file)
         particle = PrimaryParticle(
             particle_id_type="eventio_id", particle_id=run_info.get("primary_id", 1)
         )
@@ -246,7 +251,12 @@ class SimtelIOEventDataWriter:
                 )
 
         if len(telescopes) > 0 and tracking_positions:
-            self._fill_array_event(telescopes, tracking_positions, eventio_object.event_id, file_id)
+            self._fill_array_event(
+                self._map_telescope_names(telescopes),
+                tracking_positions,
+                eventio_object.event_id,
+                file_id,
+            )
 
     def _fill_array_event(self, telescopes, tracking_positions, event_id, file_id):
         """Add array event triggered events with tracking positions."""
@@ -263,6 +273,24 @@ class SimtelIOEventDataWriter:
                 "telescope_list": ",".join(map(str, telescopes)),
             }
         )
+
+    def _map_telescope_names(self, telescope_ids):
+        """
+        Map telescope sim_telarray telescopes IDs to names.
+
+        Parameters
+        ----------
+        telescope_ids : list
+            List of telescope IDs.
+
+        Returns
+        -------
+        list
+            List of telescope names corresponding to the IDs.
+        """
+        return [
+            self.telescope_id_to_name.get(tel_id, f"Unknown_{tel_id}") for tel_id in telescope_ids
+        ]
 
     def _get_preliminary_nsb_level(self, file):
         """

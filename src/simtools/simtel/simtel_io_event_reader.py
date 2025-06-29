@@ -144,7 +144,7 @@ class SimtelIOEventDataReader:
         for col in table.colnames:
             if col == "telescope_list":
                 arrays = [
-                    np.array(list(map(int, tel_list.split(","))), dtype=np.int16)
+                    np.array(list(map(str, tel_list.split(","))), dtype=np.str_)
                     for tel_list in table[col]
                 ]
                 triggered_data.telescope_list = arrays
