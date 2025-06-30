@@ -10,7 +10,7 @@ CTA_SIMPIPE:
     NO_MARKERS: true
     TABLES:
       - PARAMETER: nsb_reference_spectrum
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North'
         COLUMN_X: 'wavelength'

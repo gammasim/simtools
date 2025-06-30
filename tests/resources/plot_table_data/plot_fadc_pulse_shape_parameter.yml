@@ -9,35 +9,35 @@ CTA_SIMPIPE:
     TABLES:
       - PARAMETER: fadc_pulse_shape
         TELESCOPE: LSTN-01
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-01 (high gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude'
       - PARAMETER: fadc_pulse_shape
         TELESCOPE: LSTN-01
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-01 (low gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude (low gain)'
       - PARAMETER: fadc_pulse_shape
         TELESCOPE: LSTN-02
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-02 (high gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude'
       - PARAMETER: fadc_pulse_shape
         TELESCOPE: LSTN-02
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-02 (low gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude (low gain)'
       - PARAMETER: fadc_pulse_shape
         TELESCOPE: MSTx-NectarCam
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'MSTN (high gain)'
         COLUMN_X: 'time'
@@ -45,7 +45,7 @@ CTA_SIMPIPE:
         NORMALIZE_Y: true
       - PARAMETER: fadc_pulse_shape
         TELESCOPE: MSTx-NectarCam
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'MSTN (low gain)'
         COLUMN_X: 'time'
