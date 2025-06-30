@@ -9,21 +9,21 @@ CTA_SIMPIPE:
     TABLES:
       - PARAMETER: camera_filter
         TELESCOPE: LSTN-01
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-01'
         COLUMN_X: 'wavelength'
         COLUMN_Y: 'transmission'
       - PARAMETER: camera_filter
         TELESCOPE: LSTN-02
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-02'
         COLUMN_X: 'wavelength'
         COLUMN_Y: 'transmission'
       - PARAMETER: camera_filter
         TELESCOPE: MSTx-NectarCam
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'MSTN'
         COLUMN_X: 'wavelength'
