@@ -58,7 +58,19 @@ output_file (str, optional)
 
 Example
 -------
-Derive limits for a given file with a specified loss fraction.
+
+Derive limits for a list of array layouts (use 'all' to derive limits for all layouts):
+
+.. code-block:: console
+
+    simtools-production-derive-corsika-limits \\
+        --event_data_files path/to/event_data_files.yaml \\
+        --array_layout_name alpha,beta \\
+        --loss_fraction 1e-6 \\
+        --plot_histograms \\
+        --output_file corsika_simulation_limits_lookup.ecsv
+
+Derive limits for a given file for custom defined array layouts:
 
 .. code-block:: console
 
