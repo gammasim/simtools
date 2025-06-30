@@ -10,7 +10,7 @@ CTA_SIMPIPE:
     # PLOT_RATIO: true
     TABLES:
       - PARAMETER: atmospheric_transmission
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North (30 km)'
         COLUMN_X: 'wavelength'
@@ -19,7 +19,7 @@ CTA_SIMPIPE:
           COLUMN_NAME: 'altitude'
           VALUE: 30.0
       - PARAMETER: atmospheric_transmission
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North (15 km)'
         COLUMN_X: 'wavelength'
@@ -28,7 +28,7 @@ CTA_SIMPIPE:
           COLUMN_NAME: 'altitude'
           VALUE: 15.0
       - PARAMETER: atmospheric_transmission
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North (10 km)'
         COLUMN_X: 'wavelength'
@@ -37,7 +37,7 @@ CTA_SIMPIPE:
           COLUMN_NAME: 'altitude'
           VALUE: 10.0
       - PARAMETER: atmospheric_transmission
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North (5 km)'
         COLUMN_X: 'wavelength'
@@ -46,7 +46,7 @@ CTA_SIMPIPE:
           COLUMN_NAME: 'altitude'
           VALUE: 5.0
       - PARAMETER: atmospheric_transmission
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North (2.4 km)'
         COLUMN_X: 'wavelength'
