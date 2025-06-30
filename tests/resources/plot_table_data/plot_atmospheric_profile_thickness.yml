@@ -10,7 +10,7 @@ CTA_SIMPIPE:
     PLOT_RATIO: true
     TABLES:
       - PARAMETER: atmospheric_profile
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'North'
         COLUMN_X: 'altitude'

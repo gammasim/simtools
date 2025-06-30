@@ -9,21 +9,21 @@ CTA_SIMPIPE:
     TABLES:
       - PARAMETER: quantum_efficiency
         TELESCOPE: LSTN-01
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-01'
         COLUMN_X: 'wavelength'
         COLUMN_Y: 'efficiency'
       - PARAMETER: quantum_efficiency
         TELESCOPE: LSTN-02
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN-02'
         COLUMN_X: 'wavelength'
         COLUMN_Y: 'efficiency'
       - PARAMETER: quantum_efficiency
         TELESCOPE: MSTx-NectarCam
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'MSTN'
         COLUMN_X: 'wavelength'
