@@ -4,14 +4,14 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-generate-simtel-event-data
     TEST_NAME: fits
     CONFIGURATION:
-      INPUT: 'tests/resources/proton_run00020[1,2]_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst'
+      INPUT: 'tests/resources/*proton*North_alpha_*.simtel.zst'
       OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: output_file.fits.gz
+      OUTPUT_FILE: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
       USE_PLAIN_OUTPUT_PATH: true
       MAX_FILES: 2
       PRINT_DATASET_INFORMATION: 5
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: output_file.fits.gz
-    - OUTPUT_FILE: output_file.fits.meta.yml
+    - OUTPUT_FILE: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
+    - OUTPUT_FILE: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.meta.yml
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
