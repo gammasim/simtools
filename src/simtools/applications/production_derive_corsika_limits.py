@@ -47,7 +47,7 @@ Command line arguments
 ----------------------
 event_data_files (str, required)
     Path to reduced event data file.
-telescope_ids (str, required)
+telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
 loss_fraction (float, required)
     Maximum event-loss fraction for limit computation.
@@ -97,16 +97,6 @@ def _parse():
         help="Path to a file containing telescope configurations.",
     )
     config.parser.add_argument(
-        "--layouts",
-        type=str,
-        nargs="+",
-        required=False,
-        help=(
-            "List of array layouts as defined in the model parameters database. "
-            "Use 'all' to include all available layouts."
-        ),
-    )
-    config.parser.add_argument(
         "--loss_fraction",
         type=float,
         required=True,
@@ -118,17 +108,25 @@ def _parse():
         action="store_true",
         default=False,
     )
-    return config.initialize(db_config=True, output=True)
+    return config.initialize(
+        db_config=True,
+        output=True,
+        simulation_model=[
+            "site",
+            "model_version",
+            "layout",
+        ],
+    )
 
 
 def main():
     """Derive limits for energy, radial distance, and viewcone."""
-    args_dict, _ = _parse()
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "info")))
 
-    generate_corsika_limits_grid(args_dict)
+    generate_corsika_limits_grid(args_dict, db_config)
 
 
 if __name__ == "__main__":
