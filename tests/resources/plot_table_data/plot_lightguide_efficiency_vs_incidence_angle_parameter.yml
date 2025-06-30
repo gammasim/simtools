@@ -30,14 +30,14 @@ CTA_SIMPIPE:
         COLUMN_Y: 'efficiency'
       - PARAMETER: lightguide_efficiency_vs_incidence_angle
         TELESCOPE: MSTx-FlashCam
-        SITE: SOUTH
+        SITE: South
         MODEL_VERSION: 6.0.0
         LABEL: 'MSTS'
         COLUMN_X: 'angle'
         COLUMN_Y: 'efficiency'
       - PARAMETER: lightguide_efficiency_vs_incidence_angle
         TELESCOPE: SSTS-design
-        SITE: SOUTH
+        SITE: South
         MODEL_VERSION: 6.0.0
         LABEL: 'SSTS'
         COLUMN_X: 'angle'

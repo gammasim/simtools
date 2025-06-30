@@ -39,14 +39,14 @@ CTA_SIMPIPE:
         NORMALIZE_Y: true
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: MSTx-FlashCam
-        SITE: SOUTH
+        SITE: South
         MODEL_VERSION: 6.0.0
         LABEL: 'MSTS'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude'
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: SSTS-design
-        SITE: SOUTH
+        SITE: South
         MODEL_VERSION: 6.0.0
         LABEL: 'SSTS'
         COLUMN_X: 'time'
