@@ -468,7 +468,9 @@ def sim_telarray_file_gamma():
 @pytest.fixture
 def sim_telarray_file_proton():
     """Proton sim_telarray file for testing."""
-    return "tests/resources/proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+    return (
+        "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
+    )
 
 
 @pytest.fixture
