@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-generate-simtel-event-data
     TEST_NAME: fits
     CONFIGURATION:
-      INPUT: 'tests/resources/*proton*.simtel.zst'
+      INPUT: 'tests/resources/proton_run00020[1,2]_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst'
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: output_file.fits.gz
       USE_PLAIN_OUTPUT_PATH: true
