@@ -423,7 +423,9 @@ def test_collect_data_from_http():
     data = gen.collect_data_from_http(url + _file)
     assert isinstance(data, dict)
 
-    _file = "tests/resources/proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+    _file = (
+        "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
+    )
     with pytest.raises(TypeError):
         gen.collect_data_from_http(url + _file)
 
