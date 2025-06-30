@@ -276,7 +276,7 @@ class SimtelIOEventDataWriter:
 
     def _map_telescope_names(self, telescope_ids):
         """
-        Map telescope sim_telarray telescopes IDs to names.
+        Map sim_telarray telescopes IDs to CTAO array element names.
 
         Parameters
         ----------
