@@ -14,7 +14,7 @@ from eventio.simtel import (
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 OUTPUT_FILE_NAME = "output.fits"
-one_two_three = "LST1,LST2,MST1"
+one_two_three = "LSTN-01,LSTN-02,MSTN-01"
 unknown_one_two_three = "Unknown_1,Unknown_2,Unknown_3"
 
 
@@ -53,10 +53,10 @@ def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
         "simtools.simtel.simtel_io_event_writer.get_sim_telarray_telescope_id_to_telescope_name_mapping"
     )
     mock_get_mapping.return_value = {
-        1: "LST1",
-        2: "LST2",
-        3: "MST1",
-        4: "MST2",
+        1: "LSTN-01",
+        2: "LSTN-02",
+        3: "MSTN-01",
+        4: "MSTN-02",
     }
     return mock_get_mapping
 
@@ -343,16 +343,21 @@ def test_process_mc_event_inconsistent_shower(lookup_table_generator):
 def test_map_telescope_names(lookup_table_generator):
     """Test mapping of telescope IDs to names."""
     # Set up test mapping
-    lookup_table_generator.telescope_id_to_name = {1: "LST1", 2: "LST2", 3: "MST1", 4: "MST2"}
+    lookup_table_generator.telescope_id_to_name = {
+        1: "LSTN-01",
+        2: "LSTN-02",
+        3: "MSTN-01",
+        4: "MSTN-02",
+    }
 
     # Test with known IDs
     telescope_ids = [1, 2, 3]
-    expected = ["LST1", "LST2", "MST1"]
+    expected = ["LSTN-01", "LSTN-02", "MSTN-01"]
     assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
 
     # Test with unknown ID
     telescope_ids = [1, 99]
-    expected = ["LST1", "Unknown_99"]
+    expected = ["LSTN-01", "Unknown_99"]
     assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
 
     # Test with empty list
