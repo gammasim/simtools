@@ -1,9 +1,14 @@
 #!/usr/bin/python3
 
+from unittest import mock
 
+import pytest
+
+import simtools.simtel.simtel_io_metadata as simtel_io_metadata
 from simtools.simtel.simtel_io_metadata import (
     _decode_dictionary,
     get_sim_telarray_telescope_id,
+    get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
 )
 
@@ -46,7 +51,26 @@ def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
     assert global_meta["array_config_name"] == "test_layout"
 
 
+@mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)
+def test_read_sim_telarray_metadata_attribute_error(mock_decode, sim_telarray_file_gamma):
+    simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
+    with pytest.raises(AttributeError, match="^Error reading metadata from file"):
+        read_sim_telarray_metadata(sim_telarray_file_gamma)
+
+
 def test_get_sim_telarray_telescope_id(sim_telarray_file_gamma):
     assert get_sim_telarray_telescope_id("LSTN-01", sim_telarray_file_gamma) == 1
     assert get_sim_telarray_telescope_id("MSTN-01", sim_telarray_file_gamma) == 5
     assert get_sim_telarray_telescope_id("MSTS-01", sim_telarray_file_gamma) is None
+
+
+def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_file_gamma):
+    tel_mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_file_gamma)
+
+    assert isinstance(tel_mapping, dict)
+    assert len(tel_mapping) > 0
+    assert all(isinstance(k, int) for k in tel_mapping.keys())
+    assert all(isinstance(v, str) for v in tel_mapping.values())
+
+    assert tel_mapping[1] == "LSTN-01"
+    assert tel_mapping[5] == "MSTN-01"
