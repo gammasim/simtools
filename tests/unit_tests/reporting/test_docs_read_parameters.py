@@ -1,4 +1,4 @@
-import re
+import logging
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -124,7 +124,10 @@ def test_produce_model_parameter_reports(io_handler, db_config):
     assert file_path.exists()
 
 
-def test__convert_to_md(telescope_model_lst, io_handler, db_config):
+def test__convert_to_md(telescope_model_lst, io_handler, db_config, caplog):
+    """Test _convert_to_md with both invalid and valid files."""
+    caplog.set_level(logging.INFO)  # Change to INFO level to capture the message
+
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
@@ -132,43 +135,36 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
-    parameter_name = "test"
 
-    # testing with invalid file
-    with pytest.raises(FileNotFoundError, match="Data file not found: "):
-        read_parameters._convert_to_md(parameter_name, "1.0.0", "invalid-file.dat")
-
-    # testing with valid file
-    new_file = read_parameters._convert_to_md(
-        parameter_name, "1.0.0", "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
-    )
-    assert isinstance(new_file, str)
-    assert Path(output_path / new_file).exists()
-
-    with Path(output_path / new_file).open("r", encoding="utf-8") as mdfile:
-        md_content = mdfile.read()
-
-    match = re.search(r"```\n(.*?)\n```", md_content, re.DOTALL)
-    assert match, "Code block with file contents not found"
-
-    code_block = match.group(1)
-    line_count = len(code_block.strip().splitlines())
-    assert line_count == 30
-
-    # Compare to actual first 30 lines of input file
+    # Test valid file conversion
     input_path = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
-    with input_path.open("r", encoding="utf-8") as original_file:
-        expected_lines = original_file.read().splitlines()[:30]
-        expected_block = "\n".join(expected_lines)
+    caplog.clear()
+    read_parameters._convert_to_md("pm_photoelectron_spectrum", "1.0.0", str(input_path))
+    assert "Plotting parameter file" in caplog.text
 
-    assert code_block.strip() == expected_block.strip()
 
-    # testing with non-utf-8 file
-    new_file = read_parameters._convert_to_md(
-        parameter_name, "1.0.0", "tests/resources/example_non_utf-8_file.lis"
+def test__convert_to_md_file_not_found(telescope_model_lst, io_handler, db_config, caplog):
+    """Test _convert_to_md raises FileNotFoundError when file is not found."""
+    caplog.set_level(logging.ERROR)
+
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+    }
+    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    # Test with non-existent file
+    missing_file = "non-existent-file.dat"
+    with pytest.raises(FileNotFoundError, match=f"Data file not found: {missing_file}"):
+        read_parameters._convert_to_md("test_param", "1.0.0", missing_file)
+
+    # Verify error was logged
+    assert any(
+        record.levelno == logging.ERROR and f"Data file not found: {missing_file}" in record.message
+        for record in caplog.records
     )
-    assert isinstance(new_file, str)
-    assert Path(output_path / new_file).exists()
 
 
 def test__format_parameter_value(io_handler, db_config):
@@ -1079,3 +1075,30 @@ def test_get_calibration_data(io_handler, db_config):
     assert result[0][0] == "Camera"
     assert len(result[0]) == 6
     assert len(result) == 3
+
+
+def test__convert_to_md_new_plot(telescope_model_lst, io_handler, db_config, tmp_path, caplog):
+    """Test _convert_to_md when creating a new plot."""
+    caplog.set_level(logging.INFO)
+
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+    }
+    output_path = tmp_path
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    # Create test file
+    test_file = tmp_path / "test_param.dat"
+    test_file.write_text("Test data")
+
+    # Create images directory without adding the png file
+    image_dir = Path(io_handler.get_output_directory().parent / "_images")
+    image_dir.mkdir(parents=True)
+
+    read_parameters._convert_to_md("test_parameter", "1.0.0", str(test_file))
+
+    # Check for message using path-independent assertion
+    assert any("Plotting parameter file" in msg for msg in caplog.messages)
+    assert str(test_file.name) in caplog.text

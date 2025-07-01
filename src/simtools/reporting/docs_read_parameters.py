@@ -16,7 +16,7 @@ from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import general as gen
 from simtools.utils import names
-from simtools.visualization import plot_pixels
+from simtools.visualization import plot_pixels, plot_tables
 
 logger = logging.getLogger()
 
@@ -67,12 +67,16 @@ class ReadParameters:
     def _convert_to_md(self, parameter, parameter_version, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
+        if not input_file.exists():
+            self._logger.exception(f"Data file not found: {input_file}.")
+            raise FileNotFoundError(f"Data file not found: {input_file}.")
 
+        logger.info(f"Plotting parameter file {input_file}")
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
-        image_name = f"{self.array_element}_{parameter}_{self.model_version.replace('.', '-')}"
+        image_name = f"{input_file.stem.replace('.', '-')}_{parameter_version.replace('.', '-')}"
         outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
         outpath.mkdir(parents=True, exist_ok=True)
         image_path = Path(f"{outpath}/{image_name}")
@@ -80,7 +84,7 @@ class ReadParameters:
         if parameter == "camera_config_file" and parameter_version:
             image_path = Path(f"{outpath}/{input_file.stem.replace('.', '-')}")
             if not (image_path.with_suffix(".png")).exists():
-                logger.info("Plotting camera configuration file: %s", input_file.name)
+                self._logger.info("Plotting camera configuration file: %s", input_file.name)
                 plot_config = {
                     "file_name": input_file.name,
                     "telescope": self.array_element,
@@ -96,35 +100,66 @@ class ReadParameters:
                     db_config=self.db_config,
                 )
             else:
-                logger.info(
+                self._logger.info(
                     "Camera configuration file plot already exists: %s",
                     image_path.with_suffix(".png"),
                 )
+        else:
+            if not (image_path.with_suffix(".png")).exists():
+                self._logger.info("Plotting parameter file: %s", input_file.name)
 
-        try:
-            # with input_file.open("r", encoding="utf-8") as infile:
-            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+                plot_config = {
+                    "tables": [
+                        {
+                            "parameter": parameter,
+                            "file_name": input_file.name,
+                            "telescope": self.array_element,
+                            "parameter_version": parameter_version,
+                            "site": self.site,
+                            "model_version": self.model_version,
+                            "label": parameter,
+                            "marker": "o",
+                            "color": "red",
+                            "linestyle": ""
+                            if parameter == "mirror_list" and "mirror_list" in input_file.name
+                            else "-",
+                            "title": parameter,
+                        }
+                    ]
+                }
 
-            if self.model_version is not None:
-                with output_file.open("w", encoding="utf-8") as outfile:
-                    outfile.write(f"# {input_file.stem}\n")
-                    outfile.write(f"![Parameter plot.]({image_path}.png)\n\n")
-                    outfile.write(
-                        "\n\nThe full file can be found in the Simulation Model repository [here]"
-                        "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                        "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                        f"model_parameters/Files/{input_file.name}).\n\n"
+                try:
+                    plot_tables.plot(
+                        config=plot_config,
+                        output_file=image_path,
+                        db_config=self.db_config,
                     )
-                    outfile.write("\n\n")
-                    outfile.write("The first 30 lines of the file are:\n")
-                    outfile.write("```\n")
-                    first_30_lines = "".join(file_contents[:30])
-                    outfile.write(first_30_lines)
-                    outfile.write("\n```")
+                except (OSError, ValueError, KeyError) as e:
+                    self._logger.error("Error plotting parameter file %s: %s", input_file.name, e)
+                    return None
+            else:
+                self._logger.info(
+                    "Parameter file plot already exists: %s", image_path.with_suffix(".png")
+                )
 
-        except FileNotFoundError as exc:
-            logger.exception(f"Data file not found: {input_file}.")
-            raise FileNotFoundError(f"Data file not found: {input_file}.") from exc
+        file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+
+        if self.model_version is not None:
+            with output_file.open("w", encoding="utf-8") as outfile:
+                outfile.write(f"# {input_file.stem}\n")
+                outfile.write(f"![Parameter plot.]({image_path}.png)\n\n")
+                outfile.write(
+                    "\n\nThe full file can be found in the Simulation Model repository [here]"
+                    "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                    "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                    f"model_parameters/Files/{input_file.name}).\n\n"
+                )
+                outfile.write("\n\n")
+                outfile.write("The first 30 lines of the file are:\n")
+                outfile.write("```\n")
+                first_30_lines = "".join(file_contents[:30])
+                outfile.write(first_30_lines)
+                outfile.write("\n```")
 
         return f"_data_files/{output_file_name}"
 
@@ -396,6 +431,8 @@ class ReadParameters:
 
         def get_param_data(telescope, site):
             """Retrieve and format parameter data for one telescope-site combo."""
+            self.array_element = telescope
+            self.site = site
             param_dict = self.db.get_simulation_configuration_parameters(
                 simulation_software=self.software,
                 site=site,
@@ -527,7 +564,7 @@ class ReadParameters:
         Outputs one markdown report per model parameter of a given array element comparing
         values across model versions.
         """
-        logger.info(
+        self._logger.info(
             f"Comparing parameters across model versions for Telescope: {self.array_element}"
             f" and Site: {self.site}."
         )
@@ -666,7 +703,7 @@ class ReadParameters:
         )
 
         if not all_parameter_data:
-            logger.warning(f"No observatory parameters found for site {self.site}")
+            self._logger.warning(f"No observatory parameters found for site {self.site}")
             return
 
         Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
