@@ -56,9 +56,12 @@ def read_sim_telarray_metadata(file, encoding="utf8"):
         return {k: v.strip() if isinstance(v, str) else v for k, v in meta.items()}
 
     # keys to lower case and strip leading '*', trailing spaces
-    return clean_meta(global_meta), {
-        tel_id: clean_meta(meta) for tel_id, meta in telescope_meta.items()
-    }
+    try:
+        return clean_meta(global_meta), {
+            tel_id: clean_meta(meta) for tel_id, meta in telescope_meta.items()
+        }
+    except AttributeError as e:
+        raise AttributeError(f"Error reading metadata from file {file}: {e}") from e
 
 
 def _decode_dictionary(meta, encoding="utf8"):
@@ -104,3 +107,24 @@ def get_sim_telarray_telescope_id(telescope_name, file):
             telescope_name_to_sim_telarray_id[telescope_name] = tel_id
 
     return telescope_name_to_sim_telarray_id.get(telescope_name, None)
+
+
+def get_sim_telarray_telescope_id_to_telescope_name_mapping(file):
+    """
+    Return a mapping of telescope IDs to telescope names from a sim_telarray file.
+
+    Parameters
+    ----------
+    file: str
+        Path to the sim_telarray file.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping telescope IDs to telescope names.
+    """
+    _, telescope_meta = read_sim_telarray_metadata(file)
+    return {
+        tel_id: meta.get("optics_config_name", f"Unknown-{tel_id}")
+        for tel_id, meta in telescope_meta.items()
+    }

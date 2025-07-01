@@ -34,7 +34,7 @@ def mock_tables():
     trigger_table["file_id"] = [0, 0]
     trigger_table["array_altitude"] = [1.1, 1.2] * u.rad
     trigger_table["array_azimuth"] = [0.2, 0.3] * u.rad
-    trigger_table["telescope_list"] = ["1,2,3", "2,3,4"]
+    trigger_table["telescope_list"] = ["LSTN-01,LSTN-02,LSTN-03", "LSTN-03, LSTN-04, MSTN-01"]
 
     # Create FILE_INFO table
     file_info_table = Table()
@@ -80,19 +80,19 @@ def test_reader_initialization(mock_fits_file):
 def test_telescope_filtering(mock_fits_file):
     """Test filtering by telescope list."""
     # Should only keep events with telescope 1
-    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=[1])
-    file_info, _, _, triggered_data = reader.read_event_data(mock_fits_file)
+    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=["LSTN-01"])
+    _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
 
     assert len(triggered_data.telescope_list) == 1
-    assert 1 in triggered_data.telescope_list[0]
+    assert "LSTN-01" in triggered_data.telescope_list[0]
 
-    # Should keep both events (all have telescope 2)
-    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=[2])
-    file_info, _, _, triggered_data = reader.read_event_data(mock_fits_file)
+    # Should keep both events (all have telescope "LSTN-03")
+    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=["LSTN-03"])
+    _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
 
     assert len(triggered_data.telescope_list) == 2
     for tel_list in triggered_data.telescope_list:
-        assert 2 in tel_list
+        assert "LSTN-03" in tel_list
 
 
 def test_shower_coordinate_transformation(mock_fits_file):
