@@ -301,7 +301,7 @@ def write_table_in_hdf5(table, output_file, table_name):
     with h5py.File(output_file, "a") as f:
         data = np.array(table)
         if table_name not in f:
-            maxshape = (None,) + data.shape[1:]
+            maxshape = (None, *data.shape[1:])
             dset = f.create_dataset(
                 table_name,
                 data=data,
