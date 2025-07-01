@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6bd456e2"></script>
+    <script src="../../_static/documentation_options.js?v=eeb35f00"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc83d38d" />
+  <meta name="docsearch:version" content="0.1.dev1+gbbcc627" />
   </head>
   
   
@@ -453,6 +453,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_file_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_corsika_run_header</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_sim_telarray_telescope_id_to_telescope_name_mapping</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_circular_mean</span>
 
 
@@ -533,6 +536,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">shower_data</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">trigger_data</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_id_to_name</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="SimtelIOEventDataWriter.process_files">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files">[docs]</a>
@@ -598,6 +602,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_file_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process file information and append to file info list.&quot;&quot;&quot;</span>
         <span class="n">run_info</span> <span class="o">=</span> <span class="n">get_corsika_run_header</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_id_to_name</span> <span class="o">=</span> <span class="n">get_sim_telarray_telescope_id_to_telescope_name_mapping</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
         <span class="n">particle</span> <span class="o">=</span> <span class="n">PrimaryParticle</span><span class="p">(</span>
             <span class="n">particle_id_type</span><span class="o">=</span><span class="s2">&quot;eventio_id&quot;</span><span class="p">,</span> <span class="n">particle_id</span><span class="o">=</span><span class="n">run_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="p">)</span>
@@ -692,7 +697,12 @@
                 <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">telescopes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">tracking_positions</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_array_event</span><span class="p">(</span><span class="n">telescopes</span><span class="p">,</span> <span class="n">tracking_positions</span><span class="p">,</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span> <span class="n">file_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_array_event</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_map_telescope_names</span><span class="p">(</span><span class="n">telescopes</span><span class="p">),</span>
+                <span class="n">tracking_positions</span><span class="p">,</span>
+                <span class="n">eventio_object</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+                <span class="n">file_id</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fill_array_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescopes</span><span class="p">,</span> <span class="n">tracking_positions</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">file_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add array event triggered events with tracking positions.&quot;&quot;&quot;</span>
@@ -709,6 +719,24 @@
                 <span class="s2">&quot;telescope_list&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">telescopes</span><span class="p">)),</span>
             <span class="p">}</span>
         <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_map_telescope_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_ids</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map sim_telarray telescopes IDs to CTAO array element names.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_ids : list</span>
+<span class="sd">            List of telescope IDs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of telescope names corresponding to the IDs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_id_to_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unknown_</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">tel_id</span> <span class="ow">in</span> <span class="n">telescope_ids</span>
+        <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_preliminary_nsb_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
