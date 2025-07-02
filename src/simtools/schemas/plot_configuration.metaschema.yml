@@ -157,5 +157,4 @@ definitions:
     required:
       - COLUMN_X
       - COLUMN_Y
-      - LABEL
     title: "TableConfig"
