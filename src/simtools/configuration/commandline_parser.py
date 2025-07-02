@@ -474,7 +474,8 @@ class CommandLineParser(argparse.ArgumentParser):
         _layout_group = job_group.add_mutually_exclusive_group(required=required)
         _layout_group.add_argument(
             "--array_layout_name",
-            help="array layout name (e.g., alpha, subsystem_msts)",
+            help="array layout name(s) (e.g., alpha, subsystem_msts)",
+            nargs="+",
             type=str,
             required=False,
         )
