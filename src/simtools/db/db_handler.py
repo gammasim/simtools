@@ -409,6 +409,11 @@ class DatabaseHandler:
             Version of the model.
         export_file_as_table: bool
             If True, export the file as an astropy table (ecsv format).
+
+        Returns
+        -------
+        astropy.table.Table or None, str or None
+            If export_file_as_table is True, returns the table and the file name.
         """
         parameters = self.get_model_parameter(
             parameter,
@@ -422,8 +427,8 @@ class DatabaseHandler:
             return simtel_table_reader.read_simtel_table(
                 parameter,
                 self.io_handler.get_output_directory().joinpath(parameters[parameter]["value"]),
-            )
-        return None
+            ), parameters[parameter]["value"]
+        return None, None
 
     def export_model_files(self, parameters=None, file_names=None, dest=None, db_name=None):
         """
