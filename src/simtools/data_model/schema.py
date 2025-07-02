@@ -142,7 +142,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     return data
 
 
-def _retrieve_yaml_schema_from_uri(uri: str):
+def _retrieve_yaml_schema_from_uri(uri):
     """Load schema from a file URI."""
     path = SCHEMA_PATH / Path(uri.removeprefix("file:/"))
     contents = gen.collect_data_from_file(file_name=path)
