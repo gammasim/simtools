@@ -30,3 +30,16 @@ source:
   - Calibration
 simulation_software:
   - name: corsika
+plot_configuration:
+  - TYPE: density_vs_altitude
+    TITLE: 'Atmospheric density profile'
+    XTITLE: 'Height [km]'
+    YTITLE: 'Density [g/cm^3]'
+    YSCALE: 'log'
+    NO_MARKERS: true
+    PLOT_RATIO: true
+    TABLES:
+      - PARAMETER: atmospheric_profile
+        COLUMN_X: 'altitude'
+        COLUMN_Y: 'density'
+        LABEL: 'density vs altitude'
