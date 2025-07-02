@@ -32,16 +32,16 @@ def plot(config, output_file, output_path=None, output_file_appendix=None, db_co
     """
     data, table_file = read_table_data(config, db_config)
 
-    output_file = output_file or _generate_output_file_name(
-        table_file, output_path, output_file_appendix
-    )
-
     fig = visualize.plot_1d(
         data,
         **config,
     )
 
+    output_file = output_file or _generate_output_file_name(
+        table_file, output_path, output_file_appendix
+    )
     visualize.save_figure(fig, output_file)
+
     return output_file
 
 
@@ -170,8 +170,8 @@ def _read_table_from_model_database(table_config, db_config):
 
     Returns
     -------
-    Table
-        Astropy table.
+    Table, str
+        Astropy table, and the file name of the exported model file
     """
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     return db.export_model_file(
@@ -209,37 +209,40 @@ def _read_default_plot_config_list(parameter, parameter_version, site, plot_type
         ),
         lower_case=True,
     )
-    plot_config_all = schema.get("plot_configuration")
-    if plot_config_all is None:
+    configs = schema.get("plot_configuration")
+    if not configs:
         return None
-    if plot_type == "all":
-        plot_config = plot_config_all
-    else:
-        plot_config = [config for config in plot_config_all if config.get("type") == plot_type]
-        if not plot_config:
+    if plot_type != "all":
+        configs = [config for config in configs if config.get("type") == plot_type]
+        if not configs:
             raise ValueError(
                 f"No plot configuration found for type '{plot_type}' in parameter '{parameter}'."
             )
 
-    for _config in plot_config:
+    for _config in configs:
         for _table in _config.get("tables", []):
             _table["parameter_version"] = parameter_version
             _table["site"] = site
 
-    return plot_config
+    return configs
 
 
-def _generate_output_file_name(table_file, output_path=None, output_file_appendix=None):
+def _generate_output_file_name(table_file, output_path=None, appendix=None, file_extension=".pdf"):
     """Generate output file name based on table file and appendix."""
-    output_file = f"{Path(table_file).stem}_{output_file_appendix}"
-    if output_path is not None:
-        return Path(output_path) / output_file
-    return Path(output_file)
+    base = Path(table_file).stem
+    if appendix:
+        base = f"{base}_{appendix}"
+    if not base.endswith(file_extension):
+        base = f"{base}{file_extension}"
+    output = Path(base)
+    if output_path:
+        return Path(output_path) / output
+    return output
 
 
 def _generate_output_file_name_appendix(parameter, parameter_version, site, telescope, plot_type):
     """Generate appendix part of the output file name."""
     if telescope:
-        return f"{parameter}_{parameter_version}_{site}_{telescope}_{plot_type}.png"
+        return f"{parameter}_{parameter_version}_{site}_{telescope}_{plot_type}"
 
-    return f"{parameter}_{parameter_version}_{site}_{plot_type}.png"
+    return f"{parameter}_{parameter_version}_{site}_{plot_type}"
