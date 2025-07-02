@@ -11,7 +11,7 @@ CTA_SIMPIPE:
       OUTPUT_PATH: simtools-output
       USE_PLAIN_OUTPUT_PATH: true
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: atmprof_ecmwf_north_winter_fixed_atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
-    - OUTPUT_FILE: atmprof_ecmwf_north_winter_fixed_atmospheric_profile_1.0.0_North_density_vs_altitude.pdf
+    - OUTPUT_FILE: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
+    - OUTPUT_FILE: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
