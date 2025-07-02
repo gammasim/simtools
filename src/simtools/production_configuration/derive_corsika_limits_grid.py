@@ -25,7 +25,9 @@ def generate_corsika_limits_grid(args_dict):
     args_dict : dict
         Dictionary containing command line arguments.
     """
-    event_data_files = gen.collect_data_from_file(args_dict["event_data_files"])["files"]
+    event_data_files = gen.get_list_of_files_from_command_line(
+        args_dict["event_data_files"], [".hdf5", ".gz"]
+    )  # accept fits.gz files (.gz)
     telescope_configs = gen.collect_data_from_file(args_dict["telescope_ids"])["telescope_configs"]
 
     results = []

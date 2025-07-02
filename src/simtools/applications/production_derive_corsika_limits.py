@@ -70,8 +70,9 @@ def _parse():
     config.parser.add_argument(
         "--event_data_files",
         type=str,
+        nargs="+",
         required=True,
-        help="Path to a file containing event data file paths.",
+        help="List of event data files or ascii file listing data files ",
     )
     config.parser.add_argument(
         "--telescope_ids",
