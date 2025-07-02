@@ -12,6 +12,6 @@ CTA_SIMPIPE:
       OUTPUT_PATH: simtools-output
       USE_PLAIN_OUTPUT_PATH: true
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: pulse_LST_8dynode_pix6_20200204_fadc_pulse_shape_1.0.0_North_LSTN-design_fadc_pulse_shape.pdf
+    - OUTPUT_FILE: fadc_pulse_shape_1.0.0_North_LSTN-design.pdf
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
