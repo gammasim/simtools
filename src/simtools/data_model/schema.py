@@ -120,7 +120,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
             ),  # default version to ensure backward compatibility
         )
 
-    validator = jsonschema.Draft202012Validator(
+    validator = jsonschema.Draft6Validator(
         schema=json_schema,
         format_checker=format_checkers.format_checker,
         registry=Registry(retrieve=_retrieve_yaml_schema_from_uri),

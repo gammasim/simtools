@@ -121,7 +121,7 @@ def main():  # noqa: D103
         model_version=args_dict.get("model_version"),
     )
     if args_dict["export_model_file"] or args_dict["export_model_file_as_table"]:
-        table, _ = db.export_model_file(
+        table = db.export_model_file(
             parameter=args_dict["parameter"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],

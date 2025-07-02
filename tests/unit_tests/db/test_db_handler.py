@@ -1444,7 +1444,7 @@ def test_export_model_file_variants(
         path_obj.joinpath.return_value = f"{tmp_test_directory}/{mocks['test_file']}"
         mocks["get_output_directory"].return_value = path_obj
 
-    result, _ = db.export_model_file(
+    result = db.export_model_file(
         parameter=mocks["test_param"], site="North", array_element_name="LSTN-01", **params
     )
 
