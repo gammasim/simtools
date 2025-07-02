@@ -1,11 +1,11 @@
 r"""
 Merge tables from multiple input files into single tables.
 
-Allows to merge tables from multiple input files into a single file.
+Allows to merge tables (e.g., astropy tables) from multiple input files into a single file.
 The input files can be in HDF5 or FITS format. The merged tables will be saved in the
 specified output file.
 
-Note that merging large tables in FITS are not recommended, as it may lead to
+Merging large tables in FITS are not recommended, as it may lead to
 performance issues.
 
 Command line arguments
@@ -24,7 +24,7 @@ output_path str
 Example
 -------
 
-Merge tables from two files into a single file.
+Merge tables from two files generated with 'simtools-generate-simtel-event-data' into a single file.
 
 .. code-block:: console
 
