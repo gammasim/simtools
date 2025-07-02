@@ -1444,7 +1444,7 @@ def test_export_model_file_variants(
         path_obj.joinpath.return_value = f"{tmp_test_directory}/{mocks['test_file']}"
         mocks["get_output_directory"].return_value = path_obj
 
-    result = db.export_model_file(
+    result, _ = db.export_model_file(
         parameter=mocks["test_param"], site="North", array_element_name="LSTN-01", **params
     )
 
@@ -1477,7 +1477,8 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
     mock_read_production_table.assert_called_once_with("telescopes", model_version)
     assert result == ["LSTN-design", "LSTN-01"]
 
-    mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
+    # Test case where no design model exists for the array element
+    mock_read_production_table.return_value = {"design_model": {}}
     with pytest.raises(
         KeyError, match=r"Failed generated array element list for db query for LSTN-01"
     ):
