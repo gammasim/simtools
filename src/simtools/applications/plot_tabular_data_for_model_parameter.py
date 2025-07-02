@@ -36,6 +36,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.visualization import plot_tables
 
@@ -57,7 +58,7 @@ def _parse(label, description):
 
 def main():
     """Plot tabular data."""
-    args_dict, db_config_ = _parse(
+    args_dict, db_config = _parse(
         label=Path(__file__).stem,
         description="Plots tabular data for a model parameter.",
     )
@@ -65,24 +66,22 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "INFO")))
     io_handler_instance = io_handler.IOHandler()
 
-    plot_tables.plot_table_from_model_parameter(
+    plot_configs, output_files = plot_tables.generate_plot_configurations(
         parameter=args_dict["parameter"],
         parameter_version=args_dict["parameter_version"],
         site=args_dict["site"],
         telescope=args_dict.get("telescope"),
-        plot_type=args_dict["plot_type"],
         output_path=io_handler_instance.get_output_directory(),
-        db_config=db_config_,
+        plot_type=args_dict["plot_type"],
     )
 
-    # TODO discuss this.
-
-
-#    MetadataCollector.dump(
-#        args_dict,
-#        io_handler_instance.get_output_file(args_dict["output_file"]),
-#        add_activity_name=True,
-#    )
+    for plot_config, output_file in zip(plot_configs, output_files):
+        plot_tables.plot(
+            config=plot_config,
+            output_file=output_file,
+            db_config=db_config,
+        )
+        MetadataCollector.dump(args_dict, output_file=output_file, add_activity_name=True)
 
 
 if __name__ == "__main__":
