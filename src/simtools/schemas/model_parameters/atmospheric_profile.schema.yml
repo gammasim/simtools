@@ -37,9 +37,19 @@ plot_configuration:
     YTITLE: 'Density [g/cm^3]'
     YSCALE: 'log'
     NO_MARKERS: true
-    PLOT_RATIO: true
+    PLOT_RATIO: false
     TABLES:
       - PARAMETER: atmospheric_profile
         COLUMN_X: 'altitude'
         COLUMN_Y: 'density'
-        LABEL: 'density vs altitude'
+  - TYPE: refractive_index_vs_altitude
+    TITLE: 'Atmospheric refractive index profile'
+    XTITLE: 'Height [km]'
+    YTITLE: 'refractive index (n-1)'
+    YSCALE: 'log'
+    NO_MARKERS: true
+    PLOT_RATIO: false
+    TABLES:
+      - PARAMETER: atmospheric_profile
+        COLUMN_X: 'altitude'
+        COLUMN_Y: 'refractive_index'
