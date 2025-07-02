@@ -2,7 +2,7 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-production-derive-corsika-limits
-    TEST_NAME: hdf5
+    TEST_NAME: hdf5_arrays_from_file
     CONFIGURATION:
       EVENT_DATA_FILES:
       - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
