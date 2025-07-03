@@ -376,7 +376,7 @@ def test_save_file_lists(shower_simulator, mocker, caplog):
     assert "No files to save for simtel_output files." in caplog.text
 
 
-def test_pack_for_register(array_simulator, mocker, model_version, caplog):
+def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_test_directory):
     mocker.patch.object(
         array_simulator,
         "get_file_list",
@@ -391,8 +391,9 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog):
     mocker.patch("tarfile.open")
     mocker.patch("pathlib.Path.exists", return_value=True)
 
+    directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
-        array_simulator.pack_for_register("directory_for_grid_upload")
+        array_simulator.pack_for_register(str(directory_for_grid_upload))
 
     assert "Overwriting existing file" in caplog.text
     assert "Packing the output files for registering on the grid" in caplog.text
@@ -400,7 +401,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog):
     tarfile.open.assert_called_once()
     shutil.move.assert_any_call(
         Path(f"output_file_{model_version}_simtel.zst"),
-        Path(f"directory_for_grid_upload/output_file_{model_version}_simtel.zst"),
+        directory_for_grid_upload / Path(f"output_file_{model_version}_simtel.zst"),
     )
 
 
@@ -454,7 +455,7 @@ def test_validate_metadata(array_simulator, mocker, caplog):
 
 
 def test_pack_for_register_with_multiple_versions(
-    io_handler, simulations_args_dict, db_config, mocker, caplog
+    io_handler, simulations_args_dict, db_config, mocker, caplog, tmp_test_directory
 ):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
@@ -497,9 +498,9 @@ def test_pack_for_register_with_multiple_versions(
     mocker.patch("pathlib.Path.exists", return_value=True)
     mocker.patch.object(local_shower_array_simulator, "_copy_corsika_log_file_for_all_versions")
 
-    # Call the method
+    directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
-        local_shower_array_simulator.pack_for_register("directory_for_grid_upload")
+        local_shower_array_simulator.pack_for_register(str(directory_for_grid_upload))
 
     # Assertions
     assert "Packing the output files for registering on the grid" in caplog.text
@@ -525,7 +526,7 @@ def test_pack_for_register_with_multiple_versions(
         output_file = file_patterns["output"].format(version)
         shutil.move.assert_any_call(
             Path(output_file),
-            Path(f"directory_for_grid_upload/{output_file}"),
+            directory_for_grid_upload / Path(output_file),
         )
 
 

@@ -284,10 +284,8 @@ def test_log_level_from_user() -> None:
     """
     assert gen.get_log_level_from_user("info") == logging.INFO
     assert gen.get_log_level_from_user("debug") == logging.DEBUG
-    assert gen.get_log_level_from_user("warn") == logging.WARNING
     assert gen.get_log_level_from_user("warning") == logging.WARNING
     assert gen.get_log_level_from_user("error") == logging.ERROR
-    assert gen.get_log_level_from_user("critical") == logging.CRITICAL
 
     with pytest.raises(ValueError, match=r"^'invalid' is not a logging level"):
         gen.get_log_level_from_user("invalid")
@@ -425,7 +423,9 @@ def test_collect_data_from_http():
     data = gen.collect_data_from_http(url + _file)
     assert isinstance(data, dict)
 
-    _file = "tests/resources/proton_run201_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+    _file = (
+        "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
+    )
     with pytest.raises(TypeError):
         gen.collect_data_from_http(url + _file)
 

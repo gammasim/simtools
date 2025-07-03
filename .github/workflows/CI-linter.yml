@@ -34,13 +34,19 @@ jobs:
         with:
           python-version: "3.12"
 
-
       - name: Check for non-ASCII characters
         run: |
-          output=$(find . -type f \
-          \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
-          -exec perl -ne 'print if /[^[:ascii:]]/ && !/latin/i' {} \;)
-          if [ -n "$output" ]; then
+          found=0
+          while IFS= read -r file; do
+            matches=$(perl -ne 'print if /[^[:ascii:]]/ && !/latin/i' "$file")
+            if [ -n "$matches" ]; then
+              echo "File: $file"
+              echo "$matches"
+              found=1
+            fi
+          done < <(find . -type f \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \))
+
+          if [ "$found" -eq 1 ]; then
             echo "Non-ASCII characters found in documentation."
             exit 1
           fi
