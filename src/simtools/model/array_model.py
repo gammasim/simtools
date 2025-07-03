@@ -59,7 +59,11 @@ class ArrayModel:
         self.mongo_db_config = mongo_db_config
         self.model_version = model_version
         self.label = label
-        self.layout_name = layout_name
+        self.layout_name = (
+            layout_name[0]
+            if isinstance(layout_name, list) and len(layout_name) == 1
+            else layout_name
+        )
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
