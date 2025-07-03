@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=94310b37"></script>
+    <script src="../../_static/documentation_options.js?v=19c2f87d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gcaba5fd" />
+  <meta name="docsearch:version" content="0.1.dev1+g844a7ab" />
   </head>
   
   
@@ -444,6 +444,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_corsika_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">LimitCalculator</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -451,7 +452,7 @@
 
 <div class="viewcode-block" id="generate_corsika_limits_grid">
 <a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">generate_corsika_limits_grid</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_corsika_limits_grid</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate CORSIKA limits for a grid of parameters.</span>
 
@@ -461,9 +462,21 @@
 <span class="sd">    ----------</span>
 <span class="sd">    args_dict : dict</span>
 <span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">    db_config : dict, optional</span>
+<span class="sd">        Database configuration dictionary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">event_data_files</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_data_files&quot;</span><span class="p">])[</span><span class="s2">&quot;files&quot;</span><span class="p">]</span>
-    <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])[</span><span class="s2">&quot;telescope_configs&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">):</span>
+        <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">_read_array_layouts_from_db</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+            <span class="n">db_config</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])[</span>
+            <span class="s2">&quot;telescope_configs&quot;</span>
+        <span class="p">]</span>
 
     <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">event_data_files</span><span class="p">:</span>
@@ -628,6 +641,34 @@
             <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">col_data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
         <span class="n">table_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">table_cols</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_array_layouts_from_db</span><span class="p">(</span><span class="n">layouts</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read array layouts from the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layouts : list[str]</span>
+<span class="sd">        List of layout names to read. If &quot;all&quot;, read all available layouts.</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site name for the array layouts.</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Model version for the array layouts.</span>
+<span class="sd">    db_config : dict</span>
+<span class="sd">        Database configuration dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary mapping layout names to telescope IDs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span><span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
+    <span class="n">layout_names</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_list_of_array_layouts</span><span class="p">()</span> <span class="k">if</span> <span class="n">layouts</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="n">layouts</span>
+    <span class="n">layout_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">layout_name</span> <span class="ow">in</span> <span class="n">layout_names</span><span class="p">:</span>
+        <span class="n">layout_dict</span><span class="p">[</span><span class="n">layout_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_array_elements_for_layout</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">layout_dict</span>
 </pre></div>
 
                 </article>

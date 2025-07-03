@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=94310b37"></script>
+    <script src="../_static/documentation_options.js?v=19c2f87d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gcaba5fd" />
+  <meta name="docsearch:version" content="0.1.dev1+g844a7ab" />
   </head>
   
   
@@ -793,13 +793,15 @@ between the triggered events and the simulated events using the shower IDs.</p>
 <p>Derive CORSIKA limits for a grid of parameters.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid">
-<span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits_grid.</span></span><span class="sig-name descname"><span class="pre">generate_corsika_limits_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits_grid.html#generate_corsika_limits_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits_grid.</span></span><span class="sig-name descname"><span class="pre">generate_corsika_limits_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits_grid.html#generate_corsika_limits_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid" title="Link to this definition">#</a></dt>
 <dd><p>Generate CORSIKA limits for a grid of parameters.</p>
 <p>Requires at least one event data file per parameter set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing command line arguments.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict, optional</span></dt><dd><p>Database configuration dictionary.</p>
 </dd>
 </dl>
 </dd>

@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=94310b37"></script>
+    <script src="../../_static/documentation_options.js?v=19c2f87d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-generate-corsika-histograms" href="simtools-generate-corsika-histograms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gcaba5fd" />
+  <meta name="docsearch:version" content="0.1.dev1+g844a7ab" />
   </head>
   
   
@@ -509,10 +509,157 @@
                   
   <section id="module-generate_simtel_event_data">
 <span id="simtools-generate-simtel-event-data"></span><h1>simtools-generate-simtel-event-data<a class="headerlink" href="#module-generate_simtel_event_data" title="Link to this heading">#</a></h1>
-<p>Generate a reduced dataset of event data from simulated files.</p>
-<p>Processes sim_telarray output files (typically of type ‘.simtel.zst’) and creates a
-reduced dataset containing shower information, array-level parameters, and data about
+<p>Generate a reduced dataset of event data from output of telescope simulations.</p>
+<p>Processes sim_telarray output files (typically of type ‘.simtel.zst’) and creates
+reduced datasets containing shower information, array-level parameters, and data about
 triggered telescopes.</p>
+<p>The output consists of an HDF5 or FITS file containing the following tables:</p>
+<p><strong>FILE_INFO</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>file_name</p></td>
+<td><p>string</p></td>
+<td><p>Name of the file</p></td>
+</tr>
+<tr class="row-odd"><td><p>file_id</p></td>
+<td><p>int64</p></td>
+<td><p>Internal unique identifier for the file</p></td>
+</tr>
+<tr class="row-even"><td><p>particle_id</p></td>
+<td><p>int64</p></td>
+<td><p>PDG particle ID (e.g., 14 for proton)</p></td>
+</tr>
+<tr class="row-odd"><td><p>energy_min</p></td>
+<td><p>float32</p></td>
+<td><p>Minimum simulated energy (TeV)</p></td>
+</tr>
+<tr class="row-even"><td><p>energy_max</p></td>
+<td><p>float32</p></td>
+<td><p>Maximum simulated energy (TeV)</p></td>
+</tr>
+<tr class="row-odd"><td><p>viewcone_min</p></td>
+<td><p>float32</p></td>
+<td><p>Min viewcone angle (rad)</p></td>
+</tr>
+<tr class="row-even"><td><p>viewcone_max</p></td>
+<td><p>float32</p></td>
+<td><p>Max viewcone angle (rad)</p></td>
+</tr>
+<tr class="row-odd"><td><p>core_scatter_min</p></td>
+<td><p>float32</p></td>
+<td><p>Min core scatter radius (m)</p></td>
+</tr>
+<tr class="row-even"><td><p>core_scatter_max</p></td>
+<td><p>float32</p></td>
+<td><p>Max core scatter radius (m)</p></td>
+</tr>
+<tr class="row-odd"><td><p>zenith</p></td>
+<td><p>float32</p></td>
+<td><p>Zenith angle (rad)</p></td>
+</tr>
+<tr class="row-even"><td><p>azimuth</p></td>
+<td><p>float32</p></td>
+<td><p>Azimuth angle (rad)</p></td>
+</tr>
+<tr class="row-odd"><td><p>nsb_level</p></td>
+<td><p>float64</p></td>
+<td><p>Night sky background level (photons/deg^2/ns)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>SHOWERS</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>shower_id</p></td>
+<td><p>int64</p></td>
+<td><p>Shower identifier</p></td>
+</tr>
+<tr class="row-odd"><td><p>event_id</p></td>
+<td><p>int64</p></td>
+<td><p>Event identifier (depends on reuse of showers)</p></td>
+</tr>
+<tr class="row-even"><td><p>file_id</p></td>
+<td><p>int64</p></td>
+<td><p>Internal unique identifier for the file</p></td>
+</tr>
+<tr class="row-odd"><td><p>simulated_energy</p></td>
+<td><p>float64</p></td>
+<td><p>Simulated primary energy (TeV)</p></td>
+</tr>
+<tr class="row-even"><td><p>x_core</p></td>
+<td><p>float64</p></td>
+<td><p>Shower core X position on ground (m)</p></td>
+</tr>
+<tr class="row-odd"><td><p>y_core</p></td>
+<td><p>float64</p></td>
+<td><p>Shower core Y position on ground (m)</p></td>
+</tr>
+<tr class="row-even"><td><p>shower_azimuth</p></td>
+<td><p>float64</p></td>
+<td><p>Direction of shower azimuth (rad)</p></td>
+</tr>
+<tr class="row-odd"><td><p>shower_altitude</p></td>
+<td><p>float64</p></td>
+<td><p>Direction of shower altitude (rad)</p></td>
+</tr>
+<tr class="row-even"><td><p>area_weight</p></td>
+<td><p>float64</p></td>
+<td><p>Weighting factor for sampling area</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>TRIGGERS</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>shower_id</p></td>
+<td><p>int64</p></td>
+<td><p>Shower identifier</p></td>
+</tr>
+<tr class="row-odd"><td><p>event_id</p></td>
+<td><p>int64</p></td>
+<td><p>Event identifier (depends on reuse of showers)</p></td>
+</tr>
+<tr class="row-even"><td><p>file_id</p></td>
+<td><p>int64</p></td>
+<td><p>Internal unique identifier for the file</p></td>
+</tr>
+<tr class="row-odd"><td><p>array_altitude</p></td>
+<td><p>float64</p></td>
+<td><p>Altitude of array pointing direction (rad)</p></td>
+</tr>
+<tr class="row-even"><td><p>array_azimuth</p></td>
+<td><p>float64</p></td>
+<td><p>Azimuth of array pointing direction (rad)</p></td>
+</tr>
+<tr class="row-odd"><td><p>telescope_list</p></td>
+<td><p>string</p></td>
+<td><p>Comma-separated list of triggered telescopes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Several files generated with this application can be combined into a single
+dataset using the ‘simtools-merge-tables’ command.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -535,6 +682,17 @@ triggered telescopes.</p>
 <span class="go">    --output_file output_file.hdf5 \\</span>
 <span class="go">    --max_files 50 \\</span>
 <span class="go">    --print_dataset_information 10</span>
+</pre></div>
+</div>
+<p>To read a reduced event data file, use the following command reading on of the test files:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">import h5py</span>
+
+<span class="go">test_file = &quot;tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5&quot;</span>
+
+<span class="go">with h5py.File(test_file, &quot;r&quot;) as f:</span>
+<span class="go">    triggers = f[&quot;/TRIGGERS&quot;]</span>
+<span class="go">    for row in triggers:</span>
+<span class="go">        print({name: row[name] for name in row.dtype.names})</span>
 </pre></div>
 </div>
 </section>
