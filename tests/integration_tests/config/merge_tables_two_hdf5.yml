@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-merge-tables
     TEST_NAME: two_hdf5
     CONFIGURATION:
-      INPUT:
+      INPUT_FILES:
       - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
       - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
       TABLE_NAMES:
