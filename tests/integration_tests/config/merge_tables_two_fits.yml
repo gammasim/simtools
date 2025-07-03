@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-merge-tables
     TEST_NAME: two_fits
     CONFIGURATION:
-      INPUT:
+      INPUT_FILES:
       - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
       - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
       TABLE_NAMES:
