@@ -7,6 +7,7 @@ import pytest
 import simtools.simtel.simtel_io_metadata as simtel_io_metadata
 from simtools.simtel.simtel_io_metadata import (
     _decode_dictionary,
+    _guess_telescope_name_for_legacy_files,
     get_sim_telarray_telescope_id,
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
@@ -74,3 +75,96 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_fi
 
     assert tel_mapping[1] == "LSTN-01"
     assert tel_mapping[5] == "MSTN-01"
+
+
+def test_get_telescope_list_from_input_card_parses_telescopes(monkeypatch):
+    simtel_io_metadata._get_telescope_list_from_input_card.cache_clear()
+
+    # Simulate InputCard object with parse() returning a string matching the regex
+    class FakeInputCard:
+        def parse(self):
+            return b"""
+                TELESCOPE    -70.91E2     -52.35E2 45.00E2  12.50E2  # (ID=1)  LSTN   01   2B5\n
+                TELESCOPE   -153.29E2     168.86E2 28.70E2  9.15E2  # (ID=6)   MSTN   02   4B1\n
+                """
+
+    class FakeEventIOFile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return [FakeInputCard()]
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    monkeypatch.setattr(simtel_io_metadata, "EventIOFile", FakeEventIOFile)
+    monkeypatch.setattr(simtel_io_metadata, "InputCard", FakeInputCard)
+    result = simtel_io_metadata._get_telescope_list_from_input_card("dummy.simtel")
+    assert isinstance(result, list)
+    assert "LSTN-01" in result
+    assert "MSTN-02" in result
+    assert len(result) == 2
+
+
+def test_get_telescope_list_from_input_card_no_input_card(monkeypatch):
+    simtel_io_metadata._get_telescope_list_from_input_card.cache_clear()
+
+    class FakeInputCard:
+        def parse(self):
+            # No telescope lines matching the regex
+            return b""
+
+    class FakeEventIOFile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            # No InputCard objects
+            return []
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    monkeypatch.setattr(simtel_io_metadata, "EventIOFile", FakeEventIOFile)
+    monkeypatch.setattr(simtel_io_metadata, "InputCard", FakeInputCard)
+    result = simtel_io_metadata._get_telescope_list_from_input_card("dummy.simtel")
+    assert result == []
+
+
+def test_get_telescope_list_from_input_card_input_card_no_match(monkeypatch):
+    simtel_io_metadata._get_telescope_list_from_input_card.cache_clear()
+
+    class FakeInputCard:
+        def parse(self):
+            # No telescope lines matching the regex
+            return b"ACT"
+
+    class FakeEventIOFile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return [FakeInputCard()]
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    monkeypatch.setattr(simtel_io_metadata, "EventIOFile", FakeEventIOFile)
+    result = simtel_io_metadata._get_telescope_list_from_input_card("dummy.simtel")
+    assert result == []
+
+    def test_guess_telescope_name_for_legacy_files(monkeypatch):
+        # Patch _get_telescope_list_from_input_card to return a known list
+        monkeypatch.setattr(
+            "simtools.simtel.simtel_io_metadata._get_telescope_list_from_input_card",
+            lambda file: ["LSTN-01", "MSTN-02", "SSTC-03"],
+        )
+
+        # Should return the correct validated name for index 1
+        result = _guess_telescope_name_for_legacy_files(1, "dummy.simtel")
+        assert result == "MSTN-02"
+
+        # Should return None for out-of-range index
+        result_none = _guess_telescope_name_for_legacy_files(10, "dummy.simtel")
+        assert result_none is None
