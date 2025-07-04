@@ -169,3 +169,23 @@ def test_guess_telescope_name_for_legacy_files(monkeypatch):
     # Should return None for out-of-range index
     result_none = _guess_telescope_name_for_legacy_files(10, "dummy.simtel")
     assert result_none is None
+
+
+def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(monkeypatch, mocker):
+    # Patch validate_array_element_name to always raise ValueError
+    mocker.patch(
+        "simtools.utils.names.validate_array_element_name",
+        side_effect=ValueError("invalid name"),
+    )
+    # Patch _guess_telescope_name_for_legacy_files to return a fallback name
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_io_metadata._guess_telescope_name_for_legacy_files",
+        lambda idx, file: f"FAKE-{idx}",
+    )
+    # Patch read_sim_telarray_metadata to return dummy telescope_meta
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_io_metadata.read_sim_telarray_metadata",
+        lambda file: ({}, {1: {"optics_config_name": "bad"}, 2: {"optics_config_name": "bad2"}}),
+    )
+    mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping("dummy.simtel")
+    assert mapping == {1: "FAKE-0", 2: "FAKE-1"}
