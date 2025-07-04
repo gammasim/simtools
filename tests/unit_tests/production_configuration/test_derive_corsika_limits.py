@@ -173,12 +173,12 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
 
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 5
+    assert mock_create_plot.call_count == 6
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 5
+    assert mock_create_plot.call_count == 6
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
         assert "test_array" in str(kwargs.get("output_file"))
@@ -429,7 +429,7 @@ def test_fill_histograms(mock_reader, hdf5_file_name, mocker):
 
     mock_prepare_limits.assert_called_once_with(mock_file_info)
 
-    assert mock_fill_hist.call_count == 5
+    assert mock_fill_hist.call_count == 6
 
     expected_calls = [
         mocker.call("energy", mock_event_data.simulated_energy, mock_energy_bins),
