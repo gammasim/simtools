@@ -44,7 +44,6 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
         ]
 
     results = []
-    # TODO - does this implicitly mean one file per point in the parameter space?
     for file_path in event_data_files:
         for array_name, telescope_ids in telescope_configs.items():
             _logger.info(f"Processing file: {file_path} with telescope config: {array_name}")
