@@ -24,9 +24,9 @@ applications:
   integration_tests:
   - test_output_files:
     - file: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.log_hist.tar.gz
-      path_descriptor: PACK_FOR_GRID_REGISTER
+      path_descriptor: pack_for_grid_register
     - file: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.simtel.zst
-      path_descriptor: PACK_FOR_GRID_REGISTER
+      path_descriptor: pack_for_grid_register
   test_name: gamma_20_deg_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
