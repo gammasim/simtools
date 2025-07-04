@@ -61,7 +61,7 @@ definitions:
       plot_configuration:
         type: array
         items:
-          $ref: 'plot_configuration.metaschema.yml#/definitions/Plot'
+          $ref: 'plot_configuration.metaschema.yml#/definitions/plot'
         description: "List of plotting configurations"
     required:
       - version
