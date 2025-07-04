@@ -172,7 +172,8 @@ def _get_telescope_list_from_input_card(file):
     Return telescope list from CORSIKA input card.
 
     Note hardwired regex pattern with telescope naming convention.
-    This function is intended for legacy files where metadata is incomplete.
+    This function is intended for legacy files generated for prod6,
+    where metadata is incomplete.
 
     Parameters
     ----------
