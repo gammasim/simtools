@@ -163,11 +163,11 @@ def test_guess_telescope_name_for_legacy_files(monkeypatch):
     )
 
     # Should return the correct validated name for index 1
-    result = _guess_telescope_name_for_legacy_files(1, "dummy.simtel")
+    result = _guess_telescope_name_for_legacy_files(1, "dummy5.simtel")
     assert result == "MSTN-02"
 
     # Should return None for out-of-range index
-    result_none = _guess_telescope_name_for_legacy_files(10, "dummy.simtel")
+    result_none = _guess_telescope_name_for_legacy_files(10, "dummy5.simtel")
     assert result_none is None
 
 
@@ -187,5 +187,5 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(mon
         "simtools.simtel.simtel_io_metadata.read_sim_telarray_metadata",
         lambda file: ({}, {1: {"optics_config_name": "bad"}, 2: {"optics_config_name": "bad2"}}),
     )
-    mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping("dummy.simtel")
+    mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping("dummy4.simtel")
     assert mapping == {1: "FAKE-0", 2: "FAKE-1"}
