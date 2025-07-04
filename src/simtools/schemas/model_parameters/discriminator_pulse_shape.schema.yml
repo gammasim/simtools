@@ -31,3 +31,34 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+plot_configuration:
+  - type: discriminator_pulse_shape
+    title: 'Discriminator pulse shape'
+    xtitle: 'Time [ns]'
+    ytitle: 'Amplitude [a.u.]'
+    no_markers: true
+    tables:
+      - parameter: discriminator_pulse_shape
+        column_x: 'time'
+        column_y: 'amplitude'
+  - type: discriminator_pulse_shape_low_gain
+    title: 'Discriminator pulse shape (low gain)'
+    xtitle: 'Time [ns]'
+    ytitle: 'Amplitude [a.u.]'
+    no_markers: true
+    tables:
+      - parameter: discriminator_pulse_shape
+        column_x: 'time'
+        column_y: 'amplitude (low gain)'
+  - type: discriminator_pulse_shape_high_and_low_gain
+    title: 'Discriminator pulse shape (high and low gain)'
+    xtitle: 'Time [ns]'
+    ytitle: 'Amplitude [a.u.]'
+    no_markers: true
+    tables:
+      - parameter: discriminator_pulse_shape
+        column_x: 'time'
+        column_y: 'amplitude'
+      - parameter: discriminator_pulse_shape
+        column_x: 'time'
+        column_y: 'amplitude (low gain)'

@@ -27,3 +27,13 @@ source:
   - SimPipe Derived
 simulation_software:
   - name: simtools
+plot_configuration:
+  - type: camera_filter_incidence_angle
+    title: 'Photon incident angles'
+    xtitle: 'Photon incident angle [deg]'
+    ytitle: 'Fraction'
+    no_markers: true
+    tables:
+      - parameter: camera_filter_incidence_angle
+        column_x: 'Incidence angle'
+        column_y: 'Fraction'

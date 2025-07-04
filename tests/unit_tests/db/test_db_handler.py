@@ -1477,8 +1477,7 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
     mock_read_production_table.assert_called_once_with("telescopes", model_version)
     assert result == ["LSTN-design", "LSTN-01"]
 
-    # Test case where no design model exists for the array element
-    mock_read_production_table.return_value = {"design_model": {}}
+    mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
     with pytest.raises(
         KeyError, match=r"Failed generated array element list for db query for LSTN-01"
     ):

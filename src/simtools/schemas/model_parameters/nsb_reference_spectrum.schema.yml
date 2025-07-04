@@ -32,3 +32,15 @@ source:
   - Calibration
 simulation_software:
   - name: simtools
+plot_configuration:
+  - type: nsb_reference_spectrum
+    title: 'NSB spectrum'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Differential photon rate [10^9 / (nm s m^2 sr)]'
+    xscale: 'linear'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: nsb_reference_spectrum
+        column_x: 'wavelength'
+        column_y: 'differential photon rate'
