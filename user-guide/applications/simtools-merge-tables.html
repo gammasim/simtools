@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=91c58aa6"></script>
+    <script src="../../_static/documentation_options.js?v=1957e32a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-generate-sim-telarray-histograms" href="simtools-generate-sim-telarray-histograms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g699dc82" />
+  <meta name="docsearch:version" content="0.1.dev1+g4b5033c" />
   </head>
   
   
@@ -510,10 +510,10 @@
   <section id="module-merge_tables">
 <span id="simtools-merge-tables"></span><h1>simtools-merge-tables<a class="headerlink" href="#module-merge_tables" title="Link to this heading">#</a></h1>
 <p>Merge tables from multiple input files into single tables.</p>
-<p>Allows to merge tables from multiple input files into a single file.
-The input files can be in HDF5 or FITS format. The merged tables will be saved in the
+<p>Allows to merge tables (e.g., astropy tables) from multiple input files into a single file.
+The input files can be of HDF5 or FITS format.
 specified output file.</p>
-<p>Note that merging large tables in FITS are not recommended, as it may lead to
+<p>Merging large tables in FITS are not recommended, as it may lead to
 performance issues.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
@@ -522,7 +522,7 @@ performance issues.</p>
 </dd>
 <dt>input_list str</dt><dd><p>File with list of input files with tables.</p>
 </dd>
-<dt>table_names str</dt><dd><p>Names of tables to merge from each input file.</p>
+<dt>table_names list of str</dt><dd><p>Names of tables to merge from each input file.</p>
 </dd>
 <dt>output_file str</dt><dd><p>Output file name.</p>
 </dd>
@@ -532,9 +532,9 @@ performance issues.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Merge tables from two files into a single file.</p>
+<p>Merge tables from two files generated with ‘simtools-generate-simtel-event-data’ into a single file.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-merge-tables \\</span>
-<span class="go">    --input file1 file2&#39; \\</span>
+<span class="go">    --input_files file1 file2&#39; \\</span>
 <span class="go">    --table_names &#39;SHOWERS TRIGGERS FILE_INFO&#39; \\</span>
 <span class="go">    --output_file merged_tables.hdf5</span>
 </pre></div>

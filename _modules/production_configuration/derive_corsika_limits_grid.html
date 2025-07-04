@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=91c58aa6"></script>
+    <script src="../../_static/documentation_options.js?v=1957e32a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g699dc82" />
+  <meta name="docsearch:version" content="0.1.dev1+g4b5033c" />
   </head>
   
   
@@ -465,7 +465,9 @@
 <span class="sd">    db_config : dict, optional</span>
 <span class="sd">        Database configuration dictionary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">event_data_files</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_data_files&quot;</span><span class="p">])[</span><span class="s2">&quot;files&quot;</span><span class="p">]</span>
+    <span class="n">event_data_files</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">get_list_of_files_from_command_line</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_data_files&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;.hdf5&quot;</span><span class="p">,</span> <span class="s2">&quot;.gz&quot;</span><span class="p">]</span>
+    <span class="p">)</span>  <span class="c1"># accept fits.gz files (.gz)</span>
     <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">):</span>
         <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">_read_array_layouts_from_db</span><span class="p">(</span>
             <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
