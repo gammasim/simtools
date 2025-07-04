@@ -2,9 +2,10 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-production-derive-corsika-limits
-    TEST_NAME: hdf5
+    TEST_NAME: hdf5_arrays_from_file
     CONFIGURATION:
-      EVENT_DATA_FILES: tests/resources/production_event_data_hdf5_files.yml
+      EVENT_DATA_FILES:
+      - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
       LOSS_FRACTION: 1.e-3
       TELESCOPE_IDS: tests/resources/production_layouts_telescope_ids.yml
       OUTPUT_PATH: simtools-output
