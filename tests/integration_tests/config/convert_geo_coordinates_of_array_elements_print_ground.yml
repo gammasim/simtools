@@ -1,12 +1,11 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-convert-geo-coordinates-of-array-elements
-    TEST_NAME: print_ground
-    CONFIGURATION:
-      INPUT: tests/resources/telescope_positions-North-ground.ecsv
-      PRINT: ground
-      MODEL_VERSION: 6.0.0
-      LOG_LEVEL: DEBUG
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-convert-geo-coordinates-of-array-elements
+  configuration:
+    input: tests/resources/telescope_positions-North-ground.ecsv
+    log_level: DEBUG
+    model_version: 6.0.0
+    print: ground
+  test_name: print_ground
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

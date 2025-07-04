@@ -1,29 +1,28 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-derive-mirror-rnda
-    TEST_NAME: psf_measurement
-    CONFIGURATION:
-      SITE: North
-      TELESCOPE: MSTx-NectarCam
-      MODEL_VERSION: 6.0.0
-      CONTAINMENT_FRACTION: 0.8
-      PSF_MEASUREMENT: ./tests/resources/MLTdata-preproduction.ecsv
-      USE_RANDOM_FOCAL_LENGTH: true
-      RNDA: 0.0063
-      RTOL_PSF_CONTAINMENT: 0.1
-      TEST: true
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: test_derive_mirror_rnda_psf_measurement.ecsv
-      USE_PLAIN_OUTPUT_PATH: true
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: test_derive_mirror_rnda_psf_measurement.ecsv
-    - REFERENCE_OUTPUT_FILE: tests/resources/derive_mirror_rnda_psf_measurement.ecsv
-      TOLERANCE: 0.3
-      TEST_COLUMNS:
-      - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
-        CUT_COLUMN_NAME: best_fit
-        CUT_CONDITION: ==True
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-derive-mirror-rnda
+  configuration:
+    containment_fraction: 0.8
+    log_level: DEBUG
+    model_version: 6.0.0
+    output_file: test_derive_mirror_rnda_psf_measurement.ecsv
+    output_path: simtools-output
+    psf_measurement: ./tests/resources/MLTdata-preproduction.ecsv
+    rnda: 0.0063
+    rtol_psf_containment: 0.1
+    site: North
+    telescope: MSTx-NectarCam
+    test: true
+    use_plain_output_path: true
+    use_random_focal_length: true
+  integration_tests:
+  - output_file: test_derive_mirror_rnda_psf_measurement.ecsv
+  - reference_output_file: tests/resources/derive_mirror_rnda_psf_measurement.ecsv
+    test_columns:
+    - cut_column_name: best_fit
+      cut_condition: ==True
+      test_column_name: mirror_reflection_random_angle_sigma1
+    tolerance: 0.3
+  test_name: psf_measurement
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
