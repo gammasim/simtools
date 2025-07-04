@@ -168,12 +168,17 @@ def _guess_telescope_name_for_legacy_files(tel_counter, file):
 
 @cache
 def _get_telescope_list_from_input_card(file):
-    """
+    r"""
     Return telescope list from CORSIKA input card.
 
     Note hardwired regex pattern with telescope naming convention.
     This function is intended for legacy files generated for prod6,
     where metadata is incomplete.
+
+    Expected format in input card:
+
+    .. code-block:: console
+        TELESCOPE    -70.91E2     -52.35E2 45.00E2  12.50E2  # (ID=1)  LSTN   01   2B5\n
 
     Parameters
     ----------
