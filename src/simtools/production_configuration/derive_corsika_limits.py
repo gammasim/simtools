@@ -159,6 +159,12 @@ class LimitCalculator:
                 [self.core_distance_bins, self.energy_bins],
                 hist1d=False,
             )
+            self._fill_histogram_and_bin_edges(
+                "angular_distance_vs_energy",
+                (triggered_data.angular_distance, event_data.simulated_energy),
+                [self.view_cone_bins, self.energy_bins],
+                hist1d=False,
+            )
 
     def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
         """
@@ -385,6 +391,27 @@ class LimitCalculator:
                 },
                 "lines": {"x": self.limits["viewcone_radius"].value},
                 "filename": "angular_distance_distribution",
+            },
+            "angular_distance_vs_energy": {
+                "data": self.histograms.get("angular_distance_vs_energy"),
+                "bins": [
+                    self.histograms.get("angular_distance_vs_energy_bin_x_edges"),
+                    self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
+                ],
+                "plot_type": "histogram2d",
+                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "labels": {
+                    "x": "Distance to pointing direction [deg]",
+                    "y": "Energy [TeV]",
+                    "title": "Triggered events: angular distance distance vs energy",
+                },
+                "lines": {
+                    "x": self.limits["viewcone_radius"].value,
+                    "y": self.limits["lower_energy_limit"].value,
+                },
+                "scales": {"y": "log"},
+                "colorbar_label": event_counts,
+                "filename": "angular_distance_vs_energy_distribution",
             },
         }
 
