@@ -37,3 +37,16 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+plot_configuration:
+  - TYPE: fadc_pulse_shape
+    TITLE: 'FADC pulse shape'
+    XTITLE: 'Time [ns]'
+    YTITLE: 'Amplitude [a.u.]'
+    XSCALE: 'linear'
+    YSCALE: 'linear'
+    NO_MARKERS: true
+    PLOT_RATIO: false
+    TABLES:
+      - PARAMETER: fadc_pulse_shape
+        COLUMN_X: 'time'
+        COLUMN_Y: 'amplitude'

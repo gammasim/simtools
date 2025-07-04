@@ -6,7 +6,6 @@ description: YAML representation of plot configuration metaschema
 version: 0.1.0
 name: plot_configuration.metaschema
 type: object
-additionalProperties: false
 
 definitions:
   SimtoolsPlotConfiguration:
@@ -158,5 +157,4 @@ definitions:
     required:
       - COLUMN_X
       - COLUMN_Y
-      - LABEL
     title: "TableConfig"

@@ -183,3 +183,31 @@ def test_add_array_elements():
     test_dict_2 = {"data": {"InstrumentTypeElement": {"not_the_right_enum": ["LSTN", "MSTN"]}}}
     test_dict_added_2 = schema._add_array_elements("InstrumentTypeElement", test_dict_2)
     assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
+
+
+def test_retrieve_yaml_schema_from_uri(tmp_path, monkeypatch):
+    # Create a dummy schema file
+    dummy_schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {"foo": {"type": "string"}},
+    }
+    schema_file = tmp_path / "dummy.schema.yml"
+    with open(schema_file, "w", encoding="utf-8") as f:
+        yaml.dump(dummy_schema, f)
+
+    # Patch SCHEMA_PATH to tmp_path for this test
+    monkeypatch.setattr(schema, "SCHEMA_PATH", tmp_path)
+
+    # The uri should be 'file:/dummy.schema.yml'
+    uri = f"file:/{schema_file.name}"
+
+    resource = schema._retrieve_yaml_schema_from_uri(uri)
+    assert hasattr(resource, "contents")
+    assert resource.contents["type"] == "object"
+    assert "foo" in resource.contents["properties"]
+
+    # Test with non-existing file
+    bad_uri = "file:/not_existing_file.schema.yml"
+    with pytest.raises(FileNotFoundError):
+        schema._retrieve_yaml_schema_from_uri(bad_uri)

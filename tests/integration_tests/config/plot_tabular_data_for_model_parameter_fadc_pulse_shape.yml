@@ -1,0 +1,17 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-plot-tabular-data-for-model-parameter
+    TEST_NAME: fadc_pulse_shape
+    CONFIGURATION:
+      PARAMETER: fadc_pulse_shape
+      PARAMETER_VERSION: 1.0.0
+      SITE: North
+      TELESCOPE: LSTN-design
+      PLOT_TYPE: all
+      OUTPUT_PATH: simtools-output
+      USE_PLAIN_OUTPUT_PATH: true
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: fadc_pulse_shape_1.0.0_North_LSTN-design.pdf
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -216,3 +217,163 @@ def test_read_table_and_normalize():
     data = plot_tables.read_table_data(config, None)
     assert isinstance(data, dict)
     assert data["test_table"]["response"].max() == 1.0
+
+
+@pytest.mark.parametrize(
+    (
+        "parameter",
+        "parameter_version",
+        "site",
+        "telescope",
+        "plot_type",
+        "output_path",
+        "file_extension",
+        "expected",
+    ),
+    [
+        (
+            "par",
+            "1.0.0",
+            "North",
+            "LSTN-01",
+            "typeA",
+            None,
+            ".pdf",
+            Path("par_1.0.0_North_LSTN-01_typeA.pdf"),
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            None,
+            "typeA",
+            None,
+            ".pdf",
+            Path("par_1.0.0_North_typeA.pdf"),
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            "LSTN-01",
+            "par",
+            None,
+            ".pdf",
+            Path("par_1.0.0_North_LSTN-01.pdf"),
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            None,
+            "par",
+            None,
+            ".pdf",
+            Path("par_1.0.0_North.pdf"),
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            "LSTN-01",
+            "typeA",
+            "plots",
+            ".png",
+            Path("plots") / "par_1.0.0_North_LSTN-01_typeA.png",
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            None,
+            "typeA",
+            "plots",
+            ".png",
+            Path("plots") / "par_1.0.0_North_typeA.png",
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            "LSTN-01",
+            "par",
+            "plots",
+            ".png",
+            Path("plots") / "par_1.0.0_North_LSTN-01.png",
+        ),
+        (
+            "par",
+            "1.0.0",
+            "North",
+            None,
+            "par",
+            "plots",
+            ".png",
+            Path("plots") / "par_1.0.0_North.png",
+        ),
+    ],
+)
+def test_generate_output_file_name(
+    parameter, parameter_version, site, telescope, plot_type, output_path, file_extension, expected
+):
+    result = plot_tables._generate_output_file_name(
+        parameter=parameter,
+        parameter_version=parameter_version,
+        site=site,
+        telescope=telescope,
+        plot_type=plot_type,
+        output_path=output_path,
+        file_extension=file_extension,
+    )
+    assert result == expected
+
+
+def test_generate_plot_configurations(tmp_test_directory):
+    assert (
+        plot_tables.generate_plot_configurations(
+            parameter="num_gains",
+            parameter_version="1.0.0",
+            site="South",
+            telescope="SSTS-design",
+            output_path=tmp_test_directory,
+            plot_type="all",
+        )
+        is None
+    )
+
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="atmospheric_profile",
+        parameter_version="1.0.0",
+        site="South",
+        telescope=None,
+        output_path=tmp_test_directory,
+        plot_type="all",
+    )
+    assert len(configs) > 0
+    for _file in output_files:
+        assert "atmospheric_profile" in str(_file)
+
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="fadc_pulse_shape",
+        parameter_version="1.0.0",
+        site="South",
+        telescope="SSTS-design",
+        output_path=tmp_test_directory,
+        plot_type="fadc_pulse_shape",
+    )
+    assert len(configs) == 1
+    assert "tables" in configs[0]
+    assert configs[0]["tables"][0]["column_x"] == "time"
+
+    with pytest.raises(
+        ValueError,
+        match="No plot configuration found for type 'non_existent_type' in parameter 'fadc_pulse_shape'.",
+    ):
+        plot_tables.generate_plot_configurations(
+            parameter="fadc_pulse_shape",
+            parameter_version="1.0.0",
+            site="South",
+            telescope="SSTS-design",
+            output_path=tmp_test_directory,
+            plot_type="non_existent_type",
+        )
