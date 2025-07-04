@@ -1,54 +1,53 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-simulate-prod
-    TEST_NAME: gamma_40_deg_south_check_output
-    CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_sim_telarray
-      LABEL: check_output
-      MODEL_VERSION: 6.0.0
-      SITE: South
-      ARRAY_LAYOUT_NAME: beta
-      PRIMARY: gamma
-      RUN_NUMBER: 1
-      AZIMUTH_ANGLE: South
-      ZENITH_ANGLE: 40
-      NSHOW: 5
-      ENERGY_RANGE: 150 GeV 600 GeV
-      CORE_SCATTER: 10 840 m
-      DATA_DIRECTORY: simtools-data
-      OUTPUT_PATH: simtools-output
-      SIM_TELARRAY_INSTRUMENT_SEEDS: 1745,290
-      CORSIKA_TEST_SEEDS: true
-      PACK_FOR_GRID_REGISTER: simtools-grid-output
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - TEST_OUTPUT_FILES:
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za40deg_azm180deg_South_beta_6.0.0_check_output.log_hist.tar.gz
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za40deg_azm180deg_South_beta_6.0.0_check_output.simtel.zst
-        EXPECTED_OUTPUT:
-          trigger_time:
-          - 0
-          - 50
-          pe_sum:
-          - 20
-          - 1000
-          photons:
-          - 90
-          - 1000
-    - TEST_SIMTEL_CFG_FILES:
-        5.0.0: tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-5.0.0_test.cfg
-        6.0.0: tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-6.0.0_test.cfg
-    - TEST_SIMTEL_CFG_FILES:
-        5.0.0: tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-5.0.0_test.cfg
-        6.0.0: tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-6.0.0_test.cfg
-    - TEST_SIMTEL_CFG_FILES:
-        5.0.0: tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-5.0.0_test.cfg
-        6.0.0: tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-6.0.0_test.cfg
-    - TEST_SIMTEL_CFG_FILES:
-        5.0.0: tests/resources/sim_telarray_configurations/CTA-beta-South-5.0.0_test.cfg
-        6.0.0: tests/resources/sim_telarray_configurations/CTA-beta-South-6.0.0_test.cfg
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-simulate-prod
+  configuration:
+    array_layout_name: beta
+    azimuth_angle: South
+    core_scatter: 10 840 m
+    corsika_test_seeds: true
+    data_directory: simtools-data
+    energy_range: 150 GeV 600 GeV
+    label: check_output
+    log_level: DEBUG
+    model_version: 6.0.0
+    nshow: 5
+    output_path: simtools-output
+    pack_for_grid_register: simtools-grid-output
+    primary: gamma
+    run_number: 1
+    sim_telarray_instrument_seeds: 1745,290
+    simulation_software: corsika_sim_telarray
+    site: South
+    zenith_angle: 40
+  integration_tests:
+  - test_output_files:
+    - file: gamma_run000001_za40deg_azm180deg_South_beta_6.0.0_check_output.log_hist.tar.gz
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - expected_output:
+        pe_sum:
+        - 20
+        - 1000
+        photons:
+        - 90
+        - 1000
+        trigger_time:
+        - 0
+        - 50
+      file: gamma_run000001_za40deg_azm180deg_South_beta_6.0.0_check_output.simtel.zst
+      path_descriptor: PACK_FOR_GRID_REGISTER
+  - test_simtel_cfg_files:
+      5.0.0: tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-5.0.0_test.cfg
+      6.0.0: tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-6.0.0_test.cfg
+  - test_simtel_cfg_files:
+      5.0.0: tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-5.0.0_test.cfg
+      6.0.0: tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-6.0.0_test.cfg
+  - test_simtel_cfg_files:
+      5.0.0: tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-5.0.0_test.cfg
+      6.0.0: tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-6.0.0_test.cfg
+  - test_simtel_cfg_files:
+      5.0.0: tests/resources/sim_telarray_configurations/CTA-beta-South-5.0.0_test.cfg
+      6.0.0: tests/resources/sim_telarray_configurations/CTA-beta-South-6.0.0_test.cfg
+  test_name: gamma_40_deg_south_check_output
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

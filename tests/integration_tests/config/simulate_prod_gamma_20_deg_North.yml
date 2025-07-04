@@ -1,33 +1,32 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-simulate-prod
-    TEST_NAME: gamma_20_deg_north
-    CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_sim_telarray
-      LABEL: test-production-North
-      MODEL_VERSION: 6.0.0
-      SITE: North
-      ARRAY_LAYOUT_NAME: test_layout
-      PRIMARY: gamma
-      RUN_NUMBER: 10
-      AZIMUTH_ANGLE: North
-      ZENITH_ANGLE: 20
-      NSHOW: 5
-      ESLOPE: -2.0
-      VIEW_CONE: 0 deg 0 deg
-      ENERGY_RANGE: 100 GeV 1 TeV
-      CORE_SCATTER: 10 500 m
-      DATA_DIRECTORY: simtools-data
-      OUTPUT_PATH: simtools-output
-      SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES: 100
-      PACK_FOR_GRID_REGISTER: simtools-grid-output
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - TEST_OUTPUT_FILES:
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.log_hist.tar.gz
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.simtel.zst
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-simulate-prod
+  configuration:
+    array_layout_name: test_layout
+    azimuth_angle: North
+    core_scatter: 10 500 m
+    data_directory: simtools-data
+    energy_range: 100 GeV 1 TeV
+    eslope: -2.0
+    label: test-production-North
+    log_level: DEBUG
+    model_version: 6.0.0
+    nshow: 5
+    output_path: simtools-output
+    pack_for_grid_register: simtools-grid-output
+    primary: gamma
+    run_number: 10
+    sim_telarray_random_instrument_instances: 100
+    simulation_software: corsika_sim_telarray
+    site: North
+    view_cone: 0 deg 0 deg
+    zenith_angle: 20
+  integration_tests:
+  - test_output_files:
+    - file: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.log_hist.tar.gz
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - file: gamma_run000010_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.simtel.zst
+      path_descriptor: PACK_FOR_GRID_REGISTER
+  test_name: gamma_20_deg_north
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

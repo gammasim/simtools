@@ -134,7 +134,7 @@ def read_application_configuration(configuration_file, steps, logger):
         Path to the log file.
 
     """
-    application_config = gen.collect_data_from_file(configuration_file).get("CTA_SIMPIPE")
+    application_config = gen.collect_data_from_file(configuration_file)
     place_holder = "__SETTING_WORKFLOW__"
     workflow_dir, setting_workflow = get_subdirectory_name(configuration_file)
     output_path = Path(str(workflow_dir).replace("input", "output")) / Path(setting_workflow)

@@ -19,11 +19,11 @@ test_configs, test_ids = configuration.get_list_of_test_configurations(config_fi
 test_parameters = []
 for config, test_id in zip(test_configs, test_ids):
     marks = []
-    if config.get("TEST_REQUIREMENT"):
-        marks.append(pytest.mark.verifies_requirement(config["TEST_REQUIREMENT"]))
+    if config.get("test_requirement"):
+        marks.append(pytest.mark.verifies_requirement(config["test_requirement"]))
 
-    if config.get("TEST_USE_CASE"):
-        marks.append(pytest.mark.verifies_usecase(config["TEST_USE_CASE"]))
+    if config.get("test_use_case"):
+        marks.append(pytest.mark.verifies_usecase(config["test_use_case"]))
 
     param = pytest.param(config, id=test_id, marks=marks)
     test_parameters.append(param)
@@ -58,8 +58,8 @@ def test_applications_from_config(tmp_test_directory, config, request):
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
     logger.info(f"Application configuration: {tmp_config}")
-    logger.info(f"Test requirement: {config.get('TEST_REQUIREMENT')}")
-    logger.info(f"Test use case: {config.get('TEST_USE_CASE')}")
+    logger.info(f"Test requirement: {config.get('test_requirement')}")
+    logger.info(f"Test use case: {config.get('test_use_case')}")
     try:
         cmd, config_file_model_version = configuration.configure(
             tmp_config, tmp_test_directory, request

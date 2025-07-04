@@ -1,41 +1,42 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-simulate-prod
-    TEST_NAME: gamma_20_deg_multiple_model_versions
-    CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_sim_telarray
-      LABEL: multiple_model_versions
-      MODEL_VERSION: [6.0.0, 6.1.0]
-      SITE: South
-      ARRAY_LAYOUT_NAME: alpha
-      PRIMARY: gamma
-      RUN_NUMBER: 1
-      AZIMUTH_ANGLE: South
-      ZENITH_ANGLE: 20
-      NSHOW: 5
-      ENERGY_RANGE: 100 GeV 500 GeV
-      CORE_SCATTER: 10 700 m
-      DATA_DIRECTORY: simtools-data
-      OUTPUT_PATH: simtools-output
-      SIM_TELARRAY_INSTRUMENT_SEEDS: 1745,290
-      CORSIKA_TEST_SEEDS: true
-      PACK_FOR_GRID_REGISTER: simtools-grid-output
-      SAVE_REDUCED_EVENT_LISTS: true
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - TEST_OUTPUT_FILES:
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.log_hist.tar.gz
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.simtel.zst
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.reduced_event_data.hdf5
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.log_hist.tar.gz
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.simtel.zst
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.reduced_event_data.hdf5
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-simulate-prod
+  configuration:
+    array_layout_name: alpha
+    azimuth_angle: South
+    core_scatter: 10 700 m
+    corsika_test_seeds: true
+    data_directory: simtools-data
+    energy_range: 100 GeV 500 GeV
+    label: multiple_model_versions
+    log_level: DEBUG
+    model_version:
+    - 6.0.0
+    - 6.1.0
+    nshow: 5
+    output_path: simtools-output
+    pack_for_grid_register: simtools-grid-output
+    primary: gamma
+    run_number: 1
+    save_reduced_event_lists: true
+    sim_telarray_instrument_seeds: 1745,290
+    simulation_software: corsika_sim_telarray
+    site: South
+    zenith_angle: 20
+  integration_tests:
+  - test_output_files:
+    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.log_hist.tar.gz
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.simtel.zst
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.reduced_event_data.hdf5
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.log_hist.tar.gz
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.simtel.zst
+      path_descriptor: PACK_FOR_GRID_REGISTER
+    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.1.0_multiple_model_versions.reduced_event_data.hdf5
+      path_descriptor: PACK_FOR_GRID_REGISTER
+  test_name: gamma_20_deg_multiple_model_versions
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

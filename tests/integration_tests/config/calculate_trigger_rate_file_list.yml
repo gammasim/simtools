@@ -1,15 +1,15 @@
 ---
-APPLICATIONS:
-- APPLICATION: simtools-calculate-trigger-rate
-  TEST_NAME: file_list
-  CONFIGURATION:
-    SIMTEL_FILE_NAMES:
+applications:
+- application: simtools-calculate-trigger-rate
+  configuration:
+    output_path: simtools-output
+    save_tables: true
+    simtel_file_names:
     - ./tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
     - ./tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
-    SAVE_TABLES: true
-    OUTPUT_PATH: simtools-output
-  INTEGRATION_TESTS:
-  - OUTPUT_FILE: proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.ecsv
-  - OUTPUT_FILE: proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.ecsv
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+  integration_tests:
+  - output_file: proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.ecsv
+  - output_file: proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.ecsv
+  test_name: file_list
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

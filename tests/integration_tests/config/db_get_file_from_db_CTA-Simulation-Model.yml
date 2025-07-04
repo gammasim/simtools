@@ -1,12 +1,11 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-get-file-from-db
-    TEST_NAME: CTA-Simulation-Model
-    CONFIGURATION:
-      FILE_NAME: mirror_CTA-S-LST_v2020-04-07.dat
-      OUTPUT_PATH: simtools-output
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: mirror_CTA-S-LST_v2020-04-07.dat
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-get-file-from-db
+  configuration:
+    file_name: mirror_CTA-S-LST_v2020-04-07.dat
+    output_path: simtools-output
+  integration_tests:
+  - output_file: mirror_CTA-S-LST_v2020-04-07.dat
+  test_name: CTA-Simulation-Model
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
