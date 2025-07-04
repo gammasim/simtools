@@ -2,10 +2,14 @@
 """Read metadata from sim_telarray files."""
 
 import logging
+import re
 from functools import cache
 
 from eventio import EventIOFile
+from eventio.iact import InputCard
 from eventio.simtel import HistoryMeta
+
+from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 
@@ -124,7 +128,75 @@ def get_sim_telarray_telescope_id_to_telescope_name_mapping(file):
         Dictionary mapping telescope IDs to telescope names.
     """
     _, telescope_meta = read_sim_telarray_metadata(file)
-    return {
-        tel_id: meta.get("optics_config_name", f"Unknown-{tel_id}")
-        for tel_id, meta in telescope_meta.items()
-    }
+    telescope_map = {}
+    for i, (tel_id, meta) in enumerate(telescope_meta.items()):
+        try:
+            telescope_name = names.validate_array_element_name(
+                meta.get("optics_config_name", f"Unknown-{tel_id}")
+            )
+        except ValueError:
+            telescope_name = _guess_telescope_name_for_legacy_files(i, file)
+        if telescope_name is not None:
+            telescope_map[tel_id] = telescope_name
+
+    return telescope_map
+
+
+def _guess_telescope_name_for_legacy_files(tel_counter, file):
+    """
+    Guess telescope names for legacy prod6 sim_telarray files with incomplete metadata.
+
+    Parameters
+    ----------
+    tel_counter: int
+        Telescope counter, used to index into the telescope list.
+    file: str, Path
+        Path to the sim_telarray file.
+
+    Returns
+    -------
+    str, None
+        Guessed telescope name or None if not found.
+    """
+    telescope_list = _get_telescope_list_from_input_card(file)
+    try:
+        return names.validate_array_element_name(telescope_list[tel_counter])
+    except (IndexError, ValueError):
+        pass
+    return None
+
+
+@cache
+def _get_telescope_list_from_input_card(file):
+    r"""
+    Return telescope list from CORSIKA input card.
+
+    Note hardwired regex pattern with telescope naming convention.
+    This function is intended for legacy files generated for prod6,
+    where metadata is incomplete.
+
+    Expected format in input card:
+
+    .. code-block:: console
+        TELESCOPE    -70.91E2     -52.35E2 45.00E2  12.50E2  # (ID=1)  LSTN   01   2B5\n
+
+    Parameters
+    ----------
+    file: str, Path
+        Path to the sim_telarray file.
+
+    Returns
+    -------
+    list
+        List of telescope names as found in CORSIKA input card.
+    """
+    with EventIOFile(file) as f:
+        for o in f:
+            if isinstance(o, InputCard):
+                input_card = o.parse().decode("utf-8")
+                regex = (
+                    r"TELESCOPE\s+[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+"
+                    r"# \(ID=\d+\)\s+(LST[N|S]|MST[N|S]|S[S|C]TS)\s+([^\s]+)"
+                )
+                return [f"{m[0]}-{m[1]}" for m in re.findall(regex, input_card)]
+    return []

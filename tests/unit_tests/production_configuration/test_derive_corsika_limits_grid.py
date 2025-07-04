@@ -46,9 +46,10 @@ def mock_results():
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     """Test generate_corsika_limits_grid function."""
     # Mock dependencies
+    mock_list = mocker.patch("simtools.utils.general.get_list_of_files_from_command_line")
+    mock_list.return_value = ["file1.fits", "file2.fits"]
     mock_collect = mocker.patch("simtools.utils.general.collect_data_from_file")
     mock_collect.side_effect = [
-        {"files": ["file1.fits", "file2.fits"]},
         {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
     ]
 
@@ -63,9 +64,10 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     generate_corsika_limits_grid(mock_args_dict)
 
     # Verify calls
-    assert mock_collect.call_count == 2
+    assert mock_collect.call_count == 1
     assert mock_process.call_count == 4  # 2 files * 2 configs
     assert mock_write.call_count == 1
+    assert mock_list.call_count == 1
 
 
 def test_process_file(mocker):
@@ -198,8 +200,8 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     args["site"] = "North"
     args["model_version"] = "v1.2.3"
 
-    mock_collect = mocker.patch("simtools.utils.general.collect_data_from_file")
-    mock_collect.return_value = {"files": ["file1.fits", "file2.fits"]}
+    mock_collect = mocker.patch("simtools.utils.general.get_list_of_files_from_command_line")
+    mock_collect.return_value = ["file1.fits", "file2.fits"]
 
     mock_read_layouts = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits_grid._read_array_layouts_from_db"
@@ -215,7 +217,7 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
 
     generate_corsika_limits_grid(args)
 
-    mock_collect.assert_called_once_with(args["event_data_files"])
+    mock_collect.assert_called_once()
     mock_read_layouts.assert_called_once_with(
         args["array_layout_name"], args["site"], args["model_version"], None
     )
