@@ -24,9 +24,9 @@ applications:
   integration_tests:
   - test_output_files:
     - file: simulate_prod.submit.condor
-      path_descriptor: OUTPUT_PATH
+      path_descriptor: output_path
     - file: simulate_prod.submit.sh
-      path_descriptor: OUTPUT_PATH
+      path_descriptor: output_path
   test_name: htcondor-gamma_20_deg_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

@@ -33,9 +33,9 @@ applications:
         - 0
         - 50
       file: gamma_run000001_za20deg_azm000deg_South_alpha_6.0.0_check_output.simtel.zst
-      path_descriptor: PACK_FOR_GRID_REGISTER
+      path_descriptor: pack_for_grid_register
     - file: gamma_run000001_za20deg_azm000deg_South_alpha_6.0.0_check_output.log_hist.tar.gz
-      path_descriptor: PACK_FOR_GRID_REGISTER
+      path_descriptor: pack_for_grid_register
   test_name: gamma_20_deg_az0deg_south_check_output
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
