@@ -39,3 +39,13 @@ source:
   - Calibration
 simulation_software:
   - name: simtools
+plot_configuration:
+  - type: lightguide_efficiency_vs_incidence_angle
+    title: 'Light guide efficiency'
+    xtitle: 'Incident angle [deg]'
+    ytitle: 'Efficiency'
+    no_markers: true
+    tables:
+      - parameter: lightguide_efficiency_vs_incidence_angle
+        column_x: 'angle'
+        column_y: 'efficiency'
