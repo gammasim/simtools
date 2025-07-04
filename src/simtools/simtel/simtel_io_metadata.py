@@ -144,7 +144,7 @@ def get_sim_telarray_telescope_id_to_telescope_name_mapping(file):
 
 def _guess_telescope_name_for_legacy_files(tel_counter, file):
     """
-    Guess telescope names for legacy sim_telarray files with incomplete metadata.
+    Guess telescope names for legacy prod6 sim_telarray files with incomplete metadata.
 
     Parameters
     ----------
