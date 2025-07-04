@@ -51,3 +51,23 @@ plot_configuration:
       - parameter: atmospheric_profile
         column_x: 'altitude'
         column_y: 'refractive_index'
+  - type: pressure_vs_altitude
+    title: 'Atmospheric pressure profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Pressure [mbar]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'pressure'
+  - type: thickness_vs_altitude
+    title: 'Atmospheric thickness profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Thickness [g/cm^2]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'thickness'
