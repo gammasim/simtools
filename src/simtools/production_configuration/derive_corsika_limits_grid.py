@@ -28,7 +28,9 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
     db_config : dict, optional
         Database configuration dictionary.
     """
-    event_data_files = gen.collect_data_from_file(args_dict["event_data_files"])["files"]
+    event_data_files = gen.get_list_of_files_from_command_line(
+        args_dict["event_data_files"], [".hdf5", ".gz"]
+    )  # accept fits.gz files (.gz)
     if args_dict.get("array_layout_name"):
         telescope_configs = _read_array_layouts_from_db(
             args_dict["array_layout_name"],
