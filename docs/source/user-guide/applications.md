@@ -77,6 +77,7 @@ simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-te
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
+simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
