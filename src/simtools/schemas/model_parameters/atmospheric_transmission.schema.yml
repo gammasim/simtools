@@ -75,4 +75,4 @@ plot_configuration:
         column_y: 'extinction'
         select_values:
           column_name: 'altitude'
-          value: 2.356
+          value: 2.358
