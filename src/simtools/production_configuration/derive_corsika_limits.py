@@ -311,6 +311,12 @@ class LimitCalculator:
         """
         self._logger.info(f"Plotting histograms written to {output_path}")
         event_counts = "Event Count"
+
+        angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
+        cumulative_angular_vs_energy = self._calculate_cumulative_energy_distribution(
+            angular_dist_vs_energy
+        )
+
         plots = {
             "core_vs_energy": {
                 "data": self.histograms.get("core_vs_energy"),
@@ -413,6 +419,27 @@ class LimitCalculator:
                 "colorbar_label": event_counts,
                 "filename": "angular_distance_vs_energy_distribution",
             },
+            "angular_distance_vs_energy_cumulative": {
+                "data": cumulative_angular_vs_energy,
+                "bins": [
+                    self.histograms.get("angular_distance_vs_energy_bin_x_edges"),
+                    self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
+                ],
+                "plot_type": "histogram2d",
+                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "labels": {
+                    "x": "Distance to pointing direction [deg]",
+                    "y": "Energy [TeV]",
+                    "title": "Triggered events: cumulative angular distance vs energy",
+                },
+                "lines": {
+                    "x": self.limits["viewcone_radius"].value,
+                    "y": self.limits["lower_energy_limit"].value,
+                },
+                "scales": {"y": "log"},
+                "colorbar_label": "Cumulative " + event_counts,
+                "filename": "angular_distance_vs_energy_cumulative_distribution",
+            },
         }
 
         for _, plot_args in plots.items():
@@ -481,3 +508,27 @@ class LimitCalculator:
             plt.show()
 
         return fig
+
+    def _calculate_cumulative_energy_distribution(self, hist2d):
+        """
+        Calculate cumulative distribution of events summed with increasing energy.
+
+        For each angular distance bin, sum up events from low energy to high energy.
+
+        Parameters
+        ----------
+        hist2d : np.ndarray
+            2D histogram with angular distance vs energy
+
+        Returns
+        -------
+        np.ndarray
+            2D histogram with cumulative counts across energy
+        """
+        cumulative = hist2d.copy()
+
+        # For each angular distance bin (rows), create a cumulative sum along energy axis
+        for i in range(cumulative.shape[0]):
+            cumulative[i, :] = np.cumsum(cumulative[i, :])
+
+        return cumulative
