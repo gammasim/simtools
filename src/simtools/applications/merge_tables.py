@@ -1,11 +1,11 @@
 r"""
 Merge tables from multiple input files into single tables.
 
-Allows to merge tables from multiple input files into a single file.
-The input files can be in HDF5 or FITS format. The merged tables will be saved in the
+Allows to merge tables (e.g., astropy tables) from multiple input files into a single file.
+The input files can be of HDF5 or FITS format.
 specified output file.
 
-Note that merging large tables in FITS are not recommended, as it may lead to
+Merging large tables in FITS are not recommended, as it may lead to
 performance issues.
 
 Command line arguments
@@ -14,7 +14,7 @@ input str
     Input file(s) (e.g., 'file1 file2').
 input_list str
     File with list of input files with tables.
-table_names str
+table_names list of str
     Names of tables to merge from each input file.
 output_file str
     Output file name.
@@ -24,12 +24,12 @@ output_path str
 Example
 -------
 
-Merge tables from two files into a single file.
+Merge tables from two files generated with 'simtools-generate-simtel-event-data' into a single file.
 
 .. code-block:: console
 
     simtools-merge-tables \\
-        --input file1 file2' \\
+        --input_files file1 file2' \\
         --table_names 'SHOWERS TRIGGERS FILE_INFO' \\
         --output_file merged_tables.hdf5
 
@@ -57,15 +57,10 @@ def _parse(label, description):
 
     input_group = config.parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument(
-        "--input",
+        "--input_files",
         type=str,
         nargs="+",
-        help="Input file(s) (e.g., 'file1 file2')",
-    )
-    input_group.add_argument(
-        "--input_list",
-        type=str,
-        help="File with list of input files with tables.",
+        help="Input file(s) (e.g., 'file1 file2') or a file with a list of input files.",
     )
     config.parser.add_argument(
         "--table_names",
@@ -86,12 +81,15 @@ def main():  # noqa: D103
     )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    logger.info(f"Loading input files from: {args_dict['input']}")
+    logger.info(f"Loading input files: {args_dict['input_files']}")
+
+    # accept fits.gz files (.gz)
+    input_files = gen.get_list_of_files_from_command_line(
+        args_dict["input_files"], [".hdf5", ".gz"]
+    )
 
     output_path = io_handler.IOHandler().get_output_directory(label)
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
-
-    input_files = args_dict.get("input") or gen.collect_data_from_file(args_dict["input_list"])
 
     io_table_handler.merge_tables(
         input_files,

@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -22,11 +23,18 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def sim_telarray_file_proton_list(io_handler):
-    return io_handler.get_input_data_file(
-        file_name="simtel_output_files.txt",
-        test=True,
+def sim_telarray_file_proton_list(io_handler, tmp_test_directory):
+    output_file = tmp_test_directory / "simtel_output_files.txt"
+    resource_dir = Path("./tests/resources")
+    files = sorted(
+        resource_dir.glob(
+            "proton_run00020*_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
+        )
     )
+    with output_file.open("w") as f:
+        for file in files:
+            f.write(f"{file}\n")
+    return output_file
 
 
 @pytest.fixture
