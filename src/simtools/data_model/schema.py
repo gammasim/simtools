@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 import jsonschema
+from referencing import Registry, Resource
 
 import simtools.utils.general as gen
 from simtools.constants import (
@@ -119,8 +120,14 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
             ),  # default version to ensure backward compatibility
         )
 
+    validator = jsonschema.Draft6Validator(
+        schema=json_schema,
+        format_checker=format_checkers.format_checker,
+        registry=Registry(retrieve=_retrieve_yaml_schema_from_uri),
+    )
+
     try:
-        jsonschema.validate(data, schema=json_schema, format_checker=format_checkers.format_checker)
+        validator.validate(instance=data)
     except jsonschema.exceptions.ValidationError as exc:
         _logger.error(f"Validation failed using schema: {json_schema} for data: {data}")
         raise exc
@@ -133,6 +140,13 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
 
     _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
     return data
+
+
+def _retrieve_yaml_schema_from_uri(uri):
+    """Load schema from a file URI."""
+    path = SCHEMA_PATH / Path(uri.removeprefix("file:/"))
+    contents = gen.collect_data_from_file(file_name=path)
+    return Resource.from_contents(contents)
 
 
 def load_schema(schema_file=None, schema_version=None):

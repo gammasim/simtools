@@ -409,6 +409,11 @@ class DatabaseHandler:
             Version of the model.
         export_file_as_table: bool
             If True, export the file as an astropy table (ecsv format).
+
+        Returns
+        -------
+        astropy.table.Table or None
+            If export_file_as_table is True
         """
         parameters = self.get_model_parameter(
             parameter,
