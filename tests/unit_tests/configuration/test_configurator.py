@@ -116,9 +116,7 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
         "output_path": "./abc/",
         "test": True,
     }
-    _tmp_dict_workflow = {
-        "CTA_SIMPIPE": {"APPLICATIONS": [{"APPLICATION": "test", "CONFIGURATION": _tmp_dict}]}
-    }
+    _tmp_dict_workflow = {"applications": [{"application": "test", "configuration": _tmp_dict}]}
     _workflow_file = tmp_test_directory / "configuration-test.yml"
     with open(_workflow_file, "w") as output:
         yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
