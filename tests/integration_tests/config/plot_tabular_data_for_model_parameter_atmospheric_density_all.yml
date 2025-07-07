@@ -1,0 +1,17 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-plot-tabular-data-for-model-parameter
+    TEST_NAME: atmospheric_profile_all
+    CONFIGURATION:
+      PARAMETER: atmospheric_profile
+      PARAMETER_VERSION: 1.0.0
+      SITE: North
+      PLOT_TYPE: all
+      OUTPUT_PATH: simtools-output
+      USE_PLAIN_OUTPUT_PATH: true
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png
+    - OUTPUT_FILE: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
