@@ -141,7 +141,7 @@ def read_application_configuration(configuration_file, steps, logger):
     output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Setting workflow output path to {output_path}")
     log_file = output_path / "simtools.log"
-    configurations = application_config.get("applicationS")
+    configurations = application_config.get("applications")
     for step_count, config in enumerate(configurations, start=1):
         config["RUN_application"] = step_count in steps if steps else True
         for key, value in config.get("configuration", {}).items():
