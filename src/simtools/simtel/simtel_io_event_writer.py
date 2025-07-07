@@ -274,7 +274,10 @@ class SimtelIOEventDataWriter:
                 "array_azimuth": float(calculate_circular_mean(azimuths)),
                 "telescope_list": ",".join(map(str, telescopes)),
                 "telescope_list_common_id": ",".join(
-                    [str(get_common_identifier_from_array_element_name(tel, 0)) for tel in telescopes]
+                    [
+                        str(get_common_identifier_from_array_element_name(tel, 0))
+                        for tel in telescopes
+                    ]
                 ),
             }
         )
