@@ -171,14 +171,23 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
         "viewcone_radius": 2.0 * u.deg,
     }
 
+    # Mock the 2D histograms needed for plotting and cumulative energy distribution
+    calculator.histograms["core_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]])
+    calculator.histograms["core_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
+    calculator.histograms["core_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
+
+    calculator.histograms["angular_distance_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]])
+    calculator.histograms["angular_distance_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
+    calculator.histograms["angular_distance_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
+
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 6
+    assert mock_create_plot.call_count == 7
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 6
+    assert mock_create_plot.call_count == 7
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
         assert "test_array" in str(kwargs.get("output_file"))
@@ -511,3 +520,16 @@ def test_prepare_limit_data_with_array_and_telescopes(mock_reader, hdf5_file_nam
     # Check array name and telescope list are correctly set
     assert result["array_name"] == array_name
     assert result["telescope_ids"] == telescope_list
+
+
+def test_calculate_cumulative_energy_distribution(mock_reader, hdf5_file_name):
+    """Test calculation of cumulative energy distribution."""
+    calculator = LimitCalculator(hdf5_file_name)
+
+    test_hist = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+
+    result = calculator._calculate_cumulative_energy_distribution(test_hist)
+
+    expected = np.array([[1, 3, 6, 10], [5, 11, 18, 26], [9, 19, 30, 42]])
+
+    np.testing.assert_array_equal(result, expected)
