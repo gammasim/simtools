@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-merge-tables &#8212; simtools</title>
+    <title>simtools-plot-tabular-data-for-model-parameter &#8212; simtools</title>
   
   
   
@@ -43,7 +43,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-merge-tables';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-plot-tabular-data-for-model-parameter';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
@@ -53,8 +53,8 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-plot-array-layout" href="simtools-plot-array-layout.html" />
-    <link rel="prev" title="simtools-generate-sim-telarray-histograms" href="simtools-generate-sim-telarray-histograms.html" />
+    <link rel="next" title="simtools-production-derive-corsika-limits" href="simtools-production-derive-corsika-limits.html" />
+    <link rel="prev" title="simtools-plot-tabular-data" href="simtools-plot-tabular-data.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g9868a9e" />
@@ -422,10 +422,10 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-merge-tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data-for-model-parameter.html">simtools-plot-tabular-data-for-model-parameter</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-plot-tabular-data-for-model-parameter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
@@ -491,7 +491,7 @@
     
     <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">Applications</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-merge-tables</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-plot-tabular-data-for-model-parameter</span></li>
   </ul>
 </nav>
 </div>
@@ -508,39 +508,54 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-merge_tables">
-<span id="simtools-merge-tables"></span><h1>simtools-merge-tables<a class="headerlink" href="#module-merge_tables" title="Link to this heading">#</a></h1>
-<p>Merge tables from multiple input files into single tables.</p>
-<p>Allows to merge tables (e.g., astropy tables) from multiple input files into a single file.
-The input files can be of HDF5 or FITS format.
-specified output file.</p>
-<p>Merging large tables in FITS are not recommended, as it may lead to
-performance issues.</p>
+  <section id="module-plot_tabular_data_for_model_parameter">
+<span id="simtools-plot-tabular-data-for-model-parameter"></span><h1>simtools-plot-tabular-data-for-model-parameter<a class="headerlink" href="#module-plot_tabular_data_for_model_parameter" title="Link to this heading">#</a></h1>
+<p>Plot tabular data for a single model parameter using default plotting configurations.</p>
+<p>Uses plotting configurations as defined in the model parameters schema files.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>input str</dt><dd><p>Input file(s) (e.g., ‘file1 file2’).</p>
+<dt>parameter (str, required)</dt><dd><p>Model parameter to plot (e.g., ‘atmospheric_profile’).</p>
 </dd>
-<dt>input_list str</dt><dd><p>File with list of input files with tables.</p>
+<dt>parameter_version (str, required)</dt><dd><p>Version of the model parameter to plot (e.g., ‘1.0.0’).</p>
 </dd>
-<dt>table_names list of str</dt><dd><p>Names of tables to merge from each input file.</p>
+<dt>site (str, required)</dt><dd><p>Site for which the model parameter is defined (e.g., ‘North’).</p>
 </dd>
-<dt>output_file str</dt><dd><p>Output file name.</p>
+<dt>telescope (str, optional)</dt><dd><p>Telescope for which the model parameter is defined (e.g., ‘LSTN-01’).</p>
 </dd>
-<dt>output_path str</dt><dd><p>Path to the output file for the merged tables.</p>
+<dt>output_file (str, required)</dt><dd><p>Output file name (without suffix).</p>
+</dd>
+<dt>plot_type (str, optional)</dt><dd><p>Type of plot as defined in the schema file.
+Use ‘–plot_type all’ to plot all types defined in the schema.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Merge tables from two files generated with ‘simtools-generate-simtel-event-data’ into a single file.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-merge-tables \\</span>
-<span class="go">    --input_files file1 file2&#39; \\</span>
-<span class="go">    --table_names &#39;SHOWERS TRIGGERS FILE_INFO&#39; \\</span>
-<span class="go">    --output_file merged_tables.hdf5</span>
+<p>Plot tabular data for a specific type defined in the schema file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-tabular-data-for-model-parameter \\</span>
+<span class="go">    --parameter atmospheric_profile \\</span>
+<span class="go">    --parameter_version 1.0.0 \\</span>
+<span class="go">    --site North \\</span>
+<span class="go">    --plot_type refractive_index_vs_altitude</span>
+</pre></div>
+</div>
+<p>Plot tabular data for all types defined in the schema file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-tabular-data-for-model-parameter \\</span>
+<span class="go">    --parameter fadc_pulse_shape</span>
+<span class="go">    --parameter_version 1.0.0 \\</span>
+<span class="go">    --site North \\</span>
+<span class="go">    --telescope LSTN-01 \\</span>
+<span class="go">    --plot_type all</span>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_tabular_data_for_model_parameter.main">
+<span class="sig-prename descclassname"><span class="pre">plot_tabular_data_for_model_parameter.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/plot_tabular_data_for_model_parameter.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plot_tabular_data_for_model_parameter.main" title="Link to this definition">#</a></dt>
+<dd><p>Plot tabular data.</p>
+</dd></dl>
+
 </section>
 
 
@@ -554,20 +569,20 @@ performance issues.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-generate-sim-telarray-histograms.html"
+       href="simtools-plot-tabular-data.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-generate-sim-telarray-histograms</p>
+        <p class="prev-next-title">simtools-plot-tabular-data</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-plot-array-layout.html"
+       href="simtools-production-derive-corsika-limits.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-plot-array-layout</p>
+        <p class="prev-next-title">simtools-production-derive-corsika-limits</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -592,6 +607,7 @@ performance issues.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_tabular_data_for_model_parameter.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -599,7 +615,7 @@ performance issues.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/user-guide/applications/simtools-merge-tables.rst.txt"
+      <li><a href="../../_sources/user-guide/applications/simtools-plot-tabular-data-for-model-parameter.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
