@@ -229,9 +229,9 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     cuts applied. This is configured through the test_columns parameter. This is
     a list of dictionaries, where each dictionary contains the following
     key-value pairs:
-    - TEST_COLUMN_NAME: column name to compare.
-    - CUT_COLUMN_NAME: column for filtering.
-    - CUT_CONDITION: condition for filtering.
+    - test_column_name: column name to compare.
+    - cut_column_name: column for filtering.
+    - cut_condition: condition for filtering.
 
     Parameters
     ----------

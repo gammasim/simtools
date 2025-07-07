@@ -141,19 +141,19 @@ def read_application_configuration(configuration_file, steps, logger):
     output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Setting workflow output path to {output_path}")
     log_file = output_path / "simtools.log"
-    configurations = application_config.get("APPLICATIONS")
+    configurations = application_config.get("applicationS")
     for step_count, config in enumerate(configurations, start=1):
-        config["RUN_APPLICATION"] = step_count in steps if steps else True
-        for key, value in config.get("CONFIGURATION", {}).items():
+        config["RUN_application"] = step_count in steps if steps else True
+        for key, value in config.get("configuration", {}).items():
             if isinstance(value, str):
-                config["CONFIGURATION"][key] = value.replace(place_holder, setting_workflow)
+                config["configuration"][key] = value.replace(place_holder, setting_workflow)
             if isinstance(value, list):
-                config["CONFIGURATION"][key] = [
+                config["configuration"][key] = [
                     item.replace(place_holder, setting_workflow) if isinstance(item, str) else item
                     for item in value
                 ]
-        config["CONFIGURATION"]["USE_PLAIN_OUTPUT_PATH"] = True
-        config["CONFIGURATION"]["OUTPUT_PATH"] = str(output_path)
+        config["configuration"]["USE_PLAIN_OUTPUT_PATH"] = True
+        config["configuration"]["OUTPUT_PATH"] = str(output_path)
 
     return configurations, log_file
 
@@ -175,17 +175,17 @@ def main():  # noqa: D103
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(db_config))
         for config in configurations:
-            if config.get("RUN_APPLICATION"):
-                logger.info(f"Running application: {config.get('APPLICATION')}")
+            if config.get("RUN_application"):
+                logger.info(f"Running application: {config.get('application')}")
             else:
-                logger.info(f"Skipping application: {config.get('APPLICATION')}")
+                logger.info(f"Skipping application: {config.get('application')}")
                 continue
             config = gen.change_dict_keys_case(config, False)
             stdout, stderr = run_application(
-                config.get("APPLICATION"), config.get("CONFIGURATION"), logger
+                config.get("application"), config.get("configuration"), logger
             )
             file.write("=" * 80 + "\n")
-            file.write(f"Application: {config.get('APPLICATION')}\n")
+            file.write(f"Application: {config.get('application')}\n")
             file.write("STDOUT:\n" + stdout)
             file.write("STDERR:\n" + stderr)
 
