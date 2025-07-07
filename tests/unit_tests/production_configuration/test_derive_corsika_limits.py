@@ -180,14 +180,17 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     calculator.histograms["angular_distance_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
     calculator.histograms["angular_distance_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
 
+    calculator.histograms["energy"] = np.array([1, 2, 3, 4])
+    calculator.histograms["energy_bin_edges"] = np.array([0, 1, 2, 3, 4])
+
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 8
+    assert mock_create_plot.call_count == 9
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 8
+    assert mock_create_plot.call_count == 9
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
         assert "test_array" in str(kwargs.get("output_file"))
@@ -522,14 +525,37 @@ def test_prepare_limit_data_with_array_and_telescopes(mock_reader, hdf5_file_nam
     assert result["telescope_ids"] == telescope_list
 
 
-def test_calculate_cumulative_energy_distribution(mock_reader, hdf5_file_name):
-    """Test calculation of cumulative energy distribution."""
+def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
+    """Test calculation of cumulative histogram."""
     calculator = LimitCalculator(hdf5_file_name)
 
-    test_hist = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+    # Test 1D histogram
+    test_hist_1d = np.array([1, 2, 3, 4])
 
-    result = calculator._calculate_cumulative_energy_distribution(test_hist)
+    # Normal cumulative (left to right)
+    result_1d = calculator._calculate_cumulative_histogram(test_hist_1d)
+    expected_1d = np.array([1, 3, 6, 10])
+    np.testing.assert_array_equal(result_1d, expected_1d)
 
-    expected = np.array([[1, 3, 6, 10], [5, 11, 18, 26], [9, 19, 30, 42]])
+    # Reverse cumulative (right to left)
+    result_1d_reverse = calculator._calculate_cumulative_histogram(test_hist_1d, reverse=True)
+    expected_1d_reverse = np.array([10, 9, 7, 4])
+    np.testing.assert_array_equal(result_1d_reverse, expected_1d_reverse)
 
-    np.testing.assert_array_equal(result, expected)
+    # Test 2D histogram
+    test_hist_2d = np.array([[1, 2, 3], [4, 5, 6]])
+
+    # Default axis (axis=1)
+    result_2d = calculator._calculate_cumulative_histogram(test_hist_2d)
+    expected_2d = np.array([[1, 3, 6], [4, 9, 15]])
+    np.testing.assert_array_equal(result_2d, expected_2d)
+
+    # Along axis 0
+    result_2d_axis0 = calculator._calculate_cumulative_histogram(test_hist_2d, axis=0)
+    expected_2d_axis0 = np.array([[1, 2, 3], [5, 7, 9]])
+    np.testing.assert_array_equal(result_2d_axis0, expected_2d_axis0)
+
+    # With reverse=True
+    result_2d_reverse = calculator._calculate_cumulative_histogram(test_hist_2d, reverse=True)
+    expected_2d_reverse = np.array([[6, 5, 3], [15, 11, 6]])
+    np.testing.assert_array_equal(result_2d_reverse, expected_2d_reverse)
