@@ -26,6 +26,12 @@ class LimitCalculator:
         List of telescope IDs to filter the events (default is None).
     """
 
+    CORE_DISTANCE_LABEL = "Core Distance [m]"
+    ENERGY_LABEL = "Energy [TeV]"
+    POINTING_DIRECTION_LABEL = "Distance to pointing direction [deg]"
+    CUMULATIVE_PREFIX = "Cumulative "
+    EVENT_COUNT_LABEL = "Event Count"
+
     def __init__(self, event_data_file, array_name=None, telescope_list=None):
         """Initialize the LimitCalculator with the given event data file."""
         self._logger = logging.getLogger(__name__)
@@ -310,7 +316,7 @@ class LimitCalculator:
             Directory to save plots. If None, plots will be displayed.
         """
         self._logger.info(f"Plotting histograms written to {output_path}")
-        event_counts = "Event Count"
+        event_counts = self.EVENT_COUNT_LABEL
 
         angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
         cumulative_angular_vs_energy = self._calculate_cumulative_histogram(angular_dist_vs_energy)
@@ -337,8 +343,8 @@ class LimitCalculator:
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
                 "labels": {
-                    "x": "Core Distance [m]",
-                    "y": "Energy [TeV]",
+                    "x": self.CORE_DISTANCE_LABEL,
+                    "y": self.ENERGY_LABEL,
                     "title": "Triggered events: core distance vs energy",
                 },
                 "lines": {
@@ -355,7 +361,7 @@ class LimitCalculator:
                 "plot_type": "histogram",
                 "plot_params": {"color": "g", "edgecolor": "g", "lw": 1},
                 "labels": {
-                    "x": "Energy [TeV]",
+                    "x": self.ENERGY_LABEL,
                     "y": event_counts,
                     "title": "Triggered events: energy distribution",
                 },
@@ -369,8 +375,8 @@ class LimitCalculator:
                 "plot_type": "histogram",
                 "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
                 "labels": {
-                    "x": "Energy [TeV]",
-                    "y": "Cumulative " + event_counts,
+                    "x": self.ENERGY_LABEL,
+                    "y": self.CUMULATIVE_PREFIX + event_counts,
                     "title": "Triggered events: cumulative energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
@@ -383,7 +389,7 @@ class LimitCalculator:
                 "plot_type": "histogram",
                 "plot_params": {"color": "g", "edgecolor": "g", "lw": 1},
                 "labels": {
-                    "x": "Core Distance [m]",
+                    "x": self.CORE_DISTANCE_LABEL,
                     "y": event_counts,
                     "title": "Triggered events: core distance distribution",
                 },
@@ -396,8 +402,8 @@ class LimitCalculator:
                 "plot_type": "histogram",
                 "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
                 "labels": {
-                    "x": "Core Distance [m]",
-                    "y": "Cumulative " + event_counts,
+                    "x": self.CORE_DISTANCE_LABEL,
+                    "y": self.CUMULATIVE_PREFIX + event_counts,
                     "title": "Triggered events: cumulative core distance distribution",
                 },
                 "lines": {"x": self.limits["upper_radius_limit"].value},
@@ -428,7 +434,7 @@ class LimitCalculator:
                 "plot_type": "histogram",
                 "plot_params": {"color": "g", "edgecolor": "g", "lw": 1},
                 "labels": {
-                    "x": "Distance to pointing direction [deg]",
+                    "x": self.POINTING_DIRECTION_LABEL,
                     "y": event_counts,
                     "title": "Triggered events: angular distance distribution",
                 },
@@ -441,8 +447,8 @@ class LimitCalculator:
                 "plot_type": "histogram",
                 "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
                 "labels": {
-                    "x": "Distance to pointing direction [deg]",
-                    "y": "Cumulative " + event_counts,
+                    "x": self.POINTING_DIRECTION_LABEL,
+                    "y": self.CUMULATIVE_PREFIX + event_counts,
                     "title": "Triggered events: cumulative angular distance distribution",
                 },
                 "lines": {"x": self.limits["viewcone_radius"].value},
@@ -457,8 +463,8 @@ class LimitCalculator:
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
                 "labels": {
-                    "x": "Distance to pointing direction [deg]",
-                    "y": "Energy [TeV]",
+                    "x": self.POINTING_DIRECTION_LABEL,
+                    "y": self.ENERGY_LABEL,
                     "title": "Triggered events: angular distance distance vs energy",
                 },
                 "lines": {
@@ -478,8 +484,8 @@ class LimitCalculator:
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
                 "labels": {
-                    "x": "Distance to pointing direction [deg]",
-                    "y": "Energy [TeV]",
+                    "x": self.POINTING_DIRECTION_LABEL,
+                    "y": self.ENERGY_LABEL,
                     "title": "Triggered events: cumulative angular distance vs energy",
                 },
                 "lines": {
@@ -487,7 +493,7 @@ class LimitCalculator:
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": "Cumulative " + event_counts,
+                "colorbar_label": self.CUMULATIVE_PREFIX + event_counts,
                 "filename": "angular_distance_vs_energy_cumulative_distribution",
             },
             "core_vs_energy_cumulative": {
@@ -499,8 +505,8 @@ class LimitCalculator:
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
                 "labels": {
-                    "x": "Core Distance [m]",
-                    "y": "Energy [TeV]",
+                    "x": self.CORE_DISTANCE_LABEL,
+                    "y": self.ENERGY_LABEL,
                     "title": "Triggered events: cumulative core distance vs energy",
                 },
                 "lines": {
@@ -508,7 +514,7 @@ class LimitCalculator:
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": "Cumulative " + event_counts,
+                "colorbar_label": self.CUMULATIVE_PREFIX + event_counts,
                 "filename": "core_vs_energy_cumulative_distribution",
             },
         }
@@ -605,26 +611,56 @@ class LimitCalculator:
             return None
 
         if hist.ndim == 1:
-            if reverse:
-                return np.cumsum(hist[::-1])[::-1]
-            return np.cumsum(hist)
+            return self._calculate_cumulative_1d(hist, reverse)
 
+        return self._calculate_cumulative_2d(hist, reverse, axis)
+
+    def _calculate_cumulative_1d(self, hist, reverse):
+        """Calculate cumulative distribution for 1D histogram."""
+        if reverse:
+            return np.cumsum(hist[::-1])[::-1]
+        return np.cumsum(hist)
+
+    def _calculate_cumulative_2d(self, hist, reverse, axis=None):
+        """Calculate cumulative distribution for 2D histogram."""
         cumulative = hist.copy()
 
         if axis is None:
             axis = 1
 
-        if axis == 1:
-            for i in range(cumulative.shape[0]):
-                if reverse:
-                    cumulative[i, :] = np.cumsum(cumulative[i, ::-1])[::-1]
-                else:
-                    cumulative[i, :] = np.cumsum(cumulative[i, :])
-        elif axis == 0:
-            for i in range(cumulative.shape[1]):
-                if reverse:
-                    cumulative[:, i] = np.cumsum(cumulative[::-1, i])[::-1]
-                else:
-                    cumulative[:, i] = np.cumsum(cumulative[:, i])
+        return self._apply_cumsum_along_axis(cumulative, axis, reverse)
 
-        return cumulative
+    def _apply_cumsum_along_axis(self, hist, axis, reverse):
+        """
+        Apply cumulative sum along the specified axis of a 2D histogram.
+
+        Parameters
+        ----------
+        hist : np.ndarray
+            2D histogram to modify
+        axis : int
+            Axis along which to compute cumulative sum (0 or 1)
+        reverse : bool
+            If True, sum from high to low values
+
+        Returns
+        -------
+        np.ndarray
+            Histogram with cumulative counts
+        """
+        result = hist.copy()
+
+        if axis == 1:
+            for i in range(result.shape[0]):
+                if reverse:
+                    result[i, :] = np.cumsum(result[i, ::-1])[::-1]
+                else:
+                    result[i, :] = np.cumsum(result[i, :])
+        elif axis == 0:
+            for i in range(result.shape[1]):
+                if reverse:
+                    result[:, i] = np.cumsum(result[::-1, i])[::-1]
+                else:
+                    result[:, i] = np.cumsum(result[:, i])
+
+        return result
