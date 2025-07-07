@@ -12,8 +12,8 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      cta_simpipe:
-        "$ref": "#/definitions/cta_simpipe"
+      plot:
+        "$ref": "#/definitions/plot"
       schema_version:
         type: string
         description: "Version of the schema."
@@ -25,17 +25,8 @@ definitions:
         type: string
         description: "Name of the schema."
     required:
-      - cta_simpipe
-    title: "SimtoolsPlotConfiguration"
-  cta_simpipe:
-    type: object
-    additionalProperties: false
-    properties:
-      plot:
-        "$ref": "#/definitions/plot"
-    required:
       - plot
-    title: "CTA Simpipe"
+    title: "SimtoolsPlotConfiguration"
   plot:
     description: "Plot configuration of simtools data visualization."
     type: object
