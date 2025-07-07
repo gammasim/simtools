@@ -183,14 +183,20 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     calculator.histograms["energy"] = np.array([1, 2, 3, 4])
     calculator.histograms["energy_bin_edges"] = np.array([0, 1, 2, 3, 4])
 
+    calculator.histograms["core_distance"] = np.array([5, 6, 7, 8])
+    calculator.histograms["core_distance_bin_edges"] = np.array([0, 10, 20, 30, 40])
+
+    calculator.histograms["angular_distance"] = np.array([0.5, 0.7, 0.9, 1.1])
+    calculator.histograms["angular_distance_bin_edges"] = np.array([0, 0.5, 1.0, 1.5, 2.0])
+
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 9
+    assert mock_create_plot.call_count == 11
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 9
+    assert mock_create_plot.call_count == 11
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
         assert "test_array" in str(kwargs.get("output_file"))
