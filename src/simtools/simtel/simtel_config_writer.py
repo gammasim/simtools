@@ -96,7 +96,7 @@ class SimtelConfigWriter:
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
         with open(config_file_path, "w", encoding="utf-8") as file:
-            self._write_header(file, "TELESCOPE configuration FILE")
+            self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
             telescope_name = telescope_name or self._telescope_model_name
             file.write("#ifdef TELESCOPE\n")
@@ -241,7 +241,7 @@ class SimtelConfigWriter:
         """
         config_file_directory = Path(config_file_path).parent
         with open(config_file_path, "w", encoding="utf-8") as file:
-            self._write_header(file, "ARRAY configuration FILE")
+            self._write_header(file, "ARRAY CONFIGURATION FILE")
 
             file.write("#ifndef TELESCOPE\n")
             file.write("# define TELESCOPE 0\n")
