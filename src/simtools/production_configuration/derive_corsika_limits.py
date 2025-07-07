@@ -321,6 +321,12 @@ class LimitCalculator:
         energy_hist = self.histograms.get("energy")
         cumulative_energy = self._calculate_cumulative_histogram(energy_hist, reverse=True)
 
+        core_distance_hist = self.histograms.get("core_distance")
+        cumulative_core_distance = self._calculate_cumulative_histogram(core_distance_hist)
+
+        angular_distance_hist = self.histograms.get("angular_distance")
+        cumulative_angular_distance = self._calculate_cumulative_histogram(angular_distance_hist)
+
         plots = {
             "core_vs_energy": {
                 "data": self.histograms.get("core_vs_energy"),
@@ -384,6 +390,19 @@ class LimitCalculator:
                 "lines": {"x": self.limits["upper_radius_limit"].value},
                 "filename": "core_distance_distribution",
             },
+            "core_distance_cumulative": {
+                "data": cumulative_core_distance,
+                "bins": self.histograms.get("core_distance_bin_edges"),
+                "plot_type": "histogram",
+                "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
+                "labels": {
+                    "x": "Core Distance [m]",
+                    "y": "Cumulative " + event_counts,
+                    "title": "Triggered events: cumulative core distance distribution",
+                },
+                "lines": {"x": self.limits["upper_radius_limit"].value},
+                "filename": "core_distance_cumulative_distribution",
+            },
             "core_xy": {
                 "data": self.histograms.get("shower_cores"),
                 "bins": [
@@ -415,6 +434,19 @@ class LimitCalculator:
                 },
                 "lines": {"x": self.limits["viewcone_radius"].value},
                 "filename": "angular_distance_distribution",
+            },
+            "angular_distance_cumulative": {
+                "data": cumulative_angular_distance,
+                "bins": self.histograms.get("angular_distance_bin_edges"),
+                "plot_type": "histogram",
+                "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
+                "labels": {
+                    "x": "Distance to pointing direction [deg]",
+                    "y": "Cumulative " + event_counts,
+                    "title": "Triggered events: cumulative angular distance distribution",
+                },
+                "lines": {"x": self.limits["viewcone_radius"].value},
+                "filename": "angular_distance_cumulative_distribution",
             },
             "angular_distance_vs_energy": {
                 "data": self.histograms.get("angular_distance_vs_energy"),
