@@ -436,7 +436,7 @@ def get_array_element_id_from_name(array_element_name):
         raise ValueError(f"Invalid name {array_element_name}") from exc
 
 
-def get_common_identifier_from_array_element_name(array_element_name):
+def get_common_identifier_from_array_element_name(array_element_name, default_return=None):
     """
     Get numerical common identifier from array element name as used by CTAO.
 
@@ -456,6 +456,8 @@ def get_common_identifier_from_array_element_name(array_element_name):
     try:
         return name_to_id[array_element_name]
     except KeyError as exc:
+        if default_return is not None:
+            return default_return
         raise ValueError(f"Unknown array element name {array_element_name}") from exc
 
 
