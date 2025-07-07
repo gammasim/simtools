@@ -143,7 +143,7 @@ def read_application_configuration(configuration_file, steps, logger):
     log_file = output_path / "simtools.log"
     configurations = application_config.get("applications")
     for step_count, config in enumerate(configurations, start=1):
-        config["RUN_application"] = step_count in steps if steps else True
+        config["run_application"] = step_count in steps if steps else True
         for key, value in config.get("configuration", {}).items():
             if isinstance(value, str):
                 config["configuration"][key] = value.replace(place_holder, setting_workflow)
@@ -175,7 +175,7 @@ def main():  # noqa: D103
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(db_config))
         for config in configurations:
-            if config.get("RUN_application"):
+            if config.get("run_application"):
                 logger.info(f"Running application: {config.get('application')}")
             else:
                 logger.info(f"Skipping application: {config.get('application')}")
