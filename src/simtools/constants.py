@@ -21,3 +21,5 @@ MODEL_PARAMETER_SCHEMA_URL = (
     "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/"
     "/model_parameters"
 )
+# Path to resource files
+RESOURCE_PATH = files("simtools") / "resources"

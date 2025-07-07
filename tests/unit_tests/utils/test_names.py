@@ -597,3 +597,42 @@ def test_is_design_type():
     assert names.is_design_type("MSTS-FlashCam")
     assert names.is_design_type("MSTS-NectarCam")
     assert not names.is_design_type("MSTS-22")
+
+
+def test_array_element_common_identifiers():
+    id_to_name, name_to_id = names.array_element_common_identifiers()
+    assert isinstance(id_to_name, dict)
+    assert isinstance(name_to_id, dict)
+    assert len(id_to_name) > 0
+    assert len(name_to_id) > 0
+
+    # Check that the dictionaries are consistent
+    for name, id_ in name_to_id.items():
+        assert id_ in id_to_name
+        assert id_to_name[id_] == name
+
+    for id_, name in id_to_name.items():
+        assert name in name_to_id
+        assert name_to_id[name] == id_
+
+
+def test_get_common_identifier_from_array_element_name():
+    assert names.get_common_identifier_from_array_element_name("LSTN-01") == 1
+    assert names.get_common_identifier_from_array_element_name("MSTN-08") == 12
+    assert names.get_common_identifier_from_array_element_name("SSTS-03") == 121
+
+    with pytest.raises(ValueError, match="Unknown array element name Not_a_name"):
+        names.get_common_identifier_from_array_element_name("Not_a_name")
+
+
+def test_get_array_element_name_from_common_identifier():
+    id_to_name, _ = names.array_element_common_identifiers()
+
+    # Check some known identifiers
+    assert names.get_array_element_name_from_common_identifier(1) == "LSTN-01"
+    assert names.get_array_element_name_from_common_identifier(12) == "MSTN-08"
+    assert names.get_array_element_name_from_common_identifier(121) == "SSTS-03"
+
+    # Check that the function raises an error for an unknown identifier
+    with pytest.raises(ValueError, match="Unknown common identifier 9999"):
+        names.get_array_element_name_from_common_identifier(9999)
