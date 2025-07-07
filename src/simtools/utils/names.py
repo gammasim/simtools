@@ -12,6 +12,7 @@ Naming in simtools:
 
 """
 
+import json
 import logging
 import re
 from functools import cache
@@ -22,7 +23,7 @@ import yaml
 from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
-    SCHEMA_PATH,
+    RESOURCE_PATH,
 )
 
 _logger = logging.getLogger(__name__)
@@ -59,8 +60,28 @@ def array_elements():
     dict
         Array elements.
     """
-    with open(Path(SCHEMA_PATH) / "array_elements.yml", encoding="utf-8") as file:
+    # for efficiency reason, no functions from simtools.utils.general are used here
+    with open(Path(RESOURCE_PATH) / "array_elements.yml", encoding="utf-8") as file:
         return yaml.safe_load(file)["data"]
+
+
+@cache
+def array_element_common_identifiers():
+    """
+    Get array element IDs from CTAO common identifier.
+
+    Returns
+    -------
+    dict, dict
+        Dictionary mapping array element names to their IDs and vice versa.
+    """
+    # for efficiency reason, no functions from simtools.utils.general are used here
+    id_to_name = {}
+    with open(Path(RESOURCE_PATH) / "array-element-ids.json", encoding="utf-8") as file:
+        data = json.load(file)
+    id_to_name = {e["id"]: e["name"] for e in data["array_elements"]}
+    name_to_id = {e["name"]: e["id"] for e in data["array_elements"]}
+    return id_to_name, name_to_id
 
 
 @cache
@@ -413,6 +434,52 @@ def get_array_element_id_from_name(array_element_name):
         )
     except IndexError as exc:
         raise ValueError(f"Invalid name {array_element_name}") from exc
+
+
+def get_common_identifier_from_array_element_name(array_element_name):
+    """
+    Get numerical common identifier from array element name as used by CTAO.
+
+    Common identifiers are numerical IDs used by the CTAO ACADA and DPPS systems.
+
+    Parameters
+    ----------
+    array_element_name: str
+        Array element name (e.g. LSTN-01)
+
+    Returns
+    -------
+    int
+        Common identifier.
+    """
+    _, name_to_id = array_element_common_identifiers()
+    try:
+        return name_to_id[array_element_name]
+    except KeyError as exc:
+        raise ValueError(f"Unknown array element name {array_element_name}") from exc
+
+
+def get_array_element_name_from_common_identifier(common_identifier):
+    """
+    Get array element name from common identifier as used by CTAO.
+
+    Common identifiers are numerical IDs used by the CTAO ACADA and DPPS systems.
+
+    Parameters
+    ----------
+    common_identifier: int
+        Common identifier.
+
+    Returns
+    -------
+    str
+        Array element name.
+    """
+    id_to_name, _ = array_element_common_identifiers()
+    try:
+        return id_to_name[common_identifier]
+    except KeyError as exc:
+        raise ValueError(f"Unknown common identifier {common_identifier}") from exc
 
 
 def get_list_of_array_element_types(
