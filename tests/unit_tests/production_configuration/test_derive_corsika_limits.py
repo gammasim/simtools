@@ -182,12 +182,12 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
 
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 7
+    assert mock_create_plot.call_count == 8
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 7
+    assert mock_create_plot.call_count == 8
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
         assert "test_array" in str(kwargs.get("output_file"))
