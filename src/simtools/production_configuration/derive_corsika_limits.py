@@ -317,6 +317,9 @@ class LimitCalculator:
             angular_dist_vs_energy
         )
 
+        core_vs_energy = self.histograms.get("core_vs_energy")
+        cumulative_core_vs_energy = self._calculate_cumulative_energy_distribution(core_vs_energy)
+
         plots = {
             "core_vs_energy": {
                 "data": self.histograms.get("core_vs_energy"),
@@ -439,6 +442,27 @@ class LimitCalculator:
                 "scales": {"y": "log"},
                 "colorbar_label": "Cumulative " + event_counts,
                 "filename": "angular_distance_vs_energy_cumulative_distribution",
+            },
+            "core_vs_energy_cumulative": {
+                "data": cumulative_core_vs_energy,
+                "bins": [
+                    self.histograms.get("core_vs_energy_bin_x_edges"),
+                    self.histograms.get("core_vs_energy_bin_y_edges"),
+                ],
+                "plot_type": "histogram2d",
+                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "labels": {
+                    "x": "Core Distance [m]",
+                    "y": "Energy [TeV]",
+                    "title": "Triggered events: cumulative core distance vs energy",
+                },
+                "lines": {
+                    "x": self.limits["upper_radius_limit"].value,
+                    "y": self.limits["lower_energy_limit"].value,
+                },
+                "scales": {"y": "log"},
+                "colorbar_label": "Cumulative " + event_counts,
+                "filename": "core_vs_energy_cumulative_distribution",
             },
         }
 
