@@ -313,12 +313,13 @@ class LimitCalculator:
         event_counts = "Event Count"
 
         angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
-        cumulative_angular_vs_energy = self._calculate_cumulative_energy_distribution(
-            angular_dist_vs_energy
-        )
+        cumulative_angular_vs_energy = self._calculate_cumulative_histogram(angular_dist_vs_energy)
 
         core_vs_energy = self.histograms.get("core_vs_energy")
-        cumulative_core_vs_energy = self._calculate_cumulative_energy_distribution(core_vs_energy)
+        cumulative_core_vs_energy = self._calculate_cumulative_histogram(core_vs_energy)
+
+        energy_hist = self.histograms.get("energy")
+        cumulative_energy = self._calculate_cumulative_histogram(energy_hist, reverse=True)
 
         plots = {
             "core_vs_energy": {
@@ -355,6 +356,20 @@ class LimitCalculator:
                 "scales": {"x": "log", "y": "log"},
                 "lines": {"x": self.limits["lower_energy_limit"].value},
                 "filename": "energy_distribution",
+            },
+            "energy_distribution_cumulative": {
+                "data": cumulative_energy,
+                "bins": self.histograms.get("energy_bin_edges"),
+                "plot_type": "histogram",
+                "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
+                "labels": {
+                    "x": "Energy [TeV]",
+                    "y": "Cumulative " + event_counts,
+                    "title": "Triggered events: cumulative energy distribution",
+                },
+                "scales": {"x": "log", "y": "log"},
+                "lines": {"x": self.limits["lower_energy_limit"].value},
+                "filename": "energy_distribution_cumulative",
             },
             "core_distance": {
                 "data": self.histograms.get("core_distance"),
@@ -533,26 +548,51 @@ class LimitCalculator:
 
         return fig
 
-    def _calculate_cumulative_energy_distribution(self, hist2d):
+    def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None):
         """
-        Calculate cumulative distribution of events summed with increasing energy.
+        Calculate cumulative distribution of a histogram.
 
-        For each angular distance bin, sum up events from low energy to high energy.
+        Works with both 1D and 2D histograms.
 
         Parameters
         ----------
-        hist2d : np.ndarray
-            2D histogram with angular distance vs energy
+        hist : np.ndarray
+            Histogram (1D or 2D)
+        reverse : bool, optional
+            If True, sum from high to low values
+        axis : int, optional
+            For 2D histograms, axis along which to compute cumulative sum
+            None means default behavior: for 1D just cumsum, for 2D along rows
 
         Returns
         -------
         np.ndarray
-            2D histogram with cumulative counts across energy
+            Histogram with cumulative counts
         """
-        cumulative = hist2d.copy()
+        if hist is None:
+            return None
 
-        # For each angular distance bin (rows), create a cumulative sum along energy axis
-        for i in range(cumulative.shape[0]):
-            cumulative[i, :] = np.cumsum(cumulative[i, :])
+        if hist.ndim == 1:
+            if reverse:
+                return np.cumsum(hist[::-1])[::-1]
+            return np.cumsum(hist)
+
+        cumulative = hist.copy()
+
+        if axis is None:
+            axis = 1
+
+        if axis == 1:
+            for i in range(cumulative.shape[0]):
+                if reverse:
+                    cumulative[i, :] = np.cumsum(cumulative[i, ::-1])[::-1]
+                else:
+                    cumulative[i, :] = np.cumsum(cumulative[i, :])
+        elif axis == 0:
+            for i in range(cumulative.shape[1]):
+                if reverse:
+                    cumulative[:, i] = np.cumsum(cumulative[::-1, i])[::-1]
+                else:
+                    cumulative[:, i] = np.cumsum(cumulative[:, i])
 
         return cumulative
