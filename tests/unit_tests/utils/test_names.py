@@ -507,6 +507,12 @@ def test_generate_file_name_ray_tracing():
     )
 
 
+def test_simulation_software():
+    software = names.simulation_software()
+    assert isinstance(software, list)
+    assert "sim_telarray" in software
+
+
 def test_get_simulation_software_name_from_parameter_name():
     sim_telarray = "sim_telarray"
     assert (
@@ -623,6 +629,8 @@ def test_get_common_identifier_from_array_element_name():
 
     with pytest.raises(ValueError, match="Unknown array element name Not_a_name"):
         names.get_common_identifier_from_array_element_name("Not_a_name")
+
+    assert names.get_common_identifier_from_array_element_name("Not_a_name", default_return=0) == 0
 
 
 def test_get_array_element_name_from_common_identifier():
