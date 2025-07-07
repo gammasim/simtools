@@ -6,7 +6,6 @@ description: YAML representation of data and model parameter metaschema
 version: 0.1.0
 name: model_parameter_and_data_schema.metaschema
 type: object
-additionalProperties: false
 
 
 definitions:
@@ -59,6 +58,11 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/SimulationSoftware'
+      plot_configuration:
+        type: array
+        items:
+          $ref: 'plot_configuration.metaschema.yml#/definitions/Plot'
+        description: "List of plotting configurations"
     required:
       - version
       - meta_schema
