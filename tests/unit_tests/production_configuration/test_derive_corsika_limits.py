@@ -2,7 +2,7 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 
-from simtools.production_configuration.derive_corsika_limits_grid import (
+from simtools.production_configuration.derive_corsika_limits import (
     _create_results_table,
     _process_file,
     _read_array_layouts_from_db,
@@ -52,10 +52,10 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     ]
 
     mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid._process_file"
+        "simtools.production_configuration.derive_corsika_limits._process_file"
     )
     mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid.write_results"
+        "simtools.production_configuration.derive_corsika_limits.write_results"
     )
 
     # Run function
@@ -70,7 +70,7 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
 def test_process_file(mocker):
     """Test _process_file function."""
     mock_calculator = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid.LimitCalculator"
+        "simtools.production_configuration.derive_corsika_limits.LimitCalculator"
     )
     mock_calculator.return_value.compute_limits.return_value = {"test": "limits"}
     mock_calculator.return_value.plot_data.return_value = None
@@ -141,7 +141,7 @@ def test_round_value():
 def test_read_array_layouts_from_db_specific_layouts(mocker):
     """Test _read_array_layouts_from_db with specific layout names."""
     mock_site_model = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid.SiteModel"
+        "simtools.production_configuration.derive_corsika_limits.SiteModel"
     )
     instance = mock_site_model.return_value
     instance.get_array_elements_for_layout.side_effect = (
@@ -167,7 +167,7 @@ def test_read_array_layouts_from_db_specific_layouts(mocker):
 def test_read_array_layouts_from_db_all_layouts(mocker):
     """Test _read_array_layouts_from_db with 'all' layouts."""
     mock_site_model = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid.SiteModel"
+        "simtools.production_configuration.derive_corsika_limits.SiteModel"
     )
     instance = mock_site_model.return_value
     instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
@@ -198,15 +198,15 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     args["model_version"] = "v1.2.3"
 
     mock_read_layouts = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid._read_array_layouts_from_db"
+        "simtools.production_configuration.derive_corsika_limits._read_array_layouts_from_db"
     )
     mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
 
     mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid._process_file"
+        "simtools.production_configuration.derive_corsika_limits._process_file"
     )
     mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits_grid.write_results"
+        "simtools.production_configuration.derive_corsika_limits.write_results"
     )
 
     generate_corsika_limits_grid(args)
