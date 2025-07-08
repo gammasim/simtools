@@ -172,21 +172,23 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     }
 
     # Mock the 2D histograms needed for plotting and cumulative energy distribution
-    calculator.histograms["core_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]])
+    calculator.histograms["core_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
     calculator.histograms["core_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
     calculator.histograms["core_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
 
-    calculator.histograms["angular_distance_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]])
+    calculator.histograms["angular_distance_vs_energy"] = np.array(
+        [[1, 2, 3], [4, 5, 6]], dtype=float
+    )
     calculator.histograms["angular_distance_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
     calculator.histograms["angular_distance_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
 
-    calculator.histograms["energy"] = np.array([1, 2, 3, 4])
+    calculator.histograms["energy"] = np.array([1, 2, 3, 4], dtype=float)
     calculator.histograms["energy_bin_edges"] = np.array([0, 1, 2, 3, 4])
 
-    calculator.histograms["core_distance"] = np.array([5, 6, 7, 8])
+    calculator.histograms["core_distance"] = np.array([5, 6, 7, 8], dtype=float)
     calculator.histograms["core_distance_bin_edges"] = np.array([0, 10, 20, 30, 40])
 
-    calculator.histograms["angular_distance"] = np.array([0.5, 0.7, 0.9, 1.1])
+    calculator.histograms["angular_distance"] = np.array([0.5, 0.7, 0.9, 1.1], dtype=float)
     calculator.histograms["angular_distance_bin_edges"] = np.array([0, 0.5, 1.0, 1.5, 2.0])
 
     calculator.plot_data(output_path=tmp_path)
@@ -557,13 +559,13 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     expected_1d_reverse = np.array([10, 9, 7, 4])
     np.testing.assert_array_equal(result_1d_reverse, expected_1d_reverse)
 
-    # Test 2D histogram
-    test_hist_2d = np.array([[1, 2, 3], [4, 5, 6]])
+    # Test 1D histogram with normalization
+    result_1d_normalized = calculator._calculate_cumulative_histogram(test_hist_1d, normalize=True)
+    expected_1d_normalized = np.array([0.1, 0.3, 0.6, 1.0])
+    np.testing.assert_allclose(result_1d_normalized, expected_1d_normalized)
 
-    # Test direct call to _calculate_cumulative_2d
-    result_2d_direct = calculator._calculate_cumulative_2d(test_hist_2d, False, axis=1)
-    expected_2d = np.array([[1, 3, 6], [4, 9, 15]])
-    np.testing.assert_array_equal(result_2d_direct, expected_2d)
+    # Test 2D histogram - use float dtype to avoid casting issues
+    test_hist_2d = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
 
     # Test _apply_cumsum_along_axis with different parameters
     # Test axis=1, reverse=False
@@ -599,6 +601,14 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     expected_2d = np.array([[1, 3, 6], [4, 9, 15]])
     np.testing.assert_array_equal(result_2d, expected_2d)
 
+    # Test 2D histogram with normalization - row normalization
+    # Need to explicitly specify axis=1 since default behavior now uses _normalize_along_axis
+    result_2d_normalized = calculator._calculate_cumulative_histogram(
+        test_hist_2d, normalize=True, axis=1
+    )
+    expected_2d_normalized = np.array([[1 / 6, 3 / 6, 6 / 6], [4 / 15, 9 / 15, 15 / 15]])
+    np.testing.assert_allclose(result_2d_normalized, expected_2d_normalized)
+
     # Along axis 0
     result_2d_axis0 = calculator._calculate_cumulative_histogram(test_hist_2d, axis=0)
     expected_2d_axis0 = np.array([[1, 2, 3], [5, 7, 9]])
@@ -608,3 +618,57 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     result_2d_reverse = calculator._calculate_cumulative_histogram(test_hist_2d, reverse=True)
     expected_2d_reverse = np.array([[6, 5, 3], [15, 11, 6]])
     np.testing.assert_array_equal(result_2d_reverse, expected_2d_reverse)
+
+
+def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
+    """Test normalized cumulative histogram calculation for alpha plots."""
+    calculator = LimitCalculator(hdf5_file_name)
+
+    # Test None case
+    result_none = calculator._calculate_cumulative_histogram(None, normalize=True)
+    assert result_none is None
+
+    # Test basic 2D histogram - use float dtype to avoid casting issues
+    test_hist_2d = np.array(
+        [
+            [1, 2, 3],  # First row
+            [4, 5, 6],  # Second row
+            [0, 0, 0],  # Empty row
+        ],
+        dtype=float,
+    )
+
+    # Test with explicit axis=1 (need to specify since default behavior changed)
+    result_axis1 = calculator._calculate_cumulative_histogram(test_hist_2d, normalize=True, axis=1)
+
+    # Expected normalized cumulative values along axis=1:
+    # First row: [1/6, (1+2)/6, (1+2+3)/6] = [0.1667, 0.5, 1.0]
+    # Second row: [4/15, (4+5)/15, (4+5+6)/15] = [0.2667, 0.6, 1.0]
+    # Third row: [0, 0, 0] (avoid division by zero)
+    expected_axis1 = np.array([[1 / 6, 3 / 6, 6 / 6], [4 / 15, 9 / 15, 15 / 15], [0, 0, 0]])
+
+    np.testing.assert_allclose(result_axis1, expected_axis1, rtol=1e-4)
+
+    # Test with axis=0
+    result_axis0 = calculator._calculate_cumulative_histogram(test_hist_2d, axis=0, normalize=True)
+
+    # Expected normalized cumulative values along axis=0:
+    # For column 0: [1/5, (1+4)/5, (1+4+0)/5] = [0.2, 1.0, 1.0]
+    # For column 1: [2/7, (2+5)/7, (2+5+0)/7] = [0.2857, 1.0, 1.0]
+    # For column 2: [3/9, (3+6)/9, (3+6+0)/9] = [0.3333, 1.0, 1.0]
+    expected_axis0 = np.array([[1 / 5, 2 / 7, 3 / 9], [5 / 5, 7 / 7, 9 / 9], [5 / 5, 7 / 7, 9 / 9]])
+
+    np.testing.assert_allclose(result_axis0, expected_axis0, rtol=1e-4)
+
+    # Test 1D histogram normalization
+    test_hist_1d = np.array([10, 20, 30, 40], dtype=float)  # Total 100
+    result_1d = calculator._calculate_cumulative_histogram(test_hist_1d, normalize=True)
+    expected_1d = np.array([0.1, 0.3, 0.6, 1.0])
+    np.testing.assert_allclose(result_1d, expected_1d)
+
+    # Test normalization with reverse=True
+    result_reverse = calculator._calculate_cumulative_histogram(
+        test_hist_1d, reverse=True, normalize=True
+    )
+    expected_reverse = np.array([1.0, 0.9, 0.7, 0.4])
+    np.testing.assert_allclose(result_reverse, expected_reverse)
