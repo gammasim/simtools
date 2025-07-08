@@ -2,13 +2,13 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.production_configuration.derive_corsika_limits import LimitCalculator
+from simtools.production_configuration.corsika_limit_calculator import LimitCalculator
 
 
 @pytest.fixture
 def mock_reader(mocker):
     mock = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventDataReader"
+        "simtools.production_configuration.corsika_limit_calculator.SimtelIOEventDataReader"
     )
     mock.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
     mock.return_value.triggered_data = mocker.Mock()
