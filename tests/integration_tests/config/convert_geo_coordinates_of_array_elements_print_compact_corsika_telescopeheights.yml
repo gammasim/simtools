@@ -1,18 +1,17 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-convert-geo-coordinates-of-array-elements
-    TEST_NAME: print_compact_corsika_telescopeheights
-    CONFIGURATION:
-      INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
-      EXPORT: ground
-      MODEL_VERSION: 6.0.0
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: test.ecsv
-      SKIP_OUTPUT_VALIDATION: true
-      SELECT_ASSETS:
-      - LSTN
-      - MSTN
-      LOG_LEVEL: DEBUG
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-convert-geo-coordinates-of-array-elements
+  configuration:
+    export: ground
+    input: ./tests/resources/telescope_positions-North-utm.ecsv
+    log_level: DEBUG
+    model_version: 6.0.0
+    output_file: test.ecsv
+    output_path: simtools-output
+    select_assets:
+    - LSTN
+    - MSTN
+    skip_output_validation: true
+  test_name: print_compact_corsika_telescopeheights
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

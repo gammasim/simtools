@@ -6,7 +6,7 @@ from pathlib import Path
 
 def skip_camera_efficiency(config):
     """Skip camera efficiency tests if the old version of testeff is used."""
-    if "camera-efficiency" in config["APPLICATION"] and not _new_testeff_version():
+    if "camera-efficiency" in config["application"] and not _new_testeff_version():
         return (
             "Any applications calling the old version of testeff are skipped "
             "due to a limitation of the old testeff not allowing to specify "
@@ -42,7 +42,7 @@ def skip_multiple_version_test(config, model_version):
     if not isinstance(model_version, list):
         return None
 
-    config_model_version = config.get("CONFIGURATION", {}).get("MODEL_VERSION", [])
+    config_model_version = config.get("configuration", {}).get("model_version", [])
 
     if not isinstance(config_model_version, list):
         config_model_version = [config_model_version]

@@ -1,9 +1,8 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-inspect-databases
-    TEST_NAME: db_inspect_databases
-    CONFIGURATION:
-      DB_NAME: all
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-inspect-databases
+  configuration:
+    db_name: all
+  test_name: db_inspect_databases
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
