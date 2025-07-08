@@ -1,28 +1,27 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-derive-mirror-rnda
-    TEST_NAME: psf_mean
-    CONFIGURATION:
-      SITE: South
-      TELESCOPE: LSTS-01
-      MODEL_VERSION: 6.0.0
-      CONTAINMENT_FRACTION: 0.8
-      MIRROR_LIST: ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv
-      PSF_MEASUREMENT_CONTAINMENT_MEAN: 1.4
-      RNDA: 0.003
-      TEST: true
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: test_derive_mirror_rnda_psf_mean.ecsv
-      USE_PLAIN_OUTPUT_PATH: true
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: test_derive_mirror_rnda_psf_mean.ecsv
-    - REFERENCE_OUTPUT_FILE: tests/resources/derive_mirror_rnda_psf_mean.ecsv
-      TOLERANCE: 0.3
-      TEST_COLUMNS:
-      - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
-        CUT_COLUMN_NAME: best_fit
-        CUT_CONDITION: ==True
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-derive-mirror-rnda
+  configuration:
+    containment_fraction: 0.8
+    log_level: DEBUG
+    mirror_list: ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv
+    model_version: 6.0.0
+    output_file: test_derive_mirror_rnda_psf_mean.ecsv
+    output_path: simtools-output
+    psf_measurement_containment_mean: 1.4
+    rnda: 0.003
+    site: South
+    telescope: LSTS-01
+    test: true
+    use_plain_output_path: true
+  integration_tests:
+  - output_file: test_derive_mirror_rnda_psf_mean.ecsv
+  - reference_output_file: tests/resources/derive_mirror_rnda_psf_mean.ecsv
+    test_columns:
+    - cut_column_name: best_fit
+      cut_condition: ==True
+      test_column_name: mirror_reflection_random_angle_sigma1
+    tolerance: 0.3
+  test_name: psf_mean
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

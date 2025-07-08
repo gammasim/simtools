@@ -1,23 +1,22 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-generate-corsika-histograms
-    TEST_NAME: telescope_indices
-    CONFIGURATION:
-      IACT_FILE: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+applications:
+- application: simtools-generate-corsika-histograms
+  configuration:
+    hdf5: true
+    hdf5_file_name: test_file_telescope_indices.hdf5
+    iact_file: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
 
-        '
-      PDF: true
-      HDF5: true
-      HDF5_FILE_NAME: test_file_telescope_indices.hdf5
-      TELESCOPE_INDICES:
-      - '0'
-      - '1'
-      - '2'
-      OUTPUT_PATH: simtools-output
-      TEST: true
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: test_file_telescope_indices.hdf5
-    - OUTPUT_FILE: test_file_telescope_indices.pdf
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+      '
+    output_path: simtools-output
+    pdf: true
+    telescope_indices:
+    - '0'
+    - '1'
+    - '2'
+    test: true
+  integration_tests:
+  - output_file: test_file_telescope_indices.hdf5
+  - output_file: test_file_telescope_indices.pdf
+  test_name: telescope_indices
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

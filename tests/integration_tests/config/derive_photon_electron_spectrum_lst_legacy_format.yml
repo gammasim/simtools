@@ -1,24 +1,23 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-derive-photon-electron-spectrum
-    TEST_NAME: LST_legacy_format
-    TEST_USE_CASE: UC-150-2.1.2
-    CONFIGURATION:
-      INPUT_SPECTRUM: ./tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
-      AFTERPULSE_SPECTRUM: ./tests/resources/LST_afterpulses.dat
-      STEP_SIZE: 0.02
-      USE_NORM_SPE: true
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: test_single_pe_lst.ecsv
-      USE_PLAIN_OUTPUT_PATH: true
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: test_single_pe_lst.dat
-    - OUTPUT_FILE: test_single_pe_lst.ecsv
-    - REFERENCE_OUTPUT_FILE: 'tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
+applications:
+- application: simtools-derive-photon-electron-spectrum
+  configuration:
+    afterpulse_spectrum: ./tests/resources/LST_afterpulses.dat
+    input_spectrum: ./tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+    log_level: DEBUG
+    output_file: test_single_pe_lst.ecsv
+    output_path: simtools-output
+    step_size: 0.02
+    use_norm_spe: true
+    use_plain_output_path: true
+  integration_tests:
+  - output_file: test_single_pe_lst.dat
+  - output_file: test_single_pe_lst.ecsv
+  - reference_output_file: 'tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
 
-        '
-      TOLERANCE: 0.0001
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+      '
+    tolerance: 0.0001
+  test_name: LST_legacy_format
+  test_use_case: UC-150-2.1.2
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

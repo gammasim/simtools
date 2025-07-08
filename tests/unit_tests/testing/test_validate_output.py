@@ -245,28 +245,28 @@ def test_compare_files_ecsv_columns(create_ecsv_file, file_name):
     file2 = create_ecsv_file(file_name(2, "ecsv"), content2)
 
     assert validate_output.compare_files(file1, file2, 0.5)
-    assert validate_output.compare_files(file1, file2, 0.005, [{"TEST_COLUMN_NAME": "col1"}])
+    assert validate_output.compare_files(file1, file2, 0.005, [{"test_column_name": "col1"}])
     assert not validate_output.compare_files(file1, file2, 0.005, None)
-    assert not validate_output.compare_files(file1, file2, 0.005, [{"TEST_COLUMN_NAME": "col2"}])
+    assert not validate_output.compare_files(file1, file2, 0.005, [{"test_column_name": "col2"}])
     assert validate_output.compare_files(
         file1,
         file2,
         0.005,
-        [{"TEST_COLUMN_NAME": "col1", "CUT_COLUMN_NAME": "col2", "CUT_CONDITION": "> 4.5"}],
+        [{"test_column_name": "col1", "cut_column_name": "col2", "cut_condition": "> 4.5"}],
     )
     # select first column only (same values)
     assert validate_output.compare_files(
         file1,
         file2,
         1.0e-3,
-        [{"TEST_COLUMN_NAME": "col1", "CUT_COLUMN_NAME": "col2", "CUT_CONDITION": "<5."}],
+        [{"test_column_name": "col1", "cut_column_name": "col2", "cut_condition": "<5."}],
     )
     # select 2nd/3rd column with larger difference between values
     assert not validate_output.compare_files(
         file1,
         file2,
         1.0e-3,
-        [{"TEST_COLUMN_NAME": "col1", "CUT_COLUMN_NAME": "col2", "CUT_CONDITION": ">5."}],
+        [{"test_column_name": "col1", "cut_column_name": "col2", "cut_condition": ">5."}],
     )
 
 
@@ -305,11 +305,11 @@ def test_compare_files_unknown_type(tmp_test_directory, file_name):
 
 
 def test_validate_reference_output_file(mocker, output_path, test_path):
-    config = {"CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"}}
+    config = {"configuration": {"output_path": output_path, "output_file": "output_file"}}
     integration_test = {
-        "REFERENCE_OUTPUT_FILE": test_path,
-        "TOLERANCE": 1.0e-5,
-        "TEST_COLUMNS": None,
+        "reference_output_file": test_path,
+        "tolerance": 1.0e-5,
+        "test_columns": None,
     }
 
     mock_compare_files = mocker.patch(
@@ -319,43 +319,43 @@ def test_validate_reference_output_file(mocker, output_path, test_path):
     validate_output._validate_reference_output_file(config, integration_test)
 
     mock_compare_files.assert_called_once_with(
-        integration_test["REFERENCE_OUTPUT_FILE"],
-        Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-            config["CONFIGURATION"]["OUTPUT_FILE"]
+        integration_test["reference_output_file"],
+        Path(config["configuration"]["output_path"]).joinpath(
+            config["configuration"]["output_file"]
         ),
-        integration_test.get("TOLERANCE", 1.0e-5),
-        integration_test.get("TEST_COLUMNS", None),
+        integration_test.get("tolerance", 1.0e-5),
+        integration_test.get("test_columns", None),
     )
 
 
 def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check_output):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data"},
-        "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
+        "configuration": {"output_path": output_path, "data_directory": "/path/to/data"},
+        "integration_tests": [{"expected_output": "expected_output"}],
     }
     integration_test = [
-        {"PATH_DESCRIPTOR": "DATA_DIRECTORY", "FILE": "output_file", "EXPECTED_OUTPUT": {}}
+        {"path_descriptor": "data_directory", "file": "output_file", "expected_output": {}}
     ]
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
     mock_path_exists.assert_called()
     mock_check_output.assert_called_once_with(
-        Path(config["CONFIGURATION"]["DATA_DIRECTORY"]).joinpath(integration_test[0]["FILE"]),
+        Path(config["configuration"]["data_directory"]).joinpath(integration_test[0]["file"]),
         {},
     )
 
     wrong_integration_test = [
-        {"PATH_DESCRIPTOR": "WRONG_PATH", "FILE": "output_file", "EXPECTED_OUTPUT": {}}
+        {"path_descriptor": "wrong_path", "file": "output_file", "expected_output": {}}
     ]
     with pytest.raises(
-        KeyError, match="Path WRONG_PATH not found in integration test configuration."
+        KeyError, match="Path wrong_path not found in integration test configuration."
     ):
         validate_output._validate_output_path_and_file(config, wrong_integration_test)
 
 
 def test_validate_application_output_no_integration_tests(mocker, output_path):
-    config = {"CONFIGURATION": {"OUTPUT_PATH": output_path}}
+    config = {"configuration": {"output_path": output_path}}
     mock_logger_info = mocker.patch("simtools.testing.validate_output._logger.info")
 
     validate_output.validate_application_output(config)
@@ -372,17 +372,17 @@ def test_validate_application_output_with_reference_output_file(
     mock_validate_simtel_cfg_files,
 ):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path},
-        "INTEGRATION_TESTS": [
-            {"REFERENCE_OUTPUT_FILE": test_path},
-            {"TEST_SIMTEL_CFG_FILES": {"6.0.0": test_path}},
+        "configuration": {"output_path": output_path},
+        "integration_tests": [
+            {"reference_output_file": test_path},
+            {"test_simtel_cfg_files": {"6.0.0": test_path}},
         ],
     }
 
     validate_output.validate_application_output(config)
 
     mock_validate_reference_output_file.assert_called_once_with(
-        config, config["INTEGRATION_TESTS"][0]
+        config, config["integration_tests"][0]
     )
     mock_validate_output_path_and_file.assert_not_called()
     mock_assert_file_type.assert_not_called()
@@ -395,14 +395,14 @@ def test_validate_application_output_with_reference_output_file(
 def test_validate_application_output_with_assertion_error(output_path):
     test_path = "not_there"
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path},
-        "TEST_OUTPUT_FILES": [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": test_path}],
+        "configuration": {"output_path": output_path},
+        "test_output_files": [{"path_descriptor": "output_path", "file": test_path}],
     }
     with pytest.raises(
         AssertionError, match="Output file /path/to/output/not_there does not exist."
     ):
         validate_output._validate_output_path_and_file(
-            config, [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": test_path}]
+            config, [{"path_descriptor": "output_path", "file": test_path}]
         )
 
 
@@ -413,9 +413,9 @@ def test_validate_application_output_with_file_type(
     mock_validate_reference_output_file,
 ):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"},
-        "INTEGRATION_TESTS": [
-            {"FILE_TYPE": "ecsv", "TEST_OUTPUT_FILES": [], "OUTPUT_FILE": "output_file"}
+        "configuration": {"output_path": output_path, "output_file": "output_file"},
+        "integration_tests": [
+            {"file_type": "ecsv", "test_output_files": [], "output_file": "output_file"}
         ],
     }
 
@@ -426,8 +426,8 @@ def test_validate_application_output_with_file_type(
     assert mock_validate_output_path_and_file.call_count == 2
     mock_assert_file_type.assert_called_once_with(
         "ecsv",
-        Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-            config["CONFIGURATION"]["OUTPUT_FILE"]
+        Path(config["configuration"]["output_path"]).joinpath(
+            config["configuration"]["output_file"]
         ),
     )
 
@@ -458,12 +458,12 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
 def test_validate_simtel_cfg_files(mocker, test_path):
     mocker.patch("simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True)
     config = {
-        "CONFIGURATION": {
-            "OUTPUT_PATH": PATH_TO_OUTPUT,
-            "MODEL_VERSION": "3.4.5",
-            "LABEL": "label",
+        "configuration": {
+            "output_path": PATH_TO_OUTPUT,
+            "model_version": "3.4.5",
+            "label": "label",
         },
-        "INTEGRATION_TESTS": [{"TEST_SIMTEL_CFG_FILES": test_path}],
+        "integration_tests": [{"test_simtel_cfg_files": test_path}],
     }
     validate_output._validate_simtel_cfg_files(config, test_path)
 
@@ -478,9 +478,9 @@ def test_compare_value_from_parameter_dict():
 
 def test_test_simtel_cfg_files_with_command_line_version(mocker):
     mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
+    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
     integration_test = {
-        "TEST_SIMTEL_CFG_FILES": {
+        "test_simtel_cfg_files": {
             "6.0.0": PATH_CFG_6,
             "7.0.0": PATH_CFG_7,
         }
@@ -497,9 +497,9 @@ def test_test_simtel_cfg_files_with_command_line_version(mocker):
 
 def test_test_simtel_cfg_files_with_config_file_version(mocker):
     mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
+    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
     integration_test = {
-        "TEST_SIMTEL_CFG_FILES": {
+        "test_simtel_cfg_files": {
             "6.0.0": PATH_CFG_6,
             "7.0.0": PATH_CFG_7,
         }
@@ -516,9 +516,9 @@ def test_test_simtel_cfg_files_with_config_file_version(mocker):
 
 def test_test_simtel_cfg_files_with_single_version(mocker):
     mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
+    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
     integration_test = {
-        "TEST_SIMTEL_CFG_FILES": {
+        "test_simtel_cfg_files": {
             "6.0.0": PATH_CFG_6,
             "7.0.0": PATH_CFG_7,
         }
@@ -535,9 +535,9 @@ def test_test_simtel_cfg_files_with_single_version(mocker):
 
 def test_test_simtel_cfg_files_no_matching_version(mocker):
     mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
+    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
     integration_test = {
-        "TEST_SIMTEL_CFG_FILES": {
+        "test_simtel_cfg_files": {
             "6.0.0": PATH_CFG_6,
             "7.0.0": PATH_CFG_7,
         }
@@ -554,7 +554,7 @@ def test_test_simtel_cfg_files_no_matching_version(mocker):
 
 def test_test_simtel_cfg_files_no_test_simtel_cfg_files(mocker):
     mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"CONFIGURATION": {"OUTPUT_PATH": PATH_TO_OUTPUT}}
+    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
     integration_test = {}
 
     validate_output._test_simtel_cfg_files(config, integration_test, None, None)

@@ -1,23 +1,22 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-generate-corsika-histograms
-    TEST_NAME: 2d_run_header
-    CONFIGURATION:
-      IACT_FILE: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+applications:
+- application: simtools-generate-corsika-histograms
+  configuration:
+    event_2d_histograms:
+    - zenith
+    - azimuth
+    hdf5: true
+    hdf5_file_name: test_file_2D_run_header.hdf5
+    iact_file: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
 
-        '
-      PDF: true
-      HDF5: true
-      HDF5_FILE_NAME: test_file_2D_run_header.hdf5
-      EVENT_2D_HISTOGRAMS:
-      - zenith
-      - azimuth
-      OUTPUT_PATH: simtools-output
-      TEST: true
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: test_file_2D_run_header.pdf
-    - OUTPUT_FILE: test_file_2D_run_header.hdf5
-    - OUTPUT_FILE: test_file_2D_run_header.hdf5_event_2d_histograms.pdf
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+      '
+    output_path: simtools-output
+    pdf: true
+    test: true
+  integration_tests:
+  - output_file: test_file_2D_run_header.pdf
+  - output_file: test_file_2D_run_header.hdf5
+  - output_file: test_file_2D_run_header.hdf5_event_2d_histograms.pdf
+  test_name: 2d_run_header
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

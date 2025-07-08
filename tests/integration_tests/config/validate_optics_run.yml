@@ -1,18 +1,17 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-validate-optics
-    TEST_NAME: run
-    CONFIGURATION:
-      SITE: North
-      TELESCOPE: LSTN-01
-      MODEL_VERSION: 6.0.0
-      MAX_OFFSET: 1.0
-      SRC_DISTANCE: 11.0
-      ZENITH: 20
-      TEST: true
-      OUTPUT_PATH: simtools-output
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: results/ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics.ecsv
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-validate-optics
+  configuration:
+    max_offset: 1.0
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+    src_distance: 11.0
+    telescope: LSTN-01
+    test: true
+    zenith: 20
+  integration_tests:
+  - output_file: results/ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics.ecsv
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

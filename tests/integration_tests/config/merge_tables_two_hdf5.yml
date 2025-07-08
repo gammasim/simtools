@@ -1,20 +1,19 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-merge-tables
-    TEST_NAME: two_hdf5
-    CONFIGURATION:
-      INPUT_FILES:
-      - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-      - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-      TABLE_NAMES:
-      - SHOWERS
-      - TRIGGERS
-      - FILE_INFO
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: merged.hdf5
-      USE_PLAIN_OUTPUT_PATH: true
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: merged.hdf5
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-merge-tables
+  configuration:
+    input_files:
+    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    output_file: merged.hdf5
+    output_path: simtools-output
+    table_names:
+    - SHOWERS
+    - TRIGGERS
+    - FILE_INFO
+    use_plain_output_path: true
+  integration_tests:
+  - output_file: merged.hdf5
+  test_name: two_hdf5
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
