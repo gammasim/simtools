@@ -8,7 +8,6 @@ description: |
 version: 0.1.0
 name: production_configuration_metrics.metaschema
 type: object
-additionalProperties: false
 
 definitions:
   ErrorMetrics:
@@ -20,6 +19,16 @@ definitions:
         $ref: '#/definitions/ErrorMetric'
       energy_estimate:
         $ref: '#/definitions/ErrorMetric'
+      schema_version:
+        type: string
+        description: "Version of the schema."
+      schema_url:
+        type: string
+        format: uri
+        description: "URL of the schema."
+      schema_name:
+        type: string
+        description: "Name of the schema."
 
   ErrorMetric:
     type: object
