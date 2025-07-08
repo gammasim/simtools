@@ -38,3 +38,13 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+plot_configuration:
+  - type: mirror_reflectivity
+    title: 'Mirror reflectivity'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Reflectivity'
+    no_markers: true
+    tables:
+      - parameter: mirror_reflectivity
+        column_x: 'wavelength'
+        column_y: 'reflectivity'
