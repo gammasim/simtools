@@ -1,4 +1,4 @@
-"""Derive CORSIKA limits for a grid of parameters."""
+"""Derive CORSIKA limits from a reduced event data file."""
 
 import datetime
 import logging
@@ -17,9 +17,7 @@ _logger = logging.getLogger(__name__)
 
 def generate_corsika_limits_grid(args_dict, db_config=None):
     """
-    Generate CORSIKA limits for a grid of parameters.
-
-    Requires at least one event data file per parameter set.
+    Generate CORSIKA limits.
 
     Parameters
     ----------
@@ -60,7 +58,7 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
 
 def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_histograms):
     """
-    Compute limits for a single file.
+    Compute limits for a given event data file and telescope configuration.
 
     Parameters
     ----------
