@@ -10,7 +10,7 @@ import simtools.utils.general as gen
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.derive_corsika_limits import LimitCalculator
+from simtools.production_configuration.corsika_limit_calculator import LimitCalculator
 
 _logger = logging.getLogger(__name__)
 
