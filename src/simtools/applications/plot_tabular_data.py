@@ -91,7 +91,7 @@ def main():
     )
 
     plot_tables.plot(
-        config=plot_config["cta_simpipe"]["plot"],
+        config=plot_config["plot"],
         output_file=io_handler_instance.get_output_file(args_dict["output_file"]),
         db_config=db_config_,
     )
