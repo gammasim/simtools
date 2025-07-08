@@ -321,17 +321,26 @@ class LimitCalculator:
         # Plot parameter constants
         hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
         hist_1d_cumulative_params = {"color": "tab:blue", "edgecolor": "tab:blue", "lw": 1}
-        hist_2d_params = {"norm": "log", "cmap": "viridis"}
-        hist_2d_equal_params = {"norm": "log", "cmap": "viridis", "aspect": "equal"}
+        hist_2d_params = {"norm": "log", "cmap": "viridis", "show_contour": False}
+        hist_2d_equal_params = {
+            "norm": "log",
+            "cmap": "viridis",
+            "aspect": "equal",
+            "show_contour": False,
+        }
+        hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
 
         self._logger.info(f"Plotting histograms written to {output_path}")
-        event_counts = event_count_label
 
         angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
-        cumulative_angular_vs_energy = self._calculate_cumulative_histogram(angular_dist_vs_energy)
+        normalized_cumulative_angular_vs_energy = self._calculate_cumulative_histogram(
+            angular_dist_vs_energy, axis=0, normalize=True
+        )
 
         core_vs_energy = self.histograms.get("core_vs_energy")
-        cumulative_core_vs_energy = self._calculate_cumulative_histogram(core_vs_energy)
+        normalized_cumulative_core_vs_energy = self._calculate_cumulative_histogram(
+            core_vs_energy, axis=0, normalize=True
+        )
 
         energy_hist = self.histograms.get("energy")
         cumulative_energy = self._calculate_cumulative_histogram(energy_hist, reverse=True)
@@ -361,7 +370,7 @@ class LimitCalculator:
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": event_counts,
+                "colorbar_label": event_count_label,
                 "filename": "core_vs_energy_distribution",
             },
             "energy_distribution": {
@@ -371,7 +380,7 @@ class LimitCalculator:
                 "plot_params": hist_1d_params,
                 "labels": {
                     "x": energy_label,
-                    "y": event_counts,
+                    "y": event_count_label,
                     "title": "Triggered events: energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
@@ -385,7 +394,7 @@ class LimitCalculator:
                 "plot_params": hist_1d_cumulative_params,
                 "labels": {
                     "x": energy_label,
-                    "y": cumulative_prefix + event_counts,
+                    "y": cumulative_prefix + event_count_label,
                     "title": "Triggered events: cumulative energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
@@ -399,7 +408,7 @@ class LimitCalculator:
                 "plot_params": hist_1d_params,
                 "labels": {
                     "x": core_distance_label,
-                    "y": event_counts,
+                    "y": event_count_label,
                     "title": "Triggered events: core distance distribution",
                 },
                 "lines": {"x": self.limits["upper_radius_limit"].value},
@@ -412,7 +421,7 @@ class LimitCalculator:
                 "plot_params": hist_1d_cumulative_params,
                 "labels": {
                     "x": core_distance_label,
-                    "y": cumulative_prefix + event_counts,
+                    "y": cumulative_prefix + event_count_label,
                     "title": "Triggered events: cumulative core distance distribution",
                 },
                 "lines": {"x": self.limits["upper_radius_limit"].value},
@@ -431,7 +440,7 @@ class LimitCalculator:
                     "y": core_y_label,
                     "title": "Triggered events: core x vs core y",
                 },
-                "colorbar_label": event_counts,
+                "colorbar_label": event_count_label,
                 "lines": {
                     "r": self.limits["upper_radius_limit"].value,
                 },
@@ -444,7 +453,7 @@ class LimitCalculator:
                 "plot_params": hist_1d_params,
                 "labels": {
                     "x": pointing_direction_label,
-                    "y": event_counts,
+                    "y": event_count_label,
                     "title": "Triggered events: angular distance distribution",
                 },
                 "lines": {"x": self.limits["viewcone_radius"].value},
@@ -457,7 +466,7 @@ class LimitCalculator:
                 "plot_params": hist_1d_cumulative_params,
                 "labels": {
                     "x": pointing_direction_label,
-                    "y": cumulative_prefix + event_counts,
+                    "y": cumulative_prefix + event_count_label,
                     "title": "Triggered events: cumulative angular distance distribution",
                 },
                 "lines": {"x": self.limits["viewcone_radius"].value},
@@ -481,49 +490,49 @@ class LimitCalculator:
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": event_counts,
+                "colorbar_label": event_count_label,
                 "filename": "angular_distance_vs_energy_distribution",
             },
             "angular_distance_vs_energy_cumulative": {
-                "data": cumulative_angular_vs_energy,
+                "data": normalized_cumulative_angular_vs_energy,
                 "bins": [
                     self.histograms.get("angular_distance_vs_energy_bin_x_edges"),
                     self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": hist_2d_params,
+                "plot_params": hist_2d_normalized_params,  # Includes contour line at value=1
                 "labels": {
                     "x": pointing_direction_label,
                     "y": energy_label,
-                    "title": "Triggered events: cumulative angular distance vs energy",
+                    "title": "Triggered events: fraction of events by angular distance vs energy",
                 },
                 "lines": {
                     "x": self.limits["viewcone_radius"].value,
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": cumulative_prefix + event_counts,
+                "colorbar_label": "Fraction of events",
                 "filename": "angular_distance_vs_energy_cumulative_distribution",
             },
             "core_vs_energy_cumulative": {
-                "data": cumulative_core_vs_energy,
+                "data": normalized_cumulative_core_vs_energy,
                 "bins": [
                     self.histograms.get("core_vs_energy_bin_x_edges"),
                     self.histograms.get("core_vs_energy_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": hist_2d_params,
+                "plot_params": hist_2d_normalized_params,
                 "labels": {
                     "x": core_distance_label,
                     "y": energy_label,
-                    "title": "Triggered events: cumulative core distance vs energy",
+                    "title": "Triggered events: fraction of events by core distance vs energy",
                 },
                 "lines": {
                     "x": self.limits["upper_radius_limit"].value,
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": cumulative_prefix + event_counts,
+                "colorbar_label": "Fraction of events",
                 "filename": "core_vs_energy_cumulative_distribution",
             },
         }
@@ -551,7 +560,13 @@ class LimitCalculator:
         output_file=None,
         lines=None,
     ):
-        """Create and save a plot with the given parameters."""
+        """
+        Create and save a plot with the given parameters.
+
+        For normalized 2D histograms, a contour line is drawn at the value of 1.0
+        to indicate the boundary where each energy bin reaches complete containment.
+        This can be controlled with the 'show_contour' parameter in plot_params.
+        """
         plot_params = plot_params or {}
         labels = labels or {}
         scales = scales or {}
@@ -562,9 +577,32 @@ class LimitCalculator:
         if plot_type == "histogram":
             plt.bar(bins[:-1], data, width=np.diff(bins), **plot_params)
         elif plot_type == "histogram2d":
-            pcm = plt.pcolormesh(
-                bins[0], bins[1], data.T, norm=LogNorm(vmin=1, vmax=data.max()), cmap="viridis"
-            )
+            if plot_params.get("norm") == "linear":
+                pcm = plt.pcolormesh(
+                    bins[0],
+                    bins[1],
+                    data.T,
+                    vmin=0,
+                    vmax=1,
+                    cmap=plot_params.get("cmap", "viridis"),
+                )
+                if np.any(data == 1.0) and plot_params.get("show_contour", True):
+                    x_centers = (bins[0][1:] + bins[0][:-1]) / 2
+                    y_centers = (bins[1][1:] + bins[1][:-1]) / 2
+                    x_mesh, y_mesh = np.meshgrid(x_centers, y_centers)
+                    plt.contour(
+                        x_mesh,
+                        y_mesh,
+                        data.T,
+                        levels=[0.99, 1.0],
+                        colors=["tab:red"],
+                        linestyles=["--"],
+                        linewidths=[0.5],
+                    )
+            else:
+                pcm = plt.pcolormesh(
+                    bins[0], bins[1], data.T, norm=LogNorm(vmin=1, vmax=data.max()), cmap="viridis"
+                )
             plt.colorbar(pcm, label=colorbar_label)
 
         if "x" in lines:
@@ -595,7 +633,7 @@ class LimitCalculator:
 
         return fig
 
-    def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None):
+    def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None, normalize=False):
         """
         Calculate cumulative distribution of a histogram.
 
@@ -610,19 +648,61 @@ class LimitCalculator:
         axis : int, optional
             For 2D histograms, axis along which to compute cumulative sum
             None means default behavior: for 1D just cumsum, for 2D along rows
+        normalize : bool, optional
+            If True, normalize by the total sum for each slice along the specified axis
+            For 1D histograms, normalizes by the total sum
 
         Returns
         -------
         np.ndarray
-            Histogram with cumulative counts
+            Histogram with cumulative counts, optionally normalized
         """
         if hist is None:
             return None
 
         if hist.ndim == 1:
-            return self._calculate_cumulative_1d(hist, reverse)
+            result = self._calculate_cumulative_1d(hist, reverse)
+            if normalize and np.sum(hist) > 0:
+                result = result / np.sum(hist)
+            return result
 
-        return self._calculate_cumulative_2d(hist, reverse, axis)
+        if axis is None:
+            axis = 1
+
+        result = self._apply_cumsum_along_axis(hist.copy(), axis, reverse)
+
+        if normalize:
+            self._normalize_along_axis(result, hist, axis)
+
+        return result
+
+    def _normalize_along_axis(self, result, hist, axis):
+        """
+        Normalize cumulative histogram along the specified axis.
+
+        Parameters
+        ----------
+        result : np.ndarray
+            Cumulative histogram to normalize (modified in-place)
+        hist : np.ndarray
+            Original histogram (for calculating totals)
+        axis : int
+            Axis along which normalization should be applied
+        """
+        normalized = np.zeros_like(result, dtype=float)
+
+        if axis == 0:
+            for i in range(result.shape[1]):
+                col_total = np.sum(hist[:, i])
+                if col_total > 0:
+                    normalized[:, i] = result[:, i] / col_total
+        else:  # axis == 1
+            for i in range(result.shape[0]):
+                row_total = np.sum(hist[i, :])
+                if row_total > 0:
+                    normalized[i, :] = result[i, :] / row_total
+
+        np.copyto(result, normalized)
 
     def _calculate_cumulative_1d(self, hist, reverse):
         """Calculate cumulative distribution for 1D histogram."""
@@ -658,18 +738,21 @@ class LimitCalculator:
             Histogram with cumulative counts
         """
         result = hist.copy()
+        shape_index = 0 if axis == 1 else 1
+        size = result.shape[shape_index]
 
-        if axis == 1:
-            for i in range(result.shape[0]):
+        for i in range(size):
+            if axis == 1:
+                data = result[i, :]
                 if reverse:
-                    result[i, :] = np.cumsum(result[i, ::-1])[::-1]
+                    result[i, :] = np.cumsum(data[::-1])[::-1]
                 else:
-                    result[i, :] = np.cumsum(result[i, :])
-        elif axis == 0:
-            for i in range(result.shape[1]):
+                    result[i, :] = np.cumsum(data)
+            else:  # axis == 0
+                data = result[:, i]
                 if reverse:
-                    result[:, i] = np.cumsum(result[::-1, i])[::-1]
+                    result[:, i] = np.cumsum(data[::-1])[::-1]
                 else:
-                    result[:, i] = np.cumsum(result[:, i])
+                    result[:, i] = np.cumsum(data)
 
         return result
