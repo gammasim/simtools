@@ -22,7 +22,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 - Use CTAO telescope names when writing out telescope list in reduced event data tables. ([#1616](https://github.com/gammasim/simtools/pull/1616))
 - Allow CORSIKA limits to use layouts defined in simulation models database. ([#1619](https://github.com/gammasim/simtools/pull/1619))
-- Add application / API to plot tabled model parameters using default plotting configurations defined in model parameters schemas. ([#1628](https://github.com/gammasim/simtools/pull/1628))
+- Add application / API to plot tabulated model parameters using default plotting configurations defined in model parameters schemas. ([#1628](https://github.com/gammasim/simtools/pull/1628))
 - Allow to use current prod6 simulations for reduced event data generation. ([#1631](https://github.com/gammasim/simtools/pull/1631))
 - Add common array elements ID. Add list with triggered common telescope IDs to reduced event data tables. ([#1637](https://github.com/gammasim/simtools/pull/1637))
 
