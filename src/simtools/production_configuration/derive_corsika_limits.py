@@ -26,14 +26,6 @@ class LimitCalculator:
         List of telescope IDs to filter the events (default is None).
     """
 
-    CORE_DISTANCE_LABEL = "Core Distance [m]"
-    ENERGY_LABEL = "Energy [TeV]"
-    POINTING_DIRECTION_LABEL = "Distance to pointing direction [deg]"
-    CUMULATIVE_PREFIX = "Cumulative "
-    EVENT_COUNT_LABEL = "Event Count"
-    CORE_X_LABEL = "Core X [m]"
-    CORE_Y_LABEL = "Core Y [m]"
-
     def __init__(self, event_data_file, array_name=None, telescope_list=None):
         """Initialize the LimitCalculator with the given event data file."""
         self._logger = logging.getLogger(__name__)
@@ -317,8 +309,23 @@ class LimitCalculator:
         output_path: Path or str, optional
             Directory to save plots. If None, plots will be displayed.
         """
+        # Plot label constants
+        core_distance_label = "Core Distance [m]"
+        energy_label = "Energy [TeV]"
+        pointing_direction_label = "Distance to pointing direction [deg]"
+        cumulative_prefix = "Cumulative "
+        event_count_label = "Event Count"
+        core_x_label = "Core X [m]"
+        core_y_label = "Core Y [m]"
+
+        # Plot parameter constants
+        hist_1d_params = {"color": "g", "edgecolor": "g", "lw": 1}
+        hist_1d_cumulative_params = {"color": "b", "edgecolor": "b", "lw": 1}
+        hist_2d_params = {"norm": "log", "cmap": "viridis"}
+        hist_2d_equal_params = {"norm": "log", "cmap": "viridis", "aspect": "equal"}
+
         self._logger.info(f"Plotting histograms written to {output_path}")
-        event_counts = self.EVENT_COUNT_LABEL
+        event_counts = event_count_label
 
         angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
         cumulative_angular_vs_energy = self._calculate_cumulative_histogram(angular_dist_vs_energy)
@@ -343,10 +350,10 @@ class LimitCalculator:
                     self.histograms.get("core_vs_energy_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "plot_params": hist_2d_params,
                 "labels": {
-                    "x": self.CORE_DISTANCE_LABEL,
-                    "y": self.ENERGY_LABEL,
+                    "x": core_distance_label,
+                    "y": energy_label,
                     "title": "Triggered events: core distance vs energy",
                 },
                 "lines": {
@@ -361,9 +368,9 @@ class LimitCalculator:
                 "data": self.histograms.get("energy"),
                 "bins": self.histograms.get("energy_bin_edges"),
                 "plot_type": "histogram",
-                "plot_params": {"color": "g", "edgecolor": "g", "lw": 1},
+                "plot_params": hist_1d_params,
                 "labels": {
-                    "x": self.ENERGY_LABEL,
+                    "x": energy_label,
                     "y": event_counts,
                     "title": "Triggered events: energy distribution",
                 },
@@ -375,10 +382,10 @@ class LimitCalculator:
                 "data": cumulative_energy,
                 "bins": self.histograms.get("energy_bin_edges"),
                 "plot_type": "histogram",
-                "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
+                "plot_params": hist_1d_cumulative_params,
                 "labels": {
-                    "x": self.ENERGY_LABEL,
-                    "y": self.CUMULATIVE_PREFIX + event_counts,
+                    "x": energy_label,
+                    "y": cumulative_prefix + event_counts,
                     "title": "Triggered events: cumulative energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
@@ -389,9 +396,9 @@ class LimitCalculator:
                 "data": self.histograms.get("core_distance"),
                 "bins": self.histograms.get("core_distance_bin_edges"),
                 "plot_type": "histogram",
-                "plot_params": {"color": "g", "edgecolor": "g", "lw": 1},
+                "plot_params": hist_1d_params,
                 "labels": {
-                    "x": self.CORE_DISTANCE_LABEL,
+                    "x": core_distance_label,
                     "y": event_counts,
                     "title": "Triggered events: core distance distribution",
                 },
@@ -402,10 +409,10 @@ class LimitCalculator:
                 "data": cumulative_core_distance,
                 "bins": self.histograms.get("core_distance_bin_edges"),
                 "plot_type": "histogram",
-                "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
+                "plot_params": hist_1d_cumulative_params,
                 "labels": {
-                    "x": self.CORE_DISTANCE_LABEL,
-                    "y": self.CUMULATIVE_PREFIX + event_counts,
+                    "x": core_distance_label,
+                    "y": cumulative_prefix + event_counts,
                     "title": "Triggered events: cumulative core distance distribution",
                 },
                 "lines": {"x": self.limits["upper_radius_limit"].value},
@@ -418,10 +425,10 @@ class LimitCalculator:
                     self.histograms.get("shower_cores_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": {"norm": "log", "cmap": "viridis", "aspect": "equal"},
+                "plot_params": hist_2d_equal_params,
                 "labels": {
-                    "x": self.CORE_X_LABEL,
-                    "y": self.CORE_Y_LABEL,
+                    "x": core_x_label,
+                    "y": core_y_label,
                     "title": "Triggered events: core x vs core y",
                 },
                 "colorbar_label": event_counts,
@@ -434,9 +441,9 @@ class LimitCalculator:
                 "data": self.histograms.get("angular_distance"),
                 "bins": self.histograms.get("angular_distance_bin_edges"),
                 "plot_type": "histogram",
-                "plot_params": {"color": "g", "edgecolor": "g", "lw": 1},
+                "plot_params": hist_1d_params,
                 "labels": {
-                    "x": self.POINTING_DIRECTION_LABEL,
+                    "x": pointing_direction_label,
                     "y": event_counts,
                     "title": "Triggered events: angular distance distribution",
                 },
@@ -447,10 +454,10 @@ class LimitCalculator:
                 "data": cumulative_angular_distance,
                 "bins": self.histograms.get("angular_distance_bin_edges"),
                 "plot_type": "histogram",
-                "plot_params": {"color": "b", "edgecolor": "b", "lw": 1},
+                "plot_params": hist_1d_cumulative_params,
                 "labels": {
-                    "x": self.POINTING_DIRECTION_LABEL,
-                    "y": self.CUMULATIVE_PREFIX + event_counts,
+                    "x": pointing_direction_label,
+                    "y": cumulative_prefix + event_counts,
                     "title": "Triggered events: cumulative angular distance distribution",
                 },
                 "lines": {"x": self.limits["viewcone_radius"].value},
@@ -463,10 +470,10 @@ class LimitCalculator:
                     self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "plot_params": hist_2d_params,
                 "labels": {
-                    "x": self.POINTING_DIRECTION_LABEL,
-                    "y": self.ENERGY_LABEL,
+                    "x": pointing_direction_label,
+                    "y": energy_label,
                     "title": "Triggered events: angular distance distance vs energy",
                 },
                 "lines": {
@@ -484,10 +491,10 @@ class LimitCalculator:
                     self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "plot_params": hist_2d_params,
                 "labels": {
-                    "x": self.POINTING_DIRECTION_LABEL,
-                    "y": self.ENERGY_LABEL,
+                    "x": pointing_direction_label,
+                    "y": energy_label,
                     "title": "Triggered events: cumulative angular distance vs energy",
                 },
                 "lines": {
@@ -495,7 +502,7 @@ class LimitCalculator:
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": self.CUMULATIVE_PREFIX + event_counts,
+                "colorbar_label": cumulative_prefix + event_counts,
                 "filename": "angular_distance_vs_energy_cumulative_distribution",
             },
             "core_vs_energy_cumulative": {
@@ -505,10 +512,10 @@ class LimitCalculator:
                     self.histograms.get("core_vs_energy_bin_y_edges"),
                 ],
                 "plot_type": "histogram2d",
-                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "plot_params": hist_2d_params,
                 "labels": {
-                    "x": self.CORE_DISTANCE_LABEL,
-                    "y": self.ENERGY_LABEL,
+                    "x": core_distance_label,
+                    "y": energy_label,
                     "title": "Triggered events: cumulative core distance vs energy",
                 },
                 "lines": {
@@ -516,7 +523,7 @@ class LimitCalculator:
                     "y": self.limits["lower_energy_limit"].value,
                 },
                 "scales": {"y": "log"},
-                "colorbar_label": self.CUMULATIVE_PREFIX + event_counts,
+                "colorbar_label": cumulative_prefix + event_counts,
                 "filename": "core_vs_energy_cumulative_distribution",
             },
         }
@@ -526,9 +533,9 @@ class LimitCalculator:
             if self.array_name:
                 if plot_args.get("labels", {}).get("title"):
                     plot_args["labels"]["title"] += f" ({self.array_name} array)"
-                filename = f"{filename}_{self.array_name}.png"
+                filename = f"{filename}_{self.array_name}.pdf"
             else:
-                filename = f"{filename}.png"
+                filename = f"{filename}.pdf"
             output_file = output_path / filename if output_path else None
             self._create_plot(**plot_args, output_file=output_file)
 
