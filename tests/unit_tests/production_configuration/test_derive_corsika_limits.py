@@ -171,7 +171,6 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
         "viewcone_radius": 2.0 * u.deg,
     }
 
-    # Mock the 2D histograms needed for plotting and cumulative energy distribution
     calculator.histograms["core_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
     calculator.histograms["core_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
     calculator.histograms["core_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
@@ -270,13 +269,15 @@ def test_create_plot_histogram(
 
 
 def test_create_plot_histogram2d(
-    mock_reader, hdf5_file_name, mock_colorbar, mocker, mock_hist2d, tmp_test_directory
+    mock_reader, hdf5_file_name, mock_colorbar, mocker, tmp_test_directory
 ):
     calculator = LimitCalculator(hdf5_file_name)
     mock_savefig = mocker.patch("matplotlib.pyplot.savefig")
 
-    x_data = np.array([[1, 2], [3, 4]])
+    mock_create_2d_histogram = mocker.patch.object(calculator, "_create_2d_histogram_plot")
+    mock_create_2d_histogram.return_value = mocker.Mock()
 
+    x_data = np.array([[1, 2], [3, 4]])
     bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
     plot_params = {"cmap": "viridis"}
 
@@ -289,7 +290,7 @@ def test_create_plot_histogram2d(
         output_file=tmp_test_directory / "test_hist2d_plot.png",
     )
 
-    mock_hist2d.assert_called_once()
+    mock_create_2d_histogram.assert_called_once_with(x_data, bins, plot_params)
     mock_savefig.assert_called_once()
 
 
@@ -662,3 +663,59 @@ def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
     )
     expected_reverse = np.array([1.0, 0.9, 0.7, 0.4])
     np.testing.assert_allclose(result_reverse, expected_reverse)
+
+
+def test_create_2d_histogram_plot(
+    mock_reader, hdf5_file_name, mock_colorbar, mocker, tmp_test_directory
+):
+    """Test the _create_2d_histogram_plot helper method for both linear and log norm cases."""
+    calculator = LimitCalculator(hdf5_file_name)
+    mock_pcolormesh = mocker.patch("matplotlib.pyplot.pcolormesh")
+    mock_contour = mocker.patch("matplotlib.pyplot.contour")
+
+    data = np.array([[0.2, 0.5, 1.0], [0.1, 0.3, 0.6]])
+    bins = [np.array([0, 1, 2, 3]), np.array([0, 1, 2])]
+
+    plot_params = {"norm": "linear", "cmap": "plasma", "show_contour": True}
+    calculator._create_2d_histogram_plot(data, bins, plot_params)
+
+    mock_pcolormesh.assert_called_once()
+    args, kwargs = mock_pcolormesh.call_args
+    assert np.array_equal(args[0], bins[0])
+    assert np.array_equal(args[1], bins[1])
+    assert np.array_equal(args[2], data.T)
+    assert kwargs.get("vmin") == 0
+    assert kwargs.get("vmax") == 1
+    assert kwargs.get("cmap") == "plasma"
+
+    mock_contour.assert_called_once()
+
+    mock_pcolormesh.reset_mock()
+    mock_contour.reset_mock()
+
+    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
+    calculator._create_2d_histogram_plot(data, bins, plot_params)
+
+    mock_pcolormesh.assert_called_once()
+    args, kwargs = mock_pcolormesh.call_args
+    assert np.array_equal(args[0], bins[0])
+    assert np.array_equal(args[1], bins[1])
+    assert np.array_equal(args[2], data.T)
+    assert kwargs.get("vmin") == 0
+    assert kwargs.get("vmax") == 1
+    assert kwargs.get("cmap") == "viridis"
+
+    mock_contour.assert_not_called()
+
+    mock_pcolormesh.reset_mock()
+
+    plot_params = {"cmap": "viridis"}
+    calculator._create_2d_histogram_plot(data, bins, plot_params)
+
+    mock_pcolormesh.assert_called_once()
+    args, kwargs = mock_pcolormesh.call_args
+    assert np.array_equal(args[0], bins[0])
+    assert np.array_equal(args[1], bins[1])
+    assert np.array_equal(args[2], data.T)
+    assert "norm" in kwargs
+    assert kwargs["cmap"] == "viridis"
