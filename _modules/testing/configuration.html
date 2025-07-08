@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b41b8a73"></script>
+    <script src="../../_static/documentation_options.js?v=be76c635"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g18c4685" />
+  <meta name="docsearch:version" content="0.1.dev1+gcaee007" />
   </head>
   
   
@@ -486,24 +486,24 @@
 
     <span class="c1"># list of all applications</span>
     <span class="c1"># (needs to be sorted for pytest-xdist, see Known Limitations in their website)</span>
-    <span class="n">_applications</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">configs</span> <span class="k">if</span> <span class="s2">&quot;APPLICATION&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">})</span>
+    <span class="n">_applications</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;application&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">configs</span> <span class="k">if</span> <span class="s2">&quot;application&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">})</span>
     <span class="k">for</span> <span class="n">app</span> <span class="ow">in</span> <span class="n">_applications</span><span class="p">:</span>
         <span class="n">configs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">:</span> <span class="n">app</span><span class="p">,</span> <span class="s2">&quot;TEST_NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;auto-help&quot;</span><span class="p">,</span> <span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;HELP&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}},</span>
+                <span class="p">{</span><span class="s2">&quot;application&quot;</span><span class="p">:</span> <span class="n">app</span><span class="p">,</span> <span class="s2">&quot;test_name&quot;</span><span class="p">:</span> <span class="s2">&quot;auto-help&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;APPLICATION&quot;</span><span class="p">:</span> <span class="n">app</span><span class="p">,</span>
-                    <span class="s2">&quot;TEST_NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;auto-version&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;VERSION&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                    <span class="s2">&quot;application&quot;</span><span class="p">:</span> <span class="n">app</span><span class="p">,</span>
+                    <span class="s2">&quot;test_name&quot;</span><span class="p">:</span> <span class="s2">&quot;auto-version&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;configuration&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
                 <span class="p">},</span>
-                <span class="p">{</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">:</span> <span class="n">app</span><span class="p">,</span> <span class="s2">&quot;TEST_NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;auto-no_config&quot;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s2">&quot;application&quot;</span><span class="p">:</span> <span class="n">app</span><span class="p">,</span> <span class="s2">&quot;test_name&quot;</span><span class="p">:</span> <span class="s2">&quot;auto-no_config&quot;</span><span class="p">},</span>
             <span class="p">]</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span>
         <span class="n">configs</span><span class="p">,</span>
         <span class="p">[</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;APPLICATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;no-app-name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;TEST_NAME&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;no-test-name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;application&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;no-app-name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;test_name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;no-test-name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">configs</span>
         <span class="p">],</span>
     <span class="p">)</span></div>
@@ -520,7 +520,7 @@
         <span class="n">_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">remove_substring_recursively_from_dict</span><span class="p">(</span>
             <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">config_file</span><span class="p">),</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CTA_SIMPIPE&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;APPLICATIONS&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;applications&quot;</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">configs</span>
 
@@ -554,12 +554,12 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_version_requested</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_version_requested</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">model_version_requested</span> <span class="o">=</span> <span class="n">model_version_requested</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="s2">&quot;CONFIGURATION&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;configuration&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">_skip_test_for_model_version</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model_version_requested</span><span class="p">)</span>
         <span class="n">_skip_test_for_production_db</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
         <span class="n">config_file</span><span class="p">,</span> <span class="n">config_string</span><span class="p">,</span> <span class="n">config_file_model_version</span> <span class="o">=</span> <span class="n">_prepare_test_options</span><span class="p">(</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">],</span>
             <span class="n">output_path</span><span class="o">=</span><span class="n">tmp_output_path</span><span class="p">,</span>
             <span class="n">model_version</span><span class="o">=</span><span class="n">model_version_requested</span><span class="p">,</span>
         <span class="p">)</span>
@@ -569,7 +569,7 @@
         <span class="n">config_file_model_version</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">cmd</span> <span class="o">=</span> <span class="n">get_application_command</span><span class="p">(</span>
-        <span class="n">app</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">app</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;application&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
         <span class="n">config_file</span><span class="o">=</span><span class="n">config_file</span><span class="p">,</span>
         <span class="n">config_string</span><span class="o">=</span><span class="n">config_string</span><span class="p">,</span>
     <span class="p">)</span>
@@ -579,9 +579,9 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_skip_test_for_model_version</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model_version_requested</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip test if model version requested is not supported.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MODEL_VERSION_USE_CURRENT&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">model_version_requested</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version_use_current&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">model_version_requested</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
-    <span class="n">model_version_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="s2">&quot;MODEL_VERSION&quot;</span><span class="p">]</span>
+    <span class="n">model_version_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">model_version_requested</span> <span class="o">!=</span> <span class="n">model_version_config</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">VersionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Model version requested </span><span class="si">{</span><span class="n">model_version_requested</span><span class="si">}</span><span class="s2"> not supported for this test&quot;</span>
@@ -590,7 +590,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_skip_test_for_production_db</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip test if production db is used.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SKIP_FOR_PRODUCTION_DB&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_for_production_db&quot;</span><span class="p">):</span>
         <span class="k">return</span>
 
     <span class="k">if</span> <span class="s2">&quot;db.zeuthen.desy.de&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_DB_SERVER&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
@@ -631,15 +631,15 @@
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span> <span class="o">+</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="kc">None</span>
 
     <span class="n">tmp_config_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="s2">&quot;tmp_config.yml&quot;</span>
-    <span class="n">config_file_model_version</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MODEL_VERSION&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">model_version</span> <span class="ow">and</span> <span class="s2">&quot;MODEL_VERSION&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;MODEL_VERSION&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">})</span>
+    <span class="n">config_file_model_version</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model_version</span> <span class="ow">and</span> <span class="s2">&quot;model_version&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">})</span>
 
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;DATA_DIRECTORY&quot;</span><span class="p">,</span> <span class="s2">&quot;PACK_FOR_GRID_REGISTER&quot;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;data_directory&quot;</span><span class="p">,</span> <span class="s2">&quot;pack_for_grid_register&quot;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">:</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;USE_PLAIN_OUTPUT_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;output_path&quot;</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;use_plain_output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing config file: </span><span class="si">{</span><span class="n">tmp_config_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_config_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
@@ -697,7 +697,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">tmp_output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_test_directory</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;TEST_NAME&quot;</span><span class="p">]</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;application&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;test_name&quot;</span><span class="p">]</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No application defined in configuration </span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
