@@ -577,32 +577,7 @@ class LimitCalculator:
         if plot_type == "histogram":
             plt.bar(bins[:-1], data, width=np.diff(bins), **plot_params)
         elif plot_type == "histogram2d":
-            if plot_params.get("norm") == "linear":
-                pcm = plt.pcolormesh(
-                    bins[0],
-                    bins[1],
-                    data.T,
-                    vmin=0,
-                    vmax=1,
-                    cmap=plot_params.get("cmap", "viridis"),
-                )
-                if np.any(data == 1.0) and plot_params.get("show_contour", True):
-                    x_centers = (bins[0][1:] + bins[0][:-1]) / 2
-                    y_centers = (bins[1][1:] + bins[1][:-1]) / 2
-                    x_mesh, y_mesh = np.meshgrid(x_centers, y_centers)
-                    plt.contour(
-                        x_mesh,
-                        y_mesh,
-                        data.T,
-                        levels=[0.99, 1.0],
-                        colors=["tab:red"],
-                        linestyles=["--"],
-                        linewidths=[0.5],
-                    )
-            else:
-                pcm = plt.pcolormesh(
-                    bins[0], bins[1], data.T, norm=LogNorm(vmin=1, vmax=data.max()), cmap="viridis"
-                )
+            pcm = self._create_2d_histogram_plot(data, bins, plot_params)
             plt.colorbar(pcm, label=colorbar_label)
 
         if "x" in lines:
@@ -632,6 +607,54 @@ class LimitCalculator:
             plt.show()
 
         return fig
+
+    def _create_2d_histogram_plot(self, data, bins, plot_params):
+        """
+        Create a 2D histogram plot with the given parameters.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            2D histogram data
+        bins : tuple of np.ndarray
+            Bin edges for x and y axes
+        plot_params : dict
+            Plot parameters including norm, cmap, and show_contour
+
+        Returns
+        -------
+        matplotlib.collections.QuadMesh
+            The created pcolormesh object for colorbar attachment
+        """
+        if plot_params.get("norm") == "linear":
+            pcm = plt.pcolormesh(
+                bins[0],
+                bins[1],
+                data.T,
+                vmin=0,
+                vmax=1,
+                cmap=plot_params.get("cmap", "viridis"),
+            )
+            # Add contour line at value=1.0 for normalized histograms
+            if np.any(data == 1.0) and plot_params.get("show_contour", True):
+                x_centers = (bins[0][1:] + bins[0][:-1]) / 2
+                y_centers = (bins[1][1:] + bins[1][:-1]) / 2
+                x_mesh, y_mesh = np.meshgrid(x_centers, y_centers)
+                plt.contour(
+                    x_mesh,
+                    y_mesh,
+                    data.T,
+                    levels=[0.99, 1.0],
+                    colors=["tab:red"],
+                    linestyles=["--"],
+                    linewidths=[0.5],
+                )
+        else:
+            pcm = plt.pcolormesh(
+                bins[0], bins[1], data.T, norm=LogNorm(vmin=1, vmax=data.max()), cmap="viridis"
+            )
+
+        return pcm
 
     def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None, normalize=False):
         """
@@ -712,12 +735,10 @@ class LimitCalculator:
 
     def _calculate_cumulative_2d(self, hist, reverse, axis=None):
         """Calculate cumulative distribution for 2D histogram."""
-        cumulative = hist.copy()
-
         if axis is None:
             axis = 1
 
-        return self._apply_cumsum_along_axis(cumulative, axis, reverse)
+        return self._apply_cumsum_along_axis(hist, axis, reverse)
 
     def _apply_cumsum_along_axis(self, hist, axis, reverse):
         """
