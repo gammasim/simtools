@@ -40,3 +40,13 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+plot_configuration:
+  - type: quantum_efficiency
+    title: 'Quantum/detection efficiency'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Quantum/detection efficiency'
+    no_markers: true
+    tables:
+      - parameter: quantum_efficiency
+        column_x: 'wavelength'
+        column_y: 'efficiency'

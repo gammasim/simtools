@@ -22,6 +22,7 @@ from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
 from simtools.utils.geometry import calculate_circular_mean
+from simtools.utils.names import get_common_identifier_from_array_element_name
 
 
 @dataclass
@@ -47,6 +48,7 @@ class TableSchemas:
         "array_altitude": (np.float64, u.rad),
         "array_azimuth": (np.float64, u.rad),
         "telescope_list": (str, None),  # Store as comma-separated string
+        "telescope_list_common_id": (str, None),  # Store as comma-separated string
     }
 
     file_info_schema = {
@@ -271,6 +273,12 @@ class SimtelIOEventDataWriter:
                 "array_altitude": float(np.mean(altitudes)),
                 "array_azimuth": float(calculate_circular_mean(azimuths)),
                 "telescope_list": ",".join(map(str, telescopes)),
+                "telescope_list_common_id": ",".join(
+                    [
+                        str(get_common_identifier_from_array_element_name(tel, 0))
+                        for tel in telescopes
+                    ]
+                ),
             }
         )
 
