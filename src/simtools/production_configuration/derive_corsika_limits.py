@@ -319,8 +319,8 @@ class LimitCalculator:
         core_y_label = "Core Y [m]"
 
         # Plot parameter constants
-        hist_1d_params = {"color": "g", "edgecolor": "g", "lw": 1}
-        hist_1d_cumulative_params = {"color": "b", "edgecolor": "b", "lw": 1}
+        hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
+        hist_1d_cumulative_params = {"color": "tab:blue", "edgecolor": "tab:blue", "lw": 1}
         hist_2d_params = {"norm": "log", "cmap": "viridis"}
         hist_2d_equal_params = {"norm": "log", "cmap": "viridis", "aspect": "equal"}
 
