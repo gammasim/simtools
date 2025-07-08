@@ -139,8 +139,7 @@ def generate_plot_configurations(
     schema = gen.change_dict_keys_case(
         gen.collect_data_from_file(
             file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
-        ),
-        lower_case=True,
+        )
     )
     configs = schema.get("plot_configuration")
     if not configs:

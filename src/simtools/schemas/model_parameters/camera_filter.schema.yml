@@ -43,3 +43,13 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+plot_configuration:
+  - type: camera_filter
+    title: 'Camera filter'
+    xtitle: 'Wavelength (nm)'
+    ytitle: 'Transmission'
+    no_markers: true
+    tables:
+      - parameter: camera_filter
+        column_x: 'wavelength'
+        column_y: 'transmission'

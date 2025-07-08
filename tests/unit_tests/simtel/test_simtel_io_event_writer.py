@@ -15,7 +15,6 @@ from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 OUTPUT_FILE_NAME = "output.fits"
 one_two_three = "LSTN-01,LSTN-02,MSTN-01"
-unknown_one_two_three = "Unknown_1,Unknown_2,Unknown_3"
 
 
 @pytest.fixture
@@ -224,13 +223,16 @@ def test_process_array_event(lookup_table_generator):
 
     lookup_table_generator.shower_data.append({"shower_id": 1, "event_id": 42, "file_id": 0})
 
-    lookup_table_generator._process_array_event(mock_array_event, 0)
+    with patch.object(
+        lookup_table_generator, "_map_telescope_names", return_value=one_two_three.split(",")
+    ):
+        lookup_table_generator._process_array_event(mock_array_event, 0)
 
     assert len(lookup_table_generator.trigger_data) == 1
     trigger_event = lookup_table_generator.trigger_data[0]
     assert trigger_event["shower_id"] == 1
     assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == unknown_one_two_three
+    assert trigger_event["telescope_list"] == one_two_three
 
 
 def test_process_array_event_empty(lookup_table_generator):
@@ -251,13 +253,16 @@ def test_process_array_event_with_trigger_data(lookup_table_generator):
     mock_array_event = create_array_event()
     lookup_table_generator.shower_data.append({"shower_id": 1, "event_id": 42, "file_id": 0})
 
-    lookup_table_generator._process_array_event(mock_array_event, 0)
+    with patch.object(
+        lookup_table_generator, "_map_telescope_names", return_value=one_two_three.split(",")
+    ):
+        lookup_table_generator._process_array_event(mock_array_event, 0)
 
     assert len(lookup_table_generator.trigger_data) == 1
     trigger_event = lookup_table_generator.trigger_data[0]
     assert trigger_event["shower_id"] == 1
     assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == unknown_one_two_three
+    assert trigger_event["telescope_list"] == one_two_three
 
 
 def test_get_preliminary_nsb_level(lookup_table_generator):
