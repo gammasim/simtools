@@ -1,13 +1,12 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-add-value-from-json-to-db
-    TEST_NAME: run
-    SKIP_FOR_PRODUCTION_DB: true
-    CONFIGURATION:
-      FILE_NAME: ./tests/resources/model_parameters/num_gains-0.0.0.json
-      DB_COLLECTION: telescopes
-      DB_SIMULATION_MODEL: sandbox
-      TEST_DB: true
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-add-value-from-json-to-db
+  configuration:
+    db_collection: telescopes
+    db_simulation_model: sandbox
+    file_name: ./tests/resources/model_parameters/num_gains-0.0.0.json
+    test_db: true
+  skip_for_production_db: true
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

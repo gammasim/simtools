@@ -1,11 +1,10 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-validate-file-using-schema
-    TEST_NAME: yml_validate_schema
-    CONFIGURATION:
-      SCHEMA: src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-      FILE_NAME: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
-      DATA_TYPE: schema
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-validate-file-using-schema
+  configuration:
+    data_type: schema
+    file_name: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
+    schema: src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+  test_name: yml_validate_schema
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

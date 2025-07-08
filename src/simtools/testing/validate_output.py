@@ -30,20 +30,20 @@ def validate_application_output(config, from_command_line=None, from_config_file
         Model version from the configuration file.
 
     """
-    if "INTEGRATION_TESTS" not in config:
+    if "integration_tests" not in config:
         return
 
-    for integration_test in config["INTEGRATION_TESTS"]:
+    for integration_test in config["integration_tests"]:
         _logger.info(f"Testing application output: {integration_test}")
 
         if from_command_line == from_config_file:
             _validate_output_files(config, integration_test)
 
-            if "FILE_TYPE" in integration_test:
+            if "file_type" in integration_test:
                 assert assertions.assert_file_type(
-                    integration_test["FILE_TYPE"],
-                    Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-                        config["CONFIGURATION"]["OUTPUT_FILE"]
+                    integration_test["file_type"],
+                    Path(config["configuration"]["output_path"]).joinpath(
+                        config["configuration"]["output_file"]
                     ),
                 )
         _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file)
@@ -51,20 +51,20 @@ def validate_application_output(config, from_command_line=None, from_config_file
 
 def _validate_output_files(config, integration_test):
     """Validate output files."""
-    if "REFERENCE_OUTPUT_FILE" in integration_test:
+    if "reference_output_file" in integration_test:
         _validate_reference_output_file(config, integration_test)
-    if "TEST_OUTPUT_FILES" in integration_test:
-        _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
-    if "OUTPUT_FILE" in integration_test:
+    if "test_output_files" in integration_test:
+        _validate_output_path_and_file(config, integration_test["test_output_files"])
+    if "output_file" in integration_test:
         _validate_output_path_and_file(
             config,
-            [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}],
+            [{"path_descriptor": "output_path", "file": integration_test["output_file"]}],
         )
 
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
     """Test simtel cfg files."""
-    cfg_files = integration_test.get("TEST_SIMTEL_CFG_FILES", {})
+    cfg_files = integration_test.get("test_simtel_cfg_files", {})
     if isinstance(from_command_line, list):
         sources = from_command_line
     elif isinstance(from_config_file, list):
@@ -81,12 +81,12 @@ def _test_simtel_cfg_files(config, integration_test, from_command_line, from_con
 def _validate_reference_output_file(config, integration_test):
     """Compare with reference output file."""
     assert compare_files(
-        integration_test["REFERENCE_OUTPUT_FILE"],
-        Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-            config["CONFIGURATION"]["OUTPUT_FILE"]
+        integration_test["reference_output_file"],
+        Path(config["configuration"]["output_path"]).joinpath(
+            config["configuration"]["output_file"]
         ),
-        integration_test.get("TOLERANCE", 1.0e-5),
-        integration_test.get("TEST_COLUMNS", None),
+        integration_test.get("tolerance", 1.0e-5),
+        integration_test.get("test_columns", None),
     )
 
 
@@ -94,23 +94,23 @@ def _validate_output_path_and_file(config, integration_file_tests):
     """Check if output paths and files exist."""
     for file_test in integration_file_tests:
         try:
-            output_path = config["CONFIGURATION"][file_test["PATH_DESCRIPTOR"]]
+            output_path = config["configuration"][file_test["path_descriptor"]]
         except KeyError as exc:
             raise KeyError(
-                f"Path {file_test['PATH_DESCRIPTOR']} not found in integration test configuration."
+                f"Path {file_test['path_descriptor']} not found in integration test configuration."
             ) from exc
 
-        output_file_path = Path(output_path) / file_test["FILE"]
+        output_file_path = Path(output_path) / file_test["file"]
         _logger.info(f"Checking path: {output_file_path}")
         try:
             assert output_file_path.exists()
         except AssertionError as exc:
             raise AssertionError(f"Output file {output_file_path} does not exist. ") from exc
 
-        if "EXPECTED_OUTPUT" in file_test:
+        if "expected_output" in file_test:
             assert assertions.check_output_from_sim_telarray(
                 output_file_path,
-                file_test["EXPECTED_OUTPUT"],
+                file_test["expected_output"],
             )
 
 
@@ -229,9 +229,9 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     cuts applied. This is configured through the test_columns parameter. This is
     a list of dictionaries, where each dictionary contains the following
     key-value pairs:
-    - TEST_COLUMN_NAME: column name to compare.
-    - CUT_COLUMN_NAME: column for filtering.
-    - CUT_CONDITION: condition for filtering.
+    - test_column_name: column name to compare.
+    - cut_column_name: column for filtering.
+    - cut_condition: condition for filtering.
 
     Parameters
     ----------
@@ -250,7 +250,7 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     table2 = Table.read(file2, format="ascii.ecsv")
 
     if test_columns is None:
-        test_columns = [{"TEST_COLUMN_NAME": col} for col in table1.colnames]
+        test_columns = [{"test_column_name": col} for col in table1.colnames]
 
     def generate_mask(table, column, condition):
         """Generate a boolean mask based on the condition (note the usage of eval)."""
@@ -261,12 +261,12 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
         )
 
     for col_dict in test_columns:
-        col_name = col_dict["TEST_COLUMN_NAME"]
+        col_name = col_dict["test_column_name"]
         mask1 = generate_mask(
-            table1, col_dict.get("CUT_COLUMN_NAME", ""), col_dict.get("CUT_CONDITION", "")
+            table1, col_dict.get("cut_column_name", ""), col_dict.get("cut_condition", "")
         )
         mask2 = generate_mask(
-            table2, col_dict.get("CUT_COLUMN_NAME", ""), col_dict.get("CUT_CONDITION", "")
+            table2, col_dict.get("cut_column_name", ""), col_dict.get("cut_condition", "")
         )
         table1_masked, table2_masked = table1[mask1], table2[mask2]
 
@@ -289,12 +289,12 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
 
     """
     reference_file = Path(simtel_cfg_file)
-    test_file = Path(config["CONFIGURATION"]["OUTPUT_PATH"]) / reference_file.name.replace(
-        "_test", f"_{config['CONFIGURATION']['LABEL']}"
+    test_file = Path(config["configuration"]["output_path"]) / reference_file.name.replace(
+        "_test", f"_{config['configuration']['label']}"
     )
     _logger.info(
         f"Comparing simtel cfg files: {reference_file} and {test_file} "
-        f"for model version {config['CONFIGURATION']['MODEL_VERSION']}"
+        f"for model version {config['configuration']['model_version']}"
     )
     return _compare_simtel_cfg_files(reference_file, test_file)
 

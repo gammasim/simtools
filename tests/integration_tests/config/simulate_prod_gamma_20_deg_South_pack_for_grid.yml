@@ -1,31 +1,30 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-simulate-prod
-    TEST_NAME: gamma_20_deg_south_pack_for_grid
-    CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_sim_telarray
-      LABEL: test-production-South-pack-for-grid
-      MODEL_VERSION: 6.0.0
-      SITE: South
-      ARRAY_LAYOUT_NAME: test_layout
-      PRIMARY: gamma
-      RUN_NUMBER: 10
-      AZIMUTH_ANGLE: North
-      ZENITH_ANGLE: 20
-      NSHOW: 5
-      ESLOPE: -2.0
-      VIEW_CONE: 0 deg 0 deg
-      ENERGY_RANGE: 100 GeV 1 TeV
-      CORE_SCATTER: 10 1400 m
-      DATA_DIRECTORY: simtools-data
-      OUTPUT_PATH: simtools-output
-      PACK_FOR_GRID_REGISTER: simtools-grid-output
-    INTEGRATION_TESTS:
-    - TEST_OUTPUT_FILES:
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.log_hist.tar.gz
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.simtel.zst
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-simulate-prod
+  configuration:
+    array_layout_name: test_layout
+    azimuth_angle: North
+    core_scatter: 10 1400 m
+    data_directory: simtools-data
+    energy_range: 100 GeV 1 TeV
+    eslope: -2.0
+    label: test-production-South-pack-for-grid
+    model_version: 6.0.0
+    nshow: 5
+    output_path: simtools-output
+    pack_for_grid_register: simtools-grid-output
+    primary: gamma
+    run_number: 10
+    simulation_software: corsika_sim_telarray
+    site: South
+    view_cone: 0 deg 0 deg
+    zenith_angle: 20
+  integration_tests:
+  - test_output_files:
+    - file: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.log_hist.tar.gz
+      path_descriptor: pack_for_grid_register
+    - file: gamma_run000010_za20deg_azm000deg_South_test_layout_6.0.0_test-production-South-pack-for-grid.simtel.zst
+      path_descriptor: pack_for_grid_register
+  test_name: gamma_20_deg_south_pack_for_grid
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

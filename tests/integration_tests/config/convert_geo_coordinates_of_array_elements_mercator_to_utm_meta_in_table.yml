@@ -1,22 +1,21 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-convert-geo-coordinates-of-array-elements
-    TEST_NAME: mercator_to_utm_in_table
-    CONFIGURATION:
-      INPUT: tests/resources/telescope_positions-North-mercator.ecsv
-      EXPORT: utm
-      MODEL_VERSION: 6.0.0
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: test.ecsv
-      SELECT_ASSETS:
-      - LSTN
-      - MSTN
-      SKIP_INPUT_VALIDATION: true
-      SKIP_OUTPUT_VALIDATION: true
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: './tests/resources/telescope_positions-North-utm.ecsv'
-      TOLERANCE: 0.01
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-convert-geo-coordinates-of-array-elements
+  configuration:
+    export: utm
+    input: tests/resources/telescope_positions-North-mercator.ecsv
+    log_level: DEBUG
+    model_version: 6.0.0
+    output_file: test.ecsv
+    output_path: simtools-output
+    select_assets:
+    - LSTN
+    - MSTN
+    skip_input_validation: true
+    skip_output_validation: true
+  integration_tests:
+  - reference_output_file: ./tests/resources/telescope_positions-North-utm.ecsv
+    tolerance: 0.01
+  test_name: mercator_to_utm_in_table
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

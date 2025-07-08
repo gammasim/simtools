@@ -1,10 +1,9 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-calculate-trigger-rate
-    TEST_NAME: one_file_area_from_distribution
-    CONFIGURATION:
-      SIMTEL_FILE_NAMES: './tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst'
-      AREA_FROM_DISTRIBUTION: true
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-calculate-trigger-rate
+  configuration:
+    area_from_distribution: true
+    simtel_file_names: ./tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+  test_name: one_file_area_from_distribution
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
