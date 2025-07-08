@@ -1,16 +1,15 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-derive-ctao-array-layouts
-    TEST_NAME: run
-    CONFIGURATION:
-      REPOSITORY_BRANCH: main
-      SITE: North
-      PARAMETER_VERSION: 2.0.0
-      UPDATED_PARAMETER_VERSION: 1.0.99
-      OUTPUT_PATH: simtools-output
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: array-layouts-1.0.99.json
-    - OUTPUT_FILE: array-layouts-1.0.99.derive_ctao_array_layouts.meta.yml
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-derive-ctao-array-layouts
+  configuration:
+    output_path: simtools-output
+    parameter_version: 2.0.0
+    repository_branch: main
+    site: North
+    updated_parameter_version: 1.0.99
+  integration_tests:
+  - output_file: array-layouts-1.0.99.json
+  - output_file: array-layouts-1.0.99.derive_ctao_array_layouts.meta.yml
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

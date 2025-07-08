@@ -1,14 +1,13 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-add-file-to-db
-    TEST_NAME: run
-    SKIP_FOR_PRODUCTION_DB: true
-    CONFIGURATION:
-      FILE_NAME:
-      - ./tests/resources/MLTdata-preproduction.meta.yml
-      - ./tests/resources/MLTdata-preproduction.ecsv
-      DB: sandbox
-      TEST_DB: true
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-add-file-to-db
+  configuration:
+    db: sandbox
+    file_name:
+    - ./tests/resources/MLTdata-preproduction.meta.yml
+    - ./tests/resources/MLTdata-preproduction.ecsv
+    test_db: true
+  skip_for_production_db: true
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

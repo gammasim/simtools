@@ -7,6 +7,35 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.18.0](https://github.com/gammasim/simtools/tree/v0.18.0) - 2025-07-08
+
+### Bugfixes
+
+- Run documentation generation CI on release to obtain current version of docs. ([#1607](https://github.com/gammasim/simtools/pull/1607))
+- Fix authentication errors in script to setup a local mongoDB. ([#1610](https://github.com/gammasim/simtools/pull/1610))
+
+### Documentation
+
+- Reorganisation and improvement of the documentation in the GitHub pages. ([#1611](https://github.com/gammasim/simtools/pull/1611))
+
+### New Features
+
+- Use CTAO telescope names when writing out telescope list in reduced event data tables. ([#1616](https://github.com/gammasim/simtools/pull/1616))
+- Allow CORSIKA limits to use layouts defined in simulation models database. ([#1619](https://github.com/gammasim/simtools/pull/1619))
+- Add application / API to plot tabulated model parameters using default plotting configurations defined in model parameters schemas. ([#1628](https://github.com/gammasim/simtools/pull/1628))
+- Allow to use current prod6 simulations for reduced event data generation. ([#1631](https://github.com/gammasim/simtools/pull/1631))
+- Add common array elements ID. Add list with triggered common telescope IDs to reduced event data tables. ([#1637](https://github.com/gammasim/simtools/pull/1637))
+
+### Maintenance
+
+- Removed unused ‘critical’ log level. ([#1604](https://github.com/gammasim/simtools/pull/1604))
+- Add JSON checker to pre-commit linter. ([#1615](https://github.com/gammasim/simtools/pull/1615))
+- Update test files with proton simulations (simtel output) and add provenance information. ([#1617](https://github.com/gammasim/simtools/pull/1617))
+- Improve linter CI to print file containing non-ascii characters. ([#1620](https://github.com/gammasim/simtools/pull/1620))
+- Replace file lists `tests/resources/simtel_output_files.txt` used for testing by explicitly listing of files. ([#1629](https://github.com/gammasim/simtools/pull/1629))
+- Add default plotting configuration for tabular data. Introduce consistent lower-cases for keys in plotting configuration schema. ([#1635](https://github.com/gammasim/simtools/pull/1635))
+
+
 ## [0.17.0](https://github.com/gammasim/simtools/tree/0.17.0) - 2025-06-10
 
 ### Bugfixes

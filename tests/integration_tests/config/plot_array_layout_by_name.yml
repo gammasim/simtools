@@ -1,15 +1,14 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-plot-array-layout
-    TEST_NAME: layout_by_name
-    CONFIGURATION:
-      SITE: North
-      MODEL_VERSION: 6.0.0
-      ARRAY_LAYOUT_NAME: subsystem_lsts
-      OUTPUT_PATH: simtools-output
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground.png
-    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground.pdf
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-plot-array-layout
+  configuration:
+    array_layout_name: subsystem_lsts
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+  integration_tests:
+  - output_file: array_layout_subsystem_lsts_North_ground.png
+  - output_file: array_layout_subsystem_lsts_North_ground.pdf
+  test_name: layout_by_name
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

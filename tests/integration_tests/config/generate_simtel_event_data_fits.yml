@@ -1,17 +1,16 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-generate-simtel-event-data
-    TEST_NAME: fits
-    CONFIGURATION:
-      INPUT: 'tests/resources/proton_run00020[1,2]_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst'
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: output_file.fits.gz
-      USE_PLAIN_OUTPUT_PATH: true
-      MAX_FILES: 2
-      PRINT_DATASET_INFORMATION: 5
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: output_file.fits.gz
-    - OUTPUT_FILE: output_file.fits.meta.yml
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-generate-simtel-event-data
+  configuration:
+    input: tests/resources/proton_run00020[1,2]_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+    max_files: 2
+    output_file: output_file.fits.gz
+    output_path: simtools-output
+    print_dataset_information: 5
+    use_plain_output_path: true
+  integration_tests:
+  - output_file: output_file.fits.gz
+  - output_file: output_file.fits.meta.yml
+  test_name: fits
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

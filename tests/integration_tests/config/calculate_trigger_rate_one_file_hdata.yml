@@ -1,11 +1,10 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-calculate-trigger-rate
-    TEST_NAME: one_file_hdata
-    CONFIGURATION:
-      SIMTEL_FILE_NAMES: './tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst'
-      VIEW_CONE: 0 deg 10 deg
-      ENERGY_RANGE: 8 GeV 300 TeV
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-calculate-trigger-rate
+  configuration:
+    energy_range: 8 GeV 300 TeV
+    simtel_file_names: ./tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst
+    view_cone: 0 deg 10 deg
+  test_name: one_file_hdata
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
