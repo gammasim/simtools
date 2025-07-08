@@ -511,3 +511,20 @@ def test_prepare_limit_data_with_array_and_telescopes(mock_reader, hdf5_file_nam
     # Check array name and telescope list are correctly set
     assert result["array_name"] == array_name
     assert result["telescope_ids"] == telescope_list
+
+
+def test_is_close(caplog, mock_reader, hdf5_file_name):
+    calculator = LimitCalculator(hdf5_file_name)
+
+    test_message = "Test message"
+
+    with caplog.at_level("WARNING"):
+        calculator._is_close(1.0 * u.m, None, test_message)
+        assert test_message not in caplog.text
+
+        calculator._is_close(1.0 * u.m, 25.0 * u.m, test_message)
+        assert test_message not in caplog.text
+
+        result = calculator._is_close(1.0 * u.m, 1.0 * u.m, test_message)
+        assert test_message in caplog.text
+        assert result.value == pytest.approx(1.0)
