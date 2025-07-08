@@ -602,11 +602,10 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     np.testing.assert_array_equal(result_2d, expected_2d)
 
     # Test 2D histogram with normalization - row normalization
-    # Need to explicitly specify axis=1 since default behavior now uses _normalize_along_axis
     result_2d_normalized = calculator._calculate_cumulative_histogram(
         test_hist_2d, normalize=True, axis=1
     )
-    expected_2d_normalized = np.array([[1 / 6, 3 / 6, 6 / 6], [4 / 15, 9 / 15, 15 / 15]])
+    expected_2d_normalized = np.array([[1 / 6, 3 / 6, 1.0], [4 / 15, 9 / 15, 1.0]])
     np.testing.assert_allclose(result_2d_normalized, expected_2d_normalized)
 
     # Along axis 0
@@ -628,40 +627,31 @@ def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
     result_none = calculator._calculate_cumulative_histogram(None, normalize=True)
     assert result_none is None
 
-    # Test basic 2D histogram - use float dtype to avoid casting issues
     test_hist_2d = np.array(
         [
-            [1, 2, 3],  # First row
-            [4, 5, 6],  # Second row
-            [0, 0, 0],  # Empty row
+            [1, 2, 3],
+            [4, 5, 6],
+            [0, 0, 0],
         ],
         dtype=float,
     )
 
-    # Test with explicit axis=1 (need to specify since default behavior changed)
+    # Test with explicit axis=1
     result_axis1 = calculator._calculate_cumulative_histogram(test_hist_2d, normalize=True, axis=1)
 
-    # Expected normalized cumulative values along axis=1:
-    # First row: [1/6, (1+2)/6, (1+2+3)/6] = [0.1667, 0.5, 1.0]
-    # Second row: [4/15, (4+5)/15, (4+5+6)/15] = [0.2667, 0.6, 1.0]
-    # Third row: [0, 0, 0] (avoid division by zero)
-    expected_axis1 = np.array([[1 / 6, 3 / 6, 6 / 6], [4 / 15, 9 / 15, 15 / 15], [0, 0, 0]])
+    expected_axis1 = np.array([[1 / 6, 3 / 6, 1.0], [4 / 15, 9 / 15, 1.0], [0, 0, 0]])
 
     np.testing.assert_allclose(result_axis1, expected_axis1, rtol=1e-4)
 
     # Test with axis=0
     result_axis0 = calculator._calculate_cumulative_histogram(test_hist_2d, axis=0, normalize=True)
 
-    # Expected normalized cumulative values along axis=0:
-    # For column 0: [1/5, (1+4)/5, (1+4+0)/5] = [0.2, 1.0, 1.0]
-    # For column 1: [2/7, (2+5)/7, (2+5+0)/7] = [0.2857, 1.0, 1.0]
-    # For column 2: [3/9, (3+6)/9, (3+6+0)/9] = [0.3333, 1.0, 1.0]
-    expected_axis0 = np.array([[1 / 5, 2 / 7, 3 / 9], [5 / 5, 7 / 7, 9 / 9], [5 / 5, 7 / 7, 9 / 9]])
+    expected_axis0 = np.array([[1 / 5, 2 / 7, 3 / 9], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
 
     np.testing.assert_allclose(result_axis0, expected_axis0, rtol=1e-4)
 
     # Test 1D histogram normalization
-    test_hist_1d = np.array([10, 20, 30, 40], dtype=float)  # Total 100
+    test_hist_1d = np.array([10, 20, 30, 40], dtype=float)
     result_1d = calculator._calculate_cumulative_histogram(test_hist_1d, normalize=True)
     expected_1d = np.array([0.1, 0.3, 0.6, 1.0])
     np.testing.assert_allclose(result_1d, expected_1d)
