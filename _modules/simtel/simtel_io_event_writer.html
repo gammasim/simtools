@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6843cf40"></script>
+    <script src="../../_static/documentation_options.js?v=669a896a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9868a9e" />
+  <meta name="docsearch:version" content="0.1.dev1+gb29a798" />
   </head>
   
   
@@ -457,6 +457,7 @@
     <span class="n">get_sim_telarray_telescope_id_to_telescope_name_mapping</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_circular_mean</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.names</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_common_identifier_from_array_element_name</span>
 
 
 <div class="viewcode-block" id="TableSchemas">
@@ -484,6 +485,7 @@
         <span class="s2">&quot;array_altitude&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">),</span>
         <span class="s2">&quot;array_azimuth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">),</span>
         <span class="s2">&quot;telescope_list&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>  <span class="c1"># Store as comma-separated string</span>
+        <span class="s2">&quot;telescope_list_common_id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>  <span class="c1"># Store as comma-separated string</span>
     <span class="p">}</span>
 
     <span class="n">file_info_schema</span> <span class="o">=</span> <span class="p">{</span>
@@ -717,6 +719,12 @@
                 <span class="s2">&quot;array_altitude&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">altitudes</span><span class="p">)),</span>
                 <span class="s2">&quot;array_azimuth&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">calculate_circular_mean</span><span class="p">(</span><span class="n">azimuths</span><span class="p">)),</span>
                 <span class="s2">&quot;telescope_list&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">telescopes</span><span class="p">)),</span>
+                <span class="s2">&quot;telescope_list_common_id&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">get_common_identifier_from_array_element_name</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="n">telescopes</span>
+                    <span class="p">]</span>
+                <span class="p">),</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
