@@ -33,3 +33,46 @@ source:
 simulation_software:
   - name: corsika
   - name: sim_telarray
+plot_configuration:
+  - type: atmospheric_transmission
+    title: 'Atmospheric transmission profile'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Extinction'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_transmission
+        label: '30 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 30.0
+      - parameter: atmospheric_transmission
+        label: '15 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 15.0
+      - parameter: atmospheric_transmission
+        label: '10 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 10.0
+      - parameter: atmospheric_transmission
+        label: '5 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 5.0
+      - parameter: atmospheric_transmission
+        label: '2.4 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 2.358

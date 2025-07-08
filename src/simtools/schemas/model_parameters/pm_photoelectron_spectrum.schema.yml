@@ -39,3 +39,22 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+plot_configuration:
+  - type: pm_photoelectron_spectrum
+    title: 'Single p.e. response'
+    xtitle: 'Amplitude'
+    ytitle: 'Response'
+    xscale: 'linear'
+    yscale: 'log'
+    xlim: [0., 40.]
+    ylim: [1.e-11, null]
+    no_markers: true
+    tables:
+      - parameter: pm_photoelectron_spectrum
+        label: 'prompt'
+        column_x: 'amplitude'
+        column_y: 'response'
+      - parameter: pm_photoelectron_spectrum
+        label: 'prompt + afterpulsing'
+        column_x: 'amplitude'
+        column_y: 'response_with_ap'
