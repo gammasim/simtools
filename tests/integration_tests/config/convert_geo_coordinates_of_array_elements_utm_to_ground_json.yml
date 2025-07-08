@@ -1,20 +1,20 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-convert-geo-coordinates-of-array-elements
-    TEST_NAME: utm_to_ground_json
-    CONFIGURATION:
-      INPUT: tests/resources/model_parameters/array_element_position_utm-2.0.0.json
-      SITE: North
-      EXPORT: ground
-      MODEL_VERSION: 6.0.0
-      PARAMETER_VERSION: 2.0.0
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: test.json
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: |
-        tests/resources/model_parameters/array_element_position_ground-2.0.0.json
-      TOLERANCE: 0.01
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-convert-geo-coordinates-of-array-elements
+  configuration:
+    export: ground
+    input: tests/resources/model_parameters/array_element_position_utm-2.0.0.json
+    log_level: DEBUG
+    model_version: 6.0.0
+    output_file: test.json
+    output_path: simtools-output
+    parameter_version: 2.0.0
+    site: North
+  integration_tests:
+  - reference_output_file: 'tests/resources/model_parameters/array_element_position_ground-2.0.0.json
+
+      '
+    tolerance: 0.01
+  test_name: utm_to_ground_json
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

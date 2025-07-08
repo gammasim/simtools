@@ -1,19 +1,19 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-get-parameter-from-db
-    TEST_NAME: telescope_parameter_array_element_position_ground
-    CONFIGURATION:
-      SITE: North
-      TELESCOPE: MSTN-09
-      PARAMETER: array_element_position_ground
-      MODEL_VERSION: 6.0.0
-      OUTPUT_FILE: test.json
-      OUTPUT_PATH: simtools-output
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: |
-        ./tests/resources/model_parameters/array_element_position_ground-2.0.0.json
-      TOLERANCE: 1.0e-05
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-get-parameter-from-db
+  configuration:
+    log_level: DEBUG
+    model_version: 6.0.0
+    output_file: test.json
+    output_path: simtools-output
+    parameter: array_element_position_ground
+    site: North
+    telescope: MSTN-09
+  integration_tests:
+  - reference_output_file: './tests/resources/model_parameters/array_element_position_ground-2.0.0.json
+
+      '
+    tolerance: 1.0e-05
+  test_name: telescope_parameter_array_element_position_ground
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
