@@ -535,8 +535,17 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     """Test calculation of cumulative histogram."""
     calculator = LimitCalculator(hdf5_file_name)
 
+    # Test None case
+    result_none = calculator._calculate_cumulative_histogram(None)
+    assert result_none is None
+
     # Test 1D histogram
     test_hist_1d = np.array([1, 2, 3, 4])
+
+    # Test direct call to _calculate_cumulative_1d
+    result_1d_direct = calculator._calculate_cumulative_1d(test_hist_1d, False)
+    expected_1d = np.array([1, 3, 6, 10])
+    np.testing.assert_array_equal(result_1d_direct, expected_1d)
 
     # Normal cumulative (left to right)
     result_1d = calculator._calculate_cumulative_histogram(test_hist_1d)
@@ -550,6 +559,40 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
 
     # Test 2D histogram
     test_hist_2d = np.array([[1, 2, 3], [4, 5, 6]])
+
+    # Test direct call to _calculate_cumulative_2d
+    result_2d_direct = calculator._calculate_cumulative_2d(test_hist_2d, False, axis=1)
+    expected_2d = np.array([[1, 3, 6], [4, 9, 15]])
+    np.testing.assert_array_equal(result_2d_direct, expected_2d)
+
+    # Test _apply_cumsum_along_axis with different parameters
+    # Test axis=1, reverse=False
+    result_axis1_no_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=1, reverse=False
+    )
+    expected_axis1_no_reverse = np.array([[1, 3, 6], [4, 9, 15]])
+    np.testing.assert_array_equal(result_axis1_no_reverse, expected_axis1_no_reverse)
+
+    # Test axis=1, reverse=True
+    result_axis1_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=1, reverse=True
+    )
+    expected_axis1_reverse = np.array([[6, 5, 3], [15, 11, 6]])
+    np.testing.assert_array_equal(result_axis1_reverse, expected_axis1_reverse)
+
+    # Test axis=0, reverse=False
+    result_axis0_no_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=0, reverse=False
+    )
+    expected_axis0_no_reverse = np.array([[1, 2, 3], [5, 7, 9]])
+    np.testing.assert_array_equal(result_axis0_no_reverse, expected_axis0_no_reverse)
+
+    # Test axis=0, reverse=True
+    result_axis0_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=0, reverse=True
+    )
+    expected_axis0_reverse = np.array([[5, 7, 9], [4, 5, 6]])
+    np.testing.assert_array_equal(result_axis0_reverse, expected_axis0_reverse)
 
     # Default axis (axis=1)
     result_2d = calculator._calculate_cumulative_histogram(test_hist_2d)

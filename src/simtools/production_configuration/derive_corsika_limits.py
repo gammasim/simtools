@@ -31,6 +31,8 @@ class LimitCalculator:
     POINTING_DIRECTION_LABEL = "Distance to pointing direction [deg]"
     CUMULATIVE_PREFIX = "Cumulative "
     EVENT_COUNT_LABEL = "Event Count"
+    CORE_X_LABEL = "Core X [m]"
+    CORE_Y_LABEL = "Core Y [m]"
 
     def __init__(self, event_data_file, array_name=None, telescope_list=None):
         """Initialize the LimitCalculator with the given event data file."""
@@ -418,8 +420,8 @@ class LimitCalculator:
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis", "aspect": "equal"},
                 "labels": {
-                    "x": "Core X [m]",
-                    "y": "Core Y [m]",
+                    "x": self.CORE_X_LABEL,
+                    "y": self.CORE_Y_LABEL,
                     "title": "Triggered events: core x vs core y",
                 },
                 "colorbar_label": event_counts,
