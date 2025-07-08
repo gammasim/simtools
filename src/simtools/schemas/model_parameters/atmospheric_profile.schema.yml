@@ -30,3 +30,44 @@ source:
   - Calibration
 simulation_software:
   - name: corsika
+plot_configuration:
+  - type: density_vs_altitude
+    title: 'Atmospheric density profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Density [g/cm^3]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'density'
+  - type: refractive_index_vs_altitude
+    title: 'Atmospheric refractive index profile'
+    xtitle: 'Height [km]'
+    ytitle: 'refractive index (n-1)'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'refractive_index'
+  - type: pressure_vs_altitude
+    title: 'Atmospheric pressure profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Pressure [mbar]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'pressure'
+  - type: thickness_vs_altitude
+    title: 'Atmospheric thickness profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Thickness [g/cm^2]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'thickness'

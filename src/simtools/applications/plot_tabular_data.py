@@ -9,6 +9,17 @@ Command line arguments
 ----------------------
 config_file (str, required)
     Configuration file name for plotting.
+output_file (str, required)
+    Output file name (without suffix).
+
+Example
+-------
+
+Plot tabular data using a configuration file.
+
+.. code-block:: console
+
+    simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name
 
 """
 
@@ -80,7 +91,7 @@ def main():
     )
 
     plot_tables.plot(
-        config=plot_config["cta_simpipe"]["plot"],
+        config=plot_config["plot"],
         output_file=io_handler_instance.get_output_file(args_dict["output_file"]),
         db_config=db_config_,
     )

@@ -5,6 +5,7 @@ from astropy.table import Table
 from simtools.production_configuration.derive_corsika_limits_grid import (
     _create_results_table,
     _process_file,
+    _read_array_layouts_from_db,
     _round_value,
     generate_corsika_limits_grid,
     write_results,
@@ -45,9 +46,10 @@ def mock_results():
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     """Test generate_corsika_limits_grid function."""
     # Mock dependencies
+    mock_list = mocker.patch("simtools.utils.general.get_list_of_files_from_command_line")
+    mock_list.return_value = ["file1.fits", "file2.fits"]
     mock_collect = mocker.patch("simtools.utils.general.collect_data_from_file")
     mock_collect.side_effect = [
-        {"files": ["file1.fits", "file2.fits"]},
         {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
     ]
 
@@ -62,9 +64,10 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     generate_corsika_limits_grid(mock_args_dict)
 
     # Verify calls
-    assert mock_collect.call_count == 2
+    assert mock_collect.call_count == 1
     assert mock_process.call_count == 4  # 2 files * 2 configs
     assert mock_write.call_count == 1
+    assert mock_list.call_count == 1
 
 
 def test_process_file(mocker):
@@ -136,3 +139,87 @@ def test_round_value():
     assert _round_value("other_key", 1.2345) == 1.2345
     assert _round_value("zenith", 45.678) == 45.678
     assert _round_value("unknown", "string_value") == "string_value"
+
+
+def test_read_array_layouts_from_db_specific_layouts(mocker):
+    """Test _read_array_layouts_from_db with specific layout names."""
+    mock_site_model = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits_grid.SiteModel"
+    )
+    instance = mock_site_model.return_value
+    instance.get_array_elements_for_layout.side_effect = (
+        lambda name: [1, 2] if name == "LST" else [3, 4]
+    )
+
+    layouts = ["LST", "MST"]
+    site = "North"
+    model_version = "v1.0.0"
+    db_config = {"host": "localhost"}
+
+    result = _read_array_layouts_from_db(layouts, site, model_version, db_config)
+
+    assert result == {"LST": [1, 2], "MST": [3, 4]}
+    mock_site_model.assert_called_once_with(
+        site=site, model_version=model_version, mongo_db_config=db_config
+    )
+    assert instance.get_array_elements_for_layout.call_count == 2
+    instance.get_array_elements_for_layout.assert_any_call("LST")
+    instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+def test_read_array_layouts_from_db_all_layouts(mocker):
+    """Test _read_array_layouts_from_db with 'all' layouts."""
+    mock_site_model = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits_grid.SiteModel"
+    )
+    instance = mock_site_model.return_value
+    instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
+    instance.get_array_elements_for_layout.side_effect = (
+        lambda name: [10, 20] if name == "LST" else [30, 40]
+    )
+
+    layouts = ["all"]
+    site = "South"
+    model_version = "v2.0.0"
+    db_config = {"host": "db"}
+
+    result = _read_array_layouts_from_db(layouts, site, model_version, db_config)
+
+    assert result == {"LST": [10, 20], "MST": [30, 40]}
+    instance.get_list_of_array_layouts.assert_called_once()
+    assert instance.get_array_elements_for_layout.call_count == 2
+    instance.get_array_elements_for_layout.assert_any_call("LST")
+    instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
+    """Test generate_corsika_limits_grid using _read_array_layouts_from_db."""
+    # Prepare args_dict to use array_layout_name
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = ["LST", "MST"]
+    args["site"] = "North"
+    args["model_version"] = "v1.2.3"
+
+    mock_collect = mocker.patch("simtools.utils.general.get_list_of_files_from_command_line")
+    mock_collect.return_value = ["file1.fits", "file2.fits"]
+
+    mock_read_layouts = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits_grid._read_array_layouts_from_db"
+    )
+    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
+
+    mock_process = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits_grid._process_file"
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits_grid.write_results"
+    )
+
+    generate_corsika_limits_grid(args)
+
+    mock_collect.assert_called_once()
+    mock_read_layouts.assert_called_once_with(
+        args["array_layout_name"], args["site"], args["model_version"], None
+    )
+    assert mock_process.call_count == 4  # 2 files * 2 layouts
+    assert mock_write.call_count == 1

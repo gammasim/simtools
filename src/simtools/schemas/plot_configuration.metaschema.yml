@@ -6,157 +6,146 @@ description: YAML representation of plot configuration metaschema
 version: 0.1.0
 name: plot_configuration.metaschema
 type: object
-additionalProperties: false
 
 definitions:
   SimtoolsPlotConfiguration:
     type: object
     additionalProperties: false
     properties:
-      CTA_SIMPIPE:
-        "$ref": "#/definitions/CTASIMPIPE"
-      SCHEMA_VERSION:
+      plot:
+        "$ref": "#/definitions/plot"
+      schema_version:
         type: string
         description: "Version of the schema."
-      SCHEMA_URL:
+      schema_url:
         type: string
         format: uri
         description: "URL of the schema."
-      SCHEMA_NAME:
+      schema_name:
         type: string
         description: "Name of the schema."
     required:
-      - CTA_SIMPIPE
+      - plot
     title: "SimtoolsPlotConfiguration"
-  CTASIMPIPE:
-    type: object
-    additionalProperties: false
-    properties:
-      PLOT:
-        "$ref": "#/definitions/Plot"
-    required:
-      - PLOT
-    title: "CTASimpipe"
-  Plot:
+  plot:
     description: "Plot configuration of simtools data visualization."
     type: object
     additionalProperties: false
     properties:
-      TYPE:
+      type:
         type: string
         description: "Type of the plot (e.g., mirror reflectivity, quantum_efficiency)."
-      TITLE:
+      title:
         type: string
         description: "Title of the plot."
-      XTITLE:
+      xtitle:
         type: string
         description: "Title of x-axis."
-      YTITLE:
+      ytitle:
         type: string
         description: "Title of y-axis."
-      XSCALE:
+      xscale:
         type: string
         enum: ["linear", "log"]
         description: "Scale of x-axis (linear or log)."
-      YSCALE:
+      yscale:
         type: string
         enum: ["linear", "log"]
         description: "Scale of y-axis (linear or log)."
-      XLIM:
+      xlim:
         type: array
         items:
           type: [number, "null"]
           description: "Limits for x-axis [min, max]. Use null for auto-limit."
         minItems: 2
         maxItems: 2
-      YLIM:
+      ylim:
         type: array
         items:
           type: [number, "null"]
           description: "Limits for y-axis [min, max]. Use null for auto-limit."
         minItems: 2
         maxItems: 2
-      ERROR_TYPE:
+      error_type:
         type: string
         enum: ["fill_between", "errorbar", "none"]
         description: "Type of errors."
-      NO_MARKERS:
+      no_markers:
         type: boolean
         description: "Whether to display markers on data points."
-      PLOT_RATIO:
+      plot_ratio:
         type: boolean
         description: "Whether to display ratio plot."
-      TABLES:
+      tables:
         type: array
         description: "List of tables to plot."
         items:
-          "$ref": "#/definitions/TableConfig"
+          "$ref": "#/definitions/table_config"
     required:
-      - TYPE
-      - TITLE
-      - XTITLE
-      - YTITLE
-      - TABLES
+      - type
+      - title
+      - xtitle
+      - ytitle
+      - tables
     title: "Plot"
-  TableConfig:
+  table_config:
     type: object
     description: "Configuration for a data table to plot."
     additionalProperties: false
     properties:
-      PARAMETER:
+      parameter:
         type: string
         description: "Parameter name to retrieve data for."
-      FILE_NAME:
+      file_name:
         type: string
         description: "Path to the data file."
-      TYPE:
+      type:
         type: string
         description: "Type of data file."
-      TELESCOPE:
+      telescope:
         type: string
         description: "Telescope descriptor to retrieve data for."
-      SITE:
+      site:
         type: string
         description: "Site name (North/South)."
-      MODEL_VERSION:
+      model_version:
         type: string
         description: "Model version to use."
-      PARAMETER_VERSION:
+      parameter_version:
         type: string
         description: "Parameter version to use."
-      LABEL:
+      label:
         type: string
         description: "Label for the plot legend."
-      COLUMN_X:
+      column_x:
         type: string
         description: "Column name to use for x-axis."
-      COLUMN_Y:
+      column_y:
         type: string
         description: "Column name to use for y-axis."
-      COLUMN_X_ERR:
+      column_x_err:
         type: string
         description: "Column name to use for x-axis error."
-      COLUMN_Y_ERR:
+      column_y_err:
         type: string
         description: "Column name to use for y-axis error."
-      NORMALIZE_Y:
+      normalize_y:
         type: boolean
         description: "Whether to normalize y values."
-      SELECT_VALUES:
+      select_values:
         type: object
         description: "Selection criteria for data filtering."
         properties:
-          COLUMN_NAME:
+          column_name:
             type: string
             description: "Column name to use for filtering."
-          VALUE:
+          value:
             type: [number, string]
             description: "Value to filter by."
         required:
-          - COLUMN_NAME
-          - VALUE
+          - column_name
+          - value
     required:
-      - COLUMN_X
-      - COLUMN_Y
-      - LABEL
+      - column_x
+      - column_y
     title: "TableConfig"

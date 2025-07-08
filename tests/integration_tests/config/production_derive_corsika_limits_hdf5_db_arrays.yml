@@ -2,12 +2,16 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-production-derive-corsika-limits
-    TEST_NAME: fits
+    TEST_NAME: hdf5_arrays_from_db
     CONFIGURATION:
       EVENT_DATA_FILES:
-      - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
+      - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
       LOSS_FRACTION: 1.e-3
-      TELESCOPE_IDS: tests/resources/production_layouts_telescope_ids.yml
+      MODEL_VERSION: 6.0.0
+      SITE: North
+      ARRAY_LAYOUT_NAME:
+      - "1lst"
+      - "alpha"
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: corsika_simulation_limits_lookup.ecsv
       USE_PLAIN_OUTPUT_PATH: true
