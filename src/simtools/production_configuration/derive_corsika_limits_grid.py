@@ -28,9 +28,6 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
     db_config : dict, optional
         Database configuration dictionary.
     """
-    event_data_files = gen.get_list_of_files_from_command_line(
-        args_dict["event_data_files"], [".hdf5", ".gz"]
-    )  # accept fits.gz files (.gz)
     if args_dict.get("array_layout_name"):
         telescope_configs = _read_array_layouts_from_db(
             args_dict["array_layout_name"],
@@ -44,18 +41,19 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
         ]
 
     results = []
-    for file_path in event_data_files:
-        for array_name, telescope_ids in telescope_configs.items():
-            _logger.info(f"Processing file: {file_path} with telescope config: {array_name}")
-            result = _process_file(
-                file_path,
-                array_name,
-                telescope_ids,
-                args_dict["loss_fraction"],
-                args_dict["plot_histograms"],
-            )
-            result["layout"] = array_name
-            results.append(result)
+    for array_name, telescope_ids in telescope_configs.items():
+        _logger.info(
+            f"Processing file: {args_dict['event_data_file']} with telescope config: {array_name}"
+        )
+        result = _process_file(
+            args_dict["event_data_file"],
+            array_name,
+            telescope_ids,
+            args_dict["loss_fraction"],
+            args_dict["plot_histograms"],
+        )
+        result["layout"] = array_name
+        results.append(result)
 
     write_results(results, args_dict)
 
