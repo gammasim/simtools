@@ -226,7 +226,7 @@ class LimitCalculator:
         return self._is_close(
             energy_min,
             self.file_info["energy_min"].to("TeV") if "energy_min" in self.file_info else None,
-            "Lower energy limit is equal to the minimum energy of ",
+            "Lower energy limit is equal to the minimum energy of",
         )
 
     def _is_close(self, value, reference, warning_text):
@@ -272,7 +272,7 @@ class LimitCalculator:
             self.file_info["core_scatter_max"].to("m")
             if "core_scatter_max" in self.file_info
             else None,
-            "Upper radius limit is equal to the maximum core scatter distance of ",
+            "Upper radius limit is equal to the maximum core scatter distance of",
         )
 
     @property
@@ -314,7 +314,7 @@ class LimitCalculator:
         return self._is_close(
             viewcone_limit,
             self.file_info["viewcone_max"].to("deg") if "viewcone_max" in self.file_info else None,
-            "Upper viewcone limit is equal to the maximum viewcone distance of ",
+            "Upper viewcone limit is equal to the maximum viewcone distance of",
         )
 
     def plot_data(self, output_path=None):
