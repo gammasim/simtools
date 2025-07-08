@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
+    paths-ignore:
+      - 'docs/**'
   schedule:
     - cron: "0 0 * * *"
   release:
