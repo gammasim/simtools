@@ -1,19 +1,18 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-validate-camera-efficiency
-    TEST_NAME: MSTN
-    CONFIGURATION:
-      SITE: North
-      TELESCOPE: MSTx-NectarCam
-      MODEL_VERSION: 6.0.0
-      OUTPUT_PATH: simtools-output
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_nsb.pdf
-    - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_nsb.png
-    - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_cherenkov.png
-    - OUTPUT_FILE: validate_camera_efficiency_MSTx-NectarCam_cherenkov.pdf
-    - OUTPUT_FILE: camera_efficiency_summary_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.txt
-    - OUTPUT_FILE: camera_efficiency_table_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-validate-camera-efficiency
+  configuration:
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+    telescope: MSTx-NectarCam
+  integration_tests:
+  - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.pdf
+  - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.png
+  - output_file: validate_camera_efficiency_MSTx-NectarCam_cherenkov.png
+  - output_file: validate_camera_efficiency_MSTx-NectarCam_cherenkov.pdf
+  - output_file: camera_efficiency_summary_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.txt
+  - output_file: camera_efficiency_table_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+  test_name: MSTN
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

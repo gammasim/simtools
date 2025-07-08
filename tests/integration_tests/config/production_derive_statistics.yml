@@ -1,27 +1,26 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-production-derive-statistics
-    TEST_NAME: production_derive_statistics
-    CONFIGURATION:
-      BASE_PATH: tests/resources/production_dl2_fits/
-      ZENITHS:
-      - 20
-      - 40
-      - 52
-      - 60
-      OFFSETS:
-      - 0
-      AZIMUTHS:
-      - 180
-      NSB:
-      - 1
-      GRID_POINTS_PRODUCTION_FILE: tests/resources/production_grid_points.json
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: interpolated_production_statistics.json
-      METRICS_FILE: tests/resources/production_simulation_config_metrics.yml
-      FILE_NAME_TEMPLATE: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: interpolated_production_statistics.json
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-production-derive-statistics
+  configuration:
+    azimuths:
+    - 180
+    base_path: tests/resources/production_dl2_fits/
+    file_name_template: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
+    grid_points_production_file: tests/resources/production_grid_points.json
+    metrics_file: tests/resources/production_simulation_config_metrics.yml
+    nsb:
+    - 1
+    offsets:
+    - 0
+    output_file: interpolated_production_statistics.json
+    output_path: simtools-output
+    zeniths:
+    - 20
+    - 40
+    - 52
+    - 60
+  integration_tests:
+  - output_file: interpolated_production_statistics.json
+  test_name: production_derive_statistics
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

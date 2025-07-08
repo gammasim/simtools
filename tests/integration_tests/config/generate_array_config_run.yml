@@ -1,12 +1,11 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-generate-array-config
-    TEST_NAME: run
-    CONFIGURATION:
-      SITE: North
-      ARRAY_LAYOUT_NAME: test_layout
-      MODEL_VERSION: 6.0.0
-      OUTPUT_PATH: simtools-output
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-generate-array-config
+  configuration:
+    array_layout_name: test_layout
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

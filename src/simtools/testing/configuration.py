@@ -43,24 +43,24 @@ def get_list_of_test_configurations(config_files):
 
     # list of all applications
     # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
-    _applications = sorted({item["APPLICATION"] for item in configs if "APPLICATION" in item})
+    _applications = sorted({item["application"] for item in configs if "application" in item})
     for app in _applications:
         configs.extend(
             [
-                {"APPLICATION": app, "TEST_NAME": "auto-help", "CONFIGURATION": {"HELP": True}},
+                {"application": app, "test_name": "auto-help", "configuration": {"help": True}},
                 {
-                    "APPLICATION": app,
-                    "TEST_NAME": "auto-version",
-                    "CONFIGURATION": {"VERSION": True},
+                    "application": app,
+                    "test_name": "auto-version",
+                    "configuration": {"version": True},
                 },
-                {"APPLICATION": app, "TEST_NAME": "auto-no_config"},
+                {"application": app, "test_name": "auto-no_config"},
             ]
         )
 
     return (
         configs,
         [
-            f"{item.get('APPLICATION', 'no-app-name')}_{item.get('TEST_NAME', 'no-test-name')}"
+            f"{item.get('application', 'no-app-name')}_{item.get('test_name', 'no-test-name')}"
             for item in configs
         ],
     )
@@ -76,7 +76,7 @@ def _read_configs_from_files(config_files):
         _dict = gen.remove_substring_recursively_from_dict(
             gen.collect_data_from_file(file_name=config_file), substring="\n"
         )
-        for application in _dict.get("CTA_SIMPIPE", {}).get("APPLICATIONS", []):
+        for application in _dict.get("applications", []):
             configs.append(application)
     return configs
 
@@ -108,12 +108,12 @@ def configure(config, tmp_test_directory, request):
     if isinstance(model_version_requested, list) and len(model_version_requested) == 1:
         model_version_requested = model_version_requested[0]
 
-    if "CONFIGURATION" in config:
+    if "configuration" in config:
         _skip_test_for_model_version(config, model_version_requested)
         _skip_test_for_production_db(config)
 
         config_file, config_string, config_file_model_version = _prepare_test_options(
-            config["CONFIGURATION"],
+            config["configuration"],
             output_path=tmp_output_path,
             model_version=model_version_requested,
         )
@@ -123,7 +123,7 @@ def configure(config, tmp_test_directory, request):
         config_file_model_version = None
 
     cmd = get_application_command(
-        app=config.get("APPLICATION", None),
+        app=config.get("application", None),
         config_file=config_file,
         config_string=config_string,
     )
@@ -132,9 +132,9 @@ def configure(config, tmp_test_directory, request):
 
 def _skip_test_for_model_version(config, model_version_requested):
     """Skip test if model version requested is not supported."""
-    if config.get("MODEL_VERSION_USE_CURRENT") is None or model_version_requested is None:
+    if config.get("model_version_use_current") is None or model_version_requested is None:
         return
-    model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
+    model_version_config = config["configuration"]["model_version"]
     if model_version_requested != model_version_config:
         raise VersionError(
             f"Model version requested {model_version_requested} not supported for this test"
@@ -143,7 +143,7 @@ def _skip_test_for_model_version(config, model_version_requested):
 
 def _skip_test_for_production_db(config):
     """Skip test if production db is used."""
-    if not config.get("SKIP_FOR_PRODUCTION_DB"):
+    if not config.get("skip_for_production_db"):
         return
 
     if "db.zeuthen.desy.de" in os.getenv("SIMTOOLS_DB_SERVER", ""):
@@ -184,15 +184,15 @@ def _prepare_test_options(config, output_path, model_version=None):
         return None, "--" + next(iter(config.keys())).lower(), None
 
     tmp_config_file = output_path / "tmp_config.yml"
-    config_file_model_version = config.get("MODEL_VERSION")
-    if model_version and "MODEL_VERSION" in config:
-        config.update({"MODEL_VERSION": model_version})
+    config_file_model_version = config.get("model_version")
+    if model_version and "model_version" in config:
+        config.update({"model_version": model_version})
 
-    for key in ["OUTPUT_PATH", "DATA_DIRECTORY", "PACK_FOR_GRID_REGISTER"]:
+    for key in ["output_path", "data_directory", "pack_for_grid_register"]:
         if key in config:
             config[key] = str(Path(output_path).joinpath(config[key]))
-            if key == "OUTPUT_PATH":
-                config["USE_PLAIN_OUTPUT_PATH"] = True
+            if key == "output_path":
+                config["use_plain_output_path"] = True
 
     _logger.info(f"Writing config file: {tmp_config_file}")
     with open(tmp_config_file, "w", encoding="utf-8") as file:
@@ -245,7 +245,7 @@ def create_tmp_output_path(tmp_test_directory, config):
     """
     try:
         tmp_output_path = Path(tmp_test_directory).joinpath(
-            config["APPLICATION"] + "-" + config["TEST_NAME"]
+            config["application"] + "-" + config["test_name"]
         )
     except KeyError as exc:
         raise KeyError(f"No application defined in configuration {config}.") from exc

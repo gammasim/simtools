@@ -1,33 +1,32 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-simulate-prod-htcondor-generator
-    TEST_NAME: htcondor-gamma_20_deg_north
-    CONFIGURATION:
-      OUTPUT_PATH: htcondor_submit
-      APPTAINER_IMAGE: test.sif
-      PRIORITY: 5
-      SIMULATION_SOFTWARE: corsika_sim_telarray
-      LABEL: test-production-North
-      MODEL_VERSION: 6.0.0
-      SITE: North
-      ARRAY_LAYOUT_NAME: test_layout
-      PRIMARY: gamma
-      RUN_NUMBER: 10
-      NUMBER_OF_RUNS: 1
-      AZIMUTH_ANGLE: North
-      ZENITH_ANGLE: 20
-      NSHOW: 5
-      ESLOPE: -2.0
-      VIEW_CONE: 0 deg 0 deg
-      ENERGY_RANGE: 100 GeV 1 TeV
-      CORE_SCATTER: 10 500 m
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - TEST_OUTPUT_FILES:
-      - PATH_DESCRIPTOR: OUTPUT_PATH
-        FILE: simulate_prod.submit.condor
-      - PATH_DESCRIPTOR: OUTPUT_PATH
-        FILE: simulate_prod.submit.sh
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-simulate-prod-htcondor-generator
+  configuration:
+    apptainer_image: test.sif
+    array_layout_name: test_layout
+    azimuth_angle: North
+    core_scatter: 10 500 m
+    energy_range: 100 GeV 1 TeV
+    eslope: -2.0
+    label: test-production-North
+    log_level: DEBUG
+    model_version: 6.0.0
+    nshow: 5
+    number_of_runs: 1
+    output_path: htcondor_submit
+    primary: gamma
+    priority: 5
+    run_number: 10
+    simulation_software: corsika_sim_telarray
+    site: North
+    view_cone: 0 deg 0 deg
+    zenith_angle: 20
+  integration_tests:
+  - test_output_files:
+    - file: simulate_prod.submit.condor
+      path_descriptor: output_path
+    - file: simulate_prod.submit.sh
+      path_descriptor: output_path
+  test_name: htcondor-gamma_20_deg_north
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
