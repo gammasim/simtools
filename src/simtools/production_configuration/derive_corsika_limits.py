@@ -542,9 +542,9 @@ class LimitCalculator:
             if self.array_name:
                 if plot_args.get("labels", {}).get("title"):
                     plot_args["labels"]["title"] += f" ({self.array_name} array)"
-                filename = f"{filename}_{self.array_name}.pdf"
+                filename = f"{filename}_{self.array_name}.png"
             else:
-                filename = f"{filename}.pdf"
+                filename = f"{filename}.png"
             output_file = output_path / filename if output_path else None
             self._create_plot(**plot_args, output_file=output_file)
 
