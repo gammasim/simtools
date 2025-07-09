@@ -300,7 +300,7 @@ class LimitCalculator:
             * u.deg
         )
 
-    def plot_data(self, output_path=None):
+    def plot_data(self, output_path=None, rebin_factor=2):
         """
         Histogram plotting.
 
@@ -308,6 +308,9 @@ class LimitCalculator:
         ----------
         output_path: Path or str, optional
             Directory to save plots. If None, plots will be displayed.
+        rebin_factor: int, optional
+            Factor by which to reduce the number of bins in 2D histograms for rebinned plots.
+            Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.
         """
         # Plot label constants
         core_distance_label = "Core Distance [m]"
@@ -537,7 +540,7 @@ class LimitCalculator:
             },
         }
 
-        for _, plot_args in plots.items():
+        for plot_key, plot_args in plots.items():
             filename = plot_args.pop("filename")
             if self.array_name:
                 if plot_args.get("labels", {}).get("title"):
@@ -547,6 +550,30 @@ class LimitCalculator:
                 filename = f"{filename}.png"
             output_file = output_path / filename if output_path else None
             self._create_plot(**plot_args, output_file=output_file)
+
+            # Create rebinned versions of normalized 2D cumulative histograms
+            if (
+                rebin_factor > 1
+                and plot_args["plot_type"] == "histogram2d"
+                and plot_key.endswith("_cumulative")
+                and plot_args.get("plot_params", {}).get("norm") == "linear"
+            ):
+                data = plot_args["data"]
+                bins = plot_args["bins"]
+                rebinned_data, rebinned_x_bins, rebinned_y_bins = self._rebin_2d_histogram(
+                    data, bins[0], bins[1], rebin_factor
+                )
+
+                rebinned_plot_args = plot_args.copy()
+                rebinned_plot_args["data"] = rebinned_data
+                rebinned_plot_args["bins"] = [rebinned_x_bins, rebinned_y_bins]
+
+                if rebinned_plot_args.get("labels", {}).get("title"):
+                    rebinned_plot_args["labels"]["title"] += f" (Energy rebinned {rebin_factor}x)"
+
+                rebinned_filename = f"{filename.replace('.png', '')}_rebinned.png"
+                rebinned_output_file = output_path / rebinned_filename if output_path else None
+                self._create_plot(**rebinned_plot_args, output_file=rebinned_output_file)
 
     def _create_plot(
         self,
@@ -777,3 +804,53 @@ class LimitCalculator:
                     result[:, i] = np.cumsum(data)
 
         return result
+
+    def _rebin_2d_histogram(self, hist, x_bins, y_bins, rebin_factor=2):
+        """
+        Rebin a 2D histogram by merging neighboring bins along the energy dimension (y-axis) only.
+
+        Parameters
+        ----------
+        hist : np.ndarray
+            Original 2D histogram data
+        x_bins : np.ndarray
+            Original x-axis bin edges (preserved)
+        y_bins : np.ndarray
+            Original y-axis (energy) bin edges
+        rebin_factor : int, optional
+            Factor by which to reduce the number of bins in the energy dimension
+            Default is 2 (merge every 2 bins)
+
+        Returns
+        -------
+        tuple
+            (rebinned_hist, x_bins, rebinned_y_bins)
+        """
+        if rebin_factor <= 1:
+            return hist, x_bins, y_bins
+
+        if hist.shape != (len(x_bins) - 1, len(y_bins) - 1):
+            self._logger.warning(
+                f"Histogram shape {hist.shape} doesn't match bin edges: "
+                f"({len(x_bins) - 1}, {len(y_bins) - 1})"
+            )
+            return hist, x_bins, y_bins
+
+        x_size = hist.shape[0]
+        new_y_size = hist.shape[1] // rebin_factor
+
+        trim_y = new_y_size * rebin_factor
+
+        new_hist = np.zeros((x_size, new_y_size), dtype=float)
+
+        for i in range(x_size):
+            for j in range(new_y_size):
+                y_start = j * rebin_factor
+                y_end = (j + 1) * rebin_factor
+                new_hist[i, j] = np.sum(hist[i, y_start:y_end])
+
+        new_y_bins = y_bins[::rebin_factor]
+        if len(new_y_bins) <= new_y_size:
+            new_y_bins = np.append(new_y_bins, y_bins[trim_y])
+
+        return new_hist, x_bins, new_y_bins

@@ -192,15 +192,53 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
 
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 11
+    assert mock_create_plot.call_count == 13
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 11
+    # 11 regular plots + 2 rebinned plots (core_vs_energy_cumulative and angular_distance_vs_energy_cumulative)
+    assert mock_create_plot.call_count == 13
+
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
-        assert "test_array" in str(kwargs.get("output_file"))
+        output_file = kwargs.get("output_file")
+        assert output_file is not None
+        assert "test_array" in str(output_file)
+
+    rebinned_plots = [
+        call
+        for call in mock_create_plot.call_args_list
+        if "rebinned" in str(call[1].get("output_file"))
+    ]
+    assert len(rebinned_plots) == 2
+
+    mock_create_plot.reset_mock()
+    calculator.array_name = "test_array"
+    calculator.plot_data(output_path=tmp_path, rebin_factor=1)
+    assert mock_create_plot.call_count == 11
+
+    rebinned_plots = [
+        call
+        for call in mock_create_plot.call_args_list
+        if "rebinned" in str(call[1].get("output_file", ""))
+    ]
+    assert len(rebinned_plots) == 0
+
+    mock_create_plot.reset_mock()
+
+    mocker.patch.object(
+        calculator,
+        "_rebin_2d_histogram",
+        return_value=(np.ones((2, 2)), np.array([0, 1, 2]), np.array([0, 1, 2])),
+    )
+
+    calculator.plot_data(output_path=tmp_path, rebin_factor=2)
+
+    for call in mock_create_plot.call_args_list:
+        _, kwargs = call
+        if "rebinned" in str(kwargs.get("output_file", "")):
+            assert "(Energy rebinned 2x)" in kwargs.get("labels", {}).get("title", "")
 
 
 @pytest.fixture
@@ -621,8 +659,7 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
 
     # With reverse=True
     result_2d_reverse = calculator._calculate_cumulative_histogram(test_hist_2d, reverse=True)
-    expected_2d_reverse = np.array([[6, 5, 3], [15, 11, 6]])
-    np.testing.assert_array_equal(result_2d_reverse, expected_2d_reverse)
+    np.testing.assert_array_equal(result_2d_reverse, np.array([[6, 5, 3], [15, 11, 6]]))
 
 
 def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
@@ -724,3 +761,51 @@ def test_create_2d_histogram_plot(
     assert np.array_equal(args[2], data.T)
     assert "norm" in kwargs
     assert kwargs["cmap"] == "viridis"
+
+
+@pytest.fixture
+def mock_limit_calculator(mocker):
+    """Create a mocked LimitCalculator that doesn't require a file."""
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.SimtelIOEventDataReader")
+    return LimitCalculator("dummy_file.h5", "test_array")
+
+
+def test_rebin_2d_histogram(mock_limit_calculator):
+    """Test rebinning a 2D histogram along the energy dimension (y-axis) only."""
+    hist = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]])
+    x_bins = np.array([0, 1, 2, 3, 4])
+    y_bins = np.array([0, 10, 20, 30, 40])
+
+    calculator = mock_limit_calculator
+
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = calculator._rebin_2d_histogram(
+        hist, x_bins, y_bins, rebin_factor=2
+    )
+
+    expected_hist = np.array([[3, 7], [11, 15], [19, 23], [27, 31]])
+    expected_x_bins = x_bins
+    expected_y_bins = np.array([0, 20, 40])
+
+    assert np.array_equal(rebinned_hist, expected_hist)
+    assert np.array_equal(rebinned_x_bins, expected_x_bins)
+    assert np.array_equal(rebinned_y_bins, expected_y_bins)
+
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = calculator._rebin_2d_histogram(
+        hist, x_bins, y_bins, rebin_factor=1
+    )
+
+    assert np.array_equal(rebinned_hist, hist)
+    assert np.array_equal(rebinned_x_bins, x_bins)
+    assert np.array_equal(rebinned_y_bins, y_bins)
+
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = calculator._rebin_2d_histogram(
+        hist, x_bins, y_bins, rebin_factor=4
+    )
+
+    expected_hist = np.array([[10], [26], [42], [58]])
+
+    expected_y_bins = np.array([0, 40])
+
+    assert np.array_equal(rebinned_hist, expected_hist)
+    assert np.array_equal(rebinned_x_bins, expected_x_bins)
+    assert np.array_equal(rebinned_y_bins, expected_y_bins)
