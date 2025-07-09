@@ -187,6 +187,8 @@ class MetadataCollector:
             Name of schema file.
 
         """
+        print("A", self.args_dict)
+        print("B", self.top_level_meta)
         # from command line
         if self.args_dict.get("schema"):
             self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
