@@ -823,42 +823,12 @@ class LimitCalculator:
         return self._apply_cumsum_along_axis(hist, axis, reverse)
 
     def _apply_cumsum_along_axis(self, hist, axis, reverse):
-        """
-        Apply cumulative sum along the specified axis of a 2D histogram.
+        """Apply cumulative sum along the specified axis of a 2D histogram."""
 
-        Parameters
-        ----------
-        hist : np.ndarray
-            2D histogram to modify
-        axis : int
-            Axis along which to compute cumulative sum (0 or 1)
-        reverse : bool
-            If True, sum from high to low values
+        def cumsum_func(arr):
+            return np.cumsum(arr[::-1])[::-1] if reverse else np.cumsum(arr)
 
-        Returns
-        -------
-        np.ndarray
-            Histogram with cumulative counts
-        """
-        result = hist.copy()
-        shape_index = 0 if axis == 1 else 1
-        size = result.shape[shape_index]
-
-        for i in range(size):
-            if axis == 1:
-                data = result[i, :]
-                if reverse:
-                    result[i, :] = np.cumsum(data[::-1])[::-1]
-                else:
-                    result[i, :] = np.cumsum(data)
-            else:  # axis == 0
-                data = result[:, i]
-                if reverse:
-                    result[:, i] = np.cumsum(data[::-1])[::-1]
-                else:
-                    result[:, i] = np.cumsum(data)
-
-        return result
+        return np.apply_along_axis(cumsum_func, axis, hist)
 
     def _rebin_2d_histogram(self, hist, x_bins, y_bins, rebin_factor=2):
         """
