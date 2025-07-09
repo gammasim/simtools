@@ -718,7 +718,7 @@ class LimitCalculator:
                 cmap=plot_params.get("cmap", "viridis"),
             )
             # Add contour line at value=1.0 for normalized histograms
-            if np.any(data == 1.0) and plot_params.get("show_contour", True):
+            if plot_params.get("show_contour", True):
                 x_centers = (bins[0][1:] + bins[0][:-1]) / 2
                 y_centers = (bins[1][1:] + bins[1][:-1]) / 2
                 x_mesh, y_mesh = np.meshgrid(x_centers, y_centers)
@@ -726,7 +726,7 @@ class LimitCalculator:
                     x_mesh,
                     y_mesh,
                     data.T,
-                    levels=[0.99, 1.0],
+                    levels=[0.999999],  # very close to 1 for floating point precision
                     colors=["tab:red"],
                     linestyles=["--"],
                     linewidths=[0.5],
