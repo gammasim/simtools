@@ -3,7 +3,7 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsOutputMetadata'
 title: SimPipe Output Metadata Metaschema
 description: YAML representation of model parameter metaschema
-version: 0.1.0
+version: 0.2.0
 name: metadata.metaschema
 type: object
 additionalProperties: false
@@ -14,92 +14,92 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      CTA:
+      cta:
         $ref: '#/definitions/CTA'
     required:
-      - CTA
+      - cta
     description: SimPipe metadata definition
   CTA:
     type: object
     required:
-      - ACTIVITY
-      - CONTACT
-      - INSTRUMENT
-      - PROCESS
-      - PRODUCT
-      - REFERENCE
+      - activity
+      - contact
+      - instrument
+      - process
+      - product
+      - reference
     additionalProperties: false
     properties:
       ###############
-      REFERENCE:
+      reference:
         description: Reference fields
         required:
-          - VERSION
+          - version
         type: object
         additionalProperties: false
         properties:
-          VERSION:
+          version:
             type: string
             description: |-
               Version of the Reference metadata schema used in the data product
             default: 1.0.0
             pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
       ###############
-      CONTACT:
+      contact:
         title: Contact
         description: |-
           Describes the person or institution that is responsible for this
           data product.
         required:
-          - NAME
+          - name
         type: object
         additionalProperties: false
         properties:
-          ORGANIZATION:
+          organization:
             type: string
             description: |-
               Organization to which this data product is associated
             default: CTAO
-          NAME:
+          name:
             description: |-
               Name of contact within the organization
             anyOf:
               - type: string
               - type: "null"
             default: null
-          EMAIL:
+          email:
             description: Contact email address
             anyOf:
               - type: string
                 format: email
               - type: "null"
             default: null
-          ORCID:
+          orcid:
             description: ORCID identifier of the contact.
             anyOf:
               - type: string
               - type: "null"
             default: null
       ###############
-      PRODUCT:
+      product:
         title: Product
         description: |-
           Describes the details of the data product, including its type and
           links to the data model definition.
         required:
-          - DATA
-          - FORMAT
-          - ID
+          - data
+          - format
+          - id
         type: object
         additionalProperties: false
         properties:
-          DESCRIPTION:
+          description:
             anyOf:
               - type: string
               - type: "null"
             default: null
             description: Product description
-          CREATION_TIME:
+          creation_time:
             anyOf:
               - type: string
                 format: date-time
@@ -108,7 +108,7 @@ definitions:
             default: null
             description: |-
               Human-readable date and time of file creation, in ISO format.
-          ID:
+          id:
             anyOf:
               - type: string
                 format: uuid
@@ -117,16 +117,16 @@ definitions:
             default: null
             description: |-
               Product identifier.
-          DATA:
+          data:
             title: Data
             required:
-              - CATEGORY
-              - LEVEL
-              - MODEL
+              - category
+              - level
+              - model
             type: object
             additionalProperties: false
             properties:
-              CATEGORY:
+              category:
                 anyOf:
                   - type: string
                   - type: "null"
@@ -137,7 +137,7 @@ definitions:
                   - SIM
                   - CAL
                   - null
-              ASSOCIATION:
+              association:
                 anyOf:
                   - type: "null"
                   - type: string
@@ -151,7 +151,7 @@ definitions:
                   - Telescope
                   - Target
                   - null
-              LEVEL:
+              level:
                 anyOf:
                   - type: string
                   - type: "null"
@@ -169,7 +169,7 @@ definitions:
                   - DL5
                   - DL6
                   - null
-              TYPE:
+              type:
                 anyOf:
                   - type: string
                   - type: "null"
@@ -183,29 +183,29 @@ definitions:
                   - DataCube
                   - Catalog
                   - null
-              MODEL:
+              model:
                 title: Model
                 required:
-                  - NAME
-                  - VERSION
+                  - name
+                  - version
                 type: object
                 additionalProperties: false
                 properties:
-                  NAME:
+                  name:
                     anyOf:
                       - type: string
                       - type: "null"
                     default: null
                     description: |-
                       Identifying name of the data model used.
-                  VERSION:
+                  version:
                     anyOf:
                       - type: string
                       - type: "null"
                     default: null
                     description: |-
                       Version of the data model used.
-                  URL:
+                  url:
                     description: |-
                       Link to definition of data model.
                     anyOf:
@@ -213,35 +213,35 @@ definitions:
                         format: uri
                       - type: "null"
                     default: null
-                  TYPE:
+                  type:
                     description: |-
                       Type of data model (e.g. simpipe-schema).
                     anyOf:
                       - type: string
                       - type: "null"
                     default: null
-                  SUBTYPE:
+                  subtype:
                     description: |-
                       Additional subtype of data model.
                     anyOf:
                       - type: string
                       - type: "null"
-          FORMAT:
+          format:
             anyOf:
               - type: string
               - type: "null"
             default: null
-          VALID:
+          valid:
             type: object
             additionalProperties: false
             properties:
-              START:
+              start:
                 anyOf:
                   - type: string
                     format: date-time
                   - type: "null"
                 default: null
-              END:
+              end:
                 anyOf:
                   - type: string
                     format: date-time
@@ -250,7 +250,7 @@ definitions:
             title: Valid
             description: |-
               Time range of validity for this data product.
-          FILENAME:
+          filename:
             description: |-
               Name of the file containing the data product.
             anyOf:
@@ -258,17 +258,17 @@ definitions:
               - type: "null"
             default: null
       ###############
-      INSTRUMENT:
+      instrument:
         title: Instrument
         required:
-          - CLASS
-          - ID
-          - SITE
-          - TYPE
+          - class
+          - id
+          - site
+          - type
         type: object
         additionalProperties: false
         properties:
-          SITE:
+          site:
             anyOf:
               - type: "null"
               - type: string
@@ -278,7 +278,7 @@ definitions:
             example:
               - CTA-North
               - CTA-South
-          CLASS:
+          class:
             anyOf:
               - type: "null"
               - type: string
@@ -295,7 +295,7 @@ definitions:
               - photosensor
               - cameraModule
               - part
-          TYPE:
+          type:
             anyOf:
               - type: "null"
               - type: string
@@ -306,7 +306,7 @@ definitions:
               - MST
               - LST
               - SST
-          SUBTYPE:
+          subtype:
             anyOf:
               - type: "null"
               - type: string
@@ -316,7 +316,7 @@ definitions:
             example:
               - NectarCam
               - FlashCam
-          ID:
+          id:
             anyOf:
               - type: "null"
               - type: string
@@ -326,25 +326,25 @@ definitions:
               Unique ID of the specific instrument in the class.
             example:
               - MSTN-20
-          DESCRIPTION:
+          description:
             anyOf:
               - type: string
               - type: "null"
             default: null
             description: Instrument description
       ###############
-      PROCESS:
+      process:
         title: Process
         description: |-
           The top-level activity to which the activity that generated this
           product belongs, for example an Observation Block, and it's
           associated ID.
         required:
-          - TYPE
+          - type
         type: object
         additionalProperties: false
         properties:
-          TYPE:
+          type:
             description: |-
               General type of the process.
             anyOf:
@@ -357,7 +357,7 @@ definitions:
               - simulation
               - lab
               - null
-          SUBTYPE:
+          subtype:
             description: |-
               More specific class of the process if the class is not sufficient
               to describe it.
@@ -365,7 +365,7 @@ definitions:
               - type: "null"
               - type: string
             default: null
-          ID:
+          id:
             description: |-
               Unique identifier of the process.
             anyOf:
@@ -374,21 +374,21 @@ definitions:
               - type: number
             default: null
       ###############
-      ACTIVITY:
+      activity:
         title: Activity
         description: |-
           The specific software or task that generated this particular
           data product.
         required:
-          - ID
-          - NAME
-          - START
-          - END
-          - TYPE
+          - id
+          - name
+          - start
+          - end
+          - type
         type: object
         additionalProperties: false
         properties:
-          NAME:
+          name:
             description: |-
               Name of activity that produced this data product,
               e.g. the software/ script name.
@@ -396,7 +396,7 @@ definitions:
               - type: string
               - type: "null"
             default: null
-          TYPE:
+          type:
             description: |-
               General type of the activity.
             anyOf:
@@ -406,7 +406,7 @@ definitions:
             example:
               - software
               - user
-          ID:
+          id:
             description: |-
               Unique identifier of the instance of this activity.
             anyOf:
@@ -414,21 +414,21 @@ definitions:
               - type: "null"
               - type: number
             default: null
-          SOFTWARE:
+          software:
             title: Software
             description: |-
               The software used to generate this data product.
             type: object
             additionalProperties: false
             properties:
-              NAME:
+              name:
                 description: |-
                   Name of the software used to generate this data product.
                 anyOf:
                   - type: string
                   - type: "null"
                 default: null
-              VERSION:
+              version:
                 description: |-
                   Version of the software used to generate this data product.
                 anyOf:
@@ -436,9 +436,9 @@ definitions:
                   - type: "null"
                 default: null
             required:
-              - NAME
-              - VERSION
-          START:
+              - name
+              - version
+          start:
             description: |-
               Start time of the activity.
             anyOf:
@@ -446,7 +446,7 @@ definitions:
                 format: date-time
               - type: "null"
             default: null
-          END:
+          end:
             description: |-
               End time of the activity.
             anyOf:
@@ -455,14 +455,14 @@ definitions:
               - type: "null"
             default: null
       ###############
-      CONTEXT:
+      context:
         title: Context
         description: |-
           Additional context information for this data product.
         type: object
         additionalProperties: false
         properties:
-          NOTES:
+          notes:
             title: Context notes.
             description: |-
               Notes that provide additional context for this data product.
@@ -471,21 +471,21 @@ definitions:
               type: object
               additionalProperties: false
               properties:
-                TITLE:
+                title:
                   description: |-
                     Title of note.
                   anyOf:
                     - type: string
                     - type: "null"
                   default: null
-                TEXT:
+                text:
                   description: |-
                     Note text.
                   anyOf:
                     - type: string
                     - type: "null"
                   default: null
-                CREATION_TIME:
+                creation_time:
                   description: |-
                     Creation time of document.
                   anyOf:
@@ -494,8 +494,8 @@ definitions:
                     - type: "null"
                   default: null
               required:
-                - TEXT
-          DOCUMENT:
+                - text
+          document:
             title: Context documents.
             description: |-
               Documents that provide additional context for this data product.
@@ -504,28 +504,28 @@ definitions:
               type: object
               additionalProperties: false
               properties:
-                TYPE:
+                type:
                   description: |-
                     Type of document.
                   anyOf:
                     - type: string
                     - type: "null"
                   default: null
-                TITLE:
+                title:
                   description: |-
                     Title of document.
                   anyOf:
                     - type: string
                     - type: "null"
                   default: null
-                AUTHOR:
+                author:
                   description: |-
                     Author of document.
                   anyOf:
                     - type: string
                     - type: "null"
                   default: null
-                ID:
+                id:
                   description: |-
                     Unique identifier of document.
                   anyOf:
@@ -533,7 +533,7 @@ definitions:
                     - type: "null"
                     - type: number
                   default: null
-                CREATION_TIME:
+                creation_time:
                   description: |-
                     Creation time of document.
                   anyOf:
@@ -541,7 +541,7 @@ definitions:
                       format: date-time
                     - type: "null"
                   default: null
-                URL:
+                url:
                   description: |-
                     Link to document
                   anyOf:
@@ -550,11 +550,11 @@ definitions:
                     - type: "null"
                   default: null
               required:
-                - CREATION_TIME
-                - ID
-                - TITLE
-                - TYPE
-          ASSOCIATED_ELEMENTS:
+                - creation_time
+                - id
+                - title
+                - type
+          associated_elements:
             title: Associated elements.
             description: |-
               CTA elements associated with this data product
@@ -562,12 +562,12 @@ definitions:
               a certain camera).
             type: array
             items:
-              $ref: '#/definitions/CTA/properties/INSTRUMENT'
-          ASSOCIATED_DATA:
+              $ref: '#/definitions/CTA/properties/instrument'
+          associated_data:
             title: Associated data.
             description: |-
               Associated data products (e.g., this data product
               has been derived using the associated data).
             type: array
             items:
-              $ref: '#/definitions/CTA/properties/PRODUCT'
+              $ref: '#/definitions/CTA/properties/product'
