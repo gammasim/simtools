@@ -2,7 +2,7 @@
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsOutputMetadata'
 title: SimPipe Output Metadata Metaschema
-description: YAML representation of model parameter metaschema
+description: YAML representation of metadata metaschema
 schema_version: 2.0.0
 schema_name: metadata.metaschema
 type: object
@@ -576,7 +576,7 @@ definitions:
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsOutputMetadata'
 title: SimPipe Output Metadata Metaschema
-description: YAML representation of model parameter metaschema
+description: YAML representation of metadata metaschema
 schema_version: 1.0.0
 schema_name: metadata.metaschema
 type: object

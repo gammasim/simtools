@@ -33,7 +33,6 @@ def test_get_data_model_schema_file_name():
     assert schema_file == args_dict["schema"]
 
     # from metadata
-    print("AAAAA", _collector.top_level_meta)
     _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
         SCHEMA_PATH / "top_level_meta.schema.yml"
     )
