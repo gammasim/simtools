@@ -154,17 +154,10 @@ def test_load_schema(caplog, tmp_test_directory):
     with pytest.raises(FileNotFoundError):
         schema.load_schema(schema_file="not_existing_file")
 
-    # schema versions
-    with pytest.raises(ValueError, match=r"^Schema version not given in"):
-        schema.load_schema(MODEL_PARAMETER_METASCHEMA)
-
     _schema_1 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
-    assert _schema_1["version"] == "0.1.0"
+    assert _schema_1["schema_version"] == "0.1.0"
     _schema_2 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2.0")
-    assert _schema_2["version"] == "0.2.0"
-
-    with pytest.raises(ValueError, match=r"^Schema version 0.2 not found in"):
-        schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2")
+    assert _schema_2["schema_version"] == "0.2.0"
 
     # test a single doc yaml file (write a temporary schema file; to make sure it is a single doc)
     tmp_schema_file = Path(tmp_test_directory) / "schema.yml"

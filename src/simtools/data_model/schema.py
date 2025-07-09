@@ -83,9 +83,9 @@ def get_model_parameter_schema_version(schema_version=None):
     schemas = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
 
     if schema_version is None and schemas:
-        return schemas[0].get("version")
+        return schemas[0].get("schema_version")
 
-    if any(schema.get("version") == schema_version for schema in schemas):
+    if any(schema.get("schema_version") == schema_version for schema in schemas):
         return schema_version
 
     raise ValueError(f"Schema version {schema_version} not found in {MODEL_PARAMETER_METASCHEMA}.")
@@ -167,7 +167,7 @@ def get_schema_version_from_data(data, observatory="cta"):
     return "latest"
 
 
-def load_schema(schema_file=None, schema_version=None):
+def load_schema(schema_file=None, schema_version="latest"):
     """
     Load parameter schema from file.
 
