@@ -116,7 +116,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
             schema_file,
             data.get("schema_version")
             or data.get(
-                "SCHEMA_VERSION", "0.1.0"
+                "schema_version", "latest"
             ),  # default version to ensure backward compatibility
         )
 
@@ -182,18 +182,47 @@ def load_schema(schema_file=None, schema_version=None):
     else:
         raise FileNotFoundError(f"Schema file not found: {schema_file}")
 
-    if isinstance(schema, list):  # schema file with several schemas defined
-        if schema_version is None:
-            raise ValueError(f"Schema version not given in {schema_file}.")
-        schema = next((doc for doc in schema if doc.get("version") == schema_version), None)
-        if schema is None:
-            raise ValueError(f"Schema version {schema_version} not found in {schema_file}.")
-    elif schema_version is not None and schema_version != schema.get("version"):
-        _logger.warning(f"Schema version {schema_version} does not match {schema.get('version')}")
+    schema = _get_schema_for_version(schema, schema_file, schema_version)
 
     _logger.debug(f"Loading schema from {schema_file}")
     _add_array_elements("InstrumentTypeElement", schema)
 
+    return schema
+
+
+def _get_schema_for_version(schema, schema_file, schema_version):
+    """
+    Get schema for a specific version.
+
+    Allow for 'latest' version to return the most recent schema.
+
+    Parameters
+    ----------
+    schema: dict or list
+        Schema dictionary or list of dictionaries.
+    schema_file: str
+        Path to schema file.
+    schema_version: str or None
+        Schema version to retrieve. If 'latest', the most recent version is returned.
+
+    Returns
+    -------
+    dict
+        Schema dictionary for the specified version.
+    """
+    if schema_version is None:
+        raise ValueError(f"Schema version not given in {schema_file}.")
+
+    if isinstance(schema, list):  # schema file with several schemas defined
+        if len(schema) == 0:
+            raise ValueError(f"No schemas found in {schema_file}.")
+        if schema_version == "latest":
+            schema_version = schema[0].get("version")
+        schema = next((doc for doc in schema if doc.get("version") == schema_version), None)
+    if schema is None:
+        raise ValueError(f"Schema version {schema_version} not found in {schema_file}.")
+    if schema_version not in (None, "latest") and schema_version != schema.get("version"):
+        _logger.warning(f"Schema version {schema_version} does not match {schema.get('version')}")
     return schema
 
 

@@ -15,7 +15,7 @@ import simtools.data_model.schema
 _logger = logging.getLogger(__name__)
 
 
-def get_default_metadata_dict(schema_file=None, observatory="CTA"):
+def get_default_metadata_dict(schema_file=None, observatory="CTA", schema_version="latest"):
     """
     Return metadata schema with default values.
 
@@ -27,6 +27,8 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
         Schema file (jsonschema format) used for validation
     observatory: str
         Observatory name
+    schema_version: str, optional
+        Version of the schema to use. If not provided, the latest version is used.
 
     Returns
     -------
@@ -35,8 +37,8 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
 
     """
-    schema = simtools.data_model.schema.load_schema(schema_file)
-    return _fill_defaults(schema["definitions"], observatory)
+    schema = simtools.data_model.schema.load_schema(schema_file, schema_version=schema_version)
+    return _fill_defaults(schema["definitions"], observatory.lower())
 
 
 def _resolve_references(yaml_data, observatory="CTA"):
@@ -62,7 +64,7 @@ def _resolve_references(yaml_data, observatory="CTA"):
         parts = ref_path.split("/")
         ref_data = yaml_data
         for part in parts:
-            if part in ("definitions", observatory):
+            if part in ("definitions", observatory.lower()):
                 continue
             ref_data = ref_data.get(part, {})
         return ref_data
