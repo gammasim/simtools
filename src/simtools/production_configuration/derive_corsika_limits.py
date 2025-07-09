@@ -829,17 +829,8 @@ class LimitCalculator:
         if rebin_factor <= 1:
             return hist, x_bins, y_bins
 
-        if hist.shape != (len(x_bins) - 1, len(y_bins) - 1):
-            self._logger.warning(
-                f"Histogram shape {hist.shape} doesn't match bin edges: "
-                f"({len(x_bins) - 1}, {len(y_bins) - 1})"
-            )
-            return hist, x_bins, y_bins
-
         x_size = hist.shape[0]
         new_y_size = hist.shape[1] // rebin_factor
-
-        trim_y = new_y_size * rebin_factor
 
         new_hist = np.zeros((x_size, new_y_size), dtype=float)
 
@@ -850,7 +841,5 @@ class LimitCalculator:
                 new_hist[i, j] = np.sum(hist[i, y_start:y_end])
 
         new_y_bins = y_bins[::rebin_factor]
-        if len(new_y_bins) <= new_y_size:
-            new_y_bins = np.append(new_y_bins, y_bins[trim_y])
 
         return new_hist, x_bins, new_y_bins
