@@ -707,6 +707,6 @@ class MetadataCollector:
         input_metadata = (
             self.input_metadata if isinstance(self.input_metadata, list) else [self.input_metadata]
         )
-        if len(input_metadata) > 0:
+        if len(input_metadata) > 0 and input_metadata[0]:
             return input_metadata[0].get("reference", {}).get("version", "latest")
         return "latest"
