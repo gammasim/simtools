@@ -541,39 +541,94 @@ class LimitCalculator:
         }
 
         for plot_key, plot_args in plots.items():
-            filename = plot_args.pop("filename")
-            if self.array_name:
-                if plot_args.get("labels", {}).get("title"):
-                    plot_args["labels"]["title"] += f" ({self.array_name} array)"
-                filename = f"{filename}_{self.array_name}.png"
-            else:
-                filename = f"{filename}.png"
+            plot_filename = plot_args.pop("filename")
+            if self.array_name and plot_args.get("labels", {}).get("title"):
+                plot_args["labels"]["title"] += f" ({self.array_name} array)"
+
+            filename = self._build_plot_filename(plot_filename, self.array_name)
             output_file = output_path / filename if output_path else None
             self._create_plot(**plot_args, output_file=output_file)
 
-            # Create rebinned versions of normalized 2D cumulative histograms
-            if (
-                rebin_factor > 1
-                and plot_args["plot_type"] == "histogram2d"
-                and plot_key.endswith("_cumulative")
-                and plot_args.get("plot_params", {}).get("norm") == "linear"
-            ):
-                data = plot_args["data"]
-                bins = plot_args["bins"]
-                rebinned_data, rebinned_x_bins, rebinned_y_bins = self._rebin_2d_histogram(
-                    data, bins[0], bins[1], rebin_factor
-                )
+            if self._should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
+                self._create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
 
-                rebinned_plot_args = plot_args.copy()
-                rebinned_plot_args["data"] = rebinned_data
-                rebinned_plot_args["bins"] = [rebinned_x_bins, rebinned_y_bins]
+    def _build_plot_filename(self, base_filename, array_name=None):
+        """
+        Build the full plot filename with appropriate extensions.
 
-                if rebinned_plot_args.get("labels", {}).get("title"):
-                    rebinned_plot_args["labels"]["title"] += f" (Energy rebinned {rebin_factor}x)"
+        Parameters
+        ----------
+        base_filename : str
+            The base filename without extension
+        array_name : str, optional
+            Name of the array to append to filename
 
-                rebinned_filename = f"{filename.replace('.png', '')}_rebinned.png"
-                rebinned_output_file = output_path / rebinned_filename if output_path else None
-                self._create_plot(**rebinned_plot_args, output_file=rebinned_output_file)
+        Returns
+        -------
+        str
+            Complete filename with extension
+        """
+        if array_name:
+            return f"{base_filename}_{array_name}.png"
+        return f"{base_filename}.png"
+
+    def _should_create_rebinned_plot(self, rebin_factor, plot_args, plot_key):
+        """
+        Check if a rebinned version of the plot should be created.
+
+        Parameters
+        ----------
+        rebin_factor : int
+            Factor by which to rebin the energy axis
+        plot_args : dict
+            Plot arguments
+        plot_key : str
+            Key identifying the plot type
+
+        Returns
+        -------
+        bool
+            True if a rebinned plot should be created, False otherwise
+        """
+        return (
+            rebin_factor > 1
+            and plot_args["plot_type"] == "histogram2d"
+            and plot_key.endswith("_cumulative")
+            and plot_args.get("plot_params", {}).get("norm") == "linear"
+        )
+
+    def _create_rebinned_plot(self, plot_args, filename, output_path, rebin_factor):
+        """
+        Create a rebinned version of a 2D histogram plot.
+
+        Parameters
+        ----------
+        plot_args : dict
+            Plot arguments for the original plot
+        filename : str
+            Filename of the original plot
+        output_path : Path or None
+            Path to save the plot to, or None
+        rebin_factor : int
+            Factor by which to rebin the energy axis
+        """
+        data = plot_args["data"]
+        bins = plot_args["bins"]
+
+        rebinned_data, rebinned_x_bins, rebinned_y_bins = self._rebin_2d_histogram(
+            data, bins[0], bins[1], rebin_factor
+        )
+
+        rebinned_plot_args = plot_args.copy()
+        rebinned_plot_args["data"] = rebinned_data
+        rebinned_plot_args["bins"] = [rebinned_x_bins, rebinned_y_bins]
+
+        if rebinned_plot_args.get("labels", {}).get("title"):
+            rebinned_plot_args["labels"]["title"] += f" (Energy rebinned {rebin_factor}x)"
+
+        rebinned_filename = f"{filename.replace('.png', '')}_rebinned.png"
+        rebinned_output_file = output_path / rebinned_filename if output_path else None
+        self._create_plot(**rebinned_plot_args, output_file=rebinned_output_file)
 
     def _create_plot(
         self,
