@@ -17,6 +17,7 @@ from eventio.simtel import (
 )
 
 from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.io_operations.io_table_handler import write_table_in_hdf5
 from simtools.simtel.simtel_io_file_info import get_corsika_run_header
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
@@ -77,15 +78,24 @@ class SimtelIOEventDataWriter:
     - Trigger patterns
     - Telescope pointing
 
+    Memory-efficient processing:
+    - When output_file is provided, writes data in chunks to minimize memory usage
+    - Processes files sequentially and clears memory after each file
+    - Supports chunking within large files to prevent memory issues
+
     Attributes
     ----------
     input_files : list
         List of input file paths to process.
     max_files : int, optional
         Maximum number of files to process.
+    output_file : str, optional
+        Path to output file. If provided, data is written incrementally.
+    chunk_size : int, optional
+        Number of events to process before writing to disk (default: 10000).
     """
 
-    def __init__(self, input_files, max_files=100):
+    def __init__(self, input_files, max_files=100, output_file=None, chunk_size=10000):
         """Initialize class."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
@@ -94,6 +104,8 @@ class SimtelIOEventDataWriter:
         except TypeError as exc:
             raise TypeError("No input files provided.") from exc
 
+        self.output_file = output_file
+        self.chunk_size = chunk_size
         self.n_use = None
         self.shower_data = []
         self.trigger_data = []
@@ -102,16 +114,29 @@ class SimtelIOEventDataWriter:
 
     def process_files(self):
         """
-        Process input files and return tables.
+        Process input files and write data incrementally to output file.
+
+        If output_file is provided, writes each file's data immediately to disk
+        to minimize memory usage. Otherwise, returns tables in memory.
 
         Returns
         -------
-        list
-            List of astropy tables containing processed data.
+        list or None
+            List of astropy tables if no output_file specified, None otherwise.
         """
         for i, file in enumerate(self.input_files[: self.max_files]):
             self._logger.info(f"Processing file {i + 1}/{self.max_files}: {file}")
             self._process_file(i, file)
+
+            if self.output_file:
+                self._write_file_data_to_disk()
+                self._clear_event_data_only()  # Keep file info for final write
+
+        if self.output_file:
+            # Write remaining file info data at the end
+            self._write_file_info_to_disk()
+            self._logger.info(f"All data written to {self.output_file}")
+            return None
 
         return self.create_tables()
 
@@ -146,8 +171,14 @@ class SimtelIOEventDataWriter:
                     self._process_mc_shower(eventio_object, file_id)
                 elif isinstance(eventio_object, MCEvent):
                     self._process_mc_event(eventio_object)
+                    # Write chunks if memory threshold reached
+                    if self.output_file:
+                        self._write_data_in_chunks()
                 elif isinstance(eventio_object, ArrayEvent):
                     self._process_array_event(eventio_object, file_id)
+                    # Write chunks if memory threshold reached
+                    if self.output_file:
+                        self._write_data_in_chunks()
 
     def _process_mc_run_header(self, eventio_object):
         """Process MC run header and update data lists."""
@@ -331,3 +362,77 @@ class SimtelIOEventDataWriter:
 
         self._logger.warning("No NSB level found in file name, defaulting to 1.0")
         return 1.0
+
+    def _write_file_data_to_disk(self):
+        """Write all current data to disk including shower and trigger data."""
+        if not self.output_file:
+            return
+
+        # Use the existing _write_current_data_to_disk to write shower and trigger data
+        self._write_current_data_to_disk()
+
+        # File info is accumulated and written at the end of processing
+
+    def _clear_data_lists(self):
+        """Clear all data lists to free memory."""
+        self.shower_data.clear()
+        self.trigger_data.clear()
+        self.file_info.clear()
+        self.file_info.clear()
+
+    def _write_data_in_chunks(self):
+        """
+        Write data in chunks to avoid memory issues with very large files.
+
+        Checks if any data list exceeds chunk_size and writes to disk if so.
+        """
+        if not self.output_file:
+            return
+
+        def should_write_chunk():
+            return (
+                len(self.shower_data) >= self.chunk_size
+                or len(self.trigger_data) >= self.chunk_size
+            )
+
+        if should_write_chunk():
+            self._logger.debug(
+                f"Writing chunk: {len(self.shower_data)} showers, {len(self.trigger_data)} triggers"
+            )
+            self._write_current_data_to_disk()
+            self._clear_event_data_only()
+
+    def _write_current_data_to_disk(self):
+        """Write only shower and trigger data to disk (not file info)."""
+        if not self.output_file:
+            return
+
+        # Write shower data
+        if self.shower_data:
+            shower_table = Table(rows=self.shower_data, names=TableSchemas.shower_schema.keys())
+            shower_table.meta["EXTNAME"] = "SHOWERS"
+            self._add_units_to_table(shower_table, TableSchemas.shower_schema)
+            write_table_in_hdf5(shower_table, self.output_file, "SHOWERS")
+
+        # Write trigger data
+        if self.trigger_data:
+            trigger_table = Table(rows=self.trigger_data, names=TableSchemas.trigger_schema.keys())
+            trigger_table.meta["EXTNAME"] = "TRIGGERS"
+            self._add_units_to_table(trigger_table, TableSchemas.trigger_schema)
+            write_table_in_hdf5(trigger_table, self.output_file, "TRIGGERS")
+
+    def _clear_event_data_only(self):
+        """Clear only shower and trigger data, keep file info."""
+        self.shower_data.clear()
+        self.trigger_data.clear()
+
+    def _write_file_info_to_disk(self):
+        """Write accumulated file info to disk."""
+        if not self.output_file or not self.file_info:
+            return
+
+        file_info_table = Table(rows=self.file_info, names=TableSchemas.file_info_schema.keys())
+        file_info_table.meta["EXTNAME"] = "FILE_INFO"
+        self._add_units_to_table(file_info_table, TableSchemas.file_info_schema)
+        write_table_in_hdf5(file_info_table, self.output_file, "FILE_INFO")
+        self.file_info.clear()
