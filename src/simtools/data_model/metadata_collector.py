@@ -446,7 +446,7 @@ class MetadataCollector:
             or self.args_dict.get("metadata_product_data_name")
             or "undefined_model_name"
         )
-        product_dict["data"]["model"]["version"] = self.schema_dict.get("version", "0.0.0")
+        product_dict["data"]["model"]["version"] = self.schema_dict.get("schema_version", "0.0.0")
         product_dict["data"]["model"]["type"] = self.schema_dict.get("meta_schema", None)
         product_dict["data"]["model"]["url"] = self.schema_file or self.args_dict.get(
             "metadata_product_data_url"
