@@ -66,10 +66,13 @@ class MetadataCollector:
         self.data_model_name = data_model_name
         self.schema_file = None
         self.schema_dict = None
-        self.top_level_meta = gen.change_dict_keys_case(
-            data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
-        )
         self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
+        self.top_level_meta = gen.change_dict_keys_case(
+            data_dict=metadata_model.get_default_metadata_dict(
+                schema_version=self._get_default_input_metadata_schema_version(),
+            ),
+            lower_case=True,
+        )
         self.collect_meta_data()
         if clean_meta:
             self.top_level_meta = self.clean_meta_data(self.top_level_meta)
@@ -119,7 +122,7 @@ class MetadataCollector:
         collector = MetadataCollector(args_dict)
         collector.write(output_file, add_activity_name=add_activity_name)
 
-    def write(self, yml_file=None, keys_lower_case=False, add_activity_name=False):
+    def write(self, yml_file=None, keys_lower_case=True, add_activity_name=False):
         """
         Write toplevel metadata to file (yaml file format).
 
@@ -691,3 +694,19 @@ class MetadataCollector:
             else:
                 cleaned[key] = value
         return cleaned
+
+    def _get_default_input_metadata_schema_version(self):
+        """
+        Get default schema version from input metadata.
+
+        Returns
+        -------
+        str
+            Schema version from input metadata or 'latest' if not defined.
+        """
+        input_metadata = (
+            self.input_metadata if isinstance(self.input_metadata, list) else [self.input_metadata]
+        )
+        if len(input_metadata) > 0:
+            return input_metadata[0].get("reference", {}).get("version", "latest")
+        return "latest"
