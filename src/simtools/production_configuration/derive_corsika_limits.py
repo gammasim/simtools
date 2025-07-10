@@ -231,7 +231,7 @@ class LimitCalculator:
 
     def _is_close(self, value, reference, warning_text):
         """Check if the value is close to the reference value and log a warning if so."""
-        if reference is not None and np.isclose(value.value, reference.value):
+        if reference is not None and np.isclose(value.value, reference.value, rtol=1.0e-2):
             self._logger.warning(f"{warning_text} {value}.")
         return value
 
