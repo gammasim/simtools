@@ -11,11 +11,14 @@ Follows CTAO top-level data model definition.
 import logging
 
 import simtools.data_model.schema
+import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
 
 
-def get_default_metadata_dict(schema_file=None, observatory="CTA", schema_version="latest"):
+def get_default_metadata_dict(
+    schema_file=None, observatory="CTA", schema_version="latest", lower_case=True
+):
     """
     Return metadata schema with default values.
 
@@ -29,6 +32,8 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA", schema_versio
         Observatory name
     schema_version: str, optional
         Version of the schema to use. If not provided, the latest version is used.
+    lower_case: bool, optional
+        If True, all keys in the returned dictionary will be converted to lower case.
 
     Returns
     -------
@@ -38,7 +43,10 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA", schema_versio
 
     """
     schema = simtools.data_model.schema.load_schema(schema_file, schema_version=schema_version)
-    return _fill_defaults(schema["definitions"], observatory.lower())
+    return gen.change_dict_keys_case(
+        data_dict=_fill_defaults(schema["definitions"], observatory.lower()),
+        lower_case=lower_case,
+    )
 
 
 def _resolve_references(yaml_data, observatory="CTA"):
