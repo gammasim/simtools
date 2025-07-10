@@ -223,12 +223,23 @@ class LimitCalculator:
         astropy.units.Quantity
             Lower energy limit.
         """
-        return (
+        energy_min = (
             self._compute_limits(
                 self.histograms.get("energy"), self.energy_bins, loss_fraction, limit_type="lower"
             )
             * u.TeV
         )
+        return self._is_close(
+            energy_min,
+            self.file_info["energy_min"].to("TeV") if "energy_min" in self.file_info else None,
+            "Lower energy limit is equal to the minimum energy of",
+        )
+
+    def _is_close(self, value, reference, warning_text):
+        """Check if the value is close to the reference value and log a warning if so."""
+        if reference is not None and np.isclose(value.value, reference.value, rtol=1.0e-2):
+            self._logger.warning(f"{warning_text} {value}.")
+        return value
 
     @property
     def core_distance_bins(self):
@@ -253,7 +264,7 @@ class LimitCalculator:
         astropy.units.Quantity
             Upper radial distance in m.
         """
-        return (
+        radius_limit = (
             self._compute_limits(
                 self.histograms.get("core_distance"),
                 self.core_distance_bins,
@@ -261,6 +272,13 @@ class LimitCalculator:
                 limit_type="upper",
             )
             * u.m
+        )
+        return self._is_close(
+            radius_limit,
+            self.file_info["core_scatter_max"].to("m")
+            if "core_scatter_max" in self.file_info
+            else None,
+            "Upper radius limit is equal to the maximum core scatter distance of",
         )
 
     @property
@@ -290,7 +308,7 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        return (
+        viewcone_limit = (
             self._compute_limits(
                 self.histograms.get("angular_distance"),
                 self.view_cone_bins,
@@ -298,6 +316,11 @@ class LimitCalculator:
                 limit_type="upper",
             )
             * u.deg
+        )
+        return self._is_close(
+            viewcone_limit,
+            self.file_info["viewcone_max"].to("deg") if "viewcone_max" in self.file_info else None,
+            "Upper viewcone limit is equal to the maximum viewcone distance of",
         )
 
     def plot_data(self, output_path=None, rebin_factor=2):
