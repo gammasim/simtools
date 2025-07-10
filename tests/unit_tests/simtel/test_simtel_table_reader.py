@@ -232,3 +232,17 @@ def test_read_simtel_data_for_lightguide_efficiency(caplog):
     with mock.patch(mock_string, mock_file):
         with pytest.raises(ValueError, match="No valid data or wavelengths found"):
             simtel_table_reader._read_simtel_data_for_lightguide_efficiency("dummy_path")
+
+
+def test_dispatch_lightguide_efficiency():
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader._read_simtel_data_for_lightguide_efficiency"
+    ) as mock_reader:
+        mock_reader.return_value = "dummy result"
+
+        result = simtel_table_reader.read_simtel_table(
+            "lightguide_efficiency_vs_wavelength", "dummy_path.txt"
+        )
+
+        mock_reader.assert_called_once_with("dummy_path.txt")
+        assert result == "dummy result"

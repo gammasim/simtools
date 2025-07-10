@@ -357,30 +357,29 @@ def _read_simtel_data_for_lightguide_efficiency(file_path):
 
     lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
+    def extract_wavelengths_from_header(line):
+        match = re.search(r"orig\.:\s*(.*)", line)
+        if match:
+            return [float(wl.replace("nm", "")) for wl in match.group(1).split()]
+        return []
+
     for line in lines:
         line = line.strip()
 
-        # Read wavelengths from header
+        if not line:
+            continue
+
         if line.startswith("#"):
             meta_lines.append(line.lstrip("#").strip())
             if "orig.:" in line:
-                # e.g., "# orig.: 325nm 390nm 420nm ..."
-                match = re.search(r"orig\.:\s*(.*)", line)
-                if match:
-                    wl_strings = match.group(1).split()
-                    wavelengths = [float(wl.replace("nm", "")) for wl in wl_strings]
-            continue
-
-        # Skip blank lines
-        if not line:
+                wavelengths = extract_wavelengths_from_header(line)
             continue
 
         parts = line.split()
         try:
             theta = float(parts[0])
             eff_values = list(map(float, parts[-len(wavelengths) :]))
-            for wl, eff in zip(wavelengths, eff_values):
-                data.append((theta, wl, eff))
+            data.extend((theta, wl, eff) for wl, eff in zip(wavelengths, eff_values))
         except (ValueError, IndexError):
             logger.debug(f"Skipping malformed line: {line}")
             continue
