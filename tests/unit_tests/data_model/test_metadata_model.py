@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 
 from simtools.data_model import metadata_model
@@ -11,9 +9,9 @@ def test_get_default_metadata_dict():
     assert isinstance(_top_meta, dict)
     assert len(_top_meta) > 0
 
-    assert "VERSION" in _top_meta["CTA"]["REFERENCE"]
-    assert _top_meta["CTA"]["REFERENCE"]["VERSION"] == "1.0.0"
-    assert _top_meta["CTA"]["CONTACT"]["ORGANIZATION"] == "CTAO"
+    assert "version" in _top_meta["cta"]["reference"]
+    assert _top_meta["cta"]["reference"]["version"] == "2.0.0"
+    assert _top_meta["cta"]["contact"]["organization"] == "CTAO"
 
 
 def test_resolve_references():
@@ -39,7 +37,7 @@ def test_resolve_references():
     assert metadata_model._resolve_references(yaml_data) == expected_result
 
 
-def test_fill_defaults(caplog):
+def test_fill_defaults():
     schema = {
         "CTA": {
             "properties": {
@@ -105,8 +103,5 @@ def test_fill_defaults(caplog):
         }
     }
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            metadata_model._fill_defaults(schema)
-
-    assert "Missing 'properties' key in schema." in caplog.text
+    with pytest.raises(KeyError, match="Missing 'properties' key in schema."):
+        metadata_model._fill_defaults(schema)

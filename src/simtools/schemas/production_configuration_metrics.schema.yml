@@ -5,8 +5,8 @@ title: Statistical Error Metrics Schema
 description: |
   YAML representation of simulation production configuration
   metrics.
-version: 0.1.0
-name: production_configuration_metrics.metaschema
+schema_version: 0.1.0
+schema_name: production_configuration_metrics.metaschema
 type: object
 additionalProperties: false
 

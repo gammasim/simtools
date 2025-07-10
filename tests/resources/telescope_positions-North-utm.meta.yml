@@ -1,57 +1,52 @@
 ---
-CTA:
-  REFERENCE:
-    VERSION: 1.0.0
-  ACTIVITY:
-    NAME: telescope_positions
-    ID: null
-    TYPE: null
-    START: null
-    END: null
-  # Organization and person submitting these data
-  CONTACT:
-    ORGANIZATION: 'CTAO North'
-    NAME: 'CTAO Project Scientist'
-    EMAIL: 'a@email.org'
-  # Description of instrument which obtained these data
-  INSTRUMENT:
-    SITE: North
-    CLASS: null
-    TYPE: null
-    ID: null
-  # Description of the process which generated these data
-  PROCESS:
-    TYPE: null
-    ID: null
-  # Description of the submitted data product
-  PRODUCT:
-    DESCRIPTION: >
-      Telescope positions for the CTAO Northern site
-      (UTM coordinate system). Consistent with
-      document CTA-SPE-PSC-000000-0001 1c.
-    CREATION_TIME: '2022-05-30T12:00:00+00:00'
-    ID: null
-    VALID:
-      START: '2022-05-30T12:00:00+00:00'
-    FORMAT: ascii.ecsv
-    FILENAME: telescope_positions-North-utm.ecsv
-    DATA:
-      CATEGORY: CAL
-      LEVEL: R1
-      TYPE: Service
-      ASSOCIATION: Subarray
-      MODEL:
-        NAME: array_coordinates_utm
-        VERSION: 0.1.0
-        URL: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameters/array_coordinates_UTM.schema.yml
-  CONTEXT:
-    DOCUMENT:
-      - TYPE: CTAO-DOC
-        TITLE: Layouts of the CTAO Arrays
-        ID: CTA-SPE-PSC-000000-0001 1c
-        CREATION_TIME: '2022-05-30T12:00:00+00:00'
-    ASSOCIATED_ELEMENTS:
-      - SITE: North
-        CLASS: array
-        TYPE: null
-        ID: null
+cta:
+  reference:
+    version: 2.0.0
+  activity:
+    name: telescope_positions
+    id: null
+    type: null
+    start: null
+    end: null
+  contact:
+    organization: CTAO North
+    name: CTAO Project Scientist
+    email: a@email.org
+  instrument:
+    site: North
+    class: null
+    type: null
+    id: null
+  process:
+    type: null
+    id: null
+  product:
+    description: >
+      Telescope positions for the CTAO Northern site (UTM coordinate system).
+      Consistent with document CTA-SPE-PSC-000000-0001 1c.
+    creation_time: '2022-05-30T12:00:00+00:00'
+    id: null
+    valid:
+      start: '2022-05-30T12:00:00+00:00'
+    format: ascii.ecsv
+    filename: telescope_positions-North-utm.ecsv
+    data:
+      category: CAL
+      level: R1
+      type: Service
+      association: Subarray
+      model:
+        name: array_coordinates_utm
+        version: 0.1.0
+        url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameters/array_coordinates_UTM.schema.yml
+  context:
+    document:
+    - type: CTAO-DOC
+      title: Layouts of the CTAO Arrays
+      id: CTA-SPE-PSC-000000-0001 1c
+      creation_time: '2022-05-30T12:00:00+00:00'
+    associated_elements:
+    - site: North
+      class: array
+      type: null
+      id: null

@@ -56,7 +56,6 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
         metadata = MetadataCollector(
             args_dict=None,
             metadata_file_name=(metadata_file if metadata_file is not None else file_name),
-            data_model_name=None,
         )
 
         _validator = validate_data.DataValidator(

@@ -1,61 +1,51 @@
 ---
-CTA:
-  REFERENCE:
-    VERSION: 1.0.0
-  # Name of activity that produced this data product
-  ACTIVITY:
-    NAME: specification
-    ID: null
-    TYPE: null
-    START: null
-    END: null
-  # Organization and person submitting these data
-  CONTACT:
-    ORGANIZATION: 'CTAO'
-    NAME: 'CTAO Monte Carlo Team'
-    EMAIL: 'a@email.org'
-  # Description of instrument which obtained these data
-  # (this might be e.g., a calibration device, telescope)
-  INSTRUMENT:
-    SITE: North
-    CLASS: null
-    TYPE: LSTN
-    ID: design
-  # Description of the process which generated these data
-  PROCESS:
-    TYPE: null
-    ID: null
-  # Description of the submitted data product
-  PRODUCT:
-    DESCRIPTION: >
-      Number of gains.
-    CREATION_TIME: '2017-05-08T12:00:00+00:00'
-    ID: null
-    VALID:
-      START: '2017-05-08T12:00:00+00:00'
-    FORMAT: number
-    FILENAME: null
-    DATA:
-      CATEGORY: null
-      LEVEL: null
-      TYPE: Service
-      ASSOCIATION: Telescope
-      MODEL:
-        NAME: num_gains
-        VERSION: 0.1.0
-        URL: https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/src/simtools/schemas/model_parameters/num_gains.schema.yml
-  # Additional information about the data product.
-  CONTEXT:
-    # List of relevant documents
-    DOCUMENT:
-      - TYPE: CTAO-MC-DOC
-        TITLE: "CTA Monte Carlo Model LST Appendix (last update: 04 May 2020)"
-        ID: null
-        CREATION_TIME: '2020-04-20T12:00:00+00:00'
-        URL: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/verification/verification-process/lst/-/blob/master/Appendix-LST.pdf
-    # List of array elements this data product is associated with
-    ASSOCIATED_ELEMENTS:
-      - SITE: North
-        CLASS: null
-        TYPE: LSTN
-        ID: design
+cta:
+  reference:
+    version: 2.0.0
+  activity:
+    name: specification
+    id: null
+    type: null
+    start: null
+    end: null
+  contact:
+    organization: CTAO
+    name: CTAO Monte Carlo Team
+    email: a@email.org
+  instrument:
+    site: North
+    class: null
+    type: LSTN
+    id: design
+  process:
+    type: null
+    id: null
+  product:
+    description: Number of gains.
+    creation_time: '2017-05-08T12:00:00+00:00'
+    id: null
+    valid:
+      start: '2017-05-08T12:00:00+00:00'
+    format: number
+    filename: null
+    data:
+      category: null
+      level: null
+      type: Service
+      association: Telescope
+      model:
+        name: num_gains
+        version: 0.1.0
+        url: https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/src/simtools/schemas/model_parameters/num_gains.schema.yml
+  context:
+    document:
+    - type: CTAO-MC-DOC
+      title: 'CTA Monte Carlo Model LST Appendix (last update: 04 May 2020)'
+      id: null
+      creation_time: '2020-04-20T12:00:00+00:00'
+      url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/verification/verification-process/lst/-/blob/master/Appendix-LST.pdf
+    associated_elements:
+    - site: North
+      class: null
+      type: LSTN
+      id: design

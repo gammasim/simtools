@@ -28,7 +28,7 @@ def test_get_data_model_schema_file_name():
     assert schema_file is None
 
     args_dict = {"schema": str(METADATA_JSON_SCHEMA)}
-    _collector = metadata_collector.MetadataCollector(args_dict)
+    _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == args_dict["schema"]
 
@@ -48,15 +48,17 @@ def test_get_data_model_schema_file_name():
     assert schema_file is None
 
     # from data model_name
-    _collector.data_model_name = "array_coordinates"
+    _collector.model_parameter_name = "array_coordinates"
     schema_file = _collector.get_data_model_schema_file_name()
-    assert Path(schema_file) == (schema.get_model_parameter_schema_file(_collector.data_model_name))
+    assert Path(schema_file) == (
+        schema.get_model_parameter_schema_file(_collector.model_parameter_name)
+    )
 
     # from input metadata
     _collector.input_metadata = [
         {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
     ]
-    _collector.data_model_name = None
+    _collector.model_parameter_name = None
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == "from_input_meta"
 

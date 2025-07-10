@@ -3,8 +3,8 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsPlotConfiguration'
 title: SimPipe plot configuration metaschema
 description: YAML representation of plot configuration metaschema
-version: 0.1.0
-name: plot_configuration.metaschema
+schema_version: 0.1.0
+schema_name: plot_configuration.metaschema
 type: object
 
 definitions:
