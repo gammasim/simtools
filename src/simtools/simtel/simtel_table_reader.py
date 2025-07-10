@@ -265,7 +265,7 @@ def read_simtel_table(parameter_name, file_path):
     if parameter_name == "atmospheric_transmission":
         return _read_simtel_data_for_atmospheric_transmission(file_path)
     if parameter_name == "lightguide_efficiency_vs_wavelength":
-        return read_simtel_data_for_lightguide_efficiency(file_path)
+        return _read_simtel_data_for_lightguide_efficiency(file_path)
 
     rows, meta_from_simtel, n_columns, n_dim = _read_simtel_data(file_path)
     columns_info, description = _data_columns(parameter_name, n_columns, n_dim)
@@ -339,7 +339,7 @@ def _read_simtel_data(file_path):
     return rows, "\n".join(meta_lines), n_columns, n_dim_axis
 
 
-def read_simtel_data_for_lightguide_efficiency(file_path):
+def _read_simtel_data_for_lightguide_efficiency(file_path):
     """
     Read angular efficiency data and return a table with columns: angle, wavelength, efficiency.
 
@@ -355,34 +355,35 @@ def read_simtel_data_for_lightguide_efficiency(file_path):
     data = []
     meta_lines = []
 
-    with open(file_path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
+    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
-            # Read wavelengths from header
-            if line.startswith("#"):
-                meta_lines.append(line.lstrip("#").strip())
-                if "orig.:" in line:
-                    # e.g., "# orig.: 325nm 390nm 420nm ..."
-                    match = re.search(r"orig\.:\s*(.*)", line)
-                    if match:
-                        wl_strings = match.group(1).split()
-                        wavelengths = [float(wl.replace("nm", "")) for wl in wl_strings]
-                continue
+    for line in lines:
+        line = line.strip()
 
-            # Skip blank lines
-            if not line:
-                continue
+        # Read wavelengths from header
+        if line.startswith("#"):
+            meta_lines.append(line.lstrip("#").strip())
+            if "orig.:" in line:
+                # e.g., "# orig.: 325nm 390nm 420nm ..."
+                match = re.search(r"orig\.:\s*(.*)", line)
+                if match:
+                    wl_strings = match.group(1).split()
+                    wavelengths = [float(wl.replace("nm", "")) for wl in wl_strings]
+            continue
 
-            parts = line.split()
-            try:
-                theta = float(parts[0])
-                eff_values = list(map(float, parts[-len(wavelengths) :]))
-                for wl, eff in zip(wavelengths, eff_values):
-                    data.append((theta, wl, eff))
-            except (ValueError, IndexError):
-                print(f"Skipping malformed line: {line}")
-                continue
+        # Skip blank lines
+        if not line:
+            continue
+
+        parts = line.split()
+        try:
+            theta = float(parts[0])
+            eff_values = list(map(float, parts[-len(wavelengths) :]))
+            for wl, eff in zip(wavelengths, eff_values):
+                data.append((theta, wl, eff))
+        except (ValueError, IndexError):
+            logger.debug(f"Skipping malformed line: {line}")
+            continue
 
     if not data or not wavelengths:
         raise ValueError("No valid data or wavelengths found in file")
@@ -418,7 +419,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     astropy table
         Table with atmospheric transmission.
     """
-    lines = lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
     observatory_level, height_bins = _read_header_line_for_atmospheric_transmission(
         lines, file_path
