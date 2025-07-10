@@ -3,7 +3,7 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsDataAndModelParameters'
 title: SimPipe Data and Model Parameter Metaschema
 description: YAML representation of data and model parameter metaschema
-version: 0.1.0
+schema_version: 0.1.0
 name: model_parameter_and_data_schema.metaschema
 type: object
 
@@ -16,7 +16,7 @@ definitions:
       title:
         type: string
         description: "title for schema file"
-      version:
+      schema_version:
         type: string
         description: "version of this schema file (semver)"
       meta_schema:
@@ -64,7 +64,7 @@ definitions:
           $ref: 'plot_configuration.metaschema.yml#/definitions/plot'
         description: "List of plotting configurations"
     required:
-      - version
+      - schema_version
       - meta_schema
       - meta_schema_version
       - name
