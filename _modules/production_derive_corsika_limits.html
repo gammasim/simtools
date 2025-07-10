@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=040b34c3"></script>
+    <script src="../_static/documentation_options.js?v=e53b6615"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6296e76" />
+  <meta name="docsearch:version" content="0.1.dev1+gb901614" />
   </head>
   
   
@@ -480,7 +480,7 @@
 
 <span class="sd">Command line arguments</span>
 <span class="sd">----------------------</span>
-<span class="sd">event_data_files (str, required)</span>
+<span class="sd">event_data_file (str, required)</span>
 <span class="sd">    Path to reduced event data file.</span>
 <span class="sd">telescope_ids (str, optional)</span>
 <span class="sd">    Custom array layout file containing telescope IDs.</span>
@@ -499,7 +499,7 @@
 <span class="sd">.. code-block:: console</span>
 
 <span class="sd">    simtools-production-derive-corsika-limits \\</span>
-<span class="sd">        --event_data_files path/to/event_data_files.yaml \\</span>
+<span class="sd">        --event_data_file event_dat_file.hdf5 \\</span>
 <span class="sd">        --array_layout_name alpha,beta \\</span>
 <span class="sd">        --loss_fraction 1e-6 \\</span>
 <span class="sd">        --plot_histograms \\</span>
@@ -510,7 +510,7 @@
 <span class="sd">.. code-block:: console</span>
 
 <span class="sd">    simtools-production-derive-corsika-limits \\</span>
-<span class="sd">        --event_data_files path/to/event_data_files.yaml \\</span>
+<span class="sd">        --event_data_file event_dat_file.hdf5 \\</span>
 <span class="sd">        --telescope_ids path/to/telescope_configs.yaml \\</span>
 <span class="sd">        --loss_fraction 1e-6 \\</span>
 <span class="sd">        --plot_histograms \\</span>
@@ -521,7 +521,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_corsika_limits_grid</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_corsika_limits</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">generate_corsika_limits_grid</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -532,11 +532,10 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Derive limits for energy, radial distance, and viewcone.&quot;</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--event_data_files&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--event_data_file&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of event data files or ascii file listing data files &quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Event data file containing reduced event data.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--telescope_ids&quot;</span><span class="p">,</span>

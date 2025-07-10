@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=040b34c3"></script>
+    <script src="../../_static/documentation_options.js?v=e53b6615"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-plot-tabular-data-for-model-parameter" href="simtools-plot-tabular-data-for-model-parameter.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6296e76" />
+  <meta name="docsearch:version" content="0.1.dev1+gb901614" />
   </head>
   
   
@@ -587,7 +587,7 @@ directions, level of night sky background, etc.).</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>event_data_files (str, required)</dt><dd><p>Path to reduced event data file.</p>
+<dt>event_data_file (str, required)</dt><dd><p>Path to reduced event data file.</p>
 </dd>
 <dt>telescope_ids (str, optional)</dt><dd><p>Custom array layout file containing telescope IDs.</p>
 </dd>
@@ -603,7 +603,7 @@ directions, level of night sky background, etc.).</p>
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Derive limits for a list of array layouts (use ‘all’ to derive limits for all layouts):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-corsika-limits \\</span>
-<span class="go">    --event_data_files path/to/event_data_files.yaml \\</span>
+<span class="go">    --event_data_file event_dat_file.hdf5 \\</span>
 <span class="go">    --array_layout_name alpha,beta \\</span>
 <span class="go">    --loss_fraction 1e-6 \\</span>
 <span class="go">    --plot_histograms \\</span>
@@ -612,7 +612,7 @@ directions, level of night sky background, etc.).</p>
 </div>
 <p>Derive limits for a given file for custom defined array layouts:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-corsika-limits \\</span>
-<span class="go">    --event_data_files path/to/event_data_files.yaml \\</span>
+<span class="go">    --event_data_file event_dat_file.hdf5 \\</span>
 <span class="go">    --telescope_ids path/to/telescope_configs.yaml \\</span>
 <span class="go">    --loss_fraction 1e-6 \\</span>
 <span class="go">    --plot_histograms \\</span>

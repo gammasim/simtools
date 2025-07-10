@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=040b34c3"></script>
+    <script src="../_static/documentation_options.js?v=e53b6615"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6296e76" />
+  <meta name="docsearch:version" content="0.1.dev1+gb901614" />
   </head>
   
   
@@ -650,12 +650,12 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 </section>
-<section id="module-production_configuration.derive_corsika_limits">
-<span id="id1"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
+<section id="module-production_configuration.corsika_limit_calculator">
+<span id="corsika-limit-calculator"></span><span id="derive-corsika-limits"></span><h2>corsika_limit_calculator<a class="headerlink" href="#module-production_configuration.corsika_limit_calculator" title="Link to this heading">#</a></h2>
 <p>Calculate CORSIKA thresholds for energy, radial distance, and viewcone.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">LimitCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.corsika_limit_calculator.</span></span><span class="sig-name descname"><span class="pre">LimitCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/corsika_limit_calculator.html#LimitCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator" title="Link to this definition">#</a></dt>
 <dd><p>Compute limits for CORSIKA configuration for energy, radial distance, and viewcone.</p>
 <p>Event data is read from the reduced MC event data file.</p>
 <dl class="field-list simple">
@@ -671,8 +671,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.compute_limits">
-<span class="sig-name descname"><span class="pre">compute_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.compute_limits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_limits" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.compute_limits">
+<span class="sig-name descname"><span class="pre">compute_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/corsika_limit_calculator.html#LimitCalculator.compute_limits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_limits" title="Link to this definition">#</a></dt>
 <dd><p>Compute the limits for energy, radial distance, and viewcone.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -691,8 +691,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit">
-<span class="sig-name descname"><span class="pre">compute_lower_energy_limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.compute_lower_energy_limit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.compute_lower_energy_limit">
+<span class="sig-name descname"><span class="pre">compute_lower_energy_limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/corsika_limit_calculator.html#LimitCalculator.compute_lower_energy_limit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_lower_energy_limit" title="Link to this definition">#</a></dt>
 <dd><p>Compute the lower energy limit in TeV based on the event loss fraction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -711,8 +711,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radius_limit">
-<span class="sig-name descname"><span class="pre">compute_upper_radius_limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.compute_upper_radius_limit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radius_limit" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.compute_upper_radius_limit">
+<span class="sig-name descname"><span class="pre">compute_upper_radius_limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/corsika_limit_calculator.html#LimitCalculator.compute_upper_radius_limit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_upper_radius_limit" title="Link to this definition">#</a></dt>
 <dd><p>Compute the upper radial distance based on the event loss fraction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -731,8 +731,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone">
-<span class="sig-name descname"><span class="pre">compute_viewcone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.compute_viewcone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.compute_viewcone">
+<span class="sig-name descname"><span class="pre">compute_viewcone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/corsika_limit_calculator.html#LimitCalculator.compute_viewcone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_viewcone" title="Link to this definition">#</a></dt>
 <dd><p>Compute the viewcone based on the event loss fraction.</p>
 <p>The shower IDs of triggered events are used to create a mask for the
 azimuth and altitude of the triggered events. A mapping is created
@@ -754,20 +754,20 @@ between the triggered events and the simulated events using the shower IDs.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">core_distance_bins</span></span><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.core_distance_bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">core_distance_bins</span></span><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.core_distance_bins" title="Link to this definition">#</a></dt>
 <dd><p>Return bins for the core distance histogram.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.energy_bins">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy_bins</span></span><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.energy_bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy_bins</span></span><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.energy_bins" title="Link to this definition">#</a></dt>
 <dd><p>Return bins for the energy histogram.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.plot_data">
-<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.plot_data">
+<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/corsika_limit_calculator.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
 <dd><p>Histogram plotting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -783,22 +783,21 @@ Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">view_cone_bins</span></span><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.corsika_limit_calculator.LimitCalculator.view_cone_bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">view_cone_bins</span></span><a class="headerlink" href="#production_configuration.corsika_limit_calculator.LimitCalculator.view_cone_bins" title="Link to this definition">#</a></dt>
 <dd><p>Return bins for the viewcone histogram.</p>
 </dd></dl>
 
 </dd></dl>
 
 </section>
-<section id="module-production_configuration.derive_corsika_limits_grid">
-<span id="id2"></span><span id="derive-corsika-limits-grid"></span><h2>derive_corsika_limits_grid<a class="headerlink" href="#module-production_configuration.derive_corsika_limits_grid" title="Link to this heading">#</a></h2>
-<p>Derive CORSIKA limits for a grid of parameters.</p>
+<section id="module-production_configuration.derive_corsika_limits">
+<span id="id1"></span><span id="derive-corsika-limits-grid"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
+<p>Derive CORSIKA limits from a reduced event data file.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid">
-<span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits_grid.</span></span><span class="sig-name descname"><span class="pre">generate_corsika_limits_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits_grid.html#generate_corsika_limits_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid" title="Link to this definition">#</a></dt>
-<dd><p>Generate CORSIKA limits for a grid of parameters.</p>
-<p>Requires at least one event data file per parameter set.</p>
+<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.generate_corsika_limits_grid">
+<span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">generate_corsika_limits_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#generate_corsika_limits_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.generate_corsika_limits_grid" title="Link to this definition">#</a></dt>
+<dd><p>Generate CORSIKA limits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -812,8 +811,8 @@ Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits_grid.write_results">
-<span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits_grid.</span></span><span class="sig-name descname"><span class="pre">write_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits_grid.html#write_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits_grid.write_results" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.write_results">
+<span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">write_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#write_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.write_results" title="Link to this definition">#</a></dt>
 <dd><p>Write the computed limits as astropy table to file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -829,7 +828,7 @@ Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</p>
 
 </section>
 <section id="module-production_configuration.derive_production_statistics">
-<span id="id3"></span><span id="derive-production-statistics"></span><h2>derive_production_statistics<a class="headerlink" href="#module-production_configuration.derive_production_statistics" title="Link to this heading">#</a></h2>
+<span id="id2"></span><span id="derive-production-statistics"></span><h2>derive_production_statistics<a class="headerlink" href="#module-production_configuration.derive_production_statistics" title="Link to this heading">#</a></h2>
 <p>Calculate the event production statistics based on metrics.</p>
 <p>Module for calculating the production event statistics based on statistical error metrics.
 Contains the <a class="reference internal" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator" title="production_configuration.derive_production_statistics.ProductionStatisticsDerivator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator</span></code></a> class, which derives the number of events for
@@ -890,7 +889,7 @@ axis as a u.Quantity.</p>
 
 </section>
 <section id="module-production_configuration.derive_production_statistics_handler">
-<span id="id4"></span><span id="derive-production-statistics-handler"></span><h2>derive_production_statistics_handler<a class="headerlink" href="#module-production_configuration.derive_production_statistics_handler" title="Link to this heading">#</a></h2>
+<span id="id3"></span><span id="derive-production-statistics-handler"></span><h2>derive_production_statistics_handler<a class="headerlink" href="#module-production_configuration.derive_production_statistics_handler" title="Link to this heading">#</a></h2>
 <p>Derives the required statistics for a requested set of production parameters through interpolation.</p>
 <p>This module provides the <a class="reference internal" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler" title="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductionStatisticsHandler</span></code></a> class, which manages the workflow for
 derivation of required number of events for a simulation production using pre-defined metrics.</p>
@@ -940,7 +939,7 @@ production at a specified query point.</p>
 
 </section>
 <section id="module-production_configuration.generate_production_grid">
-<span id="id5"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
+<span id="id4"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
 <p>Module defines the <a class="reference internal" href="#production_configuration.generate_production_grid.GridGeneration" title="production_configuration.generate_production_grid.GridGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GridGeneration</span></code></a> class.</p>
 <p>Used to generate a grid of simulation points based on flexible axes definitions such
 azimuth, zenith angle, night-sky background, and camera offset.
@@ -1061,7 +1060,7 @@ as keys and axis values as values. Axis values may include units where defined.<
 
 </section>
 <section id="module-production_configuration.interpolation_handler">
-<span id="id6"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
+<span id="id5"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
 <p>Handle interpolation between multiple StatisticalUncertaintyEvaluator instances.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler">
@@ -1188,23 +1187,23 @@ parameter values (azimuth, zenith, NSB, offset) and energy.</p>
 </li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.corsika_limit_calculator">corsika_limit_calculator</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_limits"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_limits()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_upper_radius_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radius_limit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.corsika_limit_calculator.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_corsika_limits">derive_corsika_limits</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_limits"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_limits()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radius_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radius_limit()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_corsika_limits_grid">derive_corsika_limits_grid</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits_grid.generate_corsika_limits_grid"><code class="docutils literal notranslate"><span class="pre">generate_corsika_limits_grid()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits_grid.write_results"><code class="docutils literal notranslate"><span class="pre">write_results()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.generate_corsika_limits_grid"><code class="docutils literal notranslate"><span class="pre">generate_corsika_limits_grid()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.write_results"><code class="docutils literal notranslate"><span class="pre">write_results()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_production_statistics">derive_production_statistics</a><ul class="nav section-nav flex-column">
