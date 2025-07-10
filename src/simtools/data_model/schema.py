@@ -157,8 +157,9 @@ def get_schema_version_from_data(data, observatory="cta"):
     str
         Schema version. If not found, returns 'latest'.
     """
-    if data.get("schema_version"):
-        return data["schema_version"]
+    schema_version = data.get("schema_version") or data.get("SCHEMA_VERSION")
+    if schema_version:
+        return schema_version
     reference_version = data.get(observatory.upper(), {}).get("REFERENCE", {}).get(
         "VERSION"
     ) or data.get(observatory.lower(), {}).get("reference", {}).get("version")

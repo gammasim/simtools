@@ -15,6 +15,8 @@ from simtools.constants import (
 from simtools.data_model import schema
 from simtools.utils import general as gen
 
+DUMMY_FILE = "dummy_file.yml"
+
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
     par, files = schema.get_model_parameter_schema_files()
@@ -244,7 +246,7 @@ def test_get_schema_version_from_data_with_custom_observatory_lowercase():
 
 def test_get_schema_for_version_with_dict():
     test_schema = {"schema_version": "1.0.0", "name": "test"}
-    result = schema._get_schema_for_version(test_schema, "dummy_file.yml", "1.0.0")
+    result = schema._get_schema_for_version(test_schema, DUMMY_FILE, "1.0.0")
     assert result == test_schema
 
 
@@ -253,7 +255,7 @@ def test_get_schema_for_version_with_list_and_latest():
         {"schema_version": "2.0.0", "name": "latest"},
         {"schema_version": "1.0.0", "name": "old"},
     ]
-    result = schema._get_schema_for_version(schema_list, "dummy_file.yml", "latest")
+    result = schema._get_schema_for_version(schema_list, DUMMY_FILE, "latest")
     assert result["schema_version"] == "2.0.0"
 
 
@@ -262,7 +264,7 @@ def test_get_schema_for_version_with_list_and_specific_version():
         {"schema_version": "2.0.0", "name": "latest"},
         {"schema_version": "1.0.0", "name": "old"},
     ]
-    result = schema._get_schema_for_version(schema_list, "dummy_file.yml", "1.0.0")
+    result = schema._get_schema_for_version(schema_list, DUMMY_FILE, "1.0.0")
     assert result["schema_version"] == "1.0.0"
 
 
@@ -272,24 +274,24 @@ def test_get_schema_for_version_with_list_and_missing_version():
         {"schema_version": "1.0.0", "name": "old"},
     ]
     with pytest.raises(ValueError, match="Schema version 3.0.0 not found in dummy_file.yml."):
-        schema._get_schema_for_version(schema_list, "dummy_file.yml", "3.0.0")
+        schema._get_schema_for_version(schema_list, DUMMY_FILE, "3.0.0")
 
 
 def test_get_schema_for_version_with_none_version():
     test_schema = {"schema_version": "1.0.0", "name": "test"}
     with pytest.raises(ValueError, match="Schema version not given in dummy_file.yml."):
-        schema._get_schema_for_version(test_schema, "dummy_file.yml", None)
+        schema._get_schema_for_version(test_schema, DUMMY_FILE, None)
 
 
 def test_get_schema_for_version_with_empty_list():
     schema_list = []
     with pytest.raises(ValueError, match="No schemas found in dummy_file.yml."):
-        schema._get_schema_for_version(schema_list, "dummy_file.yml", "latest")
+        schema._get_schema_for_version(schema_list, DUMMY_FILE, "latest")
 
 
 def test_get_schema_for_version_warns_on_version_mismatch(caplog):
     test_schema = {"schema_version": "1.0.0", "name": "test"}
     with caplog.at_level("WARNING"):
-        result = schema._get_schema_for_version(test_schema, "dummy_file.yml", "2.0.0")
+        result = schema._get_schema_for_version(test_schema, DUMMY_FILE, "2.0.0")
     assert result == test_schema
     assert "Schema version 2.0.0 does not match 1.0.0" in caplog.text
