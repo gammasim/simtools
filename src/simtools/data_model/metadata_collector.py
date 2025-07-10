@@ -47,32 +47,32 @@ class MetadataCollector:
         Name of observatory (default: "cta")
     clean_meta: bool
         Clean metadata from None values and empty lists (default: True)
+    schema_version: str
+        Version of the metadata schema to use (default: 'latest')
     """
 
     def __init__(
         self,
-        args_dict,
+        args_dict=None,
         metadata_file_name=None,
         model_parameter_name=None,
         observatory="cta",
         clean_meta=True,
+        schema_version="latest",
     ):
         """Initialize metadata collector."""
         self._logger = logging.getLogger(__name__)
         self.observatory = observatory
         self.io_handler = io_handler.IOHandler()
 
-        self.args_dict = args_dict if args_dict else {}
+        self.args_dict = args_dict or {}
         self.model_parameter_name = model_parameter_name
         self.schema_file = None
         self.schema_dict = None
-        self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
-        self.top_level_meta = gen.change_dict_keys_case(
-            data_dict=metadata_model.get_default_metadata_dict(
-                schema_version=self._get_default_input_metadata_schema_version(),
-            ),
-            lower_case=True,
+        self.top_level_meta = metadata_model.get_default_metadata_dict(
+            schema_version=schema_version
         )
+        self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
         self.collect_meta_data()
         if clean_meta:
             self.top_level_meta = self.clean_meta_data(self.top_level_meta)
@@ -187,8 +187,6 @@ class MetadataCollector:
             Name of schema file.
 
         """
-        print("A", self.args_dict)
-        print("B", self.top_level_meta)
         # from command line
         if self.args_dict.get("schema"):
             self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
@@ -203,7 +201,7 @@ class MetadataCollector:
         except KeyError:
             pass
 
-        # from data model name
+        # from model parameter name
         if self.model_parameter_name:
             self._logger.debug(f"Schema file from data model name: {self.model_parameter_name}")
             return str(schema.get_model_parameter_schema_file(self.model_parameter_name))
@@ -696,19 +694,3 @@ class MetadataCollector:
             else:
                 cleaned[key] = value
         return cleaned
-
-    def _get_default_input_metadata_schema_version(self):
-        """
-        Get default schema version from input metadata.
-
-        Returns
-        -------
-        str
-            Schema version from input metadata or 'latest' if not defined.
-        """
-        input_metadata = (
-            self.input_metadata if isinstance(self.input_metadata, list) else [self.input_metadata]
-        )
-        if len(input_metadata) > 0 and input_metadata[0]:
-            return input_metadata[0].get("reference", {}).get("version", "latest")
-        return "latest"
