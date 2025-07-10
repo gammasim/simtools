@@ -171,17 +171,74 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
         "viewcone_radius": 2.0 * u.deg,
     }
 
+    calculator.histograms["core_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
+    calculator.histograms["core_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
+    calculator.histograms["core_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
+
+    calculator.histograms["angular_distance_vs_energy"] = np.array(
+        [[1, 2, 3], [4, 5, 6]], dtype=float
+    )
+    calculator.histograms["angular_distance_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
+    calculator.histograms["angular_distance_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
+
+    calculator.histograms["energy"] = np.array([1, 2, 3, 4], dtype=float)
+    calculator.histograms["energy_bin_edges"] = np.array([0, 1, 2, 3, 4])
+
+    calculator.histograms["core_distance"] = np.array([5, 6, 7, 8], dtype=float)
+    calculator.histograms["core_distance_bin_edges"] = np.array([0, 10, 20, 30, 40])
+
+    calculator.histograms["angular_distance"] = np.array([0.5, 0.7, 0.9, 1.1], dtype=float)
+    calculator.histograms["angular_distance_bin_edges"] = np.array([0, 0.5, 1.0, 1.5, 2.0])
+
     calculator.plot_data(output_path=tmp_path)
 
-    assert mock_create_plot.call_count == 5
+    assert mock_create_plot.call_count == 13
 
     mock_create_plot.reset_mock()
     calculator.array_name = "test_array"
     calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 5
+    # 11 regular plots + 2 rebinned plots (core_vs_energy_cumulative and angular_distance_vs_energy_cumulative)
+    assert mock_create_plot.call_count == 13
+
     for call in mock_create_plot.call_args_list:
         _, kwargs = call
-        assert "test_array" in str(kwargs.get("output_file"))
+        output_file = kwargs.get("output_file")
+        assert output_file is not None
+        assert "test_array" in str(output_file)
+
+    rebinned_plots = [
+        call
+        for call in mock_create_plot.call_args_list
+        if "rebinned" in str(call[1].get("output_file"))
+    ]
+    assert len(rebinned_plots) == 2
+
+    mock_create_plot.reset_mock()
+    calculator.array_name = "test_array"
+    calculator.plot_data(output_path=tmp_path, rebin_factor=1)
+    assert mock_create_plot.call_count == 11
+
+    rebinned_plots = [
+        call
+        for call in mock_create_plot.call_args_list
+        if "rebinned" in str(call[1].get("output_file", ""))
+    ]
+    assert len(rebinned_plots) == 0
+
+    mock_create_plot.reset_mock()
+
+    mocker.patch.object(
+        calculator,
+        "_rebin_2d_histogram",
+        return_value=(np.ones((2, 2)), np.array([0, 1, 2]), np.array([0, 1, 2])),
+    )
+
+    calculator.plot_data(output_path=tmp_path, rebin_factor=2)
+
+    for call in mock_create_plot.call_args_list:
+        _, kwargs = call
+        if "rebinned" in str(kwargs.get("output_file", "")):
+            assert "(Energy rebinned 2x)" in kwargs.get("labels", {}).get("title", "")
 
 
 @pytest.fixture
@@ -250,13 +307,15 @@ def test_create_plot_histogram(
 
 
 def test_create_plot_histogram2d(
-    mock_reader, hdf5_file_name, mock_colorbar, mocker, mock_hist2d, tmp_test_directory
+    mock_reader, hdf5_file_name, mock_colorbar, mocker, tmp_test_directory
 ):
     calculator = LimitCalculator(hdf5_file_name)
     mock_savefig = mocker.patch("matplotlib.pyplot.savefig")
 
-    x_data = np.array([[1, 2], [3, 4]])
+    mock_create_2d_histogram = mocker.patch.object(calculator, "_create_2d_histogram_plot")
+    mock_create_2d_histogram.return_value = mocker.Mock()
 
+    x_data = np.array([[1, 2], [3, 4]])
     bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
     plot_params = {"cmap": "viridis"}
 
@@ -269,7 +328,7 @@ def test_create_plot_histogram2d(
         output_file=tmp_test_directory / "test_hist2d_plot.png",
     )
 
-    mock_hist2d.assert_called_once()
+    mock_create_2d_histogram.assert_called_once_with(x_data, bins, plot_params)
     mock_savefig.assert_called_once()
 
 
@@ -429,7 +488,7 @@ def test_fill_histograms(mock_reader, hdf5_file_name, mocker):
 
     mock_prepare_limits.assert_called_once_with(mock_file_info)
 
-    assert mock_fill_hist.call_count == 5
+    assert mock_fill_hist.call_count == 6
 
     expected_calls = [
         mocker.call("energy", mock_event_data.simulated_energy, mock_energy_bins),
@@ -528,3 +587,242 @@ def test_is_close(caplog, mock_reader, hdf5_file_name):
         result = calculator._is_close(1.0 * u.m, 1.0 * u.m, test_message)
         assert test_message in caplog.text
         assert result.value == pytest.approx(1.0)
+
+
+def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
+    """Test calculation of cumulative histogram."""
+    calculator = LimitCalculator(hdf5_file_name)
+
+    # Test None case
+    result_none = calculator._calculate_cumulative_histogram(None)
+    assert result_none is None
+
+    # Test 1D histogram
+    test_hist_1d = np.array([1, 2, 3, 4])
+
+    # Test direct call to _calculate_cumulative_1d
+    result_1d_direct = calculator._calculate_cumulative_1d(test_hist_1d, False)
+    expected_1d = np.array([1, 3, 6, 10])
+    np.testing.assert_array_equal(result_1d_direct, expected_1d)
+
+    # Normal cumulative (left to right)
+    result_1d = calculator._calculate_cumulative_histogram(test_hist_1d)
+    expected_1d = np.array([1, 3, 6, 10])
+    np.testing.assert_array_equal(result_1d, expected_1d)
+
+    # Reverse cumulative (right to left)
+    result_1d_reverse = calculator._calculate_cumulative_histogram(test_hist_1d, reverse=True)
+    expected_1d_reverse = np.array([10, 9, 7, 4])
+    np.testing.assert_array_equal(result_1d_reverse, expected_1d_reverse)
+
+    # Test 1D histogram with normalization
+    result_1d_normalized = calculator._calculate_cumulative_histogram(test_hist_1d, normalize=True)
+    expected_1d_normalized = np.array([0.1, 0.3, 0.6, 1.0])
+    np.testing.assert_allclose(result_1d_normalized, expected_1d_normalized)
+
+    # Test 2D histogram - use float dtype to avoid casting issues
+    test_hist_2d = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
+
+    # Test direct call to _calculate_cumulative_2d
+    result_2d_direct = calculator._calculate_cumulative_2d(test_hist_2d, False)
+    expected_2d_direct = np.array([[1, 3, 6], [4, 9, 15]])
+    np.testing.assert_array_equal(result_2d_direct, expected_2d_direct)
+
+    # Test _apply_cumsum_along_axis with different parameters
+    # Test axis=1, reverse=False
+    result_axis1_no_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=1, reverse=False
+    )
+    expected_axis1_no_reverse = np.array([[1, 3, 6], [4, 9, 15]])
+    np.testing.assert_array_equal(result_axis1_no_reverse, expected_axis1_no_reverse)
+
+    # Test axis=1, reverse=True
+    result_axis1_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=1, reverse=True
+    )
+    expected_axis1_reverse = np.array([[6, 5, 3], [15, 11, 6]])
+    np.testing.assert_array_equal(result_axis1_reverse, expected_axis1_reverse)
+
+    # Test axis=0, reverse=False
+    result_axis0_no_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=0, reverse=False
+    )
+    expected_axis0_no_reverse = np.array([[1, 2, 3], [5, 7, 9]])
+    np.testing.assert_array_equal(result_axis0_no_reverse, expected_axis0_no_reverse)
+
+    # Test axis=0, reverse=True
+    result_axis0_reverse = calculator._apply_cumsum_along_axis(
+        test_hist_2d.copy(), axis=0, reverse=True
+    )
+    expected_axis0_reverse = np.array([[5, 7, 9], [4, 5, 6]])
+    np.testing.assert_array_equal(result_axis0_reverse, expected_axis0_reverse)
+
+    # Default axis (axis=1)
+    result_2d = calculator._calculate_cumulative_histogram(test_hist_2d)
+    expected_2d = np.array([[1, 3, 6], [4, 9, 15]])
+    np.testing.assert_array_equal(result_2d, expected_2d)
+
+    # Test 2D histogram with normalization - row normalization
+    result_2d_normalized = calculator._calculate_cumulative_histogram(
+        test_hist_2d, normalize=True, axis=1
+    )
+    expected_2d_normalized = np.array([[1 / 6, 3 / 6, 1.0], [4 / 15, 9 / 15, 1.0]])
+    np.testing.assert_allclose(result_2d_normalized, expected_2d_normalized)
+
+    # Along axis 0
+    result_2d_axis0 = calculator._calculate_cumulative_histogram(test_hist_2d, axis=0)
+    expected_2d_axis0 = np.array([[1, 2, 3], [5, 7, 9]])
+    np.testing.assert_array_equal(result_2d_axis0, expected_2d_axis0)
+
+    # With reverse=True
+    result_2d_reverse = calculator._calculate_cumulative_histogram(test_hist_2d, reverse=True)
+    np.testing.assert_array_equal(result_2d_reverse, np.array([[6, 5, 3], [15, 11, 6]]))
+
+
+def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
+    """Test normalized cumulative histogram calculation for alpha plots."""
+    calculator = LimitCalculator(hdf5_file_name)
+
+    # Test None case
+    result_none = calculator._calculate_cumulative_histogram(None, normalize=True)
+    assert result_none is None
+
+    test_hist_2d = np.array(
+        [
+            [1, 2, 3],
+            [4, 5, 6],
+            [0, 0, 0],
+        ],
+        dtype=float,
+    )
+
+    # Test with explicit axis=1
+    result_axis1 = calculator._calculate_cumulative_histogram(test_hist_2d, normalize=True, axis=1)
+
+    expected_axis1 = np.array([[1 / 6, 3 / 6, 1.0], [4 / 15, 9 / 15, 1.0], [0, 0, 0]])
+
+    np.testing.assert_allclose(result_axis1, expected_axis1, rtol=1e-4)
+
+    # Test with axis=0
+    result_axis0 = calculator._calculate_cumulative_histogram(test_hist_2d, axis=0, normalize=True)
+
+    expected_axis0 = np.array([[1 / 5, 2 / 7, 3 / 9], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+
+    np.testing.assert_allclose(result_axis0, expected_axis0, rtol=1e-4)
+
+    # Test 1D histogram normalization
+    test_hist_1d = np.array([10, 20, 30, 40], dtype=float)
+    result_1d = calculator._calculate_cumulative_histogram(test_hist_1d, normalize=True)
+    expected_1d = np.array([0.1, 0.3, 0.6, 1.0])
+    np.testing.assert_allclose(result_1d, expected_1d)
+
+    # Test normalization with reverse=True
+    result_reverse = calculator._calculate_cumulative_histogram(
+        test_hist_1d, reverse=True, normalize=True
+    )
+    expected_reverse = np.array([1.0, 0.9, 0.7, 0.4])
+    np.testing.assert_allclose(result_reverse, expected_reverse)
+
+
+def test_create_2d_histogram_plot(
+    mock_reader, hdf5_file_name, mock_colorbar, mocker, tmp_test_directory
+):
+    """Test the _create_2d_histogram_plot helper method for both linear and log norm cases."""
+    calculator = LimitCalculator(hdf5_file_name)
+    mock_pcolormesh = mocker.patch("matplotlib.pyplot.pcolormesh")
+    mock_contour = mocker.patch("matplotlib.pyplot.contour")
+
+    data = np.array([[0.2, 0.5, 1.0], [0.1, 0.3, 0.6]])
+    bins = [np.array([0, 1, 2, 3]), np.array([0, 1, 2])]
+
+    plot_params = {"norm": "linear", "cmap": "plasma", "show_contour": True}
+    calculator._create_2d_histogram_plot(data, bins, plot_params)
+
+    mock_pcolormesh.assert_called_once()
+    args, kwargs = mock_pcolormesh.call_args
+    assert np.array_equal(args[0], bins[0])
+    assert np.array_equal(args[1], bins[1])
+    assert np.array_equal(args[2], data.T)
+    assert kwargs.get("vmin") == 0
+    assert kwargs.get("vmax") == 1
+    assert kwargs.get("cmap") == "plasma"
+
+    mock_contour.assert_called_once()
+
+    mock_pcolormesh.reset_mock()
+    mock_contour.reset_mock()
+
+    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
+    calculator._create_2d_histogram_plot(data, bins, plot_params)
+
+    mock_pcolormesh.assert_called_once()
+    args, kwargs = mock_pcolormesh.call_args
+    assert np.array_equal(args[0], bins[0])
+    assert np.array_equal(args[1], bins[1])
+    assert np.array_equal(args[2], data.T)
+    assert kwargs.get("vmin") == 0
+    assert kwargs.get("vmax") == 1
+    assert kwargs.get("cmap") == "viridis"
+
+    mock_contour.assert_not_called()
+
+    mock_pcolormesh.reset_mock()
+
+    plot_params = {"cmap": "viridis"}
+    calculator._create_2d_histogram_plot(data, bins, plot_params)
+
+    mock_pcolormesh.assert_called_once()
+    args, kwargs = mock_pcolormesh.call_args
+    assert np.array_equal(args[0], bins[0])
+    assert np.array_equal(args[1], bins[1])
+    assert np.array_equal(args[2], data.T)
+    assert "norm" in kwargs
+    assert kwargs["cmap"] == "viridis"
+
+
+@pytest.fixture
+def mock_limit_calculator(mocker):
+    """Create a mocked LimitCalculator that doesn't require a file."""
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.SimtelIOEventDataReader")
+    return LimitCalculator("dummy_file.h5", "test_array")
+
+
+def test_rebin_2d_histogram(mock_limit_calculator):
+    """Test rebinning a 2D histogram along the energy dimension (y-axis) only."""
+    hist = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]])
+    x_bins = np.array([0, 1, 2, 3, 4])
+    y_bins = np.array([0, 10, 20, 30, 40])
+
+    calculator = mock_limit_calculator
+
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = calculator._rebin_2d_histogram(
+        hist, x_bins, y_bins, rebin_factor=2
+    )
+
+    expected_hist = np.array([[3, 7], [11, 15], [19, 23], [27, 31]])
+    expected_x_bins = x_bins
+    expected_y_bins = np.array([0, 20, 40])
+
+    assert np.array_equal(rebinned_hist, expected_hist)
+    assert np.array_equal(rebinned_x_bins, expected_x_bins)
+    assert np.array_equal(rebinned_y_bins, expected_y_bins)
+
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = calculator._rebin_2d_histogram(
+        hist, x_bins, y_bins, rebin_factor=1
+    )
+
+    assert np.array_equal(rebinned_hist, hist)
+    assert np.array_equal(rebinned_x_bins, x_bins)
+    assert np.array_equal(rebinned_y_bins, y_bins)
+
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = calculator._rebin_2d_histogram(
+        hist, x_bins, y_bins, rebin_factor=4
+    )
+
+    expected_hist = np.array([[10], [26], [42], [58]])
+
+    expected_y_bins = np.array([0, 40])
+
+    assert np.array_equal(rebinned_hist, expected_hist)
+    assert np.array_equal(rebinned_x_bins, expected_x_bins)
+    assert np.array_equal(rebinned_y_bins, expected_y_bins)
