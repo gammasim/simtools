@@ -133,7 +133,7 @@ def _fill_defaults_recursive(sub_schema, current_dict):
         Current dictionary to fill with default values.
     """
     if "properties" not in sub_schema:
-        _raise_missing_properties_error()
+        raise KeyError("Missing 'properties' key in schema.")
 
     for prop, prop_schema in sub_schema["properties"].items():
         _process_property(prop, prop_schema, current_dict)
@@ -162,10 +162,3 @@ def _process_property(prop, prop_schema, current_dict):
             current_dict[prop] = [{}]
             if "items" in prop_schema and isinstance(prop_schema["items"], dict):
                 _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
-
-
-def _raise_missing_properties_error():
-    """Raise an error when the 'properties' key is missing in the schema."""
-    msg = "Missing 'properties' key in schema."
-    _logger.error(msg)
-    raise KeyError(msg)
