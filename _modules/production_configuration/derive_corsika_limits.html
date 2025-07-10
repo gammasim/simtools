@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=e13e5f38"></script>
+    <script src="../../_static/documentation_options.js?v=040b34c3"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gdf65658" />
+  <meta name="docsearch:version" content="0.1.dev1+g6296e76" />
   </head>
   
   
@@ -665,13 +665,24 @@
 <span class="sd">        astropy.units.Quantity</span>
 <span class="sd">            Lower energy limit.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
+        <span class="n">energy_min</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span>
             <span class="p">)</span>
             <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_close</span><span class="p">(</span>
+            <span class="n">energy_min</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;energy_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;energy_min&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Lower energy limit is equal to the minimum energy of&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">warning_text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the value is close to the reference value and log a warning if so.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">warning_text</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">core_distance_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -698,7 +709,7 @@
 <span class="sd">        astropy.units.Quantity</span>
 <span class="sd">            Upper radial distance in m.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
+        <span class="n">radius_limit</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
@@ -706,6 +717,13 @@
                 <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_close</span><span class="p">(</span>
+            <span class="n">radius_limit</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;core_scatter_max&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Upper radius limit is equal to the maximum core scatter distance of&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -738,7 +756,7 @@
 <span class="sd">        astropy.units.Quantity</span>
 <span class="sd">            Viewcone radius in degrees.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
+        <span class="n">viewcone_limit</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
@@ -746,6 +764,11 @@
                 <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_close</span><span class="p">(</span>
+            <span class="n">viewcone_limit</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;viewcone_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;viewcone_max&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Upper viewcone limit is equal to the maximum viewcone distance of&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
