@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=67bdb2bd"></script>
+    <script src="../_static/documentation_options.js?v=e13e5f38"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g92dde01" />
+  <meta name="docsearch:version" content="0.1.dev1+gdf65658" />
   </head>
   
   
@@ -767,12 +767,15 @@ between the triggered events and the simulated events using the shower IDs.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.plot_data">
-<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
 <dd><p>Histogram plotting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>output_path: Path or str, optional</strong></dt><dd><p>Directory to save plots. If None, plots will be displayed.</p>
+</dd>
+<dt><strong>rebin_factor: int, optional</strong></dt><dd><p>Factor by which to reduce the number of bins in 2D histograms for rebinned plots.
+Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</p>
 </dd>
 </dl>
 </dd>

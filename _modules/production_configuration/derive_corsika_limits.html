@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=67bdb2bd"></script>
+    <script src="../../_static/documentation_options.js?v=e13e5f38"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g92dde01" />
+  <meta name="docsearch:version" content="0.1.dev1+gdf65658" />
   </head>
   
   
@@ -599,6 +599,12 @@
                 <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">],</span>
                 <span class="n">hist1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
+                <span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">,</span> <span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">),</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">],</span>
+                <span class="n">hist1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -745,7 +751,7 @@
 
 <div class="viewcode-block" id="LimitCalculator.plot_data">
 <a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.plot_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Histogram plotting.</span>
 
@@ -753,9 +759,52 @@
 <span class="sd">        ----------</span>
 <span class="sd">        output_path: Path or str, optional</span>
 <span class="sd">            Directory to save plots. If None, plots will be displayed.</span>
+<span class="sd">        rebin_factor: int, optional</span>
+<span class="sd">            Factor by which to reduce the number of bins in 2D histograms for rebinned plots.</span>
+<span class="sd">            Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Plot label constants</span>
+        <span class="n">core_distance_label</span> <span class="o">=</span> <span class="s2">&quot;Core Distance [m]&quot;</span>
+        <span class="n">energy_label</span> <span class="o">=</span> <span class="s2">&quot;Energy [TeV]&quot;</span>
+        <span class="n">pointing_direction_label</span> <span class="o">=</span> <span class="s2">&quot;Distance to pointing direction [deg]&quot;</span>
+        <span class="n">cumulative_prefix</span> <span class="o">=</span> <span class="s2">&quot;Cumulative &quot;</span>
+        <span class="n">event_count_label</span> <span class="o">=</span> <span class="s2">&quot;Event Count&quot;</span>
+        <span class="n">core_x_label</span> <span class="o">=</span> <span class="s2">&quot;Core X [m]&quot;</span>
+        <span class="n">core_y_label</span> <span class="o">=</span> <span class="s2">&quot;Core Y [m]&quot;</span>
+
+        <span class="c1"># Plot parameter constants</span>
+        <span class="n">hist_1d_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:green&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:green&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="n">hist_1d_cumulative_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="n">hist_2d_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;show_contour&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="n">hist_2d_equal_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;show_contour&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">hist_2d_normalized_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;show_contour&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting histograms written to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">event_counts</span> <span class="o">=</span> <span class="s2">&quot;Event Count&quot;</span>
+
+        <span class="n">angular_dist_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">)</span>
+        <span class="n">normalized_cumulative_angular_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span>
+            <span class="n">angular_dist_vs_energy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">core_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy&quot;</span><span class="p">)</span>
+        <span class="n">normalized_cumulative_core_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span>
+            <span class="n">core_vs_energy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">energy_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">)</span>
+        <span class="n">cumulative_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">energy_hist</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">core_distance_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">)</span>
+        <span class="n">cumulative_core_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">core_distance_hist</span><span class="p">)</span>
+
+        <span class="n">angular_distance_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">)</span>
+        <span class="n">cumulative_angular_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">angular_distance_hist</span><span class="p">)</span>
+
         <span class="n">plots</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;core_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy&quot;</span><span class="p">),</span>
@@ -764,10 +813,10 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
                 <span class="p">],</span>
                 <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_params</span><span class="p">,</span>
                 <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Core Distance [m]&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;Energy [TeV]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
                     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core distance vs energy&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -775,35 +824,62 @@
                     <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
                 <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_vs_energy_distribution&quot;</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;energy_distribution&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_bin_edges&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_params</span><span class="p">,</span>
                 <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Energy [TeV]&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
                     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: energy distribution&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
                 <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
                 <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;energy_distribution&quot;</span><span class="p">,</span>
             <span class="p">},</span>
+            <span class="s2">&quot;energy_distribution_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">cumulative_energy</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_bin_edges&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_cumulative_params</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">cumulative_prefix</span> <span class="o">+</span> <span class="n">event_count_label</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: cumulative energy distribution&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;energy_distribution_cumulative&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
             <span class="s2">&quot;core_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance_bin_edges&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_params</span><span class="p">,</span>
                 <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Core Distance [m]&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
                     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core distance distribution&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
                 <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_distance_distribution&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_distance_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">cumulative_core_distance</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance_bin_edges&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_cumulative_params</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">cumulative_prefix</span> <span class="o">+</span> <span class="n">event_count_label</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: cumulative core distance distribution&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_distance_cumulative_distribution&quot;</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;core_xy&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shower_cores&quot;</span><span class="p">),</span>
@@ -812,13 +888,13 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shower_cores_bin_y_edges&quot;</span><span class="p">),</span>
                 <span class="p">],</span>
                 <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_equal_params</span><span class="p">,</span>
                 <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Core X [m]&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;Core Y [m]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_x_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">core_y_label</span><span class="p">,</span>
                     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core x vs core y&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
                 <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="p">},</span>
@@ -828,28 +904,183 @@
                 <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_bin_edges&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_params</span><span class="p">,</span>
                 <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance to pointing direction [deg]&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_counts</span><span class="p">,</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
                     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: angular distance distribution&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
                 <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_distribution&quot;</span><span class="p">,</span>
             <span class="p">},</span>
+            <span class="s2">&quot;angular_distance_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">cumulative_angular_distance</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_bin_edges&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_cumulative_params</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">cumulative_prefix</span> <span class="o">+</span> <span class="n">event_count_label</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: cumulative angular distance distribution&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">},</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_cumulative_distribution&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_params</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: angular distance distance vs energy&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_vs_energy_distribution&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;angular_distance_vs_energy_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">normalized_cumulative_angular_vs_energy</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_normalized_params</span><span class="p">,</span>  <span class="c1"># Includes contour line at value=1</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: fraction of events by angular distance vs energy&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Fraction of events&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_vs_energy_cumulative_distribution&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_vs_energy_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">normalized_cumulative_core_vs_energy</span><span class="p">,</span>
+                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_normalized_params</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: fraction of events by core distance vs energy&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Fraction of events&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_vs_energy_cumulative_distribution&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
         <span class="p">}</span>
 
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">plot_args</span> <span class="ow">in</span> <span class="n">plots</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">filename</span> <span class="o">=</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">):</span>
-                    <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="si">}</span><span class="s2"> array)&quot;</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="si">}</span><span class="s2">.png&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">.png&quot;</span>
-            <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">filename</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_create_plot</span><span class="p">(</span><span class="o">**</span><span class="n">plot_args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">plot_key</span><span class="p">,</span> <span class="n">plot_args</span> <span class="ow">in</span> <span class="n">plots</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">plot_filename</span> <span class="o">=</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_name</span> <span class="ow">and</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">):</span>
+                <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="si">}</span><span class="s2"> array)&quot;</span>
 
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_plot_filename</span><span class="p">(</span><span class="n">plot_filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="p">)</span>
+            <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">filename</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_plot</span><span class="p">(</span><span class="o">**</span><span class="n">plot_args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_create_rebinned_plot</span><span class="p">(</span><span class="n">rebin_factor</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">,</span> <span class="n">plot_key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_rebinned_plot</span><span class="p">(</span><span class="n">plot_args</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_plot_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_filename</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the full plot filename with appropriate extensions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        base_filename : str</span>
+<span class="sd">            The base filename without extension</span>
+<span class="sd">        array_name : str, optional</span>
+<span class="sd">            Name of the array to append to filename</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Complete filename with extension</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">array_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_filename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">.png&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_filename</span><span class="si">}</span><span class="s2">.png&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_should_create_rebinned_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">,</span> <span class="n">plot_key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if a rebinned version of the plot should be created.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rebin_factor : int</span>
+<span class="sd">            Factor by which to rebin the energy axis</span>
+<span class="sd">        plot_args : dict</span>
+<span class="sd">            Plot arguments</span>
+<span class="sd">        plot_key : str</span>
+<span class="sd">            Key identifying the plot type</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if a rebinned plot should be created, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">rebin_factor</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;plot_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;histogram2d&quot;</span>
+            <span class="ow">and</span> <span class="n">plot_key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_cumulative&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_params&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;norm&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_rebinned_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a rebinned version of a 2D histogram plot.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        plot_args : dict</span>
+<span class="sd">            Plot arguments for the original plot</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            Filename of the original plot</span>
+<span class="sd">        output_path : Path or None</span>
+<span class="sd">            Path to save the plot to, or None</span>
+<span class="sd">        rebin_factor : int</span>
+<span class="sd">            Factor by which to rebin the energy axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;bins&quot;</span><span class="p">]</span>
+
+        <span class="n">rebinned_data</span><span class="p">,</span> <span class="n">rebinned_x_bins</span><span class="p">,</span> <span class="n">rebinned_y_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rebin_2d_histogram</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rebin_factor</span>
+        <span class="p">)</span>
+
+        <span class="n">rebinned_plot_args</span> <span class="o">=</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">rebinned_plot_args</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rebinned_data</span>
+        <span class="n">rebinned_plot_args</span><span class="p">[</span><span class="s2">&quot;bins&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rebinned_x_bins</span><span class="p">,</span> <span class="n">rebinned_y_bins</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">rebinned_plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">):</span>
+            <span class="n">rebinned_plot_args</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (Energy rebinned </span><span class="si">{</span><span class="n">rebin_factor</span><span class="si">}</span><span class="s2">x)&quot;</span>
+
+        <span class="n">rebinned_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">_rebinned.png&quot;</span>
+        <span class="n">rebinned_output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">rebinned_filename</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_plot</span><span class="p">(</span><span class="o">**</span><span class="n">rebinned_plot_args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">rebinned_output_file</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_plot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -863,7 +1094,13 @@
         <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">lines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create and save a plot with the given parameters.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create and save a plot with the given parameters.</span>
+
+<span class="sd">        For normalized 2D histograms, a contour line is drawn at the value of 1.0</span>
+<span class="sd">        to indicate the boundary where each energy bin reaches complete containment.</span>
+<span class="sd">        This can be controlled with the &#39;show_contour&#39; parameter in plot_params.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">plot_params</span> <span class="o">=</span> <span class="n">plot_params</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">scales</span> <span class="o">=</span> <span class="n">scales</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -874,9 +1111,7 @@
         <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;histogram&quot;</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span> <span class="o">**</span><span class="n">plot_params</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">:</span>
-            <span class="n">pcm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
-                <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span>
-            <span class="p">)</span>
+            <span class="n">pcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_2d_histogram_plot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">plot_params</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">pcm</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">colorbar_label</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
@@ -905,7 +1140,186 @@
             <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">fig</span></div>
+        <span class="k">return</span> <span class="n">fig</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_2d_histogram_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">plot_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a 2D histogram plot with the given parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : np.ndarray</span>
+<span class="sd">            2D histogram data</span>
+<span class="sd">        bins : tuple of np.ndarray</span>
+<span class="sd">            Bin edges for x and y axes</span>
+<span class="sd">        plot_params : dict</span>
+<span class="sd">            Plot parameters including norm, cmap, and show_contour</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        matplotlib.collections.QuadMesh</span>
+<span class="sd">            The created pcolormesh object for colorbar attachment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plot_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;norm&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+            <span class="n">pcm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
+                <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="n">plot_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cmap&quot;</span><span class="p">,</span> <span class="s2">&quot;viridis&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="c1"># Add contour line at value=1.0 for normalized histograms</span>
+            <span class="k">if</span> <span class="n">plot_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;show_contour&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="n">x_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">y_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">x_mesh</span><span class="p">,</span> <span class="n">y_mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">y_centers</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span>
+                    <span class="n">x_mesh</span><span class="p">,</span>
+                    <span class="n">y_mesh</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                    <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.999999</span><span class="p">],</span>  <span class="c1"># very close to 1 for floating point precision</span>
+                    <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tab:red&quot;</span><span class="p">],</span>
+                    <span class="n">linestyles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--&quot;</span><span class="p">],</span>
+                    <span class="n">linewidths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pcm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
+                <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pcm</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_cumulative_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate cumulative distribution of a histogram.</span>
+
+<span class="sd">        Works with both 1D and 2D histograms.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hist : np.ndarray</span>
+<span class="sd">            Histogram (1D or 2D)</span>
+<span class="sd">        reverse : bool, optional</span>
+<span class="sd">            If True, sum from high to low values</span>
+<span class="sd">        axis : int, optional</span>
+<span class="sd">            For 2D histograms, axis along which to compute cumulative sum</span>
+<span class="sd">            None means default behavior: for 1D just cumsum, for 2D along rows</span>
+<span class="sd">        normalize : bool, optional</span>
+<span class="sd">            If True, normalize by the total sum for each slice along the specified axis</span>
+<span class="sd">            For 1D histograms, normalizes by the total sum</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Histogram with cumulative counts, optionally normalized</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">hist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">hist</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_1d</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">normalize</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_cumsum_along_axis</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_along_axis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_along_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalize cumulative histogram along the specified axis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : np.ndarray</span>
+<span class="sd">            Cumulative histogram to normalize (modified in-place)</span>
+<span class="sd">        hist : np.ndarray</span>
+<span class="sd">            Original histogram (for calculating totals)</span>
+<span class="sd">        axis : int</span>
+<span class="sd">            Axis along which normalization should be applied</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">col_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">col_total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">normalized</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">col_total</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># axis == 1</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">row_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+                <span class="k">if</span> <span class="n">row_total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">normalized</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="n">row_total</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">normalized</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_cumulative_1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate cumulative distribution for 1D histogram.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_cumulative_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate cumulative distribution for 2D histogram.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_cumsum_along_axis</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_cumsum_along_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply cumulative sum along the specified axis of a 2D histogram.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">cumsum_func</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">arr</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">reverse</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">cumsum_func</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">hist</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rebin_2d_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rebin a 2D histogram by merging neighboring bins along the energy dimension (y-axis) only.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hist : np.ndarray</span>
+<span class="sd">            Original 2D histogram data</span>
+<span class="sd">        x_bins : np.ndarray</span>
+<span class="sd">            Original x-axis bin edges (preserved)</span>
+<span class="sd">        y_bins : np.ndarray</span>
+<span class="sd">            Original y-axis (energy) bin edges</span>
+<span class="sd">        rebin_factor : int, optional</span>
+<span class="sd">            Factor by which to reduce the number of bins in the energy dimension</span>
+<span class="sd">            Default is 2 (merge every 2 bins)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (rebinned_hist, x_bins, rebinned_y_bins)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">rebin_factor</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span>
+
+        <span class="n">x_size</span> <span class="o">=</span> <span class="n">hist</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">new_y_size</span> <span class="o">=</span> <span class="n">hist</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">rebin_factor</span>
+
+        <span class="n">new_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">x_size</span><span class="p">,</span> <span class="n">new_y_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x_size</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">new_y_size</span><span class="p">):</span>
+                <span class="n">y_start</span> <span class="o">=</span> <span class="n">j</span> <span class="o">*</span> <span class="n">rebin_factor</span>
+                <span class="n">y_end</span> <span class="o">=</span> <span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">rebin_factor</span>
+                <span class="n">new_hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">y_start</span><span class="p">:</span><span class="n">y_end</span><span class="p">])</span>
+
+        <span class="n">new_y_bins</span> <span class="o">=</span> <span class="n">y_bins</span><span class="p">[::</span><span class="n">rebin_factor</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">new_hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">new_y_bins</span></div>
 
 </pre></div>
 
