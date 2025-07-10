@@ -20,6 +20,16 @@ definitions:
         $ref: '#/definitions/ErrorMetric'
       energy_estimate:
         $ref: '#/definitions/ErrorMetric'
+      schema_version:
+        type: string
+        description: "Version of the schema."
+      schema_url:
+        type: string
+        format: uri
+        description: "URL of the schema."
+      schema_name:
+        type: string
+        description: "Name of the schema."
 
   ErrorMetric:
     type: object
