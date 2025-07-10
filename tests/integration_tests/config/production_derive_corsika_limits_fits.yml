@@ -1,19 +1,17 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-production-derive-corsika-limits
-    TEST_NAME: fits
-    CONFIGURATION:
-      EVENT_DATA_FILES:
-      - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
-      LOSS_FRACTION: 1.e-3
-      TELESCOPE_IDS: tests/resources/production_layouts_telescope_ids.yml
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: corsika_simulation_limits_lookup.ecsv
-      USE_PLAIN_OUTPUT_PATH: true
-      PLOT_HISTOGRAMS: true
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: corsika_simulation_limits_lookup.ecsv
-    - OUTPUT_FILE: corsika_simulation_limits_lookup.meta.yml
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-production-derive-corsika-limits
+  configuration:
+    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
+    loss_fraction: 0.001
+    output_file: corsika_simulation_limits_lookup.ecsv
+    output_path: simtools-output
+    plot_histograms: true
+    telescope_ids: tests/resources/production_layouts_telescope_ids.yml
+    use_plain_output_path: true
+  integration_tests:
+  - output_file: corsika_simulation_limits_lookup.ecsv
+  - output_file: corsika_simulation_limits_lookup.meta.yml
+  test_name: fits
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

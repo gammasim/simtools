@@ -1,20 +1,19 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-validate-camera-efficiency
-    TEST_NAME: SSTS
-    CONFIGURATION:
-      SITE: South
-      TELESCOPE: SSTS-design
-      MODEL_VERSION: 6.0.0
-      OUTPUT_PATH: simtools-output
-      LOG_LEVEL: debug
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_nsb.pdf
-    - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_nsb.png
-    - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_cherenkov.png
-    - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_cherenkov.pdf
-    - OUTPUT_FILE: camera_efficiency_summary_South_SSTS-design_za20.0deg_azm000deg_validate_camera_efficiency.txt
-    - OUTPUT_FILE: camera_efficiency_table_South_SSTS-design_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-validate-camera-efficiency
+  configuration:
+    log_level: debug
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: South
+    telescope: SSTS-design
+  integration_tests:
+  - output_file: validate_camera_efficiency_SSTS-design_nsb.pdf
+  - output_file: validate_camera_efficiency_SSTS-design_nsb.png
+  - output_file: validate_camera_efficiency_SSTS-design_cherenkov.png
+  - output_file: validate_camera_efficiency_SSTS-design_cherenkov.pdf
+  - output_file: camera_efficiency_summary_South_SSTS-design_za20.0deg_azm000deg_validate_camera_efficiency.txt
+  - output_file: camera_efficiency_table_South_SSTS-design_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+  test_name: SSTS
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

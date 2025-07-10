@@ -1,18 +1,18 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-get-parameter-from-db
-    TEST_NAME: telescope_parameter_parameter_version
-    CONFIGURATION:
-      SITE: North
-      TELESCOPE: LSTN-01
-      PARAMETER: mirror_list
-      PARAMETER_VERSION: 2.0.0
-      OUTPUT_FILE: test.json
-      OUTPUT_PATH: simtools-output
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: |
-        ./tests/resources/model_parameters/mirror_list-2.0.0.json
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-get-parameter-from-db
+  configuration:
+    log_level: DEBUG
+    output_file: test.json
+    output_path: simtools-output
+    parameter: mirror_list
+    parameter_version: 2.0.0
+    site: North
+    telescope: LSTN-01
+  integration_tests:
+  - reference_output_file: './tests/resources/model_parameters/mirror_list-2.0.0.json
+
+      '
+  test_name: telescope_parameter_parameter_version
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

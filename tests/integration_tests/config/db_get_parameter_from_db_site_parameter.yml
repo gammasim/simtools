@@ -1,11 +1,10 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-get-parameter-from-db
-    TEST_NAME: site_parameter
-    CONFIGURATION:
-      SITE: North
-      PARAMETER: reference_point_altitude
-      MODEL_VERSION: 6.0.0
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-get-parameter-from-db
+  configuration:
+    model_version: 6.0.0
+    parameter: reference_point_altitude
+    site: North
+  test_name: site_parameter
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

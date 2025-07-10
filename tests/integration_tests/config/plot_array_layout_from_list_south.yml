@@ -1,18 +1,17 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-plot-array-layout
-    TEST_NAME: from_list_south
-    CONFIGURATION:
-      ARRAY_ELEMENT_LIST:
-      - LSTS
-      - MSTS
-      - SSTS
-      MODEL_VERSION: 6.0.0
-      OUTPUT_PATH: simtools-output
-      AXES_RANGE: 1200.0
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_list_South_ground.png
-    - OUTPUT_FILE: array_layout_list_South_ground.pdf
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-plot-array-layout
+  configuration:
+    array_element_list:
+    - LSTS
+    - MSTS
+    - SSTS
+    axes_range: 1200.0
+    model_version: 6.0.0
+    output_path: simtools-output
+  integration_tests:
+  - output_file: array_layout_list_South_ground.png
+  - output_file: array_layout_list_South_ground.pdf
+  test_name: from_list_south
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

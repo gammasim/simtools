@@ -1,17 +1,16 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-submit-model-parameter-from-external
-    TEST_NAME: submit_reference_point_altitude
-    TEST_USE_CASE: UC-150-2.1.1
-    CONFIGURATION:
-      PARAMETER: reference_point_altitude
-      VALUE: 2.177 km
-      INSTRUMENT: North
-      SITE: North
-      PARAMETER_VERSION: 0.1.0
-      INPUT_META: null
-      OUTPUT_PATH: simtools-output
-      USE_PLAIN_OUTPUT_PATH: true
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-submit-model-parameter-from-external
+  configuration:
+    input_meta: null
+    instrument: North
+    output_path: simtools-output
+    parameter: reference_point_altitude
+    parameter_version: 0.1.0
+    site: North
+    use_plain_output_path: true
+    value: 2.177 km
+  test_name: submit_reference_point_altitude
+  test_use_case: UC-150-2.1.1
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

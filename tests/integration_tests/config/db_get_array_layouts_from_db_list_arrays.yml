@@ -1,11 +1,10 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-db-get-array-layouts-from-db
-    TEST_NAME: list_arrays
-    CONFIGURATION:
-      SITE: North
-      MODEL_VERSION: 6.0.0
-      LIST_AVAILABLE_LAYOUTS: true
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-db-get-array-layouts-from-db
+  configuration:
+    list_available_layouts: true
+    model_version: 6.0.0
+    site: North
+  test_name: list_arrays
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
