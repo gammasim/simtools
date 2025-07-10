@@ -41,8 +41,8 @@ class MetadataCollector:
         Command line parameters
     metadata_file_name: str
         Name of metadata file (only required when args_dict is None)
-    data_model_name: str
-        Name of data model parameter
+    model_parameter_name: str
+        Name of model parameter
     observatory: str
         Name of observatory (default: "cta")
     clean_meta: bool
@@ -53,7 +53,7 @@ class MetadataCollector:
         self,
         args_dict,
         metadata_file_name=None,
-        data_model_name=None,
+        model_parameter_name=None,
         observatory="cta",
         clean_meta=True,
     ):
@@ -63,7 +63,7 @@ class MetadataCollector:
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict if args_dict else {}
-        self.data_model_name = data_model_name
+        self.model_parameter_name = model_parameter_name
         self.schema_file = None
         self.schema_dict = None
         self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
@@ -204,9 +204,9 @@ class MetadataCollector:
             pass
 
         # from data model name
-        if self.data_model_name:
-            self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return str(schema.get_model_parameter_schema_file(self.data_model_name))
+        if self.model_parameter_name:
+            self._logger.debug(f"Schema file from data model name: {self.model_parameter_name}")
+            return str(schema.get_model_parameter_schema_file(self.model_parameter_name))
 
         # from first entry in input metadata (least preferred)
         try:
