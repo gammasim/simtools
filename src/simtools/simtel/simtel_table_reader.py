@@ -359,9 +359,7 @@ def _read_simtel_data_for_lightguide_efficiency(file_path):
 
     def extract_wavelengths_from_header(line):
         match = re.search(r"orig\.:\s*(.*)", line)
-        if match:
-            return [float(wl.replace("nm", "")) for wl in match.group(1).split()]
-        return []
+        return [float(wl.replace("nm", "")) for wl in match.group(1).split()]
 
     for line in lines:
         line = line.strip()

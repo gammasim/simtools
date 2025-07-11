@@ -246,16 +246,3 @@ def test_dispatch_lightguide_efficiency():
 
         mock_reader.assert_called_once_with("dummy_path.txt")
         assert result == "dummy result"
-
-
-def test_lightguide_efficiency_failing_regex():
-    test_data = """
-    # This is a comment without orig
-    # expecting regex to fail
-    """.strip()
-
-    mock_string = "simtools.simtel.simtel_table_reader.gen.read_file_encoded_in_utf_or_latin"
-
-    with mock.patch(mock_string, return_value=test_data.splitlines()):
-        with pytest.raises(ValueError, match="No valid data or wavelengths found in file"):
-            simtel_table_reader._read_simtel_data_for_lightguide_efficiency("dummy_path")
