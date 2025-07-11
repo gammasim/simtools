@@ -132,11 +132,6 @@ def _data_columns_camera_filter():
     )
 
 
-def _data_columns_lightguide_efficiency_vs_wavelength():
-    """Column description for parameter lightguide_efficiency_vs_wavelength."""
-    return _data_columns_lightguide_efficiency_vs_incidence_angle()
-
-
 def _data_columns_lightguide_efficiency_vs_incidence_angle():
     """Column description for (parameter lightguide_efficiency_vs_incidence_angle."""
     return (
@@ -201,6 +196,16 @@ def _data_columns_mirror_reflectivity(n_columns, n_dim):
     return _columns, "Mirror reflectivity"
 
 
+def _data_columns_secondary_mirror_reflectivity():
+    """Column description for secondary mirror reflectivity."""
+    columns = [
+        {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+        {"name": "reflectivity", "description": "Reflectivity", "unit": None},
+    ]
+
+    return columns, "Secondary mirror reflectivity vs wavelength"
+
+
 def _data_columns_pulse_shape(n_columns):
     """Column description for parameters discriminator_pulse_shape, fadc_pulse_shape."""
     _columns = [
@@ -259,6 +264,8 @@ def read_simtel_table(parameter_name, file_path):
 
     if parameter_name == "atmospheric_transmission":
         return _read_simtel_data_for_atmospheric_transmission(file_path)
+    if parameter_name == "lightguide_efficiency_vs_wavelength":
+        return _read_simtel_data_for_lightguide_efficiency(file_path)
 
     rows, meta_from_simtel, n_columns, n_dim = _read_simtel_data(file_path)
     columns_info, description = _data_columns(parameter_name, n_columns, n_dim)
@@ -332,6 +339,69 @@ def _read_simtel_data(file_path):
     return rows, "\n".join(meta_lines), n_columns, n_dim_axis
 
 
+def _read_simtel_data_for_lightguide_efficiency(file_path):
+    """
+    Read angular efficiency data and return a table with columns: angle, wavelength, efficiency.
+
+    Parameters
+    ----------
+    file_path : str or Path
+
+    Returns
+    -------
+    astropy.table.Table
+    """
+    wavelengths = []
+    data = []
+    meta_lines = []
+
+    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+
+    def extract_wavelengths_from_header(line):
+        match = re.search(r"orig\.:\s*(.*)", line)
+        return [float(wl.replace("nm", "")) for wl in match.group(1).split()]
+
+    for line in lines:
+        line = line.strip()
+
+        if not line:
+            continue
+
+        if line.startswith("#"):
+            meta_lines.append(line.lstrip("#").strip())
+            if "orig.:" in line:
+                wavelengths = extract_wavelengths_from_header(line)
+            continue
+
+        parts = line.split()
+        try:
+            theta = float(parts[0])
+            eff_values = list(map(float, parts[-len(wavelengths) :]))
+            data.extend((theta, wl, eff) for wl, eff in zip(wavelengths, eff_values))
+        except (ValueError, IndexError):
+            logger.debug(f"Skipping malformed line: {line}")
+            continue
+
+    if not data or not wavelengths:
+        raise ValueError("No valid data or wavelengths found in file")
+
+    table = Table(rows=data, names=["angle", "wavelength", "efficiency"])
+    table["angle"].unit = u.deg
+    table["wavelength"].unit = u.nm
+    table["efficiency"].unit = u.dimensionless_unscaled
+
+    table.meta.update(
+        {
+            "Name": "angular_efficiency",
+            "File": str(file_path),
+            "Description": "Angular efficiency vs wavelength",
+            "Context_from_sim_telarray": "\n".join(meta_lines),
+        }
+    )
+
+    return table
+
+
 def _read_simtel_data_for_atmospheric_transmission(file_path):
     """
     Read data and comments from sim_telarray table for atmospheric_transmission.
@@ -346,7 +416,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     astropy table
         Table with atmospheric transmission.
     """
-    lines = lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
     observatory_level, height_bins = _read_header_line_for_atmospheric_transmission(
         lines, file_path
