@@ -5,8 +5,8 @@ title: SimPipe DB Production Model Metaschema
 description: |
   YAML representation of DB production model metaschema
   (based on simulation model DB).
-version: 0.1.0
-name: production_table.metaschema
+schema_version: 0.1.0
+schema_name: production_table.metaschema
 type: object
 additionalProperties: false
 

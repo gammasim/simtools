@@ -54,7 +54,7 @@ def test_collect_dict_data(io_handler) -> None:
 
     # file with several documents - get first document
     _dict = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 0)
-    assert _dict["version"] != "0.1.0"
+    assert _dict["schema_version"] != "0.1.0"
 
     with pytest.raises(gen.InvalidConfigDataError, match=FAILED_TO_READ_FILE_ERROR):
         gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 999)

@@ -41,33 +41,36 @@ class MetadataCollector:
         Command line parameters
     metadata_file_name: str
         Name of metadata file (only required when args_dict is None)
-    data_model_name: str
-        Name of data model parameter
+    model_parameter_name: str
+        Name of model parameter
     observatory: str
         Name of observatory (default: "cta")
     clean_meta: bool
         Clean metadata from None values and empty lists (default: True)
+    schema_version: str
+        Version of the metadata schema to use (default: 'latest')
     """
 
     def __init__(
         self,
-        args_dict,
+        args_dict=None,
         metadata_file_name=None,
-        data_model_name=None,
+        model_parameter_name=None,
         observatory="cta",
         clean_meta=True,
+        schema_version="latest",
     ):
         """Initialize metadata collector."""
         self._logger = logging.getLogger(__name__)
         self.observatory = observatory
         self.io_handler = io_handler.IOHandler()
 
-        self.args_dict = args_dict if args_dict else {}
-        self.data_model_name = data_model_name
+        self.args_dict = args_dict or {}
+        self.model_parameter_name = model_parameter_name
         self.schema_file = None
         self.schema_dict = None
-        self.top_level_meta = gen.change_dict_keys_case(
-            data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
+        self.top_level_meta = metadata_model.get_default_metadata_dict(
+            schema_version=schema_version
         )
         self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
         self.collect_meta_data()
@@ -119,7 +122,7 @@ class MetadataCollector:
         collector = MetadataCollector(args_dict)
         collector.write(output_file, add_activity_name=add_activity_name)
 
-    def write(self, yml_file=None, keys_lower_case=False, add_activity_name=False):
+    def write(self, yml_file=None, keys_lower_case=True, add_activity_name=False):
         """
         Write toplevel metadata to file (yaml file format).
 
@@ -198,10 +201,10 @@ class MetadataCollector:
         except KeyError:
             pass
 
-        # from data model name
-        if self.data_model_name:
-            self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return str(schema.get_model_parameter_schema_file(self.data_model_name))
+        # from model parameter name
+        if self.model_parameter_name:
+            self._logger.debug(f"Schema file from data model name: {self.model_parameter_name}")
+            return str(schema.get_model_parameter_schema_file(self.model_parameter_name))
 
         # from first entry in input metadata (least preferred)
         try:
@@ -443,7 +446,7 @@ class MetadataCollector:
             or self.args_dict.get("metadata_product_data_name")
             or "undefined_model_name"
         )
-        product_dict["data"]["model"]["version"] = self.schema_dict.get("version", "0.0.0")
+        product_dict["data"]["model"]["version"] = self.schema_dict.get("schema_version", "0.0.0")
         product_dict["data"]["model"]["type"] = self.schema_dict.get("meta_schema", None)
         product_dict["data"]["model"]["url"] = self.schema_file or self.args_dict.get(
             "metadata_product_data_url"
