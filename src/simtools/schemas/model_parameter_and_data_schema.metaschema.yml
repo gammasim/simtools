@@ -16,7 +16,7 @@ definitions:
       title:
         type: string
         description: "title for schema file"
-      version:
+      schema_version:
         type: string
         description: "version of this schema file (semver)"
       meta_schema:
@@ -64,7 +64,7 @@ definitions:
           $ref: 'plot_configuration.metaschema.yml#/definitions/plot'
         description: "List of plotting configurations"
     required:
-      - version
+      - schema_version
       - meta_schema
       - meta_schema_version
       - name
