@@ -8,6 +8,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.simtel.simtel_config_reader import SimtelConfigReader, get_list_of_simtel_parameters
 from simtools.utils import names
 
@@ -21,12 +22,12 @@ def simtel_config_file():
 
 @pytest.fixture
 def schema_num_gains():
-    return "tests/resources/num_gains.schema.yml"
+    return MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
 
 @pytest.fixture
 def schema_telescope_transmission():
-    return "tests/resources/telescope_transmission.schema.yml"
+    return MODEL_PARAMETER_SCHEMA_PATH / "telescope_transmission.schema.yml"
 
 
 @pytest.fixture
@@ -53,7 +54,7 @@ def test_simtel_config_reader_init(simtel_config_file):
         names, "get_simulation_software_name_from_parameter_name", return_value=None
     ):
         none_parameter = SimtelConfigReader(
-            schema_file="tests/resources/num_gains.schema.yml",
+            schema_file=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml",
             simtel_config_file=simtel_config_file,
             simtel_telescope_name="CT2",
             parameter_name="num-gains",
@@ -240,7 +241,7 @@ def test_get_list_of_simtel_parameters(simtel_config_file):
 
 
 def test_get_schema_values(config_reader_num_gains):
-    assert config_reader_num_gains._get_schema_values("type") == "int"
+    assert config_reader_num_gains._get_schema_values("type") == "int64"
     assert config_reader_num_gains._get_schema_values("unit") == "dimensionless"
     assert config_reader_num_gains._get_schema_values("limits") == [1, 2]
 
