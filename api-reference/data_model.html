@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=e53b6615"></script>
+    <script src="../_static/documentation_options.js?v=e54bb854"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gb901614" />
+  <meta name="docsearch:version" content="0.1.dev1+g8e89bb9" />
   </head>
   
   
@@ -594,7 +594,7 @@ Return None if no value is found in the file.</p>
 implementation of the observatory metadata model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cta'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_parameter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cta'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'latest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Link to this definition">#</a></dt>
 <dd><p>Collects metadata to describe the current simtools activity and its data products.</p>
 <p>Collect metadata from command line configuration, input data, environment,
 and schema descriptions. Depends on the CTAO top-level metadata definition.</p>
@@ -610,11 +610,13 @@ and schema descriptions. Depends on the CTAO top-level metadata definition.</p>
 </dd>
 <dt><strong>metadata_file_name: str</strong></dt><dd><p>Name of metadata file (only required when args_dict is None)</p>
 </dd>
-<dt><strong>data_model_name: str</strong></dt><dd><p>Name of data model parameter</p>
+<dt><strong>model_parameter_name: str</strong></dt><dd><p>Name of model parameter</p>
 </dd>
 <dt><strong>observatory: str</strong></dt><dd><p>Name of observatory (default: “cta”)</p>
 </dd>
 <dt><strong>clean_meta: bool</strong></dt><dd><p>Clean metadata from None values and empty lists (default: True)</p>
+</dd>
+<dt><strong>schema_version: str</strong></dt><dd><p>Version of the metadata schema to use (default: ‘latest’)</p>
 </dd>
 </dl>
 </dd>
@@ -724,7 +726,7 @@ metadata file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys_lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_activity_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_collector.html#MetadataCollector.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.write" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys_lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_activity_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_collector.html#MetadataCollector.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.write" title="Link to this definition">#</a></dt>
 <dd><p>Write toplevel metadata to file (yaml file format).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -769,7 +771,7 @@ metadata file.</p>
 </ul>
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.metadata_model.get_default_metadata_dict">
-<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">get_default_metadata_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CTA'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_model.html#get_default_metadata_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.get_default_metadata_dict" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">get_default_metadata_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CTA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'latest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_model.html#get_default_metadata_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.get_default_metadata_dict" title="Link to this definition">#</a></dt>
 <dd><p>Return metadata schema with default values.</p>
 <p>Follows the CTA Top-Level Data Model.</p>
 <dl class="field-list simple">
@@ -778,6 +780,10 @@ metadata file.</p>
 <dt><strong>schema_file: str</strong></dt><dd><p>Schema file (jsonschema format) used for validation</p>
 </dd>
 <dt><strong>observatory: str</strong></dt><dd><p>Observatory name</p>
+</dd>
+<dt><strong>schema_version: str, optional</strong></dt><dd><p>Version of the schema to use. If not provided, the latest version is used.</p>
+</dd>
+<dt><strong>lower_case: bool, optional</strong></dt><dd><p>If True, all keys in the returned dictionary will be converted to lower case.</p>
 </dd>
 </dl>
 </dd>
@@ -1079,8 +1085,28 @@ Replace “None” with “null” for unit field.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="data_model.schema.get_schema_version_from_data">
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">get_schema_version_from_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cta'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#get_schema_version_from_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.get_schema_version_from_data" title="Link to this definition">#</a></dt>
+<dd><p>Get schema version from data dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data: dict</strong></dt><dd><p>data dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Schema version. If not found, returns ‘latest’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="data_model.schema.load_schema">
-<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">load_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#load_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.load_schema" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">load_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'latest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#load_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.load_schema" title="Link to this definition">#</a></dt>
 <dd><p>Load parameter schema from file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1329,6 +1355,7 @@ Replace “None” with “null” for unit field.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_file"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_files"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_version"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_schema_version_from_data"><code class="docutils literal notranslate"><span class="pre">get_schema_version_from_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.load_schema"><code class="docutils literal notranslate"><span class="pre">load_schema()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
 </ul>
