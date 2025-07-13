@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 title: Schema for focal_length model parameter
-version: 0.1.0
+schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
