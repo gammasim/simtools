@@ -122,18 +122,38 @@ class CorsikaMergeLimits:
         )
         return merged_table
 
-    def check_grid_completeness(self, merged_table, grid_definition=None):
+    def _to_comparable_string(self, value):
+        """Convert value to a string, stripping units and normalizing floats."""
+        if hasattr(value, "value"):
+            value = value.value
+        try:
+            # Normalize float representation (e.g., 20.0 -> "20.0")
+            return str(float(value))
+        except (ValueError, TypeError):
+            return str(value)
+
+    def _get_found_combinations_as_str(self, merged_table, layout_column, nsb_column):
+        """Get found combinations from the table as a set of string tuples."""
+        found_combinations = set()
+        for row in merged_table:
+            found_combinations.add(
+                (
+                    self._to_comparable_string(row["zenith"]),
+                    self._to_comparable_string(row["azimuth"]),
+                    self._to_comparable_string(row[nsb_column]),
+                    self._to_comparable_string(row[layout_column]),
+                )
+            )
+        return found_combinations
+
+    def check_grid_completeness(self, merged_table, grid_definition):
         """Check if the grid is complete by verifying all expected combinations exist."""
+        if not grid_definition:
+            _logger.info("No grid definition provided, skipping completeness check.")
+            return True, {}
+
         layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
         nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
-
-        if grid_definition is None:
-            grid_definition = {
-                "zenith": np.unique(merged_table["zenith"]),
-                "azimuth": np.unique(merged_table["azimuth"]),
-                "nsb_level": np.unique(merged_table[nsb_column]),
-                "layouts": np.unique(merged_table[layout_column]),
-            }
 
         expected_combinations = list(
             product(
@@ -145,32 +165,50 @@ class CorsikaMergeLimits:
         )
         _logger.info(f"Expected {len(expected_combinations)} grid point combinations")
 
-        found_combinations = set(
-            zip(
-                merged_table["zenith"],
-                merged_table["azimuth"],
-                merged_table[nsb_column],
-                merged_table[layout_column],
-            )
+        found_combinations_set = self._get_found_combinations_as_str(
+            merged_table, layout_column, nsb_column
         )
+
+        _logger.info(f"Found {len(found_combinations_set)} unique grid points in merged table")
+
+        # Convert expected combinations to strings for type-insensitive comparison
+        expected_combinations_str = {
+            tuple(self._to_comparable_string(v) for v in combo) for combo in expected_combinations
+        }
+        _logger.info(f"Expected combinations as strings: {expected_combinations_str}")
+
+        missing_combinations_str = expected_combinations_str - found_combinations_set
+        _logger.info(f"Missing combinations: {missing_combinations_str}")
+        # Find the original missing combinations (with original types)
         missing_combinations = [
-            combo for combo in expected_combinations if combo not in found_combinations
+            combo
+            for combo in expected_combinations
+            if tuple(self._to_comparable_string(v) for v in combo) in missing_combinations_str
         ]
 
         is_complete = not missing_combinations
         return is_complete, {
             "expected": len(expected_combinations),
-            "found": len(found_combinations),
+            "found": len(found_combinations_set),
             "missing": missing_combinations,
+            "found_str": found_combinations_set,
+            "expected_str": expected_combinations_str,
         }
 
-    def _plot_single_grid_coverage(self, ax, data, zeniths, azimuths, nsb, layout):
+    def _plot_single_grid_coverage(
+        self, ax, zeniths, azimuths, nsb, layout, found_combinations_str
+    ):
         """Plot grid coverage for a single NSB and layout."""
         z_grid = np.zeros((len(zeniths), len(azimuths)))
         for i, zenith in enumerate(zeniths):
             for j, azimuth in enumerate(azimuths):
-                mask = (data["zenith"] == zenith) & (data["azimuth"] == azimuth)
-                if np.any(mask):
+                point_str = (
+                    self._to_comparable_string(zenith),
+                    self._to_comparable_string(azimuth),
+                    self._to_comparable_string(nsb),
+                    self._to_comparable_string(layout),
+                )
+                if point_str in found_combinations_str:
                     z_grid[i, j] = 1
 
         az_vals = azimuths.value if hasattr(azimuths, "value") else azimuths
@@ -191,30 +229,34 @@ class CorsikaMergeLimits:
         ax.set_yticks(zen_vals)
         ax.grid(which="major", linestyle="-", linewidth="0.5", color="black", alpha=0.3)
 
-    def plot_grid_coverage(self, merged_table):
+    def plot_grid_coverage(self, merged_table, grid_definition):
         """Generate plots showing grid coverage."""
+        if not grid_definition:
+            _logger.info("No grid definition provided, skipping grid coverage plots.")
+            return []
+
         _logger.info("Generating grid coverage plots")
         output_files = []
-        layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
-        nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
+
+        _, completeness_info = self.check_grid_completeness(merged_table, grid_definition)
+        found_combinations_str = completeness_info.get("found_str", set())
 
         unique_values = {
-            "zeniths": np.unique(merged_table["zenith"]),
-            "azimuths": np.unique(merged_table["azimuth"]),
-            "nsb_levels": np.unique(merged_table[nsb_column]),
-            "layouts": np.unique(merged_table[layout_column]),
+            "zeniths": np.array(grid_definition.get("zenith", [])),
+            "azimuths": np.array(grid_definition.get("azimuth", [])),
+            "nsb_levels": np.array(grid_definition.get("nsb_level", [])),
+            "layouts": np.array(grid_definition.get("layouts", [])),
         }
 
         for nsb, layout in product(unique_values["nsb_levels"], unique_values["layouts"]):
             _, ax = plt.subplots(figsize=(10, 8))
-            mask = (merged_table[nsb_column] == nsb) & (merged_table[layout_column] == layout)
             self._plot_single_grid_coverage(
                 ax,
-                merged_table[mask],
                 unique_values["zeniths"],
                 unique_values["azimuths"],
                 nsb,
                 layout,
+                found_combinations_str,
             )
             output_file = self.output_dir / f"grid_coverage_{nsb}_{layout}.png"
             plt.tight_layout()
