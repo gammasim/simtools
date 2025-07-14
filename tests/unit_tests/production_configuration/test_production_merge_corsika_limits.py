@@ -1,12 +1,9 @@
 """Unit tests for production_merge_corsika_limits."""
 
 import numpy as np
-from astropy.table import Column, Table
+from astropy.table import Column, Table, vstack
 
-from simtools.applications.production_merge_corsika_limits import (
-    check_grid_completeness,
-    merge_corsika_limit_tables,
-)
+from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
 
 def create_test_table(
@@ -61,7 +58,8 @@ def test_merge_corsika_limit_tables(tmp_path):
 
     # Merge tables
     input_files = [file1, file2, file3]
-    merged_table = merge_corsika_limit_tables(input_files)
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merged_table = merger.merge_tables(input_files)
 
     # Check results
     assert len(merged_table) == 3
@@ -89,7 +87,7 @@ def test_check_grid_completeness():
         create_test_table(60, 180, "moon", "layout1"),
     ]
 
-    merged_table = Table.vstack(tables)
+    merged_table = vstack(tables)
 
     # Define expected grid
     grid_definition = {
@@ -100,7 +98,8 @@ def test_check_grid_completeness():
     }
 
     # Check completeness
-    is_complete, result = check_grid_completeness(merged_table, grid_definition)
+    merger = CorsikaMergeLimits(output_dir="/tmp")
+    is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
 
     assert not is_complete
     assert result["expected"] == 12
@@ -132,7 +131,8 @@ def test_check_grid_completeness_complete():
     }
 
     # Check completeness
-    is_complete, result = check_grid_completeness(merged_table, grid_definition)
+    merger = CorsikaMergeLimits(output_dir="/tmp")
+    is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
 
     assert is_complete
     assert result["expected"] == 6
@@ -153,7 +153,8 @@ def test_check_grid_completeness_auto_extract():
     merged_table = Table.vstack(tables)
 
     # Check completeness without providing grid definition
-    is_complete, result = check_grid_completeness(merged_table)
+    merger = CorsikaMergeLimits(output_dir="/tmp")
+    is_complete, result = merger.check_grid_completeness(merged_table)
 
     # It should be complete since we're extracting the grid from the table
     assert is_complete
@@ -211,7 +212,8 @@ def test_different_column_names():
     merged = Table.vstack([table1, table2])
 
     # Test grid completeness check
-    is_complete, results = check_grid_completeness(merged)
+    merger = CorsikaMergeLimits(output_dir="/tmp")
+    is_complete, results = merger.check_grid_completeness(merged)
 
     # We should find 2 combinations (all that exist in the table)
     assert is_complete
@@ -256,7 +258,8 @@ def test_nsb_type_conversion():
     }
 
     # Check grid completeness - should find both entries despite type differences
-    is_complete, results = check_grid_completeness(merged, grid_definition)
+    merger = CorsikaMergeLimits(output_dir="/tmp")
+    is_complete, results = merger.check_grid_completeness(merged, grid_definition)
 
     assert results["expected"] == 4  # 2 zeniths x 1 azimuth x 1 nsb x 2 layouts
     assert results["found"] >= 2  # At least the two combinations we explicitly created
@@ -270,7 +273,8 @@ def test_nsb_type_conversion():
     }
 
     # Check grid completeness again
-    is_complete, results = check_grid_completeness(merged, grid_definition)
+    merger = CorsikaMergeLimits(output_dir="/tmp")
+    is_complete, results = merger.check_grid_completeness(merged, grid_definition)
 
     assert results["expected"] == 4
     assert results["found"] >= 2  # Should still find at least our two rows
