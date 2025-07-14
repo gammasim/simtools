@@ -118,7 +118,7 @@ def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
     assert merged_table.meta["loss_fraction"] == 1e-6
 
 
-def test_check_grid_completeness():
+def test_check_grid_completeness(tmp_path):
     """Test checking grid completeness."""
     # Create test tables
     tables = [
@@ -139,7 +139,7 @@ def test_check_grid_completeness():
         "layouts": ["layout1"],
     }
 
-    merger = CorsikaMergeLimits(output_dir="/tmp")
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
     is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
 
     # Should not be complete
