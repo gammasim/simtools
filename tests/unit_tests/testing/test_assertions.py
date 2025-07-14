@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.testing import assertions
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -19,7 +20,7 @@ def test_json_file():
 
 @pytest.fixture
 def test_yaml_file():
-    return Path("tests/resources/num_gains.schema.yml")
+    return MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
 
 @pytest.fixture
