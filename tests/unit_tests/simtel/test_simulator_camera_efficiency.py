@@ -30,7 +30,7 @@ def expected_command():
         "testeff",
         "-fnsb",
         "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat",
-        "-flen 2.15191 -spix 0.6",
+        "-flen 2.15191 -fcur 4.2410000000000005 -spix 0.6",
         "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2",
         "-teltrans 0.921",
         "transmission_sstcam_weighted_220512.dat",
@@ -167,3 +167,32 @@ def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
         )
     )
     produced_file_has_expected_values(second_validated_nsb_spectrum_file)
+
+
+def test_get_curvature_radius_mirror_class_2(simulator_camera_efficiency, mocker):
+    mock_telescope_model = simulator_camera_efficiency._telescope_model
+    mocker.patch.object(
+        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.5 * u.m
+    )
+    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=2)
+    assert radius == 1.5
+
+
+def test_get_curvature_radius_parabolic_dish_true(simulator_camera_efficiency, mocker):
+    mock_telescope_model = simulator_camera_efficiency._telescope_model
+    mocker.patch.object(mock_telescope_model, "get_parameter_value", return_value=True)
+    mocker.patch.object(
+        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.2 * u.m
+    )
+    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=1)
+    assert radius == pytest.approx(2.4)
+
+
+def test_get_curvature_radius_parabolic_dish_false(simulator_camera_efficiency, mocker):
+    mock_telescope_model = simulator_camera_efficiency._telescope_model
+    mocker.patch.object(mock_telescope_model, "get_parameter_value", return_value=False)
+    mocker.patch.object(
+        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.7 * u.m
+    )
+    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=1)
+    assert radius == pytest.approx(1.7)
