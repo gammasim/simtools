@@ -43,7 +43,7 @@ simulation_software:
   - name: simtools
 plot_configuration:
   - type: lightguide_efficiency_vs_wavelength
-    title: 'Light guide efficiency vs Wavelength'
+    title: 'Light-guide efficiency vs incidence angle'
     xtitle: 'Incidence Angle [deg]'
     ytitle: 'Efficiency'
     no_markers: true
