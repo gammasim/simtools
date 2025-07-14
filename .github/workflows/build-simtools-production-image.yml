@@ -60,7 +60,7 @@ jobs:
           - {simtel_version: '250304', corsika_version: '78000', bernlohr_version: '1.69', hadronic_model: 'qgs3'}
 
     env:
-      LABELS: '${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}'
+      LABELS: 'sim-telarray-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}'
 
     steps:
       - name: Checkout repository
