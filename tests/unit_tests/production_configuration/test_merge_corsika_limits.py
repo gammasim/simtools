@@ -129,36 +129,35 @@ def test_check_grid_completeness(tmp_path):
         create_test_table(40, 180, "dark", "layout1"),
         # Missing 60, 180, dark, layout1
     ]
-
     merged_table = vstack(tables)
-
     grid_definition = {
         "zenith": [20, 40, 60],
         "azimuth": [0, 180],
         "nsb_level": ["dark"],
         "layouts": ["layout1"],
     }
-
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
 
-    # Should not be complete
+    # Test with incomplete grid
+    is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
     assert not is_complete
     assert result["expected"] == 6
     assert result["found"] == 5
     assert len(result["missing"]) == 1
 
-    # Add missing point and check again
+    # Test with complete grid
     tables.append(create_test_table(60, 180, "dark", "layout1"))
     complete_table = vstack(tables)
-
     is_complete, result = merger.check_grid_completeness(complete_table, grid_definition)
-
-    # Should be complete now
     assert is_complete
     assert result["expected"] == 6
     assert result["found"] == 6
     assert len(result["missing"]) == 0
+
+    # Test with no grid definition
+    is_complete, result = merger.check_grid_completeness(complete_table, None)
+    assert is_complete
+    assert not result
 
 
 @patch("matplotlib.pyplot.savefig")
@@ -170,11 +169,24 @@ def test_plot_grid_coverage(mock_savefig, tmp_path):
             create_test_table(40, 0, "dark", "layout1"),
         ]
     )
+    grid_definition = {
+        "zenith": [20, 40],
+        "azimuth": [0],
+        "nsb_level": ["dark"],
+        "layouts": ["layout1"],
+    }
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    output_files = merger.plot_grid_coverage(table)
 
+    # Test plotting with grid definition
+    output_files = merger.plot_grid_coverage(table, grid_definition)
     assert len(output_files) == 1
     mock_savefig.assert_called_once()
+
+    # Test plotting without grid definition
+    mock_savefig.reset_mock()
+    output_files = merger.plot_grid_coverage(table, None)
+    assert not output_files
+    mock_savefig.assert_not_called()
 
 
 @patch("matplotlib.pyplot.savefig")
