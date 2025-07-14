@@ -1,6 +1,6 @@
 """Unit tests for merge_corsika_limits.py module."""
 
-from astropy.table import Column, Table
+from astropy.table import Column, Table, vstack
 
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
@@ -54,7 +54,7 @@ def test_merge_tables(tmp_path):
     table2.write(file2, format="ascii.ecsv")
     table3.write(file3, format="ascii.ecsv")
 
-    merger = CorsikaMergeLimits()
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
     input_files = [file1, file2, file3]
     merged_table = merger.merge_tables(input_files)
 
@@ -71,11 +71,11 @@ def test_merge_tables(tmp_path):
 def test_merge_tables_with_duplicates(tmp_path):
     """Test merging CORSIKA limit tables with duplicate grid points."""
     # Create test tables with a duplicate grid point
-    table1 = create_test_table(20, 0, "dark", "layout1", telescope_ids=[1, 2, 3])
-    table2 = create_test_table(40, 0, "dark", "layout1", telescope_ids=[4, 5, 6])
+    table1 = create_test_table(20, 0, "dark", "layout1")
+    table2 = create_test_table(40, 0, "dark", "layout1")
 
     # Create a duplicate of the first grid point with different values
-    duplicate = create_test_table(20, 0, "dark", "layout1", telescope_ids=[7, 8, 9])
+    duplicate = create_test_table(20, 0, "dark", "layout1")
     duplicate["lower_energy_limit"] = 0.02  # Different value
 
     file1 = tmp_path / "limits_1.ecsv"
@@ -86,11 +86,11 @@ def test_merge_tables_with_duplicates(tmp_path):
     table2.write(file2, format="ascii.ecsv")
     duplicate.write(file3, format="ascii.ecsv")
 
-    merger = CorsikaMergeLimits()
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
     input_files = [file1, file2, file3]
     merged_table = merger.merge_tables(input_files)
 
-    assert len(merged_table) == 3
+    assert len(merged_table) == 2  # Duplicate row ignored
 
     # Find the duplicate row
     mask = (
@@ -119,7 +119,7 @@ def test_merge_tables_different_loss_fractions(tmp_path):
     table1.write(file1, format="ascii.ecsv")
     table2.write(file2, format="ascii.ecsv")
 
-    merger = CorsikaMergeLimits()
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
     input_files = [file1, file2]
     merged_table = merger.merge_tables(input_files)
 
@@ -139,7 +139,7 @@ def test_check_grid_completeness():
         # Missing 60, 180, dark, layout1
     ]
 
-    merged_table = Table.vstack(tables)
+    merged_table = vstack(tables)
 
     grid_definition = {
         "zenith": [20, 40, 60],
@@ -148,7 +148,7 @@ def test_check_grid_completeness():
         "layouts": ["layout1"],
     }
 
-    merger = CorsikaMergeLimits()
+    merger = CorsikaMergeLimits(output_dir="/tmp")
     is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
 
     # Should not be complete
@@ -159,7 +159,7 @@ def test_check_grid_completeness():
 
     # Add missing point and check again
     tables.append(create_test_table(60, 180, "dark", "layout1"))
-    complete_table = Table.vstack(tables)
+    complete_table = vstack(tables)
 
     is_complete, result = merger.check_grid_completeness(complete_table, grid_definition)
 
