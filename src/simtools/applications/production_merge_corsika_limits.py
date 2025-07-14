@@ -4,13 +4,14 @@ r"""
 Merge CORSIKA limit tables from multiple grid points and check grid completeness.
 
 This tool supports three main use cases:
-1.  Merge multiple CORSIKA limit tables into a single file and optionally generate
-    plots of the derived limits.
-2.  Merge tables and also check for grid completeness against a provided grid
-    definition file. This requires the --grid_definition parameter. Coverage plots
-    can also be generated.
-3.  Check grid completeness of an already merged table file. This requires both
-    the --merged_table and --grid_definition parameters.
+
+1. Merge multiple CORSIKA limit tables into a single file and optionally generate
+   plots of the derived limits.
+2. Merge tables and also check for grid completeness against a provided grid
+   definition file. This requires the --grid_definition parameter. Coverage plots
+   can also be generated.
+3. Check grid completeness of an already merged table file. This requires both
+   the --merged_table and --grid_definition parameters.
 
 Command line arguments
 ----------------------
@@ -34,28 +35,28 @@ Examples
 --------
 1. Merge CORSIKA limit tables from a directory:
 
-.. code-block:: console
+   .. code-block:: console
 
-    simtools-production-merge-corsika-limits \\
-        --input_files "simtools-output/corsika_limits/" \\
-        --output_file merged_limits.ecsv --plot_limits
+      simtools-production-merge-corsika-limits \\
+          --input_files "simtools-output/corsika_limits/" \\
+          --output_file merged_limits.ecsv --plot_limits
 
 2. Merge tables and check grid completeness:
 
-.. code-block:: console
+   .. code-block:: console
 
-    simtools-production-merge-corsika-limits \\
-        --input_files "simtools-output/corsika_limits/" \\
-        --grid_definition grid_definition.yaml \\
-        --output_file merged_limits.ecsv --plot_grid_coverage
+      simtools-production-merge-corsika-limits \\
+          --input_files "simtools-output/corsika_limits/" \\
+          --grid_definition grid_definition.yaml \\
+          --output_file merged_limits.ecsv --plot_grid_coverage
 
 3. Check grid completeness of an existing merged table:
 
-.. code-block:: console
+   .. code-block:: console
 
-    simtools-production-merge-corsika-limits \\
-        --merged_table merged_limits.ecsv \\
-        --grid_definition grid_definition.yaml --plot_grid_coverage
+      simtools-production-merge-corsika-limits \\
+          --merged_table merged_limits.ecsv \\
+          --grid_definition grid_definition.yaml --plot_grid_coverage
 """
 
 import logging
