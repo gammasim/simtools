@@ -1,5 +1,7 @@
 """Unit tests for merge_corsika_limits.py module."""
 
+from unittest.mock import patch
+
 from astropy.table import Column, Table, vstack
 
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
@@ -40,22 +42,16 @@ def create_test_table(
     return table
 
 
-def test_merge_tables(tmp_path):
+@patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
+def test_merge_tables(mock_read_table, tmp_path):
     """Test merging multiple CORSIKA limit tables."""
     table1 = create_test_table(20, 0, "dark", "layout1")
     table2 = create_test_table(40, 0, "dark", "layout1")
     table3 = create_test_table(20, 180, "moon", "layout2")
-
-    file1 = tmp_path / "limits_1.ecsv"
-    file2 = tmp_path / "limits_2.ecsv"
-    file3 = tmp_path / "limits_3.ecsv"
-
-    table1.write(file1, format="ascii.ecsv")
-    table2.write(file2, format="ascii.ecsv")
-    table3.write(file3, format="ascii.ecsv")
+    mock_read_table.side_effect = [table1, table2, table3]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    input_files = [file1, file2, file3]
+    input_files = ["file1.ecsv", "file2.ecsv", "file3.ecsv"]
     merged_table = merger.merge_tables(input_files)
 
     assert len(merged_table) == 3
@@ -68,7 +64,8 @@ def test_merge_tables(tmp_path):
     assert merged_table.meta["loss_fraction"] == 1e-6
 
 
-def test_merge_tables_with_duplicates(tmp_path):
+@patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
+def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
     """Test merging CORSIKA limit tables with duplicate grid points."""
     # Create test tables with a duplicate grid point
     table1 = create_test_table(20, 0, "dark", "layout1")
@@ -77,17 +74,10 @@ def test_merge_tables_with_duplicates(tmp_path):
     # Create a duplicate of the first grid point with different values
     duplicate = create_test_table(20, 0, "dark", "layout1")
     duplicate["lower_energy_limit"] = 0.02  # Different value
-
-    file1 = tmp_path / "limits_1.ecsv"
-    file2 = tmp_path / "limits_2.ecsv"
-    file3 = tmp_path / "limits_3.ecsv"
-
-    table1.write(file1, format="ascii.ecsv")
-    table2.write(file2, format="ascii.ecsv")
-    duplicate.write(file3, format="ascii.ecsv")
+    mock_read_table.side_effect = [table1, table2, duplicate]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    input_files = [file1, file2, file3]
+    input_files = ["file1.ecsv", "file2.ecsv", "file3.ecsv"]
     merged_table = merger.merge_tables(input_files)
 
     assert len(merged_table) == 2  # Duplicate row ignored
@@ -107,20 +97,16 @@ def test_merge_tables_with_duplicates(tmp_path):
     assert duplicate_rows["lower_energy_limit"][0] == 0.02
 
 
-def test_merge_tables_different_loss_fractions(tmp_path):
+@patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
+def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
     """Test merging tables with different loss fraction values."""
     # Create test tables with different loss fractions
     table1 = create_test_table(20, 0, "dark", "layout1", loss_fraction=1e-6)
     table2 = create_test_table(40, 0, "dark", "layout1", loss_fraction=2e-6)
-
-    file1 = tmp_path / "limits_1.ecsv"
-    file2 = tmp_path / "limits_2.ecsv"
-
-    table1.write(file1, format="ascii.ecsv")
-    table2.write(file2, format="ascii.ecsv")
+    mock_read_table.side_effect = [table1, table2]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    input_files = [file1, file2]
+    input_files = ["file1.ecsv", "file2.ecsv"]
     merged_table = merger.merge_tables(input_files)
 
     # Check that metadata from first table was used
@@ -168,3 +154,61 @@ def test_check_grid_completeness():
     assert result["expected"] == 6
     assert result["found"] == 6
     assert len(result["missing"]) == 0
+
+
+@patch("matplotlib.pyplot.savefig")
+def test_plot_grid_coverage(mock_savefig, tmp_path):
+    """Test generating grid coverage plots."""
+    table = vstack(
+        [
+            create_test_table(20, 0, "dark", "layout1"),
+            create_test_table(40, 0, "dark", "layout1"),
+        ]
+    )
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    output_files = merger.plot_grid_coverage(table)
+
+    assert len(output_files) == 1
+    mock_savefig.assert_called_once()
+
+
+@patch("matplotlib.pyplot.savefig")
+def test_plot_limits(mock_savefig, tmp_path):
+    """Test generating limit plots."""
+    table = vstack(
+        [
+            create_test_table(20, 0, "dark", "layout1"),
+            create_test_table(40, 0, "dark", "layout1"),
+            create_test_table(20, 0, "moon", "layout1"),
+        ]
+    )
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    output_files = merger.plot_limits(table)
+
+    assert len(output_files) == 1
+    mock_savefig.assert_called_once()
+
+
+def test_write_merged_table(tmp_path):
+    """Test writing the merged table to file."""
+    table = create_test_table(20, 0, "dark", "layout1")
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    output_file = tmp_path / "merged_limits.ecsv"
+    input_files = ["file1.ecsv", "file2.ecsv"]
+    grid_completeness = {
+        "is_complete": True,
+        "missing": [],
+        "expected": 1,
+        "found": 1,
+    }
+
+    with (
+        patch("astropy.table.Table.write") as mock_write,
+        patch(
+            "simtools.production_configuration.merge_corsika_limits.MetadataCollector.dump"
+        ) as mock_dump,
+    ):
+        merger.write_merged_table(table, output_file, input_files, grid_completeness)
+
+        mock_write.assert_called_once_with(output_file, format="ascii.ecsv", overwrite=True)
+        mock_dump.assert_called_once()
