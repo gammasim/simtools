@@ -6,6 +6,11 @@ from astropy.table import Column, Table, vstack
 
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
+LIMITS_FILE_1 = "limits_1.ecsv"
+LIMITS_FILE_2 = "limits_2.ecsv"
+LIMITS_FILE_3 = "limits_3.ecsv"
+ECSV_FORMAT = "ascii.ecsv"
+
 
 def create_test_table(
     zenith,
@@ -51,7 +56,7 @@ def test_merge_tables(mock_read_table, tmp_path):
     mock_read_table.side_effect = [table1, table2, table3]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    input_files = ["file1.ecsv", "file2.ecsv", "file3.ecsv"]
+    input_files = [LIMITS_FILE_1, LIMITS_FILE_2, LIMITS_FILE_3]
     merged_table = merger.merge_tables(input_files)
 
     assert len(merged_table) == 3
@@ -77,7 +82,7 @@ def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
     mock_read_table.side_effect = [table1, table2, duplicate]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    input_files = ["file1.ecsv", "file2.ecsv", "file3.ecsv"]
+    input_files = [LIMITS_FILE_1, LIMITS_FILE_2, LIMITS_FILE_3]
     merged_table = merger.merge_tables(input_files)
 
     assert len(merged_table) == 2  # Duplicate row ignored
@@ -106,7 +111,7 @@ def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
     mock_read_table.side_effect = [table1, table2]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
-    input_files = ["file1.ecsv", "file2.ecsv"]
+    input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
     merged_table = merger.merge_tables(input_files)
 
     # Check that metadata from first table was used
@@ -194,7 +199,7 @@ def test_write_merged_table(tmp_path):
     table = create_test_table(20, 0, "dark", "layout1")
     merger = CorsikaMergeLimits(output_dir=tmp_path)
     output_file = tmp_path / "merged_limits.ecsv"
-    input_files = ["file1.ecsv", "file2.ecsv"]
+    input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
     grid_completeness = {
         "is_complete": True,
         "missing": [],
@@ -210,5 +215,5 @@ def test_write_merged_table(tmp_path):
     ):
         merger.write_merged_table(table, output_file, input_files, grid_completeness)
 
-        mock_write.assert_called_once_with(output_file, format="ascii.ecsv", overwrite=True)
+        mock_write.assert_called_once_with(output_file, format=ECSV_FORMAT, overwrite=True)
         mock_dump.assert_called_once()
