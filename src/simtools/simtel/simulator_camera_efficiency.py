@@ -82,43 +82,35 @@ class SimulatorCameraEfficiency(SimtelRunner):
         """Prepare the command used to run testeff."""
         self._logger.debug("Preparing the command to run testeff")
 
-        # Processing camera pixel features
         pixel_shape = self._telescope_model.camera.get_pixel_shape()
         pixel_shape_cmd = "-hpix" if pixel_shape in [1, 3] else "-spix"
         pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
-        # Processing focal length
         focal_length = self._telescope_model.get_telescope_effective_focal_length("m", True)
 
-        # Processing mirror class
-        mirror_class = 1
         try:
             mirror_class = self._telescope_model.get_parameter_value("mirror_class")
         except InvalidModelParameterError:
-            pass
+            mirror_class = 1
 
         curvature_radius = self._get_curvature_radius(mirror_class)
 
-        # Processing camera transmission
-        camera_transmission = 1
         try:
             camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
         except KeyError:
-            pass
+            camera_transmission = 1
 
-        # Processing camera filter
-        # A special case is testeff does not support 2D distributions
         camera_filter_file = self._telescope_model.get_parameter_value("camera_filter")
+        # testeff does not support 2D distributions
         if self._telescope_model.is_file_2d("camera_filter"):
             camera_filter_file = self._get_one_dim_distribution(
                 "camera_filter", "camera_filter_incidence_angle"
             )
 
-        # Processing mirror reflectivity
-        # A special case is testeff does not support 2D distributions
         mirror_reflectivity = self._telescope_model.get_parameter_value("mirror_reflectivity")
         if mirror_class == 2:
             mirror_reflectivity_secondary = mirror_reflectivity
+        # testeff does not support 2D distributions
         if self._telescope_model.is_file_2d("mirror_reflectivity"):
             mirror_reflectivity = self._get_one_dim_distribution(
                 "mirror_reflectivity", "primary_mirror_incidence_angle"

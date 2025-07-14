@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-    Validate the camera efficiency by simulating it using the sim_telarray testeff program.
+    Calculate on-axis camera efficiency and NSB pixels rates using the sim_telarray testeff program.
 
     The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
     of wavelength are plotted. See examples below.
@@ -19,7 +19,7 @@ r"""
     telescope (str, required)
         Telescope model name (e.g. LSTN-01, SSTS-15)
     model_version (str, optional)
-        Model version
+        Simulation model version
     zenith_angle (float, optional)
         Zenith angle in degrees (between 0 and 180).
     azimuth_angle (float, optional)
@@ -56,8 +56,8 @@ def _parse(label):
     config = configurator.Configurator(
         label=label,
         description=(
-            "Calculate the camera efficiency of the telescope requested. "
-            "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
+            "Calculate the camera efficiency and NSB pixel rates. "
+            "Plot the camera efficiency vs wavelength for Cherenkov and NSB light."
         ),
     )
     config.parser.add_argument(
@@ -76,10 +76,9 @@ def _parse(label):
     config.parser.add_argument(
         "--skip_correction_to_nsb_spectrum",
         help=(
-            "Apply a correction to the NSB spectrum to account for the "
+            "Skip correction to the NSB spectrum to account for the "
             "difference between the altitude used in the reference B&E spectrum and "
             "the observation level at the CTAO sites."
-            "This correction is done internally in sim_telarray and is on by default."
         ),
         required=False,
         action="store_true",
@@ -105,7 +104,6 @@ def main():  # noqa: D103
 
     ce = CameraEfficiency(
         db_config=_db_config,
-        simtel_path=args_dict["simtel_path"],
         label=args_dict.get("label", label),
         config_data=args_dict,
     )

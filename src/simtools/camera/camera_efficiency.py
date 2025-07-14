@@ -23,8 +23,6 @@ class CameraEfficiency:
 
     Parameters
     ----------
-    simtel_path: str (or Path)
-        Location of sim_telarray installation.
     db_config: dict
         Configuration for the database.
     label: str
@@ -37,7 +35,6 @@ class CameraEfficiency:
 
     def __init__(
         self,
-        simtel_path,
         config_data,
         label,
         db_config,
@@ -46,7 +43,7 @@ class CameraEfficiency:
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
-        self._simtel_path = simtel_path
+        self._simtel_path = config_data.get("simtel_path")
         self.label = label
         self.test = test
 
