@@ -17,9 +17,18 @@ _logger = logging.getLogger(__name__)
 class CorsikaMergeLimits:
     """Class for merging CORSIKA limit tables and checking grid completeness."""
 
-    def __init__(self):
-        """Initialize CorsikaMergeLimits."""
-        self.output_dir = io_handler.IOHandler().get_output_directory()
+    def __init__(self, output_dir=None):
+        """Initialize CorsikaMergeLimits.
+
+        Parameters
+        ----------
+        output_dir : Path or str, optional
+            Output directory path. If None, will use the default from IOHandler.
+        """
+        if output_dir is None:
+            self.output_dir = io_handler.IOHandler().get_output_directory()
+        else:
+            self.output_dir = output_dir
 
     def merge_tables(self, input_files):
         """Merge multiple CORSIKA limit tables into a single table.
@@ -89,6 +98,29 @@ class CorsikaMergeLimits:
 
         # Sort by layout, zenith, azimuth, and nsb_level
         merged_table.sort([layout_column, "zenith", "azimuth", nsb_column])
+
+        # Remove duplicates - keep only the last occurrence of each grid point
+        if duplicate_points:
+            grid_keys = []
+            for row in merged_table:
+                grid_keys.append(
+                    (row["zenith"], row["azimuth"], row[nsb_column], row[layout_column])
+                )
+
+            indices_to_keep = []
+            seen_keys = set()
+
+            for i in range(len(merged_table) - 1, -1, -1):
+                key = grid_keys[i]
+                if key not in seen_keys:
+                    indices_to_keep.append(i)
+                    seen_keys.add(key)
+
+            indices_to_keep.sort()
+
+            merged_table = merged_table[indices_to_keep]
+
+            _logger.info(f"Removed {len(grid_keys) - len(indices_to_keep)} duplicate grid points")
 
         _logger.info(
             f"Merged table has {len(merged_table)} rows with {len(grid_points)} unique grid points"
