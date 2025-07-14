@@ -97,6 +97,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         except InvalidModelParameterError:
             pass
 
+        # Process curvature radius
+        curvature_radius = self._get_curvature_radius(mirror_class)
+
         # Processing camera transmission
         camera_transmission = 1
         try:
@@ -136,6 +139,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" -alt {self._site_model.get_parameter_value('corsika_observation_level')}"
         command += f" -fatm {self._site_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length}"
+        command += f" -fcur {curvature_radius}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 0:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
@@ -271,3 +275,24 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 else:
                     file.write(line)
         return validated_nsb_spectrum_file
+
+    def _get_curvature_radius(self, mirror_class=1):
+        """Get radius of curvature of dish."""
+        if mirror_class == 2:
+            return (
+                self._telescope_model.get_parameter_value_with_unit("primary_mirror_diameter")
+                .to("m")
+                .value
+            )
+
+        if self._telescope_model.get_parameter_value("parabolic_dish"):
+            return (
+                2.0
+                * self._telescope_model.get_parameter_value_with_unit("dish_shape_length")
+                .to("m")
+                .value
+            )
+
+        return (
+            self._telescope_model.get_parameter_value_with_unit("dish_shape_length").to("m").value
+        )
