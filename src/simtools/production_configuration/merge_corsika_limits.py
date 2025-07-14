@@ -333,7 +333,7 @@ class CorsikaMergeLimits:
                 )
 
                 azimuth_value = azimuth.value if hasattr(azimuth, "value") else azimuth
-                plt.suptitle(f"CORSIKA Limits: Layout={layout}, Azimuth={azimuth_value}°")
+                plt.suptitle(f"CORSIKA Limits: Layout={layout}, Azimuth={azimuth_value} deg")
                 plt.tight_layout()
                 plt.subplots_adjust(bottom=0.15)
 
