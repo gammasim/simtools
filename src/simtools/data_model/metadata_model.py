@@ -11,11 +11,14 @@ Follows CTAO top-level data model definition.
 import logging
 
 import simtools.data_model.schema
+import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
 
 
-def get_default_metadata_dict(schema_file=None, observatory="CTA"):
+def get_default_metadata_dict(
+    schema_file=None, observatory="CTA", schema_version="latest", lower_case=True
+):
     """
     Return metadata schema with default values.
 
@@ -27,6 +30,10 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
         Schema file (jsonschema format) used for validation
     observatory: str
         Observatory name
+    schema_version: str, optional
+        Version of the schema to use. If not provided, the latest version is used.
+    lower_case: bool, optional
+        If True, all keys in the returned dictionary will be converted to lower case.
 
     Returns
     -------
@@ -35,8 +42,11 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
 
     """
-    schema = simtools.data_model.schema.load_schema(schema_file)
-    return _fill_defaults(schema["definitions"], observatory)
+    schema = simtools.data_model.schema.load_schema(schema_file, schema_version=schema_version)
+    return gen.change_dict_keys_case(
+        data_dict=_fill_defaults(schema["definitions"], observatory.lower()),
+        lower_case=lower_case,
+    )
 
 
 def _resolve_references(yaml_data, observatory="CTA"):
@@ -62,7 +72,7 @@ def _resolve_references(yaml_data, observatory="CTA"):
         parts = ref_path.split("/")
         ref_data = yaml_data
         for part in parts:
-            if part in ("definitions", observatory):
+            if part in ("definitions", observatory.lower()):
                 continue
             ref_data = ref_data.get(part, {})
         return ref_data
@@ -123,7 +133,7 @@ def _fill_defaults_recursive(sub_schema, current_dict):
         Current dictionary to fill with default values.
     """
     if "properties" not in sub_schema:
-        _raise_missing_properties_error()
+        raise KeyError("Missing 'properties' key in schema.")
 
     for prop, prop_schema in sub_schema["properties"].items():
         _process_property(prop, prop_schema, current_dict)
@@ -152,10 +162,3 @@ def _process_property(prop, prop_schema, current_dict):
             current_dict[prop] = [{}]
             if "items" in prop_schema and isinstance(prop_schema["items"], dict):
                 _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
-
-
-def _raise_missing_properties_error():
-    """Raise an error when the 'properties' key is missing in the schema."""
-    msg = "Missing 'properties' key in schema."
-    _logger.error(msg)
-    raise KeyError(msg)

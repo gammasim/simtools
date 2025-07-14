@@ -84,7 +84,7 @@ def test_data_simple_columns():
         "pm_photoelectron_spectrum",
         "quantum_efficiency",
         "camera_filter",
-        "lightguide_efficiency_vs_wavelength",
+        "secondary_mirror_reflectivity",
         "lightguide_efficiency_vs_incidence_angle",
         "nsb_reference_spectrum",
         "atmospheric_profile",
@@ -188,3 +188,61 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     with mock.patch(mock_string, return_value=test_data.splitlines()):
         with pytest.raises(ValueError, match=r"^Header with 'H1='"):
             simtel_table_reader._read_simtel_data_for_atmospheric_transmission("dummy_path")
+
+
+def test_read_simtel_data_for_lightguide_efficiency(caplog):
+    test_data = """
+    # Angular efficiency table for test
+    # orig.: 325nm 390nm 420nm
+    0.0     0.838230     # (1.0 * ...)    0.821641    0.811995    0.845404
+    1.0     0.838630     # (1.0 * ...)    0.821712    0.812562    0.845727
+    2.0     0.840082     # (1.0 * ...)    0.822859    0.814194    0.846625
+    """
+
+    mock_string = "simtools.utils.general.read_file_encoded_in_utf_or_latin"
+    mock_file = mock.mock_open(read_data=test_data)
+
+    with mock.patch(mock_string, mock_file):
+        table = simtel_table_reader._read_simtel_data_for_lightguide_efficiency("dummy_path")
+
+    assert len(table) == 9  # 3 angles x 3 wavelengths
+    assert "angle" in table.colnames
+    assert "wavelength" in table.colnames
+    assert "efficiency" in table.colnames
+
+    assert table.meta["Name"] == "angular_efficiency"
+    assert table.meta["File"] == "dummy_path"
+    assert "Angular efficiency table" in table.meta["Context_from_sim_telarray"]
+
+    assert table["angle"][0] == 0.0
+    assert table["wavelength"][0] == 325.0
+    assert table["efficiency"][0] == 0.821641
+
+    # Test: skipping malformed line
+    malformed_data = test_data + "\n this is a bad line"
+    mock_file = mock.mock_open(read_data=malformed_data)
+    with mock.patch(mock_string, mock_file):
+        with caplog.at_level(logging.DEBUG):
+            simtel_table_reader._read_simtel_data_for_lightguide_efficiency("dummy_path")
+        assert "Skipping malformed line" in caplog.text
+
+    # Test: missing wavelength header
+    no_header = "\n".join(line for line in test_data.splitlines() if "orig.:" not in line)
+    mock_file = mock.mock_open(read_data=no_header)
+    with mock.patch(mock_string, mock_file):
+        with pytest.raises(ValueError, match="No valid data or wavelengths found"):
+            simtel_table_reader._read_simtel_data_for_lightguide_efficiency("dummy_path")
+
+
+def test_dispatch_lightguide_efficiency():
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader._read_simtel_data_for_lightguide_efficiency"
+    ) as mock_reader:
+        mock_reader.return_value = "dummy result"
+
+        result = simtel_table_reader.read_simtel_table(
+            "lightguide_efficiency_vs_wavelength", "dummy_path.txt"
+        )
+
+        mock_reader.assert_called_once_with("dummy_path.txt")
+        assert result == "dummy result"
