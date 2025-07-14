@@ -95,13 +95,23 @@ def merge_corsika_limit_tables(input_files):
 
     tables = []
     metadata = {}
+    loss_fractions = set()
 
     for file_path in input_files:
         table = data_reader.read_table_from_file(file_path)
         tables.append(table)
 
+        if "loss_fraction" in table.meta:
+            loss_fractions.add(table.meta["loss_fraction"])
+
         if not metadata:
             metadata = table.meta
+
+    if len(loss_fractions) > 1:
+        _logger.warning(f"Found different loss_fraction values across tables: {loss_fractions}")
+        _logger.warning(
+            f"Using loss_fraction from the first table: {metadata.get('loss_fraction')}"
+        )
 
     merged_table = vstack(tables, metadata_conflicts="silent")
     merged_table.meta.update(metadata)
@@ -342,8 +352,9 @@ def main():
         merged_table.meta["description"] = (
             "Lookup table for CORSIKA limits computed from simulations."
         )
+
     if "loss_fraction" not in merged_table.meta:
-        merged_table.meta["loss_fraction"] = 1.0e-6
+        _logger.warning("No loss_fraction found in any of the input tables")
 
     merged_table.write(output_file, format="ascii.ecsv", overwrite=True)
 
