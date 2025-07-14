@@ -15,7 +15,7 @@ import yaml
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_METASCHEMA
+from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 
@@ -95,8 +95,10 @@ def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
 
 
 def test_collect_dict_from_url(io_handler) -> None:
-    _file = "tests/resources/num_gains.schema.yml"
+    _file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     _reference_dict = gen.collect_data_from_file(_file)
+
+    _file = "src/simtools/schemas/model_parameters/num_gains.schema.yml"
 
     _url = url_simtools
     _url_dict = gen.collect_data_from_http(_url + _file)
@@ -413,7 +415,7 @@ def test_collect_data_dict_from_json():
 
 
 def test_collect_data_from_http():
-    _file = "tests/resources/num_gains.schema.yml"
+    _file = "src/simtools/schemas/model_parameters/num_gains.schema.yml"
     url = url_simtools
 
     data = gen.collect_data_from_http(url + _file)
