@@ -97,7 +97,6 @@ class SimulatorCameraEfficiency(SimtelRunner):
         except InvalidModelParameterError:
             pass
 
-        # Process curvature radius
         curvature_radius = self._get_curvature_radius(mirror_class)
 
         # Processing camera transmission
