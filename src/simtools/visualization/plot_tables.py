@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Plot tabular data."""
 
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,8 @@ from simtools.constants import SCHEMA_PATH
 from simtools.db import db_handler
 from simtools.io_operations import legacy_data_handler
 from simtools.visualization import visualize
+
+_logger = logging.getLogger(__name__)
 
 
 def plot(config, output_file, db_config=None, data_path=None):
@@ -65,9 +68,10 @@ def read_table_data(config, db_config, data_path=None):
         elif "file_name" in _config:
             file_name = (
                 _config["file_name"]
-                if data_path is None
+                if data_path is None or _config.get("ignore_table_data_path", False)
                 else Path(data_path) / _config["file_name"]
             )
+            _logger.info(f"Reading tabled data from {file_name}")
             if "legacy" in _config.get("type", ""):
                 table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
             else:
