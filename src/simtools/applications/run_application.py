@@ -180,7 +180,7 @@ def main():  # noqa: D103
             else:
                 logger.info(f"Skipping application: {config.get('application')}")
                 continue
-            config = gen.change_dict_keys_case(config, False)
+            config = gen.change_dict_keys_case(config, True)
             stdout, stderr = run_application(
                 config.get("application"), config.get("configuration"), logger
             )
