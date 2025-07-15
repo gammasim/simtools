@@ -1,0 +1,14 @@
+---
+applications:
+- application: simtools-production-merge-corsika-limits
+  configuration:
+    input_files: tests/resources/corsika_simulation_limits/
+    output_file: merged_limits_merge_only.ecsv
+    plot_limits: true
+    output_path: simtools-output
+
+  integration_tests:
+  - output_file: merged_limits_merge_only.ecsv
+  test_name: production_merge_corsika_limits_merge_only
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
