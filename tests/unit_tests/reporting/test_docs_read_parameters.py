@@ -132,7 +132,7 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
-    parameter_name = "test"
+    parameter_name = "pm_photoelectron_spectrum"
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
