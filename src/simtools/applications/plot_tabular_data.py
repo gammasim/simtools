@@ -63,6 +63,12 @@ def _parse(label, description, usage):
         default=None,
     )
     config.parser.add_argument(
+        "--table_data_path",
+        help="Path to the data files (optional). Expect all files to be in the same directory.",
+        type=str,
+        default=None,
+    )
+    config.parser.add_argument(
         "--output_file",
         help="Output file name (without suffix)",
         type=str,
@@ -94,6 +100,7 @@ def main():
         config=plot_config["plot"],
         output_file=io_handler_instance.get_output_file(args_dict["output_file"]),
         db_config=db_config_,
+        data_path=args_dict.get("table_data_path"),
     )
 
     MetadataCollector.dump(

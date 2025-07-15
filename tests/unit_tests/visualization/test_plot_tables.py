@@ -30,7 +30,7 @@ def test_plot(mock_read_table_data, mock_visualize):
 
     plot_tables.plot(config, output_file)
 
-    mock_read_table_data.assert_called_once_with(config, None)
+    mock_read_table_data.assert_called_once_with(config, None, None)
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
 
