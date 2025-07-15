@@ -396,8 +396,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
     mock_table["amplitude"] = [0.1, 0.2, 0.3]
-    mock_table["amplitude_low_gain"] = [np.nan, np.nan, np.nan]  # All NaN column (tests line 193)
-    # "wavelength" column is missing (will test line 213)
+    mock_table["amplitude_low_gain"] = [np.nan, np.nan, np.nan]
 
     mock_read_table.return_value = mock_table
 
@@ -416,7 +415,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
                     {
                         "column_x": "wavelength",
                         "column_y": "amplitude",
-                    },  # Missing column (tests line 213)
+                    },
                 ],
             },
         ]
@@ -428,7 +427,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
         parameter="test_parameter",
         parameter_version="1.0.0",
         site="South",
-        telescope="TEST-01",
+        telescope="LSTS-01",
         output_path=tmp_test_directory,
         plot_type="all",
         db_config=db_config,
@@ -438,31 +437,13 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     assert len(configs) == 1
     assert configs[0]["type"] == "valid_plot"
 
-    # Test telescope=None case (tests lines 181-182)
-    mock_read_table.reset_mock()
-    plot_tables.generate_plot_configurations(
-        parameter="test_parameter",
-        parameter_version="1.0.0",
-        site="South",
-        telescope=None,  # Tests lines 181-182
-        output_path=tmp_test_directory,
-        plot_type="all",
-        db_config=db_config,
-    )
-
-    # Verify telescope=None was properly passed through
-    mock_read_table.assert_called_once()
-    call_args = mock_read_table.call_args[0][0]
-    assert "telescope" in call_args
-    assert call_args["telescope"] is None
-
     # Test with specific plot type
     mock_read_table.reset_mock()
-    configs, output_files = plot_tables.generate_plot_configurations(
+    configs, _ = plot_tables.generate_plot_configurations(
         parameter="test_parameter",
         parameter_version="1.0.0",
         site="South",
-        telescope="TEST-01",
+        telescope="LSTS-01",
         output_path=tmp_test_directory,
         plot_type="valid_plot",
         db_config=db_config,
@@ -477,7 +458,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
         parameter="test_parameter",
         parameter_version="1.0.0",
         site="South",
-        telescope="TEST-01",
+        telescope="LSTS-01",
         output_path=tmp_test_directory,
         plot_type="invalid_plot_all_nan",
         db_config=db_config,

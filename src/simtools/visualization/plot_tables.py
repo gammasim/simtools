@@ -177,10 +177,6 @@ def generate_plot_configurations(
     # Check which columns have valid data (not all NaN)
     valid_columns = []
     for col in available_columns:
-        if len(table) == 0:
-            logger.warning(f"Table for '{parameter}' is empty")
-            continue
-
         # Check if column has valid data (not all NaN)
         if col in table.colnames and not all(np.isnan(table[col])):
             valid_columns.append(col)
