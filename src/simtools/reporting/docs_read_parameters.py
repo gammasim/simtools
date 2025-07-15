@@ -68,7 +68,10 @@ class ReadParameters:
     def _convert_to_md(self, parameter, parameter_version, input_file, design_type=False):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
-        logger.info(f"Converting {parameter} to markdown, version: {parameter_version}")
+
+        print()
+        print("parameter:", parameter, self.array_element, self.site)
+        print()
 
         # Store the markdown output file path early and don't modify it
         output_data_path = Path(self.output_path / "_data_files")
@@ -85,10 +88,8 @@ class ReadParameters:
 
         plot_names = []
         if parameter == "camera_config_file" and parameter_version:
-            # image_path = Path(f"{outpath}/{input_file.stem.replace('.', '-')}")
             plot_name = input_file.stem.replace(".", "-")
             if not (Path(f"{outpath}/{plot_name}").with_suffix(".png")).exists():
-                logger.info("Plotting camera configuration file: %s", input_file.name)
                 plot_config = {
                     "file_name": input_file.name,
                     "telescope": self.array_element,
@@ -129,6 +130,7 @@ class ReadParameters:
                 telescope=tel,
                 output_path=outpath,
                 plot_type="all",
+                db_config=self.db_config,
             )
 
             if config_data:
@@ -145,12 +147,9 @@ class ReadParameters:
                         plt.close("all")
 
         # Write markdown file using the stored path
-        logger.info(f"About to write Markdown file: {markdown_output_file}")
         file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
-        logger.info(f"Read file contents for: {input_file}")
 
         with markdown_output_file.open("w", encoding="utf-8") as outfile:
-            logger.info(f"Opened output file for writing: {markdown_output_file}")
             outfile.write(f"# {input_file.stem}\n")
 
             for plot_name in plot_names:
@@ -169,7 +168,6 @@ class ReadParameters:
             outfile.write(first_30_lines)
             outfile.write("\n```")
 
-        logger.info(f"Finished writing Markdown file: {markdown_output_file}")
         return f"_data_files/{output_file_name}"
 
     def _format_parameter_value(
