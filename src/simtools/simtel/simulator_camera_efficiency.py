@@ -138,7 +138,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" -alt {self._site_model.get_parameter_value('corsika_observation_level')}"
         command += f" -fatm {self._site_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length}"
-        command += f" -fcur {curvature_radius}"
+        command += f" -fcur {curvature_radius:.3f}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 0:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
