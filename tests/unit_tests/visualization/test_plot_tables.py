@@ -377,3 +377,35 @@ def test_generate_plot_configurations(tmp_test_directory):
             output_path=tmp_test_directory,
             plot_type="non_existent_type",
         )
+
+
+def test_get_plotting_label_unique_label():
+    config = {"label": "unique_label", "column_x": "x", "column_y": "y"}
+    data = {}
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "unique_label"
+
+
+def test_get_plotting_label_default_label():
+    config = {"column_x": "x", "column_y": "y"}
+    data = {}
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "x vs y"
+
+
+def test_get_plotting_label_duplicate_label():
+    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
+    data = {"duplicate_label": "data"}
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "duplicate_label (1)"
+
+
+def test_get_plotting_label_multiple_duplicates():
+    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
+    data = {
+        "duplicate_label": "data",
+        "duplicate_label (1)": "data",
+        "duplicate_label (2)": "data",
+    }
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "duplicate_label (3)"

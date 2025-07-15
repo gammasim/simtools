@@ -9,6 +9,9 @@ import yaml
 
 from simtools.runners import simtools_runner
 
+TEST_OUTPUT_PATH = Path("output/test")
+DUMMY_CONFIG_FILE = "dummy.yml"
+
 
 @pytest.fixture
 def mock_logger():
@@ -56,7 +59,7 @@ def test_set_input_output_directories():
 
 def test_replace_placeholders_in_configuration_replaces_string():
     config = {"input_file": "__SETTING_WORKFLOW__/data.txt", "other_key": "no_placeholder"}
-    output_path = Path("output/test")
+    output_path = TEST_OUTPUT_PATH
     setting_workflow = "LSTN-01/workflow"
     result = simtools_runner._replace_placeholders_in_configuration(
         config.copy(), output_path, setting_workflow
@@ -69,7 +72,7 @@ def test_replace_placeholders_in_configuration_replaces_string():
 
 def test_replace_placeholders_in_configuration_replaces_in_list():
     config = {"files": ["__SETTING_WORKFLOW__/a.txt", "__SETTING_WORKFLOW__/b.txt", 42, None]}
-    output_path = Path("output/test")
+    output_path = TEST_OUTPUT_PATH
     setting_workflow = "WF"
     result = simtools_runner._replace_placeholders_in_configuration(
         config.copy(), output_path, setting_workflow
@@ -84,7 +87,7 @@ def test_replace_placeholders_in_configuration_replaces_in_list():
 
 def test_replace_placeholders_in_configuration_no_placeholder():
     config = {"key": "value", "list": ["item1", "item2"]}
-    output_path = Path("output/test")
+    output_path = TEST_OUTPUT_PATH
     setting_workflow = "WF"
     result = simtools_runner._replace_placeholders_in_configuration(
         config.copy(), output_path, setting_workflow
@@ -97,7 +100,7 @@ def test_replace_placeholders_in_configuration_no_placeholder():
 
 def test_replace_placeholders_in_configuration_empty_config():
     config = {}
-    output_path = Path("output/test")
+    output_path = TEST_OUTPUT_PATH
     setting_workflow = "WF"
     result = simtools_runner._replace_placeholders_in_configuration(
         config.copy(), output_path, setting_workflow
@@ -132,7 +135,7 @@ def test_read_application_configuration_selected_steps(
     )
 
     configs, log_file = simtools_runner._read_application_configuration(
-        "dummy.yml", [2], mock_logger
+        DUMMY_CONFIG_FILE, [2], mock_logger
     )
     assert configs[0]["run_application"] is False
     assert configs[1]["run_application"] is True
@@ -161,7 +164,7 @@ def test_read_application_configuration_empty_applications(
     )
 
     configs, log_file = simtools_runner._read_application_configuration(
-        "dummy.yml", None, mock_logger
+        DUMMY_CONFIG_FILE, None, mock_logger
     )
     assert configs == []
     assert isinstance(log_file, Path)
@@ -201,7 +204,7 @@ def test_run_application_success(monkeypatch, mock_logger, tmp_path):
 
 def test_run_application_failure(monkeypatch, mock_logger):
     exc = subprocess.CalledProcessError(
-        returncode=1, cmd=["dummy_app", "--config", "dummy.yml"], stderr="error occurred"
+        returncode=1, cmd=["dummy_app", "--config", DUMMY_CONFIG_FILE], stderr="error occurred"
     )
     monkeypatch.setattr(subprocess, "run", mock.Mock(side_effect=exc))
 
