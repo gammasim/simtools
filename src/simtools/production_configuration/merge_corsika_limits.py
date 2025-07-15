@@ -235,7 +235,6 @@ class CorsikaMergeLimits:
         layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
         nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
 
-        # Group data by layout and azimuth for plotting
         grouped_by_layout_az = merged_table.group_by([layout_column, "azimuth"])
 
         for group in grouped_by_layout_az.groups:
@@ -246,13 +245,11 @@ class CorsikaMergeLimits:
             fig, axes = plt.subplots(1, 3, figsize=(18, 6))
             legend_handles, legend_labels = [], []
 
-            # Further group by NSB level to plot lines
             grouped_by_nsb = group.group_by(nsb_column)
             colors = plt.get_cmap("viridis")(np.linspace(0, 1, len(grouped_by_nsb.groups)))
 
             for i, nsb_group in enumerate(grouped_by_nsb.groups):
                 nsb_level = nsb_group[nsb_column][0]
-                # Aggregate data by zenith angle to get mean values for plotting
                 plot_columns = [
                     "zenith",
                     "lower_energy_limit",
