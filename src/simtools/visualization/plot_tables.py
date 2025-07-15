@@ -71,7 +71,7 @@ def read_table_data(config, db_config, data_path=None):
                 if data_path is None or _config.get("ignore_table_data_path", False)
                 else Path(data_path) / _config["file_name"]
             )
-            _logger.info(f"Reading tabled data from {file_name}")
+            _logger.info(f"Reading tabular data from {file_name}")
             if "legacy" in _config.get("type", ""):
                 table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
             else:
