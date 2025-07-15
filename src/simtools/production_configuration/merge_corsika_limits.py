@@ -84,11 +84,9 @@ class CorsikaMergeLimits:
         nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
         keys = [layout_column, "zenith", "azimuth", nsb_column]
 
-        # Reverse table to keep the last occurrence with unique
         reversed_table = merged_table[::-1]
         unique_table = unique(reversed_table, keys=keys, keep="first")
 
-        # Restore original order
         return unique_table[::-1]
 
     def merge_tables(self, input_files):
@@ -147,7 +145,6 @@ class CorsikaMergeLimits:
 
         missing_combinations_str = expected_combinations_str - found_combinations_set
 
-        # Find the original missing combinations (with original types)
         missing_combinations = [
             combo
             for combo in expected_combinations
