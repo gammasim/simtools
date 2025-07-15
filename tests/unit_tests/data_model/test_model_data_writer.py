@@ -67,7 +67,7 @@ def test_write(tmp_test_directory, args_dict_site):
     # check that table and metadata is good
     table = Table.read(w_1.product_data_file, format=ascii_format)
     assert "pixel" in table.colnames
-    assert "CTA" in table.meta.keys()
+    assert "cta" in table.meta.keys()
 
     w_1.product_data_format = "not_an_astropy_format"
     with pytest.raises(IORegistryError):
