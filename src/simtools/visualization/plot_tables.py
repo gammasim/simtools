@@ -79,10 +79,20 @@ def read_table_data(config, db_config, data_path=None):
         else:
             raise ValueError("No table data defined in configuration.")
 
-        label = _config.get("label", f"{_config.get('column_x')} vs {_config.get('column_y')}")
-        data[label] = _process_table_data(table, _config)
+        data[_get_plotting_label(_config, data)] = _process_table_data(table, _config)
 
     return data
+
+
+def _get_plotting_label(config, data):
+    """Get a label for plotting based on the configuration."""
+    label = config.get("label", f"{config.get('column_x')} vs {config.get('column_y')}")
+    if label in data:
+        index = 1
+        while f"{label} ({index})" in data:
+            index += 1
+        label = f"{label} ({index})"
+    return label
 
 
 def _process_table_data(table, _config):
