@@ -6,7 +6,6 @@ applications:
     output_file: merged_limits_merge_only.ecsv
     plot_limits: true
     output_path: simtools-output
-
   integration_tests:
   - output_file: merged_limits_merge_only.ecsv
   test_name: production_merge_corsika_limits_merge_only
