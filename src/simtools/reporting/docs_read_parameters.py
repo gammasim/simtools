@@ -76,19 +76,39 @@ class ReadParameters:
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
+        relative_path = f"_data_files/{output_file_name}"
         markdown_output_file = output_data_path / output_file_name
         if markdown_output_file.exists():
             logger.info(f"Markdown file already exists: {markdown_output_file}")
-            return f"_data_files/{output_file_name}"
+            return relative_path
 
         # Separate path for plot outputs
         outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
         outpath.mkdir(parents=True, exist_ok=True)
 
-        plot_names = []
-        if parameter == "camera_config_file" and parameter_version:
+        def _generate_plots(parameter, parameter_version, input_file, outpath, design_type):
+            """Generate plots based on the parameter type."""
+            plot_names = []
+
+            if parameter == "camera_config_file":
+                plot_names = _plot_camera_config(parameter, parameter_version, input_file, outpath)
+            elif parameter_version:
+                plot_names = _plot_parameter_tables(
+                    parameter, parameter_version, outpath, design_type
+                )
+
+            return plot_names
+
+        def _plot_camera_config(parameter, parameter_version, input_file, outpath):
+            """Generate plots for camera configuration files."""
+            if not parameter_version:
+                return []
+
+            plot_names = []
             plot_name = input_file.stem.replace(".", "-")
-            if not (Path(f"{outpath}/{plot_name}").with_suffix(".png")).exists():
+            plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
+
+            if not plot_path.exists():
                 plot_config = {
                     "file_name": input_file.name,
                     "telescope": self.array_element,
@@ -107,21 +127,25 @@ class ReadParameters:
             else:
                 logger.info(
                     "Camera configuration file plot already exists: %s",
-                    Path(f"{outpath}/{plot_names}").with_suffix(".png"),
+                    plot_path,
                 )
                 plot_names.append(plot_name)
 
-        if parameter != "camera_config_file" and parameter_version:
+            return plot_names
+
+        def _plot_parameter_tables(parameter, parameter_version, outpath, design_type):
+            """Generate plots for parameter tables."""
             telescope_design = self.db.get_design_model(
                 self.model_version, self.array_element, collection="telescopes"
             )
-            tel = (
-                None
-                if not self.array_element
-                else telescope_design
-                if not design_type
-                else self.array_element
-            )
+            # Replace the nested conditional expression with separate statements
+            if not self.array_element:
+                tel = None
+            elif not design_type:
+                tel = telescope_design
+            else:
+                tel = self.array_element
+
             config_data = plot_tables.generate_plot_configurations(
                 parameter=parameter,
                 parameter_version=parameter_version,
@@ -132,19 +156,25 @@ class ReadParameters:
                 db_config=self.db_config,
             )
 
-            if config_data:
-                plot_configs, output_files = config_data
-                plot_names = [i.stem for i in output_files]
-                for plot_config, output_file in zip(plot_configs, output_files):
-                    image_output_file = outpath / output_file.name
-                    if not image_output_file.with_suffix(".png").exists():
-                        plot_tables.plot(
-                            config=plot_config,
-                            output_file=image_output_file,
-                            db_config=self.db_config,
-                        )
-                        plt.close("all")
+            if not config_data:
+                return []
 
+            plot_configs, output_files = config_data
+            plot_names = [i.stem for i in output_files]
+
+            for plot_config, output_file in zip(plot_configs, output_files):
+                image_output_file = outpath / output_file.name
+                if not image_output_file.with_suffix(".png").exists():
+                    plot_tables.plot(
+                        config=plot_config,
+                        output_file=image_output_file,
+                        db_config=self.db_config,
+                    )
+                    plt.close("all")
+
+            return plot_names
+
+        plot_names = _generate_plots(parameter, parameter_version, input_file, outpath, design_type)
         # Write markdown file using the stored path
         file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
 
@@ -167,7 +197,7 @@ class ReadParameters:
             outfile.write(first_30_lines)
             outfile.write("\n```")
 
-        return f"_data_files/{output_file_name}"
+        return relative_path
 
     def _format_parameter_value(
         self, parameter, value_data, unit, file_flag, parameter_version=None, design_type=False
