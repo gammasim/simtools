@@ -1,8 +1,17 @@
 (runners)=
 
-# Runners for simulation software.
+# Runners for simulation software
 
-Support module for running CORSIKA and sim_telarray.
+Support modules for running simtools, CORSIKA, and sim_telarray.
+
+## simtools_runner
+
+(simtools-runner-1)=
+
+```{eval-rst}
+.. automodule:: runners.simtools_runner
+   :members:
+```
 
 ## corsika_runner
 
