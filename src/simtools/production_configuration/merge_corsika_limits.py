@@ -271,10 +271,7 @@ class CorsikaMergeLimits:
         for z in zeniths:
             mask = data["zenith"] == z
             values = data[mask][column_name]
-            if hasattr(values, "value"):
-                mean_values.append(np.mean(values.value))
-            else:
-                mean_values.append(np.mean(values))
+            mean_values.append(np.mean(values.value))
         return mean_values
 
     def _plot_limits_for_azimuth(self, axes, data, nsb_levels, colors):
@@ -284,8 +281,6 @@ class CorsikaMergeLimits:
 
         for i, nsb in enumerate(nsb_levels):
             nsb_mask = data[nsb_column] == nsb
-            if not np.any(nsb_mask):
-                continue
 
             filtered_data = data[nsb_mask]
             zeniths = np.unique(filtered_data["zenith"])
@@ -330,9 +325,6 @@ class CorsikaMergeLimits:
         for layout, azimuth in product(np.unique(merged_table[layout_column]), azimuths):
             fig, axes = plt.subplots(1, 3, figsize=(18, 6))
             mask = (merged_table[layout_column] == layout) & (merged_table["azimuth"] == azimuth)
-            if not np.any(mask):
-                plt.close(fig)
-                continue
 
             legend_handles, legend_labels = self._plot_limits_for_azimuth(
                 axes, merged_table[mask], nsb_levels, colors
@@ -365,13 +357,6 @@ class CorsikaMergeLimits:
 
     def write_merged_table(self, merged_table, output_file, input_files, grid_completeness):
         """Write the merged table to file and save metadata."""
-        if "description" not in merged_table.meta:
-            merged_table.meta["description"] = (
-                "Lookup table for CORSIKA limits computed from simulations."
-            )
-        if "loss_fraction" not in merged_table.meta:
-            _logger.warning("No loss_fraction found in any of the input tables")
-
         merged_table.meta.update(
             {
                 "created_by": "simtools-production-merge-corsika-limits",
