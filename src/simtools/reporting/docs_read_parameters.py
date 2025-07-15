@@ -65,6 +65,94 @@ class ReadParameters:
             )
         self._model_version = model_version
 
+    def _generate_plots(self, parameter, parameter_version, input_file, outpath, design_type):
+        """Generate plots based on the parameter type."""
+        plot_names = []
+
+        if parameter == "camera_config_file":
+            plot_names = self._plot_camera_config(parameter, parameter_version, input_file, outpath)
+        elif parameter_version:
+            plot_names = self._plot_parameter_tables(
+                parameter, parameter_version, outpath, design_type
+            )
+
+        return plot_names
+
+    def _plot_camera_config(self, parameter, parameter_version, input_file, outpath):
+        """Generate plots for camera configuration files."""
+        if not parameter_version:
+            return []
+
+        plot_names = []
+        plot_name = input_file.stem.replace(".", "-")
+        plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
+
+        if not plot_path.exists():
+            plot_config = {
+                "file_name": input_file.name,
+                "telescope": self.array_element,
+                "parameter_version": parameter_version,
+                "site": self.site,
+                "model_version": self.model_version,
+                "parameter": parameter,
+            }
+
+            plot_pixels.plot(
+                config=plot_config,
+                output_file=Path(f"{outpath}/{plot_name}"),
+                db_config=self.db_config,
+            )
+            plot_names.append(plot_name)
+        else:
+            logger.info(
+                "Camera configuration file plot already exists: %s",
+                plot_path,
+            )
+            plot_names.append(plot_name)
+
+        return plot_names
+
+    def _plot_parameter_tables(self, parameter, parameter_version, outpath, design_type):
+        """Generate plots for parameter tables."""
+        telescope_design = self.db.get_design_model(
+            self.model_version, self.array_element, collection="telescopes"
+        )
+
+        if not self.array_element:
+            tel = None
+        elif not design_type:
+            tel = telescope_design
+        else:
+            tel = self.array_element
+
+        config_data = plot_tables.generate_plot_configurations(
+            parameter=parameter,
+            parameter_version=parameter_version,
+            site=self.site,
+            telescope=tel,
+            output_path=outpath,
+            plot_type="all",
+            db_config=self.db_config,
+        )
+
+        if not config_data:
+            return []
+
+        plot_configs, output_files = config_data
+        plot_names = [i.stem for i in output_files]
+
+        for plot_config, output_file in zip(plot_configs, output_files):
+            image_output_file = outpath / output_file.name
+            if not image_output_file.with_suffix(".png").exists():
+                plot_tables.plot(
+                    config=plot_config,
+                    output_file=image_output_file,
+                    db_config=self.db_config,
+                )
+                plt.close("all")
+
+        return plot_names
+
     def _convert_to_md(self, parameter, parameter_version, input_file, design_type=False):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
@@ -78,124 +166,35 @@ class ReadParameters:
         output_file_name = Path(input_file.stem + ".md")
         relative_path = f"_data_files/{output_file_name}"
         markdown_output_file = output_data_path / output_file_name
-        if markdown_output_file.exists():
-            logger.info(f"Markdown file already exists: {markdown_output_file}")
-            return relative_path
 
-        # Separate path for plot outputs
-        outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
-        outpath.mkdir(parents=True, exist_ok=True)
+        if not markdown_output_file.exists():
+            outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+            outpath.mkdir(parents=True, exist_ok=True)
 
-        def _generate_plots(parameter, parameter_version, input_file, outpath, design_type):
-            """Generate plots based on the parameter type."""
-            plot_names = []
-
-            if parameter == "camera_config_file":
-                plot_names = _plot_camera_config(parameter, parameter_version, input_file, outpath)
-            elif parameter_version:
-                plot_names = _plot_parameter_tables(
-                    parameter, parameter_version, outpath, design_type
-                )
-
-            return plot_names
-
-        def _plot_camera_config(parameter, parameter_version, input_file, outpath):
-            """Generate plots for camera configuration files."""
-            if not parameter_version:
-                return []
-
-            plot_names = []
-            plot_name = input_file.stem.replace(".", "-")
-            plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
-
-            if not plot_path.exists():
-                plot_config = {
-                    "file_name": input_file.name,
-                    "telescope": self.array_element,
-                    "parameter_version": parameter_version,
-                    "site": self.site,
-                    "model_version": self.model_version,
-                    "parameter": parameter,
-                }
-
-                plot_pixels.plot(
-                    config=plot_config,
-                    output_file=Path(f"{outpath}/{plot_name}"),
-                    db_config=self.db_config,
-                )
-                plot_names.append(plot_name)
-            else:
-                logger.info(
-                    "Camera configuration file plot already exists: %s",
-                    plot_path,
-                )
-                plot_names.append(plot_name)
-
-            return plot_names
-
-        def _plot_parameter_tables(parameter, parameter_version, outpath, design_type):
-            """Generate plots for parameter tables."""
-            telescope_design = self.db.get_design_model(
-                self.model_version, self.array_element, collection="telescopes"
+            plot_names = self._generate_plots(
+                parameter, parameter_version, input_file, outpath, design_type
             )
-            # Replace the nested conditional expression with separate statements
-            if not self.array_element:
-                tel = None
-            elif not design_type:
-                tel = telescope_design
-            else:
-                tel = self.array_element
+            # Write markdown file using the stored path
+            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
 
-            config_data = plot_tables.generate_plot_configurations(
-                parameter=parameter,
-                parameter_version=parameter_version,
-                site=self.site,
-                telescope=tel,
-                output_path=outpath,
-                plot_type="all",
-                db_config=self.db_config,
-            )
+            with markdown_output_file.open("w", encoding="utf-8") as outfile:
+                outfile.write(f"# {input_file.stem}\n")
 
-            if not config_data:
-                return []
+                for plot_name in plot_names:
+                    outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
 
-            plot_configs, output_files = config_data
-            plot_names = [i.stem for i in output_files]
-
-            for plot_config, output_file in zip(plot_configs, output_files):
-                image_output_file = outpath / output_file.name
-                if not image_output_file.with_suffix(".png").exists():
-                    plot_tables.plot(
-                        config=plot_config,
-                        output_file=image_output_file,
-                        db_config=self.db_config,
-                    )
-                    plt.close("all")
-
-            return plot_names
-
-        plot_names = _generate_plots(parameter, parameter_version, input_file, outpath, design_type)
-        # Write markdown file using the stored path
-        file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
-
-        with markdown_output_file.open("w", encoding="utf-8") as outfile:
-            outfile.write(f"# {input_file.stem}\n")
-
-            for plot_name in plot_names:
-                outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
-
-            outfile.write(
-                "\n\nThe full file can be found in the Simulation Model repository [here]"
-                "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                f"model_parameters/Files/{input_file.name}).\n\n"
-            )
-            outfile.write("\n\n")
-            outfile.write("The first 30 lines of the file are:\n")
-            outfile.write("```\n")
-            first_30_lines = "".join(file_contents[:30])
-            outfile.write(first_30_lines)
-            outfile.write("\n```")
+                outfile.write(
+                    "\n\nThe full file can be found in the Simulation Model repository [here]"
+                    "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                    "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                    f"model_parameters/Files/{input_file.name}).\n\n"
+                )
+                outfile.write("\n\n")
+                outfile.write("The first 30 lines of the file are:\n")
+                outfile.write("```\n")
+                first_30_lines = "".join(file_contents[:30])
+                outfile.write(first_30_lines)
+                outfile.write("\n```")
 
         return relative_path
 
