@@ -69,9 +69,8 @@ class ReadParameters:
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
 
-        print()
-        print("parameter:", parameter, self.array_element, self.site)
-        print()
+        if not input_file.exists():
+            raise FileNotFoundError(f"Data file not found: {input_file}")
 
         # Store the markdown output file path early and don't modify it
         output_data_path = Path(self.output_path / "_data_files")

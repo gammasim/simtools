@@ -3,7 +3,9 @@
 from pathlib import Path
 from unittest import mock
 
+import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.visualization import plot_tables
 
@@ -328,7 +330,8 @@ def test_generate_output_file_name(
     assert result == expected
 
 
-def test_generate_plot_configurations(tmp_test_directory):
+def test_generate_plot_configurations(tmp_test_directory, db_config):
+    # Test with parameter that has no plot configuration
     assert (
         plot_tables.generate_plot_configurations(
             parameter="num_gains",
@@ -337,10 +340,12 @@ def test_generate_plot_configurations(tmp_test_directory):
             telescope="SSTS-design",
             output_path=tmp_test_directory,
             plot_type="all",
+            db_config=db_config,
         )
         is None
     )
 
+    # Test with parameter that has plot configuration and no telescope
     configs, output_files = plot_tables.generate_plot_configurations(
         parameter="atmospheric_profile",
         parameter_version="1.0.0",
@@ -348,11 +353,13 @@ def test_generate_plot_configurations(tmp_test_directory):
         telescope=None,
         output_path=tmp_test_directory,
         plot_type="all",
+        db_config=db_config,
     )
     assert len(configs) > 0
     for _file in output_files:
         assert "atmospheric_profile" in str(_file)
 
+    # Test with specific plot type
     configs, output_files = plot_tables.generate_plot_configurations(
         parameter="fadc_pulse_shape",
         parameter_version="1.0.0",
@@ -360,20 +367,121 @@ def test_generate_plot_configurations(tmp_test_directory):
         telescope="SSTS-design",
         output_path=tmp_test_directory,
         plot_type="fadc_pulse_shape",
+        db_config=db_config,
     )
     assert len(configs) == 1
     assert "tables" in configs[0]
     assert configs[0]["tables"][0]["column_x"] == "time"
 
-    with pytest.raises(
-        ValueError,
-        match="No plot configuration found for type 'non_existent_type' in parameter 'fadc_pulse_shape'.",
-    ):
-        plot_tables.generate_plot_configurations(
-            parameter="fadc_pulse_shape",
-            parameter_version="1.0.0",
-            site="South",
-            telescope="SSTS-design",
-            output_path=tmp_test_directory,
-            plot_type="non_existent_type",
-        )
+    # Test with non-existent plot type - should return None instead of raising ValueError
+    result = plot_tables.generate_plot_configurations(
+        parameter="fadc_pulse_shape",
+        parameter_version="1.0.0",
+        site="South",
+        telescope="SSTS-design",
+        output_path=tmp_test_directory,
+        plot_type="non_existent_type",
+        db_config=db_config,
+    )
+    assert result is None
+
+
+@mock.patch("simtools.visualization.plot_tables.gen.collect_data_from_file")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
+def test_generate_plot_configurations_with_nan_and_missing_columns(
+    mock_read_table, mock_collect_data, tmp_test_directory, db_config
+):
+    """Test handling of NaN values and missing columns in generate_plot_configurations."""
+    # Create mock table with valid and NaN columns
+    mock_table = Table()
+    mock_table["time"] = [1.0, 2.0, 3.0]
+    mock_table["amplitude"] = [0.1, 0.2, 0.3]
+    mock_table["amplitude_low_gain"] = [np.nan, np.nan, np.nan]  # All NaN column (tests line 193)
+    # "wavelength" column is missing (will test line 213)
+
+    mock_read_table.return_value = mock_table
+
+    # Mock schema with multiple table configs including one with missing column
+    mock_schema = {
+        "plot_configuration": [
+            {"type": "valid_plot", "tables": [{"column_x": "time", "column_y": "amplitude"}]},
+            {
+                "type": "invalid_plot_all_nan",
+                "tables": [{"column_x": "time", "column_y": "amplitude_low_gain"}],
+            },
+            {
+                "type": "multiple_tables_plot",
+                "tables": [
+                    {"column_x": "time", "column_y": "amplitude"},
+                    {
+                        "column_x": "wavelength",
+                        "column_y": "amplitude",
+                    },  # Missing column (tests line 213)
+                ],
+            },
+        ]
+    }
+    mock_collect_data.return_value = mock_schema
+
+    # Test with valid configuration
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="test_parameter",
+        parameter_version="1.0.0",
+        site="South",
+        telescope="TEST-01",
+        output_path=tmp_test_directory,
+        plot_type="all",
+        db_config=db_config,
+    )
+
+    # Should only have the valid configuration
+    assert len(configs) == 1
+    assert configs[0]["type"] == "valid_plot"
+
+    # Test telescope=None case (tests lines 181-182)
+    mock_read_table.reset_mock()
+    plot_tables.generate_plot_configurations(
+        parameter="test_parameter",
+        parameter_version="1.0.0",
+        site="South",
+        telescope=None,  # Tests lines 181-182
+        output_path=tmp_test_directory,
+        plot_type="all",
+        db_config=db_config,
+    )
+
+    # Verify telescope=None was properly passed through
+    mock_read_table.assert_called_once()
+    call_args = mock_read_table.call_args[0][0]
+    assert "telescope" in call_args
+    assert call_args["telescope"] is None
+
+    # Test with specific plot type
+    mock_read_table.reset_mock()
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="test_parameter",
+        parameter_version="1.0.0",
+        site="South",
+        telescope="TEST-01",
+        output_path=tmp_test_directory,
+        plot_type="valid_plot",
+        db_config=db_config,
+    )
+
+    assert len(configs) == 1
+    assert configs[0]["type"] == "valid_plot"
+
+    # Test with invalid plot type (NaN column)
+    mock_read_table.reset_mock()
+    result = plot_tables.generate_plot_configurations(
+        parameter="test_parameter",
+        parameter_version="1.0.0",
+        site="South",
+        telescope="TEST-01",
+        output_path=tmp_test_directory,
+        plot_type="invalid_plot_all_nan",
+        db_config=db_config,
+    )
+
+    # Should return None since no valid configs were found for this plot type
+    assert result is None
