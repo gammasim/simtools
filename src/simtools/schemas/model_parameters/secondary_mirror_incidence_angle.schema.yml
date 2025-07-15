@@ -27,3 +27,13 @@ source:
   - SimPipe Derived
 simulation_software:
   - name: simtools
+plot_configuration:
+  - type: secondary_mirror_incidence_angle
+    title: 'Secondary mirror incidence angle'
+    xtitle: 'Incident angle [deg]'
+    ytitle: 'Fraction'
+    no_markers: true
+    tables:
+      - parameter: secondary_mirror_incidence_angle
+        column_x: 'Incidence angle'
+        column_y: 'Fraction'

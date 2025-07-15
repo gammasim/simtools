@@ -33,3 +33,13 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: mirror_secondary_reflectivity
+plot_configuration:
+  - type: secondary_mirror_reflectivity
+    title: 'Secondary mirror reflectivity'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Reflectivity'
+    no_markers: true
+    tables:
+      - parameter: secondary_mirror_reflectivity
+        column_x: 'wavelength'
+        column_y: 'reflectivity'
