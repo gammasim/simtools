@@ -122,30 +122,6 @@ class CorsikaMergeLimits:
         )
         return merged_table
 
-    def _to_comparable_string(self, value):
-        """Convert value to a string, stripping units and normalizing floats."""
-        if hasattr(value, "value"):
-            value = value.value
-        try:
-            # Normalize float representation (e.g., 20.0 -> "20.0")
-            return str(float(value))
-        except (ValueError, TypeError):
-            return str(value)
-
-    def _get_found_combinations_as_str(self, merged_table, layout_column, nsb_column):
-        """Get found combinations from the table as a set of string tuples."""
-        found_combinations = set()
-        for row in merged_table:
-            found_combinations.add(
-                (
-                    self._to_comparable_string(row["zenith"]),
-                    self._to_comparable_string(row["azimuth"]),
-                    self._to_comparable_string(row[nsb_column]),
-                    self._to_comparable_string(row[layout_column]),
-                )
-            )
-        return found_combinations
-
     def check_grid_completeness(self, merged_table, grid_definition):
         """Check if the grid is complete by verifying all expected combinations exist."""
         if not grid_definition:
@@ -165,25 +141,25 @@ class CorsikaMergeLimits:
         )
         _logger.info(f"Expected {len(expected_combinations)} grid point combinations")
 
-        found_combinations_set = self._get_found_combinations_as_str(
-            merged_table, layout_column, nsb_column
+        found_combinations_set = set(
+            zip(
+                np.array(merged_table["zenith"].value, dtype=str),
+                np.array(merged_table["azimuth"].value, dtype=str),
+                np.array(merged_table[nsb_column], dtype=str),
+                np.array(merged_table[layout_column], dtype=str),
+            )
         )
-
         _logger.info(f"Found {len(found_combinations_set)} unique grid points in merged table")
 
-        # Convert expected combinations to strings for type-insensitive comparison
-        expected_combinations_str = {
-            tuple(self._to_comparable_string(v) for v in combo) for combo in expected_combinations
-        }
-        _logger.info(f"Expected combinations as strings: {expected_combinations_str}")
+        expected_combinations_str = {tuple(map(str, combo)) for combo in expected_combinations}
 
         missing_combinations_str = expected_combinations_str - found_combinations_set
-        _logger.info(f"Missing combinations: {missing_combinations_str}")
+
         # Find the original missing combinations (with original types)
         missing_combinations = [
             combo
             for combo in expected_combinations
-            if tuple(self._to_comparable_string(v) for v in combo) in missing_combinations_str
+            if tuple(map(str, combo)) in missing_combinations_str
         ]
 
         is_complete = not missing_combinations
@@ -202,12 +178,7 @@ class CorsikaMergeLimits:
         z_grid = np.zeros((len(zeniths), len(azimuths)))
         for i, zenith in enumerate(zeniths):
             for j, azimuth in enumerate(azimuths):
-                point_str = (
-                    self._to_comparable_string(zenith),
-                    self._to_comparable_string(azimuth),
-                    self._to_comparable_string(nsb),
-                    self._to_comparable_string(layout),
-                )
+                point_str = (str(zenith), str(azimuth), str(nsb), str(layout))
                 if point_str in found_combinations_str:
                     z_grid[i, j] = 1
 
