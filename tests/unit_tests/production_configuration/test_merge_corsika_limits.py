@@ -22,6 +22,7 @@ def create_test_table(
     telescope_ids=None,
     primary_particle="gamma",
     loss_fraction=1e-6,
+    lower_energy_limit=0.01,
 ):
     """Create a test CORSIKA limits table with the given parameters."""
     if telescope_ids is None:
@@ -34,7 +35,7 @@ def create_test_table(
         Column(data=[zenith], name="zenith"),
         Column(data=[azimuth], name="azimuth"),
         Column(data=[nsb_level], name="nsb_level"),
-        Column(data=[0.01], name="lower_energy_limit"),
+        Column(data=[lower_energy_limit], name="lower_energy_limit"),
         Column(data=[2000], name="upper_radius_limit"),
         Column(data=[10], name="viewcone_radius"),
         Column(data=[loss_fraction], name="loss_fraction"),
@@ -79,9 +80,9 @@ def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
     table1 = create_test_table(20, 0, "dark", "layout1")
     table2 = create_test_table(40, 0, "dark", "layout1")
 
-    # Create a duplicate of the first grid point with different values
+    # Create a duplicate of the first grid point with IDENTICAL values
     duplicate = create_test_table(20, 0, "dark", "layout1")
-    duplicate["lower_energy_limit"] = 0.02  # Different value
+    # No change to lower_energy_limit to ensure values are consistent
     mock_read_table.side_effect = [table1, table2, duplicate]
 
     merger = CorsikaMergeLimits(output_dir=tmp_path)
@@ -101,8 +102,8 @@ def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
     # Should find the row
     assert len(duplicate_rows) == 1
 
-    # Check that the last value was kept (from the duplicate with energy 0.02)
-    assert duplicate_rows["lower_energy_limit"][0] == 0.02
+    # Check that the value is correct
+    assert duplicate_rows["lower_energy_limit"][0] == 0.01
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
@@ -178,7 +179,7 @@ def test_plot_grid_coverage(mock_savefig, tmp_path):
         "zenith": [20, 40],
         "azimuth": [0],
         "nsb_level": ["dark"],
-        "array_names": ["layout1"],  # Changed from layouts to array_names
+        "array_name": ["layout1"],
     }
     merger = CorsikaMergeLimits(output_dir=tmp_path)
 
@@ -259,3 +260,35 @@ def test_read_file_list(tmp_path):
     # Test with non-existent file
     with pytest.raises(FileNotFoundError):
         merger.read_file_list(tmp_path / "non_existent.txt")
+
+
+@patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
+def test_merge_tables_with_inconsistent_duplicates(mock_read_table, tmp_path):
+    """Test merging tables with inconsistent duplicate grid points."""
+    table1 = create_test_table(20, 0, "dark", "layout1", lower_energy_limit=0.01)
+    # Duplicate with a different value
+    table2 = create_test_table(20, 0, "dark", "layout1", lower_energy_limit=0.02)
+    mock_read_table.side_effect = [table1, table2]
+
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
+
+    # Should always raise an error for inconsistent values
+    with pytest.raises(ValueError, match="Found 1 grid points with inconsistent values"):
+        merger.merge_tables(input_files)
+
+
+@patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
+def test_merge_tables_with_consistent_duplicates(mock_read_table, tmp_path):
+    """Test merging tables with consistent duplicate grid points."""
+    table1 = create_test_table(20, 0, "dark", "layout1")
+    # Exact same table
+    table2 = create_test_table(20, 0, "dark", "layout1")
+    mock_read_table.side_effect = [table1, table2]
+
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
+
+    # Should merge without error
+    merged_table = merger.merge_tables(input_files)
+    assert len(merged_table) == 1
