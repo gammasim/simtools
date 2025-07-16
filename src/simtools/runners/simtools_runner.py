@@ -23,13 +23,14 @@ def run_applications(args_dict, db_config, logger):
     logger : logging.Logger
         Logger for logging application output.
     """
-    configurations, log_file = _read_application_configuration(
+    configurations, runtime_environment, log_file = _read_application_configuration(
         args_dict["configuration_file"], args_dict.get("steps"), logger
     )
+    run_time = read_runtime_environment(runtime_environment)
 
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string(db_config))
+        file.write(dependencies.get_version_string(db_config, run_time))
 
         for config in configurations:
             app = config.get("application")
@@ -37,17 +38,23 @@ def run_applications(args_dict, db_config, logger):
                 logger.info(f"Skipping application: {app}")
                 continue
             logger.info(f"Running application: {app}")
-            stdout, stderr = run_application(app, config.get("configuration"), logger)
+            stdout, stderr = run_application(run_time, app, config.get("configuration"), logger)
             file.write("=" * 80 + "\n")
             file.write(f"Application: {app}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}\n")
 
 
-def run_application(application, configuration, logger):
+def run_application(runtime_environment, application, configuration, logger):
     """
     Run a simtools application and return stdout and stderr.
 
+    Allow to specify a runtime environment (e.g., Docker) and a working directory.
+
     Parameters
     ----------
+    runtime_environment : list
+        Command to run the application in the specified runtime environment.
+    workdir : str
+        Working directory for the application.
     application : str
         Name of the application to run.
     configuration : dict
@@ -65,9 +72,12 @@ def run_application(application, configuration, logger):
         yaml.dump(configuration, temp_config, default_flow_style=False)
         temp_config.flush()
         configuration_file = Path(temp_config.name)
+        command = [application, "--config", configuration_file]
+        if runtime_environment:
+            command = runtime_environment + command
         try:
             result = subprocess.run(
-                [application, "--config", configuration_file],
+                command,
                 check=True,
                 capture_output=True,
                 text=True,
@@ -75,7 +85,8 @@ def run_application(application, configuration, logger):
         except subprocess.CalledProcessError as exc:
             logger.error(f"Error running application {application}: {exc.stderr}")
             raise exc
-        return result.stdout, result.stderr
+
+    return result.stdout, result.stderr
 
 
 def _read_application_configuration(configuration_file, steps, logger):
@@ -103,11 +114,14 @@ def _read_application_configuration(configuration_file, steps, logger):
     -------
     dict
         Application configuration.
+    dict:
+        Runtime environment configuration.
     Path
         Path to the log file.
 
     """
-    configurations = gen.collect_data_from_file(configuration_file).get("applications")
+    job_configuration = gen.collect_data_from_file(configuration_file)
+    configurations = job_configuration.get("applications")
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
     logger.info(f"Setting workflow output path to {output_path}")
     for step_count, config in enumerate(configurations, start=1):
@@ -120,7 +134,11 @@ def _read_application_configuration(configuration_file, steps, logger):
         )
         configurations[step_count - 1] = config
 
-    return configurations, output_path / "simtools.log"
+    return (
+        configurations,
+        job_configuration.get("runtime_environment"),
+        output_path / "simtools.log",
+    )
 
 
 def _replace_placeholders_in_configuration(
@@ -189,3 +207,37 @@ def _set_input_output_directories(path):
     output_path = Path(str(workflow_dir).replace("input", "output")) / Path(setting_workflow)
     output_path.mkdir(parents=True, exist_ok=True)
     return output_path, "/".join(subdirs)
+
+
+def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
+    """
+    Read the runtime environment (e.g. docker runtime) and generate the required command.
+
+    Parameters
+    ----------
+    runtime_environment : str or None
+        Path to the runtime environment configuration file.
+
+    Returns
+    -------
+    list
+        Runtime command.
+    str
+        Working directory.
+    """
+    if runtime_environment is None:
+        return [], None
+
+    engine = runtime_environment.get("container_engine", "docker")
+    cmd = [engine, "run", "--rm", "-it", "-v", f"{Path.cwd()}:{workdir}", "-v", "/tmp:/tmp"]
+    for option in runtime_environment.get("options", None):
+        if option is not None:
+            cmd += option.split()
+
+    if env := runtime_environment.get("env_file"):
+        cmd += ["--env-file", env]
+    if net := runtime_environment.get("network"):
+        cmd += ["--network", net]
+
+    cmd.append(runtime_environment["image"])
+    return cmd
