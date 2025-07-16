@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=aed4fd45"></script>
+    <script src="_static/documentation_options.js?v=ff1c6ebc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gee413e1" />
+  <meta name="docsearch:version" content="0.1.dev1+g2456776" />
   </head>
   
   
@@ -585,6 +585,8 @@
 </li>
       <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter">check_db_for_existing_parameter() (data_model.model_data_writer.ModelDataWriter method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits.check_grid_completeness">check_grid_completeness() (production_configuration.merge_corsika_limits.CorsikaMergeLimits method)</a>
+</li>
       <li><a href="api-reference/testing.html#testing.assertions.check_output_from_sim_telarray">check_output_from_sim_telarray() (in module testing.assertions)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_collector.MetadataCollector.clean_meta_data">clean_meta_data() (data_model.metadata_collector.MetadataCollector method)</a>
@@ -740,6 +742,8 @@
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig">CorsikaConfig (class in corsika.corsika_config)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms">CorsikaHistograms (class in corsika.corsika_histograms)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits">CorsikaMergeLimits (class in production_configuration.merge_corsika_limits)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.corsika_runner.CorsikaRunner">CorsikaRunner (class in runners.corsika_runner)</a>
 </li>
@@ -1631,6 +1635,8 @@
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-grid.html#production_generate_grid.main">(in module production_generate_grid)</a>
 </li>
+        <li><a href="user-guide/applications/simtools-production-merge-corsika-limits.html#production_merge_corsika_limits.main">(in module production_merge_corsika_limits)</a>
+</li>
         <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.main">(in module simulate_light_emission)</a>
 </li>
       </ul></li>
@@ -1650,7 +1656,11 @@
 </li>
       </ul></li>
       <li><a href="api-reference/io_operations.html#io_operations.io_table_handler.merge_tables">merge_tables() (in module io_operations.io_table_handler)</a>
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits.merge_tables">(production_configuration.merge_corsika_limits.CorsikaMergeLimits method)</a>
 </li>
+      </ul></li>
       <li><a href="api-reference/data_model.html#data_model.metadata_collector.MetadataCollector">MetadataCollector (class in data_model.metadata_collector)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF">MirrorPanelPSF (class in ray_tracing.mirror_panel_psf)</a>
@@ -1890,11 +1900,15 @@
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
 </li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.merge_corsika_limits">production_configuration.merge_corsika_limits</a>
+</li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">production_derive_corsika_limits</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-derive-statistics.html#module-production_derive_statistics">production_derive_statistics</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-grid.html#module-production_generate_grid">production_generate_grid</a>
+</li>
+        <li><a href="user-guide/applications/simtools-production-merge-corsika-limits.html#module-production_merge_corsika_limits">production_merge_corsika_limits</a>
 </li>
         <li><a href="api-reference/ray_tracing.html#module-ray_tracing.mirror_panel_psf">ray_tracing.mirror_panel_psf</a>
 </li>
@@ -2106,11 +2120,15 @@
 </li>
       <li><a href="api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.plot_efficiency">plot_efficiency() (camera.camera_efficiency.CameraEfficiency method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits.plot_grid_coverage">plot_grid_coverage() (production_configuration.merge_corsika_limits.CorsikaMergeLimits method)</a>
+</li>
       <li><a href="api-reference/visualization.html#visualization.visualize.plot_hist_2d">plot_hist_2d() (in module visualization.visualize)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot_histogram">plot_histogram() (ray_tracing.ray_tracing.RayTracing method)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.plot_image">plot_image() (ray_tracing.psf_analysis.PSFImage method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits.plot_limits">plot_limits() (production_configuration.merge_corsika_limits.CorsikaMergeLimits method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.mirrors.Mirrors.plot_mirror_layout">plot_mirror_layout() (model.mirrors.Mirrors method)</a>
 </li>
@@ -2265,6 +2283,13 @@
 </li>
       </ul></li>
       <li>
+    production_configuration.merge_corsika_limits
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.merge_corsika_limits">module</a>
+</li>
+      </ul></li>
+      <li>
     production_derive_corsika_limits
 
       <ul>
@@ -2283,6 +2308,13 @@
 
       <ul>
         <li><a href="user-guide/applications/simtools-production-generate-grid.html#module-production_generate_grid">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_merge_corsika_limits
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-production-merge-corsika-limits.html#module-production_merge_corsika_limits">module</a>
 </li>
       </ul></li>
       <li><a href="api-reference/testing.html#testing.configuration.ProductionDBError">ProductionDBError</a>
@@ -2329,6 +2361,8 @@
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data">read_event_data() (simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.read_event_information">read_event_information() (corsika.corsika_histograms.CorsikaHistograms method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits.read_file_list">read_file_list() (production_configuration.merge_corsika_limits.CorsikaMergeLimits method)</a>
 </li>
       <li><a href="api-reference/io_operations.html#io_operations.hdf5_handler.read_hdf5">read_hdf5() (in module io_operations.hdf5_handler)</a>
 </li>
@@ -2987,6 +3021,8 @@
       <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json">write_dict_to_model_parameter_json() (data_model.model_data_writer.ModelDataWriter method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_dummy_telescope_configuration_file">write_dummy_telescope_configuration_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.merge_corsika_limits.CorsikaMergeLimits.write_merged_table">write_merged_table() (production_configuration.merge_corsika_limits.CorsikaMergeLimits method)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">write_optimization_data() (ray_tracing.mirror_panel_psf.MirrorPanelPSF method)</a>
 </li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-plot-tabular-data &#8212; simtools</title>
+    <title>simtools-production-merge-corsika-limits &#8212; simtools</title>
   
   
   
@@ -43,7 +43,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-plot-tabular-data';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-merge-corsika-limits';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
@@ -53,8 +53,8 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-plot-tabular-data-for-model-parameter" href="simtools-plot-tabular-data-for-model-parameter.html" />
-    <link rel="prev" title="simtools-plot-array-layout" href="simtools-plot-array-layout.html" />
+    <link rel="next" title="simtools-run-application" href="simtools-run-application.html" />
+    <link rel="prev" title="simtools-production-generate-grid" href="simtools-production-generate-grid.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g2456776" />
@@ -424,13 +424,13 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-plot-tabular-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data-for-model-parameter.html">simtools-plot-tabular-data-for-model-parameter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-production-merge-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
@@ -492,7 +492,7 @@
     
     <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">Applications</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-plot-tabular-data</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-production-merge-corsika-limits</span></li>
   </ul>
 </nav>
 </div>
@@ -509,31 +509,86 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-plot_tabular_data">
-<span id="simtools-plot-tabular-data"></span><h1>simtools-plot-tabular-data<a class="headerlink" href="#module-plot_tabular_data" title="Link to this heading">#</a></h1>
-<p>Plot tabular data read from file or from model parameter database.</p>
-<p>Uses a configuration file to define the data to be plotted and all
-plotting details.</p>
+  <section id="module-production_merge_corsika_limits">
+<span id="simtools-production-merge-corsika-limits"></span><h1>simtools-production-merge-corsika-limits<a class="headerlink" href="#module-production_merge_corsika_limits" title="Link to this heading">#</a></h1>
+<p>Merge CORSIKA limit tables from multiple grid points and check grid completeness.</p>
+<p>The corsika limit tables are first generated by the application
+‘simtools-production-derive-corsika-limits’ and contain derived limits for
+energy, radial distance, and viewcone for different observational conditions.
+The individual tables are merged into a single table for each grid point by
+the application ‘merge_tables’. This tool finalizes the merging process and
+checks the completeness of the grid against a provided grid definition file.</p>
+<p>This tool supports three main use cases:</p>
+<ol class="arabic simple">
+<li><p>Merge multiple CORSIKA limit tables into a single file and optionally generate
+plots of the derived limits.</p></li>
+<li><p>Merge tables and also check for grid completeness against a provided grid
+definition file. This requires the –grid_definition parameter. Coverage plots
+can also be generated.</p></li>
+<li><p>Check grid completeness of an already merged table file. This requires both
+the –merged_table and –grid_definition parameters.</p></li>
+</ol>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>config_file (str, required)</dt><dd><p>Configuration file name for plotting.</p>
+<dt>input_files (str)</dt><dd><p>Directory containing corsika_simulation_limits_lookup*.ecsv files to be merged,
+or a list of specific files to merge. Not used if –merged_table is provided.</p>
 </dd>
-<dt>output_file (str, required)</dt><dd><p>Output file name (without suffix).</p>
+<dt>input_files_list (str)</dt><dd><p>Path to a text file containing a list of input files (one file path per line)
+to be merged. Not used if –merged_table is provided.</p>
+</dd>
+<dt>merged_table (str)</dt><dd><p>Path to an already merged table file. Used for checking grid completeness.</p>
+</dd>
+<dt>grid_definition (str)</dt><dd><p>Path to a YAML file defining the expected grid points. Required for grid
+completeness checks and coverage plots.</p>
+</dd>
+<dt>output_file (str, optional)</dt><dd><p>Name of the output file for the merged limits table.
+Default is “merged_corsika_limits.ecsv”.</p>
+</dd>
+<dt>plot_grid_coverage (bool, optional)</dt><dd><p>Flag to generate plots showing grid coverage. Requires –grid_definition.</p>
+</dd>
+<dt>plot_limits (bool, optional)</dt><dd><p>Flag to generate plots showing the derived limits.</p>
 </dd>
 </dl>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Plot tabular data using a configuration file.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<ol class="arabic">
+<li><p>Merge CORSIKA limit tables from a directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-merge-corsika-limits \\</span>
+<span class="go">    --input_files &quot;simtools-output/corsika_limits/&quot; \\</span>
+<span class="go">    --output_file merged_limits.ecsv --plot_limits</span>
 </pre></div>
 </div>
+</li>
+<li><p>Merge tables and check grid completeness:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-merge-corsika-limits \\</span>
+<span class="go">    --input_files &quot;simtools-output/corsika_limits/&quot; \\</span>
+<span class="go">    --grid_definition grid_definition.yaml \\</span>
+<span class="go">    --output_file merged_limits.ecsv --plot_grid_coverage</span>
+</pre></div>
+</div>
+</li>
+<li><p>Check grid completeness of an existing merged table:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-merge-corsika-limits \\</span>
+<span class="go">    --merged_table merged_limits.ecsv \\</span>
+<span class="go">    --grid_definition grid_definition.yaml --plot_grid_coverage</span>
+</pre></div>
+</div>
+</li>
+<li><p>Merge tables using a list of files from a text file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-merge-corsika-limits \\</span>
+<span class="go">    --input_files_list file_list.txt \\</span>
+<span class="go">    --output_file merged_limits.ecsv</span>
+</pre></div>
+</div>
+</li>
+</ol>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="plot_tabular_data.main">
-<span class="sig-prename descclassname"><span class="pre">plot_tabular_data.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/plot_tabular_data.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plot_tabular_data.main" title="Link to this definition">#</a></dt>
-<dd><p>Plot tabular data.</p>
+<dt class="sig sig-object py" id="production_merge_corsika_limits.main">
+<span class="sig-prename descclassname"><span class="pre">production_merge_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_merge_corsika_limits.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_merge_corsika_limits.main" title="Link to this definition">#</a></dt>
+<dd><p>Merge CORSIKA limit tables and check grid completeness.</p>
 </dd></dl>
 
 </section>
@@ -549,20 +604,20 @@ plotting details.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-plot-array-layout.html"
+       href="simtools-production-generate-grid.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-plot-array-layout</p>
+        <p class="prev-next-title">simtools-production-generate-grid</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-plot-tabular-data-for-model-parameter.html"
+       href="simtools-run-application.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-plot-tabular-data-for-model-parameter</p>
+        <p class="prev-next-title">simtools-run-application</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -586,8 +641,8 @@ plotting details.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_tabular_data.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_merge_corsika_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -595,7 +650,7 @@ plotting details.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/user-guide/applications/simtools-plot-tabular-data.rst.txt"
+      <li><a href="../../_sources/user-guide/applications/simtools-production-merge-corsika-limits.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

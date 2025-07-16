@@ -68,3 +68,12 @@ the calculation of the number of events to be simulated given a pre-determined m
 .. automodule:: production_configuration.interpolation_handler
    :members:
 ```
+
+(merge-corsika-limits)=
+
+## merge_corsika_limits
+
+```{eval-rst}
+.. automodule:: production_configuration.merge_corsika_limits
+   :members:
+```
