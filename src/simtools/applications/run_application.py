@@ -69,6 +69,12 @@ def _parse(label, description, usage):
         nargs="+",
         help="List of steps to be execution (e.g., '--steps 7 8 9'; do not specify to run all).",
     )
+    config.parser.add_argument(
+        "--ignore_runtime_environment",
+        action="store_true",
+        help="Ignore the runtime environment and run the application in the current environment.",
+        default=False,
+    )
     return config.initialize(db_config=True)
 
 
