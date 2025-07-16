@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Plot tabular data."""
 
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -119,8 +120,38 @@ def _select_values_from_table(table, column_name, value):
     return table[np.isclose(table[column_name], value)]
 
 
+def _filter_config_by_plot_type(config, plot_type):
+    """Filter a configuration based on plot type."""
+    if plot_type != "all" and config.get("type") != plot_type:
+        return False
+    return True
+
+
+def _validate_config_columns(config, valid_columns, logger):
+    """Validate that all required columns in a config exist and have valid data."""
+    for table_config in config.get("tables", []):
+        required_cols = [table_config.get("column_x"), table_config.get("column_y")]
+        if not all(col in valid_columns for col in required_cols if col):
+            missing_cols = [col for col in required_cols if col not in valid_columns]
+            logger.info(
+                f"Skipping plot config {config.get('type')}: "
+                f"Missing valid data in columns: {missing_cols}"
+            )
+            return False
+    return True
+
+
+def _get_valid_columns(table):
+    """Return columns that exist and have valid data (not all NaN)."""
+    valid_columns = []
+    for col in table.colnames:
+        if not all(np.isnan(table[col])):
+            valid_columns.append(col)
+    return valid_columns
+
+
 def generate_plot_configurations(
-    parameter, parameter_version, site, telescope, output_path, plot_type
+    parameter, parameter_version, site, telescope, output_path, plot_type, db_config
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -129,6 +160,18 @@ def generate_plot_configurations(
     ----------
     parameter: str
         Model parameter name.
+    parameter_version: str
+        Parameter version.
+    site: str
+        Site name.
+    telescope: str
+        Telescope name.
+    output_path: str or Path
+        Output path for the plots.
+    plot_type: str
+        Plot type or "all" for all plots.
+    db_config: dict
+        Database configuration.
 
     Returns
     -------
@@ -136,6 +179,9 @@ def generate_plot_configurations(
         Tuple containing a list of plot configurations and a list of output file names.
         Return None, if no plot configurations are found.
     """
+    logger = logging.getLogger(__name__)
+
+    # Get schema configuration
     schema = gen.change_dict_keys_case(
         gen.collect_data_from_file(
             file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
@@ -144,18 +190,41 @@ def generate_plot_configurations(
     configs = schema.get("plot_configuration")
     if not configs:
         return None
-    if plot_type != "all":
-        configs = [config for config in configs if config.get("type") == plot_type]
-        if not configs:
-            raise ValueError(
-                f"No plot configuration found for type '{plot_type}' in parameter '{parameter}'."
-            )
 
+    # Get data table and determine valid columns
+    table = _read_table_from_model_database(
+        {
+            "parameter": parameter,
+            "site": site,
+            "telescope": telescope,
+            "parameter_version": parameter_version,
+        },
+        db_config=db_config,
+    )
+    valid_columns = _get_valid_columns(table)
+
+    # Filter configs based on plot type and column validity
+    valid_configs = []
+    for config in configs:
+        if not _filter_config_by_plot_type(config, plot_type):
+            continue
+
+        if _validate_config_columns(config, valid_columns, logger):
+            valid_configs.append(config)
+
+    if not valid_configs:
+        if plot_type != "all":
+            logger.warning("No valid plot config found.")
+        return None
+
+    # Generate output files
     output_files = []
-    for _config in configs:
+    for _config in valid_configs:
         for _table in _config.get("tables", []):
             _table["parameter_version"] = parameter_version
             _table["site"] = site
+            _table["telescope"] = telescope
+
         output_files.append(
             _generate_output_file_name(
                 parameter=parameter,
@@ -167,7 +236,7 @@ def generate_plot_configurations(
             )
         )
 
-    return configs, output_files
+    return valid_configs, output_files
 
 
 def _generate_output_file_name(
