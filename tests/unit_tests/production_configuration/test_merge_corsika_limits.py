@@ -35,13 +35,13 @@ def create_test_table(
         Column(data=[0.01], name="lower_energy_limit"),
         Column(data=[2000], name="upper_radius_limit"),
         Column(data=[10], name="viewcone_radius"),
+        Column(data=[loss_fraction], name="loss_fraction"),
     ]
 
     table = Table(columns)
     table.meta = {
         "created": "2025-07-09T12:48:35.535873",
         "description": "Lookup table for CORSIKA limits computed from simulations.",
-        "loss_fraction": loss_fraction,
     }
 
     return table
@@ -65,8 +65,9 @@ def test_merge_tables(mock_read_table, tmp_path):
     assert merged_table[1]["array_name"] == "layout1"
     assert merged_table[2]["array_name"] == "layout2"
 
-    assert "loss_fraction" in merged_table.meta
-    assert merged_table.meta["loss_fraction"] == 1e-6
+    # Check loss_fraction is now in columns, not metadata
+    assert "loss_fraction" in merged_table.colnames
+    assert merged_table["loss_fraction"][0] == 1e-6
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
@@ -114,8 +115,10 @@ def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
     merged_table = merger.merge_tables(input_files)
 
-    # Check that metadata from first table was used
-    assert merged_table.meta["loss_fraction"] == 1e-6
+    # Check that both loss_fraction values are preserved in the columns
+    assert "loss_fraction" in merged_table.colnames
+    assert merged_table["loss_fraction"][0] == 1e-6
+    assert merged_table["loss_fraction"][1] == 2e-6
 
 
 def test_check_grid_completeness(tmp_path):
@@ -134,7 +137,7 @@ def test_check_grid_completeness(tmp_path):
         "zenith": [20, 40, 60],
         "azimuth": [0, 180],
         "nsb_level": ["dark"],
-        "layouts": ["layout1"],
+        "array_names": ["layout1"],  # Changed from layouts to array_names
     }
     merger = CorsikaMergeLimits(output_dir=tmp_path)
 
@@ -173,7 +176,7 @@ def test_plot_grid_coverage(mock_savefig, tmp_path):
         "zenith": [20, 40],
         "azimuth": [0],
         "nsb_level": ["dark"],
-        "layouts": ["layout1"],
+        "array_names": ["layout1"],  # Changed from layouts to array_names
     }
     merger = CorsikaMergeLimits(output_dir=tmp_path)
 
