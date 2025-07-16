@@ -76,8 +76,10 @@ class CorsikaMergeLimits:
         """Read tables from files and collect metadata. Move loss_fraction from meta to column."""
         tables = []
         metadata = {}
-        grid_points = set()
+        # Track grid points and their associated values to check for inconsistencies
+        grid_point_values = {}
         duplicate_points = []
+        inconsistent_points = []
 
         for file_path in input_files:
             table = data_reader.read_table_from_file(file_path)
@@ -89,22 +91,92 @@ class CorsikaMergeLimits:
 
             for row in table:
                 grid_point = (row["zenith"], row["azimuth"], row["nsb_level"], row["array_name"])
-                if grid_point in grid_points:
+
+                if grid_point in grid_point_values:
                     duplicate_points.append(grid_point)
+
+                    current_values = {
+                        col: row[col]
+                        for col in row.colnames
+                        if col not in ["zenith", "azimuth", "nsb_level", "array_name"]
+                    }
+                    previous_values = grid_point_values[grid_point]
+
+                    keys_to_compare = set(current_values.keys()) & set(previous_values.keys()) - {
+                        "telescope_ids"
+                    }
+                    if any(
+                        not np.array_equal(current_values[k], previous_values[k])
+                        for k in keys_to_compare
+                    ):
+                        inconsistent_points.append(
+                            {
+                                "grid_point": grid_point,
+                                "file": str(file_path),
+                                "previous_file": grid_point_values[grid_point]["__file__"],
+                            }
+                        )
+
+                    grid_point_values[grid_point] = current_values
+                    grid_point_values[grid_point]["__file__"] = str(file_path)
                 else:
-                    grid_points.add(grid_point)
+                    values = {
+                        col: row[col]
+                        for col in row.colnames
+                        if col not in ["zenith", "azimuth", "nsb_level", "array_name"]
+                    }
+                    values["__file__"] = str(file_path)
+                    grid_point_values[grid_point] = values
 
             if not metadata:
                 metadata = table.meta
 
-        return tables, metadata, grid_points, duplicate_points
+        return (
+            tables,
+            metadata,
+            set(grid_point_values.keys()),
+            duplicate_points,
+            inconsistent_points,
+        )
 
-    def _report_and_merge(self, tables, metadata, duplicate_points):
-        """Report issues and merge tables."""
+    def _report_and_merge(self, tables, metadata, duplicate_points, inconsistent_points):
+        """Report issues and merge tables.
+
+        Parameters
+        ----------
+        tables : list
+            List of tables to merge.
+        metadata : dict
+            Metadata to include in the merged table.
+        duplicate_points : list
+            List of grid points that occur in multiple tables.
+        inconsistent_points : list
+            List of grid points with inconsistent values across tables.
+
+        Returns
+        -------
+        astropy.table.Table
+            The merged table.
+
+        Raises
+        ------
+        ValueError
+            If inconsistent duplicate grid points are found.
+        """
         if duplicate_points:
             _logger.warning(f"Found {len(duplicate_points)} duplicate grid points across tables")
             _logger.warning(f"First few duplicates: {duplicate_points[:5]}")
-            _logger.warning("When duplicates exist, only the last occurrence will be kept")
+
+            if inconsistent_points:
+                message = (
+                    f"Found {len(inconsistent_points)} grid points with inconsistent values in "
+                    "tables. This likely indicates an issue with the input data. "
+                    f"First inconsistent point: {inconsistent_points[0]}"
+                )
+                _logger.error(message)
+                raise ValueError(message)
+
+            _logger.info("All duplicates have consistent values. Last occurrence will be kept.")
 
         merged_table = vstack(tables, metadata_conflicts="silent")
         merged_table.meta.update(metadata)
@@ -123,9 +195,10 @@ class CorsikaMergeLimits:
         """Merge multiple CORSIKA limit tables into a single table.
 
         This function reads and merges CORSIKA limit tables from multiple files,
-        handling duplicate grid points by keeping only the last occurrence.
-        It also converts the loss_fraction value from metadata to a table column
-        and logs a message if multiple loss_fraction values are found.
+        handling duplicate grid points by checking for consistency and raising an
+        error if inconsistent duplicates are found. It also converts the loss_fraction
+        value from metadata to a table column and logs a message if multiple
+        loss_fraction values are found.
 
         Parameters
         ----------
@@ -137,11 +210,20 @@ class CorsikaMergeLimits:
         astropy.table.Table
             The merged table with duplicates removed, containing all rows from input files.
             The table will be sorted by array_name, zenith, azimuth, and nsb_level.
+
+        Raises
+        ------
+        ValueError
+            If inconsistent duplicate grid points are found.
         """
         _logger.info(f"Merging {len(input_files)} CORSIKA limit tables")
 
-        tables, metadata, grid_points, duplicate_points = self._read_and_collect_tables(input_files)
-        merged_table = self._report_and_merge(tables, metadata, duplicate_points)
+        tables, metadata, grid_points, duplicate_points, inconsistent_points = (
+            self._read_and_collect_tables(input_files)
+        )
+        merged_table = self._report_and_merge(
+            tables, metadata, duplicate_points, inconsistent_points
+        )
 
         if "loss_fraction" in merged_table.colnames:
             unique_loss_fractions = np.unique(merged_table["loss_fraction"])
