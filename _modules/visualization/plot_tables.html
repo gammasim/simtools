@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=cce13ca1"></script>
+    <script src="../../_static/documentation_options.js?v=aed4fd45"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g11e7d3d" />
+  <meta name="docsearch:version" content="0.1.dev1+gee413e1" />
   </head>
   
   
@@ -436,6 +436,7 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sd">&quot;&quot;&quot;Plot tabular data.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -560,10 +561,40 @@
     <span class="k">return</span> <span class="n">table</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span> <span class="n">value</span><span class="p">)]</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_filter_config_by_plot_type</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter a configuration based on plot type.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">!=</span> <span class="s2">&quot;all&quot;</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">plot_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_config_columns</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">valid_columns</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate that all required columns in a config exist and have valid data.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">table_config</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tables&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">required_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">table_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;column_x&quot;</span><span class="p">),</span> <span class="n">table_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;column_y&quot;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">col</span> <span class="ow">in</span> <span class="n">valid_columns</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">required_cols</span> <span class="k">if</span> <span class="n">col</span><span class="p">):</span>
+            <span class="n">missing_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">required_cols</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_columns</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Skipping plot config </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Missing valid data in columns: </span><span class="si">{</span><span class="n">missing_cols</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_valid_columns</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return columns that exist and have valid data (not all NaN).&quot;&quot;&quot;</span>
+    <span class="n">valid_columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">])):</span>
+            <span class="n">valid_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">valid_columns</span>
+
+
 <div class="viewcode-block" id="generate_plot_configurations">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_tables.generate_plot_configurations">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_plot_configurations</span><span class="p">(</span>
-    <span class="n">parameter</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">plot_type</span>
+    <span class="n">parameter</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">,</span> <span class="n">db_config</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate plot configurations for a model parameter from schema files.</span>
@@ -572,6 +603,18 @@
 <span class="sd">    ----------</span>
 <span class="sd">    parameter: str</span>
 <span class="sd">        Model parameter name.</span>
+<span class="sd">    parameter_version: str</span>
+<span class="sd">        Parameter version.</span>
+<span class="sd">    site: str</span>
+<span class="sd">        Site name.</span>
+<span class="sd">    telescope: str</span>
+<span class="sd">        Telescope name.</span>
+<span class="sd">    output_path: str or Path</span>
+<span class="sd">        Output path for the plots.</span>
+<span class="sd">    plot_type: str</span>
+<span class="sd">        Plot type or &quot;all&quot; for all plots.</span>
+<span class="sd">    db_config: dict</span>
+<span class="sd">        Database configuration.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -579,6 +622,9 @@
 <span class="sd">        Tuple containing a list of plot configurations and a list of output file names.</span>
 <span class="sd">        Return None, if no plot configurations are found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="c1"># Get schema configuration</span>
     <span class="n">schema</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
         <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span>
             <span class="n">file_name</span><span class="o">=</span><span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">&quot;model_parameters&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">.schema.yml&quot;</span>
@@ -587,18 +633,41 @@
     <span class="n">configs</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_configuration&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">configs</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">!=</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
-        <span class="n">configs</span> <span class="o">=</span> <span class="p">[</span><span class="n">config</span> <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">configs</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">plot_type</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">configs</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;No plot configuration found for type &#39;</span><span class="si">{</span><span class="n">plot_type</span><span class="si">}</span><span class="s2">&#39; in parameter &#39;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
-            <span class="p">)</span>
 
+    <span class="c1"># Get data table and determine valid columns</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">_read_table_from_model_database</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">parameter</span><span class="p">,</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">site</span><span class="p">,</span>
+            <span class="s2">&quot;telescope&quot;</span><span class="p">:</span> <span class="n">telescope</span><span class="p">,</span>
+            <span class="s2">&quot;parameter_version&quot;</span><span class="p">:</span> <span class="n">parameter_version</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">valid_columns</span> <span class="o">=</span> <span class="n">_get_valid_columns</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+    <span class="c1"># Filter configs based on plot type and column validity</span>
+    <span class="n">valid_configs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_filter_config_by_plot_type</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">_validate_config_columns</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">valid_columns</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+            <span class="n">valid_configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_configs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">!=</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No valid plot config found.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Generate output files</span>
     <span class="n">output_files</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">_config</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">_config</span> <span class="ow">in</span> <span class="n">valid_configs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">_table</span> <span class="ow">in</span> <span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tables&quot;</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">_table</span><span class="p">[</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_version</span>
             <span class="n">_table</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site</span>
+            <span class="n">_table</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">telescope</span>
+
         <span class="n">output_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">_generate_output_file_name</span><span class="p">(</span>
                 <span class="n">parameter</span><span class="o">=</span><span class="n">parameter</span><span class="p">,</span>
@@ -610,7 +679,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">configs</span><span class="p">,</span> <span class="n">output_files</span></div>
+    <span class="k">return</span> <span class="n">valid_configs</span><span class="p">,</span> <span class="n">output_files</span></div>
 
 
 

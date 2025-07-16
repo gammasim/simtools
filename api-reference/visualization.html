@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=cce13ca1"></script>
+    <script src="../_static/documentation_options.js?v=aed4fd45"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g11e7d3d" />
+  <meta name="docsearch:version" content="0.1.dev1+gee413e1" />
   </head>
   
   
@@ -920,12 +920,24 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 <p>Plot tabular data.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_tables.generate_plot_configurations">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">generate_plot_configurations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#generate_plot_configurations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.generate_plot_configurations" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">generate_plot_configurations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#generate_plot_configurations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.generate_plot_configurations" title="Link to this definition">#</a></dt>
 <dd><p>Generate plot configurations for a model parameter from schema files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>parameter: str</strong></dt><dd><p>Model parameter name.</p>
+</dd>
+<dt><strong>parameter_version: str</strong></dt><dd><p>Parameter version.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>telescope: str</strong></dt><dd><p>Telescope name.</p>
+</dd>
+<dt><strong>output_path: str or Path</strong></dt><dd><p>Output path for the plots.</p>
+</dd>
+<dt><strong>plot_type: str</strong></dt><dd><p>Plot type or “all” for all plots.</p>
+</dd>
+<dt><strong>db_config: dict</strong></dt><dd><p>Database configuration.</p>
 </dd>
 </dl>
 </dd>
