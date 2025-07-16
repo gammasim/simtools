@@ -221,7 +221,11 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_path):
     # Prepare mocks
     mock_logger = mock.Mock()
     mock_db_config = {"db": "config"}
-    mock_args_dict = {"configuration_file": "dummy_config.yml", "steps": None}
+    mock_args_dict = {
+        "configuration_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
 
     # Prepare configurations returned by _read_application_configuration
     mock_configurations = [
@@ -273,7 +277,11 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_path):
 def test_run_applications_handles_run_application_exception(monkeypatch, tmp_path):
     mock_logger = mock.Mock()
     mock_db_config = {"db": "config"}
-    mock_args_dict = {"configuration_file": "dummy_config.yml", "steps": None}
+    mock_args_dict = {
+        "configuration_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
 
     mock_configurations = [
         {"application": "app1", "run_application": True, "configuration": {"key": "value1"}}
@@ -364,7 +372,6 @@ def test_read_runtime_environment_with_full_options():
         common_container_engine,
         "run",
         "--rm",
-        "-it",
         "-v",
         f"{Path.cwd()}:{workdir}",
         "-w",
@@ -390,7 +397,6 @@ def test_read_runtime_environment_with_minimal_options():
         "docker",
         "run",
         "--rm",
-        "-it",
         "-v",
         f"{Path.cwd()}:{workdir}",
         "-w",
@@ -419,7 +425,6 @@ def test_read_runtime_environment_with_missing_options():
         "docker",
         "run",
         "--rm",
-        "-it",
         "-v",
         f"{Path.cwd()}:{workdir}",
         "-w",
