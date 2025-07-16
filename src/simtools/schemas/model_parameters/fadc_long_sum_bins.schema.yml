@@ -10,7 +10,7 @@ description: |-
   Number of bins summed up in ADC sum data or read out in sampled data
   in case long FADC readout mode is enabled.
   This number corresponds to the experimental length of the readout window.
-  The start of the readout window starts fadc_sum_offset bins
+  The start of the readout window starts fadc_long_sum_offset bins
   before the calculated time of the trigger, as long as the readout window
   fits fully in the simulated window.  With peak sensing readout, the same
   interval is used for searching the peak signal.
