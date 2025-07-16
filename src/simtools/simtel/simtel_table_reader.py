@@ -299,19 +299,13 @@ def _adjust_columns_length(rows, n_columns):
 
 
 def _process_line_parts(parts):
-    """Process a single line of data and convert parts to floats."""
+    """Convert parts to floats, skipping non-float entries."""
     row = []
-    i = 0
-    while i < len(parts):
+    for p in parts:
         try:
-            # Try to convert to float, if fails, it might be a string
-            row.append(float(parts[i]))
+            row.append(float(p))
         except ValueError:
-            logger.debug(f"Skipping non-float part: {parts[i]}")
-            # Skip this part and move to the next
-            i += 1
-            continue
-        i += 1
+            logger.debug(f"Skipping non-float part: {p}")
     return row
 
 
