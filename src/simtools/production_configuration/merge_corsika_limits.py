@@ -258,7 +258,7 @@ class CorsikaMergeLimits:
             'zenith': list of zenith angles,
             'azimuth': list of azimuth angles,
             'nsb_level': list of NSB levels,
-            'array_names': list of array names
+            'array_name': list of array name
 
         Returns
         -------
@@ -365,7 +365,7 @@ class CorsikaMergeLimits:
             'zenith': list of zenith angles,
             'azimuth': list of azimuth angles,
             'nsb_level': list of NSB levels,
-            'array_names': list of array names
+            'array_name': list of array names
 
         Returns
         -------
