@@ -1,10 +1,7 @@
 """Tools for running applications in the simtools framework."""
 
 import subprocess
-import tempfile
 from pathlib import Path
-
-import yaml
 
 import simtools.utils.general as gen
 from simtools import dependencies
@@ -68,25 +65,47 @@ def run_application(runtime_environment, application, configuration, logger):
         stdout and stderr from the application run.
 
     """
-    with tempfile.NamedTemporaryFile(mode="w", delete=True, suffix=".yml") as temp_config:
-        yaml.dump(configuration, temp_config, default_flow_style=False)
-        temp_config.flush()
-        configuration_file = Path(temp_config.name)
-        command = [application, "--config", configuration_file]
-        if runtime_environment:
-            command = runtime_environment + command
-        try:
-            result = subprocess.run(
-                command,
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError as exc:
-            logger.error(f"Error running application {application}: {exc.stderr}")
-            raise exc
+    command = [application, *_convert_dict_to_args(configuration)]
+    if runtime_environment:
+        command = runtime_environment + command
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        logger.error(f"Error running application {application}: {exc.stderr}")
+        raise exc
 
     return result.stdout, result.stderr
+
+
+def _convert_dict_to_args(parameters):
+    """
+    Convert a dictionary of parameters to a list of command line arguments.
+
+    Parameters
+    ----------
+    parameters : dict
+        Dictionary containing parameters to convert.
+
+    Returns
+    -------
+    list
+        List of command line arguments.
+    """
+    args = []
+    for key, value in parameters.items():
+        if isinstance(value, bool):
+            if value:
+                args.append(f"--{key}")
+        elif isinstance(value, list):
+            args.extend([f"--{key}", *(str(item) for item in value)])
+        else:
+            args.extend([f"--{key}", str(value)])
+    return args
 
 
 def _read_application_configuration(configuration_file, steps, logger):
@@ -222,17 +241,15 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
     -------
     list
         Runtime command.
-    str
-        Working directory.
     """
     if runtime_environment is None:
-        return [], None
+        return []
 
     engine = runtime_environment.get("container_engine", "docker")
-    cmd = [engine, "run", "--rm", "-it", "-v", f"{Path.cwd()}:{workdir}", "-v", "/tmp:/tmp"]
-    for option in runtime_environment.get("options", None):
-        if option is not None:
-            cmd += option.split()
+    cmd = [engine, "run", "--rm", "-it", "-v", f"{Path.cwd()}:{workdir}", "-w", workdir]
+
+    if options := runtime_environment.get("options"):
+        cmd.extend(options)
 
     if env := runtime_environment.get("env_file"):
         cmd += ["--env-file", env]
