@@ -1,7 +1,9 @@
 """Unit tests for merge_corsika_limits.py module."""
 
+from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from astropy.table import Column, Table, vstack
 
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
@@ -232,3 +234,28 @@ def test_write_merged_table(tmp_path):
 
         mock_write.assert_called_once_with(output_file, format=ECSV_FORMAT, overwrite=True)
         mock_dump.assert_called_once()
+
+
+def test_read_file_list(tmp_path):
+    """Test reading a list of files from a text file."""
+    # Create a test file with a list of files
+    file_list_path = tmp_path / "file_list.txt"
+    with open(file_list_path, "w", encoding="utf-8") as f:
+        f.write("# This is a comment\n")
+        f.write("\n")  # Empty line
+        f.write(f"{tmp_path}/file1.ecsv\n")
+        f.write(f"{tmp_path}/file2.ecsv\n")
+        f.write("  # Another comment\n")
+        f.write(f"{tmp_path}/file3.ecsv  \n")  # With trailing whitespace
+
+    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    files = merger.read_file_list(file_list_path)
+
+    assert len(files) == 3
+    assert files[0] == Path(f"{tmp_path}/file1.ecsv")
+    assert files[1] == Path(f"{tmp_path}/file2.ecsv")
+    assert files[2] == Path(f"{tmp_path}/file3.ecsv")
+
+    # Test with non-existent file
+    with pytest.raises(FileNotFoundError):
+        merger.read_file_list(tmp_path / "non_existent.txt")

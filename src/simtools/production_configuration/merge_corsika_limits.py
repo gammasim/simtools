@@ -2,6 +2,7 @@
 
 import logging
 from itertools import product
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +32,45 @@ class CorsikaMergeLimits:
         self.output_dir = (
             io_handler.IOHandler().get_output_directory() if output_dir is None else output_dir
         )
+
+    def read_file_list(self, file_list_path):
+        """Read a list of input files from a text file.
+
+        The text file should contain one file path per line.
+        Lines starting with '#' are treated as comments and ignored.
+        Empty lines are also ignored.
+
+        Parameters
+        ----------
+        file_list_path : Path or str
+            Path to the text file containing the list of input files.
+
+        Returns
+        -------
+        list
+            List of Path objects for the input files.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the file list does not exist.
+        """
+        file_list_path = Path(file_list_path).expanduser()
+        _logger.info(f"Reading input files from list file: {file_list_path}")
+
+        if not file_list_path.exists():
+            raise FileNotFoundError(f"Input files list not found: {file_list_path}")
+
+        files = []
+        with open(file_list_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):  # Skip empty lines and comments
+                    file_path = Path(line).expanduser()
+                    files.append(file_path)
+
+        _logger.info(f"Found {len(files)} files in list file {file_list_path}")
+        return files
 
     def _read_and_collect_tables(self, input_files):
         """Read tables from files and collect metadata. Move loss_fraction from meta to column."""
