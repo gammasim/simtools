@@ -88,7 +88,7 @@ Plot layout from a parameter file with a list of telescopes:
 .. code-block:: console
 
     simtools-plot-array-layout
-        --array_layout_parameter_file tests/resources/model_parameters/.json
+        --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json
         --model_version 6.0.0
 
 
