@@ -298,6 +298,23 @@ def _adjust_columns_length(rows, n_columns):
     return [row[:n_columns] + [0.0] * max(0, n_columns - len(row)) for row in rows]
 
 
+def _process_line_parts(parts):
+    """Process a single line of data and convert parts to floats."""
+    row = []
+    i = 0
+    while i < len(parts):
+        try:
+            # Try to convert to float, if fails, it might be a string
+            row.append(float(parts[i]))
+        except ValueError:
+            logger.debug(f"Skipping non-float part: {parts[i]}")
+            # Skip this part and move to the next
+            i += 1
+            continue
+        i += 1
+    return row
+
+
 def _read_simtel_data(file_path):
     """
     Read data, comments, and (if available) axis definition from sim_telarray table.
@@ -332,21 +349,8 @@ def _read_simtel_data(file_path):
             meta_lines.append(stripped.lstrip("#").strip())
         elif stripped:  # Data
             data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
-    rows = []
-    for line in data_lines:
-        parts = line.split()
-        i = 0
-        row = []
-        while i < len(parts):
-            try:
-                # Try to convert to float, if fails, it might be a string
-                row.append(float(parts[i]))
-            except ValueError:
-                logger.debug(f"Skipping non-float part: {parts[i]}")
-                i += 1
-                continue
-            i += 1
-        rows.append(row)
+
+    rows = [_process_line_parts(line.split()) for line in data_lines]
     n_columns = max(len(row) for row in rows) if rows else 0
 
     return rows, "\n".join(meta_lines), n_columns, n_dim_axis
