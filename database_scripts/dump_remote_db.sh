@@ -42,6 +42,6 @@ if ! mongodump --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}" \
      --authenticationDatabase="$SIMTOOLS_DB_API_AUTHENTICATION_DATABASE" \
      --db="$DB_TO_DUMP" --out="./dump/"; then
 
-    echo "Failed to connect to MongoDB server. Please check your connection settings and try again."
+    echo "Failed to connect to MongoDB server. Please check connection settings and try again."
     exit 1
 fi

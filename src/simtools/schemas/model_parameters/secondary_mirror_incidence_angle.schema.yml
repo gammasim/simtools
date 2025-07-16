@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 title: Schema for secondary_mirror_incidence_angle model parameter
-version: 0.1.0
+schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
@@ -27,3 +27,13 @@ source:
   - SimPipe Derived
 simulation_software:
   - name: simtools
+plot_configuration:
+  - type: secondary_mirror_incidence_angle
+    title: 'Secondary mirror incidence angle'
+    xtitle: 'Incident angle [deg]'
+    ytitle: 'Fraction'
+    no_markers: true
+    tables:
+      - parameter: secondary_mirror_incidence_angle
+        column_x: 'Incidence angle'
+        column_y: 'Fraction'

@@ -1,0 +1,56 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: primary_particle, datatype: string}
+# - {name: array_name, datatype: string}
+# - {name: telescope_ids, datatype: string, subtype: json}
+# - {name: zenith, unit: deg, datatype: float64}
+# - {name: azimuth, unit: deg, datatype: float64}
+# - {name: nsb_level, datatype: float64}
+# - {name: lower_energy_limit, unit: TeV, datatype: float64}
+# - {name: upper_radius_limit, unit: m, datatype: float64}
+# - {name: viewcone_radius, unit: deg, datatype: float64}
+# meta: !!omap
+# - {created: '2025-07-14T08:36:12.288462'}
+# - {description: Lookup table for CORSIKA limits computed from simulations.}
+# - {loss_fraction: 1.0e-07}
+# - {created_by: simtools-production-merge-corsika-limits}
+# - {creation_date: '2025-07-14T15:21:02+00:00'}
+# - {input_files_count: 7}
+# - __serialized_columns__:
+#     azimuth:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id001 !astropy.units.Unit {unit: deg}
+#       value: !astropy.table.SerializedColumn {name: azimuth}
+#     lower_energy_limit:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: !astropy.units.Unit {unit: TeV}
+#       value: !astropy.table.SerializedColumn {name: lower_energy_limit}
+#     upper_radius_limit:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: !astropy.units.Unit {unit: m}
+#       value: !astropy.table.SerializedColumn {name: upper_radius_limit}
+#     viewcone_radius:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: viewcone_radius}
+#     zenith:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: zenith}
+# schema: astropy-2.0
+primary_particle array_name telescope_ids zenith azimuth nsb_level lower_energy_limit upper_radius_limit viewcone_radius
+gamma 1lst "[""LSTN-01""]" 20.0 0.0 1.0 0.007 925.0 9.25
+gamma 1lst "[""LSTN-01""]" 20.0 180.0 1.0 0.007 950.0 9.0
+gamma 1lst "[""LSTN-01""]" 40.0 0.0 1.0 0.007 1100.0 7.0
+gamma 1lst "[""LSTN-01""]" 40.0 0.0 5.0 0.015 1125.0 8.0
+gamma 1lst "[""LSTN-01""]" 40.0 180.0 1.0 0.008 1050.0 6.5
+gamma 1lst "[""LSTN-01""]" 60.0 0.0 5.0 0.012 1400.0 8.0
+gamma 1lst "[""LSTN-01""]" 60.0 180.0 5.0 0.013 1375.0 6.8
+gamma 1mst "[""MSTN-15""]" 20.0 0.0 1.0 0.022 1000.0 9.25
+gamma 1mst "[""MSTN-15""]" 20.0 180.0 1.0 0.021 1025.0 9.0
+gamma 1mst "[""MSTN-15""]" 40.0 0.0 1.0 0.022 1075.0 7.0
+gamma 1mst "[""MSTN-15""]" 40.0 0.0 5.0 0.045 1200.0 8.0
+gamma 1mst "[""MSTN-15""]" 40.0 180.0 1.0 0.023 1000.0 6.5
+gamma 1mst "[""MSTN-15""]" 60.0 0.0 5.0 0.03 1350.0 8.0
+gamma 1mst "[""MSTN-15""]" 60.0 180.0 5.0 0.031 1325.0 6.8

@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 title: Schema for lightguide_efficiency_vs_wavelength model parameter
-version: 0.1.0
+schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
@@ -41,3 +41,52 @@ source:
   - Calibration
 simulation_software:
   - name: simtools
+plot_configuration:
+  - type: lightguide_efficiency_vs_wavelength
+    title: 'Light-guide efficiency vs incidence angle'
+    xtitle: 'Incidence Angle [deg]'
+    ytitle: 'Efficiency'
+    no_markers: true
+    tables:
+      - parameter: lightguide_efficiency_vs_wavelength
+        label: '325 nm'
+        column_x: 'angle'
+        column_y: 'efficiency'
+        select_values:
+          column_name: 'wavelength'
+          value: 325.0
+      - parameter: lightguide_efficiency_vs_wavelength
+        label: '390 nm'
+        column_x: 'angle'
+        column_y: 'efficiency'
+        select_values:
+          column_name: 'wavelength'
+          value: 390.0
+      - parameter: lightguide_efficiency_vs_wavelength
+        label: '420 nm'
+        column_x: 'angle'
+        column_y: 'efficiency'
+        select_values:
+          column_name: 'wavelength'
+          value: 420.0
+      - parameter: lightguide_efficiency_vs_wavelength
+        label: '440 nm'
+        column_x: 'angle'
+        column_y: 'efficiency'
+        select_values:
+          column_name: 'wavelength'
+          value: 440.0
+      - parameter: lightguide_efficiency_vs_wavelength
+        label: '480 nm'
+        column_x: 'angle'
+        column_y: 'efficiency'
+        select_values:
+          column_name: 'wavelength'
+          value: 480.0
+      - parameter: lightguide_efficiency_vs_wavelength
+        label: '517 nm'
+        column_x: 'angle'
+        column_y: 'efficiency'
+        select_values:
+          column_name: 'wavelength'
+          value: 517.0
