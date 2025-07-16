@@ -86,7 +86,11 @@ def _parse():
         "--input_files",
         type=str,
         default=None,
-        help="Directory containing corsika_simulation_limits_lookup*.ecsv files or path.",
+        nargs="+",
+        help=(
+            "A list of input files to be merged, or a single directory "
+            "containing the files (*.ecsv)."
+        ),
     )
     config.parser.add_argument(
         "--merged_table",
@@ -135,12 +139,16 @@ def main():
         input_files = [merged_table_path]
     elif args_dict.get("input_files"):
         # Case 1 & 2: Merge files
-        input_dir = Path(args_dict["input_files"]).expanduser()
-        input_files = (
-            list(input_dir.glob("corsika_simulation_limits_lookup*.ecsv"))
-            if input_dir.is_dir()
-            else [input_dir]
-        )
+        input_files = []
+        raw_paths = args_dict.get("input_files")
+        if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
+            input_dir = Path(raw_paths[0]).expanduser()
+            input_files.extend(input_dir.glob("*.ecsv"))
+        else:
+            input_files.extend(Path(f).expanduser() for f in raw_paths)
+
+        if not input_files:
+            raise FileNotFoundError("No input files found.")
         merged_table = merger.merge_tables(input_files)
     else:
         raise ValueError("Either --input_files or --merged_table must be provided.")
