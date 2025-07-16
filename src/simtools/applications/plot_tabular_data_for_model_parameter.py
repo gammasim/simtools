@@ -88,6 +88,7 @@ def main():
         telescope=args_dict.get("telescope"),
         output_path=io_handler_instance.get_output_directory(),
         plot_type=args_dict["plot_type"],
+        db_config=db_config,
     )
 
     for plot_config, output_file in zip(plot_configs, output_files):
