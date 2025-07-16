@@ -84,7 +84,8 @@ class CorsikaMergeLimits:
 
         This function reads and merges CORSIKA limit tables from multiple files,
         handling duplicate grid points by keeping only the last occurrence.
-        It also converts the loss_fraction value from metadata to a table column.
+        It also converts the loss_fraction value from metadata to a table column
+        and logs a message if multiple loss_fraction values are found.
 
         Parameters
         ----------
@@ -134,18 +135,17 @@ class CorsikaMergeLimits:
             The merged table containing CORSIKA limit data.
         grid_definition : dict
             Dictionary defining the grid dimensions with keys:
-            - 'zenith': list of zenith angles
-            - 'azimuth': list of azimuth angles
-            - 'nsb_level': list of NSB levels
-            - 'array_names': list of array names
+            'zenith': list of zenith angles,
+            'azimuth': list of azimuth angles,
+            'nsb_level': list of NSB levels,
+            'array_names': list of array names
 
         Returns
         -------
         tuple
-            A tuple containing:
-            - is_complete (bool): True if all expected combinations are found in the table
-            - info_dict (dict): Dictionary with detailed information about the completeness check
-              including expected points, found points, and missing combinations.
+            A tuple containing: is_complete (bool) that is True if all expected combinations
+            are found in the table, and info_dict (dict) with detailed information about the
+            completeness check including expected points, found points, and missing combinations.
         """
         if not grid_definition:
             _logger.info("No grid definition provided, skipping completeness check.")
@@ -242,10 +242,10 @@ class CorsikaMergeLimits:
             The merged table containing CORSIKA limit data.
         grid_definition : dict
             Dictionary defining the grid dimensions with keys:
-            - 'zenith': list of zenith angles
-            - 'azimuth': list of azimuth angles
-            - 'nsb_level': list of NSB levels
-            - 'array_names': list of array names
+            'zenith': list of zenith angles,
+            'azimuth': list of azimuth angles,
+            'nsb_level': list of NSB levels,
+            'array_names': list of array names
 
         Returns
         -------
