@@ -298,6 +298,17 @@ def _adjust_columns_length(rows, n_columns):
     return [row[:n_columns] + [0.0] * max(0, n_columns - len(row)) for row in rows]
 
 
+def _process_line_parts(parts):
+    """Convert parts to floats, skipping non-float entries."""
+    row = []
+    for p in parts:
+        try:
+            row.append(float(p))
+        except ValueError:
+            logger.debug(f"Skipping non-float part: {p}")
+    return row
+
+
 def _read_simtel_data(file_path):
     """
     Read data, comments, and (if available) axis definition from sim_telarray table.
@@ -333,7 +344,7 @@ def _read_simtel_data(file_path):
         elif stripped:  # Data
             data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
 
-    rows = [[float(part) for part in line.split()] for line in data_lines]
+    rows = [_process_line_parts(line.split()) for line in data_lines]
     n_columns = max(len(row) for row in rows) if rows else 0
 
     return rows, "\n".join(meta_lines), n_columns, n_dim_axis
