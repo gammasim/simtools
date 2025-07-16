@@ -23,8 +23,11 @@ This tool supports three main use cases:
 Command line arguments
 ----------------------
 input_files (str)
-    Directory containing corsika_simulation_limits_lookup*.ecsv files to be merged.
-    Not used if --merged_table is provided.
+    Directory containing corsika_simulation_limits_lookup*.ecsv files to be merged,
+    or a list of specific files to merge. Not used if --merged_table is provided.
+input_files_list (str)
+    Path to a text file containing a list of input files (one file path per line)
+    to be merged. Not used if --merged_table is provided.
 merged_table (str)
     Path to an already merged table file. Used for checking grid completeness.
 grid_definition (str)
@@ -64,6 +67,14 @@ Examples
       simtools-production-merge-corsika-limits \\
           --merged_table merged_limits.ecsv \\
           --grid_definition grid_definition.yaml --plot_grid_coverage
+
+4. Merge tables using a list of files from a text file:
+
+   .. code-block:: console
+
+      simtools-production-merge-corsika-limits \\
+          --input_files_list file_list.txt \\
+          --output_file merged_limits.ecsv
 """
 
 import logging
@@ -90,6 +101,15 @@ def _parse():
         help=(
             "A list of input files to be merged, or a single directory "
             "containing the files (*.ecsv)."
+        ),
+    )
+    config.parser.add_argument(
+        "--input_files_list",
+        type=str,
+        default=None,
+        help=(
+            "Path to a text file containing a list of input files (one file path per line) "
+            "to be merged."
         ),
     )
     config.parser.add_argument(
@@ -137,21 +157,33 @@ def main():
         merged_table_path = Path(args_dict["merged_table"]).expanduser()
         merged_table = data_reader.read_table_from_file(merged_table_path)
         input_files = [merged_table_path]
-    elif args_dict.get("input_files"):
+    elif args_dict.get("input_files") or args_dict.get("input_files_list"):
         # Case 1 & 2: Merge files
         input_files = []
-        raw_paths = args_dict.get("input_files")
-        if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
-            input_dir = Path(raw_paths[0]).expanduser()
-            input_files.extend(input_dir.glob("*.ecsv"))
-        else:
-            input_files.extend(Path(f).expanduser() for f in raw_paths)
+
+        # Process input_files argument
+        if args_dict.get("input_files"):
+            raw_paths = args_dict.get("input_files")
+            if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
+                input_dir = Path(raw_paths[0]).expanduser()
+                input_files.extend(input_dir.glob("*.ecsv"))
+            else:
+                input_files.extend(Path(f).expanduser() for f in raw_paths)
+
+        # Process input_files_list argument
+        if args_dict.get("input_files_list"):
+            files_from_list = merger.read_file_list(args_dict["input_files_list"])
+            input_files.extend(files_from_list)
 
         if not input_files:
-            raise FileNotFoundError("No input files found.")
+            raise FileNotFoundError(
+                "No input files found. Check your --input_files or --input_files_list arguments."
+            )
         merged_table = merger.merge_tables(input_files)
     else:
-        raise ValueError("Either --input_files or --merged_table must be provided.")
+        raise ValueError(
+            "Either --input_files, --input_files_list, or --merged_table must be provided."
+        )
 
     is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
 
