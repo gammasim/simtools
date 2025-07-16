@@ -13,7 +13,7 @@ For the following options, array element positions are retrieved from the model 
   (``--plot_all_layouts``)
 
 * from a model parameter file
-  (e.g., ``-array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.1.json``)
+  (e.g., ``-array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json``)
 
 * from a list of array elements (e.g., ``-array_element_list MSTN-01, MSTN-02``).
   Positions are retrieved from the database.
@@ -88,7 +88,7 @@ Plot layout from a parameter file with a list of telescopes:
 .. code-block:: console
 
     simtools-plot-array-layout
-        --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.1.json
+        --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json
         --model_version 6.0.0
 
 
