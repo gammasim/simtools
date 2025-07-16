@@ -276,7 +276,7 @@ class CorsikaMergeLimits:
                 grid_definition.get("zenith", []),
                 grid_definition.get("azimuth", []),
                 grid_definition.get("nsb_level", []),
-                grid_definition.get("array_names", []),
+                grid_definition.get("array_name", []),
             )
         )
         _logger.info(f"Expected {len(expected_combinations)} grid point combinations")
