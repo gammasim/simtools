@@ -29,17 +29,20 @@ block. The following example shows how to define a runtime environment:
 
 .. code-block:: yaml
 
-    runtime_environment:
-    image: ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-bernlohr-1.68-\
+     runtime_environment:
+     image: ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-bernlohr-1.68-\
 prod6-baseline-qgs2-no_opt:20250716-122341
-    network: simtools-mongo-network
-    environment_file: ./.env
-    container_engine: podman
-    options:
-    - '--arch amd64'
+     network: simtools-mongo-network
+     environment_file: ./.env
+     container_engine: podman
+     options:
+     - '--arch amd64'
 
 If the ``ignore_runtime_environment`` flag is set, the application will run in the current
 environment, ignoring any definitions in the configuration file.
+
+The database configuration and setting of other environment variables is done as
+described in :ref:`environment-variables`.
 
 Example
 -------
@@ -48,14 +51,14 @@ Run the application with the configuration file ``config_file_name``:
 
 .. code-block:: console
 
-    simtools-run-application --configuration_file config_file_name
+     simtools-run-application --configuration_file config_file_name
 
 Run the application with the configuration file ``config_file_name``, but skipping all steps except
 step 2 and 3 (useful for debugging):
 
 .. code-block:: console
 
-    simtools-run-application --configuration_file config_file_name --steps 2 3
+     simtools-run-application --configuration_file config_file_name --steps 2 3
 
 """
 
