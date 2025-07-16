@@ -266,7 +266,7 @@ class CorsikaMergeLimits:
             "zeniths": np.array(grid_definition.get("zenith", [])),
             "azimuths": np.array(grid_definition.get("azimuth", [])),
             "nsb_levels": np.array(grid_definition.get("nsb_level", [])),
-            "array_names": np.array(grid_definition.get("array_names", [])),
+            "array_names": np.array(grid_definition.get("array_name", [])),
         }
 
         for nsb, array_name in product(unique_values["nsb_levels"], unique_values["array_names"]):
