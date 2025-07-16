@@ -23,7 +23,11 @@ def run_applications(args_dict, db_config, logger):
     configurations, runtime_environment, log_file = _read_application_configuration(
         args_dict["configuration_file"], args_dict.get("steps"), logger
     )
-    run_time = read_runtime_environment(runtime_environment)
+    run_time = (
+        read_runtime_environment(runtime_environment)
+        if not args_dict["ignore_runtime_environment"]
+        else []
+    )
 
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
