@@ -102,6 +102,8 @@ def get_sim_telarray_version(run_time):
     if match:
         return match.group(1).split()[0]
 
+    _logger.debug(f"Command output stdout: {result.stdout} stderr: {result.stderr}")
+
     raise ValueError(f"sim_telarray release not found in {result.stdout}")
 
 

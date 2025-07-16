@@ -250,10 +250,11 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
         return []
 
     engine = runtime_environment.get("container_engine", "docker")
-    cmd = [engine, "run", "--rm", "-it", "-v", f"{Path.cwd()}:{workdir}", "-w", workdir]
+    cmd = [engine, "run", "--rm", "-v", f"{Path.cwd()}:{workdir}", "-w", workdir]
 
     if options := runtime_environment.get("options"):
-        cmd.extend(options)
+        for opt in options:
+            cmd.extend(opt.split())
 
     if env := runtime_environment.get("env_file"):
         cmd += ["--env-file", env]
