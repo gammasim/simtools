@@ -143,8 +143,7 @@ def main():
         )
         merged_table = merger.merge_tables(input_files)
     else:
-        _logger.error("Either --input_files or --merged_table must be provided.")
-        return
+        raise ValueError("Either --input_files or --merged_table must be provided.")
 
     is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
 
