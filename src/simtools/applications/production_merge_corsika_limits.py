@@ -177,7 +177,7 @@ def main():
 
         if not input_files:
             raise FileNotFoundError(
-                "No input files found. Check your --input_files or --input_files_list arguments."
+                "No input files found. Check --input_files or --input_files_list arguments."
             )
         merged_table = merger.merge_tables(input_files)
     else:
