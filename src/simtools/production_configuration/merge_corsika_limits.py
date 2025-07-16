@@ -80,7 +80,23 @@ class CorsikaMergeLimits:
         return unique_table[::-1]
 
     def merge_tables(self, input_files):
-        """Merge multiple CORSIKA limit tables into a single table."""
+        """Merge multiple CORSIKA limit tables into a single table.
+
+        This function reads and merges CORSIKA limit tables from multiple files,
+        handling duplicate grid points by keeping only the last occurrence.
+        It also converts the loss_fraction value from metadata to a table column.
+
+        Parameters
+        ----------
+        input_files : list of Path or str
+            List of paths to CORSIKA limit table files to merge.
+
+        Returns
+        -------
+        astropy.table.Table
+            The merged table with duplicates removed, containing all rows from input files.
+            The table will be sorted by array_name, zenith, azimuth, and nsb_level.
+        """
         _logger.info(f"Merging {len(input_files)} CORSIKA limit tables")
 
         tables, metadata, grid_points, duplicate_points = self._read_and_collect_tables(input_files)
@@ -107,7 +123,30 @@ class CorsikaMergeLimits:
         return merged_table
 
     def check_grid_completeness(self, merged_table, grid_definition):
-        """Check if the grid is complete by verifying all expected combinations exist."""
+        """Check if the grid is complete by verifying all expected combinations exist.
+
+        This function checks whether all combinations of zenith, azimuth, nsb_level, and array_name
+        specified in the grid_definition are present in the merged_table.
+
+        Parameters
+        ----------
+        merged_table : astropy.table.Table
+            The merged table containing CORSIKA limit data.
+        grid_definition : dict
+            Dictionary defining the grid dimensions with keys:
+            - 'zenith': list of zenith angles
+            - 'azimuth': list of azimuth angles
+            - 'nsb_level': list of NSB levels
+            - 'array_names': list of array names
+
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - is_complete (bool): True if all expected combinations are found in the table
+            - info_dict (dict): Dictionary with detailed information about the completeness check
+              including expected points, found points, and missing combinations.
+        """
         if not grid_definition:
             _logger.info("No grid definition provided, skipping completeness check.")
             return True, {}
@@ -191,7 +230,28 @@ class CorsikaMergeLimits:
         ax.grid(which="major", linestyle="-", linewidth="0.5", color="black", alpha=0.3)
 
     def plot_grid_coverage(self, merged_table, grid_definition):
-        """Generate plots showing grid coverage."""
+        """Generate plots showing grid coverage for each combination of NSB level and array name.
+
+        Creates a series of heatmap plots showing which grid points (combinations of zenith and
+        azimuth angles) are present or missing in the merged table, for each combination of
+        NSB level and array name.
+
+        Parameters
+        ----------
+        merged_table : astropy.table.Table
+            The merged table containing CORSIKA limit data.
+        grid_definition : dict
+            Dictionary defining the grid dimensions with keys:
+            - 'zenith': list of zenith angles
+            - 'azimuth': list of azimuth angles
+            - 'nsb_level': list of NSB levels
+            - 'array_names': list of array names
+
+        Returns
+        -------
+        list
+            List of Path objects pointing to the saved plot files.
+        """
         if not grid_definition:
             _logger.info("No grid definition provided, skipping grid coverage plots.")
             return []
@@ -227,7 +287,22 @@ class CorsikaMergeLimits:
         return output_files
 
     def plot_limits(self, merged_table):
-        """Generate plots showing the derived limits."""
+        """Create plots showing the derived limits for each combination of array_name and azimuth.
+
+        Creates plots showing the lower energy limit, upper radius limit, and viewcone radius
+        versus zenith angle for each combination of array_name and azimuth angle. Each plot has
+        lines for different NSB levels.
+
+        Parameters
+        ----------
+        merged_table : astropy.table.Table
+            The merged table containing CORSIKA limit data.
+
+        Returns
+        -------
+        list
+            List of Path objects pointing to the saved plot files.
+        """
         _logger.info("Generating limit plots")
         output_files = []
 
@@ -289,7 +364,28 @@ class CorsikaMergeLimits:
         return output_files
 
     def write_merged_table(self, merged_table, output_file, input_files, grid_completeness):
-        """Write the merged table to file and save metadata."""
+        """Write the merged table to file and save metadata.
+
+        Writes the merged table to the specified output file in ECSV format and
+        saves relevant metadata about the merge process, including input files,
+        grid completeness statistics, and row count.
+
+        Parameters
+        ----------
+        merged_table : astropy.table.Table
+            The merged table to write to file.
+        output_file : Path or str
+            Path where the merged table will be written.
+        input_files : list of Path or str
+            List of input files used to create the merged table.
+        grid_completeness : dict
+            Dictionary with grid completeness information from check_grid_completeness.
+
+        Returns
+        -------
+        Path or str
+            The path to the written file (same as output_file).
+        """
         merged_table.meta.update(
             {
                 "created_by": "simtools-production-merge-corsika-limits",
