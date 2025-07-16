@@ -246,7 +246,7 @@ def get_array_layouts_from_parameter_file(
                 db_config,
                 model_version,
                 site,
-                layout["elements"],
+                layout.get("elements"),
                 layout["name"],
                 coordinate_system,
             )
