@@ -179,9 +179,19 @@ class CorsikaMergeLimits:
             max(zen_vals) + 0.5,
             min(zen_vals) - 0.5,
         ]
-        im = ax.imshow(z_grid, cmap="RdYlGn", vmin=0, vmax=1, extent=extent)
+        colors = ["red", "green"]
+        cmap = plt.matplotlib.colors.ListedColormap(colors)
+        im = ax.imshow(z_grid, cmap=cmap, vmin=0, vmax=1, extent=extent)
 
-        plt.colorbar(im, ax=ax, label="Coverage (1=Present, 0=Missing)")
+        cbar = plt.colorbar(
+            im,
+            ax=ax,
+            ticks=[0, 1],
+            label="Coverage",
+            shrink=0.25,
+            pad=0.02,
+        )
+        cbar.set_ticklabels(["Missing", "Present"])
         ax.set_title(f"Grid Coverage: NSB={nsb}, Layout={layout}")
         ax.set_xlabel("Azimuth [deg]")
         ax.set_ylabel(ZENITH_LABEL)
@@ -220,7 +230,7 @@ class CorsikaMergeLimits:
             )
             output_file = self.output_dir / f"grid_coverage_{nsb}_{layout}.png"
             plt.tight_layout()
-            plt.savefig(output_file)
+            plt.savefig(output_file, bbox_inches="tight")
             plt.close()
             output_files.append(output_file)
         return output_files
