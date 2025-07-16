@@ -6,7 +6,7 @@ applications:
     model_version: 6.0.0
     output_path: simtools-output
   integration_tests:
-  - output_file: array_layout_hyper_array_North_ground.pdf
+  - output_file: array_layout_subsystem_msts_North_ground.png
   - output_file: array_layout_4mst_North_ground.pdf
   test_name: from_array_layouts_json
 schema_name: application_workflow.metaschema
