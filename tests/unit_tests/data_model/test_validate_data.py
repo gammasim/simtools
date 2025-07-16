@@ -111,7 +111,7 @@ def test_validate_and_transform(caplog, mocker):
     data_validator.data_file_name = (
         "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
     )
-    data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
     )
@@ -145,7 +145,7 @@ def test_validate_parameter_and_file_name(caplog):
 
     data_validator = validate_data.DataValidator()
     data_validator.data_file_name = num_gain_file
-    data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     data_validator.validate_and_transform()
 
     data_validator.data_dict["parameter"] = "incorrect_name"

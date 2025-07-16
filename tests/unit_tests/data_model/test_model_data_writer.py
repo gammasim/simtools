@@ -13,7 +13,7 @@ from astropy.table import Table
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
 from simtools.utils import names
@@ -27,7 +27,7 @@ ascii_format = "ascii.ecsv"
 
 @pytest.fixture
 def num_gains_schema_file():
-    return "tests/resources/num_gains.schema.yml"
+    return MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ def test_write(tmp_test_directory, args_dict_site):
     # check that table and metadata is good
     table = Table.read(w_1.product_data_file, format=ascii_format)
     assert "pixel" in table.colnames
-    assert "CTA" in table.meta.keys()
+    assert "cta" in table.meta.keys()
 
     w_1.product_data_format = "not_an_astropy_format"
     with pytest.raises(IORegistryError):

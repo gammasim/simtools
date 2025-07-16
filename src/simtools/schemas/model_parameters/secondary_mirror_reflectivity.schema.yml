@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 title: Schema for secondary_mirror_reflectivity model parameter
-version: 0.1.0
+schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
@@ -33,3 +33,13 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: mirror_secondary_reflectivity
+plot_configuration:
+  - type: secondary_mirror_reflectivity
+    title: 'Secondary mirror reflectivity'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Reflectivity'
+    no_markers: true
+    tables:
+      - parameter: secondary_mirror_reflectivity
+        column_x: 'wavelength'
+        column_y: 'reflectivity'

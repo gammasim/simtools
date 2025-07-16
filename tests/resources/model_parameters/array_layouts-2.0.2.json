@@ -3,7 +3,7 @@
     "parameter": "array_layouts",
     "instrument": "OBS-North",
     "site": "North",
-    "parameter_version": "2.0.1",
+    "parameter_version": "2.0.2",
     "unique_id": null,
     "value": [
         {
@@ -37,7 +37,7 @@
             ]
         },
         {
-            "name": "subsystem_msts",
+            "name": "extension_msts",
             "elements": [
                 "MSTN-01",
                 "MSTN-02",
@@ -56,7 +56,7 @@
             ]
         },
         {
-            "name": "alpha_msts",
+            "name": "subsystem_msts",
             "elements": [
                 "MSTN-01",
                 "MSTN-02",
@@ -103,41 +103,6 @@
                 "MSTN-07",
                 "MSTN-10",
                 "MSTN-15"
-            ]
-        },
-        {
-            "name": "hyper_array",
-            "elements": [
-                "LSTN-01",
-                "LSTN-02",
-                "LSTN-03",
-                "LSTN-04",
-                "MSTN-01",
-                "MSTN-02",
-                "MSTN-03",
-                "MSTN-04",
-                "MSTN-05",
-                "MSTN-06",
-                "MSTN-07",
-                "MSTN-08",
-                "MSTN-09",
-                "MSTN-10",
-                "MSTN-11",
-                "MSTN-12",
-                "MSTN-13",
-                "MSTN-14",
-                "MSTN-15",
-                "MSTN-100",
-                "MSTN-101",
-                "MSTN-103",
-                "MSTN-104",
-                "MSTN-105",
-                "MSTN-113",
-                "MSTN-114",
-                "MSTN-115",
-                "MSTN-201",
-                "MSTN-202",
-                "MSTN-207"
             ]
         }
     ],

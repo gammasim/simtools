@@ -1,513 +1,218 @@
 import astropy.units as u
-import numpy as np
 import pytest
+from astropy.table import Table
 
-from simtools.production_configuration.derive_corsika_limits import LimitCalculator
-
-
-@pytest.fixture
-def mock_reader(mocker):
-    mock = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventDataReader"
-    )
-    mock.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
-    mock.return_value.triggered_data = mocker.Mock()
-    mock.return_value.triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
-    return mock
+from simtools.production_configuration.derive_corsika_limits import (
+    _create_results_table,
+    _process_file,
+    _read_array_layouts_from_db,
+    _round_value,
+    generate_corsika_limits_grid,
+    write_results,
+)
 
 
 @pytest.fixture
-def hdf5_file_name():
-    return "test_file.h5"
-
-
-def test_init(mock_reader, hdf5_file_name):
-    """Test initialization with telescope list."""
-    test_telescope_list = [1, 2]
-    calculator = LimitCalculator(hdf5_file_name, "test_array", test_telescope_list)
-
-    assert calculator.event_data_file == hdf5_file_name
-    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=test_telescope_list)
-
-
-def test_init_default_telescope_list(mock_reader, hdf5_file_name):
-    """Test initialization without telescope list."""
-    calculator = LimitCalculator(hdf5_file_name)
-
-    assert calculator.event_data_file == hdf5_file_name
-    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=None)
-
-
-def test_compute_limits_lower(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    hist = np.array([1, 2, 3, 4, 5])
-    bin_edges = np.array([0, 1, 2, 3, 4, 5])
-    loss_fraction = 0.2
-
-    with pytest.raises(ValueError, match="limit_type must be 'lower' or 'upper'"):
-        calculator._compute_limits(hist, bin_edges, loss_fraction, limit_type="blabla")
-
-    result = calculator._compute_limits(hist, bin_edges, loss_fraction, limit_type="lower")
-    assert result == 2
-
-
-def test_compute_limits_upper(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    hist = np.array([5, 4, 3, 2, 1])
-    bin_edges = np.array([0, 1, 2, 3, 4, 5])
-    loss_fraction = 0.2
-
-    result = calculator._compute_limits(hist, bin_edges, loss_fraction, limit_type="upper")
-
-    assert result == 3
-
-
-def test_compute_limits_default_type(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    hist = np.array([1, 2, 3, 4, 5])
-    bin_edges = np.array([0, 1, 2, 3, 4, 5])
-    loss_fraction = 0.2
-
-    result = calculator._compute_limits(hist, bin_edges, loss_fraction)  # Default is lower
-
-    assert result == 2
-
-
-def test_energy_bins(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    mock_reader.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
-    bins = calculator.energy_bins
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
-
-
-def test_core_distance_bins(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    mock_reader.return_value.triggered_shower_data.core_distance_shower = np.array([10, 20, 30])
-    bins = calculator.core_distance_bins
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
-
-
-def test_view_cone_bins(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    mock_reader.return_value.triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
-    bins = calculator.view_cone_bins
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
-
-
-def test_compute_viewcone(mock_reader, hdf5_file_name, mocker):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    mock_hist = np.array([10, 8, 6, 4, 2])
-    mock_bins = np.linspace(0, 20.0, 100)
-    calculator.histograms = {"angular_distance": mock_hist, "angular_distance_bin_edges": mock_bins}
-    result = calculator.compute_viewcone(0.2)
-
-    assert isinstance(result, u.Quantity)
-    assert result.unit == u.deg
-    assert result.value > 0
-
-    expected = calculator._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.deg
-    assert result.value == pytest.approx(expected.value)
-
-
-def test_compute_lower_energy_limit(mock_reader, hdf5_file_name, mocker):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    mock_hist = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-    mock_bins = calculator.energy_bins
-    calculator.histograms = {"energy": mock_hist, "energy_bin_edges": mock_bins}
-    result = calculator.compute_lower_energy_limit(0.2)
-
-    assert isinstance(result, u.Quantity)
-    assert result.unit == u.TeV
-    assert result.value > 0
-
-    expected = calculator._compute_limits(mock_hist, mock_bins, 0.2, limit_type="lower") * u.TeV
-    assert result == expected
-
-
-def test_compute_upper_radius_limit(mock_reader, hdf5_file_name, mocker):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    mock_hist = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
-    mock_bins = calculator.core_distance_bins
-    calculator.histograms = {"core_distance": mock_hist, "core_distance_bin_edges": mock_bins}
-    result = calculator.compute_upper_radius_limit(0.2)
-
-    assert isinstance(result, u.Quantity)
-    assert result.unit == u.m
-    assert result.value > 0
-
-    expected = calculator._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.m
-    assert result == expected
-
-
-def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
-    """Test plotting of data with limits."""
-    calculator = LimitCalculator(hdf5_file_name)
-
-    mock_reader.return_value.triggered_shower_data.core_distance_shower = np.array(
-        [10.0, 20.0, 30.0]
-    )
-    mock_reader.return_value.triggered_shower_data.simulated_energy = np.array([1.0, 2.0, 3.0])
-    mock_reader.return_value.triggered_shower_data.x_core_shower = np.array([1.0, 2.0, 3.0])
-    mock_reader.return_value.triggered_shower_data.y_core_shower = np.array([1.0, 2.0, 3.0])
-    mock_reader.return_value.triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
-
-    mocker.patch("matplotlib.pyplot.figure")
-    mocker.patch("matplotlib.pyplot.savefig")
-    mocker.patch("matplotlib.pyplot.close")
-    mock_create_plot = mocker.patch.object(calculator, "_create_plot")
-
-    calculator.limits = {
-        "lower_energy_limit": 1.0 * u.TeV,
-        "upper_radius_limit": 100.0 * u.m,
-        "viewcone_radius": 2.0 * u.deg,
+def mock_args_dict():
+    """Create mock arguments dictionary."""
+    return {
+        "event_data_file": "data_files.hdf5",
+        "telescope_ids": "telescope_ids.yml",
+        "loss_fraction": 0.2,
+        "plot_histograms": False,
+        "output_file": "test_output.ecsv",
     }
 
-    calculator.plot_data(output_path=tmp_path)
-
-    assert mock_create_plot.call_count == 5
-
-    mock_create_plot.reset_mock()
-    calculator.array_name = "test_array"
-    calculator.plot_data(output_path=tmp_path)
-    assert mock_create_plot.call_count == 5
-    for call in mock_create_plot.call_args_list:
-        _, kwargs = call
-        assert "test_array" in str(kwargs.get("output_file"))
-
 
 @pytest.fixture
-def mock_figure(mocker):
-    return mocker.patch("matplotlib.pyplot.figure")
-
-
-@pytest.fixture
-def mock_hist(mocker):
-    return mocker.patch("matplotlib.pyplot.hist")
-
-
-@pytest.fixture
-def mock_hist2d(mocker):
-    return mocker.patch("matplotlib.pyplot.pcolormesh")
-
-
-@pytest.fixture
-def mock_tight_layout(mocker):
-    return mocker.patch("matplotlib.pyplot.tight_layout")
-
-
-@pytest.fixture
-def mock_show(mocker):
-    return mocker.patch("matplotlib.pyplot.show")
-
-
-@pytest.fixture
-def mock_colorbar(mocker):
-    return mocker.patch("matplotlib.pyplot.colorbar")
-
-
-def test_create_plot_histogram(
-    mocker,
-    mock_reader,
-    hdf5_file_name,
-    mock_figure,
-    mock_tight_layout,
-    mock_show,
-):
-    calculator = LimitCalculator(hdf5_file_name)
-    mock_axvline = mocker.patch("matplotlib.pyplot.axvline")
-    mock_circle = mocker.patch("matplotlib.pyplot.Circle")
-
-    x_data = np.array([1, 2, 3])
-    bins = np.array([0, 1, 2, 3])
-    plot_params = {"color": "blue"}
-
-    fig = calculator._create_plot(
-        data=x_data,
-        bins=bins,
-        plot_type="histogram",
-        plot_params=plot_params,
-        labels={"x": "X Label", "y": "Y Label", "title": "Test Plot"},
-        lines={"x": 1.5, "y": 2.5, "r": 2.0},
-    )
-
-    mock_figure.assert_any_call(figsize=(8, 6))
-
-    mock_tight_layout.assert_called_once()
-    mock_show.assert_called_once()
-
-    mock_axvline.assert_called_once()
-    mock_circle.assert_called_once()
-    assert fig == mock_figure.return_value
-
-
-def test_create_plot_histogram2d(
-    mock_reader, hdf5_file_name, mock_colorbar, mocker, mock_hist2d, tmp_test_directory
-):
-    calculator = LimitCalculator(hdf5_file_name)
-    mock_savefig = mocker.patch("matplotlib.pyplot.savefig")
-
-    x_data = np.array([[1, 2], [3, 4]])
-
-    bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
-    plot_params = {"cmap": "viridis"}
-
-    calculator._create_plot(
-        data=x_data,
-        bins=bins,
-        plot_type="histogram2d",
-        plot_params=plot_params,
-        colorbar_label="Counts",
-        output_file=tmp_test_directory / "test_hist2d_plot.png",
-    )
-
-    mock_hist2d.assert_called_once()
-    mock_savefig.assert_called_once()
-
-
-def test_compute_limits_all_directions(mock_reader, mocker, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    mocker.patch.object(calculator, "_fill_histograms")
-    calculator.limits = {}
-
-    mock_energy_limit = 1.0 * u.TeV
-    mock_radius_limit = 100.0 * u.m
-    mock_viewcone_limit = 2.0 * u.deg
-
-    mock_energy_limit_fn = mocker.patch.object(
-        calculator, "compute_lower_energy_limit", return_value=mock_energy_limit
-    )
-    mock_radius_limit_fn = mocker.patch.object(
-        calculator, "compute_upper_radius_limit", return_value=mock_radius_limit
-    )
-    mock_viewcone_fn = mocker.patch.object(
-        calculator, "compute_viewcone", return_value=mock_viewcone_limit
-    )
-
-    loss_fraction = 0.2
-    result = calculator.compute_limits(loss_fraction)
-
-    mock_energy_limit_fn.assert_called_once_with(loss_fraction)
-    mock_radius_limit_fn.assert_called_once_with(loss_fraction)
-    mock_viewcone_fn.assert_called_once_with(loss_fraction)
-
-    assert result["lower_energy_limit"] == mock_energy_limit
-    assert result["upper_radius_limit"] == mock_radius_limit
-    assert result["viewcone_radius"] == mock_viewcone_limit
-
-    assert calculator.limits["lower_energy_limit"] == mock_energy_limit
-    assert calculator.limits["upper_radius_limit"] == mock_radius_limit
-    assert calculator.limits["viewcone_radius"] == mock_viewcone_limit
-
-
-def test_fill_histogram_and_bin_edges_1d_new(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    name = "test_hist"
-    data = np.array([1, 2, 3, 4, 5])
-    bins = np.array([0, 2, 4, 6])
-
-    calculator._fill_histogram_and_bin_edges(name, data, bins)
-
-    assert name in calculator.histograms
-    assert f"{name}_bin_edges" in calculator.histograms
-    assert np.array_equal(calculator.histograms[f"{name}_bin_edges"], bins)
-
-    expected_hist, _ = np.histogram(data, bins=bins)
-    assert np.array_equal(calculator.histograms[name], expected_hist)
-
-
-def test_fill_histogram_and_bin_edges_1d_existing(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    name = "test_hist"
-    initial_data = np.array([1, 2, 3])
-    additional_data = np.array([4, 5, 6])
-    bins = np.array([0, 2, 4, 6])
-
-    calculator._fill_histogram_and_bin_edges(name, initial_data, bins)
-    calculator.histograms[name].copy()
-
-    calculator._fill_histogram_and_bin_edges(name, additional_data, bins)
-
-    expected_total_hist, _ = np.histogram(
-        np.concatenate([initial_data, additional_data]), bins=bins
-    )
-    assert np.array_equal(calculator.histograms[name], expected_total_hist)
-
-
-def test_fill_histogram_and_bin_edges_2d_new(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    name = "test_hist_2d"
-    data = (np.array([1, 2, 3]), np.array([4, 5, 6]))
-    bins = [np.array([0, 2, 4]), np.array([3, 5, 7])]
-
-    calculator._fill_histogram_and_bin_edges(name, data, bins, hist1d=False)
-    calculator.histograms[name].copy()
-
-    assert name in calculator.histograms
-    assert f"{name}_bin_x_edges" in calculator.histograms
-    assert f"{name}_bin_y_edges" in calculator.histograms
-    assert np.array_equal(calculator.histograms[f"{name}_bin_x_edges"], bins[0])
-    assert np.array_equal(calculator.histograms[f"{name}_bin_y_edges"], bins[1])
-
-    expected_hist, _, _ = np.histogram2d(data[0], data[1], bins=bins)
-    assert np.array_equal(calculator.histograms[name], expected_hist)
-
-
-def test_fill_histogram_and_bin_edges_2d_existing(mock_reader, hdf5_file_name):
-    calculator = LimitCalculator(hdf5_file_name)
-    name = "test_hist_2d"
-    initial_data = (np.array([1, 2]), np.array([4, 5]))
-    additional_data = (np.array([2, 3]), np.array([5, 6]))
-    bins = [np.array([0, 2, 4]), np.array([3, 5, 7])]
-
-    calculator._fill_histogram_and_bin_edges(name, initial_data, bins, hist1d=False)
-
-    calculator._fill_histogram_and_bin_edges(name, additional_data, bins, hist1d=False)
-
-    combined_data = (
-        np.concatenate([initial_data[0], additional_data[0]]),
-        np.concatenate([initial_data[1], additional_data[1]]),
-    )
-    expected_total_hist, _, _ = np.histogram2d(combined_data[0], combined_data[1], bins=bins)
-    assert np.array_equal(calculator.histograms[name], expected_total_hist)
-
-
-def test_fill_histograms(mock_reader, hdf5_file_name, mocker):
-    calculator = LimitCalculator(hdf5_file_name)
-
-    mock_file_info = mocker.Mock()
-    mock_event_data = mocker.Mock()
-    mock_triggered_data = mocker.Mock()
-
-    mock_reader.return_value.read_event_data.return_value = (
-        mock_file_info,
-        None,
-        mock_event_data,
-        mock_triggered_data,
-    )
-
-    mock_event_data.simulated_energy = np.array([1, 2, 3])
-    mock_event_data.core_distance_shower = np.array([10, 20, 30])
-    mock_event_data.x_core_shower = np.array([-10, 0, 10])
-    mock_event_data.y_core_shower = np.array([-5, 0, 5])
-    mock_triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
-
-    mock_reader.return_value.data_sets = ["test_dataset"]
-
-    mock_fill_hist = mocker.patch.object(calculator, "_fill_histogram_and_bin_edges")
-
-    mock_energy_bins = np.array([0, 2, 4])
-    mock_core_distance_bins = np.array([0, 20, 40])
-    mock_view_cone_bins = np.array([0, 1, 2])
-
-    mocker.patch.object(LimitCalculator, "energy_bins", property(lambda self: mock_energy_bins))
-    mocker.patch.object(
-        LimitCalculator, "core_distance_bins", property(lambda self: mock_core_distance_bins)
-    )
-    mocker.patch.object(
-        LimitCalculator, "view_cone_bins", property(lambda self: mock_view_cone_bins)
-    )
-
-    mock_prepare_limits = mocker.patch.object(
-        calculator, "_prepare_limit_data", return_value={"test": "data"}
-    )
-
-    calculator._fill_histograms()
-
-    mock_reader.return_value.read_event_data.assert_called_once_with(
-        hdf5_file_name, table_name_map="test_dataset"
-    )
-
-    mock_prepare_limits.assert_called_once_with(mock_file_info)
-
-    assert mock_fill_hist.call_count == 5
-
-    expected_calls = [
-        mocker.call("energy", mock_event_data.simulated_energy, mock_energy_bins),
-        mocker.call("core_distance", mock_event_data.core_distance_shower, mock_core_distance_bins),
-        mocker.call("angular_distance", mock_triggered_data.angular_distance, mock_view_cone_bins),
-        mocker.call(
-            "shower_cores",
-            (mock_event_data.x_core_shower, mock_event_data.y_core_shower),
-            [mocker.ANY, mocker.ANY],
-            hist1d=False,
-        ),
-        mocker.call(
-            "core_vs_energy",
-            (mock_event_data.core_distance_shower, mock_event_data.simulated_energy),
-            [mock_core_distance_bins, mock_energy_bins],
-            hist1d=False,
-        ),
+def mock_results():
+    """Create mock results list."""
+    return [
+        {
+            "primary_particle": "gamma",
+            "telescope_ids": [1, 2],
+            "zenith": 20.0 * u.deg,
+            "azimuth": 180.0 * u.deg,
+            "nsb_level": 1.0,
+            "lower_energy_limit": 0.5 * u.TeV,
+            "upper_radius_limit": 400.0 * u.m,
+            "viewcone_radius": 5.0 * u.deg,
+            "array_name": "LST",
+            "layout": "LST",
+        }
     ]
-    mock_fill_hist.assert_has_calls(expected_calls)
 
 
-def test_prepare_limit_data(mock_reader, hdf5_file_name, mocker):
-    calculator = LimitCalculator(hdf5_file_name)
+def test_generate_corsika_limits_grid(mocker, mock_args_dict):
+    """Test generate_corsika_limits_grid function."""
+    # Mock dependencies
+    mock_collect = mocker.patch("simtools.utils.general.collect_data_from_file")
+    mock_collect.side_effect = [
+        {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
+    ]
 
-    mock_file_info = {
-        "primary_particle": "gamma",
-        "zenith": 20.0,
-        "azimuth": 0.0,
-        "nsb_level": 1.0,
-        "energy_min": 0.1,
-        "energy_max": 100.0,
-        "core_scatter_min": 0.0,
-        "core_scatter_max": 1000.0,
-    }
-
-    mock_get_info = mocker.patch.object(
-        calculator.reader, "get_reduced_simulation_file_info", return_value=mock_file_info
+    mock_process = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._process_file"
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
     )
 
-    mock_file_info_table = mocker.Mock()
+    # Run function
+    generate_corsika_limits_grid(mock_args_dict)
 
-    result = calculator._prepare_limit_data(mock_file_info_table)
-
-    mock_get_info.assert_called_once_with(mock_file_info_table)
-    assert calculator.file_info == mock_file_info
-
-    assert isinstance(result, dict)
-    assert result["primary_particle"] == mock_file_info["primary_particle"]
-    assert result["zenith"] == mock_file_info["zenith"]
-    assert result["azimuth"] == mock_file_info["azimuth"]
-    assert result["nsb_level"] == mock_file_info["nsb_level"]
-    assert result["array_name"] == calculator.array_name
-    assert result["telescope_ids"] == calculator.telescope_list
-    assert result["lower_energy_limit"] is None
-    assert result["upper_radius_limit"] is None
-    assert result["viewcone_radius"] is None
+    # Verify calls
+    assert mock_collect.call_count == 1
+    assert mock_process.call_count == 2  # 2 configs
+    assert mock_write.call_count == 1
 
 
-def test_prepare_limit_data_with_array_and_telescopes(mock_reader, hdf5_file_name, mocker):
-    array_name = "test_array"
-    telescope_list = [1, 2, 3]
-    calculator = LimitCalculator(
-        hdf5_file_name, array_name=array_name, telescope_list=telescope_list
+def test_process_file(mocker):
+    """Test _process_file function."""
+    mock_calculator = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.LimitCalculator"
+    )
+    mock_calculator.return_value.compute_limits.return_value = {"test": "limits"}
+    mock_calculator.return_value.plot_data.return_value = None
+
+    mocker.patch("simtools.io_operations.io_handler.IOHandler")
+
+    result = _process_file("test.fits", [1, 2], 0.2, True, "array_name")
+
+    assert result == {"test": "limits"}
+    mock_calculator.return_value.plot_data.assert_called_once()
+
+
+def test_write_results(mocker, mock_args_dict, mock_results, tmp_path):
+    """Test write_results function."""
+    mock_io = mocker.patch("simtools.io_operations.io_handler.IOHandler")
+    mock_io.return_value.get_output_directory.return_value = tmp_path
+
+    mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
+
+    write_results(mock_results, mock_args_dict)
+
+    # Verify metadata was written
+    mock_dump.assert_called_once()
+    args = mock_dump.call_args[0]
+    assert args[0] == mock_args_dict
+
+
+def test_create_results_table(mock_results):
+    """Test _create_results_table function."""
+    table = _create_results_table(mock_results, loss_fraction=0.2)
+    table.info()
+
+    assert isinstance(table, Table)
+    assert len(table) == 1
+    assert "zenith" in table.colnames
+    assert table["zenith"].unit == u.deg
+    assert table.meta["loss_fraction"] == 0.2
+    assert isinstance(table.meta["created"], str)
+    assert "description" in table.meta
+
+
+def test_round_value():
+    """Test _round_value function for different key types."""
+
+    # Test lower_energy_limit rounding
+    assert _round_value("lower_energy_limit", 1.2345) == 1.234
+    assert _round_value("lower_energy_limit", 0.9876) == 0.987
+    assert _round_value("lower_energy_limit", 2.0) == 2.0
+
+    # Test upper_radius_limit rounding
+    assert _round_value("upper_radius_limit", 123.4) == 125
+    assert _round_value("upper_radius_limit", 100.0) == 100
+    assert _round_value("upper_radius_limit", 101.0) == 125
+    assert _round_value("upper_radius_limit", 75.0) == 75
+
+    # Test viewcone_radius rounding
+    assert _round_value("viewcone_radius", 1.1) == 1.25
+    assert _round_value("viewcone_radius", 2.0) == 2.0
+    assert _round_value("viewcone_radius", 2.1) == 2.25
+    assert _round_value("viewcone_radius", 0.3) == 0.5
+
+    # Test other keys (no rounding)
+    assert _round_value("other_key", 1.2345) == 1.2345
+    assert _round_value("zenith", 45.678) == 45.678
+    assert _round_value("unknown", "string_value") == "string_value"
+
+
+def test_read_array_layouts_from_db_specific_layouts(mocker):
+    """Test _read_array_layouts_from_db with specific layout names."""
+    mock_site_model = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.SiteModel"
+    )
+    instance = mock_site_model.return_value
+    instance.get_array_elements_for_layout.side_effect = (
+        lambda name: [1, 2] if name == "LST" else [3, 4]
     )
 
-    mock_file_info = {
-        "primary_particle": "proton",
-        "zenith": 30.0,
-        "azimuth": 90.0,
-        "nsb_level": 0.5,
-    }
+    layouts = ["LST", "MST"]
+    site = "North"
+    model_version = "v1.0.0"
+    db_config = {"host": "localhost"}
 
-    mocker.patch.object(
-        calculator.reader, "get_reduced_simulation_file_info", return_value=mock_file_info
+    result = _read_array_layouts_from_db(layouts, site, model_version, db_config)
+
+    assert result == {"LST": [1, 2], "MST": [3, 4]}
+    mock_site_model.assert_called_once_with(
+        site=site, model_version=model_version, mongo_db_config=db_config
+    )
+    assert instance.get_array_elements_for_layout.call_count == 2
+    instance.get_array_elements_for_layout.assert_any_call("LST")
+    instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+def test_read_array_layouts_from_db_all_layouts(mocker):
+    """Test _read_array_layouts_from_db with 'all' layouts."""
+    mock_site_model = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.SiteModel"
+    )
+    instance = mock_site_model.return_value
+    instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
+    instance.get_array_elements_for_layout.side_effect = (
+        lambda name: [10, 20] if name == "LST" else [30, 40]
     )
 
-    result = calculator._prepare_limit_data(mocker.Mock())
+    layouts = ["all"]
+    site = "South"
+    model_version = "v2.0.0"
+    db_config = {"host": "db"}
 
-    # Check array name and telescope list are correctly set
-    assert result["array_name"] == array_name
-    assert result["telescope_ids"] == telescope_list
+    result = _read_array_layouts_from_db(layouts, site, model_version, db_config)
+
+    assert result == {"LST": [10, 20], "MST": [30, 40]}
+    instance.get_list_of_array_layouts.assert_called_once()
+    assert instance.get_array_elements_for_layout.call_count == 2
+    instance.get_array_elements_for_layout.assert_any_call("LST")
+    instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
+    """Test generate_corsika_limits_grid using _read_array_layouts_from_db."""
+    # Prepare args_dict to use array_layout_name
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = ["LST", "MST"]
+    args["site"] = "North"
+    args["model_version"] = "v1.2.3"
+
+    mock_read_layouts = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._read_array_layouts_from_db"
+    )
+    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
+
+    mock_process = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._process_file"
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+
+    generate_corsika_limits_grid(args)
+
+    mock_read_layouts.assert_called_once_with(
+        args["array_layout_name"], args["site"], args["model_version"], None
+    )
+    assert mock_process.call_count == 2  # 2 layouts
+    assert mock_write.call_count == 1
