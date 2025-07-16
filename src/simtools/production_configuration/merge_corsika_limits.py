@@ -116,7 +116,7 @@ class CorsikaMergeLimits:
                 grid_definition.get("zenith", []),
                 grid_definition.get("azimuth", []),
                 grid_definition.get("nsb_level", []),
-                grid_definition.get("layouts", []),
+                grid_definition.get("array_names", []),
             )
         )
         _logger.info(f"Expected {len(expected_combinations)} grid point combinations")
@@ -151,13 +151,13 @@ class CorsikaMergeLimits:
         }
 
     def _plot_single_grid_coverage(
-        self, ax, zeniths, azimuths, nsb, layout, found_combinations_str
+        self, ax, zeniths, azimuths, nsb, array_name, found_combinations_str
     ):
-        """Plot grid coverage for a single NSB and layout."""
+        """Plot grid coverage for a single NSB and array_name."""
         z_grid = np.zeros((len(zeniths), len(azimuths)))
         for i, zenith in enumerate(zeniths):
             for j, azimuth in enumerate(azimuths):
-                point_str = (str(zenith), str(azimuth), str(nsb), str(layout))
+                point_str = (str(zenith), str(azimuth), str(nsb), str(array_name))
                 if point_str in found_combinations_str:
                     z_grid[i, j] = 1
 
@@ -182,7 +182,7 @@ class CorsikaMergeLimits:
             pad=0.02,
         )
         cbar.set_ticklabels(["Missing", "Present"])
-        ax.set_title(f"Grid Coverage: NSB={nsb}, Layout={layout}")
+        ax.set_title(f"Grid Coverage: NSB={nsb}, Array Name={array_name}")
         ax.set_xlabel("Azimuth [deg]")
         ax.set_ylabel(ZENITH_LABEL)
         ax.set_xticks(az_vals)
@@ -205,20 +205,20 @@ class CorsikaMergeLimits:
             "zeniths": np.array(grid_definition.get("zenith", [])),
             "azimuths": np.array(grid_definition.get("azimuth", [])),
             "nsb_levels": np.array(grid_definition.get("nsb_level", [])),
-            "layouts": np.array(grid_definition.get("layouts", [])),
+            "array_names": np.array(grid_definition.get("array_name", [])),
         }
 
-        for nsb, layout in product(unique_values["nsb_levels"], unique_values["layouts"]):
+        for nsb, array_name in product(unique_values["nsb_levels"], unique_values["array_names"]):
             _, ax = plt.subplots(figsize=(10, 8))
             self._plot_single_grid_coverage(
                 ax,
                 unique_values["zeniths"],
                 unique_values["azimuths"],
                 nsb,
-                layout,
+                array_name,
                 found_combinations_str,
             )
-            output_file = self.output_dir / f"grid_coverage_{nsb}_{layout}.png"
+            output_file = self.output_dir / f"grid_coverage_{nsb}_{array_name}.png"
             plt.tight_layout()
             plt.savefig(output_file, bbox_inches="tight")
             plt.close()
@@ -233,7 +233,7 @@ class CorsikaMergeLimits:
         grouped_by_layout_az = merged_table.group_by(["array_name", "azimuth"])
 
         for group in grouped_by_layout_az.groups:
-            layout = group["array_name"][0]
+            array_name = group["array_name"][0]
             azimuth = group["azimuth"][0]
             azimuth_value = azimuth.value if hasattr(azimuth, "value") else azimuth
 
@@ -277,11 +277,11 @@ class CorsikaMergeLimits:
             axes[2].grid(True)
 
             fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
-            plt.suptitle(f"CORSIKA Limits: Layout={layout}, Azimuth={azimuth_value} deg")
+            plt.suptitle(f"CORSIKA Limits: Array Name={array_name}, Azimuth={azimuth_value} deg")
             plt.tight_layout()
             plt.subplots_adjust(bottom=0.15)
 
-            output_file = self.output_dir / f"limits_{layout}_azimuth{azimuth_value}.png"
+            output_file = self.output_dir / f"limits_{array_name}_azimuth{azimuth_value}.png"
             plt.savefig(output_file)
             plt.close(fig)
             output_files.append(output_file)
