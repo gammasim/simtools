@@ -33,15 +33,18 @@ class CorsikaMergeLimits:
         )
 
     def _read_and_collect_tables(self, input_files):
-        """Read tables from files and collect metadata."""
+        """Read tables from files and collect metadata. Move loss_fraction from meta to column."""
         tables = []
         metadata = {}
-        loss_fractions = set()
         grid_points = set()
         duplicate_points = []
 
         for file_path in input_files:
             table = data_reader.read_table_from_file(file_path)
+            # Move loss_fraction from meta to column
+            lf = table.meta.pop("loss_fraction", None)
+            if lf is not None:
+                table["loss_fraction"] = lf
             tables.append(table)
 
             for row in table:
@@ -51,25 +54,17 @@ class CorsikaMergeLimits:
                 else:
                     grid_points.add(grid_point)
 
-            if "loss_fraction" in table.meta:
-                loss_fractions.add(table.meta["loss_fraction"])
             if not metadata:
                 metadata = table.meta
 
-        return tables, metadata, loss_fractions, grid_points, duplicate_points
+        return tables, metadata, grid_points, duplicate_points
 
-    def _report_and_merge(self, tables, metadata, loss_fractions, duplicate_points):
+    def _report_and_merge(self, tables, metadata, duplicate_points):
         """Report issues and merge tables."""
         if duplicate_points:
             _logger.warning(f"Found {len(duplicate_points)} duplicate grid points across tables")
             _logger.warning(f"First few duplicates: {duplicate_points[:5]}")
             _logger.warning("When duplicates exist, only the last occurrence will be kept")
-
-        if len(loss_fractions) > 1:
-            _logger.warning(f"Found different loss_fraction values across tables: {loss_fractions}")
-            _logger.warning(
-                f"Using loss_fraction from the first table: {metadata.get('loss_fraction')}"
-            )
 
         merged_table = vstack(tables, metadata_conflicts="silent")
         merged_table.meta.update(metadata)
@@ -88,10 +83,16 @@ class CorsikaMergeLimits:
         """Merge multiple CORSIKA limit tables into a single table."""
         _logger.info(f"Merging {len(input_files)} CORSIKA limit tables")
 
-        tables, metadata, loss_fractions, grid_points, duplicate_points = (
-            self._read_and_collect_tables(input_files)
-        )
-        merged_table = self._report_and_merge(tables, metadata, loss_fractions, duplicate_points)
+        tables, metadata, grid_points, duplicate_points = self._read_and_collect_tables(input_files)
+        merged_table = self._report_and_merge(tables, metadata, duplicate_points)
+
+        if "loss_fraction" in merged_table.colnames:
+            unique_loss_fractions = np.unique(merged_table["loss_fraction"])
+            if len(unique_loss_fractions) > 1:
+                _logger.info(
+                    f"Found multiple loss_fraction values in merged table: {unique_loss_fractions}."
+                    " Make sure this is intended."
+                )
 
         merged_table.sort(["array_name", "zenith", "azimuth", "nsb_level"])
 
