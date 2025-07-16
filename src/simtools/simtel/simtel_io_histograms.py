@@ -159,7 +159,7 @@ class SimtelIOHistograms:
         if sim_hist is None or trig_hist is None:
             msg = (
                 "Simulated and triggered histograms were not found in the stacked histograms."
-                " Please check your sim_telarray files!"
+                " Please check sim_telarray files!"
             )
             self._logger.error(msg)
             raise HistogramIdNotFoundError

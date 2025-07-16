@@ -97,7 +97,7 @@ def test_fill_event_histogram_dicts(simtel_hist_io_instance, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(HistogramIdNotFoundError):
             new_instance.fill_event_histogram_dicts()
-    assert "Histograms ids not found. Please check your files." in caplog.text
+    assert "Histograms ids not found. Please check files." in caplog.text
 
 
 def test_produce_triggered_to_sim_fraction_hist(simtel_hist_io_instance):
