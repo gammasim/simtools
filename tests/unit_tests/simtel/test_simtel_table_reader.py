@@ -34,6 +34,26 @@ def test_read_simtel_data(spe_test_file, spe_meta_test_comment):
     assert n_columns == 3
 
 
+def test_process_line_parts(caplog):
+    """Test processing of line parts with various inputs."""
+    # Test normal case - all parts convertible to floats
+    parts = ["1.0", "2.5", "3.0"]
+    result = simtel_table_reader._process_line_parts(parts)
+    assert result == [1.0, 2.5, 3.0]
+
+    # Test with scientific notation
+    parts = ["1.0e-3", "2.5e2"]
+    result = simtel_table_reader._process_line_parts(parts)
+    assert result == [0.001, 250.0]
+
+    # Test skipping non-numeric parts
+    with caplog.at_level(logging.DEBUG):
+        parts = ["1.0", "+-", "3.0"]
+        result = simtel_table_reader._process_line_parts(parts)
+        assert result == [1.0, 3.0]
+        assert "Skipping non-float part: +-" in caplog.text
+
+
 @mock.patch("simtools.utils.general.read_file_encoded_in_utf_or_latin")
 def test_read_simtel_data_rpol(mock_read_file_encoded_in_utf_or_latin):
     mock_read_file_encoded_in_utf_or_latin.return_value = [
