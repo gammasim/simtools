@@ -381,7 +381,7 @@ class ModelDataWriter:
 
         if metadata is not None:
             product_data.meta.update(
-                gen.change_dict_keys_case(metadata.get_top_level_metadata(), False)
+                gen.change_dict_keys_case(metadata.get_top_level_metadata(), True)
             )
 
         self._logger.info(f"Writing data to {self.product_data_file}")
