@@ -132,7 +132,7 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
-    parameter_name = "test"
+    parameter_name = "pm_photoelectron_spectrum"
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
@@ -169,6 +169,41 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
+
+
+def test__generate_plots(tmp_path, db_config):
+    args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+    input_file = tmp_path / "dummy_param.dat"
+    input_file.write_text("dummy content")
+
+    with patch.object(
+        read_parameters, "_plot_parameter_tables", return_value=["plot2"]
+    ) as mock_plot:
+        result = read_parameters._generate_plots("some_param", "1.0.0", input_file, tmp_path, False)
+        assert result == ["plot2"]
+        mock_plot.assert_called_once()
+
+
+def test__plot_camera_config_no_parameter_version(tmp_path, db_config):
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+    result = read_parameters._plot_camera_config("camera_config_file", None, tmp_path, False)
+    assert result == []
+
+
+def test__plot_parameter_tables(tmp_path, db_config):
+    args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+    result = read_parameters._plot_parameter_tables(
+        "pm_photoelectron_spectrum", "1.0.0", tmp_path, True
+    )
+    assert result == ["pm_photoelectron_spectrum_1.0.0_North_LSTN-design"]
+
+    args = {"telescope": None, "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+    result = read_parameters._plot_parameter_tables("camera_config_file", "1.0.0", tmp_path, False)
+    assert result == []
 
 
 def test__format_parameter_value(io_handler, db_config):
