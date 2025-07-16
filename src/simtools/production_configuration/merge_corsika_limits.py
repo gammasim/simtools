@@ -44,11 +44,8 @@ class CorsikaMergeLimits:
             table = data_reader.read_table_from_file(file_path)
             tables.append(table)
 
-            layout_column = "layout" if "layout" in table.colnames else "array_name"
-            nsb_column = "nsb_level" if "nsb_level" in table.colnames else "nsb"
-
             for row in table:
-                grid_point = (row["zenith"], row["azimuth"], row[nsb_column], row[layout_column])
+                grid_point = (row["zenith"], row["azimuth"], row["nsb_level"], row["array_name"])
                 if grid_point in grid_points:
                     duplicate_points.append(grid_point)
                 else:
@@ -80,9 +77,7 @@ class CorsikaMergeLimits:
 
     def _remove_duplicates(self, merged_table):
         """Remove duplicate grid points from the merged table, keeping the last occurrence."""
-        layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
-        nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
-        keys = [layout_column, "zenith", "azimuth", nsb_column]
+        keys = ["array_name", "zenith", "azimuth", "nsb_level"]
 
         reversed_table = merged_table[::-1]
         unique_table = unique(reversed_table, keys=keys, keep="first")
@@ -98,9 +93,7 @@ class CorsikaMergeLimits:
         )
         merged_table = self._report_and_merge(tables, metadata, loss_fractions, duplicate_points)
 
-        layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
-        nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
-        merged_table.sort([layout_column, "zenith", "azimuth", nsb_column])
+        merged_table.sort(["array_name", "zenith", "azimuth", "nsb_level"])
 
         if duplicate_points:
             original_count = len(merged_table)
@@ -118,9 +111,6 @@ class CorsikaMergeLimits:
             _logger.info("No grid definition provided, skipping completeness check.")
             return True, {}
 
-        layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
-        nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
-
         expected_combinations = list(
             product(
                 grid_definition.get("zenith", []),
@@ -135,8 +125,8 @@ class CorsikaMergeLimits:
             zip(
                 np.array(merged_table["zenith"].value, dtype=str),
                 np.array(merged_table["azimuth"].value, dtype=str),
-                np.array(merged_table[nsb_column], dtype=str),
-                np.array(merged_table[layout_column], dtype=str),
+                np.array(merged_table["nsb_level"], dtype=str),
+                np.array(merged_table["array_name"], dtype=str),
             )
         )
         _logger.info(f"Found {len(found_combinations_set)} unique grid points in merged table")
@@ -239,24 +229,22 @@ class CorsikaMergeLimits:
         """Generate plots showing the derived limits."""
         _logger.info("Generating limit plots")
         output_files = []
-        layout_column = "layout" if "layout" in merged_table.colnames else "array_name"
-        nsb_column = "nsb_level" if "nsb_level" in merged_table.colnames else "nsb"
 
-        grouped_by_layout_az = merged_table.group_by([layout_column, "azimuth"])
+        grouped_by_layout_az = merged_table.group_by(["array_name", "azimuth"])
 
         for group in grouped_by_layout_az.groups:
-            layout = group[layout_column][0]
+            layout = group["array_name"][0]
             azimuth = group["azimuth"][0]
             azimuth_value = azimuth.value if hasattr(azimuth, "value") else azimuth
 
             fig, axes = plt.subplots(1, 3, figsize=(18, 6))
             legend_handles, legend_labels = [], []
 
-            grouped_by_nsb = group.group_by(nsb_column)
+            grouped_by_nsb = group.group_by("nsb_level")
             colors = plt.get_cmap("viridis")(np.linspace(0, 1, len(grouped_by_nsb.groups)))
 
             for i, nsb_group in enumerate(grouped_by_nsb.groups):
-                nsb_level = nsb_group[nsb_column][0]
+                nsb_level = nsb_group["nsb_level"][0]
                 plot_columns = [
                     "zenith",
                     "lower_energy_limit",
