@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+title: Schema for fadc_long_sum_offset model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_long_sum_offset
+description: |-
+  Number of bins before telescope trigger where summing or reading of
+  sampled data starts in case long FADC readout mode is enabled
+  (see also description of fadc_long_sum_bins).  With peak
+  sensing readout, the same offset is used for setting the interval for
+  the searching of the peak signal.  For negative values, the summing or
+  reading starts after the trigger.
+short_description: |-
+  Number of bins before telescope trigger where summing or reading of
+  sampled data starts in case long FADC readout mode is enabled.
+data:
+  - type: int64
+    unit: dimensionless
+    default: 0
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTx-NectarCam
+    - MSTx-FlashCam
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateReadout
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: fadc_longsum_offset
