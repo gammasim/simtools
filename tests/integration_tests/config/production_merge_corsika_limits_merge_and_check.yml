@@ -1,0 +1,19 @@
+---
+applications:
+- application: simtools-production-merge-corsika-limits
+  configuration:
+    input_files: tests/resources/corsika_simulation_limits/
+    grid_definition: tests/resources/corsika_simulation_limits/grid_definition.yaml
+    output_file: merged_limits_merge_and_check.ecsv
+    plot_grid_coverage: true
+    plot_limits: true
+    output_path: simtools-output
+  integration_tests:
+  - output_file: merged_limits_merge_and_check.ecsv
+  - output_file: grid_coverage_1.0_alpha.png
+  - output_file: grid_coverage_5.0_alpha.png
+  - output_file: limits_alpha_azimuth0.0.png
+  - output_file: limits_alpha_azimuth180.0.png
+  test_name: production_merge_corsika_limits_merge_and_check
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

@@ -177,7 +177,7 @@ class SimtelIOHistogram:
         histograms = {hist["id"]: hist for hist in self.histogram if hist["id"] in {1, 2}}
         if 1 in histograms and 2 in histograms:
             return histograms[1], histograms[2]
-        self._logger.error("Histograms ids not found. Please check your files.")
+        self._logger.error("Histograms ids not found. Please check files.")
         raise HistogramIdNotFoundError
 
     def _set_view_cone(self, view_cone):
