@@ -13,6 +13,8 @@ DUMMY_CONFIG_FILE = "dummy.yml"
 TEST_WORKDIR = "/workdir/external/"
 TEST_FILE1 = "file1.txt"
 TEST_FILE2 = "file2.txt"
+MOCK_STDOUT_OUTPUT = "stdout output"
+MOCK_STDERR_OUTPUT = "stderr output"
 
 
 @pytest.fixture
@@ -174,8 +176,8 @@ def test_read_application_configuration_empty_applications(
 
 def test_run_application_success(monkeypatch, mock_logger, tmp_path):
     mock_result = mock.Mock()
-    mock_result.stdout = "stdout output"
-    mock_result.stderr = "stderr output"
+    mock_result.stdout = MOCK_STDOUT_OUTPUT
+    mock_result.stderr = MOCK_STDERR_OUTPUT
 
     monkeypatch.setattr(subprocess, "run", mock.Mock(return_value=mock_result))
 
@@ -186,8 +188,8 @@ def test_run_application_success(monkeypatch, mock_logger, tmp_path):
         runtime_environment, application, configuration, mock_logger
     )
 
-    assert stdout == "stdout output"
-    assert stderr == "stderr output"
+    assert stdout == MOCK_STDOUT_OUTPUT
+    assert stderr == MOCK_STDERR_OUTPUT
     subprocess.run.assert_called_once()
     args, kwargs = subprocess.run.call_args
     assert args[0][0] == application
@@ -432,8 +434,8 @@ def test_read_runtime_environment_with_missing_options():
 
 def test_run_application_with_runtime_environment(monkeypatch, mock_logger):
     mock_result = mock.Mock()
-    mock_result.stdout = "stdout output"
-    mock_result.stderr = "stderr output"
+    mock_result.stdout = MOCK_STDOUT_OUTPUT
+    mock_result.stderr = MOCK_STDERR_OUTPUT
 
     monkeypatch.setattr(subprocess, "run", mock.Mock(return_value=mock_result))
 
@@ -444,8 +446,8 @@ def test_run_application_with_runtime_environment(monkeypatch, mock_logger):
         runtime_environment, application, configuration, mock_logger
     )
 
-    assert stdout == "stdout output"
-    assert stderr == "stderr output"
+    assert stdout == MOCK_STDOUT_OUTPUT
+    assert stderr == MOCK_STDERR_OUTPUT
     subprocess.run.assert_called_once()
     args, kwargs = subprocess.run.call_args
     assert args[0][0:5] == runtime_environment
@@ -459,8 +461,8 @@ def test_run_application_with_runtime_environment(monkeypatch, mock_logger):
 
 def test_run_application_without_runtime_environment(monkeypatch, mock_logger):
     mock_result = mock.Mock()
-    mock_result.stdout = "stdout output"
-    mock_result.stderr = "stderr output"
+    mock_result.stdout = MOCK_STDOUT_OUTPUT
+    mock_result.stderr = MOCK_STDERR_OUTPUT
 
     monkeypatch.setattr(subprocess, "run", mock.Mock(return_value=mock_result))
 
@@ -471,8 +473,8 @@ def test_run_application_without_runtime_environment(monkeypatch, mock_logger):
         runtime_environment, application, configuration, mock_logger
     )
 
-    assert stdout == "stdout output"
-    assert stderr == "stderr output"
+    assert stdout == MOCK_STDOUT_OUTPUT
+    assert stderr == MOCK_STDERR_OUTPUT
     subprocess.run.assert_called_once()
     args, kwargs = subprocess.run.call_args
     assert args[0][0] == application
