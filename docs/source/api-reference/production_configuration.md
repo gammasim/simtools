@@ -17,19 +17,19 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 (derive-corsika-limits)=
 
-## derive_corsika_limits
+## corsika_limit_calculator
 
 ```{eval-rst}
-.. automodule:: production_configuration.derive_corsika_limits
+.. automodule:: production_configuration.corsika_limit_calculator
    :members:
 ```
 
 (derive-corsika-limits_grid)=
 
-## derive_corsika_limits_grid
+## derive_corsika_limits
 
 ```{eval-rst}
-.. automodule:: production_configuration.derive_corsika_limits_grid
+.. automodule:: production_configuration.derive_corsika_limits
    :members:
 ```
 
@@ -66,5 +66,14 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 ```{eval-rst}
 .. automodule:: production_configuration.interpolation_handler
+   :members:
+```
+
+(merge-corsika-limits)=
+
+## merge_corsika_limits
+
+```{eval-rst}
+.. automodule:: production_configuration.merge_corsika_limits
    :members:
 ```

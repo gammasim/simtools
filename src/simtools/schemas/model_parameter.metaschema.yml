@@ -5,8 +5,8 @@ title: SimPipe DB Model Parameter Metaschema
 description: |
   YAML representation of db model parameter metaschema
   (based on simulation model DB).
-version: 0.3.0
-name: modelparameter.metaschema
+schema_version: 0.3.0
+schema_name: modelparameter.metaschema
 type: object
 additionalProperties: false
 
@@ -118,8 +118,8 @@ title: SimPipe DB Model Parameter Metaschema
 description: |
   YAML representation of db model parameter metaschema
   (based on simulation model DB).
-version: 0.2.0
-name: modelparameter.metaschema
+schema_version: 0.2.0
+schema_name: modelparameter.metaschema
 type: object
 additionalProperties: false
 
@@ -209,8 +209,8 @@ title: SimPipe DB Model Parameter Metaschema
 description: |
   YAML representation of db model parameter metaschema
   (based on model_parameters DB).
-version: 0.1.0
-name: modelparameter.metaschema
+schema_version: 0.1.0
+schema_name: modelparameter.metaschema
 type: object
 additionalProperties: false
 

@@ -45,7 +45,7 @@ directions, level of night sky background, etc.).
 
 Command line arguments
 ----------------------
-event_data_files (str, required)
+event_data_file (str, required)
     Path to reduced event data file.
 telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
@@ -64,7 +64,7 @@ Derive limits for a list of array layouts (use 'all' to derive limits for all la
 .. code-block:: console
 
     simtools-production-derive-corsika-limits \\
-        --event_data_files path/to/event_data_files.yaml \\
+        --event_data_file event_dat_file.hdf5 \\
         --array_layout_name alpha,beta \\
         --loss_fraction 1e-6 \\
         --plot_histograms \\
@@ -75,7 +75,7 @@ Derive limits for a given file for custom defined array layouts:
 .. code-block:: console
 
     simtools-production-derive-corsika-limits \\
-        --event_data_files path/to/event_data_files.yaml \\
+        --event_data_file event_dat_file.hdf5 \\
         --telescope_ids path/to/telescope_configs.yaml \\
         --loss_fraction 1e-6 \\
         --plot_histograms \\
@@ -86,7 +86,7 @@ import logging
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.production_configuration.derive_corsika_limits_grid import (
+from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
 )
 
@@ -97,11 +97,10 @@ def _parse():
         description="Derive limits for energy, radial distance, and viewcone."
     )
     config.parser.add_argument(
-        "--event_data_files",
+        "--event_data_file",
         type=str,
-        nargs="+",
         required=True,
-        help="List of event data files or ascii file listing data files ",
+        help="Event data file containing reduced event data.",
     )
     config.parser.add_argument(
         "--telescope_ids",

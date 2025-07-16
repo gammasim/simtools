@@ -736,7 +736,7 @@ class DataValidator:
         entries = schema_data if isinstance(schema_data, list) else [schema_data]
 
         for entry in entries:
-            if not schema_version or entry.get("version") == schema_version:
+            if not schema_version or entry.get("schema_version") == schema_version:
                 try:
                     return entry["data"]
                 except KeyError as exc:

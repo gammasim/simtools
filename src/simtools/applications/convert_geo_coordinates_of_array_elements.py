@@ -140,10 +140,10 @@ def _parse(label=None, description=None):
 def main():
     """Print a list of array elements."""
     label = Path(__file__).stem
-    data_model_name = "array_coordinates"
+    model_parameter_name = "array_coordinates"
     args_dict, db_config = _parse(
         label,
-        description=f"Print a list of array element positions ({data_model_name})",
+        description=f"Print a list of array element positions ({model_parameter_name})",
     )
 
     logger = logging.getLogger()
@@ -153,7 +153,7 @@ def main():
         site = args_dict.get("site", None)
         metadata, validate_schema_file = None, None
     else:
-        metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
+        metadata = MetadataCollector(args_dict=args_dict, model_parameter_name=model_parameter_name)
         site = metadata.get_site(from_input_meta=True)
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
