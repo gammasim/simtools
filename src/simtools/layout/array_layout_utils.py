@@ -243,7 +243,12 @@ def get_array_layouts_from_parameter_file(
     for layout in value:
         layouts.append(
             _get_array_layout_dict(
-                db_config, model_version, site, None, layout["name"], coordinate_system
+                db_config,
+                model_version,
+                site,
+                layout.get("elements"),
+                layout["name"],
+                coordinate_system,
             )
         )
     return layouts
