@@ -25,11 +25,32 @@ definitions:
       schema_name:
         type: string
         description: "Name of the schema."
+      runtime_environment:
+        "$ref": "#/definitions/runtime_environment"
     required:
       - applications
       - schema_version
       - schema_name
     title: ""
+  runtime_environment:
+    additionalProperties: false
+    type: array
+    items:
+      type: object
+      properties:
+        image:
+          type: string
+          description: "Container image to use for the application."
+        network:
+          type: string
+          description: "Network configuration for the container."
+        environment_file:
+          type: string
+          description: "Path to the environment file for the container."
+        container_engine:
+          type: string
+          description: "Container engine to use (e.g., docker, podman)."
+          default: "docker"
   applications:
     additionalProperties: false
     type: array
