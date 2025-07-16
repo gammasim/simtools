@@ -84,8 +84,7 @@ class CorsikaMergeLimits:
         for file_path in input_files:
             table = data_reader.read_table_from_file(file_path)
             # Move loss_fraction from meta to column
-            lf = table.meta.pop("loss_fraction", None)
-            table["loss_fraction"] = lf
+            table["loss_fraction"] = table.meta.pop("loss_fraction", None)
             tables.append(table)
 
             for row in table:
