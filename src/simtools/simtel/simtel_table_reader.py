@@ -332,8 +332,21 @@ def _read_simtel_data(file_path):
             meta_lines.append(stripped.lstrip("#").strip())
         elif stripped:  # Data
             data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
-
-    rows = [[float(part) for part in line.split()] for line in data_lines]
+    rows = []
+    for line in data_lines:
+        parts = line.split()
+        i = 0
+        row = []
+        while i < len(parts):
+            try:
+                # Try to convert to float, if fails, it might be a string
+                row.append(float(parts[i]))
+            except ValueError:
+                logger.debug(f"Skipping non-float part: {parts[i]}")
+                i += 1
+                continue
+            i += 1
+        rows.append(row)
     n_columns = max(len(row) for row in rows) if rows else 0
 
     return rows, "\n".join(meta_lines), n_columns, n_dim_axis
