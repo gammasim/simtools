@@ -226,26 +226,6 @@ class ReadParameters:
             else ", ".join(f"{v} {unit}" for v in value_data)
         ).strip()
 
-    def _wrap_at_underscores(self, text, max_width):
-        """Wrap text at underscores to fit within a specified width."""
-        parts = text.split("_")
-        lines = []
-        current = []
-
-        for part in parts:
-            # Predict the new length if we add this part
-            next_line = "_".join([*current, part])
-            if len(next_line) <= max_width:
-                current.append(part)
-            else:
-                lines.append("_".join(current))
-                current = [part]
-
-        if current:
-            lines.append("_".join(current))
-
-        return " ".join(lines)
-
     def _group_model_versions_by_parameter_version(self, grouped_data):
         """Group model versions by parameter version and track the parameter values."""
         result = {}
@@ -455,7 +435,6 @@ class ReadParameters:
             text = short_description if short_description else description
             wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
             wrapped_text = " ".join(wrapped_text)
-            parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
 
             file.write(
                 f"| {parameter_name:{column_widths[0]}} |"
