@@ -156,6 +156,10 @@ def copy_and_update_production_table(args_dict):
     target_prod_table_path = simulation_models_path / "productions" / model_version
     model_parameters_dir = simulation_models_path / "model_parameters"
 
+    _logger.info(
+        f"Copying production tables from {source_prod_table_path} to {target_prod_table_path}"
+    )
+
     if Path(target_prod_table_path).exists():
         raise FileExistsError(
             f"The target production table directory '{target_prod_table_path}' already exists."
@@ -166,7 +170,8 @@ def copy_and_update_production_table(args_dict):
 
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
-            _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
+            if param_data.get("value"):
+                _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
 
 
 def _apply_changes_to_production_tables(target_prod_table_path, changes, model_version):
@@ -175,7 +180,7 @@ def _apply_changes_to_production_tables(target_prod_table_path, changes, model_v
         data = gen.collect_data_from_file(file_path)
         _apply_changes_to_production_table(data, changes, model_version)
         with file_path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+            json.dump(data, f, indent=4, sort_keys=True)
             f.write("\n")
 
 
@@ -213,6 +218,12 @@ def _update_parameters(params, changes):
                 new = param_data["version"]
                 _logger.info(f"Updating '{telescope} - {param}' from {old} to {new}")
                 params[telescope][param] = new
+            else:
+                _logger.info(
+                    f"Adding new parameter '{telescope} - {param}' "
+                    f"with version {param_data['version']}"
+                )
+                params[telescope][param] = param_data["version"]
 
 
 def _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir):
