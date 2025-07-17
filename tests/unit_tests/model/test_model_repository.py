@@ -9,6 +9,7 @@ import pytest
 from simtools.model import model_repository
 
 TEST_PRODUCTION_FILE = "test_production.json"
+TEST_MODIFICATIONS_FILE = "modifications.json"
 PATH_PATCH = "simtools.model.model_repository._get_model_parameter_file_path"
 
 
@@ -658,7 +659,7 @@ def test_copy_and_update_production_table_success(
         "simulation_models_path": str(tmp_path),
         "source_prod_table_dir": "source",
         "target_prod_table_dir": "target",
-        "modifications": "modifications.json",
+        "modifications": TEST_MODIFICATIONS_FILE,
     }
     mock_collect_data.return_value = {"telescope": {"param": {"version": "1.0.0", "value": 42}}}
 
@@ -678,7 +679,7 @@ def test_copy_and_update_production_table_target_exists(mock_copytree, tmp_path)
         "simulation_models_path": str(tmp_path),
         "source_prod_table_dir": "source",
         "target_prod_table_dir": "target",
-        "modifications": "modifications.json",
+        "modifications": TEST_MODIFICATIONS_FILE,
     }
     target_path = tmp_path / "productions" / "target"
     target_path.mkdir(parents=True)
@@ -701,7 +702,7 @@ def test_copy_and_update_production_table_no_changes(
         "simulation_models_path": str(tmp_path),
         "source_prod_table_dir": "source",
         "target_prod_table_dir": "target",
-        "modifications": "modifications.json",
+        "modifications": TEST_MODIFICATIONS_FILE,
     }
     mock_collect_data.return_value = {}
 
@@ -710,3 +711,28 @@ def test_copy_and_update_production_table_no_changes(
     mock_copytree.assert_called_once()
     mock_apply_changes.assert_called_once()
     mock_create_entry.assert_not_called()
+
+
+@patch("simtools.model.model_repository._get_latest__model_parameter_file")
+def test_create_new_parameter_entry_no_latest_file_error(mock_get_latest, tmp_path):
+    """Test creation of a new parameter entry when no latest file exists."""
+    telescope = "MSTx-FlashCam"
+    param = "dsum_threshold"
+    param_data = {"version": "4.0.0", "value": 62.5}
+    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
+
+    # Create directory structure
+    telescope_dir = model_parameters_dir / telescope
+    param_dir = telescope_dir / param
+    param_dir.mkdir(parents=True)
+
+    # Mock no latest file found
+    mock_get_latest.return_value = None
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"No files found for parameter '{param}' in directory '{param_dir}'.",
+    ):
+        model_repository._create_new_parameter_entry(
+            telescope, param, param_data, model_parameters_dir
+        )
