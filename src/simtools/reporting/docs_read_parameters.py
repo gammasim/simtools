@@ -65,7 +65,7 @@ class ReadParameters:
             )
         self._model_version = model_version
 
-    def _generate_plots(self, parameter, parameter_version, input_file, outpath, design_type):
+    def _generate_plots(self, parameter, parameter_version, input_file, outpath):
         """Generate plots based on the parameter type."""
         plot_names = []
 
@@ -73,7 +73,9 @@ class ReadParameters:
             plot_names = self._plot_camera_config(parameter, parameter_version, input_file, outpath)
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
-                parameter, parameter_version, outpath, design_type
+                parameter,
+                parameter_version,
+                outpath,
             )
 
         return plot_names
@@ -112,18 +114,9 @@ class ReadParameters:
 
         return plot_names
 
-    def _plot_parameter_tables(self, parameter, parameter_version, outpath, design_type):
+    def _plot_parameter_tables(self, parameter, parameter_version, outpath):
         """Generate plots for parameter tables."""
-        telescope_design = self.db.get_design_model(
-            self.model_version, self.array_element, collection="telescopes"
-        )
-
-        if not self.array_element:
-            tel = None
-        elif not design_type:
-            tel = telescope_design
-        else:
-            tel = self.array_element
+        tel = self._get_telescope_identifier()
 
         config_data = plot_tables.generate_plot_configurations(
             parameter=parameter,
@@ -153,7 +146,20 @@ class ReadParameters:
 
         return plot_names
 
-    def _convert_to_md(self, parameter, parameter_version, input_file, design_type=False):
+    def _get_telescope_identifier(self, model_version=None):
+        """Get the appropriate telescope identifier for file naming."""
+        model_version = model_version or self.model_version
+        telescope_design = self.db.get_design_model(
+            model_version, self.array_element, collection="telescopes"
+        )
+
+        if not self.array_element:
+            return None
+        if not names.is_design_type(self.array_element):
+            return telescope_design
+        return self.array_element
+
+    def _convert_to_md(self, parameter, parameter_version, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
 
@@ -167,39 +173,37 @@ class ReadParameters:
         relative_path = f"_data_files/{output_file_name}"
         markdown_output_file = output_data_path / output_file_name
 
-        if not markdown_output_file.exists():
-            outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
-            outpath.mkdir(parents=True, exist_ok=True)
+        # if not markdown_output_file.exists():
+        outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+        outpath.mkdir(parents=True, exist_ok=True)
 
-            plot_names = self._generate_plots(
-                parameter, parameter_version, input_file, outpath, design_type
+        plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
+        # Write markdown file using the stored path
+        file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+
+        with markdown_output_file.open("w", encoding="utf-8") as outfile:
+            outfile.write(f"# {input_file.stem}\n")
+
+            for plot_name in plot_names:
+                outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
+
+            outfile.write(
+                "\n\nThe full file can be found in the Simulation Model repository [here]"
+                "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                f"model_parameters/Files/{input_file.name}).\n\n"
             )
-            # Write markdown file using the stored path
-            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
-
-            with markdown_output_file.open("w", encoding="utf-8") as outfile:
-                outfile.write(f"# {input_file.stem}\n")
-
-                for plot_name in plot_names:
-                    outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
-
-                outfile.write(
-                    "\n\nThe full file can be found in the Simulation Model repository [here]"
-                    "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                    "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                    f"model_parameters/Files/{input_file.name}).\n\n"
-                )
-                outfile.write("\n\n")
-                outfile.write("The first 30 lines of the file are:\n")
-                outfile.write("```\n")
-                first_30_lines = "".join(file_contents[:30])
-                outfile.write(first_30_lines)
-                outfile.write("\n```")
+            outfile.write("\n\n")
+            outfile.write("The first 30 lines of the file are:\n")
+            outfile.write("```\n")
+            first_30_lines = "".join(file_contents[:30])
+            outfile.write(first_30_lines)
+            outfile.write("\n```")
 
         return relative_path
 
     def _format_parameter_value(
-        self, parameter, value_data, unit, file_flag, parameter_version=None, design_type=False
+        self, parameter, value_data, unit, file_flag, parameter_version=None
     ):
         """Format parameter value based on type."""
         if file_flag:
@@ -210,9 +214,7 @@ class ReadParameters:
                     "cta-science/simulations/simulation-model/simulation-models/-/blob/main/"
                     f"simulation-models/model_parameters/Files/{value_data})"
                 ).strip()
-            output_file_name = self._convert_to_md(
-                parameter, parameter_version, input_file_name, design_type
-            )
+            output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
         if isinstance(value_data, (str | int | float)):
             return f"{value_data} {unit}".strip()
@@ -398,10 +400,9 @@ class ReadParameters:
             if value_data is None:
                 continue
 
-            design_type = names.is_design_type(telescope_model.name)
             file_flag = parameter_data.get("file", False)
             value = self._format_parameter_value(
-                parameter, value_data, unit, file_flag, parameter_version, design_type
+                parameter, value_data, unit, file_flag, parameter_version
             )
 
             description = parameter_descriptions.get(parameter).get("description")
@@ -411,7 +412,7 @@ class ReadParameters:
             inst_class = parameter_descriptions.get(parameter).get("inst_class")
 
             matching_instrument = parameter_data["instrument"] == telescope_model.name
-            if not design_type and matching_instrument:
+            if not names.is_design_type(telescope_model.name) and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
                 if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
@@ -654,8 +655,40 @@ class ReadParameters:
                     )
 
                 file.write("\n")
+
                 if comparison_data.get(parameter)[0]["file_flag"]:
-                    file.write(f"![Parameter plot.](/_images/{self.array_element}_{parameter}.png)")
+                    outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+                    latest_parameter_version = max(
+                        comparison_data.get(parameter),
+                        key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
+                    )["parameter_version"]
+
+                    all_model_versions = []
+                    for item in comparison_data.get(parameter):
+                        model_versions = item["model_version"].split(", ")
+                        all_model_versions.extend(model_versions)
+
+                    latest_model_version = max(
+                        all_model_versions, key=lambda x: tuple(map(int, x.split(".")))
+                    )
+
+                    tel = self._get_telescope_identifier(latest_model_version)
+
+                    file.write("The latest parameter version is plotted below.\n\n")
+
+                    if parameter != "camera_config_file":
+                        plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
+                        file.write(f"![Parameter plot.]({outpath}/{plot_name}.png)")
+                    else:
+                        for item in comparison_data.get(parameter):
+                            if latest_model_version in item["model_version"].split(", "):
+                                latest_value = item["value"]
+                                break
+
+                        # Extract filename from markdown link and change suffix to .png
+                        match = re.search(r"\[([^\]]+)\]", latest_value)
+                        filename_png = Path(match.group(1)).with_suffix(".png").name
+                        file.write(f"![Camera configuration plot.]({outpath}/{filename_png})")
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
