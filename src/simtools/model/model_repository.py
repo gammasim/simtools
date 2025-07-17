@@ -177,6 +177,8 @@ def copy_and_update_production_table(args_dict):
 def _apply_changes_to_production_tables(target_prod_table_path, changes, model_version):
     """Apply changes to the production tables in the target directory."""
     for file_path in Path(target_prod_table_path).rglob("*.json"):
+        if file_path.name.startswith("configuration"):
+            continue
         data = gen.collect_data_from_file(file_path)
         _apply_changes_to_production_table(data, changes, model_version)
         with file_path.open("w", encoding="utf-8") as f:
