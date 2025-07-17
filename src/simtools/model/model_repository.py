@@ -5,7 +5,9 @@ a gitlab repository ('SimulationModels'). This module provides service
 functions to interact with and verify the repository.
 """
 
+import json
 import logging
+import shutil
 from pathlib import Path
 
 from simtools.utils import general as gen
@@ -132,3 +134,177 @@ def _get_model_parameter_file_path(
         / parameter_name
         / f"{parameter_name}-{parameter_version}.json"
     )
+
+
+def copy_and_update_production_table(args_dict):
+    """
+    Copy and update simulation model production tables.
+
+    Parameters
+    ----------
+    args_dict: dict
+        Dictionary containing the arguments for copying and updating production tables.
+    """
+    simulation_models_path = Path(args_dict["simulation_models_path"])
+    source_prod_table_path = (
+        simulation_models_path / "productions" / args_dict["source_prod_table_dir"]
+    )
+    target_prod_table_path = (
+        simulation_models_path / "productions" / args_dict["target_prod_table_dir"]
+    )
+    model_parameters_dir = simulation_models_path / "model_parameters"
+
+    if Path(target_prod_table_path).exists():
+        raise FileExistsError(
+            f"The target production table directory '{target_prod_table_path}' already exists."
+        )
+    shutil.copytree(source_prod_table_path, target_prod_table_path)
+
+    changes = gen.collect_data_from_file(args_dict["modifications"])
+
+    _apply_changes_to_production_tables(target_prod_table_path, changes, args_dict)
+
+    for telescope, parameters in changes.items():
+        for param, param_data in parameters.items():
+            _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
+
+
+def _apply_changes_to_production_tables(target_prod_table_path, changes, args_dict):
+    """Apply changes to the production tables in the target directory."""
+    for file_path in Path(target_prod_table_path).rglob("*.json"):
+        data = gen.collect_data_from_file(file_path)
+        _apply_changes_to_production_table(data, changes, args_dict["target_prod_table_dir"])
+        with file_path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+            f.write("\n")
+
+
+def _apply_changes_to_production_table(data, changes, model_version):
+    """
+    Recursively apply changes to the new production tables.
+
+    Parameters
+    ----------
+    data: dict or list
+        The JSON data to be updated.
+    changes: dict
+        The changes to be applied.
+    model_version: str
+        The model version to be set in the JSON data.
+    """
+    if isinstance(data, dict):
+        if "model_version" in data:
+            data["model_version"] = model_version
+        _update_parameters(data.get("parameters", {}), changes)
+
+    elif isinstance(data, list):
+        for item in data:
+            _apply_changes_to_production_table(item, changes, model_version)
+
+
+def _update_parameters(params, changes):
+    """Update parameters in the given dictionary based on changes."""
+    for telescope, updates in changes.items():
+        if telescope not in params:
+            continue
+        for param, param_data in updates.items():
+            if param in params[telescope]:
+                old = params[telescope][param]
+                new = param_data["version"]
+                print(f"Updating '{telescope} - {param}' from {old} to {new}")
+                params[telescope][param] = new
+
+
+def _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir):
+    """
+    Create new model parameter JSON file by copying the latest version and updating fields.
+
+    Parameters
+    ----------
+    telescope: str
+        Name of the telescope.
+    param: str
+        Name of the parameter.
+    param_data: dict
+        Dictionary containing the parameter data including version and value.
+    model_parameters_dir: str
+        Path to the model parameters directory.
+    """
+    telescope_dir = Path(model_parameters_dir) / telescope
+    if not telescope_dir.exists():
+        raise FileNotFoundError(
+            f"Directory for telescope '{telescope}' does not exist in '{model_parameters_dir}'."
+        )
+
+    param_dir = telescope_dir / param
+    if not param_dir.exists():
+        raise FileNotFoundError(
+            f"Directory for parameter '{param}' does not exist in '{telescope}'."
+        )
+
+    latest_file = _get_latest__model_parameter_file(param_dir, param)
+    if not latest_file:
+        raise FileNotFoundError(
+            f"No files found for parameter '{param}' in directory '{param_dir}'."
+        )
+
+    json_data = gen.collect_data_from_file(latest_file)
+
+    json_data["parameter_version"] = _update_model_parameter_version(
+        json_data, param_data, param, telescope
+    )
+    json_data["value"] = param_data["value"]
+
+    new_file_name = f"{param}-{param_data['version']}.json"
+    new_file_path = param_dir / new_file_name
+
+    with open(new_file_path, "w", encoding="utf-8") as f:
+        json.dump(json_data, f, indent=4)
+        f.write("\n")
+    print(f"Created new model parameter JSON file: {new_file_path}")
+
+
+def _get_latest__model_parameter_file(directory, parameter):
+    """
+    Get the latest model parameter JSON file for a parameter in the given directory.
+
+    Assume files are named in the format 'parameter-version.json'.
+
+    Parameters
+    ----------
+    directory: str
+        Path to the directory containing parameter JSON files.
+    parameter: str
+        Name of the parameter to find.
+
+    Returns
+    -------
+    str
+        Path to the latest JSON file for the parameter.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no files for the parameter are found in the directory.
+    """
+    directory_path = Path(directory)
+    files = list(directory_path.glob(f"{parameter}-*.json"))
+    if not files:
+        raise FileNotFoundError(
+            f"No JSON files found for parameter '{parameter}' in directory '{directory}'."
+        )
+    # Sort files by version number (assumes version is part of the filename)
+    files.sort(key=lambda f: f.stem.split("-")[-1])
+    return str(files[-1])
+
+
+def _update_model_parameter_version(json_data, param_data, param, telescope):
+    """Check for major version jump and print a warning if necessary."""
+    latest_version = int(json_data.get("parameter_version", "0").split(".")[0])
+    new_version = int(param_data["version"].split(".")[0])
+    if new_version > latest_version + 1:
+        print(
+            f"Warning: Major version jump from {latest_version} to {new_version} "
+            f"for parameter '{param}' in telescope '{telescope}'."
+        )
+    return param_data["version"]
