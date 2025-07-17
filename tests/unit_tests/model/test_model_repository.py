@@ -661,7 +661,9 @@ def test_copy_and_update_production_table_success(
         "target_prod_table_dir": "target",
         "modifications": TEST_MODIFICATIONS_FILE,
     }
-    mock_collect_data.return_value = {"telescope": {"param": {"version": "1.0.0", "value": 42}}}
+    mock_collect_data.return_value = {
+        "changes": {"telescope": {"param": {"version": "1.0.0", "value": 42}}}
+    }
 
     model_repository.copy_and_update_production_table(args_dict)
 
