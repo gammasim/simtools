@@ -11,13 +11,15 @@ Example
 
     simtools-maintain-simulation-model-add-production-table \\
         --simulation_models_path ../simulation-models-dev/simulation-models/ \\
-        --source_prod_table_dir 6.0.0 --target_prod_table_dir 6.5.0 \\
+        --source_prod_table_dir 6.0.0 \\
         --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml
 
 """
 
+import logging
 from pathlib import Path
 
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.model import model_repository
 
@@ -45,12 +47,6 @@ def _parse(label, description):
         help="The source production table directory to copy from.",
     )
     config.parser.add_argument(
-        "--target_prod_table_dir",
-        type=str,
-        required=True,
-        help="The target production table directory to create and update.",
-    )
-    config.parser.add_argument(
         "--modifications",
         type=str,
         required=True,
@@ -65,6 +61,8 @@ def main():  # noqa: D103
     args_dict, _ = _parse(
         label=label, description=("Copy and update simulation model production tables.")
     )
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     model_repository.copy_and_update_production_table(args_dict)
 
