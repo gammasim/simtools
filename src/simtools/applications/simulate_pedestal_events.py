@@ -3,8 +3,8 @@
 r"""
 Simulate pedestal events for calibration purposes.
 
-Example Usage
--------------
+Example
+-------
 
 Simulate pedestal events for MSTN-04 at the North site:
 
@@ -30,7 +30,6 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 
 def _parse(label):
@@ -45,8 +44,7 @@ def _parse(label):
     )
 
 
-def main():
-    """Simulate light emission."""
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
 
@@ -61,17 +59,6 @@ def main():
         model_version=args_dict["model_version"],
     )
 
-    light_source = SimulatorLightEmission(
-        telescope_model=telescope_model,
-        calibration_model=calibration_model,
-        site_model=site_model,
-        light_emission_config=light_emission_config,
-        le_application=le_application,
-        simtel_path=args_dict["simtel_path"],
-        light_source_type=args_dict["light_source_type"],
-        label=label,
-        test=args_dict["test"],
-    )
 
 
 if __name__ == "__main__":
