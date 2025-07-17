@@ -230,7 +230,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
             two_dim_distribution, incidence_angle_distribution
         )
         new_file_name = (
-            f"weighted_average_1D_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
+            f"weighted_average_1D_{weighting_distribution_parameter}"
+            f"_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
         )
         return self._telescope_model.export_table_to_model_directory(
             new_file_name, distribution_to_export
