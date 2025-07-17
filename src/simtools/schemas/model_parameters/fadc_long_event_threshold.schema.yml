@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+title: Schema for fadc_long_event_threshold model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_long_event_threshold
+description: |-
+  Number of trigger groups to enable long FADC readout mode.
+  In this case the length of the readout trace is given by
+  fadc_long_sum_bins instead of fadc_sum_bins and the starting point
+  as fadc_long_sum_offset instead of fadc_sum_offset before the trigger time.
+short_description: Number of trigger groups to enable long FADC readout mode.
+data:
+  - type: uint64
+    unit: dimensionless
+    default: 0
+    allowed_range:
+      min: 0
+instrument:
+  class: Camera
+  type:
+    - MSTx-FlashCam
+    - SSTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: long_event_threshold
