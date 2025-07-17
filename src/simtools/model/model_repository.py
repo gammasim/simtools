@@ -306,8 +306,14 @@ def _get_latest__model_parameter_file(directory, parameter):
         raise FileNotFoundError(
             f"No JSON files found for parameter '{parameter}' in directory '{directory}'."
         )
+
     # Sort files by version number (assumes version is part of the filename)
-    files.sort(key=lambda f: f.stem.split("-")[-1])
+    def safe_parse_version(filename):
+        version_str = filename.stem.split("-")[-1]
+        parts = version_str.split(".")
+        return tuple(part.zfill(8) for part in parts)
+
+    files.sort(key=safe_parse_version)
     return str(files[-1])
 
 

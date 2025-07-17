@@ -272,6 +272,14 @@ def test_get_latest_model_parameter_file_success(mock_path):
 
     assert result == str(mock_file_2)
 
+    mock_file_3 = Mock()
+    mock_file_3.stem = "parameter-2.0.0-rc"
+    mock_directory.glob.return_value = [mock_file_1, mock_file_2, mock_file_3]
+
+    result = model_repository._get_latest__model_parameter_file("mock_directory", "parameter")
+
+    assert result == str(mock_file_3)
+
 
 @patch("simtools.model.model_repository.Path")
 def test_get_latest_model_parameter_file_no_files(mock_path):
