@@ -155,8 +155,6 @@ def collect_data_from_file(file_name, yaml_document=None):
         Name of the yaml/json/ascii file.
     yaml_document: None, int
         Return list of yaml documents or a single document (for yaml files with several documents).
-    ignore_key: str, optional
-        Key to be ignored when loading dictionary.
 
     Returns
     -------
