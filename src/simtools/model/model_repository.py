@@ -211,7 +211,7 @@ def _update_parameters(params, changes):
             if param in params[telescope]:
                 old = params[telescope][param]
                 new = param_data["version"]
-                print(f"Updating '{telescope} - {param}' from {old} to {new}")
+                _logger.info(f"Updating '{telescope} - {param}' from {old} to {new}")
                 params[telescope][param] = new
 
 
@@ -258,10 +258,10 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     new_file_name = f"{param}-{param_data['version']}.json"
     new_file_path = param_dir / new_file_name
 
-    with open(new_file_path, "w", encoding="utf-8") as f:
+    with new_file_path.open("w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=4)
         f.write("\n")
-    print(f"Created new model parameter JSON file: {new_file_path}")
+    _logger.info(f"Created new model parameter JSON file: {new_file_path}")
 
 
 def _get_latest__model_parameter_file(directory, parameter):
@@ -303,7 +303,7 @@ def _update_model_parameter_version(json_data, param_data, param, telescope):
     latest_version = int(json_data.get("parameter_version", "0").split(".")[0])
     new_version = int(param_data["version"].split(".")[0])
     if new_version > latest_version + 1:
-        print(
+        _logger.info(
             f"Warning: Major version jump from {latest_version} to {new_version} "
             f"for parameter '{param}' in telescope '{telescope}'."
         )
