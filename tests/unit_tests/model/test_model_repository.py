@@ -564,6 +564,8 @@ def test_apply_changes_to_production_tables(tmp_path):
         },
     }
     prod_table_file.write_text(json.dumps(prod_table_data))
+    prod_config_file = target_prod_table_path / "configuration_sim_telarray.json"
+    prod_config_file.write_text(json.dumps(prod_table_data))
 
     # Mock changes to be applied
     changes = {
@@ -579,6 +581,11 @@ def test_apply_changes_to_production_tables(tmp_path):
     assert updated_data["model_version"] == "6.5.0"
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
     assert updated_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
+    # configuration table file not updated
+    config_data = json.loads(prod_config_file.read_text())
+    assert config_data["model_version"] == "6.0.0"
+    assert config_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
+    assert config_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "3.0.0"
 
 
 def test_apply_changes_to_production_tables_no_parameters(tmp_path):
