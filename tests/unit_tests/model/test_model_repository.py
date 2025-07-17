@@ -571,9 +571,7 @@ def test_apply_changes_to_production_tables(tmp_path):
     }
 
     # Call the function
-    model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, {"target_prod_table_dir": "6.5.0"}
-    )
+    model_repository._apply_changes_to_production_tables(target_prod_table_path, changes, "6.5.0")
 
     # Verify the production table file is updated
     updated_data = json.loads(prod_table_file.read_text())
@@ -598,9 +596,7 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
     }
 
     # Call the function
-    model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, {"target_prod_table_dir": "6.5.0"}
-    )
+    model_repository._apply_changes_to_production_tables(target_prod_table_path, changes, "6.5.0")
 
     # Verify the production table file is updated
     updated_data = json.loads(prod_table_file.read_text())
@@ -634,9 +630,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
     }
 
     # Call the function
-    model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, {"target_prod_table_dir": "6.5.0"}
-    )
+    model_repository._apply_changes_to_production_tables(target_prod_table_path, changes, "6.5.0")
 
     # Verify the production table files are updated
     updated_data_1 = json.loads(prod_table_file_1.read_text())
@@ -658,33 +652,37 @@ def test_copy_and_update_production_table_success(
     args_dict = {
         "simulation_models_path": str(tmp_path),
         "source_prod_table_dir": "source",
-        "target_prod_table_dir": "target",
         "modifications": TEST_MODIFICATIONS_FILE,
     }
     mock_collect_data.return_value = {
-        "changes": {"telescope": {"param": {"version": "1.0.0", "value": 42}}}
+        "model_version": "6.5.0",
+        "changes": {"telescope": {"param": {"version": "1.0.0", "value": 42}}},
     }
 
     model_repository.copy_and_update_production_table(args_dict)
 
     mock_copytree.assert_called_once_with(
-        tmp_path / "productions" / "source", tmp_path / "productions" / "target"
+        tmp_path / "productions" / "source", tmp_path / "productions" / "6.5.0"
     )
     mock_apply_changes.assert_called_once()
     mock_create_entry.assert_called_once()
 
 
 @patch("simtools.model.model_repository.shutil.copytree")
-def test_copy_and_update_production_table_target_exists(mock_copytree, tmp_path):
+@patch("simtools.model.model_repository.gen.collect_data_from_file")
+def test_copy_and_update_production_table_target_exists(mock_collect_data, mock_copytree, tmp_path):
     """Test error when target directory already exists."""
     args_dict = {
         "simulation_models_path": str(tmp_path),
         "source_prod_table_dir": "source",
-        "target_prod_table_dir": "target",
         "modifications": TEST_MODIFICATIONS_FILE,
     }
-    target_path = tmp_path / "productions" / "target"
+    target_path = tmp_path / "productions" / "6.5.0"
     target_path.mkdir(parents=True)
+
+    mock_collect_data.return_value = {
+        "model_version": "6.5.0",
+    }
 
     with pytest.raises(FileExistsError, match="already exists"):
         model_repository.copy_and_update_production_table(args_dict)
@@ -703,10 +701,9 @@ def test_copy_and_update_production_table_no_changes(
     args_dict = {
         "simulation_models_path": str(tmp_path),
         "source_prod_table_dir": "source",
-        "target_prod_table_dir": "target",
         "modifications": TEST_MODIFICATIONS_FILE,
     }
-    mock_collect_data.return_value = {}
+    mock_collect_data.return_value = {"model_version": "6.5.0"}
 
     model_repository.copy_and_update_production_table(args_dict)
 
