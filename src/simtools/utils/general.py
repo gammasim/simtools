@@ -963,9 +963,9 @@ def _find_differences_dict(obj1, obj2, path, diffs):
     for key in sorted(set(obj1) | set(obj2)):
         subpath = f"{path}['{key}']" if path else f"['{key}']"
         if key not in obj1:
-            diffs.append(f"{subpath}: added in directory 2")
+            diffs.append(f"{subpath}: added in second object")
         elif key not in obj2:
-            diffs.append(f"{subpath}: removed in directory 2")
+            diffs.append(f"{subpath}: removed in second object")
         else:
             diffs.extend(find_differences_in_json_objects(obj1[key], obj2[key], subpath))
 
