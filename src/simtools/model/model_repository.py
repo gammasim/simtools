@@ -145,13 +145,15 @@ def copy_and_update_production_table(args_dict):
     args_dict: dict
         Dictionary containing the arguments for copying and updating production tables.
     """
+    modifications = gen.collect_data_from_file(args_dict["modifications"])
+    changes = modifications.get("changes", {})
+    model_version = modifications["model_version"]
+
     simulation_models_path = Path(args_dict["simulation_models_path"])
     source_prod_table_path = (
         simulation_models_path / "productions" / args_dict["source_prod_table_dir"]
     )
-    target_prod_table_path = (
-        simulation_models_path / "productions" / args_dict["target_prod_table_dir"]
-    )
+    target_prod_table_path = simulation_models_path / "productions" / model_version
     model_parameters_dir = simulation_models_path / "model_parameters"
 
     if Path(target_prod_table_path).exists():
@@ -160,21 +162,18 @@ def copy_and_update_production_table(args_dict):
         )
     shutil.copytree(source_prod_table_path, target_prod_table_path)
 
-    modifications = gen.collect_data_from_file(args_dict["modifications"])
-    changes = modifications.get("changes", {})
-
-    _apply_changes_to_production_tables(target_prod_table_path, changes, args_dict)
+    _apply_changes_to_production_tables(target_prod_table_path, changes, model_version)
 
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
             _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
 
 
-def _apply_changes_to_production_tables(target_prod_table_path, changes, args_dict):
+def _apply_changes_to_production_tables(target_prod_table_path, changes, model_version):
     """Apply changes to the production tables in the target directory."""
     for file_path in Path(target_prod_table_path).rglob("*.json"):
         data = gen.collect_data_from_file(file_path)
-        _apply_changes_to_production_table(data, changes, args_dict["target_prod_table_dir"])
+        _apply_changes_to_production_table(data, changes, model_version)
         with file_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
             f.write("\n")
