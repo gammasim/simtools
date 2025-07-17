@@ -3,7 +3,16 @@ Generate new simulation model production tables by copying existing table and ap
 
 This script should be used to maintain the simulation model repository. It allow to create a
 new production table by copying an existing base version and apply modification defined in a YAML
-file.
+file (see the example file listed below).
+
+Example
+-------
+.. code-block:: console
+
+    simtools-maintain-simulation-model-add-production-table \\
+        --simulation_models_path ../simulation-models-dev/simulation-models/ \\
+        --source_prod_table_dir 6.0.0 --target_prod_table_dir 6.5.0 \\
+        --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml
 
 """
 

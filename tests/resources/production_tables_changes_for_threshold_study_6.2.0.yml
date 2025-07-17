@@ -1,0 +1,13 @@
+---
+MSTx-FlashCam:
+  dsum_threshold:
+    version: "4.0.0"
+    value: 62.5
+MSTx-NectarCam:
+  discriminator_threshold:
+    version: "4.0.0"
+    value: 31.9
+SSTS-design:
+  discriminator_threshold:
+    version: "4.0.0"
+    value: 8.92
