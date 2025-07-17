@@ -447,7 +447,8 @@ def test_update_parameters_with_missing_param():
 
     model_repository._update_parameters(params, changes)
 
-    assert "discriminator_threshold" not in params["MSTx-FlashCam"]
+    assert "discriminator_threshold" in params["MSTx-FlashCam"]
+    assert params["MSTx-FlashCam"]["discriminator_threshold"] == "4.0.0"
     assert params["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
 
 
