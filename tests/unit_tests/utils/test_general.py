@@ -18,6 +18,10 @@ import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
+KEY2_ADDED = "['key2']: added in second object"
+KEY1_REMOVED = "['key1']: removed in second object"
+KEY2_REMOVED = "['key2']: removed in second object"
+
 
 url_desy = "https://www.desy.de"
 url_simtools_main = "https://github.com/gammasim/simtools/"
@@ -993,14 +997,14 @@ def test_find_differences_dict():
     obj2 = {"key1": "value1", "key2": "value2"}
     diffs = []
     gen._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key2']: added in directory 2"]
+    assert diffs == [KEY2_ADDED]
 
     # Test with a key removed in obj2
     obj1 = {"key1": "value1", "key2": "value2"}
     obj2 = {"key1": "value1"}
     diffs = []
     gen._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key2']: removed in directory 2"]
+    assert diffs == [KEY2_REMOVED]
 
     # Test with nested dictionaries
     obj1 = {"key1": {"nested_key1": "value1"}}
@@ -1014,24 +1018,21 @@ def test_find_differences_dict():
     obj2 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
     diffs = []
     gen._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key1']['nested_key2']: added in directory 2"]
+    assert diffs == ["['key1']['nested_key2']: added in second object"]
 
     # Test with a key removed in a nested dictionary
     obj1 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
     obj2 = {"key1": {"nested_key1": "value1"}}
     diffs = []
     gen._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key1']['nested_key2']: removed in directory 2"]
+    assert diffs == ["['key1']['nested_key2']: removed in second object"]
 
     # Test with completely different dictionaries
     obj1 = {"key1": "value1"}
     obj2 = {"key2": "value2"}
     diffs = []
     gen._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == [
-        "['key1']: removed in directory 2",
-        "['key2']: added in directory 2",
-    ]
+    assert diffs == [KEY1_REMOVED, KEY2_ADDED]
 
 
 def test_find_differences_in_json_objects():
@@ -1048,12 +1049,12 @@ def test_find_differences_in_json_objects():
     # Test with a key added in obj2
     obj1 = {"key1": "value1"}
     obj2 = {"key1": "value1", "key2": "value2"}
-    assert gen.find_differences_in_json_objects(obj1, obj2) == ["['key2']: added in directory 2"]
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [KEY2_ADDED]
 
     # Test with a key removed in obj2
     obj1 = {"key1": "value1", "key2": "value2"}
     obj2 = {"key1": "value1"}
-    assert gen.find_differences_in_json_objects(obj1, obj2) == ["['key2']: removed in directory 2"]
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [KEY2_REMOVED]
 
     # Test with nested dictionaries
     obj1 = {"key1": {"nested_key1": "value1"}}
@@ -1066,14 +1067,14 @@ def test_find_differences_in_json_objects():
     obj1 = {"key1": {"nested_key1": "value1"}}
     obj2 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
     assert gen.find_differences_in_json_objects(obj1, obj2) == [
-        "['key1']['nested_key2']: added in directory 2"
+        "['key1']['nested_key2']: added in second object"
     ]
 
     # Test with a key removed in a nested dictionary
     obj1 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
     obj2 = {"key1": {"nested_key1": "value1"}}
     assert gen.find_differences_in_json_objects(obj1, obj2) == [
-        "['key1']['nested_key2']: removed in directory 2"
+        "['key1']['nested_key2']: removed in second object"
     ]
 
     # Test with lists of different lengths
@@ -1089,10 +1090,7 @@ def test_find_differences_in_json_objects():
     # Test with completely different structures
     obj1 = {"key1": "value1"}
     obj2 = {"key2": "value2"}
-    assert gen.find_differences_in_json_objects(obj1, obj2) == [
-        "['key1']: removed in directory 2",
-        "['key2']: added in directory 2",
-    ]
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [KEY1_REMOVED, KEY2_ADDED]
 
     # Test with deeply nested structures
     obj1 = {"key1": {"nested_key1": {"deep_key": "value1"}}}
