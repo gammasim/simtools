@@ -75,6 +75,7 @@ simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-maintain-simulation-model-add-production-table <applications/simtools-maintain-simulation-model-add-production-table>
+simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>

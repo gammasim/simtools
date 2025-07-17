@@ -98,6 +98,7 @@ scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regul
 scripts.simtools-generate-sim-telarray-histograms = "simtools.applications.generate_sim_telarray_histograms:main"
 scripts.simtools-generate-simtel-event-data = "simtools.applications.generate_simtel_event_data:main"
 scripts.simtools-maintain-simulation-model-add-production-table = "simtools.applications.maintain_simulation_model_add_production_table:main"
+scripts.simtools-maintain-simulation-model-compare-productions = "simtools.applications.maintain_simulation_model_compare_productions:main"
 scripts.simtools-maintain-simulation-model-verify-production-tables = "simtools.applications.maintain_simulation_model_verify_production_tables:main"
 scripts.simtools-merge-tables = "simtools.applications.merge_tables:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"

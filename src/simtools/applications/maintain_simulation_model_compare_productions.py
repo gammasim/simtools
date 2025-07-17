@@ -3,6 +3,14 @@ Compare two directories with model production tables in JSON format.
 
 This script should be used to support the maintenance the simulation model repository.
 
+Example
+-------
+.. code-block:: console
+
+    simtools-maintain-simulation-model-compare-productions \\
+        --directory_1 ../simulation-models-dev/simulation-models/6.0.0/ \\
+        --directory_2 ../simulation-models-dev/simulation-models/6.2.0
+
 """
 
 import logging
@@ -30,7 +38,7 @@ def _parse(label, description):
     return config.initialize(db_config=False, output=False)
 
 
-def load_json_without_key(path, ignore_key):
+def _load_json_without_key(path, ignore_key):
     """Load JSON data from a file, ignoring a specific key."""
     data = gen.collect_data_from_file(path)
 
@@ -44,40 +52,54 @@ def load_json_without_key(path, ignore_key):
     return remove_key(data)
 
 
-def find_differences(obj1, obj2, path=""):
-    """Find differences between two objects recursively."""
-    differences = []
+def __find_differences_dict(obj1, obj2, path, diffs):
+    """Recursively find differences between two dictionaries."""
+    for key in sorted(set(obj1) | set(obj2)):
+        subpath = f"{path}['{key}']" if path else f"['{key}']"
+        if key not in obj1:
+            diffs.append(f"{subpath}: added in directory 2")
+        elif key not in obj2:
+            diffs.append(f"{subpath}: removed in directory 2")
+        else:
+            diffs.extend(_find_differences(obj1[key], obj2[key], subpath))
+
+
+def _find_differences(obj1, obj2, path=""):
+    """Recursively find differences between two JSON-like objects."""
+    diffs = []
 
     if not isinstance(obj1, type(obj2)):
-        type1_name = type(obj1).__name__
-        type2_name = type(obj2).__name__
-        differences.append(f"{path}: type changed from {type1_name} to {type2_name}")
-        return differences
+        diffs.append(f"{path}: type changed from {type(obj1).__name__} to {type(obj2).__name__}")
+        return diffs
 
     if isinstance(obj1, dict):
-        all_keys = set(obj1.keys()) | set(obj2.keys())
-        for key in all_keys:
-            current_path = f"{path}['{key}']" if path else f"['{key}']"
-            if key not in obj1:
-                differences.append(f"{current_path}: added in directory 2")
-            elif key not in obj2:
-                differences.append(f"{current_path}: removed in directory 2")
-            else:
-                differences.extend(find_differences(obj1[key], obj2[key], current_path))
+        __find_differences_dict(obj1, obj2, path, diffs)
+
     elif isinstance(obj1, list):
         if len(obj1) != len(obj2):
-            differences.append(f"{path}: list length changed from {len(obj1)} to {len(obj2)}")
-        for i, (item1, item2) in enumerate(zip(obj1, obj2)):
-            current_path = f"{path}[{i}]" if path else f"[{i}]"
-            differences.extend(find_differences(item1, item2, current_path))
-    else:
-        if obj1 != obj2:
-            differences.append(f"{path}: value changed from {obj1} to {obj2}")
+            diffs.append(f"{path}: list length changed from {len(obj1)} to {len(obj2)}")
+        for i, (a, b) in enumerate(zip(obj1, obj2)):
+            subpath = f"{path}[{i}]" if path else f"[{i}]"
+            diffs.extend(_find_differences(a, b, subpath))
 
-    return differences
+    elif obj1 != obj2:
+        diffs.append(f"{path}: value changed from {obj1} to {obj2}")
+
+    return diffs
 
 
-def compare_json_dirs(dir1, dir2, ignore_key="model_version"):
+def _print_differences(differences, rel_path):
+    """Print differences in a readable format."""
+    print(f"Difference in {rel_path}:\n{'-' * 40}")
+    for diff in differences:
+        # Clean up the path formatting for better readability
+        clean_diff = diff.replace("['parameters']['", "parameters.").replace("']['", ".")
+        clean_diff = clean_diff.replace("['", "").replace("']", "")
+        print(f"  {clean_diff}")
+    print(f"{'-' * 40}\n")
+
+
+def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
     """Compare two directories containing JSON files, ignoring a specific key."""
     dir1 = Path(dir1)
     dir2 = Path(dir2)
@@ -91,21 +113,15 @@ def compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             continue
 
         try:
-            json1 = load_json_without_key(path1, ignore_key)
-            json2 = load_json_without_key(path2, ignore_key)
+            json1 = _load_json_without_key(path1, ignore_key)
+            json2 = _load_json_without_key(path2, ignore_key)
         except FileNotFoundError as e:
             print(f"Error reading {rel_path}: {e}")
             continue
 
-        differences = find_differences(json1, json2)
+        differences = _find_differences(json1, json2)
         if differences:
-            print(f"Difference in {rel_path}:\n{'-' * 40}")
-            for diff in differences:
-                # Clean up the path formatting for better readability
-                clean_diff = diff.replace("['parameters']['", "parameters.").replace("']['", ".")
-                clean_diff = clean_diff.replace("['", "").replace("']", "")
-                print(f"  {clean_diff}")
-            print(f"{'-' * 40}\n")
+            _print_differences(differences, rel_path)
 
     # Check for files present in dir2 but not dir1
     for path2 in dir2.rglob("*.json"):
@@ -123,7 +139,7 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    compare_json_dirs(args_dict["directory_1"], args_dict["directory_2"])
+    _compare_json_dirs(args_dict["directory_1"], args_dict["directory_2"])
 
 
 if __name__ == "__main__":
