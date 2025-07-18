@@ -10,6 +10,9 @@ from simtools.simtel.simulator_array import SimulatorArray
 __all__ = ["CorsikaSimtelRunner"]
 
 
+# TODO modifications for pedestal events
+
+
 class CorsikaSimtelRunner:
     """
     Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.
