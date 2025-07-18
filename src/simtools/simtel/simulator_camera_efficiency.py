@@ -186,7 +186,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
 
         self._logger.debug("Everything looks fine with output file.")
 
-    def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter, file_name_appendix=None
+    def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter):
         """
         Calculate an average one-dimensional curve for testeff from the two-dimensional curve.
 
