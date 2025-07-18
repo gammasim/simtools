@@ -7,7 +7,7 @@ import re
 import astropy.units as u
 import numpy as np
 
-import simtools.utils.general as gen
+from simtools.io_operations import ascii_handler
 from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
@@ -81,7 +81,7 @@ class SimtelConfigReader:
 
         self.schema_file = schema_file
         self.schema_dict = (
-            gen.collect_data_from_file(file_name=self.schema_file, yaml_document=0)
+            ascii_handler.collect_data_from_file(file_name=self.schema_file, yaml_document=0)
             if self.schema_file is not None
             else None
         )

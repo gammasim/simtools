@@ -38,6 +38,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
+from simtools.io_operations import ascii_handler
 from simtools.layout.array_layout_utils import validate_array_layouts_with_db, write_array_layouts
 
 
@@ -83,7 +84,7 @@ def main():  # noqa: D103
         production_table=db.read_production_table_from_mongo_db(
             collection_name="telescopes", model_version=args_dict["model_version"]
         ),
-        array_layouts=gen.collect_data_from_file(args_dict["array_layouts"]),
+        array_layouts=ascii_handler.collect_data_from_file(args_dict["array_layouts"]),
     )
 
     write_array_layouts(array_layouts=array_layouts, args_dict=args_dict, db_config=db_config)

@@ -83,6 +83,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import data_reader
+from simtools.io_operations import ascii_handler
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
 _logger = logging.getLogger(__name__)
@@ -147,7 +148,7 @@ def main():
 
     merger = CorsikaMergeLimits()
     grid_definition = (
-        gen.collect_data_from_file(args_dict["grid_definition"])
+        ascii_handler.collect_data_from_file(args_dict["grid_definition"])
         if args_dict.get("grid_definition")
         else None
     )

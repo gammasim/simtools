@@ -10,7 +10,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
 from simtools.db import db_handler
-from simtools.io_operations import legacy_data_handler
+from simtools.io_operations import ascii_handler, legacy_data_handler
 from simtools.visualization import visualize
 
 
@@ -183,7 +183,7 @@ def generate_plot_configurations(
 
     # Get schema configuration
     schema = gen.change_dict_keys_case(
-        gen.collect_data_from_file(
+        ascii_handler.collect_data_from_file(
             file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
         )
     )

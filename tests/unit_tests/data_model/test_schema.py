@@ -13,7 +13,7 @@ from simtools.constants import (
     MODEL_PARAMETER_SCHEMA_PATH,
 )
 from simtools.data_model import schema
-from simtools.utils import general as gen
+from simtools.io_operations import ascii_handler
 
 DUMMY_FILE = "dummy_file.yml"
 
@@ -91,7 +91,7 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
 def test_validate_schema_astropy_units(caplog):
     success_string = "Successful validation of data using schema"
 
-    _dict_1 = gen.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
+    _dict_1 = ascii_handler.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
             data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA

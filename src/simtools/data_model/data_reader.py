@@ -6,9 +6,9 @@ import astropy.units as u
 from astropy.io.registry.base import IORegistryError
 from astropy.table import QTable
 
-import simtools.utils.general as gen
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.io_operations import ascii_handler
 
 __all__ = ["read_table_from_file", "read_value_from_file"]
 
@@ -104,7 +104,7 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
 
     """
     try:
-        data = gen.collect_data_from_file(file_name=file_name)
+        data = ascii_handler.collect_data_from_file(file_name=file_name)
     except FileNotFoundError as exc:
         _logger.error("Error reading data from %s", file_name)
         raise exc

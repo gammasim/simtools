@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 import simtools.utils.general as gen
+from simtools.io_operations import ascii_handler
 
 _logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ def _read_configs_from_files(config_files):
         # remove new line characters from config - otherwise issues
         # with especially long file names
         _dict = gen.remove_substring_recursively_from_dict(
-            gen.collect_data_from_file(file_name=config_file), substring="\n"
+            ascii_handler.collect_data_from_file(file_name=config_file), substring="\n"
         )
         for application in _dict.get("applications", []):
             configs.append(application)

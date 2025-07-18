@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
@@ -99,7 +98,7 @@ def test_init_simulator(shower_simulator, array_simulator, shower_array_simulato
     assert isinstance(array_simulator._simulation_runner, SimulatorArray)
 
 
-def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator, caplog):
+def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator):
     assert array_simulator.simulation_software == "sim_telarray"
     assert shower_simulator.simulation_software == "corsika"
     assert shower_array_simulator.simulation_software == "corsika_sim_telarray"
@@ -109,10 +108,10 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
     test_array_simulator.simulation_software = "corsika"
     assert test_array_simulator.simulation_software == "corsika"
 
-    with pytest.raises(gen.InvalidConfigDataError):
-        with caplog.at_level(logging.ERROR):
-            test_array_simulator.simulation_software = "this_simulator_is_not_there"
-    assert "Invalid simulation software" in caplog.text
+    with pytest.raises(
+        ValueError, match="Invalid simulation software: this_simulator_is_not_there"
+    ):
+        test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
 def test_initialize_run_list(shower_simulator, caplog):

@@ -8,7 +8,7 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import Table
 
-from simtools.utils import general as gen
+from simtools.io_operations import ascii_handler
 
 logger = logging.getLogger(__name__)
 
@@ -329,7 +329,7 @@ def _read_simtel_data(file_path):
     n_dim_axis = None
     r_pol_axis = None
 
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
 
     for line in lines:
         stripped = line.strip()
@@ -366,7 +366,7 @@ def _read_simtel_data_for_lightguide_efficiency(file_path):
     data = []
     meta_lines = []
 
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
 
     def extract_wavelengths_from_header(line):
         match = re.search(r"orig\.:\s*(.*)", line)
@@ -427,7 +427,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     astropy table
         Table with atmospheric transmission.
     """
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
 
     observatory_level, height_bins = _read_header_line_for_atmospheric_transmission(
         lines, file_path

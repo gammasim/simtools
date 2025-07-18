@@ -12,6 +12,7 @@ from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
 from simtools.data_model import schema
+from simtools.io_operations import ascii_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["DataValidator"]
@@ -100,7 +101,7 @@ class DataValidator:
         """
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
-                self.data_dict = gen.collect_data_from_file(self.data_file_name)
+                self.data_dict = ascii_handler.collect_data_from_file(self.data_file_name)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -732,7 +733,7 @@ class DataValidator:
         ValueError
             if schema version is not found in schema file
         """
-        schema_data = gen.collect_data_from_file(file_name=schema_file)
+        schema_data = ascii_handler.collect_data_from_file(file_name=schema_file)
         entries = schema_data if isinstance(schema_data, list) else [schema_data]
 
         for entry in entries:

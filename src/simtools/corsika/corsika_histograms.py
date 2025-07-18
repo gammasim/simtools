@@ -18,8 +18,8 @@ from eventio import IACTFile
 
 from simtools import version
 from simtools.io_operations import io_handler
+from simtools.io_operations.ascii_handler import collect_data_from_file
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
-from simtools.utils.general import collect_data_from_file
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
 

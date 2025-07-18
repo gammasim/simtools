@@ -12,7 +12,6 @@ from pathlib import Path
 import pytest
 
 import simtools.data_model.metadata_collector as metadata_collector
-import simtools.utils.general as gen
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.utils import names
@@ -152,10 +151,8 @@ def test_read_input_metadata_from_file(
     with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
         json.dump(test_dict, f)
     metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
-    with caplog.at_level("ERROR"):
-        with pytest.raises(gen.InvalidConfigDataError):
-            metadata_1._read_input_metadata_from_file()
-    assert "More than one metadata entry" in caplog.text
+    with pytest.raises(ValueError, match=r"^More than one metadata entry found in"):
+        metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
@@ -170,7 +167,7 @@ def test_read_input_metadata_from_file(
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
 
     metadata_1.args_dict["input_meta"] = "tests/resources/test_file.list"
-    with pytest.raises(gen.InvalidConfigDataError, match=r"^Unknown metadata file format:"):
+    with pytest.raises(ValueError, match=r"^Unknown metadata file format:"):
         metadata_1._read_input_metadata_from_file()
 
 

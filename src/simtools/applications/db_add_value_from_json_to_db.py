@@ -32,6 +32,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
+from simtools.io_operations import ascii_handler
 
 
 def _parse():
@@ -86,7 +87,7 @@ def main():  # noqa: D103
 
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
-            par_dict = gen.collect_data_from_file(file_name=file_to_insert_now)
+            par_dict = ascii_handler.collect_data_from_file(file_name=file_to_insert_now)
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
                 db_name=db_config["db_simulation_model"],
