@@ -94,9 +94,9 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
 
 
 def test_init_simulator(shower_simulator, array_simulator, shower_array_simulator):
-    assert isinstance(shower_simulator.simulation_runner, CorsikaRunner)
-    assert isinstance(shower_array_simulator.simulation_runner, CorsikaSimtelRunner)
-    assert isinstance(array_simulator.simulation_runner, SimulatorArray)
+    assert isinstance(shower_simulator._simulation_runner, CorsikaRunner)
+    assert isinstance(shower_array_simulator._simulation_runner, CorsikaSimtelRunner)
+    assert isinstance(array_simulator._simulation_runner, SimulatorArray)
 
 
 def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator):
@@ -179,7 +179,7 @@ def test_simulate_shower_simulator(shower_simulator):
     shower_simulator.simulate()
     assert len(shower_simulator._results["simtel_output"]) > 0
     assert len(shower_simulator._results["sub_out"]) > 0
-    run_script = shower_simulator.simulation_runner.prepare_run_script(run_number=2)
+    run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
     assert Path(run_script).exists()
 
 
@@ -246,7 +246,7 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
         for run_number in [1, 2, 22]:
             simulator_now._fill_results(input_file_list[1], run_number=run_number)
         assert len(simulator_now.get_file_list("simtel_output")) == 3
-        assert len(simulator_now.results["sub_out"]) == 3
+        assert len(simulator_now._results["sub_out"]) == 3
         assert len(simulator_now.get_file_list("log")) == 3
         assert len(simulator_now.get_file_list("input")) == 3
         assert len(simulator_now.get_file_list("hist")) == 3
@@ -261,7 +261,7 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
 
 def test_get_list_of_files(shower_simulator):
     test_shower_simulator = copy.deepcopy(shower_simulator)
-    test_shower_simulator.results["simtel_output"] = ["file_name"] * 10
+    test_shower_simulator._results["simtel_output"] = ["file_name"] * 10
     assert len(test_shower_simulator.get_file_list("simtel_output")) == len(shower_simulator.runs)
     assert len(test_shower_simulator.get_file_list("not_a_valid_file_type")) == 0
 
@@ -280,7 +280,7 @@ def test_make_resources_report(shower_simulator):
     log_file_name = "log_sub_corsika_run000001_gamma_North_test_layout_test-production.out"
     shutil.copy(
         f"tests/resources/{log_file_name}",
-        shower_simulator.simulation_runner.get_file_name(
+        shower_simulator._simulation_runner.get_file_name(
             file_type="sub_log",
             run_number=1,
             mode="out",

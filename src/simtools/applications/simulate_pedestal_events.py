@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Simulate pedestal events for calibration purposes.
+Simulate pedestal events.
 
 Example
 -------
@@ -18,7 +18,7 @@ Command Line Arguments
 telescope (str, required)
     Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
 site (str, required)
-    Site name (North or South).
+    Site name.
 model_version (str, optional)
     Version of the simulation model.
 
