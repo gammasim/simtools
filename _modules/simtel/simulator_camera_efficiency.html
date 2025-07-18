@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=dbfaeae9"></script>
+    <script src="../../_static/documentation_options.js?v=0311b35c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gde4796d" />
+  <meta name="docsearch:version" content="0.1.dev1+g0226715" />
   </head>
   
   
@@ -534,6 +534,8 @@
         <span class="k">except</span> <span class="n">InvalidModelParameterError</span><span class="p">:</span>
             <span class="k">pass</span>
 
+        <span class="n">curvature_radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_curvature_radius</span><span class="p">(</span><span class="n">mirror_class</span><span class="p">)</span>
+
         <span class="c1"># Processing camera transmission</span>
         <span class="n">camera_transmission</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">try</span><span class="p">:</span>
@@ -573,6 +575,7 @@
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -alt </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;corsika_observation_level&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fatm </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;atmospheric_transmission&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -flen </span><span class="si">{</span><span class="n">focal_length</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fcur </span><span class="si">{</span><span class="n">curvature_radius</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">pixel_shape_cmd</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">pixel_diameter</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -fmir </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;mirror_list&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -664,7 +667,8 @@
             <span class="n">two_dim_distribution</span><span class="p">,</span> <span class="n">incidence_angle_distribution</span>
         <span class="p">)</span>
         <span class="n">new_file_name</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;weighted_average_1D_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">two_dim_parameter</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;weighted_average_1D_</span><span class="si">{</span><span class="n">weighting_distribution_parameter</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">two_dim_parameter</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">export_table_to_model_directory</span><span class="p">(</span>
             <span class="n">new_file_name</span><span class="p">,</span> <span class="n">distribution_to_export</span>
@@ -707,7 +711,28 @@
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">split_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">split_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">split_line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">validated_nsb_spectrum_file</span></div>
+        <span class="k">return</span> <span class="n">validated_nsb_spectrum_file</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_curvature_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_class</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get radius of curvature of dish.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;primary_mirror_diameter&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">value</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;parabolic_dish&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="mf">2.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;dish_shape_length&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">value</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;dish_shape_length&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="p">)</span></div>
 
 </pre></div>
 
