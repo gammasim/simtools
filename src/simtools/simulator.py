@@ -303,6 +303,14 @@ class Simulator:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = self.args_dict.get("sequential", False)
+            if self._is_calibration_run():
+                # TODO generalize
+                runner_args["calibration_runner_args"] = {
+                    "run_mode": self.run_mode,
+                    "n_calibration_event": self.args_dict.get("nshow", 0),
+                    "nsb_scaling_factor": self.args_dict.get("nsb_scaling_factor", 1.0),
+                    "stars": self.args_dict.get("stars"),
+                }
 
         return runner_class(**runner_args)
 
