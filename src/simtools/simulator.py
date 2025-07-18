@@ -77,9 +77,9 @@ class Simulator:
         self.io_handler = io_handler.IOHandler()
 
         self.runs = self._initialize_run_list()
-        self.results = defaultdict(list)
+        self._results = defaultdict(list)
         self.test = self.args_dict.get("test", False)
-        self.extra_commands = extra_commands
+        self._extra_commands = extra_commands
 
         self.sim_telarray_seeds = {
             "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
@@ -89,7 +89,7 @@ class Simulator:
             "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
         }
         self.array_models = self._initialize_array_models()
-        self.simulation_runner = self._initialize_simulation_runner()
+        self._simulation_runner = self._initialize_simulation_runner()
 
     @property
     def simulation_software(self):
@@ -341,17 +341,17 @@ class Simulator:
         )
 
         for run_number, input_file in runs_and_files_to_submit.items():
-            run_script = self.simulation_runner.prepare_run_script(
-                run_number=run_number, input_file=input_file, extra_commands=self.extra_commands
+            run_script = self._simulation_runner.prepare_run_script(
+                run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
             )
 
             job_manager = JobManager(test=self.test)
             job_manager.submit(
                 run_script=run_script,
-                run_out_file=self.simulation_runner.get_file_name(
+                run_out_file=self._simulation_runner.get_file_name(
                     file_type="sub_log", run_number=run_number
                 ),
-                log_file=self.simulation_runner.get_file_name(
+                log_file=self._simulation_runner.get_file_name(
                     file_type=("log"), run_number=run_number
                 ),
             )
@@ -434,7 +434,7 @@ class Simulator:
         results = {key: [] for key in keys}
 
         def get_file_name(name, **kwargs):
-            return str(self.simulation_runner.get_file_name(file_type=name, **kwargs))
+            return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
 
         if "sim_telarray" in self.simulation_software:
             results["input"].append(str(file))
@@ -483,7 +483,7 @@ class Simulator:
                 )
 
         for key in keys:
-            self.results[key].extend(results[key])
+            self._results[key].extend(results[key])
 
     def get_file_list(self, file_type="simtel_output"):
         """
@@ -505,7 +505,7 @@ class Simulator:
 
         """
         self.logger.info(f"Getting list of {file_type} files")
-        return self.results[file_type]
+        return self._results[file_type]
 
     def _make_resources_report(self, input_file_list):
         """
@@ -522,7 +522,7 @@ class Simulator:
            Dictionary with reports on computing resources
 
         """
-        if len(self.results["sub_out"]) == 0:
+        if len(self._results["sub_out"]) == 0:
             if input_file_list is None:
                 return {"Wall time/run [sec]": np.nan}
             self._fill_results_without_run(input_file_list)
@@ -531,7 +531,7 @@ class Simulator:
 
         _resources = {}
         for run in self.runs:
-            _resources = self.simulation_runner.get_resources(run_number=run)
+            _resources = self._simulation_runner.get_resources(run_number=run)
             if _resources.get("runtime"):
                 runtime.append(_resources["runtime"])
 
