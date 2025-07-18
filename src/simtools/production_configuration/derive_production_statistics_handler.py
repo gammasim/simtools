@@ -18,11 +18,11 @@ from pathlib import Path
 
 import astropy.units as u
 
+from simtools.io_operations.ascii_handler import collect_data_from_file
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
-from simtools.utils.general import collect_data_from_file
 
 
 class ProductionStatisticsHandler:

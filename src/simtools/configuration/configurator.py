@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
 from simtools.db.db_handler import jsonschema_db_dict
-from simtools.io_operations import io_handler
+from simtools.io_operations import ascii_handler, io_handler
 from simtools.utils import general as gen
 
 __all__ = [
@@ -280,7 +280,7 @@ class Configurator:
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
             _config_dict = (
-                gen.collect_data_from_file(file_name=config_file) if config_file else None
+                ascii_handler.collect_data_from_file(file_name=config_file) if config_file else None
             )
             # yaml parser adds \n in multiline strings, remove them
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")

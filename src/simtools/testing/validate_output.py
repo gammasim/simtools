@@ -7,6 +7,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.io_operations import ascii_handler
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
@@ -171,8 +172,8 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
         True if the files are equal.
 
     """
-    data1 = gen.collect_data_from_file(file1)
-    data2 = gen.collect_data_from_file(file2)
+    data1 = ascii_handler.collect_data_from_file(file1)
+    data2 = ascii_handler.collect_data_from_file(file2)
     data1.pop("schema_version", None)
     data2.pop("schema_version", None)
 

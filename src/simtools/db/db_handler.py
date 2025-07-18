@@ -13,9 +13,9 @@ from packaging.version import Version
 from pymongo import MongoClient
 
 from simtools.data_model import validate_data
-from simtools.io_operations import io_handler
+from simtools.io_operations import ascii_handler, io_handler
 from simtools.simtel import simtel_table_reader
-from simtools.utils import general, names, value_conversion
+from simtools.utils import names, value_conversion
 
 __all__ = ["DatabaseHandler"]
 
@@ -810,7 +810,7 @@ class DatabaseHandler:
                     f"corresponding to the {par_dict['parameter']} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(par_dict["value"])
-            if not general.is_utf8_file(file_path):
+            if not ascii_handler.is_utf8_file(file_path):
                 raise ValueError(f"File is not UTF-8 encoded: {file_path}")
             files_to_add_to_db.add(f"{file_path}")
 

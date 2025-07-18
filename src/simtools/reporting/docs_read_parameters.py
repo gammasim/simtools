@@ -13,9 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io_operations import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import general as gen
 from simtools.utils import names
 from simtools.visualization import plot_pixels, plot_tables
 
@@ -175,7 +174,7 @@ class ReadParameters:
                 parameter, parameter_version, input_file, outpath, design_type
             )
             # Write markdown file using the stored path
-            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+            file_contents = ascii_handler.read_file_encoded_in_utf_or_latin(input_file)
 
             with markdown_output_file.open("w", encoding="utf-8") as outfile:
                 outfile.write(f"# {input_file.stem}\n")

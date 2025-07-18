@@ -46,7 +46,7 @@ def mock_results():
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     """Test generate_corsika_limits_grid function."""
     # Mock dependencies
-    mock_collect = mocker.patch("simtools.utils.general.collect_data_from_file")
+    mock_collect = mocker.patch("simtools.io_operations.ascii_handler.collect_data_from_file")
     mock_collect.side_effect = [
         {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
     ]

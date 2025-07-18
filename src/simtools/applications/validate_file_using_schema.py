@@ -40,6 +40,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
+from simtools.io_operations import ascii_handler
 
 
 def _parse(label, description):
@@ -140,7 +141,7 @@ def validate_dict_using_schema(args_dict, logger):
         args_dict.get("file_directory"), args_dict.get("file_name")
     ):
         try:
-            data = gen.collect_data_from_file(file_name=file_name)
+            data = ascii_handler.collect_data_from_file(file_name=file_name)
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Error reading schema file from {file_name}") from exc
         data = data if isinstance(data, list) else [data]

@@ -207,7 +207,12 @@ def test_get_ctao_layouts_per_site(mock_names):
 
 def test_retrieve_ctao_array_layouts_from_url():
     """Test retrieving array layouts from URL."""
-    with patch("simtools.layout.array_layout_utils.gen") as mock_gen:
+    with (
+        patch("simtools.layout.array_layout_utils.gen") as mock_gen,
+        patch(
+            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
+        ) as mock_ascii_handler,
+    ):
         mock_gen.is_url.return_value = True
 
         cta_array_layouts.retrieve_ctao_array_layouts(
@@ -215,14 +220,19 @@ def test_retrieve_ctao_array_layouts_from_url():
         )
 
         mock_gen.is_url.assert_called_once_with("https://test.com")
-        mock_gen.collect_data_from_http.assert_called_with(
+        mock_ascii_handler.collect_data_from_http.assert_called_with(
             url="https://test.com/test-branch/subarray-ids.json"
         )
 
 
 def test_retrieve_ctao_array_layouts_from_file(test_path):
     """Test retrieving array layouts from local file."""
-    with patch("simtools.layout.array_layout_utils.gen") as mock_gen:
+    with (
+        patch("simtools.layout.array_layout_utils.gen") as mock_gen,
+        patch(
+            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
+        ) as mock_ascii_handler,
+    ):
         mock_gen.is_url.return_value = False
 
         cta_array_layouts.retrieve_ctao_array_layouts(
@@ -230,7 +240,7 @@ def test_retrieve_ctao_array_layouts_from_file(test_path):
         )
 
         mock_gen.is_url.assert_called_once_with(test_path)
-        mock_gen.collect_data_from_file.assert_called()
+        mock_ascii_handler.collect_data_from_file.assert_called()
 
 
 def test_validate_array_layouts_with_db_valid():
@@ -344,7 +354,7 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
         "site": "north",
     }
     mocker.patch(
-        "simtools.layout.array_layout_utils.gen.collect_data_from_file",
+        "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file",
         return_value=fake_data,
     )
     fake_table = ["tel1", "tel2"]
@@ -384,9 +394,9 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
     fake_data = {
         "site": "north",
     }
-    # Patch gen.collect_data_from_file to return fake_data without the "value" key.
+    # Patch ascii_handler.collect_data_from_file to return fake_data without the "value" key.
     mocker.patch(
-        "simtools.layout.array_layout_utils.gen.collect_data_from_file",
+        "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file",
         return_value=fake_data,
     )
 

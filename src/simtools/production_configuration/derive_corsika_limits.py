@@ -6,9 +6,8 @@ import logging
 import numpy as np
 from astropy.table import Column, Table
 
-import simtools.utils.general as gen
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler
+from simtools.io_operations import ascii_handler, io_handler
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.corsika_limit_calculator import LimitCalculator
 
@@ -34,7 +33,7 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
             db_config,
         )
     else:
-        telescope_configs = gen.collect_data_from_file(args_dict["telescope_ids"])[
+        telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[
             "telescope_configs"
         ]
 
