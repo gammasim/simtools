@@ -105,6 +105,58 @@ class SimulatorArray(SimtelRunner):
 
         return clear_default_sim_telarray_cfg_directories(command)
 
+    def make_run_command_for_pedestal_simulations(
+        self, calibration_runner_args, run_number=None, input_file=None
+    ):
+        """
+        Build and return the command to run sim_telarray for pedestal simulations.
+
+        # TODO duplications with make_run_command, refactor to a common function
+
+        Parameters
+        ----------
+        calibration_runner_args: dict
+            Dictionary with calibration runner arguments.
+        input_file: str
+            Full path of the input CORSIKA file
+        run_number: int (optional)
+            run number
+
+        Returns
+        -------
+        str
+            Command to run sim_telarray for pedestal simulations.
+        """
+        config_dir = self.corsika_config.array_model.get_config_directory()
+        self._log_file = self.get_file_name(file_type="log", run_number=run_number)
+        histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
+        output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
+        self.corsika_config.array_model.export_all_simtel_config_files()
+
+        command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command += f" -c {self.corsika_config.array_model.config_file_path}"
+        command += f" -I{config_dir}"
+        command += super().get_config_option("telescope_theta", self.corsika_config.zenith_angle)
+        command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
+        command += super().get_config_option("histogram_file", histogram_file)
+        if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instrument_instances"):
+            command += super().get_config_option(
+                "random_seed",
+                f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto",
+            )
+        elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
+            command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
+        command += super().get_config_option("show", "all")
+        command += super().get_config_option("output_file", output_file)
+        command += f" -C pedestal_events={calibration_runner_args['n_calibration_event']}"
+        command += f" -C nsb_scaling_factor={calibration_runner_args['nsb_scaling_factor']}"
+        if calibration_runner_args.get("stars"):
+            command += f" -C stars={calibration_runner_args['stars']}"
+        command += f" {input_file}"
+        command += f" | gzip > {self._log_file} 2>&1 || exit"
+
+        return clear_default_sim_telarray_cfg_directories(command)
+
     def _check_run_result(self, run_number=None):
         """
         Check if simtel output file exists.

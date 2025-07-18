@@ -920,3 +920,9 @@ def test_is_valid_boolean_type():
     assert not gen._is_valid_boolean_type(np.int32, None)
     assert not gen._is_valid_boolean_type(np.float32, None)
     assert not gen._is_valid_boolean_type(np.str_, None)
+
+
+def test_enforce_list_type():
+    assert gen.enforce_list_type(None) == []
+    assert gen.enforce_list_type([1, 2, 3]) == [1, 2, 3]
+    assert gen.enforce_list_type(5) == [5]

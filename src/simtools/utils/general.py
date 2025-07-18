@@ -340,6 +340,25 @@ def get_log_level_from_user(log_level):
     return possible_levels[log_level_lower]
 
 
+def enforce_list_type(value):
+    """
+    Enforce input to be of list type.
+
+    Parameters
+    ----------
+    value: any
+        Input value to be converted to a list.
+
+    Returns
+    -------
+    list
+        List of input values.
+    """
+    if not value:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
 def copy_as_list(value):
     """
     Copy value and, if it is not a list, turn it into a list with a single entry.
