@@ -187,31 +187,22 @@ class Simulator:
         -------
         list
             List of run numbers.
-
-        Raises
-        ------
-        KeyError
-            If 'run_number', 'run_number_offset' and 'number_of_runs' are
-            not found in the configuration.
         """
-        try:
-            offset_run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
-                "run_number", 1
-            )
-            if self.args_dict.get("number_of_runs", 1) <= 1:
-                return self._prepare_run_list_and_range(
-                    run_list=offset_run_number,
-                    run_range=None,
-                )
+        offset_run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+            "run_number", 1
+        )
+        if self.args_dict.get("number_of_runs", 1) <= 1:
             return self._prepare_run_list_and_range(
-                run_list=None,
-                run_range=[
-                    offset_run_number,
-                    offset_run_number + self.args_dict["number_of_runs"],
-                ],
+                run_list=offset_run_number,
+                run_range=None,
             )
-        except KeyError as exc:
-            raise KeyError("Error in initializing run list") from exc
+        return self._prepare_run_list_and_range(
+            run_list=None,
+            run_range=[
+                offset_run_number,
+                offset_run_number + self.args_dict["number_of_runs"],
+            ],
+        )
 
     def _prepare_run_list_and_range(self, run_list, run_range):
         """
@@ -265,24 +256,22 @@ class Simulator:
         CorsikaConfig or list of CorsikaConfig
             CORSIKA configuration(s) based on the simulation model.
         """
-        if "corsika" in self.simulation_software:
-            corsika_configurations = []
-            for array_model in self.array_models:
-                corsika_configurations.append(
-                    CorsikaConfig(
-                        array_model=array_model,
-                        label=self.label,
-                        args_dict=self.args_dict,
-                        db_config=self.db_config,
-                        dummy_simulations=self._is_calibration_run(),
-                    )
+        corsika_configurations = []
+        for array_model in self.array_models:
+            corsika_configurations.append(
+                CorsikaConfig(
+                    array_model=array_model,
+                    label=self.label,
+                    args_dict=self.args_dict,
+                    db_config=self.db_config,
+                    dummy_simulations=self._is_calibration_run(),
                 )
-            return (
-                corsika_configurations
-                if self.simulation_software == "corsika_sim_telarray"
-                else corsika_configurations[0]
             )
-        return None
+        return (
+            corsika_configurations
+            if self.simulation_software == "corsika_sim_telarray"
+            else corsika_configurations[0]
+        )
 
     def _initialize_simulation_runner(self):
         """
