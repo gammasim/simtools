@@ -304,7 +304,6 @@ class Simulator:
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = self.args_dict.get("sequential", False)
             if self._is_calibration_run():
-                # TODO generalize
                 runner_args["calibration_runner_args"] = {
                     "run_mode": self.run_mode,
                     "n_calibration_event": self.args_dict.get("nshow", 0),
@@ -323,9 +322,7 @@ class Simulator:
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
         """
-        input_file_list = gen.enforce_list_type(input_file_list)
-
-        for file in input_file_list:
+        for file in gen.enforce_list_type(input_file_list):
             run = self._guess_run_from_file(file)
             self._fill_results(file, run)
             if run not in self.runs:
