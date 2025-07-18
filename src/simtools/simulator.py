@@ -78,7 +78,7 @@ class Simulator:
 
         self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
-        self.test = self.args_dict.get("test", False)
+        self._test = self.args_dict.get("test", False)
         self._extra_commands = extra_commands
 
         self.sim_telarray_seeds = {
@@ -345,7 +345,7 @@ class Simulator:
                 run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
             )
 
-            job_manager = JobManager(test=self.test)
+            job_manager = JobManager(test=self._test)
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
