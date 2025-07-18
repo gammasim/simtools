@@ -166,36 +166,36 @@ def test_initialize_run_list_missing_keys(shower_simulator, caplog):
     assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
 
-def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
+def test_prepare_run_list_and_range(shower_simulator, shower_array_simulator):
     for simulator_now in [shower_simulator, shower_array_simulator]:
-        assert not simulator_now._validate_run_list_and_range(None, None)
+        assert not simulator_now._prepare_run_list_and_range(None, None)
 
         run_list = [1, 24, 3]
 
-        assert simulator_now._validate_run_list_and_range(run_list=run_list, run_range=None) == [
+        assert simulator_now._prepare_run_list_and_range(run_list=run_list, run_range=None) == [
             1,
             3,
             24,
         ]
 
         with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
+            simulator_now._prepare_run_list_and_range(run_list=[1, "a", 4], run_range=None)
 
-        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
+        assert simulator_now._prepare_run_list_and_range(run_list=None, run_range=[3, 6]) == [
             3,
             4,
             5,
         ]
 
-        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
+        assert simulator_now._prepare_run_list_and_range(run_list=None, run_range=[6, 3]) == []
 
         with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
+            simulator_now._prepare_run_list_and_range(run_list=None, run_range=[3, "b"])
 
         with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
+            simulator_now._prepare_run_list_and_range(run_list=None, run_range=[3, 4, 5])
 
-        assert simulator_now._validate_run_list_and_range(run_list=5, run_range=None) == [5]
+        assert simulator_now._prepare_run_list_and_range(run_list=5, run_range=None) == [5]
 
 
 def test_fill_results_without_run(array_simulator, input_file_list):
@@ -259,12 +259,6 @@ def test_get_runs_and_files_to_submit(
         }
 
 
-def test_enforce_list_type(array_simulator):
-    assert array_simulator._enforce_list_type(None) == []
-    assert array_simulator._enforce_list_type([1, 2, 3]) == [1, 2, 3]
-    assert array_simulator._enforce_list_type(5) == [5]
-
-
 def test_guess_run_from_file(array_simulator, caplog):
     assert array_simulator._guess_run_from_file("run12345_bla_ble") == 12345
 
@@ -303,16 +297,6 @@ def test_get_list_of_files(shower_simulator):
     test_shower_simulator._results["simtel_output"] = ["file_name"] * 10
     assert len(test_shower_simulator.get_file_list("simtel_output")) == len(shower_simulator.runs)
     assert len(test_shower_simulator.get_file_list("not_a_valid_file_type")) == 0
-
-
-def test_print_list_of_files(array_simulator, input_file_list, capsys):
-    array_simulator._fill_results_without_run(input_file_list)
-    array_simulator.print_list_of_files("log")
-    captured = capsys.readouterr()
-    assert "log.gz" in captured.out
-    assert captured.out.count("log.gz") == 3
-    array_simulator.print_list_of_files("blabla")
-    assert captured.out.count("blabal") == 0
 
 
 def test_resources(shower_simulator, capsys):
