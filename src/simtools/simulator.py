@@ -51,8 +51,6 @@ class Simulator:
         Extra commands to be added to the run script before the run command.
     db_config: dict
         Database configuration.
-    run_mode: str
-        Run mode, e.g., "pedestals"
     """
 
     def __init__(
@@ -61,7 +59,6 @@ class Simulator:
         label=None,
         extra_commands=None,
         db_config=None,
-        run_mode=None,
     ):
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
@@ -70,8 +67,8 @@ class Simulator:
         self.args_dict = args_dict
         self.db_config = db_config
 
-        self.simulation_software = self.args_dict["simulation_software"]
-        self.run_mode = run_mode
+        self.simulation_software = self.args_dict.get("simulation_software", "corsika_sim_telarray")
+        self.run_mode = self.args_dict.get("run_mode")
         self.logger.debug(f"Init Simulator {self.simulation_software}")
 
         self.io_handler = io_handler.IOHandler()
@@ -304,12 +301,7 @@ class Simulator:
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = self.args_dict.get("sequential", False)
             if self._is_calibration_run():
-                runner_args["calibration_runner_args"] = {
-                    "run_mode": self.run_mode,
-                    "n_calibration_event": self.args_dict.get("nshow", 0),
-                    "nsb_scaling_factor": self.args_dict.get("nsb_scaling_factor", 1.0),
-                    "stars": self.args_dict.get("stars"),
-                }
+                runner_args["calibration_runner_args"] = self.args_dict
 
         return runner_class(**runner_args)
 
@@ -765,14 +757,11 @@ class Simulator:
 
     def _is_calibration_run(self):
         """
-        Check if the simulation is a calibration run.
-
-        Calibration runs are identified by the 'run_mode' being e.g. 'pedestals', 'flasher'
+        Check if this simulation is a calibration run.
 
         Returns
         -------
         bool
             True if it is a calibration run, False otherwise.
         """
-        calibration_run_modes = ["pedestals", "flasher"]
-        return self.run_mode in calibration_run_modes
+        return self.run_mode in ["pedestals", "dark_pedestals", "flasher"]

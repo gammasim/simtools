@@ -81,11 +81,11 @@ class SimulatorArray(SimtelRunner):
 
         return clear_default_sim_telarray_cfg_directories(command)
 
-    def make_run_command_for_pedestal_simulations(
-        self, calibration_runner_args, run_number=None, input_file=None
+    def make_run_command_for_calibration_simulations(
+        self, run_number=None, input_file=None, calibration_runner_args=None
     ):
         """
-        Build and return the command to run sim_telarray for pedestal simulations.
+        Build and return the command to run sim_telarray for calibration simulations.
 
         Parameters
         ----------
@@ -110,13 +110,20 @@ class SimulatorArray(SimtelRunner):
             ).to_value("m"),
         )
         command += super().get_config_option(
-            "pedestal_events", calibration_runner_args["n_calibration_event"]
-        )
-        command += super().get_config_option(
             "nsb_scaling_factor", calibration_runner_args["nsb_scaling_factor"]
         )
         if calibration_runner_args.get("stars"):
             command += super().get_config_option("stars", calibration_runner_args["stars"])
+
+        if calibration_runner_args.get("run_mode") in ("pedestals", "dark_pedestals"):
+            command += super().get_config_option(
+                "pedestal_events", calibration_runner_args["number_of_events"]
+            )
+        if calibration_runner_args.get("run_mode") == "dark_pedestals":
+            command += self._dark_pedestal_command()
+        if calibration_runner_args.get("run_mode") == "flasher":
+            command += self._flasher_command(calibration_runner_args)
+
         command += f" {input_file}"
         command += f" | gzip > {self._log_file} 2>&1 || exit"
 
@@ -151,6 +158,76 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option("show", "all")
         command += super().get_config_option("output_file", output_file)
 
+        return command
+
+    def _flasher_command(self, calibration_runner_args):
+        """
+        Generate the command to run sim_telarray for flasher simulations.
+
+        Parameters
+        ----------
+        calibration_runner_args: dict
+            Dictionary with calibration runner arguments.
+
+        Returns
+        -------
+        str
+            Command to run sim_telarray for flasher simulations.
+        """
+        command = super().get_config_option(
+            "laser_events", calibration_runner_args["number_of_events"]
+        )
+        command += super().get_config_option(
+            "laser_photons", calibration_runner_args["flasher_photons"]
+        )
+        command += super().get_config_option(
+            "laser_var_photons", calibration_runner_args["flasher_var_photons"]
+        )
+        command += super().get_config_option(
+            "laser_pulse_exptime", calibration_runner_args["flasher_exp_time"]
+        )
+        command += super().get_config_option(
+            "laser_pulse_sigtime", calibration_runner_args["flasher_sig_time"]
+        )
+        command += super().get_config_option("laser_external_trigger", 1)
+
+        return command
+
+    def _dark_pedestal_command(self):
+        """
+        Generate the command to run sim_telarray for dark pedestal closed-camera-lid simulations.
+
+        Returns
+        -------
+        str
+            Command to run sim_telarray for dark pedestal simulations.
+        """
+        null_values = [
+            "fadc_noise",
+            "fadc_lg_noise",
+            "qe_variation",
+            "gain_variation",
+            "fadc_var_pedestal",
+            "fadc_err_pedestal",
+            "fadc_sysvar_pedestal",
+            "fadc_dev_pedestal",
+        ]
+        null_command_parts = []
+        for param in null_values:
+            null_command_parts.append(super().get_config_option(param, 0.0))
+        command = " ".join(null_command_parts)
+
+        one_values = [
+            "fadc_lg_pedestal",
+            "fadc_lg_var_pedestal",
+            "fadc_lg_err_pedestal",
+            "fadc_lg_dev_pedestal",
+            "fadc_lg_sysvar_pedestal",
+        ]
+        one_command_parts = []
+        for param in one_values:
+            one_command_parts.append(super().get_config_option(param, -1.0))
+        command += " " + " ".join(one_command_parts)
         return command
 
     def _check_run_result(self, run_number=None):

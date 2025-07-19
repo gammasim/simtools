@@ -1,0 +1,21 @@
+---
+applications:
+- application: simtools-simulate-calibration-events
+  configuration:
+    run_mode: pedestals
+    array_layout_name: 1lst
+    label: test-pedestal-production-North
+    log_level: DEBUG
+    model_version: 6.0.0
+    number_of_events: 500
+    output_path: simtools-output
+    run_number: 10
+    sim_telarray_random_instrument_instances: 100
+    site: North
+    azimuth_angle: 0.
+    zenith_angle: 20
+    stars: null
+    nsb_scaling_factor: 1.
+  test_name: pedestals_gamma_20_deg_north
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
