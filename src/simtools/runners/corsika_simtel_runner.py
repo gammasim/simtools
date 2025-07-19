@@ -127,7 +127,7 @@ class CorsikaSimtelRunner:
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
                 if self.calibration_runner_args:
-                    run_command = simulator_array.make_run_command_for_pedestal_simulations(
+                    run_command = simulator_array.make_run_command_for_calibration_simulations(
                         run_number=run_number,
                         input_file="-",  # instruct sim_telarray to take input from standard output
                         calibration_runner_args=self.calibration_runner_args,

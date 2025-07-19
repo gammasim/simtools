@@ -1,0 +1,25 @@
+---
+applications:
+- application: simtools-simulate-calibration-events
+  configuration:
+    run_mode: flasher
+    array_layout_name: 1lst
+    label: test-flasher-production-North
+    log_level: DEBUG
+    model_version: 6.0.0
+    number_of_events: 500
+    output_path: simtools-output
+    run_number: 10
+    sim_telarray_random_instrument_instances: 100
+    site: North
+    azimuth_angle: 0.
+    zenith_angle: 20
+    stars: null
+    nsb_scaling_factor: 1.
+    flasher_photons: 245
+    flasher_var_photons: 0.
+    flasher_exp_time: 1.59
+    flasher_sig_time: 0.4
+  test_name: flasher_gamma_20_deg_north
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

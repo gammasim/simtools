@@ -141,30 +141,14 @@ def _parse(description=None):
         action="store_true",
         default=False,
     )
-    sim_telarray_seed_group = config.parser.add_argument_group(
-        title="Random seeds for sim_telarray instrument setup",
-    )
-    sim_telarray_seed_group.add_argument(
-        "--sim_telarray_instrument_seeds",
-        help=(
-            "Random seed used for sim_telarray instrument setup. "
-            "If '--sim_telarray_random_instrument_instances is not set: use as sim_telarray seed "
-            " ('random_seed' parameter). "
-            "Otherwise: use as base seed for the generation of random instrument instance seeds."
-        ),
-        type=str,
-        required=False,
-    )
-    sim_telarray_seed_group.add_argument(
-        "--sim_telarray_random_instrument_instances",
-        help="Number of random instrument instances initialized in sim_telarray.",
-        type=int,
-        required=False,
-    )
     return config.initialize(
         db_config=True,
         simulation_model=["site", "layout", "telescope", "model_version"],
-        simulation_configuration={"software": None, "corsika_configuration": ["all"]},
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["all"],
+            "sim_telarray_configuration": ["all"],
+        },
     )
 
 
