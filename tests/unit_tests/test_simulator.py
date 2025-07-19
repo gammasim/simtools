@@ -93,6 +93,20 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     )
 
 
+@pytest.fixture
+def calibration_simulator(io_handler, db_config, simulations_args_dict):
+    args_dict = copy.deepcopy(simulations_args_dict)
+    args_dict["simulation_software"] = "corsika_sim_telarray"
+    args_dict["label"] = "test-calibration-shower-array-simulator"
+    args_dict["sequential"] = True
+    args_dict["run_mode"] = "dark_pedestals"
+    return Simulator(
+        label=args_dict["label"],
+        args_dict=args_dict,
+        db_config=db_config,
+    )
+
+
 def test_init_simulator(shower_simulator, array_simulator, shower_array_simulator):
     assert isinstance(shower_simulator._simulation_runner, CorsikaRunner)
     assert isinstance(shower_array_simulator._simulation_runner, CorsikaSimtelRunner)
@@ -649,6 +663,33 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
     )
 
 
+def test_initialize_simulation_runner_with_calibration_simulator(
+    calibration_simulator, db_config, mocker
+):
+    # Mock CorsikaConfig and CorsikaSimtelRunner to avoid actual initialization
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
+    mock_corsika_simtel_runner = mocker.patch(
+        "simtools.simulator.CorsikaSimtelRunner", autospec=True
+    )
+
+    # Call the method
+    simulation_runner = calibration_simulator._initialize_simulation_runner()
+
+    # Assertions
+    assert isinstance(simulation_runner, CorsikaSimtelRunner)
+    mock_corsika_config.assert_called()
+    mock_corsika_simtel_runner.assert_called_once_with(
+        label=calibration_simulator.label,
+        corsika_config=[mock_corsika_config.return_value] * len(calibration_simulator.array_models),
+        simtel_path=calibration_simulator.args_dict.get("simtel_path"),
+        use_multipipe=True,
+        sim_telarray_seeds=calibration_simulator.sim_telarray_seeds,
+        sequential=calibration_simulator.args_dict.get("sequential", False),
+        keep_seeds=calibration_simulator.args_dict.get("corsika_test_seeds", False),
+        calibration_runner_args=calibration_simulator.args_dict,
+    )
+
+
 def test_save_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
     with caplog.at_level(logging.WARNING):
         shower_simulator.save_reduced_event_lists()
@@ -703,3 +744,14 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
 
     mock_simtel_io_writer.assert_not_called()
     mock_io_table_handler.write_tables.assert_not_called()
+
+
+def test_is_calibration_run(shower_simulator):
+    shower_simulator.run_mode = "dark_pedestals"
+    assert shower_simulator._is_calibration_run() is True
+
+    shower_simulator.run_mode = None
+    assert shower_simulator._is_calibration_run() is False
+
+    shower_simulator.run_mode = "not_a_calibration_run"
+    assert shower_simulator._is_calibration_run() is False

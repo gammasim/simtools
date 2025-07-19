@@ -251,7 +251,11 @@ def test_layout_parsers():
 def test_simulation_configuration():
     _parser_9 = parser.CommandLineParser()
     _parser_9.initialize_default_arguments(
-        simulation_configuration={"software": None, "corsika_configuration": ["all"]}
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["all"],
+            "sim_telarray_configuration": ["all"],
+        }
     )
     job_groups = _parser_9._action_groups
     for group in job_groups:
@@ -261,6 +265,8 @@ def test_simulation_configuration():
             assert any(action.dest == "primary" for action in group._group_actions)
         if str(group.title) == "shower parameters":
             assert any(action.dest == "view_cone" for action in group._group_actions)
+        if str(group.title) == "sim_telarray configuration":
+            assert any(action.dest == "sim_telarray_seeds" for action in group._group_actions)
 
     _parser_10 = parser.CommandLineParser()
     _parser_10.initialize_default_arguments(
