@@ -439,7 +439,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def _get_dictionary_with_sim_telarray_configuration():
         """Return dictionary with sim_telarray configuration parameters."""
         return {
-            "sim_telarray_seeds": {
+            "sim_telarray_instrument_seeds": {
                 "help": (
                     "Random seed used for sim_telarray instrument setup. "
                     "If '--sim_telarray_random_instrument_instances' is not set: "
