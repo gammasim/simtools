@@ -7,6 +7,7 @@ applications:
     output_path: simtools-output
     site: South
     telescope: MSTx-FlashCam
+    log_level: debug
   integration_tests:
   - output_file: validate_camera_efficiency_MSTx-FlashCam_nsb.pdf
   - output_file: validate_camera_efficiency_MSTx-FlashCam_nsb.png
