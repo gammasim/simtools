@@ -14,24 +14,23 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def config_data_lst(model_version_prod5):
+def config_data_lst(model_version_prod5, simtel_path):
     return {
         "telescope": "LSTN-01",
         "site": "North",
         "model_version": model_version_prod5,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0 * u.deg,
+        "simtel_path": simtel_path,
     }
 
 
 @pytest.fixture
-def camera_efficiency_lst(io_handler, db_config, simtel_path, config_data_lst):
+def camera_efficiency_lst(io_handler, db_config, config_data_lst):
     return CameraEfficiency(
         config_data=config_data_lst,
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
-        test=True,
     )
 
 
@@ -65,17 +64,6 @@ def test_configuration_from_args_dict(camera_efficiency_lst):
     assert pytest.approx(_config["zenith_angle"]) == 30.0
     assert pytest.approx(_config["azimuth_angle"]) == 90.0
     assert _config["nsb_spectrum"] == "dark"
-
-    _config_none = camera_efficiency_lst._configuration_from_args_dict(
-        {
-            "zenith_angle": None,
-            "azimuth_angle": None,
-            "nsb_spectrum": None,
-        }
-    )
-    assert pytest.approx(_config_none["zenith_angle"]) == 20.0
-    assert pytest.approx(_config_none["azimuth_angle"]) == 0.0
-    assert _config_none["nsb_spectrum"] is None
 
 
 def test_load_files(camera_efficiency_lst):

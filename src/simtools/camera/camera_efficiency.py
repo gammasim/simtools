@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 
 import astropy.io.ascii
+import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
@@ -29,23 +30,14 @@ class CameraEfficiency:
         Instance label, optional.
     config_data: dict.
         Dict containing the configurable parameters.
-    test: bool
-        Is it a test instance (at the moment only affects the location of files).
     """
 
-    def __init__(
-        self,
-        config_data,
-        label,
-        db_config,
-        test=False,
-    ):
+    def __init__(self, config_data, label, db_config):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_path = config_data.get("simtel_path")
         self.label = label
-        self.test = test
 
         self.io_handler = io_handler.IOHandler()
         self.telescope_model, self.site_model = initialize_simulation_models(
@@ -63,15 +55,16 @@ class CameraEfficiency:
         self.config = self._configuration_from_args_dict(config_data)
         self._file = self._load_files()
 
+        self.nsb_pixel_pe_per_ns = None
+        self.nsb_rate_ref_conditions = None
+
     def __repr__(self):
         """Return string representation of the CameraEfficiency instance."""
         return f"CameraEfficiency(label={self.label})\n"
 
     def _configuration_from_args_dict(self, config_data):
         """
-        Extract the configuration data from the args_dict.
-
-        Zenith and azimuth angles are set to default values if not provided.
+        Extract configuration data from command line arguments.
 
         Parameters
         ----------
@@ -83,22 +76,9 @@ class CameraEfficiency:
         dict
             Configuration data.
         """
-        zenith_angle = config_data.get("zenith_angle")
-        if zenith_angle is not None:
-            zenith_angle = zenith_angle.to("deg").value
-        else:
-            zenith_angle = 20.0
-            self._logger.info(f"Setting zenith angle to default value {zenith_angle} deg")
-        azimuth_angle = config_data.get("azimuth_angle")
-        if azimuth_angle is not None:
-            azimuth_angle = azimuth_angle.to("deg").value
-        else:
-            azimuth_angle = 0.0
-            self._logger.info(f"Setting azimuth angle to default value {azimuth_angle} deg")
-
         return {
-            "zenith_angle": zenith_angle,
-            "azimuth_angle": azimuth_angle,
+            "zenith_angle": config_data.get("zenith_angle").to("deg").value,
+            "azimuth_angle": config_data.get("azimuth_angle").to("deg").value,
             "nsb_spectrum": config_data.get("nsb_spectrum", None),
         }
 
@@ -146,7 +126,7 @@ class CameraEfficiency:
                 "skip_correction_to_nsb_spectrum", False
             ),
         )
-        simtel.run(test=self.test)
+        simtel.run()
 
     def export_model_files(self):
         """Export model and config files to the output directory."""
@@ -155,6 +135,24 @@ class CameraEfficiency:
             self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.telescope_model.config_file_directory
             )
+
+    def get_nsb_pixel_rate(self):
+        """
+        Return the expected NSB pixel rate for each camera pixel.
+
+        This is an approximation, as testeff calculates the expected NSB pixel rate
+        for the on-axis pixel only.
+
+        Returns
+        -------
+        list
+            Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.
+        """
+        return (
+            [self.nsb_pixel_pe_per_ns]
+            * self.telescope_model.get_parameter_value("camera_pixels")
+            * u.GHz
+        )
 
     def analyze(self, export=True, force=False):
         """
@@ -240,6 +238,8 @@ class CameraEfficiency:
         self._results = Table(_results)
         self._has_results = True
 
+        self.nsb_pixel_pe_per_ns, self.nsb_rate_ref_conditions = self.calc_nsb_rate()
+
         print("\33[40;37;1m")
         self._logger.info(f"\n{self.results_summary()}")
         print("\033[0m")
@@ -254,7 +254,6 @@ class CameraEfficiency:
         Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
         """
-        nsb_pixel_pe_per_ns, nsb_rate_ref_conditions = self.calc_nsb_rate()
         nsb_spectrum_text = (
             f"NSB spectrum file: {self.config['nsb_spectrum']}"
             if self.config["nsb_spectrum"]
@@ -274,9 +273,9 @@ class CameraEfficiency:
             "(A-PERF-2025/B-TEL-0090): "
             f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
             "Expected NSB pixel rate for the provided NSB spectrum: "
-            f"{nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
+            f"{self.nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
             "Expected NSB pixel rate for the reference NSB: "
-            f"{nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
+            f"{self.nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
         )
 
     def export_results(self):
@@ -385,9 +384,11 @@ class CameraEfficiency:
         c2_sum = np.sum(c2_reduced_wl)
         return c2_sum / c1_sum / self._results["masts"][0]
 
-    def calc_nsb_rate(self):
+    def calc_nsb_rate(self, wavelength_range=(300, 650)):
         """
         Calculate the NSB rate.
+
+        CTAO reference wavelength range is 300-650 nm.
 
         Returns
         -------
@@ -404,11 +405,13 @@ class CameraEfficiency:
             / self.telescope_model.get_parameter_value("telescope_transmission")[0]
         )
 
-        # (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:
-        n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
+        # (integral is in ph./(m^2 ns sr) ) over wavelength_range
+        n1_reduced_wl = self._results["N1"][
+            [wavelength_range[0] <= wl_now <= wavelength_range[1] for wl_now in self._results["wl"]]
+        ]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
-            [wl_now in [300, 650] for wl_now in self._results["wl"]]
+            [wl_now in [wavelength_range[0], wavelength_range[1]] for wl_now in self._results["wl"]]
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
