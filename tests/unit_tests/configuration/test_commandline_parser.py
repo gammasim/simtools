@@ -266,7 +266,9 @@ def test_simulation_configuration():
         if str(group.title) == "shower parameters":
             assert any(action.dest == "view_cone" for action in group._group_actions)
         if str(group.title) == "sim_telarray configuration":
-            assert any(action.dest == "sim_telarray_seeds" for action in group._group_actions)
+            assert any(
+                action.dest == "sim_telarray_instrument_seeds" for action in group._group_actions
+            )
 
     _parser_10 = parser.CommandLineParser()
     _parser_10.initialize_default_arguments(
