@@ -1,0 +1,12 @@
+---
+applications:
+- application: simtools-validate-camera-efficiency
+  configuration:
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+    telescope: LSTN-02
+    log_level: debug
+  test_name: LSTN
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
