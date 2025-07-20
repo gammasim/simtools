@@ -20,6 +20,8 @@ applications:
     flasher_var_photons: 0.
     flasher_exp_time: 1.59
     flasher_sig_time: 0.4
-  test_name: flasher_gamma_20_deg_south
+  integration_tests:
+  - output_files: sim_telarray/data/run000010/run000010_za20deg_azm000deg_South_subsystem_msts_6.0.0_test-flasher-production-South.simtel.zst
+  test_name: flasher_20_deg_south
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

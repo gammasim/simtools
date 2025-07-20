@@ -16,6 +16,8 @@ applications:
     zenith_angle: 20
     stars: null
     nsb_scaling_factor: 2.
-  test_name: pedestals_gamma_20_deg_north
+  integration_tests:
+  - output_files: sim_telarray/data/run000010/run000010_za20deg_azm000deg_North_1lst_6.0.0_test-pedestal-production-North.simtel.zst
+  test_name: pedestals_20_deg_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
