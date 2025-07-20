@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
 r"""
-    Calculate on-axis camera efficiency and NSB pixels rates using the sim_telarray testeff program.
+    Calculate on-axis telescope throughput and NSB pixels rates.
 
-    The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
-    of wavelength are plotted. See examples below.
+    Uses the sim_telarray tool "testeff" to calculate the camera efficiency.
+    The results of telescope throughput including optical and camera components for Cherenkov (left)
+    and NSB light (right) as a function of wavelength are plotted. See examples below.
 
     .. _validate_camera_eff_plot:
     .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
@@ -46,6 +47,7 @@ r"""
 import logging
 from pathlib import Path
 
+import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
@@ -85,7 +87,7 @@ def _parse(label):
     )
     _args_dict, _db_config = config.initialize(
         db_config=True,
-        simulation_model=["telescope", "model_version"],
+        simulation_model=["telescope", "model_version", "parameter_version"],
         simulation_configuration={"corsika_configuration": ["zenith_angle", "azimuth_angle"]},
     )
     if _args_dict["site"] is None or _args_dict["telescope"] is None:
@@ -97,13 +99,13 @@ def _parse(label):
 
 def main():  # noqa: D103
     label = Path(__file__).stem
-    args_dict, _db_config = _parse(label)
+    args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     ce = CameraEfficiency(
-        db_config=_db_config,
+        db_config=db_config,
         label=args_dict.get("label", label),
         config_data=args_dict,
     )
@@ -111,6 +113,16 @@ def main():  # noqa: D103
     ce.analyze(force=True)
     ce.plot_efficiency(efficiency_type="Cherenkov", save_fig=True)
     ce.plot_efficiency(efficiency_type="NSB", save_fig=True)
+
+    writer.ModelDataWriter.dump_model_parameter(
+        parameter_name="nsb_pixel_rate",
+        value=ce.get_nsb_pixel_rate(),
+        instrument=args_dict["telescope"],
+        parameter_version=args_dict.get("parameter_version", "0.0.0"),
+        output_file=Path(f"nsb_pixel_rate-{args_dict.get('parameter_version', '0.0.0')}.json"),
+        output_path=Path(args_dict["output_path"]) / args_dict["telescope"] / "nsb_pixel_rate",
+        use_plain_output_path=args_dict.get("use_plain_output_path"),
+    )
 
 
 if __name__ == "__main__":
