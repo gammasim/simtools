@@ -107,10 +107,9 @@ def _parse(label):
     config.parser.add_argument(
         "--stars",
         help="List of stars (azimuth, zenith, weighting factor).",
-        action="store_true",
-        default=False,
+        action=str,
+        default=None,
     )
-    # TODO - some parameters should be model parameters and not command line arguments
     flasher_args = config.parser.add_argument_group("Flasher configuration")
     flasher_args.add_argument(
         "--flasher_photons",
