@@ -107,7 +107,7 @@ def _parse(label):
     config.parser.add_argument(
         "--stars",
         help="List of stars (azimuth, zenith, weighting factor).",
-        action=str,
+        type=str,
         default=None,
     )
     flasher_args = config.parser.add_argument_group("Flasher configuration")
