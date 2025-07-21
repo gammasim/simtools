@@ -222,7 +222,6 @@ class SimulatorArray(SimtelRunner):
         command = " ".join(null_command_parts)
 
         one_values = [
-            "fadc_lg_pedestal",
             "fadc_lg_var_pedestal",
             "fadc_lg_err_pedestal",
             "fadc_lg_dev_pedestal",
