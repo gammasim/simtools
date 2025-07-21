@@ -764,4 +764,4 @@ class Simulator:
         bool
             True if it is a calibration run, False otherwise.
         """
-        return self.run_mode in ["pedestals", "dark_pedestals", "flasher"]
+        return self.run_mode in ["pedestals", "dark_pedestals", "nsb_only_pedestals", "flasher"]

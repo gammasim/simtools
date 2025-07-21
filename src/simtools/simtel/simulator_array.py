@@ -115,12 +115,16 @@ class SimulatorArray(SimtelRunner):
         if calibration_runner_args.get("stars"):
             command += super().get_config_option("stars", calibration_runner_args["stars"])
 
-        if calibration_runner_args.get("run_mode") in ("pedestals", "dark_pedestals"):
+        if calibration_runner_args.get("run_mode") in ("pedestals", "nsb_only_pedestals"):
             command += super().get_config_option(
                 "pedestal_events", calibration_runner_args["number_of_events"]
             )
+        if calibration_runner_args.get("run_mode") == "nsb_only_pedestals":
+            command += self._nsb_only_pedestals_command()
         if calibration_runner_args.get("run_mode") == "dark_pedestals":
-            command += self._dark_pedestal_command()
+            command += super().get_config_option(
+                "dark_events", calibration_runner_args["number_of_events"]
+            )
         if calibration_runner_args.get("run_mode") == "flasher":
             command += self._flasher_command(calibration_runner_args)
 
@@ -193,14 +197,14 @@ class SimulatorArray(SimtelRunner):
 
         return command
 
-    def _dark_pedestal_command(self):
+    def _nsb_only_pedestals_command(self):
         """
-        Generate the command to run sim_telarray for dark pedestal closed-camera-lid simulations.
+        Generate the command to run sim_telarray for nsb-only pedestal simulations.
 
         Returns
         -------
         str
-            Command to run sim_telarray for dark pedestal simulations.
+            Command to run sim_telarray.
         """
         null_values = [
             "fadc_noise",

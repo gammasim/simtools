@@ -104,8 +104,8 @@ def test_check_run_result_file_exists(simtel_runner, tmp_path):
     assert simtel_runner._check_run_result(run_number=1) is True
 
 
-def test_dark_pedestal_command(simtel_runner):
-    command = simtel_runner._dark_pedestal_command()
+def test_nsb_only_pedestals_command(simtel_runner):
+    command = simtel_runner._nsb_only_pedestals_command()
     assert "-C fadc_err_pedestal=0.0" in command
     assert "-C fadc_lg_err_pedestal=-1.0" in command
 
@@ -143,13 +143,13 @@ def test_make_run_command_for_calibration_simulations(simtel_runner):
     assert "-C pedestal_events=100" in run_command
     assert input_file in run_command
 
-    calibration_runner_args["run_mode"] = "dark_pedestals"
+    calibration_runner_args["run_mode"] = "nsb_only_pedestals"
     run_command = simtel_runner.make_run_command_for_calibration_simulations(
         run_number=5,
         input_file=input_file,
         calibration_runner_args=calibration_runner_args,
     )
-    assert "-C fadc_err_pedestal=0.0" in run_command  # From _dark_pedestal_command
+    assert "-C fadc_err_pedestal=0.0" in run_command  # From _nsb_only_pedestals_command
 
     calibration_runner_args["run_mode"] = "flasher"
     calibration_runner_args.update(
