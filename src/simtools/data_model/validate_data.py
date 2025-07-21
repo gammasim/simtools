@@ -689,7 +689,9 @@ class DataValidator:
         max_logs: int
             Maximum number of logging messages to be printed.
         """
-        if (isinstance(col_name, int) or (isinstance(col_name, str) and col_name.isdigit())) and int(col_name) < max_logs:
+        if (
+            isinstance(col_name, int) or (isinstance(col_name, str) and col_name.isdigit())
+        ) and int(col_name) < max_logs:
             self._logger.debug(message)
 
     @staticmethod
