@@ -7,15 +7,14 @@ applications:
     site: North
     telescope: LSTN-02
     zenith_angle: 0.
+    parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
     use_plain_output_path: true
-    parameter_version: 0.0.99
     log_level: debug
   integration_tests:
   - model_parameter_validation:
       parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
       reference_parameter_name: nsb_pixel_rate
-      reference_parameter_version: 1.0.0
       tolerance: 1.e-1
   test_name: LSTN
 schema_name: application_workflow.metaschema
