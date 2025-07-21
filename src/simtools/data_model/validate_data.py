@@ -652,6 +652,7 @@ class DataValidator:
             range columns
 
         """
+        # TODO restricted printout - first 10 values?
         self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}' ")
 
         if range_type not in ("allowed_range", "required_range"):

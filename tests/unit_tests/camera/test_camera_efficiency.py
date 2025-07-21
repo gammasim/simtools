@@ -165,6 +165,7 @@ def test_analyze_from_file(camera_efficiency_lst, mocker):
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.calc_nsb_rate()
     summary = camera_efficiency_lst.results_summary()
     assert "Results summary for LSTN-01" in summary
 
