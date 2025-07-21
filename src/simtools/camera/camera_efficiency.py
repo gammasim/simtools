@@ -149,7 +149,7 @@ class CameraEfficiency:
             Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.
         """
         return (
-            [self.nsb_pixel_pe_per_ns]
+            [self.nsb_rate_ref_conditions]
             * self.telescope_model.get_parameter_value("camera_pixels")
             * u.GHz
         )
