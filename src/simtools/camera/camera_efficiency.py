@@ -136,7 +136,7 @@ class CameraEfficiency:
                 model_directory=self.telescope_model.config_file_directory
             )
 
-    def get_nsb_pixel_rate(self):
+    def get_nsb_pixel_rate(self, reference_conditions=False):
         """
         Return the expected NSB pixel rate for each camera pixel.
 
@@ -149,7 +149,7 @@ class CameraEfficiency:
             Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.
         """
         return (
-            [self.nsb_rate_ref_conditions]
+            [self.nsb_rate_ref_conditions if reference_conditions else self.nsb_pixel_pe_per_ns]
             * self.telescope_model.get_parameter_value("camera_pixels")
             * u.GHz
         )

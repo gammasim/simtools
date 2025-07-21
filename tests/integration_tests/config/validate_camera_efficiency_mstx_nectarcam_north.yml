@@ -7,14 +7,16 @@ applications:
     site: North
     telescope: MSTx-NectarCam
     zenith_angle: 0.
+    write_reference_nsb_rate_as_parameter: true
+    use_plain_output_path: true
     log_level: debug
   integration_tests:
   - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.pdf
   - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.png
   - output_file: validate_camera_efficiency_MSTx-NectarCam_cherenkov.png
   - output_file: validate_camera_efficiency_MSTx-NectarCam_cherenkov.pdf
-  - output_file: camera_efficiency_summary_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.txt
-  - output_file: camera_efficiency_table_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+  - output_file: camera_efficiency_summary_North_MSTx-NectarCam_za0.0deg_azm000deg_validate_camera_efficiency.txt
+  - output_file: camera_efficiency_table_North_MSTx-NectarCam_za0.0deg_azm000deg_validate_camera_efficiency.ecsv
   test_name: MSTN
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
