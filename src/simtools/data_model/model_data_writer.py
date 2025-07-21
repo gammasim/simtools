@@ -432,6 +432,7 @@ class ModelDataWriter:
 
         Ensure sim_telarray style lists as strings 'type' and 'unit' entries.
         Replace "None" with "null" for unit field.
+        Replace list of equal units with single unit string.
 
         Parameters
         ----------
@@ -452,6 +453,8 @@ class ModelDataWriter:
                     unit.replace("None", "null") if isinstance(unit, str) else unit
                     for unit in data_dict["unit"]
                 ]
+                if all(u == data_dict["unit"][0] for u in data_dict["unit"]):
+                    data_dict["unit"] = data_dict["unit"][0]
         except KeyError:
             pass
         return data_dict

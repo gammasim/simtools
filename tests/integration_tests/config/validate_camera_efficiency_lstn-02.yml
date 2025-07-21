@@ -6,6 +6,7 @@ applications:
     output_path: simtools-output
     site: North
     telescope: LSTN-02
+    zenith_angle: 0.
     log_level: debug
   test_name: LSTN
 schema_name: application_workflow.metaschema
