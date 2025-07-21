@@ -85,6 +85,12 @@ def _parse(label):
         required=False,
         action="store_true",
     )
+    config.parser.add_argument(
+        "--write_reference_nsb_rate_as_parameter",
+        help=("Write the NSB pixel rate obtained for reference conditions as a model parameter "),
+        action="store_true",
+        required=False,
+    )
     _args_dict, _db_config = config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version", "parameter_version"],
@@ -116,7 +122,9 @@ def main():  # noqa: D103
 
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name="nsb_pixel_rate",
-        value=ce.get_nsb_pixel_rate(),
+        value=ce.get_nsb_pixel_rate(
+            reference_conditions=args_dict.get("write_reference_nsb_rate_as_parameter", False)
+        ),
         instrument=args_dict["telescope"],
         parameter_version=args_dict.get("parameter_version", "0.0.0"),
         output_file=Path(f"nsb_pixel_rate-{args_dict.get('parameter_version', '0.0.0')}.json"),

@@ -109,9 +109,9 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_vers
             "model_version": model_version_prod5,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
+            "simtel_path": simtel_path,
         },
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
     )
@@ -119,7 +119,6 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_vers
     # 2D transmission window not defined in prod6; required prod5 runner
     camera_efficiency_sst_prod5.export_model_files()
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
-        simtel_path=simtel_path,
         telescope_model=camera_efficiency_sst_prod5.telescope_model,
         file_simtel=camera_efficiency_sst_prod5._file["sim_telarray"],
         label="test-simtel-runner-camera-efficiency",
