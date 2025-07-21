@@ -50,7 +50,7 @@ model_version (str, optional)
     Version of the simulation model.
 nsb_scaling_factor (float, optional)
     Scaling factor for the night-sky background rate. Default is 1.0, which
-    corresponds to the nominal NSB rate.
+    corresponds to the nominal (dark sky) NSB rate.
 stars (str, optional)
     Path to a file containing a list of stars (azimuth, zenith, weighting factor
     separated by whitespace). If provided, the stars will be used to simulate
@@ -98,7 +98,7 @@ def _parse(label):
         "--nsb_scaling_factor",
         help=(
             "Scaling factor for the NSB rate. "
-            "Default is 1.0, which corresponds to the nominal NSB rate."
+            "Default is 1.0, which corresponds to the nominal (dark sky) NSB rate."
         ),
         type=float,
         required=False,
@@ -126,13 +126,13 @@ def _parse(label):
     )
     flasher_args.add_argument(
         "--flasher_exp_time",
-        help="Exponential decay time of the flasher pulse in nano-seconds.",
+        help="Exponential decay time of the flasher pulse in nanoseconds.",
         type=float,
         default=0.0,
     )
     flasher_args.add_argument(
         "--flasher_sig_time",
-        help="Sigma of Gaussian-shaped flasher pulse in nano-seconds.",
+        help="Sigma of Gaussian-shaped flasher pulse in nanoseconds.",
         type=float,
         default=0.0,
     )

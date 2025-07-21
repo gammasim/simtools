@@ -106,7 +106,7 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option(
             "Altitude",
             self.corsika_config.array_model.site_model.get_parameter_value_with_unit(
-                "corsika_observation_level"
+                "reference_point_altitude"
             ).to_value("m"),
         )
         command += super().get_config_option(
