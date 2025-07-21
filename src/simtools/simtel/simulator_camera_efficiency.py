@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import general
 
@@ -88,17 +87,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
 
         focal_length = self._telescope_model.get_telescope_effective_focal_length("m", True)
 
-        try:
-            mirror_class = self._telescope_model.get_parameter_value("mirror_class")
-        except InvalidModelParameterError:
-            mirror_class = 1
-
+        mirror_class = self._telescope_model.get_parameter_value("mirror_class")
         curvature_radius = self._get_curvature_radius(mirror_class)
-
-        try:
-            camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
-        except KeyError:
-            camera_transmission = 1
+        camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
 
         camera_filter_file = self._telescope_model.get_parameter_value("camera_filter")
         # testeff does not support 2D distributions
