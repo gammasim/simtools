@@ -398,7 +398,7 @@ class CameraEfficiency:
             NSB pixel rate in p.e./ns for reference conditions
             (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)
         """
-        nsb_rate_provided_spectrum = (
+        self.nsb_pixel_pe_per_ns = (
             np.sum(self._results["N4"])
             * self.telescope_model.camera.get_pixel_active_solid_angle()
             * self.telescope_model.get_on_axis_eff_optical_area().to("m2").value
@@ -415,12 +415,12 @@ class CameraEfficiency:
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
-        nsb_rate_ref_conditions = (
-            nsb_rate_provided_spectrum
+        self.nsb_rate_ref_conditions = (
+            self.nsb_pixel_pe_per_ns
             * self.site_model.get_parameter_value("nsb_reference_value")
             / nsb_integral
         )
-        return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
+        return self.nsb_pixel_pe_per_ns, self.nsb_rate_ref_conditions
 
     def plot_efficiency(self, efficiency_type, save_fig=False):
         """
