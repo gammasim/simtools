@@ -100,7 +100,7 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
 
     # calibration run scripts
     corsika_simtel_runner.calibration_runner_args = {
-        "run_mode": "dark_pedestals",
+        "run_mode": "nsb_only_pedestals",
         "number_of_events": 500,
         "nsb_scaling_factor": 1.0,
         "stars": "stars.txt",

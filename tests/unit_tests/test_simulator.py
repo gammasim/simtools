@@ -99,7 +99,7 @@ def calibration_simulator(io_handler, db_config, simulations_args_dict):
     args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "test-calibration-shower-array-simulator"
     args_dict["sequential"] = True
-    args_dict["run_mode"] = "dark_pedestals"
+    args_dict["run_mode"] = "nsb_only_pedestals"
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
@@ -747,7 +747,7 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
 
 
 def test_is_calibration_run(shower_simulator):
-    shower_simulator.run_mode = "dark_pedestals"
+    shower_simulator.run_mode = "nsb_only_pedestals"
     assert shower_simulator._is_calibration_run() is True
 
     shower_simulator.run_mode = None
