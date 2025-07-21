@@ -16,6 +16,7 @@ PATH_TO_OUTPUT = "/path/to/output"
 PATCH_TO_VALIDATE_CFG = "simtools.testing.validate_output._validate_simtel_cfg_files"
 PATH_CFG_6 = "/path/to/simtel_cfg_6.0.0.cfg"
 PATH_CFG_7 = "/path/to/simtel_cfg_7.0.0.cfg"
+TEST_PARAM_JSON = "test_param.json"
 
 
 @pytest.fixture
@@ -599,7 +600,7 @@ def test_validate_model_parameter_json_file(mocker, output_path):
     }
     model_parameter_validation = {
         "reference_parameter_name": "reference_param",
-        "parameter_file": "test_param.json",
+        "parameter_file": TEST_PARAM_JSON,
         "tolerance": 1.0e-5,
     }
 
@@ -615,7 +616,7 @@ def test_validate_model_parameter_json_file(mocker, output_path):
         model_version="1.0.0",
     )
     mock_collect_data_from_file.assert_called_once_with(
-        Path(output_path) / "test_telescope" / "test_param.json"
+        Path(output_path) / "test_telescope" / TEST_PARAM_JSON
     )
     mock_compare_value.assert_called_once_with([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], 1.0e-5)
 
@@ -643,7 +644,7 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
     }
     model_parameter_validation = {
         "reference_parameter_name": "reference_param",
-        "parameter_file": "test_param.json",
+        "parameter_file": TEST_PARAM_JSON,
         "tolerance": 1.0e-5,
     }
 
@@ -660,6 +661,6 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
         model_version="1.0.0",
     )
     mock_collect_data_from_file.assert_called_once_with(
-        Path(output_path) / "test_telescope" / "test_param.json"
+        Path(output_path) / "test_telescope" / TEST_PARAM_JSON
     )
     mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5)
