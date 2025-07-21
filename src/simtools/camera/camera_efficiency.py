@@ -77,8 +77,8 @@ class CameraEfficiency:
             Configuration data.
         """
         return {
-            "zenith_angle": config_data.get("zenith_angle").to("deg").value,
-            "azimuth_angle": config_data.get("azimuth_angle").to("deg").value,
+            "zenith_angle": config_data["zenith_angle"].to("deg").value,
+            "azimuth_angle": config_data["azimuth_angle"].to("deg").value,
             "nsb_spectrum": config_data.get("nsb_spectrum", None),
         }
 
