@@ -183,3 +183,25 @@ def test_save_plot(camera_efficiency_lst, mocker, caplog):
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst._save_plot(fig_mock, "test_plot")
     assert "Saved plot test_plot efficiency to" in caplog.text
+
+
+def test_get_nsb_pixel_rate_provided_spectrum(camera_efficiency_lst, mocker):
+    mocker.patch.object(
+        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=10
+    )
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate()
+    assert nsb_pixel_rate.unit == u.GHz
+    assert len(nsb_pixel_rate) == 10
+    assert nsb_pixel_rate[0].value == pytest.approx(5.0)
+
+
+def test_get_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker):
+    mocker.patch.object(
+        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=20
+    )
+    camera_efficiency_lst.nsb_rate_ref_conditions = 7.0
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate(reference_conditions=True)
+    assert nsb_pixel_rate.unit == u.GHz
+    assert len(nsb_pixel_rate) == 20
+    assert nsb_pixel_rate[0].value == pytest.approx(7.0)

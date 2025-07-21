@@ -195,3 +195,12 @@ def test_get_curvature_radius_parabolic_dish_false(simulator_camera_efficiency, 
     )
     radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=1)
     assert radius == pytest.approx(1.7)
+
+
+def test_check_run_result_success(simulator_camera_efficiency, mocker):
+    mocker.patch.object(Path, "exists", return_value=True)
+    mock_logger = mocker.patch.object(simulator_camera_efficiency._logger, "debug")
+
+    simulator_camera_efficiency._check_run_result()
+
+    mock_logger.assert_called_once_with("Everything looks fine with output file.")
