@@ -14,7 +14,7 @@ BASE_PATH = "tests/resources/production_dl2_fits/"
 FILE_NAME_TEMPLATE = "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 MOCK_OPEN_PATH = "builtins.open"
 OUTPUT_FILE = "output.json"
-COLLECT_DATA_PATH = "simtools.utils.general.collect_data_from_file"
+COLLECT_DATA_PATH = "simtools.io_operations.ascii_handler.collect_data_from_file"
 
 
 @pytest.fixture
