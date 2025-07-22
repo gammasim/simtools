@@ -191,7 +191,7 @@ def is_utf8_file(file_name):
 
 def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False):
     """
-    Write structure data to JSON or YAML file.
+    Write structured data to JSON or YAML file.
 
     The file type is determined by the file extension.
 
