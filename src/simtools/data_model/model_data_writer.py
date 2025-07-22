@@ -418,7 +418,7 @@ class ModelDataWriter:
         self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
         ascii_handler.write_data_to_file(
             data=data_dict,
-            output_file=file_name,
+            output_file=self.io_handler.get_output_file(file_name),
             sort_keys=False,
             numpy_types=True,
         )
