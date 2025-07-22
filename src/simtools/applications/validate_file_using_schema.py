@@ -40,7 +40,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 
 def _parse(label, description):

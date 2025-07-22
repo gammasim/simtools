@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 import simtools.utils.general as gen
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
 

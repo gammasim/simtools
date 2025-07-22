@@ -130,7 +130,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler, io_table_handler
+from simtools.io import io_handler, io_table_handler
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 

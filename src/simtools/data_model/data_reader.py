@@ -8,7 +8,7 @@ from astropy.table import QTable
 
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 __all__ = ["read_table_from_file", "read_value_from_file"]
 

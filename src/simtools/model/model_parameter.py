@@ -9,7 +9,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.db import db_handler
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 

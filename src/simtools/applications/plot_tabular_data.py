@@ -31,7 +31,7 @@ from simtools.configuration import configurator
 from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.visualization import plot_tables
 
 

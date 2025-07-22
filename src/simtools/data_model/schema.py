@@ -14,7 +14,7 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)

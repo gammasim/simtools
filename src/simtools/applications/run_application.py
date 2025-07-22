@@ -38,7 +38,7 @@ import yaml
 import simtools.utils.general as gen
 from simtools import dependencies
 from simtools.configuration import configurator
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 
 def _parse(label, description, usage):

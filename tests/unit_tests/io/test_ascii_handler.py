@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-import simtools.io_operations.ascii_handler as ascii_handler
+import simtools.io.ascii_handler as ascii_handler
 from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"

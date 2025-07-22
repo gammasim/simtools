@@ -13,7 +13,7 @@ from packaging.version import Version
 from pymongo import MongoClient
 
 from simtools.data_model import validate_data
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
 

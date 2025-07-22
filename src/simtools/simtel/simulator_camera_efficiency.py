@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import general

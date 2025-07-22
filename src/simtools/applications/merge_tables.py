@@ -41,7 +41,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler, io_table_handler
+from simtools.io import io_handler, io_table_handler
 
 
 def _parse(label, description):

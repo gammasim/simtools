@@ -15,7 +15,7 @@ import subprocess
 from pathlib import Path
 
 from simtools.db.db_handler import DatabaseHandler
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
 

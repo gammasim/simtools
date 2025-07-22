@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_operations import io_handler, io_table_handler
+from simtools.io import io_handler, io_table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner

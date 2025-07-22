@@ -7,7 +7,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)

@@ -10,7 +10,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
 from simtools.db import db_handler
-from simtools.io_operations import ascii_handler, legacy_data_handler
+from simtools.io import ascii_handler, legacy_data_handler
 from simtools.visualization import visualize
 
 

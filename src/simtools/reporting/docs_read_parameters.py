@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 from simtools.visualization import plot_pixels, plot_tables

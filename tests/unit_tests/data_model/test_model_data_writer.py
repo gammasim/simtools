@@ -15,7 +15,7 @@ import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 logger = logging.getLogger()

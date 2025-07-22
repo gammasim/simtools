@@ -83,7 +83,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import data_reader
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
 _logger = logging.getLogger(__name__)
