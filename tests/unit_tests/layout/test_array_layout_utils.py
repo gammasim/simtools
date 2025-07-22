@@ -210,19 +210,18 @@ def test_retrieve_ctao_array_layouts_from_url():
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
         patch(
-            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
+            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_http"
         ) as mock_ascii_handler,
     ):
         mock_gen.is_url.return_value = True
+        mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
 
         cta_array_layouts.retrieve_ctao_array_layouts(
             site="north", repository_url="https://test.com", branch_name="test-branch"
         )
 
         mock_gen.is_url.assert_called_once_with("https://test.com")
-        mock_ascii_handler.collect_data_from_http.assert_called_with(
-            url="https://test.com/test-branch/subarray-ids.json"
-        )
+        mock_ascii_handler.assert_called_with(url="https://test.com/test-branch/subarray-ids.json")
 
 
 def test_retrieve_ctao_array_layouts_from_file(test_path):
@@ -234,13 +233,14 @@ def test_retrieve_ctao_array_layouts_from_file(test_path):
         ) as mock_ascii_handler,
     ):
         mock_gen.is_url.return_value = False
+        mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
 
         cta_array_layouts.retrieve_ctao_array_layouts(
             site="north", repository_url=test_path, branch_name="test-branch"
         )
 
         mock_gen.is_url.assert_called_once_with(test_path)
-        mock_ascii_handler.collect_data_from_file.assert_called()
+        assert mock_ascii_handler.call_count == 2
 
 
 def test_validate_array_layouts_with_db_valid():
