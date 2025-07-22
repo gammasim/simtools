@@ -232,18 +232,15 @@ def _write_to_json(data, output_file, sort_keys, numpy_types):
     numpy_types: bool
         If True, convert numpy types to native Python types.
     """
-    try:
-        with open(output_file, "w", encoding="utf-8") as file:
-            json.dump(
-                data,
-                file,
-                indent=4,
-                sort_keys=sort_keys,
-                cls=JsonNumpyEncoder if numpy_types else None,
-            )
-            file.write("\n")
-    except FileNotFoundError as exc:
-        raise FileNotFoundError(f"Failed to write JSON file {output_file}: {exc}") from exc
+    with open(output_file, "w", encoding="utf-8") as file:
+        json.dump(
+            data,
+            file,
+            indent=4,
+            sort_keys=sort_keys,
+            cls=JsonNumpyEncoder if numpy_types else None,
+        )
+        file.write("\n")
 
 
 def _write_to_yaml(data, output_file, sort_keys):
@@ -260,11 +257,8 @@ def _write_to_yaml(data, output_file, sort_keys):
         If True, sort the keys.
 
     """
-    try:
-        with open(output_file, "w", encoding="utf-8") as file:
-            yaml.dump(data, file, indent=4, sort_keys=sort_keys, explicit_start=True)
-    except FileNotFoundError as exc:
-        raise FileNotFoundError(f"Failed to write YAML file {output_file}: {exc}") from exc
+    with open(output_file, "w", encoding="utf-8") as file:
+        yaml.dump(data, file, indent=4, sort_keys=sort_keys, explicit_start=True)
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
