@@ -13,6 +13,9 @@ from simtools.layout.array_layout_utils import (
     write_array_layouts,
 )
 
+# Constants for patch paths
+PATCH_ASCII_COLLECT_FILE = "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
+
 
 @pytest.fixture
 def mock_read_table_from_file():
@@ -228,9 +231,7 @@ def test_retrieve_ctao_array_layouts_from_file(test_path):
     """Test retrieving array layouts from local file."""
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
-        patch(
-            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
-        ) as mock_ascii_handler,
+        patch(PATCH_ASCII_COLLECT_FILE) as mock_ascii_handler,
     ):
         mock_gen.is_url.return_value = False
         mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
@@ -354,7 +355,7 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
         "site": "north",
     }
     mocker.patch(
-        "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file",
+        PATCH_ASCII_COLLECT_FILE,
         return_value=fake_data,
     )
     fake_table = ["tel1", "tel2"]
@@ -396,7 +397,7 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
     }
     # Patch ascii_handler.collect_data_from_file to return fake_data without the "value" key.
     mocker.patch(
-        "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file",
+        PATCH_ASCII_COLLECT_FILE,
         return_value=fake_data,
     )
 
