@@ -2,12 +2,14 @@
 
 import logging
 from pathlib import Path
+from unittest.mock import mock_open, patch
 
 import pytest
 import yaml
 
 import simtools.io.ascii_handler as ascii_handler
 from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
+from simtools.io.ascii_handler import read_file_encoded_in_utf_or_latin
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
@@ -179,3 +181,16 @@ def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
 
     with pytest.raises(FileNotFoundError):
         ascii_handler.is_utf8_file(non_existent_file)
+
+
+def test_read_file_encoded_in_utf_or_latin_unicode_decode_error():
+    """Test read_file_encoded_in_utf_or_latin raises UnicodeDecodeError."""
+    mock_file_name = "mock_file.txt"
+
+    # Mock open to raise UnicodeDecodeError for both UTF-8 and Latin-1
+    with patch("builtins.open", mock_open()) as mocked_open:
+        mocked_open.side_effect = UnicodeDecodeError("utf-8", b"", 0, 1, "mock reason")
+        with pytest.raises(
+            UnicodeDecodeError, match="Unable to decode file.*using UTF-8 or Latin-1"
+        ):
+            read_file_encoded_in_utf_or_latin(mock_file_name)

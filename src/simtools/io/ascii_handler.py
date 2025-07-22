@@ -39,7 +39,6 @@ def collect_data_from_file(file_name, yaml_document=None):
     # broad exception to catch all possible errors in reading the file
     except Exception as exc:  # pylint: disable=broad-except
         raise type(exc)(f"Failed to read file {file_name}: {exc}") from exc
-    return None
 
 
 def _collect_data_from_different_file_types(file, file_name, suffix, yaml_document):
@@ -160,7 +159,8 @@ def read_file_encoded_in_utf_or_latin(file_name):
             with open(file_name, encoding="latin-1") as file:
                 lines = file.readlines()
         except UnicodeDecodeError as exc:
-            raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
+            msg = f"Unable to decode file {file_name} using UTF-8 or Latin-1."
+            raise UnicodeDecodeError(exc.encoding, exc.object, exc.start, exc.end, msg) from exc
 
     return lines
 

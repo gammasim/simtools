@@ -401,7 +401,7 @@ class MetadataCollector:
             if len(_json_type_metadata) > 1:
                 raise ValueError(f"More than one metadata entry found in {metadata_file_name}")
         except FileNotFoundError as exc:
-            raise ValueError(f"Failed reading metadata from {metadata_file_name}") from exc
+            raise FileNotFoundError(f"Failed reading metadata from {metadata_file_name}") from exc
         return _input_metadata
 
     def _fill_product_meta(self, product_dict):

@@ -14,6 +14,7 @@ import pytest
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -652,3 +653,9 @@ def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
 
     assert "Failed to get user name" in caplog.text
     assert contact_dict["name"] == "UNKNOWN_USER"
+
+
+def test_read_input_metadata_from_yml_or_json_no_file():
+    collector = MetadataCollector(args_dict={})
+    with pytest.raises(FileNotFoundError, match="Failed reading metadata from missing_file.yml"):
+        collector._read_input_metadata_from_yml_or_json("missing_file.yml")
