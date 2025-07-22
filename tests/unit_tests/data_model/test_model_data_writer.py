@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import astropy.units as u
-import numpy as np
 import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
@@ -14,7 +13,6 @@ import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
-from simtools.data_model.model_data_writer import JsonNumpyEncoder
 from simtools.io import ascii_handler
 from simtools.utils import names
 
@@ -169,20 +167,6 @@ def test_astropy_data_format():
     assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format
 
 
-def test_json_numpy_encoder():
-    encoder = JsonNumpyEncoder()
-    assert isinstance(encoder.default(np.float64(3.14)), float)
-    assert isinstance(encoder.default(np.int64(3.14)), int)
-    assert isinstance(encoder.default(np.array([])), list)
-    assert isinstance(encoder.default(u.Unit("m")), str)
-    assert encoder.default(u.Unit("")) is None
-    assert isinstance(encoder.default(u.Unit("m/s")), str)
-    assert isinstance(encoder.default(np.bool_(True)), bool)
-
-    with pytest.raises(TypeError):
-        encoder.default("abc")
-
-
 def test_dump_model_parameter(tmp_test_directory, db_config):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
@@ -321,6 +305,16 @@ def test_prepare_data_dict_for_writing():
     assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_5) == {
         "value": [5.5, 6.6],
         "unit": ["null", "null"],
+        "type": "float64",
+    }
+    data_dict_6 = {
+        "value": 5.0,
+        "unit": "None",
+        "type": "float64",
+    }
+    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_6) == {
+        "value": 5.0,
+        "unit": "null",
         "type": "float64",
     }
 
