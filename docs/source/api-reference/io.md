@@ -9,7 +9,16 @@ This module include I/O related functionality.
 ## io_handler
 
 ```{eval-rst}
-.. automodule:: io_operations.io_handler
+.. automodule:: io.io_handler
+   :members:
+```
+
+(io_ascii_handler)=
+
+## io_ascii_handler
+
+```{eval-rst}
+.. automodule:: io.ascii_handler
    :members:
 ```
 
@@ -18,7 +27,7 @@ This module include I/O related functionality.
 ## io_table_handler
 
 ```{eval-rst}
-.. automodule:: io_operations.io_table_handler
+.. automodule:: io.table_handler
    :members:
 ```
 
@@ -27,7 +36,7 @@ This module include I/O related functionality.
 ## hdf5_handler
 
 ```{eval-rst}
-.. automodule:: io_operations.hdf5_handler
+.. automodule:: io.hdf5_handler
    :members:
 ```
 
@@ -36,6 +45,6 @@ This module include I/O related functionality.
 ## legacy_data_handler
 
 ```{eval-rst}
-.. automodule:: io_operations.legacy_data_handler
+.. automodule:: io.legacy_data_handler
    :members:
 ```
