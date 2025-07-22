@@ -235,7 +235,7 @@ def test_write_to_yaml(tmp_path):
     # Verify the content of the sorted file
     with open(sorted_output_file, encoding="utf-8") as file:
         loaded_data_sorted = yaml.safe_load(file)
-    assert loaded_data_sorted.keys() == sorted(test_data.keys())
+    assert list(loaded_data_sorted.keys()) == sorted(test_data.keys())
 
 
 def test_write_to_json(tmp_path):
