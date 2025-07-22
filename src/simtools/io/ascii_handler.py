@@ -6,6 +6,8 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
+import astropy.units as u
+import numpy as np
 import yaml
 
 from simtools.utils.general import is_url
@@ -185,3 +187,99 @@ def is_utf8_file(file_name):
         return True
     except UnicodeDecodeError:
         return False
+
+
+def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False):
+    """
+    Write structure data to JSON or YAML file.
+
+    The file type is determined by the file extension.
+
+    Parameters
+    ----------
+    data: dict or list
+        Data to be written to the file.
+    output_file: str or Path
+        Name of the file to be written.
+    sort_keys: bool, optional
+        If True, sort the keys.
+    numpy_types: bool, optional
+        If True, convert numpy types to native Python types.
+    """
+    output_file = Path(output_file)
+    if output_file.suffix.lower() == ".json":
+        return _write_to_json(data, output_file, sort_keys, numpy_types)
+    if output_file.suffix.lower() in [".yml", ".yaml"]:
+        return _write_to_yaml(data, output_file, sort_keys)
+
+    raise ValueError(
+        f"Unsupported file type {output_file.suffix}. Only .json, .yml, and .yaml are supported."
+    )
+
+
+def _write_to_json(data, output_file, sort_keys, numpy_types):
+    """
+    Write data to a JSON file.
+
+    Parameters
+    ----------
+    data: dict or list
+        Data to be written to the file.
+    output_file: Path
+        Name of the file to be written.
+    sort_keys: bool
+        If True, sort the keys.
+    numpy_types: bool
+        If True, convert numpy types to native Python types.
+    """
+    try:
+        with open(output_file, "w", encoding="utf-8") as file:
+            json.dump(
+                data,
+                file,
+                indent=4,
+                sort_keys=sort_keys,
+                cls=JsonNumpyEncoder if numpy_types else None,
+            )
+            file.write("\n")
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"Failed to write JSON file {output_file}: {exc}") from exc
+
+
+def _write_to_yaml(data, output_file, sort_keys):
+    """
+    Write data to a YAML file.
+
+    Parameters
+    ----------
+    data: dict or list
+        Data to be written to the file.
+    output_file: Path
+        Name of the file to be written.
+    sort_keys: bool
+        If True, sort the keys.
+
+    """
+    try:
+        with open(output_file, "w", encoding="utf-8") as file:
+            yaml.dump(data, file, indent=4, sort_keys=sort_keys, explicit_start=True)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"Failed to write YAML file {output_file}: {exc}") from exc
+
+
+class JsonNumpyEncoder(json.JSONEncoder):
+    """Convert numpy to python types as accepted by json.dump."""
+
+    def default(self, o):
+        """Return default encoder."""
+        if isinstance(o, np.floating):
+            return float(o)
+        if isinstance(o, np.integer):
+            return int(o)
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
+            return str(o) if o != u.dimensionless_unscaled else None
+        if np.issubdtype(type(o), np.bool_):
+            return bool(o)
+        return super().default(o)

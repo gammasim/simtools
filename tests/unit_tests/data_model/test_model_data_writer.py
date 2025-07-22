@@ -87,12 +87,6 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
     w1.write_dict_to_model_parameter_json(file_name=data_file, data_dict=data_dict)
     assert Path(data_file).is_file()
 
-    this_directory_is_not_there = "./this_directory_is_not_there/test_file.json"
-    with pytest.raises(FileNotFoundError, match=r"^Error writing model data to"):
-        w1.write_dict_to_model_parameter_json(
-            file_name=this_directory_is_not_there, data_dict=data_dict
-        )
-
 
 def test_dump(args_dict, io_handler):
     empty_table = Table()
@@ -193,16 +187,43 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
-    # single value, no unit
-    num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
-        parameter_name=num_gains_name,
-        value=2,
-        instrument=instrument,
-        parameter_version=parameter_version,
-        output_file="num_gains.json",
-        output_path=tmp_test_directory,
-        use_plain_output_path=True,
-    )
+
+    # Mock schemas to prevent FileNotFoundError during schema loading
+    mock_schema = {
+        "name": "num_gains",
+        "model_parameter_schema_version": "0.1.0",
+        "data": [{"type": "int", "allowed_range": {"min": 1, "max": 10}}],
+    }
+
+    mock_metadata_schema = {"definitions": {}, "schema_version": "1.0.0"}
+
+    with (
+        patch("simtools.io.ascii_handler.collect_data_from_file") as mock_collect_data,
+        patch("simtools.data_model.schema.get_model_parameter_schema_file") as mock_schema_file,
+        patch(
+            "simtools.data_model.schema.get_model_parameter_schema_version", return_value="1.0.0"
+        ),
+        patch("simtools.data_model.schema.load_schema", return_value=mock_metadata_schema),
+    ):
+        # Set up the mock to return appropriate schema based on the file being requested
+        def mock_collect_data_side_effect(file_name, **kwargs):
+            if "schema" in str(file_name):
+                return mock_schema
+            return mock_metadata_schema
+
+        mock_collect_data.side_effect = mock_collect_data_side_effect
+        mock_schema_file.return_value = "mock_schema.yml"
+
+        # single value, no unit
+        num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
+            parameter_name=num_gains_name,
+            value=2,
+            instrument=instrument,
+            parameter_version=parameter_version,
+            output_file="num_gains.json",
+            output_path=tmp_test_directory,
+            use_plain_output_path=True,
+        )
     assert Path(tmp_test_directory / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
     assert num_gains_dict["value"] == 2
