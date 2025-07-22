@@ -10,14 +10,13 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
-from astropy.io.misc import yaml
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from ctapipe.io import write_table
 from eventio import IACTFile
 
 from simtools import version
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.io.hdf5_handler import fill_hdf5_table
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
@@ -362,8 +361,7 @@ class CorsikaHistograms:
             file_name = "hist_config"
         file_name = Path(file_name).with_suffix(".yml")
         output_config_file_name = Path(self.output_path).joinpath(file_name)
-        with open(output_config_file_name, "w", encoding="utf-8") as file:
-            yaml.dump(self.hist_config, file)
+        ascii_handler.write_data_to_file(data=self.hist_config, output_file=output_config_file_name)
 
     def _create_histogram_default_config(self):
         """
