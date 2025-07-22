@@ -8,7 +8,7 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import Table
 
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 logger = logging.getLogger(__name__)
 

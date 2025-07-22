@@ -13,7 +13,7 @@ from simtools.constants import (
     MODEL_PARAMETER_SCHEMA_PATH,
 )
 from simtools.data_model import schema
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 DUMMY_FILE = "dummy_file.yml"
 

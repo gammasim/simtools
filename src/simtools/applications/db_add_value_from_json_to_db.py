@@ -32,7 +32,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 
 
 def _parse():

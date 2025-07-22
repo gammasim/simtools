@@ -9,7 +9,7 @@ from astropy.coordinates import AltAz, angular_separation
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io_operations import io_table_handler
+from simtools.io import io_table_handler
 
 
 @dataclass

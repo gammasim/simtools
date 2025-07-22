@@ -69,8 +69,8 @@ import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import schema
-from simtools.io_operations import ascii_handler
-from simtools.io_operations.io_handler import IOHandler
+from simtools.io import ascii_handler
+from simtools.io.io_handler import IOHandler
 from simtools.simtel import simtel_config_reader
 
 

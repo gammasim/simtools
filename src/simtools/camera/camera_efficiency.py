@@ -8,7 +8,7 @@ import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
 
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names

@@ -49,8 +49,8 @@ from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
-from simtools.io_operations.ascii_handler import collect_data_from_file
+from simtools.io import io_handler
+from simtools.io.ascii_handler import collect_data_from_file
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.generate_production_grid import GridGeneration
 

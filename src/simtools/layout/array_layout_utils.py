@@ -7,7 +7,7 @@ import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.utils import names

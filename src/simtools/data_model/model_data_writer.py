@@ -12,7 +12,7 @@ import simtools.utils.general as gen
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["ModelDataWriter"]

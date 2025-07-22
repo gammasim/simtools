@@ -12,7 +12,7 @@ from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
 from simtools.data_model import schema
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["DataValidator"]

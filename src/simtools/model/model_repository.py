@@ -8,7 +8,7 @@ functions to interact with and verify the repository.
 import logging
 from pathlib import Path
 
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
 )

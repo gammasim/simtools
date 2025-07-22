@@ -61,7 +61,7 @@ def test_verify_simulation_model_production_tables_no_production_files(tmp_path)
     assert result is True
 
 
-@patch("simtools.io_operations.ascii_handler.collect_data_from_file")
+@patch("simtools.io.ascii_handler.collect_data_from_file")
 def test_verify_model_parameters_for_production_with_missing_files(mock_collect_data, tmp_path):
     """Test verification of model parameters with missing files."""
 
@@ -85,7 +85,7 @@ def test_verify_model_parameters_for_production_with_missing_files(mock_collect_
         assert len(missing_files) == 2
 
 
-@patch("simtools.io_operations.ascii_handler.collect_data_from_file")
+@patch("simtools.io.ascii_handler.collect_data_from_file")
 def test_verify_model_parameters_for_production_all_files_exist(mock_collect_data, tmp_path):
     """Test verification when all parameter files exist."""
     production_data = {"parameters": {"telescope": {"camera_config": "1.0.0"}}}
@@ -106,7 +106,7 @@ def test_verify_model_parameters_for_production_all_files_exist(mock_collect_dat
         assert len(missing_files) == 0
 
 
-@patch("simtools.io_operations.ascii_handler.collect_data_from_file")
+@patch("simtools.io.ascii_handler.collect_data_from_file")
 def test_verify_model_parameters_for_production_no_parameters(mock_collect_data, tmp_path):
     """Test verification with no parameters in production file."""
     production_data = {}
@@ -122,7 +122,7 @@ def test_verify_model_parameters_for_production_no_parameters(mock_collect_data,
     assert len(missing_files) == 0
 
 
-@patch("simtools.io_operations.ascii_handler.collect_data_from_file")
+@patch("simtools.io.ascii_handler.collect_data_from_file")
 def test_verify_model_parameters_for_production_non_dict_parameters(mock_collect_data, tmp_path):
     """Test verification with non-dict parameter values."""
     production_data = {"parameters": {"telescope": "not_a_dict", "array": {"valid_param": "1.0.0"}}}

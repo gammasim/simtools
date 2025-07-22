@@ -38,7 +38,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import validate_array_layouts_with_db, write_array_layouts
 
 

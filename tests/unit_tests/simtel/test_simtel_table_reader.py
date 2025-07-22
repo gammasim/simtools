@@ -54,7 +54,7 @@ def test_process_line_parts(caplog):
         assert "Skipping non-float part: +-" in caplog.text
 
 
-@mock.patch("simtools.io_operations.ascii_handler.read_file_encoded_in_utf_or_latin")
+@mock.patch("simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin")
 def test_read_simtel_data_rpol(mock_read_file_encoded_in_utf_or_latin):
     mock_read_file_encoded_in_utf_or_latin.return_value = [
         "#@RPOL@[ANGLE=] 2",
@@ -180,7 +180,7 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     204       0.264762  0.527657  1.047906  1.560804  2.564867  3.539938  4.956099  7.197119  9.210340  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00
     """
 
-    mock_string = "simtools.io_operations.ascii_handler.read_file_encoded_in_utf_or_latin"
+    mock_string = "simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin"
 
     with mock.patch(mock_string, return_value=test_data.splitlines()):
         table = simtel_table_reader._read_simtel_data_for_atmospheric_transmission("dummy_path")
@@ -219,7 +219,7 @@ def test_read_simtel_data_for_lightguide_efficiency(caplog):
     2.0     0.840082     # (1.0 * ...)    0.822859    0.814194    0.846625
     """
 
-    mock_string = "simtools.io_operations.ascii_handler.read_file_encoded_in_utf_or_latin"
+    mock_string = "simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin"
     mock_file = mock.mock_open(read_data=test_data)
 
     with mock.patch(mock_string, mock_file):

@@ -17,7 +17,7 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
 from simtools.data_model import metadata_model, schema
-from simtools.io_operations import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.utils import names
 
 __all__ = ["MetadataCollector"]

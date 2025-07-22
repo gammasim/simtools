@@ -7,7 +7,7 @@ import re
 import astropy.units as u
 import numpy as np
 
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]

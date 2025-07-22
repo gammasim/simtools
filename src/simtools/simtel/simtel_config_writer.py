@@ -10,7 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools.io_operations import ascii_handler
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
