@@ -41,7 +41,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.io import io_handler, io_table_handler
+from simtools.io import io_handler, table_handler
 
 
 def _parse(label, description):
@@ -91,7 +91,7 @@ def main():  # noqa: D103
     output_path = io_handler.IOHandler().get_output_directory(label)
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
-    io_table_handler.merge_tables(
+    table_handler.merge_tables(
         input_files,
         input_table_names=args_dict["table_names"],
         output_file=output_filepath,
