@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io import io_handler, io_table_handler
+from simtools.io import io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
@@ -664,7 +664,7 @@ class Simulator:
         output_files = self.get_file_list(file_type="event_data")
         for input_file, output_file in zip(input_files, output_files):
             generator = SimtelIOEventDataWriter([input_file])
-            io_table_handler.write_tables(
+            table_handler.write_tables(
                 tables=generator.process_files(),
                 output_file=Path(output_file),
                 overwrite_existing=True,
