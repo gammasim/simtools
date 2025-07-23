@@ -271,7 +271,7 @@ class SimtelIOEventDataWriter:
                 "event_id": event_id,
                 "file_id": file_id,
                 "array_altitude": float(np.mean(altitudes)),
-                "array_azimuth": float(calculate_circular_mean(np.deg2rad(azimuths))),
+                "array_azimuth": float(np.degrees(calculate_circular_mean(np.deg2rad(azimuths)))),
                 "telescope_list": ",".join(map(str, telescopes)),
                 "telescope_list_common_id": ",".join(
                     [
