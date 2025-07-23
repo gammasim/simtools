@@ -36,7 +36,9 @@ def get_telescope_config(telescope_type):
     dict
         The configuration dictionary for the telescope type.
     """
-    return TELESCOPE_CONFIG.get(telescope_type) or TELESCOPE_CONFIG.get(telescope_type[:3])
+    if len(telescope_type) >= 3:
+        return TELESCOPE_CONFIG.get(telescope_type) or TELESCOPE_CONFIG.get(telescope_type[:3])
+    return TELESCOPE_CONFIG.get(telescope_type)
 
 
 def calculate_center(handlebox, width_factor=3, height_factor=3):
