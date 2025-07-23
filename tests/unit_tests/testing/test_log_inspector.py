@@ -4,6 +4,8 @@ import pytest
 
 from simtools.testing.log_inspector import inspect
 
+ERROR_MSG_LINE_2 = "Error or warning found in log at line 2"
+
 
 @pytest.fixture
 def mock_logger(caplog):
@@ -25,7 +27,7 @@ def test_inspect_with_errors(mock_logger):
     result = inspect(log_text)
     assert result is False
     assert len(mock_logger.records) == 2
-    assert "Error or warning found in log at line 2" in mock_logger.text
+    assert ERROR_MSG_LINE_2 in mock_logger.text
     assert "Error or warning found in log at line 3" in mock_logger.text
 
 
@@ -46,7 +48,7 @@ def test_inspect_mixed_input(mock_logger):
     result = inspect(log_text)
     assert result is False
     assert len(mock_logger.records) == 2
-    assert "Error or warning found in log at line 2" in mock_logger.text
+    assert ERROR_MSG_LINE_2 in mock_logger.text
     assert "Error or warning found in log at line 4" in mock_logger.text
 
 
@@ -55,4 +57,4 @@ def test_inspect_single_string_input(mock_logger):
     result = inspect(log_text)
     assert result is False
     assert len(mock_logger.records) == 1
-    assert "Error or warning found in log at line 2" in mock_logger.text
+    assert ERROR_MSG_LINE_2 in mock_logger.text
