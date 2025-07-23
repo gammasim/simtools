@@ -1,4 +1,4 @@
-"""Calculate CORSIKA thresholds for energy, radial distance, and viewcone."""
+"""Histograms for shower and triggered events."""
 
 import logging
 
@@ -10,9 +10,9 @@ from matplotlib.colors import LogNorm
 from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
 
 
-class LimitCalculator:
+class SimtelIOEventHistograms:
     """
-    Compute limits for CORSIKA configuration for energy, radial distance, and viewcone.
+    Generate and fill histograms for shower and triggered events.
 
     Event data is read from the reduced MC event data file.
 
@@ -27,7 +27,7 @@ class LimitCalculator:
     """
 
     def __init__(self, event_data_file, array_name=None, telescope_list=None):
-        """Initialize the LimitCalculator with the given event data file."""
+        """Initialize."""
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
         self.array_name = array_name
@@ -68,28 +68,6 @@ class LimitCalculator:
             "viewcone_radius": None,
         }
 
-    def compute_limits(self, loss_fraction):
-        """
-        Compute the limits for energy, radial distance, and viewcone.
-
-        Parameters
-        ----------
-        loss_fraction : float
-            Fraction of events to be lost.
-
-        Returns
-        -------
-        dict
-            Dictionary containing the computed limits.
-        """
-        self._fill_histograms()
-
-        self.limits["lower_energy_limit"] = self.compute_lower_energy_limit(loss_fraction)
-        self.limits["upper_radius_limit"] = self.compute_upper_radius_limit(loss_fraction)
-        self.limits["viewcone_radius"] = self.compute_viewcone(loss_fraction)
-
-        return self.limits
-
     def _fill_histogram_and_bin_edges(self, name, data, bins, hist1d=True):
         """
         Fill histogram and bin edges and it both to histogram dictionary.
@@ -118,7 +96,7 @@ class LimitCalculator:
                 self.histograms[f"{name}_bin_x_edges"] = x_edges
                 self.histograms[f"{name}_bin_y_edges"] = y_edges
 
-    def _fill_histograms(self):
+    def fill(self):
         """
         Fill histograms with event data.
 
@@ -166,40 +144,6 @@ class LimitCalculator:
                 hist1d=False,
             )
 
-    def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
-        """
-        Compute the limits based on the loss fraction.
-
-        Add or subtract one bin to be on the safe side of the limit.
-
-        Parameters
-        ----------
-        hist : np.ndarray
-            1D histogram array.
-        bin_edges : np.ndarray
-            Array of bin edges.
-        loss_fraction : float
-            Fraction of events to be lost.
-        limit_type : str, optional
-            Type of limit ('lower' or 'upper'). Default is 'lower'.
-
-        Returns
-        -------
-        float
-            Bin edge value corresponding to the threshold.
-        """
-        total_events = np.sum(hist)
-        threshold = (1 - loss_fraction) * total_events
-        if limit_type == "upper":
-            cum = np.cumsum(hist)
-            idx = np.searchsorted(cum, threshold) + 1
-            return bin_edges[min(idx, len(bin_edges) - 1)]
-        if limit_type == "lower":
-            cum = np.cumsum(hist[::-1])
-            idx = np.searchsorted(cum, threshold) + 1
-            return bin_edges[max(len(bin_edges) - 1 - idx, 0)]
-        raise ValueError("limit_type must be 'lower' or 'upper'")
-
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
@@ -208,38 +152,6 @@ class LimitCalculator:
             np.log10(self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value),
             100,
         )
-
-    def compute_lower_energy_limit(self, loss_fraction):
-        """
-        Compute the lower energy limit in TeV based on the event loss fraction.
-
-        Parameters
-        ----------
-        loss_fraction : float
-            Fraction of events to be lost.
-
-        Returns
-        -------
-        astropy.units.Quantity
-            Lower energy limit.
-        """
-        energy_min = (
-            self._compute_limits(
-                self.histograms.get("energy"), self.energy_bins, loss_fraction, limit_type="lower"
-            )
-            * u.TeV
-        )
-        return self._is_close(
-            energy_min,
-            self.file_info["energy_min"].to("TeV") if "energy_min" in self.file_info else None,
-            "Lower energy limit is equal to the minimum energy of",
-        )
-
-    def _is_close(self, value, reference, warning_text):
-        """Check if the value is close to the reference value and log a warning if so."""
-        if reference is not None and np.isclose(value.value, reference.value, rtol=1.0e-2):
-            self._logger.warning(f"{warning_text} {value}.")
-        return value
 
     @property
     def core_distance_bins(self):
@@ -250,37 +162,6 @@ class LimitCalculator:
             100,
         )
 
-    def compute_upper_radius_limit(self, loss_fraction):
-        """
-        Compute the upper radial distance based on the event loss fraction.
-
-        Parameters
-        ----------
-        loss_fraction : float
-            Fraction of events to be lost.
-
-        Returns
-        -------
-        astropy.units.Quantity
-            Upper radial distance in m.
-        """
-        radius_limit = (
-            self._compute_limits(
-                self.histograms.get("core_distance"),
-                self.core_distance_bins,
-                loss_fraction,
-                limit_type="upper",
-            )
-            * u.m
-        )
-        return self._is_close(
-            radius_limit,
-            self.file_info["core_scatter_max"].to("m")
-            if "core_scatter_max" in self.file_info
-            else None,
-            "Upper radius limit is equal to the maximum core scatter distance of",
-        )
-
     @property
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
@@ -288,39 +169,6 @@ class LimitCalculator:
             self.file_info.get("viewcone_min", 0.0 * u.deg).to("deg").value,
             self.file_info.get("viewcone_max", 20.0 * u.deg).to("deg").value,
             100,
-        )
-
-    def compute_viewcone(self, loss_fraction):
-        """
-        Compute the viewcone based on the event loss fraction.
-
-        The shower IDs of triggered events are used to create a mask for the
-        azimuth and altitude of the triggered events. A mapping is created
-        between the triggered events and the simulated events using the shower IDs.
-
-        Parameters
-        ----------
-        loss_fraction : float
-            Fraction of events to be lost.
-
-        Returns
-        -------
-        astropy.units.Quantity
-            Viewcone radius in degrees.
-        """
-        viewcone_limit = (
-            self._compute_limits(
-                self.histograms.get("angular_distance"),
-                self.view_cone_bins,
-                loss_fraction,
-                limit_type="upper",
-            )
-            * u.deg
-        )
-        return self._is_close(
-            viewcone_limit,
-            self.file_info["viewcone_max"].to("deg") if "viewcone_max" in self.file_info else None,
-            "Upper viewcone limit is equal to the maximum viewcone distance of",
         )
 
     def plot_data(self, output_path=None, rebin_factor=2):

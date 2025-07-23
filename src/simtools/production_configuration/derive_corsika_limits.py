@@ -3,13 +3,14 @@
 import datetime
 import logging
 
+import astropy.units as u
 import numpy as np
 from astropy.table import Column, Table
 
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.corsika_limit_calculator import LimitCalculator
+from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
 
 _logger = logging.getLogger(__name__)
 
@@ -59,6 +60,8 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     """
     Compute limits for a given event data file and telescope configuration.
 
+    Compute limits for energy, radial distance, and viewcone.
+
     Parameters
     ----------
     file_path : str
@@ -77,11 +80,19 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     dict
         Dictionary containing the computed limits and metadata.
     """
-    calculator = LimitCalculator(file_path, array_name=array_name, telescope_list=telescope_ids)
-    limits = calculator.compute_limits(loss_fraction)
+    histograms = SimtelIOEventHistograms(
+        file_path, array_name=array_name, telescope_list=telescope_ids
+    )
+    histograms.fill()
+
+    limits = {
+        "lower_energy_limit": compute_lower_energy_limit(histograms, loss_fraction),
+        "upper_radius_limit": compute_upper_radius_limit(histograms, loss_fraction),
+        "viewcone_radius": compute_viewcone(histograms, loss_fraction),
+    }
 
     if plot_histograms:
-        calculator.plot_data(io_handler.IOHandler().get_output_directory())
+        histograms.plot_data(io_handler.IOHandler().get_output_directory())
 
     return limits
 
@@ -225,3 +236,145 @@ def _read_array_layouts_from_db(layouts, site, model_version, db_config):
     for layout_name in layout_names:
         layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
     return layout_dict
+
+
+def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
+    """
+    Compute the limits based on the loss fraction.
+
+    Add or subtract one bin to be on the safe side of the limit.
+
+    Parameters
+    ----------
+    hist : np.ndarray
+        1D histogram array.
+    bin_edges : np.ndarray
+        Array of bin edges.
+    loss_fraction : float
+        Fraction of events to be lost.
+    limit_type : str, optional
+        Type of limit ('lower' or 'upper'). Default is 'lower'.
+
+    Returns
+    -------
+    float
+        Bin edge value corresponding to the threshold.
+    """
+    total_events = np.sum(hist)
+    threshold = (1 - loss_fraction) * total_events
+    if limit_type == "upper":
+        cum = np.cumsum(hist)
+        idx = np.searchsorted(cum, threshold) + 1
+        return bin_edges[min(idx, len(bin_edges) - 1)]
+    if limit_type == "lower":
+        cum = np.cumsum(hist[::-1])
+        idx = np.searchsorted(cum, threshold) + 1
+        return bin_edges[max(len(bin_edges) - 1 - idx, 0)]
+    raise ValueError("limit_type must be 'lower' or 'upper'")
+
+
+def compute_lower_energy_limit(histograms, loss_fraction):
+    """
+    Compute the lower energy limit in TeV based on the event loss fraction.
+
+    Parameters
+    ----------
+    loss_fraction : float
+        Fraction of events to be lost.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Lower energy limit.
+    """
+    energy_min = (
+        _compute_limits(
+            histograms.histograms("energy"),
+            histograms.energy_bins,
+            loss_fraction,
+            limit_type="lower",
+        )
+        * u.TeV
+    )
+    return _is_close(
+        energy_min,
+        histograms.file_info["energy_min"].to("TeV")
+        if "energy_min" in histograms.file_info
+        else None,
+        "Lower energy limit is equal to the minimum energy of",
+    )
+
+
+def _is_close(value, reference, warning_text):
+    """Check if the value is close to the reference value and log a warning if so."""
+    if reference is not None and np.isclose(value.value, reference.value, rtol=1.0e-2):
+        _logger.warning(f"{warning_text} {value}.")
+    return value
+
+
+def compute_upper_radius_limit(histograms, loss_fraction):
+    """
+    Compute the upper radial distance based on the event loss fraction.
+
+    Parameters
+    ----------
+    loss_fraction : float
+        Fraction of events to be lost.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Upper radial distance in m.
+    """
+    radius_limit = (
+        _compute_limits(
+            histograms.histograms.get("core_distance"),
+            histograms.core_distance_bins,
+            loss_fraction,
+            limit_type="upper",
+        )
+        * u.m
+    )
+    return _is_close(
+        radius_limit,
+        histograms.file_info["core_scatter_max"].to("m")
+        if "core_scatter_max" in histograms.file_info
+        else None,
+        "Upper radius limit is equal to the maximum core scatter distance of",
+    )
+
+
+def compute_viewcone(histograms, loss_fraction):
+    """
+    Compute the viewcone based on the event loss fraction.
+
+    The shower IDs of triggered events are used to create a mask for the
+    azimuth and altitude of the triggered events. A mapping is created
+    between the triggered events and the simulated events using the shower IDs.
+
+    Parameters
+    ----------
+    loss_fraction : float
+        Fraction of events to be lost.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Viewcone radius in degrees.
+    """
+    viewcone_limit = (
+        _compute_limits(
+            histograms.histograms.get("angular_distance"),
+            histograms.view_cone_bins,
+            loss_fraction,
+            limit_type="upper",
+        )
+        * u.deg
+    )
+    return _is_close(
+        viewcone_limit,
+        histograms.file_info["viewcone_max"].to("deg")
+        if "viewcone_max" in histograms.file_info
+        else None,
+        "Upper viewcone limit is equal to the maximum viewcone distance of",
+    )
