@@ -33,40 +33,10 @@ class SimtelIOEventHistograms:
         self.array_name = array_name
         self.telescope_list = telescope_list
 
-        self.limits = None
         self.histograms = {}
         self.file_info = {}
 
         self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=telescope_list)
-
-    def _prepare_limit_data(self, file_info_table):
-        """
-        Prepare result data structure for limit calculation.
-
-        Contains both the point in parameter space and the limits derived for that point.
-
-        Parameters
-        ----------
-        file_info_table : astropy.table.Table
-            Table containing file information.
-
-        Returns
-        -------
-        dict
-            Dictionary containing limits (not yet calculated) and parameter space information.
-        """
-        self.file_info = self.reader.get_reduced_simulation_file_info(file_info_table)
-        return {
-            "primary_particle": self.file_info["primary_particle"],
-            "zenith": self.file_info["zenith"],
-            "azimuth": self.file_info["azimuth"],
-            "nsb_level": self.file_info["nsb_level"],
-            "array_name": self.array_name,
-            "telescope_ids": self.telescope_list,
-            "lower_energy_limit": None,
-            "upper_radius_limit": None,
-            "viewcone_radius": None,
-        }
 
     def _fill_histogram_and_bin_edges(self, name, data, bins, hist1d=True):
         """
@@ -102,13 +72,16 @@ class SimtelIOEventHistograms:
 
         Involves looping over all event data, and therefore is the slowest part of the
         limit calculation. Adds the histograms to the histogram dictionary.
+
+        Assume that all event data files are generated with similar configurations
+        (self.file_info contains the latest file info).
         """
+        _file_info_table = None
         for data_set in self.reader.data_sets:
             self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
-            file_info, _, event_data, triggered_data = self.reader.read_event_data(
+            _file_info_table, _, event_data, triggered_data = self.reader.read_event_data(
                 self.event_data_file, table_name_map=data_set
             )
-            self.limits = self.limits if self.limits else self._prepare_limit_data(file_info)
 
             self._fill_histogram_and_bin_edges(
                 "energy", event_data.simulated_energy, self.energy_bins
@@ -144,9 +117,18 @@ class SimtelIOEventHistograms:
                 hist1d=False,
             )
 
+        _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
+        self.file_info = {
+            "energy_min": _file_info_table["energy_min"].to("TeV"),
+            "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
+            "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
+        }
+
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
+        if "energy_bin_edges" in self.histograms:
+            return self.histograms["energy_bin_edges"]
         return np.logspace(
             np.log10(self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value),
             np.log10(self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value),
@@ -156,6 +138,8 @@ class SimtelIOEventHistograms:
     @property
     def core_distance_bins(self):
         """Return bins for the core distance histogram."""
+        if "core_distance_bin_edges" in self.histograms:
+            return self.histograms["core_distance_bin_edges"]
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
             self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
@@ -165,13 +149,15 @@ class SimtelIOEventHistograms:
     @property
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
+        if "viewcone_bin_edges" in self.histograms:
+            return self.histograms["viewcone_bin_edges"]
         return np.linspace(
             self.file_info.get("viewcone_min", 0.0 * u.deg).to("deg").value,
             self.file_info.get("viewcone_max", 20.0 * u.deg).to("deg").value,
             100,
         )
 
-    def plot_data(self, output_path=None, rebin_factor=2):
+    def plot_data(self, output_path=None, limits=None, rebin_factor=2):
         """
         Histogram plotting.
 
@@ -179,6 +165,11 @@ class SimtelIOEventHistograms:
         ----------
         output_path: Path or str, optional
             Directory to save plots. If None, plots will be displayed.
+        limits: dict, optional
+            Dictionary containing limits for plotting. Keys can include:
+            - "upper_radius_limit": Upper limit for core distance
+            - "lower_energy_limit": Lower limit for energy
+            - "viewcone_radius": Radius for the viewcone
         rebin_factor: int, optional
             Factor by which to reduce the number of bins in 2D histograms for rebinned plots.
             Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.
@@ -225,6 +216,8 @@ class SimtelIOEventHistograms:
         angular_distance_hist = self.histograms.get("angular_distance")
         cumulative_angular_distance = self._calculate_cumulative_histogram(angular_distance_hist)
 
+        upper_radius_limit, lower_energy_limit, viewcone_radius = self._get_limits(limits)
+
         plots = {
             "core_vs_energy": {
                 "data": self.histograms.get("core_vs_energy"),
@@ -239,10 +232,7 @@ class SimtelIOEventHistograms:
                     "y": energy_label,
                     "title": "Triggered events: core distance vs energy",
                 },
-                "lines": {
-                    "x": self.limits["upper_radius_limit"].value,
-                    "y": self.limits["lower_energy_limit"].value,
-                },
+                "lines": {"x": upper_radius_limit, "y": lower_energy_limit},
                 "scales": {"y": "log"},
                 "colorbar_label": event_count_label,
                 "filename": "core_vs_energy_distribution",
@@ -258,7 +248,7 @@ class SimtelIOEventHistograms:
                     "title": "Triggered events: energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
-                "lines": {"x": self.limits["lower_energy_limit"].value},
+                "lines": {"x": lower_energy_limit},
                 "filename": "energy_distribution",
             },
             "energy_distribution_cumulative": {
@@ -272,7 +262,7 @@ class SimtelIOEventHistograms:
                     "title": "Triggered events: cumulative energy distribution",
                 },
                 "scales": {"x": "log", "y": "log"},
-                "lines": {"x": self.limits["lower_energy_limit"].value},
+                "lines": {"x": lower_energy_limit},
                 "filename": "energy_distribution_cumulative",
             },
             "core_distance": {
@@ -285,7 +275,7 @@ class SimtelIOEventHistograms:
                     "y": event_count_label,
                     "title": "Triggered events: core distance distribution",
                 },
-                "lines": {"x": self.limits["upper_radius_limit"].value},
+                "lines": {"x": upper_radius_limit},
                 "filename": "core_distance_distribution",
             },
             "core_distance_cumulative": {
@@ -298,7 +288,7 @@ class SimtelIOEventHistograms:
                     "y": cumulative_prefix + event_count_label,
                     "title": "Triggered events: cumulative core distance distribution",
                 },
-                "lines": {"x": self.limits["upper_radius_limit"].value},
+                "lines": {"x": upper_radius_limit},
                 "filename": "core_distance_cumulative_distribution",
             },
             "core_xy": {
@@ -316,7 +306,7 @@ class SimtelIOEventHistograms:
                 },
                 "colorbar_label": event_count_label,
                 "lines": {
-                    "r": self.limits["upper_radius_limit"].value,
+                    "r": upper_radius_limit,
                 },
                 "filename": "core_xy_distribution",
             },
@@ -330,7 +320,7 @@ class SimtelIOEventHistograms:
                     "y": event_count_label,
                     "title": "Triggered events: angular distance distribution",
                 },
-                "lines": {"x": self.limits["viewcone_radius"].value},
+                "lines": {"x": viewcone_radius},
                 "filename": "angular_distance_distribution",
             },
             "angular_distance_cumulative": {
@@ -343,7 +333,7 @@ class SimtelIOEventHistograms:
                     "y": cumulative_prefix + event_count_label,
                     "title": "Triggered events: cumulative angular distance distribution",
                 },
-                "lines": {"x": self.limits["viewcone_radius"].value},
+                "lines": {"x": viewcone_radius},
                 "filename": "angular_distance_cumulative_distribution",
             },
             "angular_distance_vs_energy": {
@@ -360,8 +350,8 @@ class SimtelIOEventHistograms:
                     "title": "Triggered events: angular distance distance vs energy",
                 },
                 "lines": {
-                    "x": self.limits["viewcone_radius"].value,
-                    "y": self.limits["lower_energy_limit"].value,
+                    "x": viewcone_radius,
+                    "y": lower_energy_limit,
                 },
                 "scales": {"y": "log"},
                 "colorbar_label": event_count_label,
@@ -381,8 +371,8 @@ class SimtelIOEventHistograms:
                     "title": "Triggered events: fraction of events by angular distance vs energy",
                 },
                 "lines": {
-                    "x": self.limits["viewcone_radius"].value,
-                    "y": self.limits["lower_energy_limit"].value,
+                    "x": viewcone_radius,
+                    "y": lower_energy_limit,
                 },
                 "scales": {"y": "log"},
                 "colorbar_label": "Fraction of events",
@@ -402,8 +392,8 @@ class SimtelIOEventHistograms:
                     "title": "Triggered events: fraction of events by core distance vs energy",
                 },
                 "lines": {
-                    "x": self.limits["upper_radius_limit"].value,
-                    "y": self.limits["lower_energy_limit"].value,
+                    "x": upper_radius_limit,
+                    "y": lower_energy_limit,
                 },
                 "scales": {"y": "log"},
                 "colorbar_label": "Fraction of events",
@@ -422,6 +412,23 @@ class SimtelIOEventHistograms:
 
             if self._should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
                 self._create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
+
+    def _get_limits(self, limits):
+        """Extract limits from the provided dictionary for plotting."""
+        upper_radius_limit = None
+        lower_energy_limit = None
+        viewcone_radius = None
+        if limits:
+            upper_radius_limit = (
+                limits["upper_radius_limit"].value if "upper_radius_limit" in limits else None
+            )
+            lower_energy_limit = (
+                limits["lower_energy_limit"].value if "lower_energy_limit" in limits else None
+            )
+            viewcone_radius = (
+                limits["viewcone_radius"].value if "viewcone_radius" in limits else None
+            )
+        return upper_radius_limit, lower_energy_limit, viewcone_radius
 
     def _build_plot_filename(self, base_filename, array_name=None):
         """
