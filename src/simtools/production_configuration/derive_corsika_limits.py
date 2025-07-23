@@ -92,7 +92,10 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     }
 
     if plot_histograms:
-        histograms.plot_data(io_handler.IOHandler().get_output_directory())
+        histograms.plot_data(
+            output_path=io_handler.IOHandler().get_output_directory(),
+            limits=limits,
+        )
 
     return limits
 
@@ -289,13 +292,14 @@ def compute_lower_energy_limit(histograms, loss_fraction):
     """
     energy_min = (
         _compute_limits(
-            histograms.histograms("energy"),
+            histograms.histograms.get("energy"),
             histograms.energy_bins,
             loss_fraction,
             limit_type="lower",
         )
         * u.TeV
     )
+
     return _is_close(
         energy_min,
         histograms.file_info["energy_min"].to("TeV")
