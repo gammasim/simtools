@@ -1,10 +1,11 @@
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 
+import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
 from simtools.production_configuration.derive_corsika_limits import (
     _create_results_table,
-    _process_file,
     _read_array_layouts_from_db,
     _round_value,
     generate_corsika_limits_grid,
@@ -43,6 +44,19 @@ def mock_results():
     ]
 
 
+@pytest.fixture
+def mock_reader(mocker):
+    """Mock SimtelIOEventReader."""
+    # Since SimtelIOEventReader doesn't exist, we don't need this fixture
+    return
+
+
+@pytest.fixture
+def hdf5_file_name(tmp_path):
+    """Create temporary HDF5 file name."""
+    return str(tmp_path / "test_file.h5")
+
+
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     """Test generate_corsika_limits_grid function."""
     # Mock dependencies
@@ -69,18 +83,45 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
 
 def test_process_file(mocker):
     """Test _process_file function."""
-    mock_calculator = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.LimitCalculator"
+    # Mock the SimtelIOEventHistograms class
+    mock_histograms = mocker.MagicMock()
+    mock_histogram_class = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms"
     )
-    mock_calculator.return_value.compute_limits.return_value = {"test": "limits"}
-    mock_calculator.return_value.plot_data.return_value = None
+    mock_histogram_class.return_value = mock_histograms
+
+    # Mock the individual limit computation functions
+    mock_energy_limit = 1.0 * u.TeV
+    mock_radius_limit = 100.0 * u.m
+    mock_viewcone_limit = 2.0 * u.deg
+
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit",
+        return_value=mock_energy_limit,
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit",
+        return_value=mock_radius_limit,
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_viewcone",
+        return_value=mock_viewcone_limit,
+    )
 
     mocker.patch("simtools.io.io_handler.IOHandler")
 
-    result = _process_file("test.fits", [1, 2], 0.2, True, "array_name")
+    result = derive_corsika_limits._process_file("test.fits", "array_name", [1, 2], 0.2, False)
 
-    assert result == {"test": "limits"}
-    mock_calculator.return_value.plot_data.assert_called_once()
+    expected_result = {
+        "lower_energy_limit": mock_energy_limit,
+        "upper_radius_limit": mock_radius_limit,
+        "viewcone_radius": mock_viewcone_limit,
+    }
+    assert result == expected_result
+    mock_histogram_class.assert_called_once_with(
+        "test.fits", array_name="array_name", telescope_list=[1, 2]
+    )
+    mock_histograms.fill.assert_called_once()
 
 
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_path):
@@ -216,3 +257,214 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     )
     assert mock_process.call_count == 2  # 2 layouts
     assert mock_write.call_count == 1
+
+
+def test_compute_limits_lower():
+    hist = np.array([1, 2, 3, 4, 5])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+    loss_fraction = 0.2
+
+    with pytest.raises(ValueError, match="limit_type must be 'lower' or 'upper'"):
+        derive_corsika_limits._compute_limits(hist, bin_edges, loss_fraction, limit_type="blabla")
+
+    result = derive_corsika_limits._compute_limits(
+        hist, bin_edges, loss_fraction, limit_type="lower"
+    )
+    assert result == 2
+
+
+def test_compute_limits_upper():
+    hist = np.array([5, 4, 3, 2, 1])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+    loss_fraction = 0.2
+
+    result = derive_corsika_limits._compute_limits(
+        hist, bin_edges, loss_fraction, limit_type="upper"
+    )
+    assert result == 3
+
+
+def test_compute_limits_default_type():
+    hist = np.array([1, 2, 3, 4, 5])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+    loss_fraction = 0.2
+
+    result = derive_corsika_limits._compute_limits(hist, bin_edges, loss_fraction)
+    assert result == 2
+
+
+def test_compute_viewcone(hdf5_file_name, mocker):
+    """Test compute_viewcone function with mocked histograms."""
+    mock_hist = np.array([10, 8, 6, 4, 2])
+    mock_bins = np.linspace(0, 20.0, 6)
+
+    # Mock the histograms object
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.histograms = {"angular_distance": mock_hist}
+    mock_histograms.view_cone_bins = mock_bins
+
+    result = derive_corsika_limits.compute_viewcone(mock_histograms, 0.2)
+
+    assert isinstance(result, u.Quantity)
+    assert result.unit == u.deg
+    assert result.value > 0
+
+    expected = (
+        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.deg
+    )
+    assert result.value == pytest.approx(expected.value)
+
+
+def test_compute_lower_energy_limit(hdf5_file_name, mocker):
+    """Test compute_lower_energy_limit function with mocked histograms."""
+    mock_hist = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    mock_bins = np.logspace(-3, 3, 6)
+
+    # Mock the histograms object
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.histograms = {"energy": mock_hist}
+    mock_histograms.energy_bins = mock_bins
+    mock_histograms.file_info = {}
+
+    result = derive_corsika_limits.compute_lower_energy_limit(mock_histograms, 0.2)
+
+    assert isinstance(result, u.Quantity)
+    assert result.unit == u.TeV
+    assert result.value > 0
+
+    expected = (
+        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="lower") * u.TeV
+    )
+    assert result == expected
+
+
+def test_compute_upper_radius_limit(hdf5_file_name, mocker):
+    """Test compute_upper_radius_limit function with mocked histograms."""
+    mock_hist = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+    mock_bins = np.linspace(0, 500, 6)
+
+    # Mock the histograms object
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.histograms = {"core_distance": mock_hist}
+    mock_histograms.core_distance_bins = mock_bins
+    mock_histograms.file_info = {}
+
+    result = derive_corsika_limits.compute_upper_radius_limit(mock_histograms, 0.2)
+
+    assert isinstance(result, u.Quantity)
+    assert result.unit == u.m
+    assert result.value > 0
+
+    expected = (
+        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.m
+    )
+    assert result == expected
+
+
+def test_is_close(caplog):
+    """Test _is_close function behavior."""
+    test_message = "Test message"
+
+    with caplog.at_level("WARNING"):
+        derive_corsika_limits._is_close(1.0 * u.m, None, test_message)
+        assert test_message not in caplog.text
+
+        derive_corsika_limits._is_close(1.0 * u.m, 25.0 * u.m, test_message)
+        assert test_message not in caplog.text
+
+        result = derive_corsika_limits._is_close(1.0 * u.m, 1.0 * u.m, test_message)
+        assert test_message in caplog.text
+        assert result.value == pytest.approx(1.0)
+
+
+def test_process_file_with_mocked_histograms(mocker):
+    """Test _process_file with mocked SimtelIOEventHistograms."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.fill.return_value = None
+
+    mock_histogram_class = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms",
+        return_value=mock_histograms,
+    )
+
+    mock_compute_lower_energy_limit = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit",
+        return_value=1.0 * u.TeV,
+    )
+    mock_compute_upper_radius_limit = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit",
+        return_value=100.0 * u.m,
+    )
+    mock_compute_viewcone = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_viewcone",
+        return_value=2.0 * u.deg,
+    )
+
+    result = derive_corsika_limits._process_file(
+        file_path="mock_file.fits",
+        array_name="MockArray",
+        telescope_ids=[1, 2],
+        loss_fraction=0.2,
+        plot_histograms=False,
+    )
+
+    assert result == {
+        "lower_energy_limit": 1.0 * u.TeV,
+        "upper_radius_limit": 100.0 * u.m,
+        "viewcone_radius": 2.0 * u.deg,
+    }
+
+    mock_histogram_class.assert_called_once_with(
+        "mock_file.fits", array_name="MockArray", telescope_list=[1, 2]
+    )
+    mock_histograms.fill.assert_called_once()
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
+    mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2)
+    mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
+
+
+def test_process_file_with_plot_histograms(mocker):
+    """Test _process_file with plot_histograms=True."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.fill.return_value = None
+    mock_histograms.plot_data.return_value = None
+
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms",
+        return_value=mock_histograms,
+    )
+
+    mock_io_handler = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io_handler.return_value.get_output_directory.return_value = "mock_output_dir"
+
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit",
+        return_value=1.0 * u.TeV,
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit",
+        return_value=100.0 * u.m,
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.compute_viewcone",
+        return_value=2.0 * u.deg,
+    )
+
+    derive_corsika_limits._process_file(
+        file_path="mock_file.fits",
+        array_name="MockArray",
+        telescope_ids=[1, 2],
+        loss_fraction=0.2,
+        plot_histograms=True,
+    )
+
+    mock_histograms.plot_data.assert_called_once_with(
+        output_path="mock_output_dir",
+        limits={
+            "lower_energy_limit": 1.0 * u.TeV,
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 2.0 * u.deg,
+        },
+    )

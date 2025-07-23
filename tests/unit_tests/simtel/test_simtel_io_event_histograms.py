@@ -621,3 +621,120 @@ def test_rebin_2d_histogram(mock_histograms):
     assert np.array_equal(rebinned_hist, expected_hist)
     assert np.array_equal(rebinned_x_bins, expected_x_bins)
     assert np.array_equal(rebinned_y_bins, expected_y_bins)
+
+
+def test_energy_bins_default(mock_reader, hdf5_file_name):
+    """Test energy_bins property with default values."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {}
+
+    bins = histograms.energy_bins
+
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == pytest.approx(1.0e-3)
+    assert bins[-1] == pytest.approx(1.0e3)
+
+
+def test_energy_bins_with_file_info(mock_reader, hdf5_file_name):
+    """Test energy_bins property with file info values."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.file_info = {
+        "energy_min": 1.0 * u.TeV,
+        "energy_max": 10.0 * u.TeV,
+    }
+
+    bins = histograms.energy_bins
+
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == pytest.approx(1.0)
+    assert bins[-1] == pytest.approx(10.0)
+
+
+def test_energy_bins_with_existing_edges(mock_reader, hdf5_file_name):
+    """Test energy_bins property when bin edges already exist."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.histograms["energy_bin_edges"] = np.array([0.1, 1.0, 10.0])
+
+    bins = histograms.energy_bins
+
+    assert isinstance(bins, np.ndarray)
+    assert np.array_equal(bins, np.array([0.1, 1.0, 10.0]))
+
+
+def test_core_distance_bins_default(mock_reader, hdf5_file_name):
+    """Test core_distance_bins with default file_info values."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {}
+
+    bins = histograms.core_distance_bins
+
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == 0.0
+    assert bins[-1] == 1.0e5
+
+
+def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
+    """Test core_distance_bins with file_info values."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.file_info = {
+        "core_scatter_min": 10.0 * u.m,
+        "core_scatter_max": 500.0 * u.m,
+    }
+
+    bins = histograms.core_distance_bins
+
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == 10.0
+    assert bins[-1] == 500.0
+
+
+def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
+    """Test core_distance_bins when bin edges already exist in histograms."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    mock_edges = np.linspace(0, 1000, 50)
+    histograms.histograms["core_distance_bin_edges"] = mock_edges
+
+    bins = histograms.core_distance_bins
+
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 50
+    assert np.array_equal(bins, mock_edges)
+
+
+def test_view_cone_bins_default(mock_reader, hdf5_file_name):
+    """Test default view_cone_bins when no histogram data is present."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.file_info = {
+        "viewcone_min": 0.0 * u.deg,
+        "viewcone_max": 10.0 * u.deg,
+    }
+    bins = histograms.view_cone_bins
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == 0.0
+    assert bins[-1] == 10.0
+
+
+def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
+    """Test view_cone_bins when histogram data is already present."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    mock_bins = np.linspace(0.0, 5.0, 50)
+    histograms.histograms["viewcone_bin_edges"] = mock_bins
+    bins = histograms.view_cone_bins
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 50
+    assert np.array_equal(bins, mock_bins)
+
+
+def test_view_cone_bins_no_file_info(mock_reader, hdf5_file_name):
+    """Test view_cone_bins when file_info is empty."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    bins = histograms.view_cone_bins
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == 0.0
+    assert bins[-1] == 20.0
