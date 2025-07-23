@@ -76,12 +76,17 @@ class SimtelIOEventHistograms:
         Assume that all event data files are generated with similar configurations
         (self.file_info contains the latest file info).
         """
-        _file_info_table = None
         for data_set in self.reader.data_sets:
             self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
             _file_info_table, _, event_data, triggered_data = self.reader.read_event_data(
                 self.event_data_file, table_name_map=data_set
             )
+            _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
+            self.file_info = {
+                "energy_min": _file_info_table["energy_min"].to("TeV"),
+                "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
+                "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
+            }
 
             self._fill_histogram_and_bin_edges(
                 "energy", event_data.simulated_energy, self.energy_bins
@@ -116,13 +121,6 @@ class SimtelIOEventHistograms:
                 [self.view_cone_bins, self.energy_bins],
                 hist1d=False,
             )
-
-        _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
-        self.file_info = {
-            "energy_min": _file_info_table["energy_min"].to("TeV"),
-            "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
-            "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
-        }
 
     @property
     def energy_bins(self):
