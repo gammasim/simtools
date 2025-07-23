@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from simtools.testing import configuration, helpers, validate_output
+from simtools.testing import configuration, helpers, log_inspector, validate_output
 
 logger = logging.getLogger()
 load_dotenv(".env")
@@ -71,6 +71,8 @@ def test_applications_from_config(tmp_test_directory, config, request):
     result = subprocess.run(cmd, shell=True, input="y\n", capture_output=True, text=True)
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     assert result.returncode == 0, msg
+
+    assert log_inspector.inspect([result.stdout, result.stderr])
 
     validate_output.validate_application_output(
         tmp_config,
