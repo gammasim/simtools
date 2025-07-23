@@ -13,7 +13,7 @@ ERROR_PATTERNS = [
     re.compile(r"exception", re.IGNORECASE),
     re.compile(r"traceback", re.IGNORECASE),
     re.compile(r"failed", re.IGNORECASE),
-    re.compile(r"runtimewarning", re.IGNORECASE),
+    re.compile(r"runtime\s*warning", re.IGNORECASE),
 ]
 
 
