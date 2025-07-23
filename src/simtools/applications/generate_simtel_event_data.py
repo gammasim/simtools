@@ -36,7 +36,7 @@ The output consists of an HDF5 or FITS file containing the following tables:
 +-------------------+---------+-----------------------------------------------+
 | azimuth           | float32 | Azimuth angle (deg)                           |
 +-------------------+---------+-----------------------------------------------+
-| nsb_level         | float64 | Night sky background level (photons/deg^2/ns) |
+| nsb_level         | float64 | Night sky background level (factor to dark)   |
 +-------------------+---------+-----------------------------------------------+
 
 **SHOWERS**
