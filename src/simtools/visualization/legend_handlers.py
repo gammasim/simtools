@@ -1,7 +1,5 @@
 """Helper functions for legend handlers used for plotting."""
 
-from enum import Enum
-
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
@@ -46,18 +44,6 @@ def calculate_center(handlebox, width_factor=3, height_factor=3):
     x0 = handlebox.xdescent + handlebox.width / width_factor
     y0 = handlebox.ydescent + handlebox.height / height_factor
     return x0, y0
-
-
-class TelescopeType(str, Enum):
-    """Enumeration for telescope types."""
-
-    LST = "LST"
-    MST = "MST"
-    SST = "SST"
-    SCT = "SCT"
-    HESS = "HESS"
-    MAGIC = "MAGIC"
-    VERITAS = "VERITAS"
 
 
 # Object classes for legend mapping
