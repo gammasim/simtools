@@ -404,7 +404,7 @@ def test_validate_application_output_with_reference_output_file(
 
     validate_output.validate_application_output(config, "6.0.0")
     mock_validate_simtel_cfg_files.assert_called_once()
-    mock_validate_model_parameter_json_file.called_one()
+    mock_validate_model_parameter_json_file.assert_called_once()
 
 
 def test_validate_application_output_with_assertion_error(output_path):
