@@ -22,7 +22,9 @@ def test_inspect_no_issues(mock_logger):
 
 def test_inspect_with_errors(mock_logger):
     log_text = [
-        "INFO:: This is an informational message.\nERROR:: An error occurred in the system.\nRuntimeWarning: Something went wrong."
+        "INFO:: This is an informational message.",
+        "ERROR:: An error occurred in the system.",
+        "RuntimeWarning: Something went wrong."
     ]
     result = inspect(log_text)
     assert result is False
