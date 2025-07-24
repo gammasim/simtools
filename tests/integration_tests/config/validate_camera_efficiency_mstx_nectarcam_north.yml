@@ -6,6 +6,7 @@ applications:
     output_path: simtools-output
     site: North
     telescope: MSTx-NectarCam
+    log_level: debug
   integration_tests:
   - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.pdf
   - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.png
