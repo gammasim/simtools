@@ -9,7 +9,7 @@ from astropy.table import Column, Table
 
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
-from simtools.model.site_model import SiteModel
+from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
 
 _logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
         Database configuration dictionary.
     """
     if args_dict.get("array_layout_name"):
-        telescope_configs = _read_array_layouts_from_db(
+        telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
             args_dict.get("site"),
             args_dict.get("model_version"),
@@ -211,34 +211,6 @@ def _create_table_columns(cols, columns, units):
             col = Column(data=col_data, name=k, unit=units.get(k))
         table_cols.append(col)
     return table_cols
-
-
-def _read_array_layouts_from_db(layouts, site, model_version, db_config):
-    """
-    Read array layouts from the database.
-
-    Parameters
-    ----------
-    layouts : list[str]
-        List of layout names to read. If "all", read all available layouts.
-    site : str
-        Site name for the array layouts.
-    model_version : str
-        Model version for the array layouts.
-    db_config : dict
-        Database configuration dictionary.
-
-    Returns
-    -------
-    dict
-        Dictionary mapping layout names to telescope IDs.
-    """
-    site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
-    layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
-    layout_dict = {}
-    for layout_name in layout_names:
-        layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
-    return layout_dict
 
 
 def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
