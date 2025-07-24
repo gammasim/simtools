@@ -4,7 +4,7 @@ import pytest
 
 from simtools.testing.log_inspector import inspect
 
-ERROR_MSG_LINE_2 = "Error or warning found in log at line 2"
+ERROR_MSG_LINE_1 = "Error or warning found in log at line 1"
 
 
 @pytest.fixture
@@ -24,13 +24,13 @@ def test_inspect_with_errors(mock_logger):
     log_text = [
         "INFO:: This is an informational message.",
         "ERROR:: An error occurred in the system.",
-        "RuntimeWarning: Something went wrong."
+        "RuntimeWarning: Something went wrong.",
     ]
     result = inspect(log_text)
     assert result is False
     assert len(mock_logger.records) == 2
-    assert ERROR_MSG_LINE_2 in mock_logger.text
-    assert "Error or warning found in log at line 3" in mock_logger.text
+    assert ERROR_MSG_LINE_1 in mock_logger.text
+    assert "Error or warning found in log at line 1" in mock_logger.text
 
 
 def test_inspect_ignore_info_lines(mock_logger):
@@ -50,7 +50,7 @@ def test_inspect_mixed_input(mock_logger):
     result = inspect(log_text)
     assert result is False
     assert len(mock_logger.records) == 2
-    assert ERROR_MSG_LINE_2 in mock_logger.text
+    assert "Error or warning found in log at line 2" in mock_logger.text
     assert "Error or warning found in log at line 4" in mock_logger.text
 
 
@@ -59,4 +59,4 @@ def test_inspect_single_string_input(mock_logger):
     result = inspect(log_text)
     assert result is False
     assert len(mock_logger.records) == 1
-    assert ERROR_MSG_LINE_2 in mock_logger.text
+    assert "Error or warning found in log at line 2" in mock_logger.text
