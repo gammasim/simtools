@@ -147,6 +147,8 @@ class SimtelIOEventHistograms:
             for name, data, bins, hist1d in hist_defs:
                 self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
 
+            break
+
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
@@ -197,6 +199,55 @@ class SimtelIOEventHistograms:
             Factor by which to reduce the number of bins in 2D histograms for rebinned plots.
             Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.
         """
+        self._logger.info(f"Plotting histograms written to {output_path}")
+
+        # Calculate cumulative histograms
+        cumulative_data = self._calculate_cumulative_data()
+
+        # Get plotting limits
+        upper_radius_limit, lower_energy_limit, viewcone_radius = self._get_limits(limits)
+
+        # Generate all plot configurations
+        plots = self._generate_plot_configurations(
+            cumulative_data, upper_radius_limit, lower_energy_limit, viewcone_radius
+        )
+
+        # Execute plotting loop
+        self._execute_plotting_loop(plots, output_path, rebin_factor)
+
+    def _calculate_cumulative_data(self):
+        """Calculate all cumulative histograms needed for plotting."""
+        angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
+        normalized_cumulative_angular_vs_energy = self._calculate_cumulative_histogram(
+            angular_dist_vs_energy, axis=0, normalize=True
+        )
+
+        core_vs_energy = self.histograms.get("core_vs_energy")
+        normalized_cumulative_core_vs_energy = self._calculate_cumulative_histogram(
+            core_vs_energy, axis=0, normalize=True
+        )
+
+        energy_hist = self.histograms.get("energy")
+        cumulative_energy = self._calculate_cumulative_histogram(energy_hist, reverse=True)
+
+        core_distance_hist = self.histograms.get("core_distance")
+        cumulative_core_distance = self._calculate_cumulative_histogram(core_distance_hist)
+
+        angular_distance_hist = self.histograms.get("angular_distance")
+        cumulative_angular_distance = self._calculate_cumulative_histogram(angular_distance_hist)
+
+        return {
+            "normalized_cumulative_angular_vs_energy": normalized_cumulative_angular_vs_energy,
+            "normalized_cumulative_core_vs_energy": normalized_cumulative_core_vs_energy,
+            "cumulative_energy": cumulative_energy,
+            "cumulative_core_distance": cumulative_core_distance,
+            "cumulative_angular_distance": cumulative_angular_distance,
+        }
+
+    def _generate_plot_configurations(
+        self, cumulative_data, upper_radius_limit, lower_energy_limit, viewcone_radius
+    ):
+        """Generate plot configurations for all histogram types."""
         # Plot label constants
         core_distance_label = "Core Distance [m]"
         energy_label = "Energy [TeV]"
@@ -218,233 +269,345 @@ class SimtelIOEventHistograms:
         }
         hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
 
-        self._logger.info(f"Plotting histograms written to {output_path}")
+        plots = {}
 
-        angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
-        normalized_cumulative_angular_vs_energy = self._calculate_cumulative_histogram(
-            angular_dist_vs_energy, axis=0, normalize=True
+        # Generate 1D histogram plots
+        plots.update(
+            self._generate_1d_plots(
+                hist_1d_params,
+                hist_1d_cumulative_params,
+                cumulative_data,
+                energy_label,
+                core_distance_label,
+                pointing_direction_label,
+                event_count_label,
+                cumulative_prefix,
+                upper_radius_limit,
+                lower_energy_limit,
+                viewcone_radius,
+            )
         )
 
-        core_vs_energy = self.histograms.get("core_vs_energy")
-        normalized_cumulative_core_vs_energy = self._calculate_cumulative_histogram(
-            core_vs_energy, axis=0, normalize=True
+        # Generate 2D histogram plots
+        plots.update(
+            self._generate_2d_plots(
+                hist_2d_params,
+                hist_2d_equal_params,
+                hist_2d_normalized_params,
+                cumulative_data,
+                energy_label,
+                core_distance_label,
+                pointing_direction_label,
+                event_count_label,
+                core_x_label,
+                core_y_label,
+                upper_radius_limit,
+                lower_energy_limit,
+                viewcone_radius,
+            )
         )
 
-        energy_hist = self.histograms.get("energy")
-        cumulative_energy = self._calculate_cumulative_histogram(energy_hist, reverse=True)
+        return plots
 
-        core_distance_hist = self.histograms.get("core_distance")
-        cumulative_core_distance = self._calculate_cumulative_histogram(core_distance_hist)
+    def _generate_1d_plots(
+        self,
+        hist_1d_params,
+        hist_1d_cumulative_params,
+        cumulative_data,
+        energy_label,
+        core_distance_label,
+        pointing_direction_label,
+        event_count_label,
+        cumulative_prefix,
+        upper_radius_limit,
+        lower_energy_limit,
+        viewcone_radius,
+    ):
+        """Generate 1D histogram plot configurations."""
+        plots = {}
 
-        angular_distance_hist = self.histograms.get("angular_distance")
-        cumulative_angular_distance = self._calculate_cumulative_histogram(angular_distance_hist)
+        # Define base configurations for 1D plots
+        plot_configs = [
+            {
+                "base_key": "energy_distribution",
+                "histogram_key": "energy",
+                "bin_key": "energy_bin_edges",
+                "cumulative_key": "cumulative_energy",
+                "x_label": energy_label,
+                "title_base": "energy distribution",
+                "scales": {"x": "log", "y": "log"},
+                "line_key": "x",
+                "line_value": lower_energy_limit,
+            },
+            {
+                "base_key": "core_distance",
+                "histogram_key": "core_distance",
+                "bin_key": "core_distance_bin_edges",
+                "cumulative_key": "cumulative_core_distance",
+                "x_label": core_distance_label,
+                "title_base": "core distance distribution",
+                "scales": {},
+                "line_key": "x",
+                "line_value": upper_radius_limit,
+            },
+            {
+                "base_key": "angular_distance",
+                "histogram_key": "angular_distance",
+                "bin_key": "angular_distance_bin_edges",
+                "cumulative_key": "cumulative_angular_distance",
+                "x_label": pointing_direction_label,
+                "title_base": "angular distance distribution",
+                "scales": {},
+                "line_key": "x",
+                "line_value": viewcone_radius,
+            },
+        ]
 
-        upper_radius_limit, lower_energy_limit, viewcone_radius = self._get_limits(limits)
+        # Generate regular and MC versions of 1D plots
+        for config in plot_configs:
+            # Regular version
+            plots[config["base_key"]] = self._create_1d_plot_config(
+                config, hist_1d_params, event_count_label, False
+            )
 
-        plots = {
-            "core_vs_energy": {
-                "data": self.histograms.get("core_vs_energy"),
-                "bins": [
-                    self.histograms.get("core_vs_energy_bin_x_edges"),
-                    self.histograms.get("core_vs_energy_bin_y_edges"),
-                ],
-                "plot_type": "histogram2d",
+            # MC version
+            if config["base_key"] == "energy_distribution":
+                mc_key = "energy_mc_distribution"
+            else:
+                mc_key = f"{config['base_key']}_mc"
+            plots[mc_key] = self._create_1d_plot_config(
+                config, hist_1d_params, event_count_label, True
+            )
+
+            # Cumulative version
+            cumulative_key = f"{config['base_key']}_cumulative"
+            plots[cumulative_key] = self._create_1d_cumulative_plot_config(
+                config,
+                hist_1d_cumulative_params,
+                cumulative_data,
+                event_count_label,
+                cumulative_prefix,
+            )
+
+        return plots
+
+    def _create_1d_plot_config(self, config, plot_params, event_count_label, is_mc=False):
+        """Create a 1D plot configuration."""
+        suffix = "_mc" if is_mc else ""
+        histogram_key = f"{config['histogram_key']}{suffix}"
+        event_type = "Simulated events" if is_mc else "Triggered events"
+
+        lines = {}
+        if config["line_value"] is not None:
+            lines[config["line_key"]] = config["line_value"]
+
+        return {
+            "data": self.histograms.get(histogram_key),
+            "bins": self.histograms.get(config["bin_key"]),
+            "plot_type": "histogram",
+            "plot_params": plot_params,
+            "labels": {
+                "x": config["x_label"],
+                "y": event_count_label,
+                "title": f"{event_type}: {config['title_base']}",
+            },
+            "scales": config["scales"],
+            "lines": lines,
+            "filename": f"{config['base_key']}{suffix}",
+        }
+
+    def _create_1d_cumulative_plot_config(
+        self, config, plot_params, cumulative_data, event_count_label, cumulative_prefix
+    ):
+        """Create a 1D cumulative plot configuration."""
+        lines = {}
+        if config["line_value"] is not None:
+            lines[config["line_key"]] = config["line_value"]
+
+        return {
+            "data": cumulative_data[config["cumulative_key"]],
+            "bins": self.histograms.get(config["bin_key"]),
+            "plot_type": "histogram",
+            "plot_params": plot_params,
+            "labels": {
+                "x": config["x_label"],
+                "y": cumulative_prefix + event_count_label,
+                "title": f"Triggered events: cumulative {config['title_base']}",
+            },
+            "scales": config["scales"],
+            "lines": lines,
+            "filename": f"{config['base_key']}_cumulative",
+        }
+
+    def _generate_2d_plots(
+        self,
+        hist_2d_params,
+        hist_2d_equal_params,
+        hist_2d_normalized_params,
+        cumulative_data,
+        energy_label,
+        core_distance_label,
+        pointing_direction_label,
+        event_count_label,
+        core_x_label,
+        core_y_label,
+        upper_radius_limit,
+        lower_energy_limit,
+        viewcone_radius,
+    ):
+        """Generate 2D histogram plot configurations."""
+        plots = {}
+
+        # Define base configurations for different 2D plot types
+        plot_configs = [
+            {
+                "base_key": "core_vs_energy",
+                "event_type": "Triggered events",
+                "x_label": core_distance_label,
+                "y_label": energy_label,
                 "plot_params": hist_2d_params,
-                "labels": {
-                    "x": core_distance_label,
-                    "y": energy_label,
-                    "title": "Triggered events: core distance vs energy",
-                },
                 "lines": {"x": upper_radius_limit, "y": lower_energy_limit},
                 "scales": {"y": "log"},
                 "colorbar_label": event_count_label,
-                "filename": "core_vs_energy_distribution",
             },
-            "energy_distribution": {
-                "data": self.histograms.get("energy"),
-                "bins": self.histograms.get("energy_bin_edges"),
-                "plot_type": "histogram",
-                "plot_params": hist_1d_params,
-                "labels": {
-                    "x": energy_label,
-                    "y": event_count_label,
-                    "title": "Triggered events: energy distribution",
-                },
-                "scales": {"x": "log", "y": "log"},
-                "lines": {"x": lower_energy_limit},
-                "filename": "energy_distribution",
-            },
-            "energy_distribution_cumulative": {
-                "data": cumulative_energy,
-                "bins": self.histograms.get("energy_bin_edges"),
-                "plot_type": "histogram",
-                "plot_params": hist_1d_cumulative_params,
-                "labels": {
-                    "x": energy_label,
-                    "y": cumulative_prefix + event_count_label,
-                    "title": "Triggered events: cumulative energy distribution",
-                },
-                "scales": {"x": "log", "y": "log"},
-                "lines": {"x": lower_energy_limit},
-                "filename": "energy_distribution_cumulative",
-            },
-            "core_distance": {
-                "data": self.histograms.get("core_distance"),
-                "bins": self.histograms.get("core_distance_bin_edges"),
-                "plot_type": "histogram",
-                "plot_params": hist_1d_params,
-                "labels": {
-                    "x": core_distance_label,
-                    "y": event_count_label,
-                    "title": "Triggered events: core distance distribution",
-                },
-                "lines": {"x": upper_radius_limit},
-                "filename": "core_distance_distribution",
-            },
-            "core_distance_cumulative": {
-                "data": cumulative_core_distance,
-                "bins": self.histograms.get("core_distance_bin_edges"),
-                "plot_type": "histogram",
-                "plot_params": hist_1d_cumulative_params,
-                "labels": {
-                    "x": core_distance_label,
-                    "y": cumulative_prefix + event_count_label,
-                    "title": "Triggered events: cumulative core distance distribution",
-                },
-                "lines": {"x": upper_radius_limit},
-                "filename": "core_distance_cumulative_distribution",
-            },
-            "core_xy": {
-                "data": self.histograms.get("shower_cores"),
-                "bins": [
-                    self.histograms.get("shower_cores_bin_x_edges"),
-                    self.histograms.get("shower_cores_bin_y_edges"),
-                ],
-                "plot_type": "histogram2d",
-                "plot_params": hist_2d_equal_params,
-                "labels": {
-                    "x": core_x_label,
-                    "y": core_y_label,
-                    "title": "Triggered events: core x vs core y",
-                },
-                "colorbar_label": event_count_label,
-                "lines": {
-                    "r": upper_radius_limit,
-                },
-                "filename": "core_xy_distribution",
-            },
-            "angular_distance": {
-                "data": self.histograms.get("angular_distance"),
-                "bins": self.histograms.get("angular_distance_bin_edges"),
-                "plot_type": "histogram",
-                "plot_params": hist_1d_params,
-                "labels": {
-                    "x": pointing_direction_label,
-                    "y": event_count_label,
-                    "title": "Triggered events: angular distance distribution",
-                },
-                "lines": {"x": viewcone_radius},
-                "filename": "angular_distance_distribution",
-            },
-            "angular_distance_cumulative": {
-                "data": cumulative_angular_distance,
-                "bins": self.histograms.get("angular_distance_bin_edges"),
-                "plot_type": "histogram",
-                "plot_params": hist_1d_cumulative_params,
-                "labels": {
-                    "x": pointing_direction_label,
-                    "y": cumulative_prefix + event_count_label,
-                    "title": "Triggered events: cumulative angular distance distribution",
-                },
-                "lines": {"x": viewcone_radius},
-                "filename": "angular_distance_cumulative_distribution",
-            },
-            "angular_distance_vs_energy_mc": {
-                "data": self.histograms.get("angular_distance_vs_energy_mc"),
-                "bins": [
-                    self.histograms.get("angular_distance_vs_energy_mc_bin_x_edges"),
-                    self.histograms.get("angular_distance_vs_energy_mc_bin_y_edges"),
-                ],
-                "plot_type": "histogram2d",
+            {
+                "base_key": "angular_distance_vs_energy",
+                "event_type": "Triggered events",
+                "x_label": pointing_direction_label,
+                "y_label": energy_label,
                 "plot_params": hist_2d_params,
-                "labels": {
-                    "x": pointing_direction_label,
-                    "y": energy_label,
-                    "title": "Simulated events: angular distance distance vs energy",
-                },
-                "lines": {
-                    "x": viewcone_radius,
-                    "y": lower_energy_limit,
-                },
+                "lines": {"x": viewcone_radius, "y": lower_energy_limit},
                 "scales": {"y": "log"},
                 "colorbar_label": event_count_label,
-                "filename": "angular_distance_vs_energy_mc_distribution",
             },
-            "angular_distance_vs_energy": {
-                "data": self.histograms.get("angular_distance_vs_energy"),
-                "bins": [
-                    self.histograms.get("angular_distance_vs_energy_bin_x_edges"),
-                    self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
-                ],
-                "plot_type": "histogram2d",
-                "plot_params": hist_2d_params,
-                "labels": {
-                    "x": pointing_direction_label,
-                    "y": energy_label,
-                    "title": "Triggered events: angular distance distance vs energy",
-                },
-                "lines": {
-                    "x": viewcone_radius,
-                    "y": lower_energy_limit,
-                },
-                "scales": {"y": "log"},
-                "colorbar_label": event_count_label,
-                "filename": "angular_distance_vs_energy_distribution",
+        ]
+
+        # Generate regular and MC versions of 2D plots
+        for config in plot_configs:
+            # Regular version
+            plots[config["base_key"]] = self._create_2d_plot_config(config, False)
+
+            # MC version
+            mc_config = config.copy()
+            mc_config["event_type"] = "Simulated events"
+            plots[f"{config['base_key']}_mc"] = self._create_2d_plot_config(mc_config, True)
+
+            # Cumulative version
+            cumulative_config = config.copy()
+            cumulative_config["plot_params"] = hist_2d_normalized_params
+            cumulative_config["colorbar_label"] = "Fraction of events"
+            cumulative_config["is_cumulative"] = True
+            plots[f"{config['base_key']}_cumulative"] = self._create_2d_cumulative_plot_config(
+                cumulative_config, cumulative_data
+            )
+
+        # Add special cases
+        plots["core_xy"] = {
+            "data": self.histograms.get("shower_cores"),
+            "bins": [
+                self.histograms.get("shower_cores_bin_x_edges"),
+                self.histograms.get("shower_cores_bin_y_edges"),
+            ],
+            "plot_type": "histogram2d",
+            "plot_params": hist_2d_equal_params,
+            "labels": {
+                "x": core_x_label,
+                "y": core_y_label,
+                "title": "Triggered events: core x vs core y",
             },
-            "angular_distance_vs_energy_cumulative": {
-                "data": normalized_cumulative_angular_vs_energy,
-                "bins": [
-                    self.histograms.get("angular_distance_vs_energy_bin_x_edges"),
-                    self.histograms.get("angular_distance_vs_energy_bin_y_edges"),
-                ],
-                "plot_type": "histogram2d",
-                "plot_params": hist_2d_normalized_params,  # Includes contour line at value=1
-                "labels": {
-                    "x": pointing_direction_label,
-                    "y": energy_label,
-                    "title": "Triggered events: fraction of events by angular distance vs energy",
-                },
-                "lines": {
-                    "x": viewcone_radius,
-                    "y": lower_energy_limit,
-                },
-                "scales": {"y": "log"},
-                "colorbar_label": "Fraction of events",
-                "filename": "angular_distance_vs_energy_cumulative_distribution",
-            },
-            "core_vs_energy_cumulative": {
-                "data": normalized_cumulative_core_vs_energy,
-                "bins": [
-                    self.histograms.get("core_vs_energy_bin_x_edges"),
-                    self.histograms.get("core_vs_energy_bin_y_edges"),
-                ],
-                "plot_type": "histogram2d",
-                "plot_params": hist_2d_normalized_params,
-                "labels": {
-                    "x": core_distance_label,
-                    "y": energy_label,
-                    "title": "Triggered events: fraction of events by core distance vs energy",
-                },
-                "lines": {
-                    "x": upper_radius_limit,
-                    "y": lower_energy_limit,
-                },
-                "scales": {"y": "log"},
-                "colorbar_label": "Fraction of events",
-                "filename": "core_vs_energy_cumulative_distribution",
-            },
+            "colorbar_label": event_count_label,
+            "lines": {"r": upper_radius_limit},
+            "filename": "core_xy_distribution",
         }
 
+        # Add MC version of core_xy
+        plots["core_xy_mc"] = {
+            "data": self.histograms.get("shower_cores_mc"),
+            "bins": [
+                self.histograms.get("shower_cores_mc_bin_x_edges"),
+                self.histograms.get("shower_cores_mc_bin_y_edges"),
+            ],
+            "plot_type": "histogram2d",
+            "plot_params": hist_2d_equal_params,
+            "labels": {
+                "x": core_x_label,
+                "y": core_y_label,
+                "title": "Simulated events: core x vs core y",
+            },
+            "colorbar_label": event_count_label,
+            "lines": {"r": upper_radius_limit},
+            "filename": "core_xy_mc_distribution",
+        }
+
+        return plots
+
+    def _create_2d_plot_config(self, config, is_mc=False):
+        """Create a 2D plot configuration."""
+        suffix = "_mc" if is_mc else ""
+        base_key = config["base_key"]
+
+        # Handle special case for title formatting
+        if "angular_distance" in base_key:
+            distance_type = "angular distance distance"
+        else:
+            distance_type = base_key.replace("_", " ")
+
+        return {
+            "data": self.histograms.get(f"{base_key}{suffix}"),
+            "bins": [
+                self.histograms.get(f"{base_key}{suffix}_bin_x_edges"),
+                self.histograms.get(f"{base_key}{suffix}_bin_y_edges"),
+            ],
+            "plot_type": "histogram2d",
+            "plot_params": config["plot_params"],
+            "labels": {
+                "x": config["x_label"],
+                "y": config["y_label"],
+                "title": f"{config['event_type']}: {distance_type}",
+            },
+            "lines": config["lines"],
+            "scales": config.get("scales", {}),
+            "colorbar_label": config["colorbar_label"],
+            "filename": f"{base_key}{suffix}_distribution",
+        }
+
+    def _create_2d_cumulative_plot_config(self, config, cumulative_data):
+        """Create a 2D cumulative plot configuration."""
+        base_key = config["base_key"]
+
+        # Handle special case for title formatting
+        if "angular_distance" in base_key:
+            distance_type = "angular distance"
+        else:
+            distance_type = base_key.replace("_vs_energy", "").replace("_", " ")
+
+        # Map to cumulative data keys
+        cumulative_key_map = {
+            "core_vs_energy": "normalized_cumulative_core_vs_energy",
+            "angular_distance_vs_energy": "normalized_cumulative_angular_vs_energy",
+        }
+
+        return {
+            "data": cumulative_data[cumulative_key_map[base_key]],
+            "bins": [
+                self.histograms.get(f"{base_key}_bin_x_edges"),
+                self.histograms.get(f"{base_key}_bin_y_edges"),
+            ],
+            "plot_type": "histogram2d",
+            "plot_params": config["plot_params"],
+            "labels": {
+                "x": config["x_label"],
+                "y": config["y_label"],
+                "title": f"{config['event_type']}: fraction of events by {distance_type} vs energy",
+            },
+            "lines": config["lines"],
+            "scales": config.get("scales", {}),
+            "colorbar_label": config["colorbar_label"],
+            "filename": f"{base_key}_cumulative_distribution",
+        }
+
+    def _execute_plotting_loop(self, plots, output_path, rebin_factor):
+        """Execute the main plotting loop for all plot configurations."""
         for plot_key, plot_args in plots.items():
             plot_filename = plot_args.pop("filename")
 
