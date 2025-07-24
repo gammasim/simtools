@@ -221,7 +221,7 @@ class CorsikaConfig:
         return {
             "EVTNR": [1],
             "NSHOW": [1],
-            "PRMPAR": [1],  # e.g., proton
+            "PRMPAR": [1],  # CORSIKA ID 1 for primary gamma
             "ESLOPE": [-2.0],
             "ERANGE": [0.1, 0.1],
             "THETAP": [20.0, 20.0],
