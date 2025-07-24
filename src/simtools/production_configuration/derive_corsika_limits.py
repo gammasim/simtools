@@ -282,6 +282,8 @@ def compute_lower_energy_limit(histograms, loss_fraction):
 
     Parameters
     ----------
+    histograms : SimtelIOEventHistograms
+        Histograms.
     loss_fraction : float
         Fraction of events to be lost.
 
@@ -322,6 +324,8 @@ def compute_upper_radius_limit(histograms, loss_fraction):
 
     Parameters
     ----------
+    histograms : SimtelIOEventHistograms
+        Histograms.
     loss_fraction : float
         Fraction of events to be lost.
 
@@ -358,6 +362,8 @@ def compute_viewcone(histograms, loss_fraction):
 
     Parameters
     ----------
+    histograms : SimtelIOEventHistograms
+        Histograms.
     loss_fraction : float
         Fraction of events to be lost.
 
