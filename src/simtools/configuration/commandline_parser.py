@@ -351,11 +351,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 ),
                 "type": CommandLineParser.azimuth_angle,
                 "required": True,
+                "default": 0 * u.deg,
             },
             "zenith_angle": {
                 "help": "Zenith angle in degrees (between 0 and 180).",
                 "type": CommandLineParser.zenith_angle,
                 "required": True,
+                "default": 20 * u.deg,
             },
             "nshow": {
                 "help": "Number of showers per run to simulate.",

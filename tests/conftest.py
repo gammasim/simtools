@@ -447,11 +447,10 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
             "model_version": model_version,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
+            "simtel_path": simtel_path,
         },
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
-        test=True,
     )
 
 
