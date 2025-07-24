@@ -92,7 +92,7 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     }
 
     if plot_histograms:
-        histograms.plot_data(
+        histograms.plot(
             output_path=io_handler.IOHandler().get_output_directory(),
             limits=limits,
         )
