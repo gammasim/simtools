@@ -682,16 +682,18 @@ class DataValidator:
 
         Parameters
         ----------
-        col_name: str
-            Numerical column name to limit the rate of logging.
+        col_name: str or int
+            Column name or index to limit the rate of logging.
         message: str
             Message to log.
         max_logs: int
             Maximum number of logging messages to be printed.
         """
-        if (
-            isinstance(col_name, int) or (isinstance(col_name, str) and col_name.isdigit())
-        ) and int(col_name) < max_logs:
+        try:
+            col_index = int(col_name)
+            if col_index < max_logs:
+                self._logger.debug(message)
+        except (ValueError, TypeError):
             self._logger.debug(message)
 
     @staticmethod
