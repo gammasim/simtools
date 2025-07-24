@@ -15,14 +15,6 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(derive-corsika-limits)=
-
-## corsika_limit_calculator
-
-```{eval-rst}
-.. automodule:: production_configuration.corsika_limit_calculator
-   :members:
-```
 
 (derive-corsika-limits_grid)=
 
