@@ -272,8 +272,31 @@ def test_get_patches_simplest(monkeypatch):
     assert pytest.approx(returned_range) == 7.7
 
 
+def test_get_telescope_patch_circle(monkeypatch):
+    def dummy_get_type(name):
+        return "MSTN"
+
+    monkeypatch.setattr(
+        "simtools.visualization.plot_array_layout.names.get_array_element_type_from_name",
+        dummy_get_type,
+    )
+
+    x = 15 * u.m
+    y = 25 * u.m
+    radius = 3 * u.m
+
+    patch = get_telescope_patch("dummy", x, y, radius)
+    assert isinstance(patch, mpatches.Circle)
+
+    expected_center = (x.to(u.m).value, y.to(u.m).value)
+    assert patch.center == expected_center
+    assert patch.radius == radius.to(u.m).value
+
+    assert patch.get_fill() is True
+    assert to_rgba("dodgerblue") == patch.get_facecolor()
+
+
 def test_get_telescope_patch_rectangle(monkeypatch):
-    # Mock names.get_array_element_type_from_name to return "SCTS"
     def dummy_get_type(name):
         return "SCTS"
 
@@ -282,77 +305,20 @@ def test_get_telescope_patch_rectangle(monkeypatch):
         dummy_get_type,
     )
 
-    # Mock leg_h.TelescopeHandler to return a dummy object with a colors_dict for "SCTS"
-    class DummyTelHandler:
-        def __init__(self):
-            self.colors_dict = {"SCTS": "red"}
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.leg_h.TelescopeHandler",
-        lambda: DummyTelHandler(),
-    )
-
-    # Prepare input quantities
     x = 10 * u.m
     y = 20 * u.m
     radius = 2 * u.m
 
     patch = get_telescope_patch("dummy", x, y, radius)
-    # Verify that a Rectangle patch is returned
     assert isinstance(patch, mpatches.Rectangle)
 
-    # Expected lower-left corner: (x - radius/2, y - radius/2)
     expected_xy = ((x - radius / 2).value, (y - radius / 2).value)
     assert patch.get_xy() == expected_xy
     assert patch.get_width() == radius.to(u.m).value
     assert patch.get_height() == radius.to(u.m).value
 
-    # Verify properties: fill flag and color
     assert patch.get_fill() is False
-    # Compare the RGBA values instead of string color names
-    assert patch.get_edgecolor() == to_rgba("red")
-
-
-def test_get_telescope_patch_circle(monkeypatch):
-    # Mock names.get_array_element_type_from_name to return "MST"
-    def dummy_get_type(name):
-        return "MST"
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.names.get_array_element_type_from_name",
-        dummy_get_type,
-    )
-
-    # Mock leg_h.TelescopeHandler to return a dummy object with a colors_dict for "MST"
-    class DummyTelHandler:
-        def __init__(self):
-            self.colors_dict = {"MST": "green"}
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.leg_h.TelescopeHandler",
-        lambda: DummyTelHandler(),
-    )
-
-    # Prepare input quantities
-    x = 15 * u.m
-    y = 25 * u.m
-    radius = 3 * u.m
-
-    patch = get_telescope_patch("dummy", x, y, radius)
-    # Verify that a Circle patch is returned
-    assert isinstance(patch, mpatches.Circle)
-
-    # Verify center and radius
-    expected_center = (x.to(u.m).value, y.to(u.m).value)
-    assert patch.center == expected_center
-    assert patch.radius == radius.to(u.m).value
-
-    # For non-SCTS type, fill is set based on tel_type.startswith("MST")
-    # Since "MST" starts with "MST", fill should be True.
-    assert patch.get_fill() is True
-
-    # Verify that the color is set to "green" (converted to RGBA)
-    assert to_rgba("green") == patch.get_facecolor()
+    assert patch.get_edgecolor() == to_rgba("black")
 
 
 def test_plot_array_layout_calls_helpers(monkeypatch):
