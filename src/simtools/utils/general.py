@@ -342,7 +342,11 @@ def get_log_level_from_user(log_level):
 
 def enforce_list_type(value):
     """
-    Enforce input to be of list type.
+    Return input value as list.
+
+    - Single values will return as a list with a single element.
+    - None values will return as empty list.
+    - Values of list type are not changed.
 
     Parameters
     ----------
