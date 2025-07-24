@@ -12,7 +12,7 @@ ERROR_PATTERNS = [
     re.compile(r"error", re.IGNORECASE),
     re.compile(r"exception", re.IGNORECASE),
     re.compile(r"traceback", re.IGNORECASE),
-    re.compile(r"\bfailed\b", re.IGNORECASE),
+    re.compile(r"\b(failed to|has failed)\b", re.IGNORECASE),
     re.compile(r"runtime\s*warning", re.IGNORECASE),
     re.compile(r"segmentation fault", re.IGNORECASE),
 ]
