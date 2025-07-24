@@ -60,7 +60,6 @@ r"""
 
 """
 
-import json
 import logging
 from pathlib import Path
 from pprint import pprint
@@ -68,7 +67,7 @@ from pprint import pprint
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 
 
 def _parse():
@@ -142,8 +141,9 @@ def main():  # noqa: D103
         )
         pars[args_dict["parameter"]].pop("_id")
         pars[args_dict["parameter"]].pop("entry_date")
-        with open(_output_file, "w", encoding="utf-8") as json_file:
-            json.dump(pars[args_dict["parameter"]], json_file, indent=4)
+        ascii_handler.write_data_to_file(
+            data=pars[args_dict["parameter"]], output_file=_output_file
+        )
     else:
         pprint(pars[args_dict["parameter"]])
 

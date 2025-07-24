@@ -33,7 +33,6 @@
 
 """
 
-import json
 import logging
 from pathlib import Path
 
@@ -41,7 +40,8 @@ import astropy.table
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model.model_data_writer import JsonNumpyEncoder, ModelDataWriter
+from simtools.data_model.model_data_writer import ModelDataWriter
+from simtools.io import ascii_handler
 from simtools.model.array_model import ArrayModel
 
 
@@ -145,17 +145,12 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
         output_path = Path(args_dict["repository_path"]) / f"{element_name}"
         output_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Writing array element positions (ground) to {output_path}")
-        with open(
-            output_path / "array_element_position_ground.json", "w", encoding="utf-8"
-        ) as file:
-            json.dump(
-                data,
-                file,
-                indent=4,
-                sort_keys=False,
-                cls=JsonNumpyEncoder,
-            )
-            file.write("\n")
+        ascii_handler.write_data_to_file(
+            data=data,
+            output_file=output_path / "array_element_position_ground.json",
+            sort_keys=False,
+            numpy_types=True,
+        )
 
 
 def main():

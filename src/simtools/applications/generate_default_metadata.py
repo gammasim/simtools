@@ -21,16 +21,13 @@ r"""
 
     """
 
-import json
 import logging
 from pathlib import Path
-
-import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import metadata_model
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 
 
 def _parse(label, description):
@@ -74,8 +71,8 @@ def main():  # noqa: D103
         label, description="Generate a default simtools metadata file from a json schema."
     )
 
-    _logger = logging.getLogger()
-    _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     default_values = metadata_model.get_default_metadata_dict(args_dict["schema"])
 
@@ -83,24 +80,11 @@ def main():  # noqa: D103
         print(default_values)
     else:
         _io_handler = io_handler.IOHandler()
-        _out_file = _io_handler.get_output_file(args_dict["output_file"])
-        _logger.info(f"Writing default values to {_out_file}")
-        if args_dict["output_file"].endswith((".yml", ".yaml")):
-            with open(_out_file, "w", encoding="utf-8") as file:
-                yaml.dump(
-                    default_values,
-                    file,
-                    default_flow_style=False,
-                    sort_keys=False,
-                )
-        if args_dict["output_file"].endswith(".json"):
-            with open(_out_file, "w", encoding="utf-8") as file:
-                json.dump(
-                    default_values,
-                    file,
-                    indent=4,
-                    sort_keys=False,
-                )
+        output_file = _io_handler.get_output_file(args_dict["output_file"])
+        logger.info(f"Writing default values to {output_file}")
+        ascii_handler.write_data_to_file(
+            data=default_values, output_file=output_file, sort_keys=False
+        )
 
 
 if __name__ == "__main__":
