@@ -69,7 +69,7 @@ def _collect_data_from_yaml_file(file, file_name, yaml_document):
         return list(yaml.safe_load_all(file))[yaml_document]
     except IndexError as exc:
         raise IndexError(
-            f"YAML file {file_name} does not contain {yaml_document} documents."
+            f"Failed to read file {file_name}: YAML document index {yaml_document} is out of range."
         ) from exc
 
 
