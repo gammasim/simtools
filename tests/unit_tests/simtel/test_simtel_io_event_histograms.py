@@ -60,7 +60,7 @@ def test_view_cone_bins(mock_reader, hdf5_file_name):
     assert len(bins) == 100
 
 
-def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
+def test_plot(mock_reader, hdf5_file_name, mocker, tmp_path):
     """Test plotting of data with limits."""
     histograms = SimtelIOEventHistograms(hdf5_file_name)
 
@@ -102,13 +102,13 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     histograms.histograms["angular_distance"] = np.array([0.5, 0.7, 0.9, 1.1], dtype=float)
     histograms.histograms["angular_distance_bin_edges"] = np.array([0, 0.5, 1.0, 1.5, 2.0])
 
-    histograms.plot_data(output_path=tmp_path, limits=limits)
+    histograms.plot(output_path=tmp_path, limits=limits)
 
     assert mock_create_plot.call_count == 13
 
     mock_create_plot.reset_mock()
     histograms.array_name = "test_array"
-    histograms.plot_data(output_path=tmp_path, limits=limits)
+    histograms.plot(output_path=tmp_path, limits=limits)
     # 11 regular plots + 2 rebinned plots (core_vs_energy_cumulative and angular_distance_vs_energy_cumulative)
     assert mock_create_plot.call_count == 13
 
@@ -127,7 +127,7 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
 
     mock_create_plot.reset_mock()
     histograms.array_name = "test_array"
-    histograms.plot_data(output_path=tmp_path, rebin_factor=1)
+    histograms.plot(output_path=tmp_path, rebin_factor=1)
     assert mock_create_plot.call_count == 11
 
     rebinned_plots = [
@@ -145,7 +145,7 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
         return_value=(np.ones((2, 2)), np.array([0, 1, 2]), np.array([0, 1, 2])),
     )
 
-    histograms.plot_data(output_path=tmp_path, rebin_factor=2)
+    histograms.plot(output_path=tmp_path, rebin_factor=2)
 
     for call in mock_create_plot.call_args_list:
         _, kwargs = call

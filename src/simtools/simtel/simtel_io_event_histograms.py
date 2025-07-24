@@ -78,7 +78,7 @@ class SimtelIOEventHistograms:
         """
         for data_set in self.reader.data_sets:
             self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
-            _file_info_table, _, event_data, triggered_data = self.reader.read_event_data(
+            _file_info_table, shower_data, event_data, triggered_data = self.reader.read_event_data(
                 self.event_data_file, table_name_map=data_set
             )
             _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
@@ -122,6 +122,13 @@ class SimtelIOEventHistograms:
                 hist1d=False,
             )
 
+            self._fill_histogram_and_bin_edges(
+                "angular_distance_vs_energy_mc",
+                (shower_data.angular_distance, shower_data.simulated_energy),
+                [self.view_cone_bins, self.energy_bins],
+                hist1d=False,
+            )
+
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
@@ -155,7 +162,7 @@ class SimtelIOEventHistograms:
             100,
         )
 
-    def plot_data(self, output_path=None, limits=None, rebin_factor=2):
+    def plot(self, output_path=None, limits=None, rebin_factor=2):
         """
         Histogram plotting.
 
@@ -333,6 +340,27 @@ class SimtelIOEventHistograms:
                 },
                 "lines": {"x": viewcone_radius},
                 "filename": "angular_distance_cumulative_distribution",
+            },
+            "angular_distance_vs_energy_mc": {
+                "data": self.histograms.get("angular_distance_vs_energy_mc"),
+                "bins": [
+                    self.histograms.get("angular_distance_vs_energy_mc_bin_x_edges"),
+                    self.histograms.get("angular_distance_vs_energy_mc_bin_y_edges"),
+                ],
+                "plot_type": "histogram2d",
+                "plot_params": hist_2d_params,
+                "labels": {
+                    "x": pointing_direction_label,
+                    "y": energy_label,
+                    "title": "Simulated events: angular distance distance vs energy",
+                },
+                "lines": {
+                    "x": viewcone_radius,
+                    "y": lower_energy_limit,
+                },
+                "scales": {"y": "log"},
+                "colorbar_label": event_count_label,
+                "filename": "angular_distance_vs_energy_mc_distribution",
             },
             "angular_distance_vs_energy": {
                 "data": self.histograms.get("angular_distance_vs_energy"),
@@ -538,11 +566,10 @@ class SimtelIOEventHistograms:
             pcm = self._create_2d_histogram_plot(data, bins, plot_params)
             plt.colorbar(pcm, label=colorbar_label)
 
-        if "x" in lines:
-            plt.axvline(lines["x"], color="r", linestyle="--", linewidth=0.5)
-        if "y" in lines:
-            plt.axhline(lines["y"], color="r", linestyle="--", linewidth=0.5)
-        if "r" in lines:
+        for xy in ["x", "y"]:
+            if xy in lines and lines[xy] is not None:
+                ax.axvline(lines[xy], color="r", linestyle="--", linewidth=0.5)
+        if "r" in lines and lines["r"] is not None:
             circle = plt.Circle(
                 (0, 0), lines["r"], color="r", fill=False, linestyle="--", linewidth=0.5
             )
