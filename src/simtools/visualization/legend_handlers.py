@@ -4,7 +4,11 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
-# Telescope configuration - single source of truth
+"""
+Define properties of different telescope types for visualization purposes.
+
+Radii are relative to a reference radius (REFERENCE_RADIUS).
+"""
 TELESCOPE_CONFIG = {
     "LST": {"color": "darkorange", "radius": 12.5, "shape": "circle", "filled": False},
     "MST": {"color": "dodgerblue", "radius": 9.15, "shape": "circle", "filled": True},
@@ -267,13 +271,6 @@ class LSTHandler(TelescopeHandler):
 
     def __init__(self):
         super().__init__("LST")
-
-    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
-        x0, y0 = calculate_center(handlebox, 10 / 3, 2)
-        radius = handlebox.height
-        patch = self._create_circle(handlebox, x0, y0, radius)
-        handlebox.add_artist(patch)
-        return patch
 
 
 class MSTHandler(TelescopeHandler):
