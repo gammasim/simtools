@@ -36,8 +36,8 @@ class TableSchemas:
         "simulated_energy": (np.float64, u.TeV),
         "x_core": (np.float64, u.m),
         "y_core": (np.float64, u.m),
-        "shower_azimuth": (np.float64, u.rad),
-        "shower_altitude": (np.float64, u.rad),
+        "shower_azimuth": (np.float64, u.deg),
+        "shower_altitude": (np.float64, u.deg),
         "area_weight": (np.float64, None),
     }
 
@@ -45,8 +45,8 @@ class TableSchemas:
         "shower_id": (np.uint32, None),
         "event_id": (np.uint32, None),
         "file_id": (np.uint32, None),
-        "array_altitude": (np.float64, u.rad),
-        "array_azimuth": (np.float64, u.rad),
+        "array_altitude": (np.float64, u.deg),
+        "array_azimuth": (np.float64, u.deg),
         "telescope_list": (str, None),  # Store as comma-separated string
         "telescope_list_common_id": (str, None),  # Store as comma-separated string
     }
@@ -196,8 +196,8 @@ class SimtelIOEventDataWriter:
                 "simulated_energy": shower["energy"],
                 "x_core": None,  # filled in _process_mc_event
                 "y_core": None,  # filled in _process_mc_event
-                "shower_azimuth": shower["azimuth"],
-                "shower_altitude": shower["altitude"],
+                "shower_azimuth": np.degrees(shower["azimuth"]),
+                "shower_altitude": np.degrees(shower["altitude"]),
                 "area_weight": None,  # filled in _process_mc_event
             }
             for _ in range(self.n_use)
@@ -247,8 +247,8 @@ class SimtelIOEventDataWriter:
                 tracking_position = obj.parse()
                 tracking_positions.append(
                     {
-                        "altitude": tracking_position["altitude_raw"],
-                        "azimuth": tracking_position["azimuth_raw"],
+                        "altitude": np.degrees(tracking_position["altitude_raw"]),
+                        "azimuth": np.degrees(tracking_position["azimuth_raw"]),
                     }
                 )
 
@@ -271,7 +271,7 @@ class SimtelIOEventDataWriter:
                 "event_id": event_id,
                 "file_id": file_id,
                 "array_altitude": float(np.mean(altitudes)),
-                "array_azimuth": float(calculate_circular_mean(azimuths)),
+                "array_azimuth": float(np.degrees(calculate_circular_mean(np.deg2rad(azimuths)))),
                 "telescope_list": ",".join(map(str, telescopes)),
                 "telescope_list_common_id": ",".join(
                     [
