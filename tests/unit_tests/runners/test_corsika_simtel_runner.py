@@ -98,6 +98,23 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
         assert "-C telescope_phi=0" in script_content
         assert show_all in script_content
 
+    # calibration run scripts
+    corsika_simtel_runner.calibration_runner_args = {
+        "run_mode": "nsb_only_pedestals",
+        "number_of_events": 500,
+        "nsb_scaling_factor": 1.0,
+        "stars": "stars.txt",
+    }
+    corsika_simtel_runner._export_multipipe_script(run_number=1)
+    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
+        corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe")
+    )
+
+    assert script.exists()
+    with open(script) as f:
+        script_content = f.read()
+        assert "-C fadc_lg_noise=0.0" in script_content
+
 
 def test_write_multipipe_script(corsika_simtel_runner):
     corsika_simtel_runner._export_multipipe_script(run_number=1)

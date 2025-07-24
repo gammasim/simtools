@@ -139,11 +139,16 @@ class RunnerServices:
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
         azimuth = self.corsika_config.azimuth_angle
         run_number_string = self._get_run_number_string(info_for_file_name["run_number"])
-        return (
+        prefix = (
             f"{info_for_file_name['primary']}_{run_number_string}_"
-            f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
-            f"{info_for_file_name['site']}_{info_for_file_name['array_name']}_"
-            f"{info_for_file_name['model_version']}{file_label}"
+            if info_for_file_name["primary"]
+            else f"{run_number_string}_"
+        )
+        return (
+            prefix
+            + f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
+            + f"{info_for_file_name['site']}_{info_for_file_name['array_name']}_"
+            + f"{info_for_file_name['model_version']}{file_label}"
         )
 
     def _get_log_file_path(self, file_type, file_name):

@@ -145,6 +145,11 @@ def test_get_file_basename(runner_service, file_base_name, model_version):
         f"proton_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
+    _runner_service_copy.corsika_config.primary_particle = None
+    assert _runner_service_copy._get_file_basename(1) == (
+        f"run000001_za20deg_azm000deg_South_test_layout_{model_version}"
+    )
+
 
 def test_get_log_file_path(runner_service, corsika_runner_mock_array_model, file_base_name):
     # log.gz

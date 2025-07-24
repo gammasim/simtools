@@ -487,20 +487,14 @@ def test_set_primary_particle(corsika_config_mock_array_model):
     assert p_pdg_id.name == PROTON_PARTICLE
 
 
-def test_get_config_parameter(corsika_config_mock_array_model, caplog):
+def test_get_config_parameter(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
     assert isinstance(cc.get_config_parameter("THETAP"), list)
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            cc.get_config_parameter("not_really_a_parameter")
-    assert "Parameter not_really_a_parameter" in caplog.text
-
-
-def test_print_config_parameter(corsika_config_mock_array_model, capsys):
-    logger.info("test_print_config_parameter")
-    corsika_config_mock_array_model.print_config_parameter()
-    assert "NSHOW" in capsys.readouterr().out
+    with pytest.raises(
+        KeyError, match="Parameter not_really_a_parameter is not a CORSIKA config parameter"
+    ):
+        cc.get_config_parameter("not_really_a_parameter")
 
 
 def test_get_text_single_line(corsika_config_mock_array_model):
@@ -523,7 +517,7 @@ def test_generate_corsika_input_file(corsika_config_mock_array_model):
     with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
-    assert corsika_config_mock_array_model._is_file_updated
+    assert corsika_config_mock_array_model.is_file_updated
     assert input_file == corsika_config_mock_array_model.generate_corsika_input_file()
 
 
