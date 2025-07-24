@@ -249,10 +249,10 @@ class SimtelIOEventDataReader:
 
         triggered_data.angular_distance = (
             angular_separation(
-                triggered_shower.shower_azimuth * u.rad,
-                triggered_shower.shower_altitude * u.rad,
-                triggered_data.array_azimuth * u.rad,
-                triggered_data.array_altitude * u.rad,
+                triggered_shower.shower_azimuth * u.deg,
+                triggered_shower.shower_altitude * u.deg,
+                triggered_data.array_azimuth * u.deg,
+                triggered_data.array_altitude * u.deg,
             )
             .to(u.deg)
             .value
@@ -309,9 +309,9 @@ class SimtelIOEventDataReader:
         y_core : np.ndarray
             Core y positions in ground coordinates.
         shower_azimuth : np.ndarray
-            Shower azimuth angles.
+            Shower azimuth angles in deg.
         shower_altitude : np.ndarray
-            Shower altitude angles.
+            Shower altitude angles in deg.
 
         Returns
         -------
@@ -321,7 +321,9 @@ class SimtelIOEventDataReader:
         ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=np.zeros_like(x_core) * u.m)
         shower_frame = ground.transform_to(
             TiltedGroundFrame(
-                pointing_direction=AltAz(az=shower_azimuth * u.rad, alt=shower_altitude * u.rad)
+                pointing_direction=AltAz(
+                    az=np.deg2rad(shower_azimuth) * u.rad, alt=np.deg2rad(shower_altitude) * u.rad
+                )
             )
         )
         return shower_frame.x.value, shower_frame.y.value
