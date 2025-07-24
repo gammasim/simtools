@@ -12,6 +12,19 @@ from simtools.production_configuration.derive_corsika_limits import (
     write_results,
 )
 
+# Constants
+SIMTEL_IO_EVENT_HISTOGRAMS_PATH = (
+    "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms"
+)
+COMPUTE_LOWER_ENERGY_LIMIT_PATH = (
+    "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit"
+)
+COMPUTE_UPPER_RADIUS_LIMIT_PATH = (
+    "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit"
+)
+COMPUTE_VIEWCONE_PATH = "simtools.production_configuration.derive_corsika_limits.compute_viewcone"
+MOCK_FILE_PATH = "mock_file.fits"
+
 
 @pytest.fixture
 def mock_args_dict():
@@ -42,13 +55,6 @@ def mock_results():
             "layout": "LST",
         }
     ]
-
-
-@pytest.fixture
-def mock_reader(mocker):
-    """Mock SimtelIOEventReader."""
-    # Since SimtelIOEventReader doesn't exist, we don't need this fixture
-    return
 
 
 @pytest.fixture
@@ -85,9 +91,7 @@ def test_process_file(mocker):
     """Test _process_file function."""
     # Mock the SimtelIOEventHistograms class
     mock_histograms = mocker.MagicMock()
-    mock_histogram_class = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms"
-    )
+    mock_histogram_class = mocker.patch(SIMTEL_IO_EVENT_HISTOGRAMS_PATH)
     mock_histogram_class.return_value = mock_histograms
 
     # Mock the individual limit computation functions
@@ -96,15 +100,15 @@ def test_process_file(mocker):
     mock_viewcone_limit = 2.0 * u.deg
 
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit",
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
         return_value=mock_energy_limit,
     )
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit",
+        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
         return_value=mock_radius_limit,
     )
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_viewcone",
+        COMPUTE_VIEWCONE_PATH,
         return_value=mock_viewcone_limit,
     )
 
@@ -383,25 +387,25 @@ def test_process_file_with_mocked_histograms(mocker):
     mock_histograms.fill.return_value = None
 
     mock_histogram_class = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms",
+        SIMTEL_IO_EVENT_HISTOGRAMS_PATH,
         return_value=mock_histograms,
     )
 
     mock_compute_lower_energy_limit = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit",
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
         return_value=1.0 * u.TeV,
     )
     mock_compute_upper_radius_limit = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit",
+        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
         return_value=100.0 * u.m,
     )
     mock_compute_viewcone = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_viewcone",
+        COMPUTE_VIEWCONE_PATH,
         return_value=2.0 * u.deg,
     )
 
     result = derive_corsika_limits._process_file(
-        file_path="mock_file.fits",
+        file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
         loss_fraction=0.2,
@@ -415,7 +419,7 @@ def test_process_file_with_mocked_histograms(mocker):
     }
 
     mock_histogram_class.assert_called_once_with(
-        "mock_file.fits", array_name="MockArray", telescope_list=[1, 2]
+        MOCK_FILE_PATH, array_name="MockArray", telescope_list=[1, 2]
     )
     mock_histograms.fill.assert_called_once()
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
@@ -430,7 +434,7 @@ def test_process_file_with_plot_histograms(mocker):
     mock_histograms.plot_data.return_value = None
 
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SimtelIOEventHistograms",
+        SIMTEL_IO_EVENT_HISTOGRAMS_PATH,
         return_value=mock_histograms,
     )
 
@@ -440,20 +444,20 @@ def test_process_file_with_plot_histograms(mocker):
     mock_io_handler.return_value.get_output_directory.return_value = "mock_output_dir"
 
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit",
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
         return_value=1.0 * u.TeV,
     )
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit",
+        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
         return_value=100.0 * u.m,
     )
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.compute_viewcone",
+        COMPUTE_VIEWCONE_PATH,
         return_value=2.0 * u.deg,
     )
 
     derive_corsika_limits._process_file(
-        file_path="mock_file.fits",
+        file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
         loss_fraction=0.2,
