@@ -108,7 +108,7 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     output_path = (
-        Path(args_dict["output_path"]) / args_dict["instrument"] / args_dict["parameter"]
+        Path(args_dict["output_path"]) / args_dict["parameter"]
         if args_dict.get("output_path")
         else None
     )
