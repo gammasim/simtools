@@ -133,8 +133,8 @@ def _validate_model_parameter_json_file(config, model_parameter_validation, db_c
     ----------
     config: dict
         Configuration dictionary.
-    model_parameter_validation: str
-        Path to the model parameter json file.
+    model_parameter_validation: dict
+        Dictionary with model parameter validation configuration.
 
     """
     _logger.info(f"Checking model parameter json file: {model_parameter_validation}")
