@@ -12,10 +12,10 @@ from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -32,7 +32,7 @@ def num_gains_schema_file():
 
 @pytest.fixture
 def num_gains_schema(num_gains_schema_file):
-    return gen.collect_data_from_file(file_name=num_gains_schema_file)
+    return ascii_handler.collect_data_from_file(file_name=num_gains_schema_file)
 
 
 def test_write(tmp_test_directory, args_dict_site):

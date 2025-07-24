@@ -5,7 +5,7 @@ import pytest
 from astropy.io import fits
 from astropy.table import Table
 
-from simtools.io_operations.io_table_handler import (
+from simtools.io.table_handler import (
     _merge,
     _read_table_list_fits,
     _read_table_list_hdf5,
@@ -20,7 +20,7 @@ from simtools.io_operations.io_table_handler import (
 )
 
 # Constants for repeated strings
-TABLE_HANDLER_PATH = "simtools.io_operations.io_table_handler"
+TABLE_HANDLER_PATH = "simtools.io.table_handler"
 READ_TABLE_FILE_TYPE = f"{TABLE_HANDLER_PATH}.read_table_file_type"
 ASTROPY_TABLE_READ = "astropy.table.Table.read"
 H5PY_FILE = "h5py.File"
@@ -81,7 +81,7 @@ def mock_fits_objects(mocker):
 @pytest.fixture
 def mock_logger(mocker):
     """Mock logger."""
-    return mocker.patch("simtools.io_operations.io_table_handler._logger")
+    return mocker.patch("simtools.io.table_handler._logger")
 
 
 @pytest.fixture
@@ -505,7 +505,7 @@ def test_read_table_list_hdf5(mocker):
     """Test read_table_list with HDF5 file."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="HDF5")
     mock_read_hdf5 = mocker.patch(
-        "simtools.io_operations.io_table_handler._read_table_list_hdf5",
+        "simtools.io.table_handler._read_table_list_hdf5",
         return_value={"table1": ["table1"], "table2": ["table2"]},
     )
 
@@ -520,7 +520,7 @@ def test_read_table_list_fits(mocker):
     """Test read_table_list with FITS file."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="FITS")
     mock_read_fits = mocker.patch(
-        "simtools.io_operations.io_table_handler._read_table_list_fits",
+        "simtools.io.table_handler._read_table_list_fits",
         return_value={"table1": ["table1"], "table2": ["table2"]},
     )
 

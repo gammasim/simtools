@@ -7,7 +7,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 
 __all__ = [

@@ -10,7 +10,7 @@ from astropy.table import QTable
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader, schema
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.site_model import SiteModel

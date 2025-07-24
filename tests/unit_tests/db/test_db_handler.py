@@ -998,7 +998,7 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
     mocks = add_parameter_mocks
     mocks["validate"].return_value = {"parameter": "param1", "value": "value1", "file": True}
     mock_insert_file_to_db = mocker.patch.object(db, "insert_file_to_db")
-    mock_is_utf8 = mocker.patch("simtools.utils.general.is_utf8_file", return_value=True)
+    mock_is_utf8 = mocker.patch("simtools.io.ascii_handler.is_utf8_file", return_value=True)
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"

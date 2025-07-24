@@ -68,7 +68,7 @@ from pprint import pprint
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 
 def _parse():

@@ -12,7 +12,7 @@ import numpy as np
 from matplotlib.collections import PatchCollection
 
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h

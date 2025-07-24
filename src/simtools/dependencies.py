@@ -14,8 +14,8 @@ import re
 import subprocess
 from pathlib import Path
 
-import simtools.utils.general as gen
 from simtools.db.db_handler import DatabaseHandler
+from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ def get_build_options():
     Expects a build_opts.yml file in the sim_telarray directory.
     """
     try:
-        return gen.collect_data_from_file(
+        return ascii_handler.collect_data_from_file(
             Path(os.getenv("SIMTOOLS_SIMTEL_PATH")) / "build_opts.yml"
         )
     except FileNotFoundError as exc:

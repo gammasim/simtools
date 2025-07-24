@@ -202,7 +202,7 @@ def test_change_parameter(telescope_model_lst):
 
 def test_change_multiple_parameters_from_file(telescope_model_lst, caplog, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mocker_gen = mocker.patch("simtools.utils.general.collect_data_from_file", return_value={})
+    mocker_gen = mocker.patch("simtools.io.ascii_handler.collect_data_from_file", return_value={})
     with caplog.at_level(logging.WARNING):
         telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
     assert "Changing multiple parameters from file is a feature for developers." in caplog.text

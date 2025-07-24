@@ -54,7 +54,7 @@ import logging
 from pathlib import Path
 
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
 )

@@ -69,7 +69,8 @@ import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import schema
-from simtools.io_operations.io_handler import IOHandler
+from simtools.io import ascii_handler
+from simtools.io.io_handler import IOHandler
 from simtools.simtel import simtel_config_reader
 
 
@@ -319,7 +320,7 @@ def print_list_of_files(args_dict, logger):
     """
     model_files = sorted(Path(args_dict["output_path"]).rglob("*.json"))
     for file in model_files:
-        model_dict = gen.collect_data_from_file(file_name=file)
+        model_dict = ascii_handler.collect_data_from_file(file_name=file)
         if model_dict.get("file"):
             logger.info(f"{file.name}: {model_dict['value']}")
 
