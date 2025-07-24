@@ -88,46 +88,64 @@ class SimtelIOEventHistograms:
                 "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
             }
 
-            self._fill_histogram_and_bin_edges(
-                "energy", event_data.simulated_energy, self.energy_bins
-            )
-            self._fill_histogram_and_bin_edges(
-                "core_distance", event_data.core_distance_shower, self.core_distance_bins
-            )
-            self._fill_histogram_and_bin_edges(
-                "angular_distance", triggered_data.angular_distance, self.view_cone_bins
-            )
-
             xy_bins = np.linspace(
                 -1.0 * self.core_distance_bins.max(),
                 self.core_distance_bins.max(),
                 len(self.core_distance_bins),
             )
-            self._fill_histogram_and_bin_edges(
-                "shower_cores",
-                (event_data.x_core_shower, event_data.y_core_shower),
-                [xy_bins, xy_bins],
-                hist1d=False,
-            )
-            self._fill_histogram_and_bin_edges(
-                "core_vs_energy",
-                (event_data.core_distance_shower, event_data.simulated_energy),
-                [self.core_distance_bins, self.energy_bins],
-                hist1d=False,
-            )
-            self._fill_histogram_and_bin_edges(
-                "angular_distance_vs_energy",
-                (triggered_data.angular_distance, event_data.simulated_energy),
-                [self.view_cone_bins, self.energy_bins],
-                hist1d=False,
-            )
 
-            self._fill_histogram_and_bin_edges(
-                "angular_distance_vs_energy_mc",
-                (shower_data.angular_distance, shower_data.simulated_energy),
-                [self.view_cone_bins, self.energy_bins],
-                hist1d=False,
-            )
+            hist_defs = [
+                ("energy", event_data.simulated_energy, self.energy_bins, True),
+                ("energy_mc", shower_data.simulated_energy, self.energy_bins, True),
+                ("core_distance", event_data.core_distance_shower, self.core_distance_bins, True),
+                (
+                    "core_distance_mc",
+                    shower_data.core_distance_shower,
+                    self.core_distance_bins,
+                    True,
+                ),
+                ("angular_distance", triggered_data.angular_distance, self.view_cone_bins, True),
+                ("angular_distance_mc", shower_data.angular_distance, self.view_cone_bins, True),
+                (
+                    "shower_cores",
+                    (event_data.x_core_shower, event_data.y_core_shower),
+                    [xy_bins, xy_bins],
+                    False,
+                ),
+                (
+                    "shower_cores_mc",
+                    (shower_data.x_core_shower, shower_data.y_core_shower),
+                    [xy_bins, xy_bins],
+                    False,
+                ),
+                (
+                    "core_vs_energy",
+                    (event_data.core_distance_shower, event_data.simulated_energy),
+                    [self.core_distance_bins, self.energy_bins],
+                    False,
+                ),
+                (
+                    "core_vs_energy_mc",
+                    (shower_data.core_distance_shower, shower_data.simulated_energy),
+                    [self.core_distance_bins, self.energy_bins],
+                    False,
+                ),
+                (
+                    "angular_distance_vs_energy",
+                    (triggered_data.angular_distance, event_data.simulated_energy),
+                    [self.view_cone_bins, self.energy_bins],
+                    False,
+                ),
+                (
+                    "angular_distance_vs_energy_mc",
+                    (shower_data.angular_distance, shower_data.simulated_energy),
+                    [self.view_cone_bins, self.energy_bins],
+                    False,
+                ),
+            ]
+
+            for name, data, bins, hist1d in hist_defs:
+                self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
 
     @property
     def energy_bins(self):
@@ -429,12 +447,22 @@ class SimtelIOEventHistograms:
 
         for plot_key, plot_args in plots.items():
             plot_filename = plot_args.pop("filename")
+
+            # Skip plots with no data
+            if plot_args.get("data") is None:
+                self._logger.warning(f"Skipping plot {plot_key} - no data available")
+                continue
+
             if self.array_name and plot_args.get("labels", {}).get("title"):
                 plot_args["labels"]["title"] += f" ({self.array_name} array)"
 
             filename = self._build_plot_filename(plot_filename, self.array_name)
             output_file = output_path / filename if output_path else None
-            self._create_plot(**plot_args, output_file=output_file)
+            result = self._create_plot(**plot_args, output_file=output_file)
+
+            # Skip rebinned plot if main plot failed
+            if result is None:
+                continue
 
             if self._should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
                 self._create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
@@ -558,6 +586,15 @@ class SimtelIOEventHistograms:
         scales = scales or {}
         lines = lines or {}
 
+        # Check for empty or invalid data
+        if data is None:
+            self._logger.warning("No data available for plotting")
+            return None
+
+        if isinstance(data, np.ndarray) and data.size == 0:
+            self._logger.warning("Empty data array for plotting")
+            return None
+
         fig, ax = plt.subplots(figsize=(8, 6))
 
         if plot_type == "histogram":
@@ -635,9 +672,22 @@ class SimtelIOEventHistograms:
                     linewidths=[0.5],
                 )
         else:
-            pcm = plt.pcolormesh(
-                bins[0], bins[1], data.T, norm=LogNorm(vmin=1, vmax=data.max()), cmap="viridis"
-            )
+            # Handle empty or invalid data for logarithmic scaling
+            data_max = data.max()
+            if data_max <= 0:
+                self._logger.warning(
+                    "No positive data found for logarithmic scaling, using linear scale"
+                )
+                pcm = plt.pcolormesh(
+                    bins[0], bins[1], data.T, vmin=0, vmax=max(1, data_max), cmap="viridis"
+                )
+            else:
+                # Ensure vmin is less than vmax for LogNorm
+                vmin = max(1, data[data > 0].min()) if np.any(data > 0) else 1
+                vmax = max(vmin + 1, data_max)
+                pcm = plt.pcolormesh(
+                    bins[0], bins[1], data.T, norm=LogNorm(vmin=vmin, vmax=vmax), cmap="viridis"
+                )
 
         return pcm
 
