@@ -10,6 +10,8 @@ The simulation pipeline allows to simulate calibration data for various componen
 
 ## Flasher and laser simulations
 
+- [simtools-simulate-flasher](simulate_flasher): Simulate flasher devices for camera calibration.
+
 ## Muons
 
 ## Illuminators
