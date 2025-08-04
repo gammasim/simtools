@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=df37c0fb"></script>
+    <script src="../../_static/documentation_options.js?v=7dec33ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfc795ca" />
+  <meta name="docsearch:version" content="0.1.dev1+gcb0e466" />
   </head>
   
   
@@ -452,7 +452,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">METADATA_JSON_SCHEMA</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata_model</span><span class="p">,</span> <span class="n">schema</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MetadataCollector&quot;</span><span class="p">]</span>
@@ -682,7 +682,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No valid schema file provided (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{}</span></div>
@@ -795,7 +795,7 @@
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        gen.InvalidConfigDataError, FileNotFoundError</span>
+<span class="sd">        ValueError:</span>
 <span class="sd">            if metadata cannot be read from file.</span>
 <span class="sd">        KeyError:</span>
 <span class="sd">            if metadata does not exist</span>
@@ -826,7 +826,7 @@
                 <span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown metadata file format: </span><span class="si">{</span><span class="n">metadata_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown metadata file format: </span><span class="si">{</span><span class="n">metadata_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span><span class="n">_input_metadata</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="n">METADATA_JSON_SCHEMA</span><span class="p">)</span>
             <span class="n">metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">_input_metadata</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
@@ -852,16 +852,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_read_input_metadata_from_yml_or_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read input metadata from yml or json file.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">_input_metadata</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">metadata_file_name</span><span class="p">)</span>
+            <span class="n">_input_metadata</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">metadata_file_name</span><span class="p">)</span>
             <span class="n">_json_type_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Metadata&quot;</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="s2">&quot;METADATA&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">_input_metadata</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_json_type_metadata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">_input_metadata</span> <span class="o">=</span> <span class="n">_input_metadata</span><span class="p">[</span><span class="n">_json_type_metadata</span><span class="o">.</span><span class="n">pop</span><span class="p">()]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_json_type_metadata</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;More than one metadata entry found in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed reading metadata from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">exc</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;More than one metadata entry found in </span><span class="si">{</span><span class="n">metadata_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed reading metadata from </span><span class="si">{</span><span class="n">metadata_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">return</span> <span class="n">_input_metadata</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">product_dict</span><span class="p">):</span>

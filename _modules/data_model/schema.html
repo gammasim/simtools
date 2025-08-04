@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=df37c0fb"></script>
+    <script src="../../_static/documentation_options.js?v=7dec33ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfc795ca" />
+  <meta name="docsearch:version" content="0.1.dev1+gcb0e466" />
   </head>
   
   
@@ -449,6 +449,7 @@
     <span class="n">SCHEMA_PATH</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_checkers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -474,7 +475,7 @@
     <span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="n">schema_files</span><span class="p">:</span>
         <span class="c1"># reading parameter &#39;name&#39; only - first document in schema file should be ok</span>
-        <span class="n">schema_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">yaml_document</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">schema_dict</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">yaml_document</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">schema_files</span></div>
 
@@ -523,7 +524,7 @@
 <span class="sd">        Schema version.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">schemas</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">MODEL_PARAMETER_METASCHEMA</span><span class="p">)</span>
+    <span class="n">schemas</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">MODEL_PARAMETER_METASCHEMA</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">schema_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">schemas</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">schemas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">)</span>
@@ -586,7 +587,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_yaml_schema_from_uri</span><span class="p">(</span><span class="n">uri</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load schema from a file URI.&quot;&quot;&quot;</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">uri</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">&quot;file:/&quot;</span><span class="p">))</span>
-    <span class="n">contents</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">contents</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Resource</span><span class="o">.</span><span class="n">from_contents</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
 
 
@@ -646,7 +647,7 @@
 
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">(</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="n">schema_file</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">schema</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">schema</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
             <span class="k">break</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="k">continue</span>

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=df37c0fb"></script>
+    <script src="../../_static/documentation_options.js?v=7dec33ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfc795ca" />
+  <meta name="docsearch:version" content="0.1.dev1+gcb0e466" />
   </head>
   
   
@@ -435,13 +435,10 @@
   <h1>Source code for utils.general</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;General functions useful across different parts of the code.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">urllib.error</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span>
@@ -449,55 +446,19 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;InvalidConfigDataError&quot;</span><span class="p">,</span>
     <span class="s2">&quot;change_dict_keys_case&quot;</span><span class="p">,</span>
     <span class="s2">&quot;clear_default_sim_telarray_cfg_directories&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;collect_data_from_file&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_final_lines&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_kwargs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_log_excerpt&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_log_level_from_user&quot;</span><span class="p">,</span>
     <span class="s2">&quot;remove_substring_recursively_from_dict&quot;</span><span class="p">,</span>
     <span class="s2">&quot;set_default_kwargs&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;sort_arrays&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="InvalidConfigDataError">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.InvalidConfigDataError">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">InvalidConfigDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid configuration data.&quot;&quot;&quot;</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">join_url_or_path</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Join URL or path with additional subdirectories and file.</span>
-
-<span class="sd">    This is the equivalent to Path.join(), with extended functionality</span>
-<span class="sd">    working also for URLs.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    url_or_path: str or Path</span>
-<span class="sd">        URL or path to be extended.</span>
-<span class="sd">    args: list</span>
-<span class="sd">        Additional arguments to be added to the URL or path.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str or Path</span>
-<span class="sd">        Extended URL or path.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;://&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">url_or_path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">is_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
@@ -542,107 +503,6 @@
     <span class="k">except</span> <span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">URLError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;URL </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> does not exist: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">collect_data_from_http</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Download yaml or json file from url and return it contents as dict.</span>
-
-<span class="sd">    File is downloaded as a temporary file and deleted afterwards.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    url: str</span>
-<span class="sd">        URL of the yaml/json file.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dictionary containing the file content.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    TypeError</span>
-<span class="sd">        If url is not a valid URL.</span>
-<span class="sd">    FileNotFoundError</span>
-<span class="sd">        If downloading the yaml file fails.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w+t&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp_file</span><span class="p">:</span>
-            <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">tmp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">_collect_data_from_different_file_types</span><span class="p">(</span>
-                <span class="n">tmp_file</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="kc">None</span>
-            <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid url </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to download file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-
-    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloaded file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">data</span>
-
-
-<div class="viewcode-block" id="collect_data_from_file">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.collect_data_from_file">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Collect data from file based on its extension.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file_name: str</span>
-<span class="sd">        Name of the yaml/json/ascii file.</span>
-<span class="sd">    yaml_document: None, int</span>
-<span class="sd">        Return list of yaml documents or a single document (for yaml files with several documents).</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    data: dict or list</span>
-<span class="sd">        Data as dict or list.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">is_url</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">collect_data_from_http</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
-
-    <span class="n">suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_collect_data_from_different_file_types</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">)</span>
-    <span class="c1"># broad exception to catch all possible errors in reading the file</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-        <span class="k">raise</span> <span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)(</span><span class="sa">f</span><span class="s2">&quot;Failed to read file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">return</span> <span class="kc">None</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_collect_data_from_different_file_types</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect data from different file types.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.list&quot;</span><span class="p">,</span> <span class="s2">&quot;.txt&quot;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
-    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File type </span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2"> not supported.&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect data from a yaml file (allow for multi-document yaml files).&quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">composer</span><span class="o">.</span><span class="n">ComposerError</span><span class="p">:</span>
-        <span class="k">pass</span>
-    <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">yaml_document</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_load_all</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_load_all</span><span class="p">(</span><span class="n">file</span><span class="p">))[</span><span class="n">yaml_document</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidConfigDataError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;YAML file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> does not contain </span><span class="si">{</span><span class="n">yaml_document</span><span class="si">}</span><span class="s2"> documents.&quot;</span>
-        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
 
 <div class="viewcode-block" id="collect_kwargs">
@@ -793,28 +653,6 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">copy_as_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Copy value and, if it is not a list, turn it into a list with a single entry.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    value single variable of any type or list</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    value: list</span>
-<span class="sd">        Copy of value if it is a list of [value] otherwise.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">program_is_executable</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if program exists and is executable.</span>
@@ -849,17 +687,17 @@
         <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Directory </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> found in </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">file</span>
+        <span class="k">return</span> <span class="n">_file</span>
 
     <span class="k">if</span> <span class="n">rec</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">subdir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-                <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">file</span>
+                <span class="n">_file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">_file</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">_file</span>
     <span class="k">return</span> <span class="kc">None</span>
 
 
@@ -887,15 +725,15 @@
     <span class="n">all_locations</span> <span class="o">=</span> <span class="p">[</span><span class="n">loc</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">loc</span>
 
     <span class="c1"># Searching file locally</span>
-    <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">file</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_file</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_file</span>
 
     <span class="c1"># Searching file in given locations</span>
     <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">all_locations</span><span class="p">:</span>
-        <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">file</span>
+        <span class="n">_file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_file</span>
 
     <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> could not be found in </span><span class="si">{</span><span class="n">all_locations</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1077,32 +915,6 @@
 
 
 
-<div class="viewcode-block" id="sort_arrays">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.sort_arrays">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort arrays.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    *args</span>
-<span class="sd">        Arguments to be sorted.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        Sorted args.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">args</span>
-    <span class="n">order_array</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">order_array</span><span class="p">,</span> <span class="n">arg</span><span class="p">)))</span>
-        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">new_args</span></div>
-
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">user_confirm</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ask the user to enter y or n (case-insensitive) on the command line.</span>
@@ -1277,82 +1089,6 @@
     <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">data_string</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_comma_separation</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">data_string</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">data_string</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load a yaml file using astropy&#39;s yaml loader.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file: file</span>
-<span class="sd">        File to be loaded.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dictionary containing the file content.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># pylint: disable=import-outside-toplevel</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.io.misc.yaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">astropy_yaml</span>
-
-    <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">astropy_yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">is_utf8_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check if a file is encoded in UTF-8.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file_name: str, Path</span>
-<span class="sd">        Name of the file to be checked.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    bool</span>
-<span class="sd">        True if the file is encoded in UTF-8, False otherwise.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">read_file_encoded_in_utf_or_latin</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read a file encoded in UTF-8 or Latin-1.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file_name: str</span>
-<span class="sd">        Name of the file to be read.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        List of lines read from the file.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    UnicodeDecodeError</span>
-<span class="sd">        If the file cannot be decoded using UTF-8 or Latin-1.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Unable to decode file using UTF-8. Trying Latin-1.&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">UnicodeDecodeError</span><span class="p">(</span><span class="s2">&quot;Unable to decode file using UTF-8 or Latin-1.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-
-    <span class="k">return</span> <span class="n">lines</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_structure_array_from_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column_names</span><span class="p">):</span>

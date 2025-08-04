@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=df37c0fb"></script>
+    <script src="../../_static/documentation_options.js?v=7dec33ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfc795ca" />
+  <meta name="docsearch:version" content="0.1.dev1+gcb0e466" />
   </head>
   
   
@@ -444,7 +444,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroundFrame</span><span class="p">,</span> <span class="n">TiltedGroundFrame</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_table_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">table_handler</span>
 
 
 <div class="viewcode-block" id="ShowerEventData">
@@ -516,7 +516,7 @@
 <span class="sd">        list</span>
 <span class="sd">            List of dictionaries containing the data from the tables.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">io_table_handler</span><span class="o">.</span><span class="n">read_table_list</span><span class="p">(</span>
+        <span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_table_list</span><span class="p">(</span>
             <span class="n">event_data_file</span><span class="p">,</span>
             <span class="p">[</span><span class="s2">&quot;SHOWERS&quot;</span><span class="p">,</span> <span class="s2">&quot;TRIGGERS&quot;</span><span class="p">,</span> <span class="s2">&quot;FILE_INFO&quot;</span><span class="p">],</span>
             <span class="n">include_indexed_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -681,7 +681,7 @@
         <span class="k">def</span><span class="w"> </span><span class="nf">get_name</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">table_name_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
 
-        <span class="n">tables</span> <span class="o">=</span> <span class="n">io_table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span>
+        <span class="n">tables</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span>
             <span class="n">event_data_file</span><span class="p">,</span>
             <span class="n">table_names</span><span class="o">=</span><span class="p">[</span><span class="n">get_name</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;SHOWERS&quot;</span><span class="p">,</span> <span class="s2">&quot;TRIGGERS&quot;</span><span class="p">,</span> <span class="s2">&quot;FILE_INFO&quot;</span><span class="p">)],</span>
         <span class="p">)</span>
