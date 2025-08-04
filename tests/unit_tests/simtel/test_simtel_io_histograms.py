@@ -11,7 +11,7 @@ import pytest
 from astropy.table import Table
 from matplotlib.collections import QuadMesh
 
-from simtools.io_operations.hdf5_handler import read_hdf5
+from simtools.io.hdf5_handler import read_hdf5
 from simtools.simtel.simtel_io_histogram import (
     HistogramIdNotFoundError,
     InconsistentHistogramFormatError,

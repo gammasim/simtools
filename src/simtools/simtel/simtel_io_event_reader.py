@@ -9,7 +9,7 @@ from astropy.coordinates import AltAz, angular_separation
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io_operations import io_table_handler
+from simtools.io import table_handler
 
 
 @dataclass
@@ -71,7 +71,7 @@ class SimtelIOEventDataReader:
         list
             List of dictionaries containing the data from the tables.
         """
-        dataset_dict = io_table_handler.read_table_list(
+        dataset_dict = table_handler.read_table_list(
             event_data_file,
             ["SHOWERS", "TRIGGERS", "FILE_INFO"],
             include_indexed_tables=True,
@@ -233,7 +233,7 @@ class SimtelIOEventDataReader:
         def get_name(key):
             return table_name_map.get(key, key)
 
-        tables = io_table_handler.read_tables(
+        tables = table_handler.read_tables(
             event_data_file,
             table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
         )
