@@ -12,7 +12,7 @@ from pathlib import Path
 
 from simtools import dependencies, version
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.utils import general as gen
 
 

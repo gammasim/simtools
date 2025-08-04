@@ -30,7 +30,7 @@ import yaml
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import metadata_model
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 
 def _parse(label, description):
