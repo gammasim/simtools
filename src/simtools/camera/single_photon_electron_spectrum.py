@@ -15,7 +15,7 @@ import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 
 class SinglePhotonElectronSpectrum:

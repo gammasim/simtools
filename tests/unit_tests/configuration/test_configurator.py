@@ -14,7 +14,7 @@ from simtools.configuration.configurator import (
     Configurator,
     InvalidConfigurationParameterError,
 )
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 logger = logging.getLogger()
 
