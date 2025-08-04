@@ -166,13 +166,26 @@ def generate_random_parameters(all_parameters, n_runs, args_dict, mrra_0, mfr_0,
         add_parameters(all_parameters, mrra, mar, mrf, mrra2)
 
 
-def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to_plot, radius):
+def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     """
-    Run the simulation for one set of parameters and return D80, RMSD, and simulated data.
+    Run the core ray tracing simulation for a given set of parameters.
 
-    No plotting is done in this function.
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object.
+    site_model : SiteModel
+        Site model object.
+    args_dict : dict
+        Dictionary containing parsed command-line arguments.
+    pars : dict
+        Parameter set dictionary.
+
+    Returns
+    -------
+    tuple
+        (d80, simulated_data) - D80 value and simulated data from ray tracing.
     """
-    cumulative_psf = "Cumulative PSF"
     if pars is not None:
         tel_model.change_multiple_parameters(**pars)
     else:
@@ -190,6 +203,18 @@ def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to
     ray.analyze(force=True, use_rx=False)
     im = ray.images()[0]
     d80 = im.get_psf()
+
+    return d80, im
+
+
+def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to_plot, radius):
+    """
+    Run the simulation for one set of parameters and return D80, RMSD, and simulated data.
+
+    No plotting is done in this function.
+    """
+    cumulative_psf = "Cumulative PSF"
+    d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
 
     if radius is not None:
         simulated_data = im.get_cumulative_data(radius * u.cm)
@@ -206,22 +231,8 @@ def run_psf_simulation(
 ):
     """Run the tuning for one set of parameters."""
     cumulative_psf = "Cumulative PSF"
-    if pars is not None:
-        tel_model.change_multiple_parameters(**pars)
-    else:
-        raise ValueError("No best parameters found")
-    ray = RayTracing(
-        telescope_model=tel_model,
-        site_model=site_model,
-        simtel_path=args_dict["simtel_path"],
-        zenith_angle=args_dict["zenith"] * u.deg,
-        source_distance=args_dict["src_distance"] * u.km,
-        off_axis_angle=[0.0] * u.deg,
-    )
-    ray.simulate(test=args_dict["test"], force=True)
-    ray.analyze(force=True, use_rx=False)
-    im = ray.images()[0]
-    d80 = im.get_psf()
+    d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
+
     if radius is not None:
         data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
     else:
