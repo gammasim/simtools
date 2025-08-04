@@ -20,6 +20,10 @@ from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
 
+# Constants
+RADIUS_CM = "Radius [cm]"
+CUMULATIVE_PSF = "Cumulative PSF"
+
 
 def load_psf_data(data_file):
     """
@@ -35,12 +39,10 @@ def load_psf_data(data_file):
     numpy.ndarray
         Loaded and processed data from the file.
     """
-    radius_cm = "Radius [cm]"
-    cumulative_psf = "Cumulative PSF"
-    d_type = {"names": (radius_cm, cumulative_psf), "formats": ("f8", "f8")}
+    d_type = {"names": (RADIUS_CM, CUMULATIVE_PSF), "formats": ("f8", "f8")}
     data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
-    data[radius_cm] *= 0.1
-    data[cumulative_psf] /= np.max(np.abs(data[cumulative_psf]))
+    data[RADIUS_CM] *= 0.1
+    data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))
     return data
 
 
@@ -213,7 +215,6 @@ def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to
 
     No plotting is done in this function.
     """
-    cumulative_psf = "Cumulative PSF"
     d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
 
     if radius is not None:
@@ -221,7 +222,7 @@ def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to
     else:
         raise ValueError("Radius data is not available.")
 
-    rmsd = calculate_rmsd(data_to_plot["measured"][cumulative_psf], simulated_data[cumulative_psf])
+    rmsd = calculate_rmsd(data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF])
 
     return d80, rmsd, simulated_data
 
@@ -230,7 +231,6 @@ def run_psf_simulation(
     tel_model, site_model, args_dict, pars, data_to_plot, radius, pdf_pages=None, is_best=False
 ):
     """Run the tuning for one set of parameters."""
-    cumulative_psf = "Cumulative PSF"
     d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
 
     if radius is not None:
@@ -238,7 +238,7 @@ def run_psf_simulation(
     else:
         raise ValueError("Radius data is not available.")
     rmsd = calculate_rmsd(
-        data_to_plot["measured"][cumulative_psf], data_to_plot["simulated"][cumulative_psf]
+        data_to_plot["measured"][CUMULATIVE_PSF], data_to_plot["simulated"][CUMULATIVE_PSF]
     )
     if pdf_pages is not None and args_dict.get("plot_all", False):
         fig = visualize.plot_1d(
@@ -312,7 +312,7 @@ def load_and_process_data(args_dict):
     if args_dict["data"] is not None:
         data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
         data_to_plot["measured"] = load_psf_data(data_file)
-        radius = data_to_plot["measured"]["Radius [cm]"]
+        radius = data_to_plot["measured"][RADIUS_CM]
     return data_to_plot, radius
 
 
