@@ -88,7 +88,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 from simtools.utils.general import get_log_level_from_user

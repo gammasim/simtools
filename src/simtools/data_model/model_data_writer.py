@@ -12,7 +12,7 @@ import simtools.utils.general as gen
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["ModelDataWriter"]
@@ -254,7 +254,7 @@ class ModelDataWriter:
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
         schema_file = schema.get_model_parameter_schema_file(parameter_name)
-        self.schema_dict = gen.collect_data_from_file(schema_file)
+        self.schema_dict = ascii_handler.collect_data_from_file(schema_file)
 
         value, unit = value_conversion.split_value_and_unit(value)
 

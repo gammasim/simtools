@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
