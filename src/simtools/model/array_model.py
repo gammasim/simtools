@@ -8,7 +8,7 @@ from astropy.table import QTable
 
 from simtools.data_model import data_reader, schema
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter

@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-import simtools.io_operations.io_handler as io_handler_module
+import simtools.io.io_handler as io_handler_module
 
 logger = logging.getLogger()
 

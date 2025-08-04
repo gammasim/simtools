@@ -37,7 +37,7 @@ def afterpulse_column():
     return "frequency (afterpulsing)"
 
 
-@patch("simtools.io_operations.io_handler.IOHandler")
+@patch("simtools.io.io_handler.IOHandler")
 @patch("simtools.camera.single_photon_electron_spectrum.MetadataCollector")
 def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
     mock_io_handler_instance = mock_io_handler.return_value

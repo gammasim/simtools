@@ -386,7 +386,7 @@ def test_generate_plot_configurations(tmp_test_directory, db_config):
     assert result is None
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.collect_data_from_file")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_read_table, mock_collect_data, tmp_test_directory, db_config
