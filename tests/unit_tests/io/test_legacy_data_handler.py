@@ -3,7 +3,7 @@
 import pytest
 from astropy.table import Table
 
-from simtools.io_operations import legacy_data_handler
+from simtools.io import legacy_data_handler
 
 
 @pytest.fixture

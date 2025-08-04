@@ -9,7 +9,7 @@ from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
 
 from simtools import version
-from simtools.io_operations.hdf5_handler import fill_hdf5_table
+from simtools.io.hdf5_handler import fill_hdf5_table
 from simtools.simtel.simtel_io_histogram import (
     HistogramIdNotFoundError,
     InconsistentHistogramFormatError,

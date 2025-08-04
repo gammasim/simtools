@@ -14,6 +14,7 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ def get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PAT
     parameters = []
     for schema_file in schema_files:
         # reading parameter 'name' only - first document in schema file should be ok
-        schema_dict = gen.collect_data_from_file(file_name=schema_file, yaml_document=0)
+        schema_dict = ascii_handler.collect_data_from_file(file_name=schema_file, yaml_document=0)
         parameters.append(schema_dict.get("name"))
     return parameters, schema_files
 
@@ -80,7 +81,7 @@ def get_model_parameter_schema_version(schema_version=None):
         Schema version.
 
     """
-    schemas = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
+    schemas = ascii_handler.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
 
     if schema_version is None and schemas:
         return schemas[0].get("schema_version")
@@ -139,7 +140,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
 def _retrieve_yaml_schema_from_uri(uri):
     """Load schema from a file URI."""
     path = SCHEMA_PATH / Path(uri.removeprefix("file:/"))
-    contents = gen.collect_data_from_file(file_name=path)
+    contents = ascii_handler.collect_data_from_file(file_name=path)
     return Resource.from_contents(contents)
 
 
@@ -194,7 +195,7 @@ def load_schema(schema_file=None, schema_version="latest"):
 
     for path in (schema_file, SCHEMA_PATH / schema_file):
         try:
-            schema = gen.collect_data_from_file(file_name=path)
+            schema = ascii_handler.collect_data_from_file(file_name=path)
             break
         except FileNotFoundError:
             continue
