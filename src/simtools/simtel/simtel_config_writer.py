@@ -10,6 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
@@ -404,7 +405,9 @@ class SimtelConfigWriter:
             "simtools_model_production_version": self._model_version,
         }
         try:
-            build_opts = gen.collect_data_from_file(Path(self._simtel_path) / "build_opts.yml")
+            build_opts = ascii_handler.collect_data_from_file(
+                Path(self._simtel_path) / "build_opts.yml"
+            )
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
         except (FileNotFoundError, TypeError):
