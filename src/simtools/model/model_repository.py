@@ -10,7 +10,7 @@ import logging
 import shutil
 from pathlib import Path
 
-from simtools.utils import general as gen
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def _verify_model_parameters_for_production(simulation_models_path, production_f
     tuple
         (missing_files_list, total_checked_count)
     """
-    production_table = gen.collect_data_from_file(production_file)
+    production_table = ascii_handler.collect_data_from_file(production_file)
     missing_files = []
     total_checked = 0
 
