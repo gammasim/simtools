@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import simtools.utils.general as gen
+from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
 )
@@ -29,7 +29,9 @@ def test_fits_file_2():
 
 @pytest.fixture
 def metric():
-    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yml")
+    return ascii_handler.collect_data_from_file(
+        "tests/resources/production_simulation_config_metrics.yml"
+    )
 
 
 @pytest.fixture

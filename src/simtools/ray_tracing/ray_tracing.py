@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing

@@ -11,13 +11,11 @@ import logging
 import uuid
 from pathlib import Path
 
-import yaml
-
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
 from simtools.data_model import metadata_model, schema
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.utils import names
 
 __all__ = ["MetadataCollector"]
@@ -158,16 +156,13 @@ class MetadataCollector:
 
         try:
             yml_file = names.file_name_with_version(yml_file, suffix)
-            with open(yml_file, "w", encoding="UTF-8") as file:
-                yaml.safe_dump(
-                    gen.change_dict_keys_case(
-                        gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
-                        keys_lower_case,
-                    ),
-                    file,
-                    sort_keys=False,
-                    explicit_start=True,
-                )
+            ascii_handler.write_data_to_file(
+                data=gen.change_dict_keys_case(
+                    gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
+                    keys_lower_case,
+                ),
+                output_file=yml_file,
+            )
             self._logger.info(f"Writing metadata to {yml_file}")
             return yml_file
         except FileNotFoundError as exc:
@@ -228,7 +223,7 @@ class MetadataCollector:
 
         """
         try:
-            return gen.collect_data_from_file(file_name=self.schema_file)
+            return ascii_handler.collect_data_from_file(file_name=self.schema_file)
         except TypeError:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
@@ -337,7 +332,7 @@ class MetadataCollector:
 
         Raises
         ------
-        gen.InvalidConfigDataError, FileNotFoundError
+        ValueError:
             if metadata cannot be read from file.
         KeyError:
             if metadata does not exist
@@ -368,7 +363,7 @@ class MetadataCollector:
                 )
                 continue
             else:
-                raise gen.InvalidConfigDataError(f"Unknown metadata file format: {metadata_file}")
+                raise ValueError(f"Unknown metadata file format: {metadata_file}")
 
             schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
             metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
@@ -394,16 +389,14 @@ class MetadataCollector:
     def _read_input_metadata_from_yml_or_json(self, metadata_file_name):
         """Read input metadata from yml or json file."""
         try:
-            _input_metadata = gen.collect_data_from_file(file_name=metadata_file_name)
+            _input_metadata = ascii_handler.collect_data_from_file(file_name=metadata_file_name)
             _json_type_metadata = {"Metadata", "metadata", "METADATA"}.intersection(_input_metadata)
             if len(_json_type_metadata) == 1:
                 _input_metadata = _input_metadata[_json_type_metadata.pop()]
             if len(_json_type_metadata) > 1:
-                self._logger.error("More than one metadata entry found in %s", metadata_file_name)
-                raise gen.InvalidConfigDataError
-        except (gen.InvalidConfigDataError, FileNotFoundError) as exc:
-            self._logger.error("Failed reading metadata from %s", metadata_file_name)
-            raise exc
+                raise ValueError(f"More than one metadata entry found in {metadata_file_name}")
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Failed reading metadata from {metadata_file_name}") from exc
         return _input_metadata
 
     def _fill_product_meta(self, product_dict):

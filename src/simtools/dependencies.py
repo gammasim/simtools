@@ -18,6 +18,7 @@ import yaml
 
 import simtools.utils.general as gen
 from simtools.db.db_handler import DatabaseHandler
+from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
 

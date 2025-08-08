@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from simtools.io_operations.hdf5_handler import fill_hdf5_table
+from simtools.io.hdf5_handler import fill_hdf5_table
 
 
 def test_fill_hdf5_table_1d(corsika_histograms_instance_set_histograms):

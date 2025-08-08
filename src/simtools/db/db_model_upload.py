@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix):
     file_prefix : str
         Path to location of all additional files to be uploaded.
     """
-    par_dict = gen.collect_data_from_file(file_name=file)
+    par_dict = ascii_handler.collect_data_from_file(file_name=file)
     logger.debug(
         f"Adding the following parameter to the DB: {par_dict['parameter']} "
         f"version {par_dict['parameter_version']} "
@@ -119,7 +119,7 @@ def _read_production_table(model_dict, file, model_name):
             "design_model": {},
         },
     )
-    parameter_dict = gen.collect_data_from_file(file_name=file)
+    parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
     logger.debug(f"Reading production table for {array_element} (collection {collection})")
     try:
         if array_element in ("configuration_corsika", "configuration_sim_telarray"):
