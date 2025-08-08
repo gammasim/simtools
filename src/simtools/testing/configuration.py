@@ -4,8 +4,6 @@ import logging
 import os
 from pathlib import Path
 
-import yaml
-
 import simtools.utils.general as gen
 from simtools.io import ascii_handler
 
@@ -196,8 +194,7 @@ def _prepare_test_options(config, output_path, model_version=None):
                 config["use_plain_output_path"] = True
 
     _logger.info(f"Writing config file: {tmp_config_file}")
-    with open(tmp_config_file, "w", encoding="utf-8") as file:
-        yaml.safe_dump(config, file, sort_keys=False)
+    ascii_handler.write_data_to_file(data=config, output_file=tmp_config_file, sort_keys=False)
 
     return tmp_config_file, None, config_file_model_version
 
