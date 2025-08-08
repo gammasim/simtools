@@ -11,8 +11,6 @@ import logging
 import uuid
 from pathlib import Path
 
-import yaml
-
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
@@ -158,16 +156,13 @@ class MetadataCollector:
 
         try:
             yml_file = names.file_name_with_version(yml_file, suffix)
-            with open(yml_file, "w", encoding="UTF-8") as file:
-                yaml.safe_dump(
-                    gen.change_dict_keys_case(
-                        gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
-                        keys_lower_case,
-                    ),
-                    file,
-                    sort_keys=False,
-                    explicit_start=True,
-                )
+            ascii_handler.write_data_to_file(
+                data=gen.change_dict_keys_case(
+                    gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
+                    keys_lower_case,
+                ),
+                output_file=yml_file,
+            )
             self._logger.info(f"Writing metadata to {yml_file}")
             return yml_file
         except FileNotFoundError as exc:
