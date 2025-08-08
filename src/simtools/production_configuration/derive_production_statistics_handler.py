@@ -12,13 +12,12 @@ query point.
 """
 
 import itertools
-import json
 import logging
 from pathlib import Path
 
 import astropy.units as u
 
-from simtools.io.ascii_handler import collect_data_from_file
+from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
 )
@@ -48,7 +47,7 @@ class ProductionStatisticsHandler:
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
         self.output_path = output_path
-        self.metrics = collect_data_from_file(self.args["metrics_file"])
+        self.metrics = ascii_handler.collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
         self.interpolation_handler = None
         self.grid_points_production = self._load_grid_points_production()
@@ -56,7 +55,7 @@ class ProductionStatisticsHandler:
     def _load_grid_points_production(self):
         """Load grid points from the JSON file."""
         grid_points_production_file = self.args["grid_points_production_file"]
-        return collect_data_from_file(grid_points_production_file)
+        return ascii_handler.collect_data_from_file(grid_points_production_file)
 
     def initialize_evaluators(self):
         """Initialize StatisticalUncertaintyEvaluator instances for the given grid point."""
@@ -127,8 +126,10 @@ class ProductionStatisticsHandler:
         output_filename = self.args["output_file"]
         self.output_path.mkdir(parents=True, exist_ok=True)
         output_file_path = self.output_path.joinpath(output_filename)
-        with open(output_file_path, "w", encoding="utf-8") as f:
-            json.dump(output_data, f, indent=4)
+        ascii_handler.write_data_to_file(
+            data=output_data,
+            output_file=output_file_path,
+        )
         self.logger.info(f"Output saved to {self.output_path}")
 
     def plot_production_statistics_comparison(self):
