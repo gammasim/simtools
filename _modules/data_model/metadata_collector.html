@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=781b25cb"></script>
+    <script src="../../_static/documentation_options.js?v=92e3e644"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gce4e588" />
+  <meta name="docsearch:version" content="0.1.dev1+g806f1b9" />
   </head>
   
   
@@ -446,8 +446,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
-
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">METADATA_JSON_SCHEMA</span>
@@ -606,16 +604,13 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">yml_file</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">file_name_with_version</span><span class="p">(</span><span class="n">yml_file</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yml_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span>
-                    <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
-                        <span class="n">gen</span><span class="o">.</span><span class="n">remove_substring_recursively_from_dict</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">),</span>
-                        <span class="n">keys_lower_case</span><span class="p">,</span>
-                    <span class="p">),</span>
-                    <span class="n">file</span><span class="p">,</span>
-                    <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">explicit_start</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="p">)</span>
+            <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">remove_substring_recursively_from_dict</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">),</span>
+                    <span class="n">keys_lower_case</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">output_file</span><span class="o">=</span><span class="n">yml_file</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing metadata to </span><span class="si">{</span><span class="n">yml_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">yml_file</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
