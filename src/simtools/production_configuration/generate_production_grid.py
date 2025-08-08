@@ -9,7 +9,6 @@ Additionally, it allows for converting between Altitude/Azimuth and Right Ascens
 Declination coordinates. The resulting grid points are saved to a file.
 """
 
-import json
 import logging
 
 import numpy as np
@@ -18,6 +17,8 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
 from scipy.interpolate import griddata
+
+from simtools.io import ascii_handler
 
 
 class GridGeneration:
@@ -331,7 +332,7 @@ class GridGeneration:
                     point["dec"] = radec.dec.deg * u.deg
         return grid_points
 
-    def serialize_grid_points(self, grid_points, output_file=None):
+    def serialize_grid_points(self, grid_points, output_file):
         """Serialize the grid output and save to a file or print to the console."""
         cleaned_points = []
 
@@ -346,15 +347,12 @@ class GridGeneration:
 
             cleaned_points.append(cleaned_point)
 
-        output_data = json.dumps(cleaned_points, indent=4)
-
-        if output_file:
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write(output_data)
-            self._logger.info(f"Output saved to {output_file}")
-        else:
-            self._logger.info(output_data)
-        return output_data
+        ascii_handler.write_data_to_file(
+            data=cleaned_points,
+            output_file=output_file,
+            sort_keys=False,
+        )
+        self._logger.info(f"Output saved to {output_file}")
 
     def serialize_quantity(self, value):
         """Serialize Quantity."""
