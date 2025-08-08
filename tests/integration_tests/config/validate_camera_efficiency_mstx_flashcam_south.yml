@@ -8,6 +8,7 @@ applications:
     site: South
     telescope: MSTx-FlashCam
     zenith_angle: 0.
+    parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
     use_plain_output_path: true
     log_level: debug
@@ -18,6 +19,10 @@ applications:
   - output_file: validate_camera_efficiency_MSTx-FlashCam_cherenkov.pdf
   - output_file: camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg_validate_camera_efficiency.txt
   - output_file: camera_efficiency_table_South_MSTx-FlashCam_za0.0deg_azm000deg_validate_camera_efficiency.ecsv
+  - model_parameter_validation:
+      parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
+      reference_parameter_name: nsb_pixel_rate
+      tolerance: 1.e-1
   test_name: MSTS
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
