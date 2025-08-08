@@ -248,7 +248,7 @@ def run_psf_simulation(
         )
         ax = fig.get_axes()[0]
         ax.set_ylim(0, 1.05)
-        ax.set_ylabel("Cumulative PSF")
+        ax.set_ylabel(CUMULATIVE_PSF)
 
         # Create title with asterisk for best parameters
         title_prefix = "* " if is_best else ""
@@ -347,7 +347,7 @@ def _create_plot_for_parameters(pars, rmsd, d80, simulated_data, data_to_plot, i
     )
     ax = fig.get_axes()[0]
     ax.set_ylim(0, 1.05)
-    ax.set_ylabel("Cumulative PSF")
+    ax.set_ylabel(CUMULATIVE_PSF)
 
     title_prefix = "* " if is_best else ""
 
