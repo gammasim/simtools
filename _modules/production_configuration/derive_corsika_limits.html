@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=92e3e644"></script>
+    <script src="../../_static/documentation_options.js?v=5edafad6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g806f1b9" />
+  <meta name="docsearch:version" content="0.1.dev1+g3d5e284" />
   </head>
   
   
@@ -438,13 +438,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Table</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.corsika_limit_calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">LimitCalculator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventHistograms</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -497,6 +498,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute limits for a given event data file and telescope configuration.</span>
 
+<span class="sd">    Compute limits for energy, radial distance, and viewcone.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    file_path : str</span>
@@ -515,11 +518,22 @@
 <span class="sd">    dict</span>
 <span class="sd">        Dictionary containing the computed limits and metadata.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">calculator</span> <span class="o">=</span> <span class="n">LimitCalculator</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="n">telescope_ids</span><span class="p">)</span>
-    <span class="n">limits</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">compute_limits</span><span class="p">(</span><span class="n">loss_fraction</span><span class="p">)</span>
+    <span class="n">histograms</span> <span class="o">=</span> <span class="n">SimtelIOEventHistograms</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="n">telescope_ids</span>
+    <span class="p">)</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+
+    <span class="n">limits</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">:</span> <span class="n">compute_lower_energy_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">),</span>
+        <span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">:</span> <span class="n">compute_upper_radius_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">),</span>
+        <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">:</span> <span class="n">compute_viewcone</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">if</span> <span class="n">plot_histograms</span><span class="p">:</span>
-        <span class="n">calculator</span><span class="o">.</span><span class="n">plot_data</span><span class="p">(</span><span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">())</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">plot_data</span><span class="p">(</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+            <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">limits</span>
 
@@ -666,6 +680,164 @@
     <span class="k">for</span> <span class="n">layout_name</span> <span class="ow">in</span> <span class="n">layout_names</span><span class="p">:</span>
         <span class="n">layout_dict</span><span class="p">[</span><span class="n">layout_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_array_elements_for_layout</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">layout_dict</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the limits based on the loss fraction.</span>
+
+<span class="sd">    Add or subtract one bin to be on the safe side of the limit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hist : np.ndarray</span>
+<span class="sd">        1D histogram array.</span>
+<span class="sd">    bin_edges : np.ndarray</span>
+<span class="sd">        Array of bin edges.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+<span class="sd">    limit_type : str, optional</span>
+<span class="sd">        Type of limit (&#39;lower&#39; or &#39;upper&#39;). Default is &#39;lower&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Bin edge value corresponding to the threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">loss_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="n">total_events</span>
+    <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span>
+        <span class="n">cum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;lower&quot;</span><span class="p">:</span>
+        <span class="n">cum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;limit_type must be &#39;lower&#39; or &#39;upper&#39;&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compute_lower_energy_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_lower_energy_limit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_lower_energy_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the lower energy limit in TeV based on the event loss fraction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : SimtelIOEventHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Lower energy limit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energy_min</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">),</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">energy_min</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;energy_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;energy_min&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Lower energy limit is equal to the minimum energy of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_close</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">warning_text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the value is close to the reference value and log a warning if so.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">):</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">warning_text</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="compute_upper_radius_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_upper_radius_limit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_upper_radius_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the upper radial distance based on the event loss fraction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : SimtelIOEventHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Upper radial distance in m.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">radius_limit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">),</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">radius_limit</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;core_scatter_max&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Upper radius limit is equal to the maximum core scatter distance of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_viewcone">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_viewcone">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_viewcone</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the viewcone based on the event loss fraction.</span>
+
+<span class="sd">    The shower IDs of triggered events are used to create a mask for the</span>
+<span class="sd">    azimuth and altitude of the triggered events. A mapping is created</span>
+<span class="sd">    between the triggered events and the simulated events using the shower IDs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : SimtelIOEventHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Viewcone radius in degrees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">viewcone_limit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">),</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">viewcone_limit</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;viewcone_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;viewcone_max&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Upper viewcone limit is equal to the maximum viewcone distance of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=92e3e644"></script>
+    <script src="_static/documentation_options.js?v=5edafad6"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g806f1b9" />
+  <meta name="docsearch:version" content="0.1.dev1+g3d5e284" />
   </head>
   
   
@@ -621,17 +621,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties">compute_efficiency_and_uncertainties() (production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.compute_limits">compute_limits() (production_configuration.corsika_limit_calculator.LimitCalculator method)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.compute_lower_energy_limit">compute_lower_energy_limit() (production_configuration.corsika_limit_calculator.LimitCalculator method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_lower_energy_limit">compute_lower_energy_limit() (in module production_configuration.derive_corsika_limits)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_reconstructed_event_histogram">compute_reconstructed_event_histogram() (production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_utils.compute_telescope_transmission">compute_telescope_transmission() (in module model.model_utils)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.compute_upper_radius_limit">compute_upper_radius_limit() (production_configuration.corsika_limit_calculator.LimitCalculator method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_upper_radius_limit">compute_upper_radius_limit() (in module production_configuration.derive_corsika_limits)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.compute_viewcone">compute_viewcone() (production_configuration.corsika_limit_calculator.LimitCalculator method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_viewcone">compute_viewcone() (in module production_configuration.derive_corsika_limits)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.config_file_directory">config_file_directory (model.model_parameter.ModelParameter property)</a>
 </li>
@@ -707,7 +705,7 @@
 </li>
       <li><a href="api-reference/io.html#simtools.io.table_handler.copy_metadata_to_hdf5">copy_metadata_to_hdf5() (in module simtools.io.table_handler)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.core_distance_bins">core_distance_bins (production_configuration.corsika_limit_calculator.LimitCalculator property)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.core_distance_bins">core_distance_bins (simtel.simtel_io_event_histograms.SimtelIOEventHistograms property)</a>
 </li>
       <li>
     corsika.corsika_config
@@ -988,7 +986,7 @@
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">efficiency_interval() (configuration.commandline_parser.CommandLineParser static method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.energy_bins">energy_bins (production_configuration.corsika_limit_calculator.LimitCalculator property)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.energy_bins">energy_bins (simtel.simtel_io_event_histograms.SimtelIOEventHistograms property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram">event_1d_histogram() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
@@ -1066,12 +1064,14 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">fill_corsika_configuration() (corsika.corsika_config.CorsikaConfig method)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.fill">fill() (simtel.simtel_io_event_histograms.SimtelIOEventHistograms method)</a>
 </li>
-      <li><a href="api-reference/io.html#simtools.io.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module simtools.io.hdf5_handler)</a>
+      <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">fill_corsika_configuration() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/io.html#simtools.io.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module simtools.io.hdf5_handler)</a>
+</li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.find_best_parameters">find_best_parameters() (in module derive_psf_parameters)</a>
 </li>
       <li><a href="api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum">fit_afterpulse_spectrum() (camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum method)</a>
@@ -1556,8 +1556,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator">LimitCalculator (class in production_configuration.corsika_limit_calculator)</a>
-</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.list_of_histograms">list_of_histograms (simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.load_and_process_data">load_and_process_data() (in module derive_psf_parameters)</a>
@@ -1858,8 +1856,6 @@
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.calculate_statistical_uncertainties_grid_point">production_configuration.calculate_statistical_uncertainties_grid_point</a>
 </li>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.corsika_limit_calculator">production_configuration.corsika_limit_calculator</a>
-</li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_corsika_limits">production_configuration.derive_corsika_limits</a>
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_production_statistics">production_configuration.derive_production_statistics</a>
@@ -1903,6 +1899,8 @@
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_config_reader">simtel.simtel_config_reader</a>
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_config_writer">simtel.simtel_config_writer</a>
+</li>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_histograms">simtel.simtel_io_event_histograms</a>
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_reader">simtel.simtel_io_event_reader</a>
 </li>
@@ -2094,7 +2092,7 @@
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.plot_cumulative">plot_cumulative() (ray_tracing.psf_analysis.PSFImage method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.plot_data">plot_data() (production_configuration.corsika_limit_calculator.LimitCalculator method)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.plot_data">plot_data() (simtel.simtel_io_event_histograms.SimtelIOEventHistograms method)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_density_distr">plot_density_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
@@ -2218,13 +2216,6 @@
 
       <ul>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.calculate_statistical_uncertainties_grid_point">module</a>
-</li>
-      </ul></li>
-      <li>
-    production_configuration.corsika_limit_calculator
-
-      <ul>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.corsika_limit_calculator">module</a>
 </li>
       </ul></li>
       <li>
@@ -2542,6 +2533,13 @@
 </li>
       </ul></li>
       <li>
+    simtel.simtel_io_event_histograms
+
+      <ul>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_histograms">module</a>
+</li>
+      </ul></li>
+      <li>
     simtel.simtel_io_event_reader
 
       <ul>
@@ -2621,11 +2619,13 @@
 </li>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader">SimtelIOEventDataReader (class in simtel.simtel_io_event_reader)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader">SimtelIOEventDataReader (class in simtel.simtel_io_event_reader)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter">SimtelIOEventDataWriter (class in simtel.simtel_io_event_writer)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms">SimtelIOEventHistograms (class in simtel.simtel_io_event_histograms)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms">SimtelIOHistograms (class in simtel.simtel_io_histograms)</a>
 </li>
@@ -2973,7 +2973,7 @@
       </ul></li>
       <li><a href="api-reference/testing.html#testing.configuration.VersionError">VersionError</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.corsika_limit_calculator.LimitCalculator.view_cone_bins">view_cone_bins (production_configuration.corsika_limit_calculator.LimitCalculator property)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.view_cone_bins">view_cone_bins (simtel.simtel_io_event_histograms.SimtelIOEventHistograms property)</a>
 </li>
       <li>
     visualization.legend_handlers
