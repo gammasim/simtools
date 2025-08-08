@@ -279,7 +279,7 @@ def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"grid_points": ["test1", "test2"]}):
         with patch(
             MOCK_OPEN_PATH, mock_open(read_data=json.dumps({"grid_points": ["test1", "test2"]}))
         ):
@@ -318,7 +318,7 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"grid_points": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with an empty grid_points list
@@ -344,7 +344,7 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"wrong_key": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with the wrong key
