@@ -1,0 +1,16 @@
+---
+model_version: "6.2.0"
+description: "Threshold changes for production tables in the context of the threshold study 6.2.0"
+changes:
+  MSTx-FlashCam:
+    dsum_threshold:
+      version: "4.0.0"
+      value: 62.5
+  MSTx-NectarCam:
+    discriminator_threshold:
+      version: "4.0.0"
+      value: 31.9
+  SSTS-design:
+    discriminator_threshold:
+      version: "4.0.0"
+      value: 8.92
