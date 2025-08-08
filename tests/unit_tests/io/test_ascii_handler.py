@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 
+import json
 import logging
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
+import astropy.units as u
+import numpy as np
 import pytest
 import yaml
 
@@ -194,3 +197,117 @@ def test_read_file_encoded_in_utf_or_latin_unicode_decode_error():
             UnicodeDecodeError, match="Unable to decode file.*using UTF-8 or Latin-1"
         ):
             read_file_encoded_in_utf_or_latin(mock_file_name)
+
+
+def test_json_numpy_encoder():
+    encoder = ascii_handler.JsonNumpyEncoder()
+    assert isinstance(encoder.default(np.float64(3.14)), float)
+    assert isinstance(encoder.default(np.int64(3.14)), int)
+    assert isinstance(encoder.default(np.array([])), list)
+    assert isinstance(encoder.default(u.Unit("m")), str)
+    assert encoder.default(u.Unit("")) is None
+    assert isinstance(encoder.default(u.Unit("m/s")), str)
+    assert isinstance(encoder.default(np.bool_(True)), bool)
+
+    with pytest.raises(TypeError):
+        encoder.default("abc")
+
+
+def test_write_to_yaml(tmp_path):
+    """Test the _write_to_yaml function."""
+    test_data = {"key1": "value1", "key2": [1, 2, 3], "key3": {"nested_key": "nested_value"}}
+    output_file = tmp_path / "test_output.yaml"
+
+    # Test writing YAML file
+    ascii_handler._write_to_yaml(test_data, output_file, sort_keys=False)
+    assert output_file.exists()
+
+    # Verify the content of the written file
+    with open(output_file, encoding="utf-8") as file:
+        loaded_data = yaml.safe_load(file)
+    assert loaded_data == test_data
+
+    # Test writing YAML file with sorted keys
+    sorted_output_file = tmp_path / "test_output_sorted.yaml"
+    ascii_handler._write_to_yaml(test_data, sorted_output_file, sort_keys=True)
+    assert sorted_output_file.exists()
+
+    # Verify the content of the sorted file
+    with open(sorted_output_file, encoding="utf-8") as file:
+        loaded_data_sorted = yaml.safe_load(file)
+    assert list(loaded_data_sorted.keys()) == sorted(test_data.keys())
+
+
+def test_write_to_json(tmp_path):
+    """Test the _write_to_json function."""
+    test_data = {"key1": "value1", "key2": [1, 2, 3], "key3": {"nested_key": "nested_value"}}
+    output_file = tmp_path / "test_output.json"
+
+    # Test writing JSON file
+    ascii_handler._write_to_json(test_data, output_file, sort_keys=False, numpy_types=False)
+    assert output_file.exists()
+
+    # Verify the content of the written file
+    with open(output_file, encoding="utf-8") as file:
+        loaded_data = json.load(file)
+    assert loaded_data == test_data
+
+    # Test writing JSON file with sorted keys
+    sorted_output_file = tmp_path / "test_output_sorted.json"
+    ascii_handler._write_to_json(test_data, sorted_output_file, sort_keys=True, numpy_types=False)
+    assert sorted_output_file.exists()
+
+    # Verify the content of the sorted file
+    with open(sorted_output_file, encoding="utf-8") as file:
+        loaded_data_sorted = json.load(file)
+    assert list(loaded_data_sorted.keys()) == sorted(test_data.keys())
+
+    # Test writing JSON file with numpy types
+    numpy_data = {"array": np.array([1, 2, 3]), "float": np.float64(3.14), "int": np.int64(42)}
+    numpy_output_file = tmp_path / "test_numpy_output.json"
+    ascii_handler._write_to_json(numpy_data, numpy_output_file, sort_keys=False, numpy_types=True)
+    assert numpy_output_file.exists()
+
+    # Verify the content of the file with numpy types
+    with open(numpy_output_file, encoding="utf-8") as file:
+        loaded_numpy_data = json.load(file)
+    assert loaded_numpy_data == {
+        "array": [1, 2, 3],
+        "float": 3.14,
+        "int": 42,
+    }
+
+
+def test_write_data_to_file_json(tmp_path):
+    """Test write_data_to_file for JSON files."""
+    test_data = {"key1": "value1", "key2": [1, 2, 3]}
+    output_file = tmp_path / "test_output.json"
+
+    ascii_handler.write_data_to_file(test_data, output_file, sort_keys=False, numpy_types=False)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        loaded_data = json.load(file)
+    assert loaded_data == test_data
+
+
+def test_write_data_to_file_yaml(tmp_path):
+    """Test write_data_to_file for YAML files."""
+    test_data = {"key1": "value1", "key2": [1, 2, 3]}
+    output_file = tmp_path / "test_output.yaml"
+
+    ascii_handler.write_data_to_file(test_data, output_file, sort_keys=False, numpy_types=False)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        loaded_data = yaml.safe_load(file)
+    assert loaded_data == test_data
+
+
+def test_write_data_to_file_invalid_extension(tmp_path):
+    """Test write_data_to_file with unsupported file extension."""
+    test_data = {"key1": "value1"}
+    output_file = tmp_path / "test_output.txt"
+
+    with pytest.raises(ValueError, match="Unsupported file type"):
+        ascii_handler.write_data_to_file(test_data, output_file)
