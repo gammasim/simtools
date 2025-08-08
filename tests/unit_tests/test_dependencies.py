@@ -192,9 +192,10 @@ def test_build_options(monkeypatch, fake_path):
     with pytest.raises(FileNotFoundError, match="No build_opts.yml file found."):
         dependencies.get_build_options()
 
-    # mock gen.collect_data_from_file to return a dict
+    # mock ascii_handler.collect_data_from_file to return a dict
     with mock.patch(
-        "simtools.dependencies.gen.collect_data_from_file", return_value={"corsika_version": "7.7"}
+        "simtools.dependencies.ascii_handler.collect_data_from_file",
+        return_value={"corsika_version": "7.7"},
     ):
         build_opts = dependencies.get_build_options()
         assert build_opts == {"corsika_version": "7.7"}

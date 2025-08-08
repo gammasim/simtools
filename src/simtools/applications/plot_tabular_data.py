@@ -31,7 +31,7 @@ from simtools.configuration import configurator
 from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.visualization import plot_tables
 
 
@@ -91,7 +91,7 @@ def main():
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
         schema.validate_dict_using_schema(
-            gen.collect_data_from_file(args_dict["plot_config"]),
+            ascii_handler.collect_data_from_file(args_dict["plot_config"]),
             PLOT_CONFIG_SCHEMA,
         )
     )

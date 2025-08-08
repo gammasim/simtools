@@ -46,7 +46,7 @@ def mock_results():
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     """Test generate_corsika_limits_grid function."""
     # Mock dependencies
-    mock_collect = mocker.patch("simtools.utils.general.collect_data_from_file")
+    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
     mock_collect.side_effect = [
         {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
     ]
@@ -75,7 +75,7 @@ def test_process_file(mocker):
     mock_calculator.return_value.compute_limits.return_value = {"test": "limits"}
     mock_calculator.return_value.plot_data.return_value = None
 
-    mocker.patch("simtools.io_operations.io_handler.IOHandler")
+    mocker.patch("simtools.io.io_handler.IOHandler")
 
     result = _process_file("test.fits", [1, 2], 0.2, True, "array_name")
 
@@ -85,7 +85,7 @@ def test_process_file(mocker):
 
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_path):
     """Test write_results function."""
-    mock_io = mocker.patch("simtools.io_operations.io_handler.IOHandler")
+    mock_io = mocker.patch("simtools.io.io_handler.IOHandler")
     mock_io.return_value.get_output_directory.return_value = tmp_path
 
     mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")

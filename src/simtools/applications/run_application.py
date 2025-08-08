@@ -68,6 +68,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.runners import simtools_runner
+from simtools.io import ascii_handler
 
 
 def _parse(label, description, usage):
@@ -110,6 +111,7 @@ def _parse(label, description, usage):
         default=False,
     )
     return config.initialize(db_config=True)
+
 
 
 def main():  # noqa: D103
