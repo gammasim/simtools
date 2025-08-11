@@ -560,6 +560,8 @@ class SimtelIOHistogram:
             self.energy_range[0],
             self.energy_range[1],
         )
+        if first_estimate == 0:
+            return 0.0 * u.s
         if stacked_num_simulated_events is None:
             _simulated_events, _ = self.total_number_of_events
             return (_simulated_events / first_estimate) * u.s
