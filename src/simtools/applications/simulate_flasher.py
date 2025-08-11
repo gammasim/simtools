@@ -85,44 +85,44 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--return_cleaned",
-        help="ctapipe, if image should be cleaned, notice as well image cleaning parameters",
-        type=str,
-        default=False,
+        help="If set, perform image cleaning and return cleaned image.",
+        action="store_true",
         required=False,
     )
     config.parser.add_argument(
         "--picture_thresh",
-        help="ctapipe, threshold above which all pixels are retained",
+        help="Threshold above which all pixels are retained.",
         type=int,
         required=False,
     )
     config.parser.add_argument(
         "--boundary_thresh",
-        help="ctapipe, threshold above which pixels are retained if\
-              they have a neighbor already above the picture_thresh",
+        help=(
+            "Threshold above which pixels are retained if they have a neighbor "
+            "already above the picture threshold."
+        ),
         type=int,
         required=False,
     )
     config.parser.add_argument(
         "--min_neighbors",
-        help="ctapipe, A picture pixel survives cleaning only if it has at\
-              least this number of picture neighbors. This has no effect in\
-              case keep_isolated_pixels is True",
+        help=(
+            "Minimum number of picture neighbors a picture pixel must have "
+            "(ignored if keep_isolated_pixels)."
+        ),
         type=int,
         required=False,
     )
     config.parser.add_argument(
         "--level",
-        help="read 5",
+        help="read_cta plotting level (default 5)",
         type=int,
         default=5,
         required=False,
     )
     config.parser.add_argument(
         "--integration_window",
-        help="ctapipe, A picture pixel survives cleaning only if it has at\
-              least this number of picture neighbors. This has no effect in\
-              case keep_isolated_pixels is True",
+        help="Integration window width,offset (default 7 3)",
         nargs="*",
         default=["7", "3"],
         required=False,
@@ -149,16 +149,9 @@ def flasher_configs(telescope_model_name):
         Application name and mode
 
     """
-    application = None
-
     if "SST" in telescope_model_name:
-        # For dual-mirror telescopes (SST)
-        application = ("ff-gct", "flasher")
-    else:
-        # For single-mirror telescopes (MST, LST)
-        application = ("ff-1m", "flasher")
-
-    return application
+        return ("ff-gct", "flasher")
+    return ("ff-1m", "flasher")
 
 
 def main():
