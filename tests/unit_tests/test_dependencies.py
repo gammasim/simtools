@@ -313,7 +313,7 @@ def test_get_build_options_success(monkeypatch, fake_path):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_build_opts = {"corsika_version": "7.7"}
     with mock.patch(
-        "simtools.dependencies.gen.collect_data_from_file", return_value=mock_build_opts
+        "simtools.dependencies.ascii_handler.collect_data_from_file", return_value=mock_build_opts
     ):
         assert dependencies.get_build_options() == mock_build_opts
 

@@ -16,7 +16,6 @@ from pathlib import Path
 
 import yaml
 
-import simtools.utils.general as gen
 from simtools.db.db_handler import DatabaseHandler
 from simtools.io import ascii_handler
 
@@ -194,7 +193,7 @@ def get_build_options(run_time=None):
 
     if run_time is None:
         try:
-            return gen.collect_data_from_file(build_opts_path)
+            return ascii_handler.collect_data_from_file(build_opts_path)
         except FileNotFoundError as exc:
             raise FileNotFoundError("No build_opts.yml file found.") from exc
 

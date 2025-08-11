@@ -126,7 +126,8 @@ def test_read_application_configuration_selected_steps(
         {"application": "app3", "configuration": {"key": "value3"}},
     ]
     monkeypatch.setattr(
-        "simtools.utils.general.collect_data_from_file", mock_collect_data_from_file(applications)
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
     )
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._set_input_output_directories",
@@ -155,7 +156,8 @@ def test_read_application_configuration_empty_applications(
 ):
     applications = []
     monkeypatch.setattr(
-        "simtools.utils.general.collect_data_from_file", mock_collect_data_from_file(applications)
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
     )
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._set_input_output_directories",

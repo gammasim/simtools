@@ -331,7 +331,7 @@ def test_generate_output_file_name(
 
 
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables.gen.collect_data_from_file")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 def test_generate_plot_configurations(
     mock_collect_data, mock_read_table, tmp_test_directory, db_config
 ):
@@ -443,7 +443,7 @@ def test_get_plotting_label_multiple_duplicates():
     assert result == "duplicate_label (3)"
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.collect_data_from_file")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_read_table, mock_collect_data, tmp_test_directory, db_config

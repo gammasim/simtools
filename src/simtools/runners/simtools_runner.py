@@ -5,6 +5,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies
+from simtools.io import ascii_handler
 
 
 def run_applications(args_dict, db_config, logger):
@@ -143,7 +144,7 @@ def _read_application_configuration(configuration_file, steps, logger):
         Path to the log file.
 
     """
-    job_configuration = gen.collect_data_from_file(configuration_file)
+    job_configuration = ascii_handler.collect_data_from_file(configuration_file)
     configurations = job_configuration.get("applications")
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
     logger.info(f"Setting workflow output path to {output_path}")
