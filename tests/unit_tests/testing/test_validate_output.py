@@ -579,7 +579,7 @@ def test_test_simtel_cfg_files_no_test_simtel_cfg_files(mocker):
 
 def test_validate_model_parameter_json_file(mocker, output_path):
     mock_db_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
-    mock_collect_data_from_file = mocker.patch("simtools.utils.general.collect_data_from_file")
+    mock_collect_data_from_file = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
     mock_compare_value = mocker.patch(
         "simtools.testing.validate_output._compare_value_from_parameter_dict"
     )
@@ -623,7 +623,7 @@ def test_validate_model_parameter_json_file(mocker, output_path):
 
 def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
     mock_db_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
-    mock_collect_data_from_file = mocker.patch("simtools.utils.general.collect_data_from_file")
+    mock_collect_data_from_file = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
     mock_compare_value = mocker.patch(
         "simtools.testing.validate_output._compare_value_from_parameter_dict", return_value=False
     )
