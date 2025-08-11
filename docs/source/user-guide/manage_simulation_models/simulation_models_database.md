@@ -2,7 +2,7 @@
 # Simulation Models Database and Repository
 
 The following applications are for testing, maintenance or debugging the simulation model database and repository.
-Note that the remote primary production database is modified only by the simulation models gitlab CI.
+Note that the remote primary production database is modified only by the simulation models GitLab CI.
 
 ## Simulation model database
 
@@ -25,7 +25,7 @@ Tests should be done using a sandbox database before applying this to the produc
 
 Applications modifying database entries:
 
-* update or define a single model parameter from a json file (as defined in the model parameter repository): [simtools-db-add-value-from-json-to-db](db_add_value_from_json_to_db)
+* update or define a single model parameter from a JSON file (as defined in the model parameter repository): [simtools-db-add-value-from-json-to-db](db_add_value_from_json_to_db)
 * upload a model parameter file: [simtools-db-add-file-to-db](db_add_file_to_db)
 * upload all model parameters and files from the model parameter repository: [simtools-db-add-simulation-model-from-repository-to-db](db_add_simulation_model_from_repository_to_db)
 
