@@ -124,6 +124,24 @@ definitions:
         description: |
           "Reference file used for comparison."
         type: string
+      model_parameter_validation:
+        description: |
+          "Validation of model parameters against reference values."
+        type: object
+        additionalProperties: false
+        properties:
+          parameter_file:
+            description: |
+              "Path to the JSON file containing model parameters."
+            type: string
+          reference_parameter_name:
+            description: |
+              "Name of the parameter to validate against the reference."
+            type: string
+          tolerance:
+            description: |
+              "Allowed tolerance for floating point comparison."
+            type: number
       test_simtel_cfg_files:
         description: |
           "Reference file used for comparison of sim_telarray configuration files."
