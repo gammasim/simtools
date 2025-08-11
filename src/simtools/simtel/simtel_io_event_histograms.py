@@ -107,13 +107,13 @@ class SimtelIOEventHistograms:
                 ("angular_distance", triggered_data.angular_distance, self.view_cone_bins, True),
                 ("angular_distance_mc", shower_data.angular_distance, self.view_cone_bins, True),
                 (
-                    "shower_cores",
+                    "x_core_shower_vs_y_core_shower",
                     (event_data.x_core_shower, event_data.y_core_shower),
                     [xy_bins, xy_bins],
                     False,
                 ),
                 (
-                    "shower_cores_mc",
+                    "x_core_shower_vs_y_core_shower_mc",
                     (shower_data.x_core_shower, shower_data.y_core_shower),
                     [xy_bins, xy_bins],
                     False,
@@ -201,48 +201,40 @@ class SimtelIOEventHistograms:
         """
         self._logger.info(f"Plotting histograms written to {output_path}")
 
-        # Calculate cumulative histograms
         cumulative_data = self._calculate_cumulative_data()
 
-        # Get plotting limits
         upper_radius_limit, lower_energy_limit, viewcone_radius = self._get_limits(limits)
 
-        # Generate all plot configurations
         plots = self._generate_plot_configurations(
             cumulative_data, upper_radius_limit, lower_energy_limit, viewcone_radius
         )
 
-        # Execute plotting loop
         self._execute_plotting_loop(plots, output_path, rebin_factor)
 
     def _calculate_cumulative_data(self):
         """Calculate all cumulative histograms needed for plotting."""
-        angular_dist_vs_energy = self.histograms.get("angular_distance_vs_energy")
-        normalized_cumulative_angular_vs_energy = self._calculate_cumulative_histogram(
-            angular_dist_vs_energy, axis=0, normalize=True
-        )
+        cumulative_data = {}
 
-        core_vs_energy = self.histograms.get("core_vs_energy")
-        normalized_cumulative_core_vs_energy = self._calculate_cumulative_histogram(
-            core_vs_energy, axis=0, normalize=True
-        )
+        # Calculate normalized cumulative for 2D vs_energy histograms
+        for hist_key in self.histograms:
+            if hist_key.endswith("_vs_energy") and not hist_key.endswith("_mc"):
+                output_key = f"normalized_cumulative_{hist_key}"
+                hist = self.histograms.get(hist_key)
+                cumulative_data[output_key] = self._calculate_cumulative_histogram(
+                    hist, axis=0, normalize=True
+                )
 
-        energy_hist = self.histograms.get("energy")
-        cumulative_energy = self._calculate_cumulative_histogram(energy_hist, reverse=True)
+        # Calculate cumulative for 1D histograms (triggered events only)
+        for hist_key in ["energy", "core_distance", "angular_distance"]:
+            if hist_key in self.histograms:
+                output_key = f"cumulative_{hist_key}"
+                hist = self.histograms.get(hist_key)
+                reverse = hist_key == "energy"  # Only energy uses reverse cumulative
+                cumulative_data[output_key] = self._calculate_cumulative_histogram(
+                    hist, reverse=reverse
+                )
 
-        core_distance_hist = self.histograms.get("core_distance")
-        cumulative_core_distance = self._calculate_cumulative_histogram(core_distance_hist)
-
-        angular_distance_hist = self.histograms.get("angular_distance")
-        cumulative_angular_distance = self._calculate_cumulative_histogram(angular_distance_hist)
-
-        return {
-            "normalized_cumulative_angular_vs_energy": normalized_cumulative_angular_vs_energy,
-            "normalized_cumulative_core_vs_energy": normalized_cumulative_core_vs_energy,
-            "cumulative_energy": cumulative_energy,
-            "cumulative_core_distance": cumulative_core_distance,
-            "cumulative_angular_distance": cumulative_angular_distance,
-        }
+        return cumulative_data
 
     def _generate_plot_configurations(
         self, cumulative_data, upper_radius_limit, lower_energy_limit, viewcone_radius
@@ -271,7 +263,6 @@ class SimtelIOEventHistograms:
 
         plots = {}
 
-        # Generate 1D histogram plots
         plots.update(
             self._generate_1d_plots(
                 hist_1d_params,
@@ -288,7 +279,6 @@ class SimtelIOEventHistograms:
             )
         )
 
-        # Generate 2D histogram plots
         plots.update(
             self._generate_2d_plots(
                 hist_2d_params,
@@ -326,7 +316,6 @@ class SimtelIOEventHistograms:
         """Generate 1D histogram plot configurations."""
         plots = {}
 
-        # Define base configurations for 1D plots
         plot_configs = [
             {
                 "base_key": "energy_distribution",
@@ -363,18 +352,12 @@ class SimtelIOEventHistograms:
             },
         ]
 
-        # Generate regular and MC versions of 1D plots
         for config in plot_configs:
-            # Regular version
             plots[config["base_key"]] = self._create_1d_plot_config(
                 config, hist_1d_params, event_count_label, False
             )
 
-            # MC version
-            if config["base_key"] == "energy_distribution":
-                mc_key = "energy_mc_distribution"
-            else:
-                mc_key = f"{config['base_key']}_mc"
+            mc_key = f"{config['base_key']}_mc"
             plots[mc_key] = self._create_1d_plot_config(
                 config, hist_1d_params, event_count_label, True
             )
@@ -480,64 +463,33 @@ class SimtelIOEventHistograms:
                 "scales": {"y": "log"},
                 "colorbar_label": event_count_label,
             },
+            {
+                "base_key": "x_core_shower_vs_y_core_shower",
+                "event_type": "Triggered events",
+                "x_label": core_x_label,
+                "y_label": core_y_label,
+                "plot_params": hist_2d_equal_params,
+                "lines": {"r": upper_radius_limit},
+                "scales": {},
+                "colorbar_label": event_count_label,
+            },
         ]
 
-        # Generate regular and MC versions of 2D plots
         for config in plot_configs:
-            # Regular version
             plots[config["base_key"]] = self._create_2d_plot_config(config, False)
-
-            # MC version
             mc_config = config.copy()
             mc_config["event_type"] = "Simulated events"
             plots[f"{config['base_key']}_mc"] = self._create_2d_plot_config(mc_config, True)
 
-            # Cumulative version
-            cumulative_config = config.copy()
-            cumulative_config["plot_params"] = hist_2d_normalized_params
-            cumulative_config["colorbar_label"] = "Fraction of events"
-            cumulative_config["is_cumulative"] = True
-            plots[f"{config['base_key']}_cumulative"] = self._create_2d_cumulative_plot_config(
-                cumulative_config, cumulative_data
-            )
-
-        # Add special cases
-        plots["core_xy"] = {
-            "data": self.histograms.get("shower_cores"),
-            "bins": [
-                self.histograms.get("shower_cores_bin_x_edges"),
-                self.histograms.get("shower_cores_bin_y_edges"),
-            ],
-            "plot_type": "histogram2d",
-            "plot_params": hist_2d_equal_params,
-            "labels": {
-                "x": core_x_label,
-                "y": core_y_label,
-                "title": "Triggered events: core x vs core y",
-            },
-            "colorbar_label": event_count_label,
-            "lines": {"r": upper_radius_limit},
-            "filename": "core_xy_distribution",
-        }
-
-        # Add MC version of core_xy
-        plots["core_xy_mc"] = {
-            "data": self.histograms.get("shower_cores_mc"),
-            "bins": [
-                self.histograms.get("shower_cores_mc_bin_x_edges"),
-                self.histograms.get("shower_cores_mc_bin_y_edges"),
-            ],
-            "plot_type": "histogram2d",
-            "plot_params": hist_2d_equal_params,
-            "labels": {
-                "x": core_x_label,
-                "y": core_y_label,
-                "title": "Simulated events: core x vs core y",
-            },
-            "colorbar_label": event_count_label,
-            "lines": {"r": upper_radius_limit},
-            "filename": "core_xy_mc_distribution",
-        }
+            # Cumulative version (only for plots that make sense to have cumulative)
+            if config["base_key"] != "x_core_shower_vs_y_core_shower":
+                cumulative_config = config.copy()
+                cumulative_config["plot_params"] = hist_2d_normalized_params
+                cumulative_config["colorbar_label"] = "Fraction of events"
+                cumulative_config["is_cumulative"] = True
+                plots[f"{config['base_key']}_cumulative"] = self._create_2d_cumulative_plot_config(
+                    cumulative_config, cumulative_data
+                )
 
         return plots
 
@@ -545,18 +497,21 @@ class SimtelIOEventHistograms:
         """Create a 2D plot configuration."""
         suffix = "_mc" if is_mc else ""
         base_key = config["base_key"]
+        data_key = f"{base_key}{suffix}"
 
         # Handle special case for title formatting
         if "angular_distance" in base_key:
             distance_type = "angular distance distance"
+        elif base_key == "core_xy":
+            distance_type = "core x vs core y"
         else:
             distance_type = base_key.replace("_", " ")
 
         return {
-            "data": self.histograms.get(f"{base_key}{suffix}"),
+            "data": self.histograms.get(data_key),
             "bins": [
-                self.histograms.get(f"{base_key}{suffix}_bin_x_edges"),
-                self.histograms.get(f"{base_key}{suffix}_bin_y_edges"),
+                self.histograms.get(f"{data_key}_bin_x_edges"),
+                self.histograms.get(f"{data_key}_bin_y_edges"),
             ],
             "plot_type": "histogram2d",
             "plot_params": config["plot_params"],
@@ -581,14 +536,11 @@ class SimtelIOEventHistograms:
         else:
             distance_type = base_key.replace("_vs_energy", "").replace("_", " ")
 
-        # Map to cumulative data keys
-        cumulative_key_map = {
-            "core_vs_energy": "normalized_cumulative_core_vs_energy",
-            "angular_distance_vs_energy": "normalized_cumulative_angular_vs_energy",
-        }
+        # Generate cumulative data key dynamically to match _calculate_cumulative_data
+        cumulative_data_key = f"normalized_cumulative_{base_key}"
 
         return {
-            "data": cumulative_data[cumulative_key_map[base_key]],
+            "data": cumulative_data[cumulative_data_key],
             "bins": [
                 self.histograms.get(f"{base_key}_bin_x_edges"),
                 self.histograms.get(f"{base_key}_bin_y_edges"),
@@ -632,20 +584,12 @@ class SimtelIOEventHistograms:
 
     def _get_limits(self, limits):
         """Extract limits from the provided dictionary for plotting."""
-        upper_radius_limit = None
-        lower_energy_limit = None
-        viewcone_radius = None
-        if limits:
-            upper_radius_limit = (
-                limits["upper_radius_limit"].value if "upper_radius_limit" in limits else None
-            )
-            lower_energy_limit = (
-                limits["lower_energy_limit"].value if "lower_energy_limit" in limits else None
-            )
-            viewcone_radius = (
-                limits["viewcone_radius"].value if "viewcone_radius" in limits else None
-            )
-        return upper_radius_limit, lower_energy_limit, viewcone_radius
+        if not limits:
+            return None, None, None
+        return tuple(
+            limits.get(key).value if key in limits else None
+            for key in ("upper_radius_limit", "lower_energy_limit", "viewcone_radius")
+        )
 
     def _build_plot_filename(self, base_filename, array_name=None):
         """
@@ -663,9 +607,7 @@ class SimtelIOEventHistograms:
         str
             Complete filename with extension
         """
-        if array_name:
-            return f"{base_filename}_{array_name}.png"
-        return f"{base_filename}.png"
+        return f"{base_filename}_{array_name}.png" if array_name else f"{base_filename}.png"
 
     def _should_create_rebinned_plot(self, rebin_factor, plot_args, plot_key):
         """
@@ -749,13 +691,8 @@ class SimtelIOEventHistograms:
         scales = scales or {}
         lines = lines or {}
 
-        # Check for empty or invalid data
-        if data is None:
+        if data is None or (isinstance(data, np.ndarray) and data.size == 0):
             self._logger.warning("No data available for plotting")
-            return None
-
-        if isinstance(data, np.ndarray) and data.size == 0:
-            self._logger.warning("Empty data array for plotting")
             return None
 
         fig, ax = plt.subplots(figsize=(8, 6))
