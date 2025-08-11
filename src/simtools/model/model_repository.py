@@ -145,7 +145,7 @@ def copy_and_update_production_table(args_dict):
     args_dict: dict
         Dictionary containing the arguments for copying and updating production tables.
     """
-    modifications = gen.collect_data_from_file(args_dict["modifications"])
+    modifications = ascii_handler.collect_data_from_file(args_dict["modifications"])
     changes = modifications.get("changes", {})
     model_version = modifications["model_version"]
 
@@ -179,7 +179,7 @@ def _apply_changes_to_production_tables(target_prod_table_path, changes, model_v
     for file_path in Path(target_prod_table_path).rglob("*.json"):
         if file_path.name.startswith("configuration"):
             continue
-        data = gen.collect_data_from_file(file_path)
+        data = ascii_handler.collect_data_from_file(file_path)
         _apply_changes_to_production_table(data, changes, model_version)
         with file_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, sort_keys=True)
@@ -255,13 +255,13 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
             f"Directory for parameter '{param}' does not exist in '{telescope}'."
         )
 
-    latest_file = _get_latest__model_parameter_file(param_dir, param)
+    latest_file = _get_latest_model_parameter_file(param_dir, param)
     if not latest_file:
         raise FileNotFoundError(
             f"No files found for parameter '{param}' in directory '{param_dir}'."
         )
 
-    json_data = gen.collect_data_from_file(latest_file)
+    json_data = ascii_handler.collect_data_from_file(latest_file)
 
     json_data["parameter_version"] = _update_model_parameter_version(
         json_data, param_data, param, telescope
@@ -277,7 +277,7 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     _logger.info(f"Created new model parameter JSON file: {new_file_path}")
 
 
-def _get_latest__model_parameter_file(directory, parameter):
+def _get_latest_model_parameter_file(directory, parameter):
     """
     Get the latest model parameter JSON file for a parameter in the given directory.
 
@@ -322,8 +322,8 @@ def _update_model_parameter_version(json_data, param_data, param, telescope):
     latest_version = int(json_data.get("parameter_version", "0").split(".")[0])
     new_version = int(param_data["version"].split(".")[0])
     if new_version > latest_version + 1:
-        _logger.info(
-            f"Warning: Major version jump from {latest_version} to {new_version} "
+        _logger.warning(
+            f"Major version jump from {latest_version} to {new_version} "
             f"for parameter '{param}' in telescope '{telescope}'."
         )
     return param_data["version"]

@@ -268,7 +268,7 @@ def test_get_latest_model_parameter_file_success(mock_path):
     mock_file_2.stem = "parameter-2.0.0"
     mock_directory.glob.return_value = [mock_file_1, mock_file_2]
 
-    result = model_repository._get_latest__model_parameter_file("mock_directory", "parameter")
+    result = model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
 
     assert result == str(mock_file_2)
 
@@ -276,7 +276,7 @@ def test_get_latest_model_parameter_file_success(mock_path):
     mock_file_3.stem = "parameter-2.0.0-rc"
     mock_directory.glob.return_value = [mock_file_1, mock_file_2, mock_file_3]
 
-    result = model_repository._get_latest__model_parameter_file("mock_directory", "parameter")
+    result = model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
 
     assert result == str(mock_file_3)
 
@@ -290,7 +290,7 @@ def test_get_latest_model_parameter_file_no_files(mock_path):
     mock_directory.glob.return_value = []
 
     with pytest.raises(FileNotFoundError, match="No JSON files found for parameter 'parameter'"):
-        model_repository._get_latest__model_parameter_file("mock_directory", "parameter")
+        model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
 
 
 @patch("simtools.model.model_repository.Path")
@@ -307,13 +307,13 @@ def test_get_latest_model_parameter_file_unsorted_versions(mock_path):
     mock_file_3.stem = "parameter-2.0.0"
     mock_directory.glob.return_value = [mock_file_1, mock_file_3, mock_file_2]
 
-    result = model_repository._get_latest__model_parameter_file("mock_directory", "parameter")
+    result = model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
 
     assert result == str(mock_file_2)
 
 
-@patch("simtools.model.model_repository._get_latest__model_parameter_file")
-@patch("simtools.model.model_repository.gen.collect_data_from_file")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 def test_create_new_parameter_entry_success(mock_collect_data, mock_get_latest, tmp_path):
     """Test successful creation of a new parameter entry."""
     telescope = "MSTx-FlashCam"
@@ -345,7 +345,7 @@ def test_create_new_parameter_entry_success(mock_collect_data, mock_get_latest, 
         assert data["value"] == 62.5
 
 
-@patch("simtools.model.model_repository._get_latest__model_parameter_file")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
 def test_create_new_parameter_entry_missing_telescope_dir(mock_get_latest, tmp_path):
     """Test creation of a new parameter entry when telescope directory is missing."""
     telescope = "MSTx-FlashCam"
@@ -364,7 +364,7 @@ def test_create_new_parameter_entry_missing_telescope_dir(mock_get_latest, tmp_p
         )
 
 
-@patch("simtools.model.model_repository._get_latest__model_parameter_file")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
 def test_create_new_parameter_entry_missing_param_dir(mock_get_latest, tmp_path):
     """Test creation of a new parameter entry when parameter directory is missing."""
     telescope = "MSTx-FlashCam"
@@ -385,7 +385,7 @@ def test_create_new_parameter_entry_missing_param_dir(mock_get_latest, tmp_path)
         )
 
 
-@patch("simtools.model.model_repository._get_latest__model_parameter_file")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
 def test_create_new_parameter_entry_no_latest_file(mock_get_latest, tmp_path):
     """Test creation of a new parameter entry when no latest file exists."""
     telescope = "MSTx-FlashCam"
@@ -658,7 +658,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
 
 @patch("simtools.model.model_repository.shutil.copytree")
-@patch("simtools.model.model_repository.gen.collect_data_from_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._create_new_parameter_entry")
 def test_copy_and_update_production_table_success(
@@ -685,7 +685,7 @@ def test_copy_and_update_production_table_success(
 
 
 @patch("simtools.model.model_repository.shutil.copytree")
-@patch("simtools.model.model_repository.gen.collect_data_from_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 def test_copy_and_update_production_table_target_exists(mock_collect_data, mock_copytree, tmp_path):
     """Test error when target directory already exists."""
     args_dict = {
@@ -707,7 +707,7 @@ def test_copy_and_update_production_table_target_exists(mock_collect_data, mock_
 
 
 @patch("simtools.model.model_repository.shutil.copytree")
-@patch("simtools.model.model_repository.gen.collect_data_from_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._create_new_parameter_entry")
 def test_copy_and_update_production_table_no_changes(
@@ -728,7 +728,7 @@ def test_copy_and_update_production_table_no_changes(
     mock_create_entry.assert_not_called()
 
 
-@patch("simtools.model.model_repository._get_latest__model_parameter_file")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
 def test_create_new_parameter_entry_no_latest_file_error(mock_get_latest, tmp_path):
     """Test creation of a new parameter entry when no latest file exists."""
     telescope = "MSTx-FlashCam"
