@@ -6,6 +6,8 @@ applications:
     log_level: DEBUG
     output_file: simtools_db_sim_telarray_corsika_versions.json
     output_path: simtools-output
+  integration_tests:
+  - output_file: simtools_db_sim_telarray_corsika_versions.json
   test_name: print_versions_simtools_db_sim_telarray_corsika
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

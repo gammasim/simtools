@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+from simtools.io import ascii_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import general
 
@@ -244,7 +245,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
             self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )
 
-        lines = general.read_file_encoded_in_utf_or_latin(nsb_spectrum_file)
+        lines = ascii_handler.read_file_encoded_in_utf_or_latin(nsb_spectrum_file)
 
         with open(validated_nsb_spectrum_file, "w", encoding="utf-8") as file:
             for line in lines:
