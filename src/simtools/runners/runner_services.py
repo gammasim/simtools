@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 _logger = logging.getLogger(__name__)
 

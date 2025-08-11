@@ -4,9 +4,8 @@ import logging
 import os
 from pathlib import Path
 
-import yaml
-
 import simtools.utils.general as gen
+from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
 
@@ -74,7 +73,7 @@ def _read_configs_from_files(config_files):
         # remove new line characters from config - otherwise issues
         # with especially long file names
         _dict = gen.remove_substring_recursively_from_dict(
-            gen.collect_data_from_file(file_name=config_file), substring="\n"
+            ascii_handler.collect_data_from_file(file_name=config_file), substring="\n"
         )
         for application in _dict.get("applications", []):
             configs.append(application)
@@ -195,8 +194,7 @@ def _prepare_test_options(config, output_path, model_version=None):
                 config["use_plain_output_path"] = True
 
     _logger.info(f"Writing config file: {tmp_config_file}")
-    with open(tmp_config_file, "w", encoding="utf-8") as file:
-        yaml.safe_dump(config, file, sort_keys=False)
+    ascii_handler.write_data_to_file(data=config, output_file=tmp_config_file, sort_keys=False)
 
     return tmp_config_file, None, config_file_model_version
 
