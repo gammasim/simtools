@@ -148,11 +148,17 @@ class CameraEfficiency:
         list
             Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.
         """
-        return (
-            [self.nsb_rate_ref_conditions if reference_conditions else self.nsb_pixel_pe_per_ns]
-            * self.telescope_model.get_parameter_value("camera_pixels")
-            * u.GHz
+        base_rate = (
+            self.nsb_rate_ref_conditions if reference_conditions else self.nsb_pixel_pe_per_ns
         )
+        # Accept either a plain float (assumed already in GHz) or an astropy Quantity
+        if isinstance(base_rate, u.Quantity):
+            base_rate_ghz = base_rate.to(u.GHz).value
+        else:
+            base_rate_ghz = float(base_rate)
+
+        n_pixels = int(self.telescope_model.get_parameter_value("camera_pixels"))
+        return u.Quantity(np.full(n_pixels, base_rate_ghz), u.GHz)
 
     def analyze(self, export=True, force=False):
         """
@@ -384,11 +390,16 @@ class CameraEfficiency:
         c2_sum = np.sum(c2_reduced_wl)
         return c2_sum / c1_sum / self._results["masts"][0]
 
-    def calc_nsb_rate(self, wavelength_range=(300, 650)):
+    def calc_nsb_rate(self, wavelength_range=(300 * u.nm, 650 * u.nm)):
         """
         Calculate the NSB rate.
 
         CTAO reference wavelength range is 300-650 nm.
+
+        Parameters
+        ----------
+        wavelength_range: tuple
+            Wavelength range used for the NSB rate calculation (default: (300 nm, 650 nm)).
 
         Returns
         -------
@@ -403,6 +414,11 @@ class CameraEfficiency:
             * self.telescope_model.camera.get_pixel_active_solid_angle()
             * self.telescope_model.get_on_axis_eff_optical_area().to("m2").value
             / self.telescope_model.get_parameter_value("telescope_transmission")[0]
+        )
+
+        wavelength_range = (
+            wavelength_range[0].to("nm").value,
+            wavelength_range[1].to("nm").value,
         )
 
         # (integral is in ph./(m^2 ns sr) ) over wavelength_range
@@ -420,7 +436,7 @@ class CameraEfficiency:
             * self.site_model.get_parameter_value("nsb_reference_value")
             / nsb_integral
         )
-        return self.nsb_pixel_pe_per_ns, self.nsb_rate_ref_conditions
+        return self.nsb_pixel_pe_per_ns * u.GHz, self.nsb_rate_ref_conditions * u.GHz
 
     def plot_efficiency(self, efficiency_type, save_fig=False):
         """

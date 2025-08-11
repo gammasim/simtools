@@ -123,7 +123,9 @@ def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
     _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
-    assert nsb_rate_ref_conditions == pytest.approx(0.24421390533203186)  # Value for Prod5 LST-1
+    assert nsb_rate_ref_conditions.value == pytest.approx(
+        0.24421390533203186
+    )  # Value for Prod5 LST-1
 
 
 def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
@@ -194,6 +196,12 @@ def test_get_nsb_pixel_rate_provided_spectrum(camera_efficiency_lst, mocker):
     assert nsb_pixel_rate.unit == u.GHz
     assert len(nsb_pixel_rate) == 10
     assert nsb_pixel_rate[0].value == pytest.approx(5.0)
+
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 6.0 * u.GHz
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate()
+    assert nsb_pixel_rate.unit == u.GHz
+    assert len(nsb_pixel_rate) == 10
+    assert nsb_pixel_rate[0].value == pytest.approx(6.0)
 
 
 def test_get_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker):
