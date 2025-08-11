@@ -18,6 +18,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.io import ascii_handler
 
 
 def _parse(label, description):
@@ -60,8 +61,12 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             continue
 
         try:
-            json1 = gen.remove_key_from_dict(gen.collect_data_from_file(path1), ignore_key)
-            json2 = gen.remove_key_from_dict(gen.collect_data_from_file(path2), ignore_key)
+            json1 = gen.remove_key_from_dict(
+                ascii_handler.collect_data_from_file(path1), ignore_key
+            )
+            json2 = gen.remove_key_from_dict(
+                ascii_handler.collect_data_from_file(path2), ignore_key
+            )
         except FileNotFoundError as e:
             print(f"Error reading {rel_path}: {e}")
             continue
