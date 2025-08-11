@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1da742dc"></script>
+    <script src="../../_static/documentation_options.js?v=50ca18ba"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
+  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
   </head>
   
   
@@ -1013,7 +1013,7 @@
 <span class="sd">            If unit conversions fails</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rate_limited_logger</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Checking data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
         <span class="n">reference_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reference_unit</span><span class="p">(</span><span class="n">col_name</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1024,9 +1024,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dimensionless</span><span class="p">(</span><span class="n">column_unit</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dimensionless</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rate_limited_logger</span><span class="p">(</span>
+            <span class="n">col_name</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;Data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39; with reference unit &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39; and data unit &#39;</span><span class="si">{</span><span class="n">column_unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39; and data unit &#39;</span><span class="si">{</span><span class="n">column_unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span> <span class="o">|</span> <span class="n">Column</span><span class="p">):</span>
@@ -1102,7 +1103,9 @@
 <span class="sd">            range columns</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking data in column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39; for &#39;</span><span class="si">{</span><span class="n">range_type</span><span class="si">}</span><span class="s2">&#39; &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rate_limited_logger</span><span class="p">(</span>
+            <span class="n">col_name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Checking data in column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39; for &#39;</span><span class="si">{</span><span class="n">range_type</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">range_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">,</span> <span class="s2">&quot;required_range&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Allowed range types are &#39;allowed_range&#39;, &#39;required_range&#39;&quot;</span><span class="p">)</span>
@@ -1122,6 +1125,26 @@
                 <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">_entry</span><span class="p">[</span><span class="n">range_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min&#39;</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_entry</span><span class="p">[</span><span class="n">range_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="si">}</span><span class="s2">])&quot;</span>
             <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rate_limited_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">max_logs</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log debug messages at a limited rate defined by a numerical column name.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        col_name: str or int</span>
+<span class="sd">            Column name or index to limit the rate of logging.</span>
+<span class="sd">        message: str</span>
+<span class="sd">            Message to log.</span>
+<span class="sd">        max_logs: int</span>
+<span class="sd">            Maximum number of logging messages to be printed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">col_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">col_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">col_index</span> <span class="o">&lt;</span> <span class="n">max_logs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_interval_check</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">,</span> <span class="n">range_type</span><span class="p">):</span>
@@ -1224,8 +1247,9 @@
 <span class="sd">            If data column is not found.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Getting reference data column </span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2"> from schema </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rate_limited_logger</span><span class="p">(</span>
+            <span class="n">column_name</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Getting reference data column </span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2"> from schema </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>

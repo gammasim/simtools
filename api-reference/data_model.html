@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1da742dc"></script>
+    <script src="../_static/documentation_options.js?v=50ca18ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
+  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
   </head>
   
   
@@ -939,7 +939,8 @@ metadata file.</p>
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prepare_data_dict_for_writing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.prepare_data_dict_for_writing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing" title="Link to this definition">#</a></dt>
 <dd><p>Prepare data dictionary for writing to json file.</p>
 <p>Ensure sim_telarray style lists as strings ‘type’ and ‘unit’ entries.
-Replace “None” with “null” for unit field.</p>
+Replace “None” with “null” for unit field.
+Replace list of equal units with single unit string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

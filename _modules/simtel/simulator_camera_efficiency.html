@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1da742dc"></script>
+    <script src="../../_static/documentation_options.js?v=50ca18ba"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
+  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
   </head>
   
   
@@ -439,7 +439,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidModelParameterError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span>
 
@@ -520,43 +519,27 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the command used to run testeff.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Preparing the command to run testeff&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Processing camera pixel features</span>
         <span class="n">pixel_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_shape</span><span class="p">()</span>
         <span class="n">pixel_shape_cmd</span> <span class="o">=</span> <span class="s2">&quot;-hpix&quot;</span> <span class="k">if</span> <span class="n">pixel_shape</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;-spix&quot;</span>
         <span class="n">pixel_diameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_diameter</span><span class="p">()</span>
 
-        <span class="c1"># Processing focal length</span>
         <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_telescope_effective_focal_length</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
-        <span class="c1"># Processing mirror class</span>
-        <span class="n">mirror_class</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">mirror_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_class&quot;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">InvalidModelParameterError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
+        <span class="n">mirror_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_class&quot;</span><span class="p">)</span>
         <span class="n">curvature_radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_curvature_radius</span><span class="p">(</span><span class="n">mirror_class</span><span class="p">)</span>
+        <span class="n">camera_transmission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_transmission&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Processing camera transmission</span>
-        <span class="n">camera_transmission</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">camera_transmission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_transmission&quot;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="c1"># Processing camera filter</span>
-        <span class="c1"># A special case is testeff does not support 2D distributions</span>
         <span class="n">camera_filter_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_filter&quot;</span><span class="p">)</span>
+        <span class="c1"># testeff does not support 2D distributions</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">is_file_2d</span><span class="p">(</span><span class="s2">&quot;camera_filter&quot;</span><span class="p">):</span>
             <span class="n">camera_filter_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_one_dim_distribution</span><span class="p">(</span>
                 <span class="s2">&quot;camera_filter&quot;</span><span class="p">,</span> <span class="s2">&quot;camera_filter_incidence_angle&quot;</span>
             <span class="p">)</span>
 
-        <span class="c1"># Processing mirror reflectivity</span>
-        <span class="c1"># A special case is testeff does not support 2D distributions</span>
         <span class="n">mirror_reflectivity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">mirror_class</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">mirror_reflectivity_secondary</span> <span class="o">=</span> <span class="n">mirror_reflectivity</span>
+        <span class="c1"># testeff does not support 2D distributions</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">is_file_2d</span><span class="p">(</span><span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">):</span>
             <span class="n">mirror_reflectivity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_one_dim_distribution</span><span class="p">(</span>
                 <span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">,</span> <span class="s2">&quot;primary_mirror_incidence_angle&quot;</span>

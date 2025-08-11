@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1da742dc"></script>
+    <script src="../../_static/documentation_options.js?v=50ca18ba"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-submit-model-parameter-from-external" href="simtools-submit-model-parameter-from-external.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
+  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
   </head>
   
   
@@ -511,8 +511,10 @@
                   
   <section id="module-validate_camera_efficiency">
 <span id="simtools-validate-camera-efficiency"></span><h1>simtools-validate-camera-efficiency<a class="headerlink" href="#module-validate_camera_efficiency" title="Link to this heading">#</a></h1>
-<p>Validate the camera efficiency by simulating it using the sim_telarray testeff program.</p>
-<p>The results of camera efficiency for Cherenkov (left) and NSB light (right) as a functionof wavelength are plotted. See examples below.</p>
+<p>Calculate on-axis telescope throughput and NSB pixels rates.</p>
+<p>Uses the sim_telarray tool “testeff” to calculate the camera efficiency.
+The results of telescope throughput including optical and camera components for Cherenkov (left)
+and NSB light (right) as a function of wavelength are plotted. See examples below.</p>
 <a class="reference internal image-reference" href="../../_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot"><img alt="../../_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot" src="../../_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" style="width: 49%;" />
 </a>
 <a class="reference internal image-reference" href="../../_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png"><img alt="../../_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" src="../../_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" style="width: 49%;" />
@@ -524,7 +526,7 @@
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, SSTS-15)</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version</p>
+<dt>model_version (str, optional)</dt><dd><p>Simulation model version</p>
 </dd>
 <dt>zenith_angle (float, optional)</dt><dd><p>Zenith angle in degrees (between 0 and 180).</p>
 </dd>

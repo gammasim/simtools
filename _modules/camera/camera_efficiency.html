@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1da742dc"></script>
+    <script src="../../_static/documentation_options.js?v=50ca18ba"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
+  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
   </head>
   
   
@@ -440,6 +440,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.io.ascii</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
@@ -460,32 +461,20 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    simtel_path: str (or Path)</span>
-<span class="sd">        Location of sim_telarray installation.</span>
 <span class="sd">    db_config: dict</span>
 <span class="sd">        Configuration for the database.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label, optional.</span>
 <span class="sd">    config_data: dict.</span>
 <span class="sd">        Dict containing the configurable parameters.</span>
-<span class="sd">    test: bool</span>
-<span class="sd">        Is it a test instance (at the moment only affects the location of files).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">simtel_path</span><span class="p">,</span>
-        <span class="n">config_data</span><span class="p">,</span>
-        <span class="n">label</span><span class="p">,</span>
-        <span class="n">db_config</span><span class="p">,</span>
-        <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the CameraEfficiency class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">simtel_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">test</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
@@ -503,15 +492,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configuration_from_args_dict</span><span class="p">(</span><span class="n">config_data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_files</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of the CameraEfficiency instance.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;CameraEfficiency(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_configuration_from_args_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Extract the configuration data from the args_dict.</span>
-
-<span class="sd">        Zenith and azimuth angles are set to default values if not provided.</span>
+<span class="sd">        Extract configuration data from command line arguments.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -523,22 +513,9 @@
 <span class="sd">        dict</span>
 <span class="sd">            Configuration data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">zenith_angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">zenith_angle</span> <span class="o">=</span> <span class="mf">20.0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting zenith angle to default value </span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
-        <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">azimuth_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting azimuth angle to default value </span><span class="si">{</span><span class="n">azimuth_angle</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="n">zenith_angle</span><span class="p">,</span>
-            <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="n">azimuth_angle</span><span class="p">,</span>
+            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">:</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
         <span class="p">}</span>
 
@@ -588,7 +565,7 @@
                 <span class="s2">&quot;skip_correction_to_nsb_spectrum&quot;</span><span class="p">,</span> <span class="kc">False</span>
             <span class="p">),</span>
         <span class="p">)</span>
-        <span class="n">simtel</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">)</span></div>
+        <span class="n">simtel</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.export_model_files">
@@ -600,6 +577,33 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">export_nsb_spectrum_to_telescope_altitude_correction_file</span><span class="p">(</span>
                 <span class="n">model_directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span>
             <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.get_nsb_pixel_rate">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.get_nsb_pixel_rate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_nsb_pixel_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_conditions</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the expected NSB pixel rate for each camera pixel.</span>
+
+<span class="sd">        This is an approximation, as testeff calculates the expected NSB pixel rate</span>
+<span class="sd">        for the on-axis pixel only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_rate</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="k">if</span> <span class="n">reference_conditions</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span>
+        <span class="p">)</span>
+        <span class="c1"># Accept either a plain float (assumed already in GHz) or an astropy Quantity</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_rate</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">base_rate_ghz</span> <span class="o">=</span> <span class="n">base_rate</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">GHz</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_rate_ghz</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">base_rate</span><span class="p">)</span>
+
+        <span class="n">n_pixels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_pixels&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_pixels</span><span class="p">,</span> <span class="n">base_rate_ghz</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.analyze">
@@ -688,6 +692,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">_results</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_nsb_rate</span><span class="p">()</span>
+
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\33</span><span class="s2">[40;37;1m&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span><span class="p">)</span>
@@ -705,7 +711,6 @@
 <span class="sd">        Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.</span>
 <span class="sd">        The summary includes the various CTAO requirements and the final expected NSB pixel rate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">nsb_pixel_pe_per_ns</span><span class="p">,</span> <span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_nsb_rate</span><span class="p">()</span>
         <span class="n">nsb_spectrum_text</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;NSB spectrum file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;nsb_spectrum&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">]</span>
@@ -725,9 +730,9 @@
             <span class="s2">&quot;(A-PERF-2025/B-TEL-0090): &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tel_efficiency</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Expected NSB pixel rate for the provided NSB spectrum: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nsb_pixel_pe_per_ns</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Expected NSB pixel rate for the reference NSB: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nsb_rate_ref_conditions</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span></div>
 
 
@@ -854,9 +859,16 @@
 
 <div class="viewcode-block" id="CameraEfficiency.calc_nsb_rate">
 <a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_nsb_rate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">calc_nsb_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_nsb_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="p">(</span><span class="mi">300</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span> <span class="mi">650</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the NSB rate.</span>
+
+<span class="sd">        CTAO reference wavelength range is 300-650 nm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wavelength_range: tuple</span>
+<span class="sd">            Wavelength range used for the NSB rate calculation (default: (300 nm, 650 nm)).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -866,27 +878,34 @@
 <span class="sd">            NSB pixel rate in p.e./ns for reference conditions</span>
 <span class="sd">            (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">nsb_rate_provided_spectrum</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N4&quot;</span><span class="p">])</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_active_solid_angle</span><span class="p">()</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_on_axis_eff_optical_area</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
             <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="c1"># (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:</span>
-        <span class="n">n1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">651</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
+        <span class="n">wavelength_range</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;nm&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;nm&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># (integral is in ph./(m^2 ns sr) ) over wavelength_range</span>
+        <span class="n">n1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][</span>
+            <span class="p">[</span><span class="n">wavelength_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">wl_now</span> <span class="o">&lt;=</span> <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]</span>
+        <span class="p">]</span>
         <span class="n">n1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n1_reduced_wl</span><span class="p">)</span>
         <span class="n">n1_integral_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][</span>
-            <span class="p">[</span><span class="n">wl_now</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">650</span><span class="p">]</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]</span>
+            <span class="p">[</span><span class="n">wl_now</span> <span class="ow">in</span> <span class="p">[</span><span class="n">wavelength_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]</span>
         <span class="p">]</span>
         <span class="n">n1_integral_edges_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n1_integral_edges</span><span class="p">)</span>
         <span class="n">nsb_integral</span> <span class="o">=</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="p">(</span><span class="n">n1_sum</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">n1_integral_edges_sum</span><span class="p">)</span>
-        <span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">nsb_rate_provided_spectrum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">)</span>
             <span class="o">/</span> <span class="n">nsb_integral</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">nsb_rate_provided_spectrum</span><span class="p">,</span> <span class="n">nsb_rate_ref_conditions</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.plot_efficiency">

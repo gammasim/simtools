@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1da742dc"></script>
+    <script src="../_static/documentation_options.js?v=50ca18ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="API" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
+  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
   </head>
   
   
@@ -476,20 +476,16 @@ A <a class="reference internal" href="mc_model.html#id5"><span class="std std-re
 <p id="module-camera.camera_efficiency">Camera efficiency simulations and analysis.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="camera.camera_efficiency.CameraEfficiency">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera.camera_efficiency.</span></span><span class="sig-name descname"><span class="pre">CameraEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/camera_efficiency.html#CameraEfficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.camera_efficiency.CameraEfficiency" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera.camera_efficiency.</span></span><span class="sig-name descname"><span class="pre">CameraEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/camera_efficiency.html#CameraEfficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.camera_efficiency.CameraEfficiency" title="Link to this definition">#</a></dt>
 <dd><p>Camera efficiency simulations and analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>simtel_path: str (or Path)</strong></dt><dd><p>Location of sim_telarray installation.</p>
-</dd>
 <dt><strong>db_config: dict</strong></dt><dd><p>Configuration for the database.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label, optional.</p>
 </dd>
 <dt><strong>config_data: dict.</strong></dt><dd><p>Dict containing the configurable parameters.</p>
-</dd>
-<dt><strong>test: bool</strong></dt><dd><p>Is it a test instance (at the moment only affects the location of files).</p>
 </dd>
 </dl>
 </dd>
@@ -527,11 +523,18 @@ function can be used.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="camera.camera_efficiency.CameraEfficiency.calc_nsb_rate">
-<span class="sig-name descname"><span class="pre">calc_nsb_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/camera_efficiency.html#CameraEfficiency.calc_nsb_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.camera_efficiency.CameraEfficiency.calc_nsb_rate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_nsb_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavelength_range=(&lt;Quantity</span> <span class="pre">300.</span> <span class="pre">nm&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;Quantity</span> <span class="pre">650.</span> <span class="pre">nm&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/camera_efficiency.html#CameraEfficiency.calc_nsb_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.camera_efficiency.CameraEfficiency.calc_nsb_rate" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the NSB rate.</p>
+<p>CTAO reference wavelength range is 300-650 nm.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>wavelength_range: tuple</strong></dt><dd><p>Wavelength range used for the NSB rate calculation (default: (300 nm, 650 nm)).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt>nsb_rate_provided_spectrum: float</dt><dd><p>NSB pixel rate in p.e./ns for the provided NSB spectrum</p>
 </dd>
 <dt>nsb_rate_ref_conditions: float</dt><dd><p>NSB pixel rate in p.e./ns for reference conditions
@@ -600,6 +603,22 @@ function can be used.</p>
 <dt class="sig sig-object py" id="camera.camera_efficiency.CameraEfficiency.export_results">
 <span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/camera_efficiency.html#CameraEfficiency.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.camera_efficiency.CameraEfficiency.export_results" title="Link to this definition">#</a></dt>
 <dd><p>Export results to a ecsv file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera.camera_efficiency.CameraEfficiency.get_nsb_pixel_rate">
+<span class="sig-name descname"><span class="pre">get_nsb_pixel_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/camera_efficiency.html#CameraEfficiency.get_nsb_pixel_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.camera_efficiency.CameraEfficiency.get_nsb_pixel_rate" title="Link to this definition">#</a></dt>
+<dd><p>Return the expected NSB pixel rate for each camera pixel.</p>
+<p>This is an approximation, as testeff calculates the expected NSB pixel rate
+for the on-axis pixel only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -772,6 +791,7 @@ and ‘frequency stdev (afterpulsing)’.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.calc_tot_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_tot_efficiency()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.export_model_files"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.export_results"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.export_results()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.get_nsb_pixel_rate"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.get_nsb_pixel_rate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.plot_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_efficiency()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.results_summary"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.results_summary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.camera_efficiency.CameraEfficiency.simulate"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.simulate()</span></code></a></li>
