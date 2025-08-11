@@ -3,8 +3,6 @@
 import logging
 import re
 
-import simtools.utils.general as gen
-
 _logger = logging.getLogger(__name__)
 
 
@@ -35,7 +33,7 @@ def inspect(log_text):
     bool
         True if no errors or warnings are found, False otherwise.
     """
-    log_text = gen.copy_as_list(log_text)
+    log_text = log_text if isinstance(log_text, list) else [log_text]
     issues = []
     for txt in log_text:
         for lineno, line in enumerate(txt.splitlines(), 1):
