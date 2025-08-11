@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=5edafad6"></script>
+    <script src="../../_static/documentation_options.js?v=1da742dc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g3d5e284" />
+  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
   </head>
   
   
@@ -728,7 +728,11 @@
                 <span class="sa">f</span><span class="s2">&quot;Estimated equivalent observation time corresponding to the number of &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;events simulated: </span><span class="si">{</span><span class="n">obs_time</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> s&quot;</span>
             <span class="p">)</span>
-            <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="n">_simulated_events</span> <span class="o">/</span> <span class="n">obs_time</span>
+            <span class="k">if</span> <span class="n">obs_time</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="n">_simulated_events</span> <span class="o">/</span> <span class="n">obs_time</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">obs_time</span><span class="o">.</span><span class="n">unit</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Observation time is zero, cannot calculate event rate.&quot;</span><span class="p">)</span>
             <span class="n">sim_event_rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_event_rate</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulated event rate: </span><span class="si">{</span><span class="n">sim_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span><span class="p">)</span>
 

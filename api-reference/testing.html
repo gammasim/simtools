@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5edafad6"></script>
+    <script src="../_static/documentation_options.js?v=1da742dc"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Simulator" href="simulators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g3d5e284" />
+  <meta name="docsearch:version" content="0.1.dev1+gfabd57597" />
   </head>
   
   
@@ -696,6 +696,32 @@ Add “–help” and “–version” calls for all applications.</p>
 </dd></dl>
 
 </section>
+<section id="module-testing.log_inspector">
+<span id="log-inspector"></span><span id="loginspectormodule"></span><h2>log_inspector<a class="headerlink" href="#module-testing.log_inspector" title="Link to this heading">#</a></h2>
+<p>Inspect logs and output for errors and warnings.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.log_inspector.inspect">
+<span class="sig-prename descclassname"><span class="pre">testing.log_inspector.</span></span><span class="sig-name descname"><span class="pre">inspect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/log_inspector.html#inspect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.log_inspector.inspect" title="Link to this definition">#</a></dt>
+<dd><p>Inspect log text for errors and run-time warnings.</p>
+<p>Ignore any lines containing “INFO::” (to avoid false positives
+like “INFO:: Job error stream “).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>log_text: str or list of str</strong></dt><dd><p>Text of the log to inspect.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if no errors or warnings are found, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-testing.validate_output">
 <span id="validate-output"></span><span id="validate-outputmodule"></span><h2>validate_output<a class="headerlink" href="#module-testing.validate_output" title="Link to this heading">#</a></h2>
 <p>Compare application output to reference output.</p>
@@ -889,6 +915,10 @@ equals the model version from the configuration file.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.create_tmp_output_path"><code class="docutils literal notranslate"><span class="pre">create_tmp_output_path()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.get_application_command"><code class="docutils literal notranslate"><span class="pre">get_application_command()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.get_list_of_test_configurations"><code class="docutils literal notranslate"><span class="pre">get_list_of_test_configurations()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.log_inspector">log_inspector</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.log_inspector.inspect"><code class="docutils literal notranslate"><span class="pre">inspect()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.validate_output">validate_output</a><ul class="nav section-nav flex-column">
