@@ -30,7 +30,7 @@ for config, test_id in zip(test_configs, test_ids):
 
 
 @pytest.mark.parametrize("config", test_parameters)
-def test_applications_from_config(tmp_test_directory, config, request):
+def test_applications_from_config(tmp_test_directory, config, request, db_config):
     """
     Test all applications from config files found in the config directory.
 
@@ -78,4 +78,5 @@ def test_applications_from_config(tmp_test_directory, config, request):
         tmp_config,
         model_version,
         config_file_model_version or model_version,
+        db_config=db_config,
     )
