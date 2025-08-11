@@ -380,7 +380,14 @@ class SimulatorLightEmission(SimtelRunner):
         flasher_xy = self._flasher_model.get_parameter_value("flasher_position")
         flasher_depth = self._flasher_model.get_parameter_value("flasher_depth")
         flasher_inclination = self._flasher_model.get_parameter_value("flasher_inclination")
-        mirror_camera_distance = self._flasher_model.get_parameter_value("mirror_camera_distance")
+        # Provide fallback if not present in DB
+        try:
+            mirror_camera_distance = self._flasher_model.get_parameter_value(
+                "mirror_camera_distance"
+            )
+        except KeyError:
+            mirror_camera_distance = 0.0
+            self._logger.warning("mirror_camera_distance missing; defaulting to 0.0")
         spectrum = self._flasher_model.get_parameter_value("spectrum")
         pulse = self._flasher_model.get_parameter_value("lightpulse")
         angular = self._flasher_model.get_parameter_value("angular_distribution")
@@ -814,14 +821,7 @@ class SimulatorLightEmission(SimtelRunner):
             raise KeyError(f"Key '{key}' not found in light emission configuration.")
 
     def calculate_distance_telescope_calibration_device(self):
-        """
-        Calculate the distance(s) between the telescope and the calibration device.
-
-        Returns
-        -------
-        list of astropy.Quantity
-            A list of distances for variable positions or a single distance for layout positions.
-        """
+        """Calculate distance(s) between telescope and calibration device."""
         if not self.light_emission_config:
             # Layout positions: Use DB coordinates
             x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
@@ -835,7 +835,7 @@ class SimulatorLightEmission(SimtelRunner):
             tel_vect = np.array([x_tel, y_tel, z_tel])
             cal_vect = np.array([x_cal, y_cal, z_cal])
             distance = np.linalg.norm(cal_vect - tel_vect)
-            print("Distance between telescope and calibration device:", distance * u.m)
+            self._logger.info(f"Distance between telescope and calibration device: {distance} m")
             return [distance * u.m]
 
         # Variable positions: Calculate distances for all positions

@@ -48,4 +48,4 @@ class FlasherModel(ModelParameter):
         )
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init FlasherModel %s %s", site, flasher_device_model_name)
+        self._logger.debug(f"Init FlasherModel {site} {flasher_device_model_name}")
