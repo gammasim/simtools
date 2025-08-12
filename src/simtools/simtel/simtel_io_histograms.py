@@ -285,7 +285,11 @@ class SimtelIOHistograms:
                 f"Estimated equivalent observation time corresponding to the number of "
                 f"events simulated: {obs_time.value} s"
             )
-            sim_event_rate = _simulated_events / obs_time
+            if obs_time != 0:
+                sim_event_rate = _simulated_events / obs_time
+            else:
+                sim_event_rate = 0.0 * obs_time.unit
+                logging.warning("Observation time is zero, cannot calculate event rate.")
             sim_event_rates.append(sim_event_rate)
             logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
 

@@ -937,3 +937,38 @@ def test__check_site_and_array_element_consistency():
     expected_message = "Site '['South']' and instrument site '['North']' are inconsistent."
     with pytest.raises(ValueError, match=re.escape(expected_message)):
         data_validator._check_site_and_array_element_consistency("LSTN-03", "South")
+
+
+def test_rate_limited_logger(caplog):
+    """Test the _rate_limited_logger method with different input types."""
+    data_validator = validate_data.DataValidator()
+
+    with caplog.at_level(logging.DEBUG):
+        # Test with integer column name - should log for values < max_logs
+        data_validator._rate_limited_logger(5, "Test message 1", max_logs=10)
+        assert "Test message 1" in caplog.text
+
+        # Test with integer column name - should not log for values >= max_logs
+        caplog.clear()
+        data_validator._rate_limited_logger(15, "Test message 2", max_logs=10)
+        assert "Test message 2" not in caplog.text
+
+        # Test with string numeric column name - should log for numeric < max_logs
+        caplog.clear()
+        data_validator._rate_limited_logger("3", "Test message 3", max_logs=10)
+        assert "Test message 3" in caplog.text
+
+        # Test with string numeric column name - should not log for numeric >= max_logs
+        caplog.clear()
+        data_validator._rate_limited_logger("12", "Test message 4", max_logs=10)
+        assert "Test message 4" not in caplog.text
+
+        # Test with non-numeric string column name - should log once
+        caplog.clear()
+        data_validator._rate_limited_logger("wavelength", "Test message 5", max_logs=10)
+        assert "Test message 5" in caplog.text
+
+        # Test with complex string that contains numbers but is not purely numeric
+        caplog.clear()
+        data_validator._rate_limited_logger("col1_name", "Test message 6", max_logs=10)
+        assert "Test message 6" in caplog.text
