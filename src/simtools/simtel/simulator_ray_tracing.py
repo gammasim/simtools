@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import astropy.units as u
 
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
