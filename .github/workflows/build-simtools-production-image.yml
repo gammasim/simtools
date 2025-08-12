@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
         run: |
@@ -64,10 +64,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: corsika-simtelarray-package-${{ matrix.version.simtel_version }}
           path: ./downloaded-artifacts
@@ -145,10 +145,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: corsika-simtelarray-package-${{ matrix.version.simtel_version }}
           path: ./downloaded-artifacts
@@ -249,7 +249,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
