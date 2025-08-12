@@ -446,7 +446,7 @@ class CommandLineParser(argparse.ArgumentParser):
                     "Random seed used for sim_telarray instrument setup. "
                     "If '--sim_telarray_random_instrument_instances' is not set: "
                     "use as sim_telarray seed ('random_seed' parameter). Otherwise: "
-                    "use as base seed to generate of random instrument instance seeds."
+                    "use as base seed to generate the random instrument instance seeds."
                 ),
                 "type": str,
                 "required": False,

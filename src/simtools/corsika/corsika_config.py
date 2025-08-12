@@ -210,7 +210,7 @@ class CorsikaConfig:
         """
         Return CORSIKA configuration for dummy simulations.
 
-        Setting are such that that the simulations are fast
+        Settings are such that that the simulations are fast
         and none (or not many) Cherenkov photons are generated.
 
         Returns

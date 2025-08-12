@@ -30,8 +30,9 @@ for all telescopes.
 .. code-block:: console
 
     simtools-simulate-calibration-events --run_mode=flasher \\
+        --number_of_events 1000 \\
         --array_layout_name subsystem_msts --site South \\
-        --number_of_events 1000 --model_version 6.0.0 \\
+        --model_version 6.0.0 \\
         --zenith_angle 20 --azimuth_angle 0 \\
         --flasher_photons 500 --flasher_var_photons 0.05 \\
         --flasher_exp_time 1.59 --flasher_sig_time 0.4
