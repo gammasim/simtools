@@ -6,7 +6,7 @@
 [![pypyi](https://badge.fury.io/py/gammasimtools.svg)](https://badge.fury.io/py/gammasimtools)
 [![conda](https://anaconda.org/conda-forge/gammasimtools/badges/version.svg)](https://anaconda.org/conda-forge/gammasimtools)
 
-**simtools** is a modular toolkit for managing simulation model parameters, configuring and validating simulation productions for arrays of imaging atmospheric Cherenkov telescopes.
+**simtools** is a modular toolkit for managing simulation model parameters, configuring, running, and validating simulation productions for arrays of imaging atmospheric Cherenkov telescopes.
 
 **Documentation**: [simtools documentation](https://gammasim.github.io/simtools/)
 
@@ -20,7 +20,7 @@
 
 - Simulation model libraries and management
 - Database interfaces for simulation model parameters (see [CTAO Simulation models](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models))
-- Tools for preparing and configuring simulation productions
+- Tools for preparing, configuring, running, and validating simulation productions
 - Applications for deriving and validating model parameters (see CTAO [Model setting and validation workflows](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting))
 - Standardized interfaces and outputs independent of the simulation software (e.g., [CORSIKA](https://www.iap.kit.edu/corsika/) air shower simulations and [sim_telarray](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/) telescope simulations)
 - I/O and reporting tools for the simulation model and production database
