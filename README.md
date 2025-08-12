@@ -16,7 +16,7 @@
 
 > **Note**
 > simtools is under active development.
-> Best to contact the developers before using it: [simtools-developer@desy.de](mailto:simtools-developer@desy.de)
+> Contact the developers before using it: [simtools-developer@desy.de](mailto:simtools-developer@desy.de)
 
 ## Features
 
