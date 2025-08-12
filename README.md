@@ -12,6 +12,8 @@
 
 **simtools** is part of the [SimPipe](http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/) pipeline of the [Cherenkov Telescope Array Observatory (CTAO)](https://www.cta-observatory.org/).
 
+**Authors**: see the [CITATION.cff](https://github.com/gammasim/simtools/blob/main/CITATION.cff) file.
+
 > **Note**
 > simtools is under active development.
 > Best to contact the developers before using it: [simtools-developer@desy.de](mailto:simtools-developer@desy.de)
