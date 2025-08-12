@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=50ca18ba"></script>
+    <script src="../../_static/documentation_options.js?v=528d3fea"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
+  <meta name="docsearch:version" content="0.1.dev1+g722ab1559" />
   </head>
   
   
@@ -439,102 +439,60 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;EdgePixelObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;HexEdgePixelHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;HexOffPixelHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;HexPixelHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;LSTHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;LSTObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MSTHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MSTObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MeanRadiusOuterEdgeHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MeanRadiusOuterEdgeObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;OffPixelObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;PixelObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SCTHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SCTObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SSTHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SSTObject&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SquareEdgePixelHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SquareOffPixelHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SquarePixelHandler&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TelescopeHandler&quot;</span><span class="p">,</span>
-<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Define properties of different telescope types for visualization purposes.</span>
 
-<span class="c1"># assume same size of telescope at both sides</span>
-<span class="c1"># (good assumption for plotting)</span>
-<span class="n">lst</span> <span class="o">=</span> <span class="s2">&quot;LSTN&quot;</span>
-<span class="n">mst</span> <span class="o">=</span> <span class="s2">&quot;MSTN&quot;</span>
-<span class="n">sst</span> <span class="o">=</span> <span class="s2">&quot;SSTS&quot;</span>
-<span class="n">sct</span> <span class="o">=</span> <span class="s2">&quot;SCTS&quot;</span>
-<span class="n">hess</span> <span class="o">=</span> <span class="s2">&quot;HESS&quot;</span>
-<span class="n">magic</span> <span class="o">=</span> <span class="s2">&quot;MAGIC&quot;</span>
-<span class="n">veritas</span> <span class="o">=</span> <span class="s2">&quot;VERITAS&quot;</span>
+<span class="sd">Radii are relative to a reference radius (REFERENCE_RADIUS).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">TELESCOPE_CONFIG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;LST&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;darkorange&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">12.5</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;circle&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+    <span class="s2">&quot;MST&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">9.15</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;circle&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">&quot;SCT&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">7.15</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;square&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">&quot;SST&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;darkgreen&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;circle&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">&quot;HESS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;hexagon&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">&quot;MAGIC&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">8.5</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;hexagon&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">&quot;VERITAS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;hexagon&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">REFERENCE_RADIUS</span> <span class="o">=</span> <span class="mf">12.5</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">width_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">height_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<div class="viewcode-block" id="get_telescope_config">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.get_telescope_config">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_telescope_config</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate the center of the handlebox based on given factors.</span>
+<span class="sd">    Return the configuration for a given telescope type.</span>
+
+<span class="sd">    Try both site-dependent and site-independent configurations (e.g. &quot;MSTS&quot; and &quot;MST&quot;).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    handlebox: matplotlib.legend.Legend</span>
-<span class="sd">        The handlebox object from the legend.</span>
-<span class="sd">    width_factor: int, optional</span>
-<span class="sd">        The factor to adjust the width.</span>
-<span class="sd">    height_factor: int, optional</span>
-<span class="sd">        The factor to adjust the height.</span>
+<span class="sd">    telescope_type : str</span>
+<span class="sd">        The type of the telescope (e.g., &quot;LSTN&quot;, &quot;MSTS&quot;).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tuple</span>
-<span class="sd">        The calculated (x0, y0) position.</span>
+<span class="sd">    dict</span>
+<span class="sd">        The configuration dictionary for the telescope type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">TELESCOPE_CONFIG</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">TELESCOPE_CONFIG</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">config</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_center">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.calculate_center">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">width_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">height_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the center of the handlebox based on given factors.&quot;&quot;&quot;</span>
     <span class="n">x0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="n">width_factor</span>
     <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="n">height_factor</span>
-    <span class="k">return</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span>
-
-
-<div class="viewcode-block" id="TelescopeHandler">
-<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.TelescopeHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TelescopeHandler</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Telescope handler that centralizes the telescope information.</span>
-
-<span class="sd">    Individual telescopes handlers inherit from this class.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;LSTN&quot;</span><span class="p">:</span> <span class="s2">&quot;darkorange&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;MSTx&quot;</span><span class="p">:</span> <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;MSTN&quot;</span><span class="p">:</span> <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;LSTS&quot;</span><span class="p">:</span> <span class="s2">&quot;darkorange&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;MSTS&quot;</span><span class="p">:</span> <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;SCTS&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;SSTS&quot;</span><span class="p">:</span> <span class="s2">&quot;darkgreen&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;HESS&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;MAGIC&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;VERITAS&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="c1"># hardwired values; this is for plotting purposes only</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;LSTN&quot;</span><span class="p">:</span> <span class="mf">12.5</span><span class="p">,</span>
-            <span class="s2">&quot;MSTx&quot;</span><span class="p">:</span> <span class="mf">9.15</span><span class="p">,</span>
-            <span class="s2">&quot;MSTN&quot;</span><span class="p">:</span> <span class="mf">9.15</span><span class="p">,</span>
-            <span class="s2">&quot;LSTS&quot;</span><span class="p">:</span> <span class="mf">12.5</span><span class="p">,</span>
-            <span class="s2">&quot;MSTS&quot;</span><span class="p">:</span> <span class="mf">9.15</span><span class="p">,</span>
-            <span class="s2">&quot;SCTS&quot;</span><span class="p">:</span> <span class="mf">7.15</span><span class="p">,</span>
-            <span class="s2">&quot;SSTS&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
-            <span class="s2">&quot;HESS&quot;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>
-            <span class="s2">&quot;MAGIC&quot;</span><span class="p">:</span> <span class="mf">8.5</span><span class="p">,</span>
-            <span class="s2">&quot;VERITAS&quot;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>
-        <span class="p">}</span></div>
+    <span class="k">return</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span></div>
 
 
 
+<span class="c1"># Object classes for legend mapping</span>
 <div class="viewcode-block" id="PixelObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.PixelObject">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PixelObject</span><span class="p">:</span>
@@ -584,16 +542,25 @@
 
 
 
+<div class="viewcode-block" id="HESSObject">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HESSObject">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HESSObject</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;HESS Object.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;HESS Object.&quot;&quot;&quot;</span></div>
 
 
+
+<div class="viewcode-block" id="MAGICObject">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MAGICObject">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MAGICObject</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;MAGIC Object.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MAGIC Object.&quot;&quot;&quot;</span></div>
 
 
+
+<div class="viewcode-block" id="VERITASObject">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.VERITASObject">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VERITASObject</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;VERITAS Object.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VERITAS Object.&quot;&quot;&quot;</span></div>
+
 
 
 <div class="viewcode-block" id="MeanRadiusOuterEdgeObject">
@@ -603,280 +570,293 @@
 
 
 
-<div class="viewcode-block" id="HexPixelHandler">
-<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexPixelHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">HexPixelHandler</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;on&quot; pixel.&quot;&quot;&quot;</span>
+<span class="c1"># Pixel handlers</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_BaseHexPixelHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for hexagonal pixel handlers.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_hex_patch</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">facecolor</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a hexagonal patch with specified colors.&quot;&quot;&quot;</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
             <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
             <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
             <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
         <span class="p">)</span>
         <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+        <span class="k">return</span> <span class="n">patch</span>
+
+
+<div class="viewcode-block" id="HexPixelHandler">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexPixelHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HexPixelHandler</span><span class="p">(</span><span class="n">_BaseHexPixelHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;on&quot; pixel.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HexPixelHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexPixelHandler.legend_artist">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Legend artist.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">HexPixelHandler</span><span class="o">.</span><span class="n">_create_hex_patch</span><span class="p">(</span>
+            <span class="n">handlebox</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="HexEdgePixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexEdgePixelHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">HexEdgePixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HexEdgePixelHandler</span><span class="p">(</span><span class="n">_BaseHexPixelHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;edge&quot; pixel.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="HexEdgePixelHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexEdgePixelHandler.legend_artist">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-            <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Legend artist.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">HexEdgePixelHandler</span><span class="o">.</span><span class="n">_create_hex_patch</span><span class="p">(</span>
+            <span class="n">handlebox</span><span class="p">,</span>
             <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;brown&quot;</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">),</span>
             <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+        <span class="p">)</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="HexOffPixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexOffPixelHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">HexOffPixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HexOffPixelHandler</span><span class="p">(</span><span class="n">_BaseHexPixelHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;off&quot; pixel.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="HexOffPixelHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexOffPixelHandler.legend_artist">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-            <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Legend artist.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">HexOffPixelHandler</span><span class="o">.</span><span class="n">_create_hex_patch</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span></div>
+</div>
 
 
 
-<div class="viewcode-block" id="SquarePixelHandler">
-<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquarePixelHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SquarePixelHandler</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;on&quot; pixel.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_BaseSquarePixelHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for square pixel handlers.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_square_patch</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">facecolor</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a square patch with specified colors.&quot;&quot;&quot;</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
             <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">],</span>
             <span class="n">width</span><span class="p">,</span>
             <span class="n">height</span><span class="p">,</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
         <span class="p">)</span>
         <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+        <span class="k">return</span> <span class="n">patch</span>
+
+
+<div class="viewcode-block" id="SquarePixelHandler">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquarePixelHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquarePixelHandler</span><span class="p">(</span><span class="n">_BaseSquarePixelHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;on&quot; pixel.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SquarePixelHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquarePixelHandler.legend_artist">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Legend artist.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SquarePixelHandler</span><span class="o">.</span><span class="n">_create_square_patch</span><span class="p">(</span>
+            <span class="n">handlebox</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="SquareEdgePixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquareEdgePixelHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SquareEdgePixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareEdgePixelHandler</span><span class="p">(</span><span class="n">_BaseSquarePixelHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;edge&quot; pixel.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="SquareEdgePixelHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquareEdgePixelHandler.legend_artist">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">],</span>
-            <span class="n">width</span><span class="p">,</span>
-            <span class="n">height</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Legend artist.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SquareEdgePixelHandler</span><span class="o">.</span><span class="n">_create_square_patch</span><span class="p">(</span>
+            <span class="n">handlebox</span><span class="p">,</span>
             <span class="n">facecolor</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;brown&quot;</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">),</span>
             <span class="n">edgecolor</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+        <span class="p">)</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="SquareOffPixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquareOffPixelHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SquareOffPixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareOffPixelHandler</span><span class="p">(</span><span class="n">_BaseSquarePixelHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;off&quot; pixel.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="SquareOffPixelHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquareOffPixelHandler.legend_artist">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">],</span>
-            <span class="n">width</span><span class="p">,</span>
-            <span class="n">height</span><span class="p">,</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Legend artist.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SquareOffPixelHandler</span><span class="o">.</span><span class="n">_create_square_patch</span><span class="p">(</span>
+            <span class="n">handlebox</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BaseLegendHandler">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.BaseLegendHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseLegendHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base telescope handler that can handle any telescope type.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_type</span> <span class="o">=</span> <span class="n">telescope_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">get_telescope_config</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_circle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a circle patch.&quot;&quot;&quot;</span>
+        <span class="n">facecolor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;filled&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;none&quot;</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">REFERENCE_RADIUS</span><span class="p">,</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
         <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a square patch.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">],</span>
+            <span class="n">size</span><span class="p">,</span>
+            <span class="n">size</span><span class="p">,</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_hexagon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a hexagon patch.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
+            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">REFERENCE_RADIUS</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="BaseLegendHandler.legend_artist">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.BaseLegendHandler.legend_artist">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the appropriate patch based on telescope type.&quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;circle&quot;</span><span class="p">:</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_circle</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;square&quot;</span><span class="p">:</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_square</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;hexagon&quot;</span><span class="p">:</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_hexagon</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+
         <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">patch</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="LSTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.LSTHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">LSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an LST in an array layout.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LSTHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for LST telescopes.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;LST&quot;</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="MSTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MSTHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an MST in an array layout.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MSTHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for MST telescopes.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">mst</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">mst</span><span class="p">],</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">mst</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;MST&quot;</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="SSTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SSTHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an SST in an array layout.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSTHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for SST telescopes.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">sst</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">sst</span><span class="p">],</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">sst</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;SST&quot;</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="SCTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SCTHandler">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SCTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an SCT in an array layout.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCTHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for SCT telescopes.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">],</span>
-            <span class="n">width</span><span class="p">,</span>
-            <span class="n">height</span><span class="p">,</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">sct</span><span class="p">],</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">sct</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;SCT&quot;</span><span class="p">)</span></div>
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">HESSHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an HESS in an array layout.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="HESSHandler">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HESSHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HESSHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for HESS telescopes.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
-        <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-            <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">hess</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">hess</span><span class="p">],</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">hess</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;HESS&quot;</span><span class="p">)</span></div>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MAGICHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an MAGIC in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
-        <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-            <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">magic</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">magic</span><span class="p">],</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">magic</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span>
+<div class="viewcode-block" id="MAGICHandler">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MAGICHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MAGICHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for MAGIC telescopes.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;MAGIC&quot;</span><span class="p">)</span></div>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">VERITASHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an VERITAS in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
-        <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
-            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-            <span class="n">radius</span><span class="o">=</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">veritas</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
-            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
-            <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">veritas</span><span class="p">],</span>
-            <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">veritas</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">handlebox</span><span class="o">.</span><span class="n">get_transform</span><span class="p">(),</span>
-        <span class="p">)</span>
-        <span class="n">handlebox</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">patch</span>
+<div class="viewcode-block" id="VERITASHandler">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.VERITASHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VERITASHandler</span><span class="p">(</span><span class="n">BaseLegendHandler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler for VERITAS telescopes.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;VERITAS&quot;</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="MeanRadiusOuterEdgeHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeHandler">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MeanRadiusOuterEdgeHandler</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a the mean radius outer edge of the dish.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot the mean radius outer edge of the dish.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
@@ -894,34 +874,15 @@
 
 
 
-<span class="n">all_telescope_objects</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;LSTN&quot;</span><span class="p">:</span> <span class="n">LSTObject</span><span class="p">,</span>
-    <span class="s2">&quot;LSTS&quot;</span><span class="p">:</span> <span class="n">LSTObject</span><span class="p">,</span>
-    <span class="s2">&quot;MSTN&quot;</span><span class="p">:</span> <span class="n">MSTObject</span><span class="p">,</span>
-    <span class="s2">&quot;MSTS&quot;</span><span class="p">:</span> <span class="n">MSTObject</span><span class="p">,</span>
-    <span class="n">sct</span><span class="p">:</span> <span class="n">SCTObject</span><span class="p">,</span>
-    <span class="n">sst</span><span class="p">:</span> <span class="n">SSTObject</span><span class="p">,</span>
-    <span class="n">hess</span><span class="p">:</span> <span class="n">HESSObject</span><span class="p">,</span>
-    <span class="n">magic</span><span class="p">:</span> <span class="n">MAGICObject</span><span class="p">,</span>
-    <span class="n">veritas</span><span class="p">:</span> <span class="n">VERITASObject</span><span class="p">,</span>
+<span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">LSTObject</span><span class="p">:</span> <span class="n">LSTHandler</span><span class="p">,</span>
+    <span class="n">MSTObject</span><span class="p">:</span> <span class="n">MSTHandler</span><span class="p">,</span>
+    <span class="n">SSTObject</span><span class="p">:</span> <span class="n">SSTHandler</span><span class="p">,</span>
+    <span class="n">SCTObject</span><span class="p">:</span> <span class="n">SCTHandler</span><span class="p">,</span>
+    <span class="n">HESSObject</span><span class="p">:</span> <span class="n">HESSHandler</span><span class="p">,</span>
+    <span class="n">MAGICObject</span><span class="p">:</span> <span class="n">MAGICHandler</span><span class="p">,</span>
+    <span class="n">VERITASObject</span><span class="p">:</span> <span class="n">VERITASHandler</span><span class="p">,</span>
 <span class="p">}</span>
-<span class="n">all_telescope_handlers</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;LSTN&quot;</span><span class="p">:</span> <span class="n">LSTHandler</span><span class="p">,</span>
-    <span class="s2">&quot;LSTS&quot;</span><span class="p">:</span> <span class="n">LSTHandler</span><span class="p">,</span>
-    <span class="s2">&quot;MSTN&quot;</span><span class="p">:</span> <span class="n">MSTHandler</span><span class="p">,</span>
-    <span class="s2">&quot;MSTS&quot;</span><span class="p">:</span> <span class="n">MSTHandler</span><span class="p">,</span>
-    <span class="n">sct</span><span class="p">:</span> <span class="n">SCTHandler</span><span class="p">,</span>
-    <span class="n">sst</span><span class="p">:</span> <span class="n">SSTHandler</span><span class="p">,</span>
-    <span class="n">hess</span><span class="p">:</span> <span class="n">HESSHandler</span><span class="p">,</span>
-    <span class="n">magic</span><span class="p">:</span> <span class="n">MAGICHandler</span><span class="p">,</span>
-    <span class="n">veritas</span><span class="p">:</span> <span class="n">VERITASHandler</span><span class="p">,</span>
-<span class="p">}</span>
-<span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">tel_type</span> <span class="ow">in</span> <span class="n">all_telescope_objects</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">legend_handler_map</span><span class="p">[</span><span class="n">all_telescope_objects</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]]</span> <span class="o">=</span> <span class="n">all_telescope_handlers</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span>
-<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-    <span class="k">pass</span>
 </pre></div>
 
                 </article>

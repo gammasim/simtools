@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=50ca18ba"></script>
+    <script src="../_static/documentation_options.js?v=528d3fea"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+geccf337" />
+  <meta name="docsearch:version" content="0.1.dev1+g722ab1559" />
   </head>
   
   
@@ -718,33 +718,75 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <span id="legend-handlers"></span><span id="visualizationlegendhandlers"></span><h2>legend_handlers<a class="headerlink" href="#module-visualization.legend_handlers" title="Link to this heading">#</a></h2>
 <p>Helper functions for legend handlers used for plotting.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="visualization.legend_handlers.BaseLegendHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">BaseLegendHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#BaseLegendHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.BaseLegendHandler" title="Link to this definition">#</a></dt>
+<dd><p>Base telescope handler that can handle any telescope type.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.BaseLegendHandler.legend_artist">
+<span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#BaseLegendHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.BaseLegendHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Create the appropriate patch based on telescope type.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.EdgePixelObject">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">EdgePixelObject</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#EdgePixelObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.EdgePixelObject" title="Link to this definition">#</a></dt>
 <dd><p>Edge-Pixel Object.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="visualization.legend_handlers.HESSHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">HESSHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HESSHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HESSHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for HESS telescopes.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="visualization.legend_handlers.HESSObject">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">HESSObject</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HESSObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HESSObject" title="Link to this definition">#</a></dt>
+<dd><p>HESS Object.</p>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.HexEdgePixelHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">HexEdgePixelHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HexEdgePixelHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HexEdgePixelHandler" title="Link to this definition">#</a></dt>
 <dd><p>Legend handler class to plot a hexagonal “edge” pixel.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.HexEdgePixelHandler.legend_artist">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HexEdgePixelHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HexEdgePixelHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Legend artist.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.HexOffPixelHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">HexOffPixelHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HexOffPixelHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HexOffPixelHandler" title="Link to this definition">#</a></dt>
 <dd><p>Legend handler class to plot a hexagonal “off” pixel.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.HexOffPixelHandler.legend_artist">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HexOffPixelHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HexOffPixelHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Legend artist.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.HexPixelHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">HexPixelHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HexPixelHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HexPixelHandler" title="Link to this definition">#</a></dt>
 <dd><p>Legend handler class to plot a hexagonal “on” pixel.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.HexPixelHandler.legend_artist">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#HexPixelHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.HexPixelHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Legend artist.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.LSTHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">LSTHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#LSTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.LSTHandler" title="Link to this definition">#</a></dt>
-<dd><p>Legend handler class to plot a representation of an LST in an array layout.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">LSTHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#LSTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.LSTHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for LST telescopes.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -754,9 +796,21 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="visualization.legend_handlers.MAGICHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">MAGICHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#MAGICHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.MAGICHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for MAGIC telescopes.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="visualization.legend_handlers.MAGICObject">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">MAGICObject</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#MAGICObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.MAGICObject" title="Link to this definition">#</a></dt>
+<dd><p>MAGIC Object.</p>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.MSTHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">MSTHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#MSTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.MSTHandler" title="Link to this definition">#</a></dt>
-<dd><p>Legend handler class to plot a representation of an MST in an array layout.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">MSTHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#MSTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.MSTHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for MST telescopes.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -768,7 +822,7 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.MeanRadiusOuterEdgeHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">MeanRadiusOuterEdgeHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#MeanRadiusOuterEdgeHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.MeanRadiusOuterEdgeHandler" title="Link to this definition">#</a></dt>
-<dd><p>Legend handler class to plot a the mean radius outer edge of the dish.</p>
+<dd><p>Legend handler class to plot the mean radius outer edge of the dish.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -791,8 +845,8 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.SCTHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SCTHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SCTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SCTHandler" title="Link to this definition">#</a></dt>
-<dd><p>Legend handler class to plot a representation of an SCT in an array layout.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SCTHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SCTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SCTHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for SCT telescopes.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -803,8 +857,8 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.SSTHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SSTHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SSTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SSTHandler" title="Link to this definition">#</a></dt>
-<dd><p>Legend handler class to plot a representation of an SST in an array layout.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SSTHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SSTHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SSTHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for SST telescopes.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -817,25 +871,75 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <dt class="sig sig-object py" id="visualization.legend_handlers.SquareEdgePixelHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SquareEdgePixelHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SquareEdgePixelHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SquareEdgePixelHandler" title="Link to this definition">#</a></dt>
 <dd><p>Legend handler class to plot a square “edge” pixel.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.SquareEdgePixelHandler.legend_artist">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SquareEdgePixelHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SquareEdgePixelHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Legend artist.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.SquareOffPixelHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SquareOffPixelHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SquareOffPixelHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SquareOffPixelHandler" title="Link to this definition">#</a></dt>
 <dd><p>Legend handler class to plot a square “off” pixel.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.SquareOffPixelHandler.legend_artist">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SquareOffPixelHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SquareOffPixelHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Legend artist.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="visualization.legend_handlers.SquarePixelHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">SquarePixelHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SquarePixelHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SquarePixelHandler" title="Link to this definition">#</a></dt>
 <dd><p>Legend handler class to plot a square “on” pixel.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="visualization.legend_handlers.SquarePixelHandler.legend_artist">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_artist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">__</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">___</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#SquarePixelHandler.legend_artist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.SquarePixelHandler.legend_artist" title="Link to this definition">#</a></dt>
+<dd><p>Legend artist.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="visualization.legend_handlers.TelescopeHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">TelescopeHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#TelescopeHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.TelescopeHandler" title="Link to this definition">#</a></dt>
-<dd><p>Telescope handler that centralizes the telescope information.</p>
-<p>Individual telescopes handlers inherit from this class.</p>
+<dt class="sig sig-object py" id="visualization.legend_handlers.VERITASHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">VERITASHandler</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#VERITASHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.VERITASHandler" title="Link to this definition">#</a></dt>
+<dd><p>Legend handler for VERITAS telescopes.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="visualization.legend_handlers.VERITASObject">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">VERITASObject</span></span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#VERITASObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.VERITASObject" title="Link to this definition">#</a></dt>
+<dd><p>VERITAS Object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.legend_handlers.calculate_center">
+<span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">calculate_center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handlebox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#calculate_center"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.calculate_center" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the center of the handlebox based on given factors.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.legend_handlers.get_telescope_config">
+<span class="sig-prename descclassname"><span class="pre">visualization.legend_handlers.</span></span><span class="sig-name descname"><span class="pre">get_telescope_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/legend_handlers.html#get_telescope_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.legend_handlers.get_telescope_config" title="Link to this definition">#</a></dt>
+<dd><p>Return the configuration for a given telescope type.</p>
+<p>Try both site-dependent and site-independent configurations (e.g. “MSTS” and “MST”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_type</strong><span class="classifier">str</span></dt><dd><p>The type of the telescope (e.g., “LSTN”, “MSTS”).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>The configuration dictionary for the telescope type.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -1119,12 +1223,29 @@ generates a plot of the pixel layout for the given telescope model.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.legend_handlers">legend_handlers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.BaseLegendHandler"><code class="docutils literal notranslate"><span class="pre">BaseLegendHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.BaseLegendHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">BaseLegendHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.EdgePixelObject"><code class="docutils literal notranslate"><span class="pre">EdgePixelObject</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexEdgePixelHandler"><code class="docutils literal notranslate"><span class="pre">HexEdgePixelHandler</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">HexOffPixelHandler</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexPixelHandler"><code class="docutils literal notranslate"><span class="pre">HexPixelHandler</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HESSHandler"><code class="docutils literal notranslate"><span class="pre">HESSHandler</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HESSObject"><code class="docutils literal notranslate"><span class="pre">HESSObject</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexEdgePixelHandler"><code class="docutils literal notranslate"><span class="pre">HexEdgePixelHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexEdgePixelHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">HexEdgePixelHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">HexOffPixelHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexOffPixelHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">HexOffPixelHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexPixelHandler"><code class="docutils literal notranslate"><span class="pre">HexPixelHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.HexPixelHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">HexPixelHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.LSTHandler"><code class="docutils literal notranslate"><span class="pre">LSTHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.LSTObject"><code class="docutils literal notranslate"><span class="pre">LSTObject</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.MAGICHandler"><code class="docutils literal notranslate"><span class="pre">MAGICHandler</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.MAGICObject"><code class="docutils literal notranslate"><span class="pre">MAGICObject</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.MSTHandler"><code class="docutils literal notranslate"><span class="pre">MSTHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.MSTObject"><code class="docutils literal notranslate"><span class="pre">MSTObject</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.MeanRadiusOuterEdgeHandler"><code class="docutils literal notranslate"><span class="pre">MeanRadiusOuterEdgeHandler</span></code></a></li>
@@ -1135,10 +1256,22 @@ generates a plot of the pixel layout for the given telescope model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SCTObject"><code class="docutils literal notranslate"><span class="pre">SCTObject</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SSTHandler"><code class="docutils literal notranslate"><span class="pre">SSTHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SSTObject"><code class="docutils literal notranslate"><span class="pre">SSTObject</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareEdgePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareEdgePixelHandler</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareOffPixelHandler</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquarePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquarePixelHandler</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.TelescopeHandler"><code class="docutils literal notranslate"><span class="pre">TelescopeHandler</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareEdgePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareEdgePixelHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareEdgePixelHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">SquareEdgePixelHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareOffPixelHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareOffPixelHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">SquareOffPixelHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquarePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquarePixelHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquarePixelHandler.legend_artist"><code class="docutils literal notranslate"><span class="pre">SquarePixelHandler.legend_artist()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.VERITASHandler"><code class="docutils literal notranslate"><span class="pre">VERITASHandler</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.VERITASObject"><code class="docutils literal notranslate"><span class="pre">VERITASObject</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.calculate_center"><code class="docutils literal notranslate"><span class="pre">calculate_center()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.get_telescope_config"><code class="docutils literal notranslate"><span class="pre">get_telescope_config()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_array_layout">plot_array_layout</a><ul class="nav section-nav flex-column">
