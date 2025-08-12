@@ -58,7 +58,8 @@ nsb_scaling_factor (float, optional)
 stars (str, optional)
     Path to a file containing a list of stars (azimuth, zenith, weighting factor
     separated by whitespace). If provided, the stars will be used to simulate
-    additional contributions to the night-sky background.
+    additional contributions to the night-sky background. For details on the
+    parameters, see the sim_telarray manual.
 zenith_angle (float, optional)
     Zenith angle in degrees.
 azimuth_angle (float, optional)
