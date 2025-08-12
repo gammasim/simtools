@@ -19,8 +19,9 @@ nominal value. A list of stars is provided to simulate to simulate additional co
 .. code-block:: console
 
     simtools-simulate-calibration-events --run_mode=pedestals \\
+        --run_number 10 --number_of_events 1000 \\
         --array_layout_name alpha --site North \\
-        --number_of_events 1000 --model_version 6.0.0 \\
+        --model_version 6.0.0 \\
         --zenith_angle 20 --azimuth_angle 0 \\
         --nsb_scaling_factor 2.0 --stars stars.txt
 
@@ -30,7 +31,7 @@ for all telescopes.
 .. code-block:: console
 
     simtools-simulate-calibration-events --run_mode=flasher \\
-        --number_of_events 1000 \\
+        --run_number 10 --number_of_events 1000 \\
         --array_layout_name subsystem_msts --site South \\
         --model_version 6.0.0 \\
         --zenith_angle 20 --azimuth_angle 0 \\
@@ -41,6 +42,8 @@ Command Line Arguments
 ----------------------
 run_mode (str, required)
     Run mode, e.g. "pedestals" or "flasher".
+run_number (int, required)
+    Run number for the simulation.
 number_of_events (int, required)
     Number of calibration events to simulate.
 array_layout_name (str, required)
