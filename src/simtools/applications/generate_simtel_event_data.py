@@ -24,19 +24,19 @@ The output consists of an HDF5 or FITS file containing the following tables:
 +-------------------+---------+-----------------------------------------------+
 | energy_max        | float32 | Maximum simulated energy (TeV)                |
 +-------------------+---------+-----------------------------------------------+
-| viewcone_min      | float32 | Min viewcone angle (rad)                      |
+| viewcone_min      | float32 | Min viewcone angle (deg)                      |
 +-------------------+---------+-----------------------------------------------+
-| viewcone_max      | float32 | Max viewcone angle (rad)                      |
+| viewcone_max      | float32 | Max viewcone angle (deg)                      |
 +-------------------+---------+-----------------------------------------------+
 | core_scatter_min  | float32 | Min core scatter radius (m)                   |
 +-------------------+---------+-----------------------------------------------+
 | core_scatter_max  | float32 | Max core scatter radius (m)                   |
 +-------------------+---------+-----------------------------------------------+
-| zenith            | float32 | Zenith angle (rad)                            |
+| zenith            | float32 | Zenith angle (deg)                            |
 +-------------------+---------+-----------------------------------------------+
-| azimuth           | float32 | Azimuth angle (rad)                           |
+| azimuth           | float32 | Azimuth angle (deg)                           |
 +-------------------+---------+-----------------------------------------------+
-| nsb_level         | float64 | Night sky background level (photons/deg^2/ns) |
+| nsb_level         | float64 | Night sky background level (factor to dark)   |
 +-------------------+---------+-----------------------------------------------+
 
 **SHOWERS**
@@ -56,9 +56,9 @@ The output consists of an HDF5 or FITS file containing the following tables:
 +------------------+---------+-----------------------------------------------+
 | y_core           | float64 | Shower core Y position on ground (m)          |
 +------------------+---------+-----------------------------------------------+
-| shower_azimuth   | float64 | Direction of shower azimuth (rad)             |
+| shower_azimuth   | float64 | Direction of shower azimuth (deg)             |
 +------------------+---------+-----------------------------------------------+
-| shower_altitude  | float64 | Direction of shower altitude (rad)            |
+| shower_altitude  | float64 | Direction of shower altitude (deg)            |
 +------------------+---------+-----------------------------------------------+
 | area_weight      | float64 | Weighting factor for sampling area            |
 +------------------+---------+-----------------------------------------------+
@@ -74,9 +74,9 @@ The output consists of an HDF5 or FITS file containing the following tables:
 +-----------------+---------+-----------------------------------------------+
 | file_id         | int64   | Internal unique identifier for the file       |
 +-----------------+---------+-----------------------------------------------+
-| array_altitude  | float64 | Altitude of array pointing direction (rad)    |
+| array_altitude  | float64 | Altitude of array pointing direction (deg)    |
 +-----------------+---------+-----------------------------------------------+
-| array_azimuth   | float64 | Azimuth of array pointing direction (rad)     |
+| array_azimuth   | float64 | Azimuth of array pointing direction (deg)     |
 +-----------------+---------+-----------------------------------------------+
 | telescope_list  | string  | Comma-separated list of triggered telescopes  |
 +-----------------+---------+-----------------------------------------------+
@@ -130,7 +130,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler, io_table_handler
+from simtools.io import io_handler, table_handler
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 
@@ -187,7 +187,7 @@ def main():  # noqa: D103
     output_filepath = io_handler.IOHandler().get_output_file(args_dict["output_file"])
     generator = SimtelIOEventDataWriter(files, args_dict["max_files"])
     tables = generator.process_files()
-    io_table_handler.write_tables(tables, output_filepath, overwrite_existing=True)
+    table_handler.write_tables(tables, output_filepath, overwrite_existing=True)
     MetadataCollector.dump(args_dict=args_dict, output_file=output_filepath.with_suffix(".yml"))
 
     if args_dict["print_dataset_information"] > 0:

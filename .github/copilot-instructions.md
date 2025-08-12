@@ -2,7 +2,7 @@ This is a python project in the context of Monte Carlo simulations and high-ener
 
 ## Guidelines
 
-- use always semantic versions for version strings.
+- use always semantic versions for version strings. Do not add a "v" to the version string (e.g. use "1.0.0" and not "v1.0.0").
 - do not start replies with "this is the final outcome", while it is obviously not.
 - do not add trivial comments to the code (e.g. '# Adding five' before calling add_five()). Minimize the number of comments added.
 - Use pathlib, not os.path

@@ -9,7 +9,7 @@ from astropy.coordinates import AltAz, angular_separation
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io_operations import io_table_handler
+from simtools.io import table_handler
 
 
 @dataclass
@@ -71,7 +71,7 @@ class SimtelIOEventDataReader:
         list
             List of dictionaries containing the data from the tables.
         """
-        dataset_dict = io_table_handler.read_table_list(
+        dataset_dict = table_handler.read_table_list(
             event_data_file,
             ["SHOWERS", "TRIGGERS", "FILE_INFO"],
             include_indexed_tables=True,
@@ -233,7 +233,7 @@ class SimtelIOEventDataReader:
         def get_name(key):
             return table_name_map.get(key, key)
 
-        tables = io_table_handler.read_tables(
+        tables = table_handler.read_tables(
             event_data_file,
             table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
         )
@@ -249,10 +249,10 @@ class SimtelIOEventDataReader:
 
         triggered_data.angular_distance = (
             angular_separation(
-                triggered_shower.shower_azimuth * u.rad,
-                triggered_shower.shower_altitude * u.rad,
-                triggered_data.array_azimuth * u.rad,
-                triggered_data.array_altitude * u.rad,
+                triggered_shower.shower_azimuth * u.deg,
+                triggered_shower.shower_altitude * u.deg,
+                triggered_data.array_azimuth * u.deg,
+                triggered_data.array_altitude * u.deg,
             )
             .to(u.deg)
             .value
@@ -309,9 +309,9 @@ class SimtelIOEventDataReader:
         y_core : np.ndarray
             Core y positions in ground coordinates.
         shower_azimuth : np.ndarray
-            Shower azimuth angles.
+            Shower azimuth angles in deg.
         shower_altitude : np.ndarray
-            Shower altitude angles.
+            Shower altitude angles in deg.
 
         Returns
         -------
@@ -321,7 +321,9 @@ class SimtelIOEventDataReader:
         ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=np.zeros_like(x_core) * u.m)
         shower_frame = ground.transform_to(
             TiltedGroundFrame(
-                pointing_direction=AltAz(az=shower_azimuth * u.rad, alt=shower_altitude * u.rad)
+                pointing_direction=AltAz(
+                    az=np.deg2rad(shower_azimuth) * u.rad, alt=np.deg2rad(shower_altitude) * u.rad
+                )
             )
         )
         return shower_frame.x.value, shower_frame.y.value

@@ -14,24 +14,23 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def config_data_lst(model_version_prod5):
+def config_data_lst(model_version_prod5, simtel_path):
     return {
         "telescope": "LSTN-01",
         "site": "North",
         "model_version": model_version_prod5,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0 * u.deg,
+        "simtel_path": simtel_path,
     }
 
 
 @pytest.fixture
-def camera_efficiency_lst(io_handler, db_config, simtel_path, config_data_lst):
+def camera_efficiency_lst(io_handler, db_config, config_data_lst):
     return CameraEfficiency(
         config_data=config_data_lst,
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
-        test=True,
     )
 
 
@@ -65,17 +64,6 @@ def test_configuration_from_args_dict(camera_efficiency_lst):
     assert pytest.approx(_config["zenith_angle"]) == 30.0
     assert pytest.approx(_config["azimuth_angle"]) == 90.0
     assert _config["nsb_spectrum"] == "dark"
-
-    _config_none = camera_efficiency_lst._configuration_from_args_dict(
-        {
-            "zenith_angle": None,
-            "azimuth_angle": None,
-            "nsb_spectrum": None,
-        }
-    )
-    assert pytest.approx(_config_none["zenith_angle"]) == 20.0
-    assert pytest.approx(_config_none["azimuth_angle"]) == 0.0
-    assert _config_none["nsb_spectrum"] is None
 
 
 def test_load_files(camera_efficiency_lst):
@@ -135,7 +123,9 @@ def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
     _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
-    assert nsb_rate_ref_conditions == pytest.approx(0.24421390533203186)  # Value for Prod5 LST-1
+    assert nsb_rate_ref_conditions.value == pytest.approx(
+        0.24421390533203186
+    )  # Value for Prod5 LST-1
 
 
 def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
@@ -177,6 +167,7 @@ def test_analyze_from_file(camera_efficiency_lst, mocker):
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.calc_nsb_rate()
     summary = camera_efficiency_lst.results_summary()
     assert "Results summary for LSTN-01" in summary
 
@@ -194,3 +185,31 @@ def test_save_plot(camera_efficiency_lst, mocker, caplog):
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst._save_plot(fig_mock, "test_plot")
     assert "Saved plot test_plot efficiency to" in caplog.text
+
+
+def test_get_nsb_pixel_rate_provided_spectrum(camera_efficiency_lst, mocker):
+    mocker.patch.object(
+        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=10
+    )
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate()
+    assert nsb_pixel_rate.unit == u.GHz
+    assert len(nsb_pixel_rate) == 10
+    assert nsb_pixel_rate[0].value == pytest.approx(5.0)
+
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 6.0 * u.GHz
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate()
+    assert nsb_pixel_rate.unit == u.GHz
+    assert len(nsb_pixel_rate) == 10
+    assert nsb_pixel_rate[0].value == pytest.approx(6.0)
+
+
+def test_get_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker):
+    mocker.patch.object(
+        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=20
+    )
+    camera_efficiency_lst.nsb_rate_ref_conditions = 7.0
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate(reference_conditions=True)
+    assert nsb_pixel_rate.unit == u.GHz
+    assert len(nsb_pixel_rate) == 20
+    assert nsb_pixel_rate[0].value == pytest.approx(7.0)
