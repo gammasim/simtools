@@ -16,7 +16,7 @@ from simtools.corsika.corsika_histograms import (
     CorsikaHistograms,
     HistogramNotCreatedError,
 )
-from simtools.io_operations.hdf5_handler import read_hdf5
+from simtools.io.hdf5_handler import read_hdf5
 
 x_axis_string = "x axis"
 y_axis_string = "y axis"

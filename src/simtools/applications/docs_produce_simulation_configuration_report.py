@@ -5,7 +5,7 @@ r"""Produces a markdown file for a given simulation configuration."""
 import logging
 
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
 

@@ -1,12 +1,9 @@
 """General functions useful across different parts of the code."""
 
-import copy
 import datetime
 import glob
-import json
 import logging
 import os
-import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -14,52 +11,19 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import numpy as np
-import yaml
 
 __all__ = [
-    "InvalidConfigDataError",
     "change_dict_keys_case",
     "clear_default_sim_telarray_cfg_directories",
-    "collect_data_from_file",
     "collect_final_lines",
     "collect_kwargs",
     "get_log_excerpt",
     "get_log_level_from_user",
     "remove_substring_recursively_from_dict",
     "set_default_kwargs",
-    "sort_arrays",
 ]
 
 _logger = logging.getLogger(__name__)
-
-
-class InvalidConfigDataError(Exception):
-    """Exception for invalid configuration data."""
-
-
-def join_url_or_path(url_or_path, *args):
-    """
-    Join URL or path with additional subdirectories and file.
-
-    This is the equivalent to Path.join(), with extended functionality
-    working also for URLs.
-
-    Parameters
-    ----------
-    url_or_path: str or Path
-        URL or path to be extended.
-    args: list
-        Additional arguments to be added to the URL or path.
-
-    Returns
-    -------
-    str or Path
-        Extended URL or path.
-
-    """
-    if "://" in str(url_or_path):
-        return "/".join([url_or_path.rstrip("/"), *args])
-    return Path(url_or_path).joinpath(*args)
 
 
 def is_url(url):
@@ -104,104 +68,6 @@ def url_exists(url):
     except (urllib.error.URLError, AttributeError) as e:
         _logger.error(f"URL {url} does not exist: {e}")
         return False
-
-
-def collect_data_from_http(url):
-    """
-    Download yaml or json file from url and return it contents as dict.
-
-    File is downloaded as a temporary file and deleted afterwards.
-
-    Parameters
-    ----------
-    url: str
-        URL of the yaml/json file.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the file content.
-
-    Raises
-    ------
-    TypeError
-        If url is not a valid URL.
-    FileNotFoundError
-        If downloading the yaml file fails.
-
-    """
-    try:
-        with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
-            urllib.request.urlretrieve(url, tmp_file.name)
-            data = _collect_data_from_different_file_types(
-                tmp_file, url, Path(url).suffix.lower(), None
-            )
-    except TypeError as exc:
-        raise TypeError(f"Invalid url {url}") from exc
-    except urllib.error.HTTPError as exc:
-        raise FileNotFoundError(f"Failed to download file from {url}") from exc
-
-    _logger.debug(f"Downloaded file from {url}")
-    return data
-
-
-def collect_data_from_file(file_name, yaml_document=None):
-    """
-    Collect data from file based on its extension.
-
-    Parameters
-    ----------
-    file_name: str
-        Name of the yaml/json/ascii file.
-    yaml_document: None, int
-        Return list of yaml documents or a single document (for yaml files with several documents).
-
-    Returns
-    -------
-    data: dict or list
-        Data as dict or list.
-    """
-    if is_url(file_name):
-        return collect_data_from_http(file_name)
-
-    suffix = Path(file_name).suffix.lower()
-    try:
-        with open(file_name, encoding="utf-8") as file:
-            return _collect_data_from_different_file_types(file, file_name, suffix, yaml_document)
-    # broad exception to catch all possible errors in reading the file
-    except Exception as exc:  # pylint: disable=broad-except
-        raise type(exc)(f"Failed to read file {file_name}: {exc}") from exc
-    return None
-
-
-def _collect_data_from_different_file_types(file, file_name, suffix, yaml_document):
-    """Collect data from different file types."""
-    if suffix == ".json":
-        return json.load(file)
-    if suffix in (".list", ".txt"):
-        return [line.strip() for line in file.readlines()]
-    if suffix in [".yml", ".yaml"]:
-        return _collect_data_from_yaml_file(file, file_name, yaml_document)
-    raise TypeError(f"File type {suffix} not supported.")
-
-
-def _collect_data_from_yaml_file(file, file_name, yaml_document):
-    """Collect data from a yaml file (allow for multi-document yaml files)."""
-    try:
-        return yaml.safe_load(file)
-    except yaml.constructor.ConstructorError:
-        return _load_yaml_using_astropy(file)
-    except yaml.composer.ComposerError:
-        pass
-    file.seek(0)
-    if yaml_document is None:
-        return list(yaml.safe_load_all(file))
-    try:
-        return list(yaml.safe_load_all(file))[yaml_document]
-    except IndexError as exc:
-        raise InvalidConfigDataError(
-            f"YAML file {file_name} does not contain {yaml_document} documents."
-        ) from exc
 
 
 def collect_kwargs(label, in_kwargs):
@@ -363,28 +229,6 @@ def enforce_list_type(value):
     return value if isinstance(value, list) else [value]
 
 
-def copy_as_list(value):
-    """
-    Copy value and, if it is not a list, turn it into a list with a single entry.
-
-    Parameters
-    ----------
-    value single variable of any type or list
-
-    Returns
-    -------
-    value: list
-        Copy of value if it is a list of [value] otherwise.
-    """
-    if isinstance(value, str):
-        return [value]
-
-    try:
-        return list(value)
-    except TypeError:
-        return [value]
-
-
 def program_is_executable(program):
     """
     Check if program exists and is executable.
@@ -419,17 +263,17 @@ def _search_directory(directory, filename, rec=False):
         _logger.debug(f"Directory {directory} does not exist")
         return None
 
-    file = Path(directory).joinpath(filename)
-    if file.exists():
+    _file = Path(directory).joinpath(filename)
+    if _file.exists():
         _logger.debug(f"File {filename} found in {directory}")
-        return file
+        return _file
 
     if rec:
         for subdir in Path(directory).iterdir():
             if subdir.is_dir():
-                file = _search_directory(subdir, filename, True)
-                if file:
-                    return file
+                _file = _search_directory(subdir, filename, True)
+                if _file:
+                    return _file
     return None
 
 
@@ -457,15 +301,15 @@ def find_file(name, loc):
     all_locations = [loc] if not isinstance(loc, list) else loc
 
     # Searching file locally
-    file = _search_directory(".", name)
-    if file:
-        return file
+    _file = _search_directory(".", name)
+    if _file:
+        return _file
 
     # Searching file in given locations
     for location in all_locations:
-        file = _search_directory(location, name, True)
-        if file:
-            return file
+        _file = _search_directory(location, name, True)
+        if _file:
+            return _file
 
     msg = f"File {name} could not be found in {all_locations}"
     _logger.error(msg)
@@ -636,29 +480,6 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
     except AttributeError:
         _logger.debug(f"Input is not a dictionary: {data_dict}")
     return data_dict
-
-
-def sort_arrays(*args):
-    """Sort arrays.
-
-    Parameters
-    ----------
-    *args
-        Arguments to be sorted.
-
-    Returns
-    -------
-    list
-        Sorted args.
-    """
-    if len(args) == 0:
-        return args
-    order_array = copy.copy(args[0])
-    new_args = []
-    for arg in args:
-        _, value = zip(*sorted(zip(order_array, arg)))
-        new_args.append(list(value))
-    return new_args
 
 
 def user_confirm():
@@ -835,82 +656,6 @@ def convert_string_to_list(data_string, is_float=True, force_comma_separation=Fa
     if " " in data_string and not force_comma_separation:
         return data_string.split()
     return data_string
-
-
-def _load_yaml_using_astropy(file):
-    """
-    Load a yaml file using astropy's yaml loader.
-
-    Parameters
-    ----------
-    file: file
-        File to be loaded.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the file content.
-    """
-    # pylint: disable=import-outside-toplevel
-    import astropy.io.misc.yaml as astropy_yaml
-
-    file.seek(0)
-    return astropy_yaml.load(file)
-
-
-def is_utf8_file(file_name):
-    """
-    Check if a file is encoded in UTF-8.
-
-    Parameters
-    ----------
-    file_name: str, Path
-        Name of the file to be checked.
-
-    Returns
-    -------
-    bool
-        True if the file is encoded in UTF-8, False otherwise.
-    """
-    try:
-        with open(file_name, encoding="utf-8") as file:
-            file.read()
-        return True
-    except UnicodeDecodeError:
-        return False
-
-
-def read_file_encoded_in_utf_or_latin(file_name):
-    """
-    Read a file encoded in UTF-8 or Latin-1.
-
-    Parameters
-    ----------
-    file_name: str
-        Name of the file to be read.
-
-    Returns
-    -------
-    list
-        List of lines read from the file.
-
-    Raises
-    ------
-    UnicodeDecodeError
-        If the file cannot be decoded using UTF-8 or Latin-1.
-    """
-    try:
-        with open(file_name, encoding="utf-8") as file:
-            lines = file.readlines()
-    except UnicodeDecodeError:
-        logging.debug("Unable to decode file using UTF-8. Trying Latin-1.")
-        try:
-            with open(file_name, encoding="latin-1") as file:
-                lines = file.readlines()
-        except UnicodeDecodeError as exc:
-            raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
-
-    return lines
 
 
 def get_structure_array_from_table(table, column_names):

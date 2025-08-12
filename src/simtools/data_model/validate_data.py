@@ -12,6 +12,7 @@ from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
 from simtools.data_model import schema
+from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["DataValidator"]
@@ -100,7 +101,7 @@ class DataValidator:
         """
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
-                self.data_dict = gen.collect_data_from_file(self.data_file_name)
+                self.data_dict = ascii_handler.collect_data_from_file(self.data_file_name)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -563,7 +564,7 @@ class DataValidator:
             If unit conversions fails
 
         """
-        self._logger.debug(f"Checking data column '{col_name}'")
+        self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
 
         reference_unit = self._get_reference_unit(col_name)
         try:
@@ -574,9 +575,10 @@ class DataValidator:
         if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
             return data, u.dimensionless_unscaled
 
-        self._logger.debug(
+        self._rate_limited_logger(
+            col_name,
             f"Data column '{col_name}' with reference unit "
-            f"'{reference_unit}' and data unit '{column_unit}'"
+            f"'{reference_unit}' and data unit '{column_unit}'",
         )
         try:
             if isinstance(data, u.Quantity | Column):
@@ -652,7 +654,9 @@ class DataValidator:
             range columns
 
         """
-        self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}' ")
+        self._rate_limited_logger(
+            col_name, f"Checking data in column '{col_name}' for '{range_type}'"
+        )
 
         if range_type not in ("allowed_range", "required_range"):
             raise KeyError("Allowed range types are 'allowed_range', 'required_range'")
@@ -672,6 +676,26 @@ class DataValidator:
                 f"[{_entry[range_type].get('min', -np.inf)}, "
                 f"{_entry[range_type].get('max', np.inf)}])"
             )
+
+    def _rate_limited_logger(self, col_name, message, max_logs=10):
+        """
+        Log debug messages at a limited rate defined by a numerical column name.
+
+        Parameters
+        ----------
+        col_name: str or int
+            Column name or index to limit the rate of logging.
+        message: str
+            Message to log.
+        max_logs: int
+            Maximum number of logging messages to be printed.
+        """
+        try:
+            col_index = int(col_name)
+            if col_index < max_logs:
+                self._logger.debug(message)
+        except (ValueError, TypeError):
+            self._logger.debug(message)
 
     @staticmethod
     def _interval_check(data, axis_range, range_type):
@@ -732,7 +756,7 @@ class DataValidator:
         ValueError
             if schema version is not found in schema file
         """
-        schema_data = gen.collect_data_from_file(file_name=schema_file)
+        schema_data = ascii_handler.collect_data_from_file(file_name=schema_file)
         entries = schema_data if isinstance(schema_data, list) else [schema_data]
 
         for entry in entries:
@@ -774,8 +798,9 @@ class DataValidator:
             If data column is not found.
 
         """
-        self._logger.debug(
-            f"Getting reference data column {column_name} from schema {self._data_description}"
+        self._rate_limited_logger(
+            column_name,
+            f"Getting reference data column {column_name} from schema {self._data_description}",
         )
         try:
             return (
