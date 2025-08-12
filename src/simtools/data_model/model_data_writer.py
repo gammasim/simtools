@@ -1,11 +1,8 @@
 """Model data writer module."""
 
-import json
 import logging
 from pathlib import Path
 
-import astropy.units as u
-import numpy as np
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
@@ -16,23 +13,6 @@ from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["ModelDataWriter"]
-
-
-class JsonNumpyEncoder(json.JSONEncoder):
-    """Convert numpy to python types as accepted by json.dump."""
-
-    def default(self, o):
-        if isinstance(o, np.floating):
-            return float(o)
-        if isinstance(o, np.integer):
-            return int(o)
-        if isinstance(o, np.ndarray):
-            return o.tolist()
-        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
-            return str(o) if o != u.dimensionless_unscaled else None
-        if np.issubdtype(type(o), np.bool_):
-            return bool(o)
-        return super().default(o)
 
 
 class ModelDataWriter:
@@ -415,15 +395,13 @@ class ModelDataWriter:
             if data writing was not successful.
         """
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
-        try:
-            self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
-            with open(self.io_handler.get_output_file(file_name), "w", encoding="UTF-8") as file:
-                json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
-                file.write("\n")
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(
-                f"Error writing model data to {self.io_handler.get_output_file(file_name)}"
-            ) from exc
+        self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
+        ascii_handler.write_data_to_file(
+            data=data_dict,
+            output_file=self.io_handler.get_output_file(file_name),
+            sort_keys=False,
+            numpy_types=True,
+        )
 
     @staticmethod
     def prepare_data_dict_for_writing(data_dict):
@@ -432,6 +410,7 @@ class ModelDataWriter:
 
         Ensure sim_telarray style lists as strings 'type' and 'unit' entries.
         Replace "None" with "null" for unit field.
+        Replace list of equal units with single unit string.
 
         Parameters
         ----------
@@ -452,6 +431,8 @@ class ModelDataWriter:
                     unit.replace("None", "null") if isinstance(unit, str) else unit
                     for unit in data_dict["unit"]
                 ]
+                if all(u == data_dict["unit"][0] for u in data_dict["unit"]):
+                    data_dict["unit"] = data_dict["unit"][0]
         except KeyError:
             pass
         return data_dict
