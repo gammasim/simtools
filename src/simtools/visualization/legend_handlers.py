@@ -205,7 +205,7 @@ class SquareOffPixelHandler(_BaseSquarePixelHandler):
         )
 
 
-class TelescopeHandler:
+class BaseLegendHandler:
     """Base telescope handler that can handle any telescope type."""
 
     def __init__(self, telescope_type):
@@ -267,49 +267,49 @@ class TelescopeHandler:
         return patch
 
 
-class LSTHandler(TelescopeHandler):
+class LSTHandler(BaseLegendHandler):
     """Legend handler for LST telescopes."""
 
     def __init__(self):
         super().__init__("LST")
 
 
-class MSTHandler(TelescopeHandler):
+class MSTHandler(BaseLegendHandler):
     """Legend handler for MST telescopes."""
 
     def __init__(self):
         super().__init__("MST")
 
 
-class SSTHandler(TelescopeHandler):
+class SSTHandler(BaseLegendHandler):
     """Legend handler for SST telescopes."""
 
     def __init__(self):
         super().__init__("SST")
 
 
-class SCTHandler(TelescopeHandler):
+class SCTHandler(BaseLegendHandler):
     """Legend handler for SCT telescopes."""
 
     def __init__(self):
         super().__init__("SCT")
 
 
-class HESSHandler(TelescopeHandler):
+class HESSHandler(BaseLegendHandler):
     """Legend handler for HESS telescopes."""
 
     def __init__(self):
         super().__init__("HESS")
 
 
-class MAGICHandler(TelescopeHandler):
+class MAGICHandler(BaseLegendHandler):
     """Legend handler for MAGIC telescopes."""
 
     def __init__(self):
         super().__init__("MAGIC")
 
 
-class VERITASHandler(TelescopeHandler):
+class VERITASHandler(BaseLegendHandler):
     """Legend handler for VERITAS telescopes."""
 
     def __init__(self):

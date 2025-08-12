@@ -55,7 +55,7 @@ def test_handlers(io_handler):
         handler_instance = handler()
         assert handler_instance.legend_artist is not None
 
-    tel_handler = leg_h.TelescopeHandler("LSTN")
+    tel_handler = leg_h.BaseLegendHandler("LSTN")
     assert tel_handler.config is not None
     assert "color" in tel_handler.config
     assert "radius" in tel_handler.config
@@ -63,9 +63,9 @@ def test_handlers(io_handler):
 
 
 def test_telescope_config():
-    """Test that all telescope types in TELESCOPE_CONFIG work with TelescopeHandler."""
+    """Test that all telescope types in TELESCOPE_CONFIG work with BaseLegendHandler."""
     for telescope_type in leg_h.TELESCOPE_CONFIG:
-        handler = leg_h.TelescopeHandler(telescope_type)
+        handler = leg_h.BaseLegendHandler(telescope_type)
         assert handler.telescope_type == telescope_type
         assert handler.config == leg_h.TELESCOPE_CONFIG[telescope_type]
 
@@ -123,9 +123,9 @@ def test_base_square_pixel_handler_create_square_patch():
 
 
 def test_telescope_handler():
-    """Test the TelescopeHandler class for various telescope types."""
+    """Test the BaseLegendHandler class for various telescope types."""
     for telescope_type, config in leg_h.TELESCOPE_CONFIG.items():
-        handler = leg_h.TelescopeHandler(telescope_type)
+        handler = leg_h.BaseLegendHandler(telescope_type)
         assert handler.telescope_type == telescope_type
         assert handler.config == config
 

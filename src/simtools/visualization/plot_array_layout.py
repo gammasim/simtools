@@ -227,17 +227,17 @@ def update_legend(ax, telescopes):
             objs.append(telescope_type)
             labels.append(f"{telescope_type} ({counts[telescope_type]})")
 
-            class TelescopeHandlerWrapper:  # pylint: disable=R0903
-                """Wrapper for TelescopeHandler to use in legend."""
+            class BaseLegendHandlerWrapper:  # pylint: disable=R0903
+                """Wrapper for BaseLegendHandler to use in legend."""
 
                 def __init__(self, tel_type):
                     self.tel_type = tel_type
 
                 def legend_artist(self, legend, orig_handle, fontsize, handlebox):
-                    handler = leg_h.TelescopeHandler(self.tel_type)
+                    handler = leg_h.BaseLegendHandler(self.tel_type)
                     return handler.legend_artist(legend, orig_handle, fontsize, handlebox)
 
-            handler_map[telescope_type] = TelescopeHandlerWrapper(telescope_type)
+            handler_map[telescope_type] = BaseLegendHandlerWrapper(telescope_type)
 
     ax.legend(objs, labels, handler_map=handler_map, prop={"size": 11}, loc="best")
 
