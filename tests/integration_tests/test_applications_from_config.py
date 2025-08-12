@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from simtools.testing import configuration, helpers, validate_output
+from simtools.testing import configuration, helpers, log_inspector, validate_output
 
 logger = logging.getLogger()
 load_dotenv(".env")
@@ -30,7 +30,7 @@ for config, test_id in zip(test_configs, test_ids):
 
 
 @pytest.mark.parametrize("config", test_parameters)
-def test_applications_from_config(tmp_test_directory, config, request):
+def test_applications_from_config(tmp_test_directory, config, request, db_config):
     """
     Test all applications from config files found in the config directory.
 
@@ -72,8 +72,11 @@ def test_applications_from_config(tmp_test_directory, config, request):
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     assert result.returncode == 0, msg
 
+    assert log_inspector.inspect([result.stdout, result.stderr])
+
     validate_output.validate_application_output(
         tmp_config,
         model_version,
         config_file_model_version or model_version,
+        db_config=db_config,
     )

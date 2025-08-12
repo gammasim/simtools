@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
@@ -123,7 +122,9 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
     test_array_simulator.simulation_software = "corsika"
     assert test_array_simulator.simulation_software == "corsika"
 
-    with pytest.raises(gen.InvalidConfigDataError, match="^Invalid simulation software"):
+    with pytest.raises(
+        ValueError, match="Invalid simulation software: this_simulator_is_not_there"
+    ):
         test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
@@ -714,7 +715,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer = mocker.patch(
         "simtools.simulator.SimtelIOEventDataWriter", return_value=mock_generator
     )
-    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
 
     array_simulator.save_reduced_event_lists()
 
@@ -722,13 +723,13 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
     mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
 
-    assert mock_io_table_handler.write_tables.call_count == 2
-    mock_io_table_handler.write_tables.assert_any_call(
+    assert mock_table_handler.write_tables.call_count == 2
+    mock_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
         output_file=Path("output_file1.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
-    mock_io_table_handler.write_tables.assert_any_call(
+    mock_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
         output_file=Path("output_file2.reduced_event_data.hdf5"),
         overwrite_existing=True,
@@ -738,7 +739,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
 def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
     mocker.patch.object(array_simulator, "get_file_list", return_value=[])
     mock_simtel_io_writer = mocker.patch("simtools.simulator.SimtelIOEventDataWriter")
-    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+    mock_io_table_handler = mocker.patch("simtools.simulator.table_handler")
 
     array_simulator.save_reduced_event_lists()
 
