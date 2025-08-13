@@ -3,13 +3,15 @@ from unittest.mock import MagicMock, patch
 
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
+FILE_SIMTEL = "test_file.simtel"
+
 
 def test_telescope_trigger_rates_with_array_layout_name():
     args_dict = {
         "array_layout_name": "test_layout",
         "site": "test_site",
         "model_version": "1.0.0",
-        "event_data_file": "test_file.simtel",
+        "event_data_file": FILE_SIMTEL,
         "plot_histograms": False,
     }
     db_config = {"db_key": "db_value"}
@@ -30,7 +32,7 @@ def test_telescope_trigger_rates_with_array_layout_name():
             "test_layout", "test_site", "1.0.0", db_config
         )
         mock_histograms.assert_called_once_with(
-            "test_file.simtel", array_name="array1", telescope_list=[1, 2, 3]
+            FILE_SIMTEL, array_name="array1", telescope_list=[1, 2, 3]
         )
         mock_histograms_instance.fill.assert_called_once()
         mock_histograms_instance.plot.assert_not_called()
@@ -39,7 +41,7 @@ def test_telescope_trigger_rates_with_array_layout_name():
 def test_telescope_trigger_rates_without_array_layout_name():
     args_dict = {
         "telescope_ids": Path("test_telescope_ids.txt"),
-        "event_data_file": "test_file.simtel",
+        "event_data_file": FILE_SIMTEL,
         "plot_histograms": True,
     }
     db_config = {"db_key": "db_value"}
@@ -63,7 +65,7 @@ def test_telescope_trigger_rates_without_array_layout_name():
 
         mock_collect_data.assert_called_once_with(Path("test_telescope_ids.txt"))
         mock_histograms.assert_called_once_with(
-            "test_file.simtel", array_name="array1", telescope_list=[1, 2, 3]
+            FILE_SIMTEL, array_name="array1", telescope_list=[1, 2, 3]
         )
         mock_histograms_instance.fill.assert_called_once()
         mock_plot.assert_called_once_with(
