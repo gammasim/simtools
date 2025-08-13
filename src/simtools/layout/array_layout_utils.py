@@ -402,12 +402,13 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_conf
     """
     Get list of array elements from the database for given list of layout names.
 
-    Structure of the returned dictionary:
-    {
-        "layout_name_1": [telescope_id_1, telescope_id_2, ...],
-        "layout_name_2": [telescope_id_3, telescope_id_4, ...],
-        ...
-    }
+    Structure of the returned dictionary::
+
+        {
+            "layout_name_1": [telescope_id_1, telescope_id_2, ...],
+            "layout_name_2": [telescope_id_3, telescope_id_4, ...],
+            ...
+        }
 
     Parameters
     ----------
