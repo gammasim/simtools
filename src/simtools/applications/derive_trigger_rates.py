@@ -1,5 +1,5 @@
 r"""
-Derive trigger rates for a single telescope or an array of telescopes.
+Derive cosmic-ray trigger rates for a single telescope or an array of telescopes.
 
 Uses simulated background events (e.g. from proton primaries) to calculate the trigger rates.
 Input is reduced event data generated from simulations for the given configuration.

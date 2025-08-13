@@ -5,6 +5,7 @@ import logging
 from simtools.io import ascii_handler, io_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ def telescope_trigger_rates(args_dict, db_config):
         )
         histograms.fill()
         if args_dict["plot_histograms"]:
-            histograms.plot(
+            plot_simtel_event_histograms.plot(
+                histograms,
                 output_path=io_handler.IOHandler().get_output_directory(),
+                array_name=array_name,
             )
