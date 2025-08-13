@@ -430,17 +430,21 @@ class SimulatorLightEmission(SimtelRunner):
             The updated command string
         """
         # For dual mirror we use ff-gct style flashers (dual-mirror design)
-        flasher_xy = self._flasher_model.get_parameter_value("flasher_position")
-        flasher_depth = self._flasher_model.get_parameter_value("flasher_depth")
-        flasher_inclination = self._flasher_model.get_parameter_value("flasher_inclination")
-        mirror_camera_distance = self._flasher_model.get_parameter_value("mirror_camera_distance")
-        spectrum = self._flasher_model.get_parameter_value("spectrum")
+        flasher_xy = self._flasher_model.get_parameter_value_with_unit("flasher_position")
+        flasher_depth = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
+        flasher_inclination = self._flasher_model.get_parameter_value_with_unit(
+            "flasher_inclination"
+        )
+        mirror_camera_distance = self._flasher_model.get_parameter_value_with_unit(
+            "mirror_camera_distance"
+        )
+        spectrum = self._flasher_model.get_parameter_value_with_unit("spectrum")
         pulse = self._flasher_model.get_parameter_value("lightpulse")
         angular = self._flasher_model.get_parameter_value("angular_distribution")
         fire_pattern = self._flasher_model.get_parameter_value("flasher_pattern")
         bunch_size = self._flasher_model.get_parameter_value("bunch_size")
 
-        # Ensure plain numeric values for CLI
+        # Convert to plain numbers for CLI
         fx = flasher_xy[0].to(u.cm).value
         fdepth = flasher_depth.to(u.cm).value
         finc = flasher_inclination.to(u.deg).value
@@ -475,16 +479,21 @@ class SimulatorLightEmission(SimtelRunner):
             The updated command string
         """
         # For MST/LST we use ff-1m style flashers (single-mirror design)
-        flasher_xy = self._flasher_model.get_parameter_value("flasher_position")
-        flasher_distance = self._flasher_model.get_parameter_value("flasher_depth")
+        flasher_xy = self._flasher_model.get_parameter_value_with_unit("flasher_position")
+        flasher_distance = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
+        # Camera radius required for application, Radius of fiducial sphere enclosing camera
         camera_radius = (
-            self._telescope_model.get_parameter_value_with_unit("camera_radius").to(u.cm).value
+            self._telescope_model.get_parameter_value_with_unit("camera_body_diameter")
+            .to(u.cm)
+            .value
+            / 2
         )
-        spectrum = self._flasher_model.get_parameter_value("spectrum")
+        spectrum = self._flasher_model.get_parameter_value_with_unit("spectrum")
         pulse = self._flasher_model.get_parameter_value("lightpulse")
         angular = self._flasher_model.get_parameter_value("angular_distribution")
         bunch_size = self._flasher_model.get_parameter_value("bunch_size")
 
+        # Convert to plain numbers for CLI
         fx = flasher_xy[0].to(u.cm).value
         fy = flasher_xy[1].to(u.cm).value
         dist_cm = flasher_distance.to(u.cm).value
