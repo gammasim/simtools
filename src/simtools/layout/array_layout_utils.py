@@ -280,8 +280,6 @@ def get_array_layouts_from_db(
     list
         List of dictionaries containing array layout names and their elements.
     """
-    # TODO - this function should be replace by enforce list type from utils.general
-    # (wait for simulate-calibration-events merge)
     layout_names = []
     if layout_name:
         layout_names.append(
