@@ -11,6 +11,7 @@ import numpy as np
 
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.io import io_handler
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.visualization.visualize import (
@@ -300,7 +301,7 @@ class SimulatorLightEmission(SimtelRunner):
         try:
             atmo_name = self._telescope_model.get_parameter_value("atmospheric_profile")
             self._logger.debug(f"Using atmosphere profile: {atmo_name}")
-        except (KeyError, AttributeError, TypeError):
+        except InvalidModelParameterError:
             atmo_name = None
 
         if not atmo_name:
@@ -432,28 +433,28 @@ class SimulatorLightEmission(SimtelRunner):
         flasher_xy = self._flasher_model.get_parameter_value("flasher_position")
         flasher_depth = self._flasher_model.get_parameter_value("flasher_depth")
         flasher_inclination = self._flasher_model.get_parameter_value("flasher_inclination")
-        # Provide fallback if not present in DB
-        try:
-            mirror_camera_distance = self._flasher_model.get_parameter_value(
-                "mirror_camera_distance"
-            )
-        except KeyError:
-            mirror_camera_distance = 0.0
-            self._logger.warning("mirror_camera_distance missing; defaulting to 0.0")
+        mirror_camera_distance = self._flasher_model.get_parameter_value("mirror_camera_distance")
         spectrum = self._flasher_model.get_parameter_value("spectrum")
         pulse = self._flasher_model.get_parameter_value("lightpulse")
         angular = self._flasher_model.get_parameter_value("angular_distribution")
         fire_pattern = self._flasher_model.get_parameter_value("flasher_pattern")
         bunch_size = self._flasher_model.get_parameter_value("bunch_size")
 
+        # Ensure plain numeric values for CLI
+        fx = flasher_xy[0].to(u.cm).value
+        fdepth = flasher_depth.to(u.cm).value
+        finc = flasher_inclination.to(u.deg).value
+        mcd = mirror_camera_distance.to(u.cm).value
+        spec_nm = int(spectrum.to(u.nm).value)
+
         command += f" --events {self.runs}"
         command += f" --photons {self.photons_per_run}"
         command += f" --bunchsize {bunch_size}"
-        command += f" --flasher-xy {flasher_xy[0]}"
-        command += f" --flasher-depth {flasher_depth}"
-        command += f" --flasher-inclination {flasher_inclination}"
-        command += f" --mirror-camera-distance {mirror_camera_distance}"
-        command += f" --spectrum {spectrum}"
+        command += f" --flasher-xy {fx}"
+        command += f" --flasher-depth {fdepth}"
+        command += f" --flasher-inclination {finc}"
+        command += f" --mirror-camera-distance {mcd}"
+        command += f" --spectrum {spec_nm}"
         command += f" --lightpulse {pulse}"
         command += f" --angular-distribution {angular}"
         command += f" --fire {fire_pattern}"
@@ -476,41 +477,26 @@ class SimulatorLightEmission(SimtelRunner):
         # For MST/LST we use ff-1m style flashers (single-mirror design)
         flasher_xy = self._flasher_model.get_parameter_value("flasher_position")
         flasher_distance = self._flasher_model.get_parameter_value("flasher_depth")
-        # camera_radius is optional; use model value or sensible default (cm)
-        try:
-            camera_radius = (
-                self._telescope_model.get_parameter_value_with_unit("camera_radius").to(u.cm).value
-            )
-        except (KeyError, AttributeError, TypeError, ValueError):
-            camera_radius = 120.0
-            self._logger.info("camera_radius missing; using default 120.0 cm for ff-1m")
-        # Log if distance deviates from effective focal length significantly
-        try:
-            eff_f = (
-                self._telescope_model.get_parameter_value_with_unit("effective_focal_length")
-                .to(u.cm)
-                .value
-            )
-            if abs(flasher_distance - eff_f) > 10.0:
-                self._logger.info(
-                    f"Flasher distance {flasher_distance:.1f} cm differs from "
-                    f"effective focal length {eff_f:.1f} cm"
-                )
-        except (KeyError, AttributeError, TypeError, ValueError):
-            pass
-
+        camera_radius = (
+            self._telescope_model.get_parameter_value_with_unit("camera_radius").to(u.cm).value
+        )
         spectrum = self._flasher_model.get_parameter_value("spectrum")
         pulse = self._flasher_model.get_parameter_value("lightpulse")
         angular = self._flasher_model.get_parameter_value("angular_distribution")
         bunch_size = self._flasher_model.get_parameter_value("bunch_size")
 
+        fx = flasher_xy[0].to(u.cm).value
+        fy = flasher_xy[1].to(u.cm).value
+        dist_cm = flasher_distance.to(u.cm).value
+        spec_nm = int(spectrum.to(u.nm).value)
+
         command += f" --events {self.runs}"
         command += f" --photons {self.photons_per_run}"
         command += f" --bunchsize {bunch_size}"
-        command += f" --xy {flasher_xy[0]},{flasher_xy[1]}"
-        command += f" --distance {flasher_distance}"
+        command += f" --xy {fx},{fy}"
+        command += f" --distance {dist_cm}"
         command += f" --camera-radius {camera_radius}"
-        command += f" --spectrum {spectrum}"
+        command += f" --spectrum {spec_nm}"
         command += f" --lightpulse {pulse}"
         command += f" --angular-distribution {angular}"
         return command
@@ -916,7 +902,7 @@ class SimulatorLightEmission(SimtelRunner):
             try:
                 d_cm = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
                 return d_cm.to(u.m)
-            except (KeyError, AttributeError, TypeError, ValueError):
+            except InvalidModelParameterError:
                 pass
 
         # Variable LED/light emission configuration with z_pos
