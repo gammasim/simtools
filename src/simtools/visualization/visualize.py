@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """Module for visualization."""
 
-import copy
 import logging
 import re
 from collections import OrderedDict
@@ -19,6 +18,12 @@ __all__ = [
     "get_markers",
     "plot_1d",
     "plot_hist_2d",
+    "plot_simtel_ctapipe",
+    "plot_simtel_event_image",
+    "plot_simtel_peak_timing",
+    "plot_simtel_step_traces",
+    "plot_simtel_time_traces",
+    "plot_simtel_waveform_pcolormesh",
     "plot_table",
     "save_figure",
     "set_style",
@@ -663,20 +668,22 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
 
     source = EventSource(filename, max_events=1)
     event = None
-    events = [copy.deepcopy(event) for event in source]
-    if len(events) > 1:
-        event = events[-1]
-    else:
-        try:
-            event = events[0]
-        except IndexError:
-            event = events
-    tel_id = sorted(event.r1.tel.keys())[0]
+    for ev in source:
+        event = ev
+        break
+    if event is None:
+        _logger.warning(f"No events found in {filename}")
+        return None
+    tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if not tel_ids:
+        _logger.warning("First event has no R1 telescope data")
+        return None
+    tel_id = tel_ids[0]
 
     calib = CameraCalibrator(subarray=source.subarray)
     calib(event)
 
-    geometry = source.subarray.tel[1].camera.geometry
+    geometry = source.subarray.tel[tel_id].camera.geometry
     image = event.dl1.tel[tel_id].image
     cleaned = image.copy()
 
@@ -701,11 +708,18 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     disp.add_colorbar(fraction=0.02, pad=-0.1)
     disp.set_limits_percent(100)
     ax.set_title(title, pad=20)
+    if distance is not None:
+        try:
+            d_str = f"{distance.to(u.m)}"
+        except (AttributeError, TypeError, ValueError):
+            d_str = str(distance)
+    else:
+        d_str = "n/a"
     ax.annotate(
-        f"tel type: {source.subarray.tel[1].type.name}\n"
-        f"optics: {source.subarray.tel[1].optics.name}\n"
-        f"camera: {source.subarray.tel[1].camera_name}\n"
-        f"distance: {distance.to(u.m)}",
+        f"tel type: {source.subarray.tel[tel_id].type.name}\n"
+        f"optics: {source.subarray.tel[tel_id].optics.name}\n"
+        f"camera: {source.subarray.tel[tel_id].camera_name}\n"
+        f"distance: {d_str}",
         xy=(0, 0),
         xytext=(0.1, 1),
         xycoords="axes fraction",
@@ -722,6 +736,533 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
         size=7,
     )
     ax.set_axis_off()
+    fig.tight_layout()
+    return fig
+
+
+def _select_event_by_type(source, preferred: str | None):
+    """Return the first event from the source.
+
+    The sim_telarray MC files often don't contain reliable trigger event_type
+    metadata for flasher/pedestal discrimination, so we keep this simple and
+    just return the first available event. If a preferred type is provided, we
+    log that filtering is not applied.
+    """
+    for ev in source:
+        if preferred:
+            _logger.info(f"Event type filtering ('{preferred}') not applied; returning first event")
+        return ev
+    _logger.warning("No events available from source")
+    return None
+
+
+def plot_simtel_event_image(
+    filename,
+    event_type: str | None = None,
+    cleaning_args=None,
+    distance=None,
+    return_cleaned: bool = False,
+):
+    """
+    Plot a single sim_telarray event image filtered by event type (flasher/pedestal).
+
+    Parameters
+    ----------
+    filename : str
+        Path to the sim_telarray file.
+    event_type : str | None
+        Event type to select: 'flasher' or 'pedestal'. If None, first event is used.
+    cleaning_args : tuple | None
+        Cleaning parameters as (boundary_thresh, picture_thresh, min_neighbors).
+    distance : astropy Quantity | None
+        Distance annotation.
+    return_cleaned : bool
+        If True, apply tailcuts cleaning.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure | None
+        The figure or None if no event found.
+    """
+    # pylint:disable=import-outside-toplevel
+    from ctapipe.calib import CameraCalibrator
+    from ctapipe.image import tailcuts_clean
+    from ctapipe.io import EventSource
+    from ctapipe.visualization import CameraDisplay
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    calib = CameraCalibrator(subarray=source.subarray)
+    calib(event)
+
+    # Prefer DL1 telescopes after calibration; fallback to R1 if needed
+    dl1_tel_ids = sorted(getattr(event.dl1, "tel", {}).keys())
+    if dl1_tel_ids:
+        tel_id = dl1_tel_ids[0]
+    else:
+        r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+        if not r1_tel_ids:
+            _logger.warning("Event has no DL1 or R1 telescope data")
+            return None
+        tel_id = r1_tel_ids[0]
+
+    geometry = source.subarray.tel[tel_id].camera.geometry
+    try:
+        image = event.dl1.tel[tel_id].image
+    except (AttributeError, KeyError):
+        _logger.warning("No DL1 image available for selected telescope")
+        return None
+
+    cleaned = image.copy()
+
+    if return_cleaned:
+        if cleaning_args is None:
+            # defaults per camera (as in plot_simtel_ctapipe)
+            defaults = {
+                "CHEC": (2, 4, 2),
+                "LSTCam": (3.5, 7, 2),
+                "FlashCam": (3.5, 7, 2),
+                "NectarCam": (4, 8, 2),
+            }
+            boundary, picture, min_neighbors = defaults.get(geometry.name, (3, 6, 2))
+        else:
+            boundary, picture, min_neighbors = cleaning_args
+        mask = tailcuts_clean(
+            geometry,
+            image,
+            picture_thresh=picture,
+            boundary_thresh=boundary,
+            min_number_picture_neighbors=min_neighbors,
+        )
+        cleaned[~mask] = 0
+
+    fig, ax = plt.subplots(dpi=300)
+    disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
+    disp.cmap = "RdBu_r"
+    disp.add_colorbar(fraction=0.02, pad=-0.1)
+    disp.set_limits_percent(100)
+
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id} ({et_name})"
+    ax.set_title(title, pad=20)
+
+    if distance is not None:
+        try:
+            d_str = f"{distance.to(u.m)}"
+        except (AttributeError, TypeError, ValueError):
+            d_str = str(distance)
+    else:
+        d_str = "n/a"
+
+    ax.annotate(
+        f"tel type: {source.subarray.tel[tel_id].type.name}\n"
+        f"optics: {source.subarray.tel[tel_id].optics.name}\n"
+        f"camera: {source.subarray.tel[tel_id].camera_name}\n"
+        f"distance: {d_str}",
+        xy=(0, 0),
+        xytext=(0.1, 1),
+        xycoords="axes fraction",
+        va="top",
+        size=7,
+    )
+    ax.set_axis_off()
+    fig.tight_layout()
+    return fig
+
+
+def plot_simtel_time_traces(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    n_pixels: int = 3,
+):
+    """
+    Plot time traces (R1 waveforms) for a few camera pixels of a selected event.
+
+    Pixels are chosen as the highest-amplitude pixels from the dl1 image (if available),
+    otherwise by integrated waveform amplitude.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the sim_telarray file.
+    event_type : str | None
+        Event type to select: 'flasher' or 'pedestal'. If None, first event is used.
+    tel_id : int | None
+        Telescope id to plot. If None, use the first available.
+    n_pixels : int
+        Number of pixel traces to plot.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure | None
+        The figure or None if no event/waveforms found.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.calib import CameraCalibrator
+    from ctapipe.io import EventSource
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    # Determine telescope id for waveforms (R1), fallback to DL1 if R1 not present
+    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if r1_tel_ids:
+        tel_id = tel_id or r1_tel_ids[0]
+    else:
+        dl1_tel_ids = sorted(getattr(event.dl1, "tel", {}).keys())
+        if not dl1_tel_ids:
+            _logger.warning("Event has no R1 or DL1 telescope data for traces")
+            return None
+        tel_id = tel_id or dl1_tel_ids[0]
+
+    # Calibrate to get dl1 image for pixel selection if possible
+    calib = CameraCalibrator(subarray=source.subarray)
+    try:
+        calib(event)
+        image = event.dl1.tel[tel_id].image
+    except (RuntimeError, ValueError, KeyError, AttributeError):
+        image = None
+
+    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
+    if waveforms is None:
+        _logger.warning("No R1 waveforms available in event")
+        return None
+
+    # Handle waveform shape (n_chan, n_pix, n_samp) or (n_pix, n_samp)
+    w = np.asarray(waveforms)
+    if w.ndim == 3:
+        w = w[0]  # first gain channel
+    _, n_samp = w.shape
+
+    # Choose pixel ids
+    if image is not None:
+        pix_ids = np.argsort(image)[-n_pixels:][::-1]
+    else:
+        integrals = w.sum(axis=1)
+        pix_ids = np.argsort(integrals)[-n_pixels:][::-1]
+
+    readout = source.subarray.tel[tel_id].camera.readout
+    try:
+        dt = (1 / readout.sampling_rate).to(u.ns).value
+    except (AttributeError, ZeroDivisionError, TypeError):
+        dt = 1.0  # ns
+    t = np.arange(n_samp) * dt
+
+    fig, ax = plt.subplots(dpi=300)
+    for pid in pix_ids:
+        ax.plot(t, w[pid], label=f"pix {int(pid)}", drawstyle="steps-mid")
+    ax.set_xlabel("time [ns]")
+    ax.set_ylabel("R1 samples [a.u.]")
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    ax.set_title(f"CT{tel_id} waveforms ({et_name})")
+    ax.legend(loc="best", fontsize=7)
+    fig.tight_layout()
+    return fig
+
+
+def plot_simtel_waveform_pcolormesh(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    pixel_step: int | None = None,
+    vmax: float | None = None,
+):
+    """
+    Pseudocolor image of waveforms (samples vs pixel id) for one event.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the sim_telarray file.
+    event_type : str | None
+        'flasher' or 'pedestal'. If None, first event is used.
+    tel_id : int | None
+        Telescope id. If None, use the first available with waveforms.
+    pixel_step : int | None
+        If set, take every N-th pixel to reduce size.
+    vmax : float | None
+        Optional color scale upper limit.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure | None
+        The figure or None if no waveforms found.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.io import EventSource
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if r1_tel_ids:
+        tel_id = tel_id or r1_tel_ids[0]
+    else:
+        _logger.warning("Event has no R1 data for waveform plot")
+        return None
+
+    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
+    if waveforms is None:
+        _logger.warning("No R1 waveforms available in event")
+        return None
+
+    w = np.asarray(waveforms)
+    if w.ndim == 3:
+        w = w[0]
+    n_pix, n_samp = w.shape
+
+    if pixel_step and pixel_step > 1:
+        pix_idx = np.arange(0, n_pix, pixel_step)
+        w_sel = w[pix_idx]
+    else:
+        pix_idx = np.arange(n_pix)
+        w_sel = w
+
+    readout = source.subarray.tel[tel_id].camera.readout
+    try:
+        dt = (1 / readout.sampling_rate).to(u.ns).value
+    except (AttributeError, ZeroDivisionError, TypeError):
+        dt = 1.0
+    t = np.arange(n_samp) * dt
+
+    fig, ax = plt.subplots(dpi=300)
+    mesh = ax.pcolormesh(t, pix_idx, w_sel, shading="auto", vmax=vmax)
+    cbar = fig.colorbar(mesh, ax=ax)
+    cbar.set_label("R1 samples [a.u.]")
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    ax.set_title(f"CT{tel_id} waveform matrix ({et_name})")
+    ax.set_xlabel("time [ns]")
+    ax.set_ylabel("pixel id")
+    fig.tight_layout()
+    return fig
+
+
+def plot_simtel_step_traces(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    pixel_step: int = 100,
+    max_pixels: int | None = None,
+):
+    """
+    Plot step-style traces for regularly sampled pixels: pix 0, N, 2N, ...
+
+    Parameters
+    ----------
+    filename : str
+    event_type : str | None
+    tel_id : int | None
+    pixel_step : int
+        Step between pixel ids (default 100).
+    max_pixels : int | None
+        Maximum number of pixels to draw.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.io import EventSource
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if r1_tel_ids:
+        tel_id = tel_id or r1_tel_ids[0]
+    else:
+        _logger.warning("Event has no R1 data for traces plot")
+        return None
+
+    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
+    if waveforms is None:
+        _logger.warning("No R1 waveforms available in event")
+        return None
+
+    w = np.asarray(waveforms)
+    if w.ndim == 3:
+        w = w[0]
+    n_pix, n_samp = w.shape
+
+    readout = source.subarray.tel[tel_id].camera.readout
+    try:
+        dt = (1 / readout.sampling_rate).to(u.ns).value
+    except (AttributeError, ZeroDivisionError, TypeError):
+        dt = 1.0
+    t = np.arange(n_samp) * dt
+
+    pix_ids = np.arange(0, n_pix, max(1, pixel_step))
+    if max_pixels is not None:
+        pix_ids = pix_ids[:max_pixels]
+
+    fig, ax = plt.subplots(dpi=300)
+    for pid in pix_ids:
+        ax.plot(t, w[int(pid)], label=f"pix {int(pid)}", drawstyle="steps-mid")
+    ax.set_xlabel("time [ns]")
+    ax.set_ylabel("R1 samples [a.u.]")
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    ax.set_title(f"CT{tel_id} step traces ({et_name})")
+    ax.legend(loc="best", fontsize=7, ncol=2)
+    fig.tight_layout()
+    return fig
+
+
+def plot_simtel_peak_timing(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    sum_threshold: float = 200.0,
+    peak_width: int = 8,
+    examples: int = 3,
+):
+    """
+    Peak finding per pixel; report mean/std of peak sample and plot a histogram.
+
+    Parameters
+    ----------
+    filename : str
+    event_type : str | None
+    tel_id : int | None
+    sum_threshold : float
+        Minimum integrated signal per pixel to consider for peak finding.
+    peak_width : int
+        Expected peak width (samples).
+    examples : int
+        Number of example pixels to overlay with detected peaks.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.io import EventSource
+
+    try:
+        from scipy import signal
+    except ImportError as exc:
+        _logger.error(
+            "scipy is required for peak finding but not available: "
+            f"{exc}. Install scipy to enable this plot."
+        )
+        return None
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if r1_tel_ids:
+        tel_id = tel_id or r1_tel_ids[0]
+    else:
+        _logger.warning("Event has no R1 data for peak timing plot")
+        return None
+
+    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
+    if waveforms is None:
+        _logger.warning("No R1 waveforms available in event")
+        return None
+
+    w = np.asarray(waveforms)
+    if w.ndim == 3:
+        w = w[0]
+    n_pix, n_samp = w.shape
+
+    # Select pixels with sufficient integrated signal
+    sums = w.sum(axis=1)
+    has_signal = sums > float(sum_threshold)
+    pix_ids = np.arange(n_pix)[has_signal]
+    if pix_ids.size == 0:
+        _logger.warning("No pixels exceeded sum_threshold for peak timing")
+        return None
+
+    peak_samples = []
+    for pid in pix_ids:
+        trace = w[int(pid)]
+        peaks = []
+        try:
+            if hasattr(signal, "find_peaks_cwt"):
+                peaks = signal.find_peaks_cwt(trace, widths=np.array([peak_width]))
+            if not np.any(peaks):
+                peaks, _ = signal.find_peaks(trace, prominence=np.max(trace) * 0.1)
+        except (ValueError, RuntimeError, TypeError):
+            peaks = []
+        if not np.any(peaks):
+            peak_idx = int(np.argmax(trace))
+        else:
+            # choose highest-amplitude peak among candidates
+            peaks = np.asarray(peaks, dtype=int)
+            peak_idx = int(peaks[np.argmax(trace[peaks])])
+        peak_samples.append(peak_idx)
+
+    peak_samples = np.asarray(peak_samples)
+    mean_sample = float(np.mean(peak_samples))
+    std_sample = float(np.std(peak_samples))
+    _logger.info(
+        f"Peak timing over {peak_samples.size} pixels: "
+        f"mean sample={mean_sample:.2f}, std={std_sample:.2f}"
+    )
+
+    # Build figure with histogram + example traces
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
+    ax1.hist(peak_samples, bins=min(50, max(10, n_samp // 2)), color="#5B90DC")
+    ax1.set_xlabel("peak sample")
+    ax1.set_ylabel("N pixels")
+    ax1.axvline(
+        mean_sample,
+        color="#D8153C",
+        linestyle="--",
+        label=f"mean={mean_sample:.2f}",
+    )
+    ax1.axvspan(
+        mean_sample - std_sample,
+        mean_sample + std_sample,
+        color="#D8153C",
+        alpha=0.2,
+        label=f"std={std_sample:.2f}",
+    )
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    ax1.set_title(f"CT{tel_id} peak timing ({et_name})")
+    ax1.legend(fontsize=7)
+
+    # Example traces with peaks
+    readout = source.subarray.tel[tel_id].camera.readout
+    try:
+        dt = (1 / readout.sampling_rate).to(u.ns).value
+    except (AttributeError, ZeroDivisionError, TypeError):
+        dt = 1.0
+    t = np.arange(n_samp) * dt
+
+    ex_ids = pix_ids[: max(1, int(examples))]
+    for pid in ex_ids:
+        trace = w[int(pid)]
+        # detect peaks again for plotting
+        try:
+            if hasattr(signal, "find_peaks_cwt"):
+                pks = signal.find_peaks_cwt(trace, widths=np.array([peak_width]))
+            else:
+                pks, _ = signal.find_peaks(trace, prominence=np.max(trace) * 0.1)
+        except (ValueError, RuntimeError, TypeError):
+            pks = []
+        ax2.plot(t, trace, drawstyle="steps-mid", label=f"pix {int(pid)}")
+        if np.any(pks):
+            pks = np.asarray(pks, dtype=int)
+            ax2.scatter(t[pks], trace[pks], s=10)
+    ax2.set_xlabel("time [ns]")
+    ax2.set_ylabel("R1 samples [a.u.]")
+    ax2.legend(fontsize=7)
+
     fig.tight_layout()
     return fig
 

@@ -190,7 +190,7 @@ def main():
         site_model=site_model,
         light_emission_config=args_dict,
         le_application=le_application,
-        simtel_path=Path(args_dict["sim_telarray_path"]),
+        simtel_path=args_dict["simtel_path"],
         light_source_type="flasher",
         label=args_dict["label"],
         test=args_dict.get("test", False),
