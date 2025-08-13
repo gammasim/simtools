@@ -16,6 +16,7 @@ from simtools.layout.array_layout_utils import (
 
 # Constants for patch paths
 PATCH_ASCII_COLLECT_FILE = "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
+PATCH_SITEMODEL = "simtools.layout.array_layout_utils.SiteModel"
 
 
 @pytest.fixture
@@ -453,7 +454,7 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     fake_layout_names = ["layout1", "layout2"]
 
     # Patch SiteModel so that get_list_of_array_layouts returns our fake_layout_names.
-    mock_site_model = mocker.patch("simtools.layout.array_layout_utils.SiteModel")
+    mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance_site = MagicMock()
     instance_site.get_list_of_array_layouts.return_value = fake_layout_names
     mock_site_model.return_value = instance_site
@@ -691,7 +692,7 @@ def test_get_array_layout_dict_with_telescope_list(mock_array_model):
 
 def test_read_array_layouts_from_db_specific_layouts(mocker):
     """Test _read_array_layouts_from_db with specific layout names."""
-    mock_site_model = mocker.patch("simtools.layout.array_layout_utils.SiteModel")
+    mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance = mock_site_model.return_value
     instance.get_array_elements_for_layout.side_effect = (
         lambda name: [1, 2] if name == "LST" else [3, 4]

@@ -147,7 +147,7 @@ def test_plot_data_histogram2d(sample_data):
 
     data, bins = sample_data
     plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
-    colorbar_label = "Event Count"
+    colorbar_label = EVENT_COUNT
 
     fig, ax = plt.subplots()
     fake_pcm = object()
@@ -558,12 +558,12 @@ def test_create_2d_cumulative_plot_config():
 
     config = {
         "base_key": "core_vs_energy",
-        "x_label": "Core Distance [m]",
-        "y_label": "Energy [TeV]",
+        "x_label": CORE_DIST_LABEL,
+        "y_label": ENERGY_LABEL,
         "plot_params": {"norm": "linear", "cmap": "viridis", "show_contour": True},
         "lines": {"x": 1, "y": 0.5},
         "colorbar_label": "Fraction of events",
-        "event_type": "Triggered events",
+        "event_type": TRIGGERED,
     }
 
     result = plot_simtel_event_histograms._create_2d_cumulative_plot_config(
@@ -594,13 +594,13 @@ def test_create_2d_plot_config():
 
     config = {
         "base_key": "core_vs_energy",
-        "x_label": "Core Distance [m]",
-        "y_label": "Energy [TeV]",
+        "x_label": CORE_DIST_LABEL,
+        "y_label": ENERGY_LABEL,
         "plot_params": {"norm": "log", "cmap": "viridis"},
         "lines": {"x": 1, "y": 0.5},
         "scales": {"y": "log"},
-        "colorbar_label": "Event Count",
-        "event_type": "Triggered events",
+        "colorbar_label": EVENT_COUNT,
+        "event_type": TRIGGERED,
     }
 
     result = plot_simtel_event_histograms._create_2d_plot_config(histograms, config, is_mc=False)
@@ -636,8 +636,8 @@ def test_create_2d_plot_config_core_xy():
         "plot_params": {"norm": "log", "cmap": "viridis"},
         "lines": {},
         "scales": {},
-        "colorbar_label": "Event Count",
-        "event_type": "Triggered events",
+        "colorbar_label": EVENT_COUNT,
+        "event_type": TRIGGERED,
     }
 
     result = plot_simtel_event_histograms._create_2d_plot_config(histograms, config, is_mc=False)
@@ -706,7 +706,7 @@ def test_create_1d_cumulative_plot_config():
         "base_key": "energy_distribution",
         "cumulative_key": "cumulative_energy",
         "bin_key": "energy_bin_edges",
-        "x_label": "Energy [TeV]",
+        "x_label": ENERGY_LABEL,
         "title_base": "energy distribution",
         "scales": {"x": "log", "y": "log"},
         "line_key": "x",
@@ -725,7 +725,7 @@ def test_create_1d_cumulative_plot_config():
     assert result["plot_type"] == "histogram"
     assert result["plot_params"] == plot_params
     assert result["labels"]["x"] == ENERGY_LABEL
-    assert result["labels"]["y"] == "Cumulative Event Count"
+    assert result["labels"]["y"] == f"Cumulative {EVENT_COUNT}"
     assert result["labels"]["title"] == "Triggered events: cumulative energy distribution"
     assert result["scales"] == {"x": "log", "y": "log"}
     assert result["lines"] == {"x": 1.0}
@@ -743,7 +743,7 @@ def test_create_1d_plot_config():
         "base_key": "energy_distribution",
         "histogram_key": "energy",
         "bin_key": "energy_bin_edges",
-        "x_label": "Energy [TeV]",
+        "x_label": ENERGY_LABEL,
         "title_base": "energy distribution",
         "scales": {"x": "log", "y": "log"},
         "line_key": "x",
@@ -761,7 +761,7 @@ def test_create_1d_plot_config():
     assert result["plot_type"] == "histogram"
     assert result["plot_params"] == plot_params
     assert result["labels"]["x"] == ENERGY_LABEL
-    assert result["labels"]["y"] == "Event Count"
+    assert result["labels"]["y"] == EVENT_COUNT
     assert result["labels"]["title"] == "Triggered events: energy distribution"
     assert result["scales"] == {"x": "log", "y": "log"}
     assert result["lines"] == {"x": 1.0}
@@ -811,8 +811,8 @@ def test_generate_plot_configurations():
     energy_plot = plots["energy_distribution"]
     assert energy_plot["data"] is not None
     assert energy_plot["bins"] is not None
-    assert energy_plot["labels"]["x"] == "Energy [TeV]"
-    assert energy_plot["labels"]["y"] == "Event Count"
+    assert energy_plot["labels"]["x"] == ENERGY_LABEL
+    assert energy_plot["labels"]["y"] == EVENT_COUNT
     assert energy_plot["scales"]["x"] == "log"
     assert energy_plot["scales"]["y"] == "log"
 
@@ -820,8 +820,8 @@ def test_generate_plot_configurations():
     assert core_vs_energy_plot["data"] is not None
     assert core_vs_energy_plot["bins"][0] is not None
     assert core_vs_energy_plot["bins"][1] is not None
-    assert core_vs_energy_plot["labels"]["x"] == "Core Distance [m]"
-    assert core_vs_energy_plot["labels"]["y"] == "Energy [TeV]"
+    assert core_vs_energy_plot["labels"]["x"] == CORE_DIST_LABEL
+    assert core_vs_energy_plot["labels"]["y"] == ENERGY_LABEL
     assert core_vs_energy_plot["scales"]["y"] == "log"
 
 
