@@ -376,11 +376,10 @@ def test_process_file_with_mocked_histograms(mocker):
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
 
 
-def test_process_file_with_plot_histograms(mocker):
-    """Test _process_file with plot_histograms=True."""
+def test_process_file_with_plot_histograms(mocker, tmp_path):
+    """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
-    mock_histograms.plot_data.return_value = None
 
     mocker.patch(
         SIMTEL_IO_EVENT_HISTOGRAMS_PATH,
@@ -390,7 +389,7 @@ def test_process_file_with_plot_histograms(mocker):
     mock_io_handler = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
-    mock_io_handler.return_value.get_output_directory.return_value = "mock_output_dir"
+    mock_io_handler.return_value.get_output_directory.return_value = tmp_path
 
     mocker.patch(
         COMPUTE_LOWER_ENERGY_LIMIT_PATH,
@@ -405,6 +404,10 @@ def test_process_file_with_plot_histograms(mocker):
         return_value=2.0 * u.deg,
     )
 
+    mock_plot = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.plot_simtel_event_histograms.plot"
+    )
+
     derive_corsika_limits._process_file(
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
@@ -413,11 +416,14 @@ def test_process_file_with_plot_histograms(mocker):
         plot_histograms=True,
     )
 
-    mock_histograms.plot_data.assert_called_once_with(
-        output_path="mock_output_dir",
-        limits={
-            "lower_energy_limit": 1.0 * u.TeV,
-            "upper_radius_limit": 100.0 * u.m,
-            "viewcone_radius": 2.0 * u.deg,
-        },
-    )
+    mock_plot.assert_called_once()
+    args, kwargs = mock_plot.call_args
+    # First positional argument should be the histograms instance
+    assert args[0] is mock_histograms
+    assert kwargs["output_path"] == tmp_path
+    assert kwargs["limits"] == {
+        "lower_energy_limit": 1.0 * u.TeV,
+        "upper_radius_limit": 100.0 * u.m,
+        "viewcone_radius": 2.0 * u.deg,
+    }
+    assert kwargs["array_name"] == "MockArray"

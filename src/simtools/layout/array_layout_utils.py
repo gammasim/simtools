@@ -281,6 +281,7 @@ def get_array_layouts_from_db(
         List of dictionaries containing array layout names and their elements.
     """
     # TODO - this function should be replace by enforce list type from utils.general
+    # (wait for simulate-calibration-events merge)
     layout_names = []
     if layout_name:
         layout_names.append(
@@ -399,7 +400,7 @@ def _get_array_layout_dict(
 
 def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config):
     """
-    Get list of array elements from the DB for given list of layout names.
+    Get list of array elements from the database for given list of layout names.
 
     Structure of the returned dictionary:
     {

@@ -9,6 +9,7 @@ from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
 def mock_reader(mocker):
     mock = mocker.patch("simtools.simtel.simtel_io_event_histograms.SimtelIOEventDataReader")
     mock.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
+    mock.return_value.shower_data.simulated_energy = np.array([1, 10, 100])
     mock.return_value.triggered_data = mocker.Mock()
     mock.return_value.triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
     return mock
@@ -58,190 +59,6 @@ def test_view_cone_bins(mock_reader, hdf5_file_name):
     bins = histograms.view_cone_bins
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
-
-
-def test_plot(mock_reader, hdf5_file_name, mocker, tmp_path):
-    """Test plotting of data with limits."""
-    histograms = SimtelIOEventHistograms(hdf5_file_name)
-
-    mock_reader.return_value.triggered_shower_data.core_distance_shower = np.array(
-        [10.0, 20.0, 30.0]
-    )
-    mock_reader.return_value.triggered_shower_data.simulated_energy = np.array([1.0, 2.0, 3.0])
-    mock_reader.return_value.triggered_shower_data.x_core_shower = np.array([1.0, 2.0, 3.0])
-    mock_reader.return_value.triggered_shower_data.y_core_shower = np.array([1.0, 2.0, 3.0])
-    mock_reader.return_value.triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
-
-    mocker.patch("matplotlib.pyplot.figure")
-    mocker.patch("matplotlib.pyplot.savefig")
-    mocker.patch("matplotlib.pyplot.close")
-    mock_create_plot = mocker.patch.object(histograms, "_create_plot")
-
-    limits = {
-        "lower_energy_limit": 1.0 * u.TeV,
-        "upper_radius_limit": 100.0 * u.m,
-        "viewcone_radius": 2.0 * u.deg,
-    }
-
-    histograms.histograms["core_vs_energy"] = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
-    histograms.histograms["core_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
-    histograms.histograms["core_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
-
-    histograms.histograms["angular_distance_vs_energy"] = np.array(
-        [[1, 2, 3], [4, 5, 6]], dtype=float
-    )
-    histograms.histograms["angular_distance_vs_energy_bin_x_edges"] = np.array([0, 1, 2])
-    histograms.histograms["angular_distance_vs_energy_bin_y_edges"] = np.array([0, 1, 2, 3])
-
-    histograms.histograms["energy"] = np.array([1, 2, 3, 4], dtype=float)
-    histograms.histograms["energy_bin_edges"] = np.array([0, 1, 2, 3, 4])
-
-    histograms.histograms["core_distance"] = np.array([5, 6, 7, 8], dtype=float)
-    histograms.histograms["core_distance_bin_edges"] = np.array([0, 10, 20, 30, 40])
-
-    histograms.histograms["angular_distance"] = np.array([0.5, 0.7, 0.9, 1.1], dtype=float)
-    histograms.histograms["angular_distance_bin_edges"] = np.array([0, 0.5, 1.0, 1.5, 2.0])
-
-    histograms.plot(output_path=tmp_path, limits=limits)
-
-    assert mock_create_plot.call_count == 13
-
-    mock_create_plot.reset_mock()
-    histograms.array_name = "test_array"
-    histograms.plot(output_path=tmp_path, limits=limits)
-    # 11 regular plots + 2 rebinned plots (core_vs_energy_cumulative and angular_distance_vs_energy_cumulative)
-    assert mock_create_plot.call_count == 13
-
-    for call in mock_create_plot.call_args_list:
-        _, kwargs = call
-        output_file = kwargs.get("output_file")
-        assert output_file is not None
-        assert "test_array" in str(output_file)
-
-    rebinned_plots = [
-        call
-        for call in mock_create_plot.call_args_list
-        if "rebinned" in str(call[1].get("output_file"))
-    ]
-    assert len(rebinned_plots) == 2
-
-    mock_create_plot.reset_mock()
-    histograms.array_name = "test_array"
-    histograms.plot(output_path=tmp_path, rebin_factor=1)
-    assert mock_create_plot.call_count == 11
-
-    rebinned_plots = [
-        call
-        for call in mock_create_plot.call_args_list
-        if "rebinned" in str(call[1].get("output_file", ""))
-    ]
-    assert len(rebinned_plots) == 0
-
-    mock_create_plot.reset_mock()
-
-    mocker.patch.object(
-        histograms,
-        "_rebin_2d_histogram",
-        return_value=(np.ones((2, 2)), np.array([0, 1, 2]), np.array([0, 1, 2])),
-    )
-
-    histograms.plot(output_path=tmp_path, rebin_factor=2)
-
-    for call in mock_create_plot.call_args_list:
-        _, kwargs = call
-        if "rebinned" in str(kwargs.get("output_file", "")):
-            assert "(Energy rebinned 2x)" in kwargs.get("labels", {}).get("title", "")
-
-
-@pytest.fixture
-def mock_figure(mocker):
-    return mocker.patch("matplotlib.pyplot.figure")
-
-
-@pytest.fixture
-def mock_hist(mocker):
-    return mocker.patch("matplotlib.pyplot.hist")
-
-
-@pytest.fixture
-def mock_hist2d(mocker):
-    return mocker.patch("matplotlib.pyplot.pcolormesh")
-
-
-@pytest.fixture
-def mock_tight_layout(mocker):
-    return mocker.patch("matplotlib.pyplot.tight_layout")
-
-
-@pytest.fixture
-def mock_show(mocker):
-    return mocker.patch("matplotlib.pyplot.show")
-
-
-@pytest.fixture
-def mock_colorbar(mocker):
-    return mocker.patch("matplotlib.pyplot.colorbar")
-
-
-def test_create_plot_histogram(
-    mocker,
-    mock_reader,
-    hdf5_file_name,
-    mock_figure,
-    mock_tight_layout,
-    mock_show,
-):
-    histograms = SimtelIOEventHistograms(hdf5_file_name)
-    mock_axvline = mocker.patch("matplotlib.pyplot.axvline")
-    mock_circle = mocker.patch("matplotlib.pyplot.Circle")
-
-    x_data = np.array([1, 2, 3])
-    bins = np.array([0, 1, 2, 3])
-    plot_params = {"color": "blue"}
-
-    fig = histograms._create_plot(
-        data=x_data,
-        bins=bins,
-        plot_type="histogram",
-        plot_params=plot_params,
-        labels={"x": "X Label", "y": "Y Label", "title": "Test Plot"},
-        lines={"x": 1.5, "y": 2.5, "r": 2.0},
-    )
-
-    mock_figure.assert_any_call(figsize=(8, 6))
-
-    mock_tight_layout.assert_called_once()
-    mock_show.assert_called_once()
-
-    mock_axvline.assert_called_once()
-    mock_circle.assert_called_once()
-    assert fig == mock_figure.return_value
-
-
-def test_create_plot_histogram2d(
-    mock_reader, hdf5_file_name, mock_colorbar, mocker, tmp_test_directory
-):
-    histograms = SimtelIOEventHistograms(hdf5_file_name)
-    mock_savefig = mocker.patch("matplotlib.pyplot.savefig")
-
-    mock_create_2d_histogram = mocker.patch.object(histograms, "_create_2d_histogram_plot")
-    mock_create_2d_histogram.return_value = mocker.Mock()
-
-    x_data = np.array([[1, 2], [3, 4]])
-    bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
-    plot_params = {"cmap": "viridis"}
-
-    histograms._create_plot(
-        data=x_data,
-        bins=bins,
-        plot_type="histogram2d",
-        plot_params=plot_params,
-        colorbar_label="Counts",
-        output_file=tmp_test_directory / "test_hist2d_plot.png",
-    )
-
-    mock_create_2d_histogram.assert_called_once_with(x_data, bins, plot_params)
-    mock_savefig.assert_called_once()
 
 
 def test_fill_histogram_and_bin_edges_1d_new(mock_reader, hdf5_file_name):
@@ -322,19 +139,28 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
     mock_file_info = mocker.Mock()
     mock_event_data = mocker.Mock()
     mock_triggered_data = mocker.Mock()
+    mock_shower_data = mocker.Mock()
 
     mock_reader.return_value.read_event_data.return_value = (
         mock_file_info,
-        None,
+        mock_shower_data,
         mock_event_data,
         mock_triggered_data,
     )
 
+    # Event (triggered) data
     mock_event_data.simulated_energy = np.array([1, 2, 3])
     mock_event_data.core_distance_shower = np.array([10, 20, 30])
     mock_event_data.x_core_shower = np.array([-10, 0, 10])
     mock_event_data.y_core_shower = np.array([-5, 0, 5])
     mock_triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])
+
+    # Shower (MC truth) data
+    mock_shower_data.simulated_energy = np.array([1, 2, 3])
+    mock_shower_data.core_distance_shower = np.array([10, 20, 30])
+    mock_shower_data.x_core_shower = np.array([-10, 0, 10])
+    mock_shower_data.y_core_shower = np.array([-5, 0, 5])
+    mock_shower_data.angular_distance = np.array([0.5, 1.0, 1.5])
 
     mock_reader.return_value.data_sets = ["test_dataset"]
 
@@ -362,26 +188,30 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
         hdf5_file_name, table_name_map="test_dataset"
     )
 
-    assert mock_fill_hist.call_count == 6
+    assert mock_fill_hist.call_count == 12
 
-    expected_calls = [
-        mocker.call("energy", mock_event_data.simulated_energy, mock_energy_bins),
-        mocker.call("core_distance", mock_event_data.core_distance_shower, mock_core_distance_bins),
-        mocker.call("angular_distance", mock_triggered_data.angular_distance, mock_view_cone_bins),
-        mocker.call(
-            "shower_cores",
-            (mock_event_data.x_core_shower, mock_event_data.y_core_shower),
-            [mocker.ANY, mocker.ANY],
-            hist1d=False,
-        ),
-        mocker.call(
-            "core_vs_energy",
-            (mock_event_data.core_distance_shower, mock_event_data.simulated_energy),
-            [mock_core_distance_bins, mock_energy_bins],
-            hist1d=False,
-        ),
+    # xy bins are internally computed; no direct assertion on values needed here
+
+    expected_call_names = [
+        "energy",
+        "energy_mc",
+        "core_distance",
+        "core_distance_mc",
+        "angular_distance",
+        "angular_distance_mc",
+        "x_core_shower_vs_y_core_shower",
+        "x_core_shower_vs_y_core_shower_mc",
+        "core_vs_energy",
+        "core_vs_energy_mc",
+        "angular_distance_vs_energy",
+        "angular_distance_vs_energy_mc",
     ]
-    mock_fill_hist.assert_has_calls(expected_calls)
+    actual_call_names = [c.args[0] for c in mock_fill_hist.call_args_list]
+    assert actual_call_names == expected_call_names
+
+    # First six histograms are 1D, remaining six are 2D
+    hist1d_flags = [c.kwargs.get("hist1d", True) for c in mock_fill_hist.call_args_list]
+    assert hist1d_flags == [True] * 6 + [False] * 6
 
 
 def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
@@ -519,62 +349,6 @@ def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
     np.testing.assert_allclose(result_reverse, expected_reverse)
 
 
-def test_create_2d_histogram_plot(
-    mock_reader, hdf5_file_name, mock_colorbar, mocker, tmp_test_directory
-):
-    """Test the _create_2d_histogram_plot helper method for both linear and log norm cases."""
-    histograms = SimtelIOEventHistograms(hdf5_file_name)
-    mock_pcolormesh = mocker.patch("matplotlib.pyplot.pcolormesh")
-    mock_contour = mocker.patch("matplotlib.pyplot.contour")
-
-    data = np.array([[0.2, 0.5, 1.0], [0.1, 0.3, 0.6]])
-    bins = [np.array([0, 1, 2, 3]), np.array([0, 1, 2])]
-
-    plot_params = {"norm": "linear", "cmap": "plasma", "show_contour": True}
-    histograms._create_2d_histogram_plot(data, bins, plot_params)
-
-    mock_pcolormesh.assert_called_once()
-    args, kwargs = mock_pcolormesh.call_args
-    assert np.array_equal(args[0], bins[0])
-    assert np.array_equal(args[1], bins[1])
-    assert np.array_equal(args[2], data.T)
-    assert kwargs.get("vmin") == 0
-    assert kwargs.get("vmax") == 1
-    assert kwargs.get("cmap") == "plasma"
-
-    mock_contour.assert_called_once()
-
-    mock_pcolormesh.reset_mock()
-    mock_contour.reset_mock()
-
-    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
-    histograms._create_2d_histogram_plot(data, bins, plot_params)
-
-    mock_pcolormesh.assert_called_once()
-    args, kwargs = mock_pcolormesh.call_args
-    assert np.array_equal(args[0], bins[0])
-    assert np.array_equal(args[1], bins[1])
-    assert np.array_equal(args[2], data.T)
-    assert kwargs.get("vmin") == 0
-    assert kwargs.get("vmax") == 1
-    assert kwargs.get("cmap") == "viridis"
-
-    mock_contour.assert_not_called()
-
-    mock_pcolormesh.reset_mock()
-
-    plot_params = {"cmap": "viridis"}
-    histograms._create_2d_histogram_plot(data, bins, plot_params)
-
-    mock_pcolormesh.assert_called_once()
-    args, kwargs = mock_pcolormesh.call_args
-    assert np.array_equal(args[0], bins[0])
-    assert np.array_equal(args[1], bins[1])
-    assert np.array_equal(args[2], data.T)
-    assert "norm" in kwargs
-    assert kwargs["cmap"] == "viridis"
-
-
 @pytest.fixture
 def mock_histograms(mocker):
     """Create a mocked SimtelIOEventHistograms that doesn't require a file."""
@@ -590,7 +364,7 @@ def test_rebin_2d_histogram(mock_histograms):
 
     histograms = mock_histograms
 
-    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms._rebin_2d_histogram(
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms.rebin_2d_histogram(
         hist, x_bins, y_bins, rebin_factor=2
     )
 
@@ -602,7 +376,7 @@ def test_rebin_2d_histogram(mock_histograms):
     assert np.array_equal(rebinned_x_bins, expected_x_bins)
     assert np.array_equal(rebinned_y_bins, expected_y_bins)
 
-    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms._rebin_2d_histogram(
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms.rebin_2d_histogram(
         hist, x_bins, y_bins, rebin_factor=1
     )
 
@@ -610,7 +384,7 @@ def test_rebin_2d_histogram(mock_histograms):
     assert np.array_equal(rebinned_x_bins, x_bins)
     assert np.array_equal(rebinned_y_bins, y_bins)
 
-    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms._rebin_2d_histogram(
+    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms.rebin_2d_histogram(
         hist, x_bins, y_bins, rebin_factor=4
     )
 
@@ -738,3 +512,80 @@ def test_view_cone_bins_no_file_info(mock_reader, hdf5_file_name):
     assert len(bins) == 100
     assert bins[0] == 0.0
     assert bins[-1] == 20.0
+
+
+def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
+    """Test calculate_cumulative_data end-to-end without patching internals."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+
+    # Seed histogram dictionary with minimal required histograms
+    energy = np.array([10, 20, 30, 40])
+    core_distance = np.array([5, 15, 25, 35])
+    angular_distance = np.array([2, 4, 6, 8])
+    core_vs_energy = np.array([[1, 2], [3, 4]])  # shape (core_distance, energy)
+    angular_distance_vs_energy = np.array([[2, 3], [4, 5]])
+
+    histograms.histograms = {
+        "energy": energy,
+        "core_distance": core_distance,
+        "angular_distance": angular_distance,
+        "core_vs_energy": core_vs_energy,
+        "angular_distance_vs_energy": angular_distance_vs_energy,
+    }
+
+    cumulative_data = histograms.calculate_cumulative_data()
+
+    # Expected 1D cumulative distributions
+    expected_cumulative_energy = np.array([100, 90, 70, 40])  # reverse cumulative
+    expected_cumulative_core_distance = np.array([5, 20, 45, 80])
+    expected_cumulative_angular_distance = np.array([2, 6, 12, 20])
+
+    # Expected normalized cumulative for 2D histograms along axis=0 (column-wise)
+    # For core_vs_energy:
+    # cumulative along axis 0 -> [[1,2],[4,6]], totals per column [4,6]
+    expected_norm_core_vs_energy = np.array([[1 / 4, 2 / 6], [1.0, 1.0]])
+    # For angular_distance_vs_energy:
+    # cumulative along axis 0 -> [[2,3],[6,8]], totals per column [6,8]
+    expected_norm_ang_vs_energy = np.array([[2 / 6, 3 / 8], [1.0, 1.0]])
+
+    assert set(cumulative_data.keys()) == {
+        "cumulative_energy",
+        "cumulative_core_distance",
+        "cumulative_angular_distance",
+        "normalized_cumulative_core_vs_energy",
+        "normalized_cumulative_angular_distance_vs_energy",
+    }
+
+    np.testing.assert_array_equal(cumulative_data["cumulative_energy"], expected_cumulative_energy)
+    np.testing.assert_array_equal(
+        cumulative_data["cumulative_core_distance"], expected_cumulative_core_distance
+    )
+    np.testing.assert_array_equal(
+        cumulative_data["cumulative_angular_distance"], expected_cumulative_angular_distance
+    )
+    np.testing.assert_allclose(
+        cumulative_data["normalized_cumulative_core_vs_energy"], expected_norm_core_vs_energy
+    )
+    np.testing.assert_allclose(
+        cumulative_data["normalized_cumulative_angular_distance_vs_energy"],
+        expected_norm_ang_vs_energy,
+    )
+
+
+def test_get_existing_key(mock_histograms):
+    """Test retrieving an existing key from the histogram dictionary."""
+    mock_histograms.histograms["test_key"] = "test_value"
+    result = mock_histograms.get("test_key")
+    assert result == "test_value"
+
+
+def test_get_non_existing_key_with_default(mock_histograms):
+    """Test retrieving a non-existing key with a default value."""
+    result = mock_histograms.get("non_existing_key", default="default_value")
+    assert result == "default_value"
+
+
+def test_get_non_existing_key_without_default(mock_histograms):
+    """Test retrieving a non-existing key without a default value."""
+    result = mock_histograms.get("non_existing_key")
+    assert result is None
