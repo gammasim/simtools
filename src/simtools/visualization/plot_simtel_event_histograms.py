@@ -489,9 +489,10 @@ def _plot_data(ax, data, bins, plot_type, plot_params, colorbar_label):
 
 def _add_lines(ax, lines):
     """Add reference lines to the plot."""
-    for xy in ("x", "y"):
-        if lines.get(xy) is not None:
-            ax.axvline(lines[xy], color="r", linestyle="--", linewidth=0.5)
+    if lines.get("x") is not None:
+        ax.axvline(lines["x"], color="r", linestyle="--", linewidth=0.5)
+    if lines.get("y") is not None:
+        ax.axhline(lines["y"], color="r", linestyle="--", linewidth=0.5)
     if lines.get("r") is not None:
         ax.add_artist(
             plt.Circle((0, 0), lines["r"], color="r", fill=False, linestyle="--", linewidth=0.5)
