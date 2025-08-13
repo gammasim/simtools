@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-production-derive-trigger-rates
+- application: simtools-derive-trigger-rates
   configuration:
     array_layout_name:
     - 1lst
