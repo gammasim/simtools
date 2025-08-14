@@ -108,6 +108,7 @@ scripts.simtools-production-derive-statistics = "simtools.applications.productio
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
 scripts.simtools-production-merge-corsika-limits = "simtools.applications.production_merge_corsika_limits:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
+scripts.simtools-simulate-calibration-events = "simtools.applications.simulate_calibration_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
