@@ -125,10 +125,10 @@ class SimtelIOEventDataReader:
         )
         shower_data.angular_distance = (
             angular_separation(
-                shower_data.shower_azimuth * u.rad,
-                shower_data.shower_altitude * u.rad,
-                self.reduced_file_info["azimuth"].to(u.rad),
-                (90.0 * u.deg - self.reduced_file_info["zenith"]).to(u.rad),
+                shower_data.shower_azimuth * u.deg,
+                shower_data.shower_altitude * u.deg,
+                self.reduced_file_info["azimuth"],
+                (90.0 * u.deg - self.reduced_file_info["zenith"]),
             )
             .to(u.deg)
             .value
