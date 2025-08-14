@@ -820,3 +820,9 @@ def test_find_differences_in_json_objects():
     assert gen.find_differences_in_json_objects(obj1, obj2) == [
         "['key1']['nested_key1']['deep_key']: value changed from value1 to value2"
     ]
+
+
+def test_enforce_list_type():
+    assert gen.enforce_list_type(None) == []
+    assert gen.enforce_list_type([1, 2, 3]) == [1, 2, 3]
+    assert gen.enforce_list_type(5) == [5]
