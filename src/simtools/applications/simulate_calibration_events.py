@@ -14,7 +14,7 @@ Example
 -------
 
 Simulate pedestal events for alpha North. The assumed level night-sky background is 2.0 times the
-nominal value. A list of stars is provided to simulate to simulate additional contributions.
+nominal value. A list of stars can be provided to simulate additional contributions.
 
 .. code-block:: console
 
@@ -23,7 +23,7 @@ nominal value. A list of stars is provided to simulate to simulate additional co
         --array_layout_name alpha --site North \\
         --model_version 6.0.0 \\
         --zenith_angle 20 --azimuth_angle 0 \\
-        --nsb_scaling_factor 2.0 --stars stars.txt
+        --nsb_scaling_factor 2.0
 
 Simulate flasher events for alpha South. Note that the same flasher configuration is used
 for all telescopes.
