@@ -102,3 +102,68 @@ def test_check_run_result_file_exists(simtel_runner, tmp_path):
     output_file.touch()
     simtel_runner.get_file_name = lambda file_type, run_number: output_file
     assert simtel_runner._check_run_result(run_number=1) is True
+
+
+def test_nsb_only_pedestals_command(simtel_runner):
+    command = simtel_runner._nsb_only_pedestals_command()
+    assert "-C fadc_err_pedestal=0.0" in command
+    assert "-C fadc_lg_err_pedestal=-1.0" in command
+
+
+def test_flasher_command(simtel_runner):
+    calibration_runner_args = {
+        "number_of_events": 100,
+        "flasher_photons": 100,
+        "flasher_var_photons": 0.5,
+        "flasher_exp_time": 1.0,
+        "flasher_sig_time": 0.5,
+    }
+    command = simtel_runner._flasher_command(calibration_runner_args)
+    assert "-C laser_events" in command
+    assert "-C laser_pulse_sigtime" in command
+
+
+def test_make_run_command_for_calibration_simulations(simtel_runner):
+    input_file = "test_calibration_simulations.inp"
+    calibration_runner_args = {
+        "nsb_scaling_factor": 1.5,
+        "stars": "stars.txt",
+        "run_mode": "pedestals",
+        "number_of_events": 100,
+    }
+
+    run_command = simtel_runner.make_run_command_for_calibration_simulations(
+        run_number=5,
+        input_file=input_file,
+        calibration_runner_args=calibration_runner_args,
+    )
+    assert "sim_telarray" in run_command
+    assert "-C nsb_scaling_factor=1.5" in run_command
+    assert "-C stars=stars.txt" in run_command
+    assert "-C pedestal_events=100" in run_command
+    assert input_file in run_command
+
+    calibration_runner_args["run_mode"] = "nsb_only_pedestals"
+    run_command = simtel_runner.make_run_command_for_calibration_simulations(
+        run_number=5,
+        input_file=input_file,
+        calibration_runner_args=calibration_runner_args,
+    )
+    assert "-C fadc_err_pedestal=0.0" in run_command  # From _nsb_only_pedestals_command
+
+    calibration_runner_args["run_mode"] = "flasher"
+    calibration_runner_args.update(
+        {
+            "flasher_photons": 100,
+            "flasher_var_photons": 0.5,
+            "flasher_exp_time": 1.0,
+            "flasher_sig_time": 0.5,
+        }
+    )
+    run_command = simtel_runner.make_run_command_for_calibration_simulations(
+        run_number=5,
+        input_file=input_file,
+        calibration_runner_args=calibration_runner_args,
+    )
+    assert "-C laser_events=100" in run_command  # From _flasher_command
+    assert "-C laser_pulse_sigtime=0.5" in run_command
