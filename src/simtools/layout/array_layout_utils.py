@@ -282,11 +282,7 @@ def get_array_layouts_from_db(
     """
     layout_names = []
     if layout_name:
-        layout_names.append(
-            layout_name[0]
-            if isinstance(layout_name, list) and len(layout_name) == 1
-            else layout_name
-        )
+        layout_names = gen.enforce_list_type(layout_name)
     else:
         site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
         layout_names = site_model.get_list_of_array_layouts()
