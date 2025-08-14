@@ -1124,9 +1124,9 @@ def plot_simtel_peak_timing(
     filename,
     event_type: str | None = None,
     tel_id: int | None = None,
-    sum_threshold: float = 200.0,
+    sum_threshold: float = 10.0,
     peak_width: int = 8,
-    examples: int = 3,
+    examples: int = 5,
 ):
     """
     Peak finding per pixel; report mean/std of peak sample and plot a histogram.
