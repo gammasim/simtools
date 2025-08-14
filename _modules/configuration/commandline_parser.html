@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=75fd2dea"></script>
+    <script src="../../_static/documentation_options.js?v=cb8b052d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc859fe824" />
+  <meta name="docsearch:version" content="0.1.dev1+gb92ab8f" />
   </head>
   
   
@@ -769,6 +769,12 @@
                 <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;shower parameters&quot;</span><span class="p">,</span>
                 <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;corsika_configuration&quot;</span><span class="p">],</span>
                 <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_shower_configuration</span><span class="p">(),</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray_configuration&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">(</span>
+                <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray configuration&quot;</span><span class="p">,</span>
+                <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;sim_telarray_configuration&quot;</span><span class="p">],</span>
+                <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_sim_telarray_configuration</span><span class="p">(),</span>
             <span class="p">)</span></div>
 
 
@@ -892,6 +898,27 @@
                 <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
                 <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;10 1400 m&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dictionary_with_sim_telarray_configuration</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with sim_telarray configuration parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;sim_telarray_instrument_seeds&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Random seed used for sim_telarray instrument setup. &quot;</span>
+                    <span class="s2">&quot;If &#39;--sim_telarray_random_instrument_instances&#39; is not set: &quot;</span>
+                    <span class="s2">&quot;use as sim_telarray seed (&#39;random_seed&#39; parameter). Otherwise: &quot;</span>
+                    <span class="s2">&quot;use as base seed to generate the random instrument instance seeds.&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sim_telarray_random_instrument_instances&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of random instrument instances initialized in sim_telarray.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">}</span>
 

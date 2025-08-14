@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-validate-camera-fov &#8212; simtools</title>
+    <title>simtools-simulate-calibration-events &#8212; simtools</title>
   
   
   
@@ -43,7 +43,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-validate-camera-fov';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-simulate-calibration-events';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
@@ -53,8 +53,8 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-validate-cumulative-psf" href="simtools-validate-cumulative-psf.html" />
-    <link rel="prev" title="simtools-validate-camera-efficiency" href="simtools-validate-camera-efficiency.html" />
+    <link rel="next" title="simtools-simulate-light-emission" href="simtools-simulate-light-emission.html" />
+    <link rel="prev" title="simtools-run-application" href="simtools-run-application.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+gb92ab8f" />
@@ -432,7 +432,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-calibration-events.html">simtools-simulate-calibration-events</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-simulate-calibration-events</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -440,7 +440,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-validate-camera-fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-validate-optics.html">simtools-validate-optics</a></li>
@@ -493,7 +493,7 @@
     
     <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">Applications</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-validate-camera-fov</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-simulate-calibration-events</span></li>
   </ul>
 </nav>
 </div>
@@ -510,47 +510,76 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-validate_camera_fov">
-<span id="simtools-validate-camera-fov"></span><h1>simtools-validate-camera-fov<a class="headerlink" href="#module-validate_camera_fov" title="Link to this heading">#</a></h1>
-<p>Calculate the camera FoV of the telescope requested and plot the camera.</p>
-<p>The orientation for the plotting is “as seen for an observer facing the camera”.</p>
-<p>An example of the camera plot can be found below.</p>
-<a class="reference internal image-reference" href="../../_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot"><img alt="../../_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot" src="../../_images/validate_camera_fov_North-LST-1_pixelLayout.png" style="width: 50%;" />
-</a>
-<section id="command-line-arguments">
-<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
-<dl class="simple">
-<dt>site (str, required)</dt><dd><p>North or South.</p>
-</dd>
-<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
-</dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version</p>
-</dd>
-<dt>camera_in_sky_coor (bool, optional)</dt><dd><dl class="simple">
-<dt>Plot the camera layout in sky coordinates akin to looking at it from behind for single </dt><dd><p>mirror telescopes</p>
-</dd>
-</dl>
-</dd>
-<dt>print_pixels_id (bool, optional)</dt><dd><dl class="simple">
-<dt>Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero</dt><dd><p>(–print_pixels_id 0). To print all pixels, set to ‘All’.”</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</section>
+  <section id="module-simulate_calibration_events">
+<span id="simtools-simulate-calibration-events"></span><h1>simtools-simulate-calibration-events<a class="headerlink" href="#module-simulate_calibration_events" title="Link to this heading">#</a></h1>
+<p>Simulate calibration events like pedestal or flasher events.</p>
+<p>Use sim_telarray to simulate calibration events for an array of telescopes.
+The following types of calibration events are supported:</p>
+<ul class="simple">
+<li><p>Pedestal events (includes night-sky background and camera noise)</p></li>
+<li><p>Dark pedestal events (closed camera lid, camera noise only)</p></li>
+<li><p>Flasher events (simulated flasher light source)</p></li>
+</ul>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>LST - 5.0.0</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-fov --site North \\</span>
-<span class="go">    --telescope LSTN-01 --model_version 5.0.0</span>
+<p>Simulate pedestal events for alpha North. The assumed level night-sky background is 2.0 times the
+nominal value. A list of stars can be provided to simulate additional contributions.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-calibration-events --run_mode=pedestals \\</span>
+<span class="go">    --run_number 10 --number_of_events 1000 \\</span>
+<span class="go">    --array_layout_name alpha --site North \\</span>
+<span class="go">    --model_version 6.0.0 \\</span>
+<span class="go">    --zenith_angle 20 --azimuth_angle 0 \\</span>
+<span class="go">    --nsb_scaling_factor 2.0</span>
 </pre></div>
 </div>
-<p>The output is saved in simtools-output/validate_camera_fov.</p>
-<p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\\</span>
-<span class="go">/application-plots/validate_camera_fov_LST-1_pixel_layout.png</span>
+<p>Simulate flasher events for alpha South. Note that the same flasher configuration is used
+for all telescopes.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-calibration-events --run_mode=flasher \\</span>
+<span class="go">    --run_number 10 --number_of_events 1000 \\</span>
+<span class="go">    --array_layout_name subsystem_msts --site South \\</span>
+<span class="go">    --model_version 6.0.0 \\</span>
+<span class="go">    --zenith_angle 20 --azimuth_angle 0 \\</span>
+<span class="go">    --flasher_photons 500 --flasher_var_photons 0.05 \\</span>
+<span class="go">    --flasher_exp_time 1.59 --flasher_sig_time 0.4</span>
 </pre></div>
 </div>
+</section>
+<section id="command-line-arguments">
+<h2>Command Line Arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>run_mode (str, required)</dt><dd><p>Run mode, e.g. “pedestals” or “flasher”.</p>
+</dd>
+<dt>run_number (int, required)</dt><dd><p>Run number for the simulation.</p>
+</dd>
+<dt>number_of_events (int, required)</dt><dd><p>Number of calibration events to simulate.</p>
+</dd>
+<dt>array_layout_name (str, required)</dt><dd><p>Array layout name, e.g. “alpha”.</p>
+</dd>
+<dt>site (str, required)</dt><dd><p>Site name.</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
+</dd>
+<dt>nsb_scaling_factor (float, optional)</dt><dd><p>Scaling factor for the night-sky background rate. Default is 1.0, which
+corresponds to the nominal (dark sky) NSB rate.</p>
+</dd>
+<dt>stars (str, optional)</dt><dd><p>Path to a file containing a list of stars (azimuth, zenith, weighting factor
+separated by whitespace). If provided, the stars will be used to simulate
+additional contributions to the night-sky background. For details on the
+parameters, see the sim_telarray manual.</p>
+</dd>
+<dt>zenith_angle (float, optional)</dt><dd><p>Zenith angle in degrees.</p>
+</dd>
+<dt>azimuth_angle (float, optional)</dt><dd><p>Azimuth angle in degrees.</p>
+</dd>
+<dt>flasher_photons (float, optional)</dt><dd><p>Number of photons in the flasher pulse at each photodetector.</p>
+</dd>
+<dt>flasher_var_photons (float, optional)</dt><dd><p>Relative variance of the number of photons in the flasher pulse.</p>
+</dd>
+<dt>flasher_exp_time (float, optional)</dt><dd><p>Exponential decay time of the flasher pulse in nano-seconds.</p>
+</dd>
+<dt>flasher_sig_time (float, optional)</dt><dd><p>Sigma of Gaussian-shaped flasher pulse in nano-seconds.</p>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -565,20 +594,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-validate-camera-efficiency.html"
+       href="simtools-run-application.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-validate-camera-efficiency</p>
+        <p class="prev-next-title">simtools-run-application</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-validate-cumulative-psf.html"
+       href="simtools-simulate-light-emission.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-validate-cumulative-psf</p>
+        <p class="prev-next-title">simtools-simulate-light-emission</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -601,8 +630,8 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
 </ul>
   </nav></div>
 
@@ -610,7 +639,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/user-guide/applications/simtools-validate-camera-fov.rst.txt"
+      <li><a href="../../_sources/user-guide/applications/simtools-simulate-calibration-events.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

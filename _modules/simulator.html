@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=75fd2dea"></script>
+    <script src="../_static/documentation_options.js?v=cb8b052d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc859fe824" />
+  <meta name="docsearch:version" content="0.1.dev1+gb92ab8f" />
   </head>
   
   
@@ -445,6 +445,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.corsika_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span><span class="p">,</span> <span class="n">table_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.job_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">JobManager</span>
@@ -488,8 +489,8 @@
 <span class="sd">        Instance label.</span>
 <span class="sd">    extra_commands: str or list of str</span>
 <span class="sd">        Extra commands to be added to the run script before the run command.</span>
-<span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    db_config: dict</span>
+<span class="sd">        Database configuration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -497,15 +498,18 @@
         <span class="n">args_dict</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">extra_commands</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Simulator class.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Init Simulator </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span> <span class="o">=</span> <span class="n">db_config</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Init Simulator </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
 
@@ -521,8 +525,8 @@
             <span class="p">),</span>
             <span class="s2">&quot;seed_file_name&quot;</span><span class="p">:</span> <span class="s2">&quot;sim_telarray_instrument_seeds.txt&quot;</span><span class="p">,</span>  <span class="c1"># name only; no directory</span>
         <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_array_models</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_runner</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_array_models</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_runner</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -549,29 +553,23 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid simulation software: </span><span class="si">{</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_software</span> <span class="o">=</span> <span class="n">simulation_software</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_array_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_array_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize array simulation models.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mongo_db_config: dict</span>
-<span class="sd">            Database configuration.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            List of ArrayModel objects.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">,</span> <span class="p">[])</span>
-        <span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">model_version</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">model_version</span>
+        <span class="n">versions</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">enforce_list_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">,</span> <span class="p">[]))</span>
 
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">ArrayModel</span><span class="p">(</span>
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
                 <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
                 <span class="n">layout_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">),</span>
-                <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
+                <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
                 <span class="n">model_version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
                 <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="p">{</span>
                     <span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_seed_for_random_instrument_instances</span><span class="p">(</span>
@@ -626,35 +624,24 @@
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            List of run numbers.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        KeyError</span>
-<span class="sd">            If &#39;run_number&#39;, &#39;run_number_offset&#39; and &#39;number_of_runs&#39; are</span>
-<span class="sd">            not found in the configuration.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">offset_run_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;run_number_offset&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;run_number&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_run_list_and_range</span><span class="p">(</span>
-                    <span class="n">run_list</span><span class="o">=</span><span class="n">offset_run_number</span><span class="p">,</span>
-                    <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_run_list_and_range</span><span class="p">(</span>
-                <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">run_range</span><span class="o">=</span><span class="p">[</span>
-                    <span class="n">offset_run_number</span><span class="p">,</span>
-                    <span class="n">offset_run_number</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">],</span>
-                <span class="p">],</span>
+        <span class="n">offset_run_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_number_offset&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;run_number&quot;</span><span class="p">,</span> <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_run_list_and_range</span><span class="p">(</span>
+                <span class="n">run_list</span><span class="o">=</span><span class="n">offset_run_number</span><span class="p">,</span>
+                <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;Error in initializing run list &quot;</span>
-                <span class="s2">&quot;(missing &#39;run_number&#39;, &#39;run_number_offset&#39; or &#39;number_of_runs&#39;).&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">exc</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_run_list_and_range</span><span class="p">(</span>
+            <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">run_range</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">offset_run_number</span><span class="p">,</span>
+                <span class="n">offset_run_number</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">],</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_run_list_and_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_run_list_and_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare list of run numbers from a list or from a range.</span>
 
@@ -671,49 +658,40 @@
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            list of unique run numbers (integers)</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">run_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">run_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Nothing to validate - run_list and run_range not given.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Nothing to prepare - run_list and run_range not given.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">validated_runs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">run_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">run_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_list</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">run_list</span><span class="p">):</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_list must contain only integers.&quot;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span>
-            <span class="n">validated_runs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">run_list</span><span class="p">)</span>
+            <span class="n">validated_runs</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">enforce_list_type</span><span class="p">(</span><span class="n">run_list</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">validated_runs</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run list must contain only integers: </span><span class="si">{</span><span class="n">run_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">run_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">run_range</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">run_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_range must contain two integers only.&quot;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span>
-
+                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Run_range must contain two integers only: </span><span class="si">{</span><span class="n">run_range</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
             <span class="n">run_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">run_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">run_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_range: </span><span class="si">{</span><span class="n">run_range</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">validated_runs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">run_range</span><span class="p">))</span>
 
         <span class="n">validated_runs_unique</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">validated_runs</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_list: </span><span class="si">{</span><span class="n">validated_runs_unique</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">validated_runs_unique</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Runlist: </span><span class="si">{</span><span class="n">validated_runs_unique</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">validated_runs_unique</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_corsika_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize corsika configuration and simulation runners.</span>
+<span class="sd">        Define CORSIKA configurations based on the simulation model.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        db_config: dict</span>
-<span class="sd">            Database configuration.</span>
+<span class="sd">        For &#39;corsika_sim_telarray&#39;, this is a list since multiple configurations</span>
+<span class="sd">        might be defined to run in a single job using multipipe.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner</span>
-<span class="sd">            Simulation runner object.</span>
+<span class="sd">        CorsikaConfig or list of CorsikaConfig</span>
+<span class="sd">            CORSIKA configuration(s) based on the simulation model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">corsika_configurations</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">array_model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
@@ -722,9 +700,26 @@
                     <span class="n">array_model</span><span class="o">=</span><span class="n">array_model</span><span class="p">,</span>
                     <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
                     <span class="n">args_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">,</span>
-                    <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+                    <span class="n">db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+                    <span class="n">dummy_simulations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_calibration_run</span><span class="p">(),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">corsika_configurations</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span>
+            <span class="k">else</span> <span class="n">corsika_configurations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize corsika configuration and simulation runners.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner</span>
+<span class="sd">            Simulation runner object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">corsika_configurations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_configuration</span><span class="p">()</span>
 
         <span class="n">runner_class</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;corsika&quot;</span><span class="p">:</span> <span class="n">CorsikaRunner</span><span class="p">,</span>
@@ -732,16 +727,9 @@
             <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">:</span> <span class="n">CorsikaSimtelRunner</span><span class="p">,</span>
         <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">)</span>
 
-        <span class="c1"># In case of CorsikaSimtelRunner we should pass all corsika_configurations</span>
-        <span class="c1"># to the runner, since we define multiple configurations to run in a single job</span>
-        <span class="c1"># using multipipe. In other cases we pass only the first one (there&#39;s only one anyway).</span>
         <span class="n">runner_args</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-            <span class="s2">&quot;corsika_config&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="n">corsika_configurations</span>
-                <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="n">CorsikaSimtelRunner</span>
-                <span class="k">else</span> <span class="n">corsika_configurations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="p">),</span>
+            <span class="s2">&quot;corsika_config&quot;</span><span class="p">:</span> <span class="n">corsika_configurations</span><span class="p">,</span>
             <span class="s2">&quot;simtel_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">),</span>
             <span class="s2">&quot;use_multipipe&quot;</span><span class="p">:</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="n">CorsikaSimtelRunner</span><span class="p">,</span>
         <span class="p">}</span>
@@ -752,6 +740,8 @@
             <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;sim_telarray_seeds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span>
         <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="n">CorsikaSimtelRunner</span><span class="p">:</span>
             <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;sequential&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sequential&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_calibration_run</span><span class="p">():</span>
+                <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;calibration_runner_args&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span>
 
         <span class="k">return</span> <span class="n">runner_class</span><span class="p">(</span><span class="o">**</span><span class="n">runner_args</span><span class="p">)</span>
 
@@ -764,9 +754,7 @@
 <span class="sd">        input_file_list: str or list of str</span>
 <span class="sd">            Single file or list of files of shower simulations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">input_file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">input_file_list</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">gen</span><span class="o">.</span><span class="n">enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">):</span>
             <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_guess_run_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fill_results</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">run</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
@@ -786,7 +774,7 @@
         <span class="n">runs_and_files_to_submit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_and_files_to_submit</span><span class="p">(</span>
             <span class="n">input_file_list</span><span class="o">=</span><span class="n">input_file_list</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Starting submission for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">runs_and_files_to_submit</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;run</span><span class="si">{</span><span class="s1">&#39;s&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">runs_and_files_to_submit</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
@@ -814,7 +802,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a dictionary with run numbers and simulation files.</span>
 
-<span class="sd">        The latter are expected to be given for the simtel simulator.</span>
+<span class="sd">        The latter are expected to be given for the sim_telarray simulator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -831,38 +819,18 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If no runs are to be submitted.</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting runs and files to submit (</span><span class="si">{</span><span class="n">input_file_list</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting runs and files to submit (</span><span class="si">{</span><span class="n">input_file_list</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span>
-            <span class="n">input_file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_file_list</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
             <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess_run_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">):</span> <span class="n">file</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">input_file_list</span><span class="p">}</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">]:</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_to_simulate</span><span class="p">())</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_runs_and_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No runs to submit.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_runs_and_files</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Enforce the input list to be a list.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        input_file_list: str or list of str</span>
-<span class="sd">            Single file or list of files of shower simulations.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        list</span>
-<span class="sd">            List of input files.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">input_file_list</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[]</span>
-        <span class="k">return</span> <span class="n">input_file_list</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">input_file_list</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_guess_run_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -887,7 +855,7 @@
             <span class="n">run_str</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;run\d*&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">run_str</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run number could not be guessed from </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> using run = 1&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run number could not be guessed from </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> using run = 1&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="mi">1</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fill_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
@@ -978,27 +946,8 @@
 <span class="sd">            List with the full path of all output files.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">file_type</span><span class="p">]</span></div>
-
-
-<div class="viewcode-block" id="Simulator.print_list_of_files">
-<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.print_list_of_files">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">print_list_of_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Print list of output files generated by simulations.</span>
-
-<span class="sd">        Options are &quot;input&quot;, &quot;simtel_output&quot;, &quot;hist&quot;, &quot;log&quot;.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        file_type : str</span>
-<span class="sd">            File type to be listed.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Printing list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">file_type</span><span class="p">]:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_resources_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="p">):</span>
@@ -1082,7 +1031,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">run_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">run_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_run_list_and_range</span><span class="p">(</span><span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_run_list_and_range</span><span class="p">(</span><span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Simulator.save_file_lists">
 <a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.save_file_lists">[docs]</a>
@@ -1094,12 +1043,12 @@
             <span class="p">)</span>
             <span class="n">file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">):</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files to save for </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files.&quot;</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files to save for </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Simulator.save_reduced_event_lists">
@@ -1112,7 +1061,7 @@
 <span class="sd">        but with a &#39;hdf5&#39; extension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Reduced event lists can only be saved for sim_telarray simulations.&quot;</span>
             <span class="p">)</span>
             <span class="k">return</span>
@@ -1142,7 +1091,7 @@
 <span class="sd">            Directory for the tarball with output files.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Packing the output files for registering on the grid (</span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
         <span class="n">output_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
@@ -1192,10 +1141,10 @@
             <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_to_move</span><span class="p">)</span>
             <span class="n">destination_file</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span> <span class="o">/</span> <span class="n">source_file</span><span class="o">.</span><span class="n">name</span>
             <span class="k">if</span> <span class="n">destination_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overwriting existing file: </span><span class="si">{</span><span class="n">destination_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overwriting existing file: </span><span class="si">{</span><span class="n">destination_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output files for the grid placed in </span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output files for the grid placed in </span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Simulator.validate_metadata">
@@ -1203,18 +1152,18 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate metadata in the sim_telarray output files.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No sim_telarray files to validate.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No sim_telarray files to validate.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
             <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
             <span class="n">output_file</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating metadata for </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating metadata for </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">assert_sim_telarray_metadata</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata for sim_telarray file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> is valid.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata for sim_telarray file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> is valid.&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;No sim_telarray file found for model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span></div>
 
@@ -1265,7 +1214,18 @@
                     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">orig_file</span><span class="p">:</span>
                         <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
-            <span class="n">corsika_log_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">new_log</span><span class="p">))</span></div>
+            <span class="n">corsika_log_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">new_log</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_calibration_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if this simulation is a calibration run.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if it is a calibration run, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pedestals&quot;</span><span class="p">,</span> <span class="s2">&quot;dark_pedestals&quot;</span><span class="p">,</span> <span class="s2">&quot;nsb_only_pedestals&quot;</span><span class="p">,</span> <span class="s2">&quot;flasher&quot;</span><span class="p">]</span></div>
 
 </pre></div>
 

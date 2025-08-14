@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=75fd2dea"></script>
+    <script src="../../_static/documentation_options.js?v=cb8b052d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc859fe824" />
+  <meta name="docsearch:version" content="0.1.dev1+gb92ab8f" />
   </head>
   
   
@@ -507,6 +507,77 @@
 <span class="sd">        str</span>
 <span class="sd">            Command to run sim_telarray.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_common_run_command</span><span class="p">(</span><span class="n">run_number</span><span class="p">,</span> <span class="n">weak_pointing</span><span class="p">)</span>
+
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; | gzip &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1 || exit&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;power_law&quot;</span><span class="p">,</span>
+            <span class="n">SimulatorArray</span><span class="o">.</span><span class="n">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary_particle</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimulatorArray.make_run_command_for_calibration_simulations">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_run_command_for_calibration_simulations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build and return the command to run sim_telarray for calibration simulations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        calibration_runner_args: dict</span>
+<span class="sd">            Dictionary with calibration runner arguments.</span>
+<span class="sd">        input_file: str</span>
+<span class="sd">            Full path of the input CORSIKA file</span>
+<span class="sd">        run_number: int (optional)</span>
+<span class="sd">            run number</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Command to run sim_telarray for pedestal simulations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_common_run_command</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
+
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;Altitude&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+                <span class="s2">&quot;reference_point_altitude&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;nsb_scaling_factor&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;nsb_scaling_factor&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">calibration_runner_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stars&quot;</span><span class="p">):</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;stars&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;stars&quot;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">calibration_runner_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;pedestals&quot;</span><span class="p">,</span> <span class="s2">&quot;nsb_only_pedestals&quot;</span><span class="p">):</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;pedestal_events&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;number_of_events&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">calibration_runner_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;nsb_only_pedestals&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_only_pedestals_command</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">calibration_runner_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;dark_pedestals&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;dark_events&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;number_of_events&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">calibration_runner_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;flasher&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_command</span><span class="p">(</span><span class="n">calibration_runner_args</span><span class="p">)</span>
+
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; | gzip &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1 || exit&quot;</span>
+
+        <span class="k">return</span> <span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_common_run_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">weak_pointing</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build generic run command for sim_telarray.&quot;&quot;&quot;</span>
         <span class="n">config_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
         <span class="n">histogram_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
@@ -522,12 +593,6 @@
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
             <span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span> <span class="n">weak_pointing</span>
         <span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;power_law&quot;</span><span class="p">,</span>
-            <span class="n">SimulatorArray</span><span class="o">.</span><span class="n">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary_particle</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_state&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">):</span>
@@ -539,11 +604,77 @@
             <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">])</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; | gzip &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1 || exit&quot;</span>
 
-        <span class="k">return</span> <span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">command</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_flasher_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the command to run sim_telarray for flasher simulations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        calibration_runner_args: dict</span>
+<span class="sd">            Dictionary with calibration runner arguments.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Command to run sim_telarray for flasher simulations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;laser_events&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;number_of_events&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;laser_photons&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;flasher_photons&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;laser_var_photons&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;flasher_var_photons&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;laser_pulse_exptime&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;flasher_exp_time&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;laser_pulse_sigtime&quot;</span><span class="p">,</span> <span class="n">calibration_runner_args</span><span class="p">[</span><span class="s2">&quot;flasher_sig_time&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;laser_external_trigger&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">command</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_nsb_only_pedestals_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the command to run sim_telarray for nsb-only pedestal simulations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Command to run sim_telarray.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">null_values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;fadc_noise&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_lg_noise&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;qe_variation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gain_variation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_var_pedestal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_err_pedestal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_sysvar_pedestal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_dev_pedestal&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">null_command_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">null_values</span><span class="p">:</span>
+            <span class="n">null_command_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">null_command_parts</span><span class="p">)</span>
+
+        <span class="n">one_values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;fadc_lg_var_pedestal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_lg_err_pedestal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_lg_dev_pedestal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_lg_sysvar_pedestal&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">one_command_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">one_values</span><span class="p">:</span>
+            <span class="n">one_command_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">one_command_parts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">command</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=75fd2dea"></script>
+    <script src="../../_static/documentation_options.js?v=cb8b052d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc859fe824" />
+  <meta name="docsearch:version" content="0.1.dev1+gb92ab8f" />
   </head>
   
   
@@ -582,11 +582,16 @@
         <span class="n">zenith</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s2">&quot;THETAP&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">azimuth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span>
         <span class="n">run_number_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_run_number_string</span><span class="p">(</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s2">&quot;run_number&quot;</span><span class="p">])</span>
-        <span class="k">return</span> <span class="p">(</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;primary&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">run_number_string</span><span class="si">}</span><span class="s2">_&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;za</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">zenith</span><span class="p">)</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">deg_azm</span><span class="si">{</span><span class="n">azimuth</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg_&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;array_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;model_version&#39;</span><span class="p">]</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">info_for_file_name</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">]</span>
+            <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">run_number_string</span><span class="si">}</span><span class="s2">_&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">prefix</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;za</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">zenith</span><span class="p">)</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">deg_azm</span><span class="si">{</span><span class="n">azimuth</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg_&quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;array_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_&quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;model_version&#39;</span><span class="p">]</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_log_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>

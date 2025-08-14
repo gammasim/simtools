@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=75fd2dea"></script>
+    <script src="../_static/documentation_options.js?v=cb8b052d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Runners for simulation software." href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc859fe824" />
+  <meta name="docsearch:version" content="0.1.dev1+gb92ab8f" />
   </head>
   
   
@@ -1252,6 +1252,30 @@ the difference between this exponent and the one used for the shower simulations
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations">
+<span class="sig-name descname"><span class="pre">make_run_command_for_calibration_simulations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_runner_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray.make_run_command_for_calibration_simulations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations" title="Link to this definition">#</a></dt>
+<dd><p>Build and return the command to run sim_telarray for calibration simulations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>calibration_runner_args: dict</strong></dt><dd><p>Dictionary with calibration runner arguments.</p>
+</dd>
+<dt><strong>input_file: str</strong></dt><dd><p>Full path of the input CORSIKA file</p>
+</dd>
+<dt><strong>run_number: int (optional)</strong></dt><dd><p>run number</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Command to run sim_telarray for pedestal simulations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -1596,6 +1620,7 @@ mirror_numbers.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.get_power_law_for_sim_telarray_histograms()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.make_run_command"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.make_run_command()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.make_run_command_for_calibration_simulations()</span></code></a></li>
 </ul>
 </li>
 </ul>
