@@ -206,6 +206,29 @@ def get_log_level_from_user(log_level):
     return possible_levels[log_level_lower]
 
 
+def enforce_list_type(value):
+    """
+    Return input value as list.
+
+    - Single values will return as a list with a single element.
+    - None values will return as empty list.
+    - Values of list type are not changed.
+
+    Parameters
+    ----------
+    value: any
+        Input value to be converted to a list.
+
+    Returns
+    -------
+    list
+        List of input values.
+    """
+    if not value:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
 def program_is_executable(program):
     """
     Check if program exists and is executable.
