@@ -87,10 +87,10 @@ class SimtelIOEventHistograms:
         Fill histograms with event data.
 
         Involves looping over all event data, and therefore is the slowest part of the
-        limit calculation. Adds the histograms to the histogram dictionary.
+        histogram module. Adds the histograms to the histogram dictionary.
 
         Assume that all event data files are generated with similar configurations
-        (self.file_info contains the latest file info).
+        (self.file_info contains the file info of the last file).
         """
         for data_set in self.reader.data_sets:
             self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
@@ -162,6 +162,12 @@ class SimtelIOEventHistograms:
 
             for name, data, bins, hist1d in hist_defs:
                 self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
+
+            print(
+                len(shower_data.angular_distance),
+                min(shower_data.angular_distance),
+                max(shower_data.angular_distance),
+            )
 
             break
 
@@ -348,7 +354,7 @@ class SimtelIOEventHistograms:
         Returns
         -------
         tuple
-            (rebinned_hist, x_bins, rebinned_y_bins)
+            (re-binned_hist, x_bins, re-binned_y_bins)
         """
         if rebin_factor <= 1:
             return hist, x_bins, y_bins
