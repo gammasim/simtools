@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+import logging
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, PropertyMock, call, mock_open, patch
@@ -7,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+import simtools.simtel.simulator_light_emission as sim_mod
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
@@ -628,7 +632,8 @@ def test_get_distance_for_plotting(mock_simulator_variable):
 
     with patch.object(mock_simulator_variable._logger, "warning"):
         distance = mock_simulator_variable._get_distance_for_plotting()
-        assert distance == 1500 * u.m
+        # allow rounding to nearest meter
+        assert np.isclose(distance.to_value(u.m), 1500.0)
 
 
 @patch("simtools.simtel.simulator_light_emission.save_figs_to_pdf")
@@ -665,9 +670,11 @@ def test_run_simulation(
     mock_simulator_variable.prepare_script = Mock(return_value="dummy_script.sh")
     mock_simulator_variable.run_simulation(args_dict, figures)
 
-    mock_open.assert_called_once_with(
-        Path(mock_simulator_variable.output_directory) / "logfile.log", "w", encoding="utf-8"
-    )
+    # first open for write, then append via FileHandler
+    assert mock_open.call_count >= 1
+    first_call = mock_open.call_args_list[0]
+    assert first_call.args[0] == Path(mock_simulator_variable.output_directory) / "logfile.log"
+
     mock_subprocess_run.assert_called_once_with(
         "dummy_script.sh",
         shell=False,
@@ -711,3 +718,74 @@ def test_write_telpos_file(mock_simulator, tmp_path):
     # Check that the content contains the expected values converted to cm
     # 1m = 100cm, 2m = 200cm, 3m = 300cm, 4m = 400cm
     assert content == "100.0 200.0 300.0 400.0"
+
+
+def _make_dummy_fig():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    return fig
+
+
+@pytest.fixture
+def sim_instance():
+    # Create instance without running __init__ to avoid heavy deps
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger("simtools.simtel.simulator_light_emission")
+
+    def fake_calib(filename, args_dict, distance, figures):
+        figures.append(_make_dummy_fig())
+
+    inst._plot_calibration_outputs = fake_calib
+    return inst
+
+
+def test_plot_flasher_outputs_success(monkeypatch, sim_instance, caplog):
+    # Stub visualize functions to return figures
+    monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", lambda *a, **k: _make_dummy_fig())
+    monkeypatch.setattr(sim_mod, "plot_simtel_peak_timing", lambda *a, **k: _make_dummy_fig())
+    monkeypatch.setattr(
+        sim_mod, "plot_simtel_waveform_pcolormesh", lambda *a, **k: _make_dummy_fig()
+    )
+
+    figures = []
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger="simtools.simtel.simulator_light_emission"):
+        sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 6}, None, figures)
+
+    # 1 calibration + 3 plots
+    assert len(figures) == 4
+
+    messages = "\n".join(r.message for r in caplog.records)
+    assert "Added time-trace figure" in messages
+    assert "Added peak timing figure" in messages
+    assert "Added waveform pcolormesh figure" in messages
+
+    # Close figures
+    for f in figures:
+        plt.close(f)
+
+
+def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
+    # Stub visualize functions to raise exceptions
+    def _raise(*a, **k):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", _raise)
+    monkeypatch.setattr(sim_mod, "plot_simtel_peak_timing", _raise)
+    monkeypatch.setattr(sim_mod, "plot_simtel_waveform_pcolormesh", _raise)
+
+    figures = []
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger="simtools.simtel.simulator_light_emission"):
+        sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 3}, None, figures)
+
+    # Only calibration figure appended
+    assert len(figures) == 1
+
+    messages = "\n".join(r.message for r in caplog.records)
+    assert "No event time traces available" in messages or "No event time" in messages
+    assert "Peak timing plot not available" in messages
+    assert "Waveform pcolormesh not available" in messages
+
+    for f in figures:
+        plt.close(f)

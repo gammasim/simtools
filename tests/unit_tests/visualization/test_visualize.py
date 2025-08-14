@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
+# pylint: disable=protected-access,redefined-outer-name,unused-argument
+
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
 import astropy.io.ascii
 import astropy.units as u
@@ -51,12 +54,12 @@ def test_plot_1d(db, io_handler, wavelength):
         new_data[y_title] = new_data[y_title] * (1 - 0.1 * (i + 1))
         data[f"{100 * (1 - 0.1 * (i + 1))}%% reflectivity"] = new_data
 
-    plt = visualize.plot_1d(data, title=title, palette="autumn")
+    fig = visualize.plot_1d(data, title=title, palette="autumn")
 
     plot_file = io_handler.get_output_file(file_name="plot_1d.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
-    plt.savefig(plot_file)
+    fig.savefig(plot_file)
 
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
@@ -69,12 +72,12 @@ def test_plot_table(io_handler):
     title = "Test plot table"
     table = astropy.io.ascii.read("tests/resources/Transmission_Spectrum_PlexiGlass.dat")
 
-    plt = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
+    fig = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 
     plot_file = io_handler.get_output_file(file_name="plot_table.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
-    plt.savefig(plot_file)
+    fig.savefig(plot_file)
 
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
@@ -95,7 +98,7 @@ def test_add_unit(caplog, wavelength):
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
 
 
-def test_save_figure(tmp_test_directory, io_handler):
+def test_save_figure(io_handler):
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
     ax.set_title("Test Figure")
@@ -264,3 +267,283 @@ def test_plot_ratio_difference():
     yticks = len(ratio_ax.get_yticks())
     assert yticks <= 7
     plt.close(fig4)
+
+
+# Tests for event selection and event image plotting
+
+
+def _fake_event(dl1_image=None, r1_waveforms=None):
+    tel_id = 1
+    ev = SimpleNamespace()
+    ev.index = SimpleNamespace(obs_id=1, event_id=42)
+    ev.trigger = SimpleNamespace(event_type=SimpleNamespace(name="flasher"))
+    ev.dl1 = SimpleNamespace(tel={})
+    ev.r1 = SimpleNamespace(tel={})
+    if dl1_image is not None:
+        ev.dl1.tel[tel_id] = SimpleNamespace(image=np.asarray(dl1_image))
+    if r1_waveforms is not None:
+        ev.r1.tel[tel_id] = SimpleNamespace(waveform=np.asarray(r1_waveforms))
+    return ev, tel_id
+
+
+def _fake_source_with_event(ev, tel_id):
+    class _Sub:
+        def __init__(self):
+            # minimal camera/readout/geometry stubs
+            self.tel = {
+                tel_id: SimpleNamespace(
+                    type=SimpleNamespace(name="LST"),
+                    optics=SimpleNamespace(name="LST-Optics"),
+                    camera_name="LSTCam",
+                    camera=SimpleNamespace(
+                        geometry=SimpleNamespace(name="LSTCam"),
+                        readout=SimpleNamespace(sampling_rate=None),
+                    ),
+                )
+            }
+
+    class _Src:
+        def __init__(self):
+            self.subarray = _Sub()
+            self._ev = [ev]
+
+        def __iter__(self):
+            return iter(self._ev)
+
+    return _Src()
+
+
+def test__select_event_by_type_returns_first(caplog):
+    ev, _ = _fake_event([1, 2, 3])
+    src = _fake_source_with_event(ev, 1)
+    caplog.clear()
+    with caplog.at_level("INFO", logger=visualize._logger.name):  # pylint:disable=protected-access
+        out = visualize._select_event_by_type(src, preferred="flasher")  # pylint:disable=protected-access
+    assert out is ev
+    assert any("filtering ('flasher') not applied" in r.message for r in caplog.records)
+
+
+def test__select_event_by_type_none_warns(caplog):
+    class _Empty:
+        def __iter__(self):
+            return iter(())
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=visualize._logger.name):  # pylint:disable=protected-access
+        out = visualize._select_event_by_type(_Empty(), preferred=None)  # pylint:disable=protected-access
+    assert out is None
+    assert any("No events available" in r.message for r in caplog.records)
+
+
+# Helpers for ctapipe stubs and waveform generation
+
+
+def _make_waveforms(n_pix=4, n_samp=16):
+    w = np.tile(np.arange(n_samp, dtype=float), (n_pix, 1))
+    w += np.arange(n_pix)[:, None]
+    return w
+
+
+def _install_fake_ctapipe(monkeypatch, source_obj):
+    import sys
+    from types import ModuleType
+
+    ctapipe_mod = ModuleType("ctapipe")
+    io_mod = ModuleType("io")
+    calib_mod = ModuleType("calib")
+    vis_mod = ModuleType("visualization")
+    image_mod = ModuleType("image")
+
+    class _EventSource:
+        def __init__(self, *a, **k):
+            self._src = source_obj
+            self.subarray = getattr(source_obj, "subarray", None)
+
+        def __iter__(self):
+            return iter(self._src)
+
+    class _CameraCalibrator:
+        def __init__(self, *a, **k):
+            pass
+
+        def __call__(self, *a, **k):
+            return None
+
+    class _CameraDisplay:
+        def __init__(self, *a, **k):
+            self.cmap = None
+
+        def add_colorbar(self, *a, **k):
+            pass
+
+        def set_limits_percent(self, *a, **k):
+            pass
+
+    def _tailcuts_clean(*a, **k):
+        img = a[1]
+        return np.ones_like(img, dtype=bool)
+
+    io_mod.EventSource = _EventSource
+    calib_mod.CameraCalibrator = _CameraCalibrator
+    vis_mod.CameraDisplay = _CameraDisplay
+    image_mod.tailcuts_clean = _tailcuts_clean
+
+    ctapipe_mod.io = io_mod
+    ctapipe_mod.calib = calib_mod
+    ctapipe_mod.visualization = vis_mod
+    ctapipe_mod.image = image_mod
+
+    monkeypatch.setitem(sys.modules, "ctapipe", ctapipe_mod)
+    monkeypatch.setitem(sys.modules, "ctapipe.io", io_mod)
+    monkeypatch.setitem(sys.modules, "ctapipe.calib", calib_mod)
+    monkeypatch.setitem(sys.modules, "ctapipe.visualization", vis_mod)
+    monkeypatch.setitem(sys.modules, "ctapipe.image", image_mod)
+
+
+def test_plot_simtel_event_image_returns_figure(monkeypatch):
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_event_image("dummy.simtel.gz", return_cleaned=False)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
+    class _EmptySrc:
+        def __iter__(self):
+            return iter(())
+
+    # Attach minimal subarray to avoid attribute errors when accessing subarray
+    _EmptySrc.subarray = SimpleNamespace(tel={})
+
+    _install_fake_ctapipe(monkeypatch, _EmptySrc())
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=visualize._logger.name):  # pylint:disable=protected-access
+        fig = visualize.plot_simtel_event_image("dummy.simtel.gz")
+    assert fig is None
+    assert any("No event found" in r.message for r in caplog.records)
+
+
+def test_plot_simtel_time_traces_returns_figure(monkeypatch):
+    w = _make_waveforms(5, 20)
+    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_time_traces("dummy.simtel.gz", n_pixels=3)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_waveform_pcolormesh_returns_figure(monkeypatch):
+    w = _make_waveforms(8, 32)
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_waveform_pcolormesh("dummy.simtel.gz", pixel_step=2)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_step_traces_returns_figure(monkeypatch):
+    w = _make_waveforms(12, 10)
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_step_traces("dummy.simtel.gz", pixel_step=5, max_pixels=3)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_time_traces_no_waveforms(monkeypatch, caplog):
+    ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0, 2.0]), r1_waveforms=None)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=visualize._logger.name):  # pylint:disable=protected-access
+        fig = visualize.plot_simtel_time_traces("dummy.simtel.gz")
+    assert fig is None
+    assert any("No R1 waveforms available" in r.message for r in caplog.records)
+
+
+def test__histogram_edges_default_and_binned():
+    edges_default = visualize._histogram_edges(10, timing_bins=None)
+    assert np.allclose(edges_default[:3], [-0.5, 0.5, 1.5])
+    # For n_samp=10, edges go from -0.5 to 9.5 in steps of 1.0 -> 11 edges
+    assert edges_default.size == 11
+
+    edges_binned = visualize._histogram_edges(10, timing_bins=5)
+    # 5 bins -> 6 edges spanning -0.5 .. 9.5
+    assert np.isclose(edges_binned[0], -0.5)
+    assert np.isclose(edges_binned[-1], 9.5)
+    assert edges_binned.size == 6
+
+
+def test__draw_peak_hist_basic():
+    fig, ax = plt.subplots()
+    peak_samples = np.array([1, 2, 2, 3, 4, 4, 4])
+    edges = np.arange(-0.5, 6.5, 1.0)
+    visualize._draw_peak_hist(
+        ax,
+        peak_samples,
+        edges,
+        mean_sample=3.0,
+        std_sample=1.0,
+        tel_id=1,
+        et_name="flasher",
+        considered=7,
+        found_count=6,
+    )
+    # Bars added
+    assert len(ax.containers) >= 1
+    # Limits set to edge bounds
+    x0, x1 = ax.get_xlim()
+    assert np.isclose(x0, edges[0])
+    assert np.isclose(x1, edges[-1])
+    plt.close(fig)
+
+
+def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
+    # Build fake scipy.signal
+    import sys
+    from types import ModuleType
+
+    scipy_mod = ModuleType("scipy")
+    signal_mod = ModuleType("signal")
+
+    def _find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
+        # return the argmax as the only peak
+        peak = int(np.argmax(trace))
+        return np.array([peak]), {}
+
+    def _find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
+        # no cwt peaks -> force fallback
+        return []
+
+    signal_mod.find_peaks = _find_peaks
+    signal_mod.find_peaks_cwt = _find_peaks_cwt
+    scipy_mod.signal = signal_mod
+
+    monkeypatch.setitem(sys.modules, "scipy", scipy_mod)
+    monkeypatch.setitem(sys.modules, "scipy.signal", signal_mod)
+
+    # Fake event with simple peaked waveforms
+    n_pix, n_samp, peak_idx = 6, 20, 7
+    w = np.zeros((n_pix, n_samp), dtype=float)
+    for i in range(n_pix):
+        w[i, peak_idx] = 10 + i
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    monkeypatch.setattr(visualize, "EventSource", lambda *a, **k: src)
