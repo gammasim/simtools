@@ -67,9 +67,14 @@ class SimtelIOEventHistograms:
             Dictionary describing histogram types.
         """
         return {
-            "triggered": {"suffix": "", "title": "Triggered events"},
-            "mc": {"suffix": "_mc", "title": "Simulated events"},
-            "efficiency": {"suffix": "_eff", "title": "Efficiency"},
+            "triggered": {"suffix": "", "title": "Triggered events", "ordinate": "Event Count"},
+            "mc": {"suffix": "_mc", "title": "Simulated events", "ordinate": "Event Count"},
+            "cumulative": {
+                "suffix": "_cumulative",
+                "title": "Cumulative triggered events",
+                "ordinate": "Fraction of Events",
+            },
+            "efficiency": {"suffix": "_eff", "title": "Efficiency", "ordinate": "Efficiency"},
         }
 
     def fill(self):
@@ -102,7 +107,8 @@ class SimtelIOEventHistograms:
             # TODO temporary break to run one file only
             break
 
-        self._fill_efficiency_histograms()
+        self.calculate_efficiency_data()
+        self.calculate_cumulative_data()
 
     def _histogram_definitions(self, event_data, triggered_data, shower_data):
         """
@@ -218,12 +224,17 @@ class SimtelIOEventHistograms:
                 self.histograms[f"{name}_bin_x_edges"] = x_edges
                 self.histograms[f"{name}_bin_y_edges"] = y_edges
 
-    def _fill_efficiency_histograms(self):
+    def calculate_efficiency_data(self):
         """
-        Fill efficiency histograms (triggered divided by simulated).
+        Calculate efficiency histograms (triggered divided by simulated).
 
         Assumes that for each histogram with simulated events, there is a
         corresponding histogram with triggered events.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the efficiency histograms.
         """
 
         def calculate_efficiency(sim_hist, mc_hist):
@@ -249,7 +260,8 @@ class SimtelIOEventHistograms:
                     f"{base_name}_bin_y_edges"
                 ]
 
-        new_histograms = {}
+        eff_histograms = {}
+        suffix = self.histogram_types()["efficiency"]["suffix"]
         for name, mc_hist in self.histograms.items():
             if not name.endswith("_mc"):
                 continue
@@ -265,11 +277,12 @@ class SimtelIOEventHistograms:
                 )
                 continue
 
-            eff_name = f"{base_name}_eff"
-            new_histograms[eff_name] = calculate_efficiency(sim_hist, mc_hist)
-            copy_bin_edges(base_name, eff_name, new_histograms)
+            eff_name = f"{base_name}{suffix}"
+            eff_histograms[eff_name] = calculate_efficiency(sim_hist, mc_hist)
+            copy_bin_edges(base_name, eff_name, eff_histograms)
 
-        self.histograms.update(new_histograms)
+        self.histograms.update(eff_histograms)
+        return eff_histograms
 
     @property
     def energy_bins(self):
@@ -304,7 +317,7 @@ class SimtelIOEventHistograms:
             100,
         )
 
-    def calculate_cumulative_data(self, is_1d=True):
+    def calculate_cumulative_data(self):
         """
         Calculate cumulative distributions for triggered event histograms.
 
@@ -317,26 +330,37 @@ class SimtelIOEventHistograms:
 
         """
         cumulative_data = {}
+        suffix = self.histogram_types()["cumulative"]["suffix"]
 
         # Calculate normalized cumulative for 2D vs_energy histograms
         for hist_key in self.histograms:
-            if not is_1d and hist_key.endswith("_vs_energy") and not hist_key.endswith("_mc"):
-                output_key = f"normalized_cumulative_{hist_key}"
+            if hist_key.endswith("_vs_energy") and not hist_key.endswith("_mc"):
+                output_key = f"{hist_key}{suffix}"
                 hist = self.histograms.get(hist_key)
                 cumulative_data[output_key] = self._calculate_cumulative_histogram(
                     hist, axis=0, normalize=True
                 )
+                cumulative_data[f"{output_key}_bin_x_edges"] = self.histograms[
+                    f"{hist_key}_bin_x_edges"
+                ]
+                cumulative_data[f"{output_key}_bin_y_edges"] = self.histograms[
+                    f"{hist_key}_bin_y_edges"
+                ]
 
         # Calculate cumulative for 1D histograms
         for hist_key in ["energy", "core_distance", "angular_distance"]:
-            if is_1d and hist_key in self.histograms:
-                output_key = f"cumulative_{hist_key}"
+            if hist_key in self.histograms:
+                output_key = f"{hist_key}{suffix}"
                 hist = self.histograms.get(hist_key)
                 reverse = hist_key == "energy"  # Only energy uses reverse cumulative
                 cumulative_data[output_key] = self._calculate_cumulative_histogram(
                     hist, reverse=reverse
                 )
+                cumulative_data[f"{output_key}_bin_edges"] = self.histograms[
+                    f"{hist_key}_bin_edges"
+                ]
 
+        self.histograms.update(cumulative_data)
         return cumulative_data
 
     def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None, normalize=False):
