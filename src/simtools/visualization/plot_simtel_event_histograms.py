@@ -119,7 +119,7 @@ def _generate_1d_plots(histograms, labels, limits):
                 histograms,
                 config,
                 hist_1d_params,
-                labels["event_count"],
+                labels["event_count"] if histo_type["suffix"] != "_eff" else "Efficiency",
                 suffix=histo_type["suffix"],
                 title=histo_type["title"],
             )

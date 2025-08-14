@@ -225,45 +225,49 @@ class SimtelIOEventHistograms:
         Assumes that for each histogram with simulated events, there is a
         corresponding histogram with triggered events.
         """
+
+        def calculate_efficiency(sim_hist, mc_hist):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                return np.divide(
+                    sim_hist,
+                    mc_hist,
+                    out=np.zeros_like(sim_hist, dtype=float),
+                    where=mc_hist > 0,
+                )
+
+        def copy_bin_edges(base_name, eff_name, new_histograms):
+            if f"{base_name}_bin_edges" in self.histograms:
+                new_histograms[f"{eff_name}_bin_edges"] = self.histograms[f"{base_name}_bin_edges"]
+            elif (
+                f"{base_name}_bin_x_edges" in self.histograms
+                and f"{base_name}_bin_y_edges" in self.histograms
+            ):
+                new_histograms[f"{eff_name}_bin_x_edges"] = self.histograms[
+                    f"{base_name}_bin_x_edges"
+                ]
+                new_histograms[f"{eff_name}_bin_y_edges"] = self.histograms[
+                    f"{base_name}_bin_y_edges"
+                ]
+
         new_histograms = {}
         for name, mc_hist in self.histograms.items():
-            if name.endswith("_mc"):
-                base_name = name[:-3]
-                if base_name in self.histograms:
-                    eff_name = f"{base_name}_eff"
-                    sim_hist = self.histograms[base_name]
+            if not name.endswith("_mc"):
+                continue
 
-                    if mc_hist.shape != sim_hist.shape:
-                        self._logger.warning(
-                            f"Shape mismatch for {base_name} and {name}, "
-                            "skipping efficiency calculation."
-                        )
-                        continue
+            base_name = name[:-3]
+            sim_hist = self.histograms.get(base_name)
+            if sim_hist is None:
+                continue
 
-                    with np.errstate(divide="ignore", invalid="ignore"):
-                        eff_hist = np.divide(
-                            sim_hist,
-                            mc_hist,
-                            out=np.zeros_like(sim_hist, dtype=float),
-                            where=mc_hist > 0,
-                        )
+            if mc_hist.shape != sim_hist.shape:
+                self._logger.warning(
+                    f"Shape mismatch for {base_name} and {name}, skipping efficiency calculation."
+                )
+                continue
 
-                    new_histograms[eff_name] = eff_hist
-
-                    if f"{base_name}_bin_edges" in self.histograms:
-                        new_histograms[f"{eff_name}_bin_edges"] = self.histograms[
-                            f"{base_name}_bin_edges"
-                        ]
-                    elif (
-                        f"{base_name}_bin_x_edges" in self.histograms
-                        and f"{base_name}_bin_y_edges" in self.histograms
-                    ):
-                        new_histograms[f"{eff_name}_bin_x_edges"] = self.histograms[
-                            f"{base_name}_bin_x_edges"
-                        ]
-                        new_histograms[f"{eff_name}_bin_y_edges"] = self.histograms[
-                            f"{base_name}_bin_y_edges"
-                        ]
+            eff_name = f"{base_name}_eff"
+            new_histograms[eff_name] = calculate_efficiency(sim_hist, mc_hist)
+            copy_bin_edges(base_name, eff_name, new_histograms)
 
         self.histograms.update(new_histograms)
 
