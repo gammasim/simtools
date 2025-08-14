@@ -59,8 +59,7 @@ def _generate_plot_configurations(histograms, limits):
         "core_y": "Core Y [m]",
     }
 
-    plots = {}
-    plots.update(_generate_1d_plots(histograms, labels, limits))
+    plots = _generate_1d_plots(histograms, labels, limits)
     plots.update(_generate_2d_plots(histograms, labels, limits))
     return plots
 
@@ -211,7 +210,6 @@ def _execute_plotting_loop(plots, output_path, rebin_factor, array_name):
     for plot_key, plot_args in plots.items():
         plot_filename = plot_args.pop("filename")
 
-        # Skip plots with no data
         if plot_args.get("data") is None:
             _logger.warning(f"Skipping plot {plot_key} - no data available")
             continue

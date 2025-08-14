@@ -13,6 +13,7 @@ class SimtelIOEventHistograms:
     Generate and fill histograms for shower and triggered events.
 
     Event data is read from the reduced MC event data file.
+    Calculate cumulative and relative (efficiency) distributions.
 
     Parameters
     ----------
@@ -29,7 +30,6 @@ class SimtelIOEventHistograms:
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
         self.array_name = array_name
-        self.telescope_list = telescope_list
 
         self.histograms = {}
         self.file_info = {}
@@ -246,20 +246,6 @@ class SimtelIOEventHistograms:
                     where=mc_hist > 0,
                 )
 
-        def copy_bin_edges(base_name, eff_name, new_histograms):
-            if f"{base_name}_bin_edges" in self.histograms:
-                new_histograms[f"{eff_name}_bin_edges"] = self.histograms[f"{base_name}_bin_edges"]
-            elif (
-                f"{base_name}_bin_x_edges" in self.histograms
-                and f"{base_name}_bin_y_edges" in self.histograms
-            ):
-                new_histograms[f"{eff_name}_bin_x_edges"] = self.histograms[
-                    f"{base_name}_bin_x_edges"
-                ]
-                new_histograms[f"{eff_name}_bin_y_edges"] = self.histograms[
-                    f"{base_name}_bin_y_edges"
-                ]
-
         eff_histograms = {}
         suffix = self.histogram_types()["efficiency"]["suffix"]
         for name, mc_hist in self.histograms.items():
@@ -279,10 +265,21 @@ class SimtelIOEventHistograms:
 
             eff_name = f"{base_name}{suffix}"
             eff_histograms[eff_name] = calculate_efficiency(sim_hist, mc_hist)
-            copy_bin_edges(base_name, eff_name, eff_histograms)
+            self._copy_bin_edges(base_name, eff_name, eff_histograms)
 
         self.histograms.update(eff_histograms)
         return eff_histograms
+
+    def _copy_bin_edges(self, base_name, new_name, new_histograms):
+        """Copy bin edges into histogram dictionary."""
+        if f"{base_name}_bin_edges" in self.histograms:
+            new_histograms[f"{new_name}_bin_edges"] = self.histograms[f"{base_name}_bin_edges"]
+        elif (
+            f"{base_name}_bin_x_edges" in self.histograms
+            and f"{base_name}_bin_y_edges" in self.histograms
+        ):
+            new_histograms[f"{new_name}_bin_x_edges"] = self.histograms[f"{base_name}_bin_x_edges"]
+            new_histograms[f"{new_name}_bin_y_edges"] = self.histograms[f"{base_name}_bin_y_edges"]
 
     @property
     def energy_bins(self):
@@ -340,12 +337,7 @@ class SimtelIOEventHistograms:
                 cumulative_data[output_key] = self._calculate_cumulative_histogram(
                     hist, axis=0, normalize=True
                 )
-                cumulative_data[f"{output_key}_bin_x_edges"] = self.histograms[
-                    f"{hist_key}_bin_x_edges"
-                ]
-                cumulative_data[f"{output_key}_bin_y_edges"] = self.histograms[
-                    f"{hist_key}_bin_y_edges"
-                ]
+                self._copy_bin_edges(hist_key, output_key, cumulative_data)
 
         # Calculate cumulative for 1D histograms
         for hist_key in ["energy", "core_distance", "angular_distance"]:
@@ -356,9 +348,7 @@ class SimtelIOEventHistograms:
                 cumulative_data[output_key] = self._calculate_cumulative_histogram(
                     hist, reverse=reverse
                 )
-                cumulative_data[f"{output_key}_bin_edges"] = self.histograms[
-                    f"{hist_key}_bin_edges"
-                ]
+                self._copy_bin_edges(hist_key, output_key, cumulative_data)
 
         self.histograms.update(cumulative_data)
         return cumulative_data
@@ -396,9 +386,7 @@ class SimtelIOEventHistograms:
                 result = result / np.sum(hist)
             return result
 
-        if axis is None:
-            axis = 1
-
+        axis = axis if axis is not None else 1
         result = self._apply_cumsum_along_axis(hist.copy(), axis, reverse)
 
         if normalize:
@@ -445,9 +433,7 @@ class SimtelIOEventHistograms:
 
     def _calculate_cumulative_2d(self, hist, reverse, axis=None):
         """Calculate cumulative distribution for 2D histogram."""
-        if axis is None:
-            axis = 1
-
+        axis = axis if axis is not None else 1
         return self._apply_cumsum_along_axis(hist, axis, reverse)
 
     def _apply_cumsum_along_axis(self, hist, axis, reverse):
