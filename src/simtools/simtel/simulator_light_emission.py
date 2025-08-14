@@ -16,7 +16,7 @@ from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.visualization.visualize import (
     plot_simtel_ctapipe,
-    plot_simtel_event_image,
+    plot_simtel_peak_timing,
     plot_simtel_time_traces,
     plot_simtel_waveform_pcolormesh,
 )
@@ -841,49 +841,44 @@ class SimulatorLightEmission(SimtelRunner):
             self._logger.warning(f"ctapipe image plotting failed: {ex}")
 
     def _plot_flasher_outputs(self, filename, args_dict, distance, figures):
-        """Plot generic image plus flasher-specific figures (event images, traces, pcolormesh)."""
-        # Generic image first
+        """Plot generic image plus traces, peak timing, and pcolormesh for flashers."""
+        # Generic image (first event)
         self._plot_calibration_outputs(filename, args_dict, distance, figures)
 
-        # Dedicated event images for flasher and pedestal
-        for etype in ("flasher", "pedestal"):
-            try:
-                fig_et = plot_simtel_event_image(
-                    filename,
-                    event_type=etype,
-                    cleaning_args=(
-                        args_dict["boundary_thresh"],
-                        args_dict["picture_thresh"],
-                        args_dict["min_neighbors"],
-                    ),
-                    distance=distance,
-                    return_cleaned=args_dict["return_cleaned"],
-                )
-                if fig_et is not None:
-                    figures.append(fig_et)
-                    self._logger.info(f"Added {etype} camera image figure")
-            except (RuntimeError, ValueError, OSError):
-                self._logger.info(f"No {etype} event image available for plotting")
+        # Time traces (prefer flasher-type event if available)
+        n_pixels = args_dict.get("n_trace_pixels", 6)
+        try:
+            fig_tr = plot_simtel_time_traces(
+                filename,
+                event_type="flasher",
+                n_pixels=n_pixels,
+            )
+            if fig_tr is not None:
+                figures.append(fig_tr)
+                self._logger.info(f"Added time-trace figure ({n_pixels} pixels)")
+        except (RuntimeError, ValueError, OSError) as ex:
+            self._logger.info(f"No event time traces available for plotting: {ex}")
 
-        # Time traces for a few pixels for both types
-        n_pixels = args_dict.get("n_trace_pixels", 3)
-        for etype in ("flasher", "pedestal"):
-            try:
-                fig_tr = plot_simtel_time_traces(
-                    filename,
-                    event_type=etype,
-                    n_pixels=n_pixels,
-                )
-                if fig_tr is not None:
-                    figures.append(fig_tr)
-                    self._logger.info(f"Added {etype} time-trace figure ({n_pixels} pixels)")
-            except (RuntimeError, ValueError, OSError):
-                self._logger.info(f"No {etype} event time traces available for plotting")
+        # Peak timing (histogram + example traces)
+        try:
+            fig_pk = plot_simtel_peak_timing(
+                filename,
+                event_type="flasher",
+                sum_threshold=float(args_dict.get("peak_timing_sum_threshold", 20.0)),
+                peak_width=int(args_dict.get("peak_timing_peak_width", 10)),
+                examples=int(args_dict.get("peak_timing_examples", 5)),
+            )
+            if fig_pk is not None:
+                figures.append(fig_pk)
+                self._logger.info("Added peak timing figure")
+        except (RuntimeError, ValueError, OSError) as ex:
+            self._logger.info(f"Peak timing plot not available: {ex}")
 
-        # Waveform matrix (samples vs pixel) pcolormesh (once per file)
+        # Waveform matrix (pcolormesh) as additional diagnostic
         try:
             fig_pc = plot_simtel_waveform_pcolormesh(
                 filename,
+                event_type="flasher",
                 pixel_step=args_dict.get("pcolormesh_pixel_step"),
                 vmax=args_dict.get("pcolormesh_vmax"),
             )
