@@ -84,6 +84,7 @@ simtools-production-derive-statistics <applications/simtools-production-derive-s
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
+simtools-simulate-calibration-events <applications/simtools-simulate-calibration-events>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
 simtools-simulate-prod <applications/simtools-simulate-prod>
