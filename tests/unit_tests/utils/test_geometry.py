@@ -108,3 +108,24 @@ def test_calculate_circular_mean():
     angles = np.array([0.1, 0.2, 0.3])
     expected = 0.2
     assert pytest.approx(transf.calculate_circular_mean(angles), abs=1e-6) == expected
+
+
+def test_solid_angle():
+    # Test with angle in radians
+    angle_rad = 1 * u.rad
+    expected_solid_angle_rad = 2 * np.pi * (1 - np.cos(angle_rad)) * u.rad
+    assert transf.solid_angle(angle_rad) == expected_solid_angle_rad
+
+    # Test with angle in degrees
+    angle_deg = 90 * u.deg
+    expected_solid_angle_deg = 2 * np.pi * (1 - np.cos(angle_deg.to(u.rad))) * u.rad
+    assert transf.solid_angle(angle_deg) == expected_solid_angle_deg
+
+    # Test with zero angle
+    angle_zero = 0 * u.rad
+    assert transf.solid_angle(angle_zero) == 0 * u.rad
+
+    # Test with a full circle (360 degrees)
+    angle_full_circle = 360 * u.deg
+    expected_solid_angle_full_circle = 2 * np.pi * (1 - np.cos(angle_full_circle.to(u.rad))) * u.rad
+    assert transf.solid_angle(angle_full_circle) == expected_solid_angle_full_circle

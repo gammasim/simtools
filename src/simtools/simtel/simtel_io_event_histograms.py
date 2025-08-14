@@ -54,6 +54,109 @@ class SimtelIOEventHistograms:
         """
         return self.histograms.get(key, default)
 
+    def fill(self):
+        """
+        Fill histograms with event data.
+
+        Involves looping over all event data, and therefore is the slowest part of the
+        histogram module. Adds the histograms to the histogram dictionary.
+
+        Assume that all event data files are generated with similar configurations
+        (self.file_info contains the file info of the last file).
+        """
+        for data_set in self.reader.data_sets:
+            self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
+            _file_info_table, shower_data, event_data, triggered_data = self.reader.read_event_data(
+                self.event_data_file, table_name_map=data_set
+            )
+            _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
+            self.file_info = {
+                "energy_min": _file_info_table["energy_min"].to("TeV"),
+                "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
+                "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
+            }
+
+            hist_defs = self._histogram_definitions(event_data, triggered_data, shower_data)
+
+            for name, data, bins, hist1d in hist_defs:
+                self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
+
+            # TODO temporary break to run one file only
+            break
+
+    def _histogram_definitions(self, event_data, triggered_data, shower_data):
+        """
+        Generate list with definitions and data for filling of histograms.
+
+        Parameters
+        ----------
+        event_data : EventData
+            The event data to use for filling the histograms.
+        triggered_data : TriggeredData
+            The triggered data to use for filling the histograms.
+        shower_data : ShowerData
+            The shower data to use for filling the histograms.
+
+        Returns
+        -------
+         list
+            List with histogram definitions and data.
+        """
+        xy_bins = np.linspace(
+            -1.0 * self.core_distance_bins.max(),
+            self.core_distance_bins.max(),
+            len(self.core_distance_bins),
+        )
+        return [
+            ("energy", event_data.simulated_energy, self.energy_bins, True),
+            ("energy_mc", shower_data.simulated_energy, self.energy_bins, True),
+            ("core_distance", event_data.core_distance_shower, self.core_distance_bins, True),
+            (
+                "core_distance_mc",
+                shower_data.core_distance_shower,
+                self.core_distance_bins,
+                True,
+            ),
+            ("angular_distance", triggered_data.angular_distance, self.view_cone_bins, True),
+            ("angular_distance_mc", shower_data.angular_distance, self.view_cone_bins, True),
+            (
+                "x_core_shower_vs_y_core_shower",
+                (event_data.x_core_shower, event_data.y_core_shower),
+                [xy_bins, xy_bins],
+                False,
+            ),
+            (
+                "x_core_shower_vs_y_core_shower_mc",
+                (shower_data.x_core_shower, shower_data.y_core_shower),
+                [xy_bins, xy_bins],
+                False,
+            ),
+            (
+                "core_vs_energy",
+                (event_data.core_distance_shower, event_data.simulated_energy),
+                [self.core_distance_bins, self.energy_bins],
+                False,
+            ),
+            (
+                "core_vs_energy_mc",
+                (shower_data.core_distance_shower, shower_data.simulated_energy),
+                [self.core_distance_bins, self.energy_bins],
+                False,
+            ),
+            (
+                "angular_distance_vs_energy",
+                (triggered_data.angular_distance, event_data.simulated_energy),
+                [self.view_cone_bins, self.energy_bins],
+                False,
+            ),
+            (
+                "angular_distance_vs_energy_mc",
+                (shower_data.angular_distance, shower_data.simulated_energy),
+                [self.view_cone_bins, self.energy_bins],
+                False,
+            ),
+        ]
+
     def _fill_histogram_and_bin_edges(self, name, data, bins, hist1d=True):
         """
         Fill histogram and bin edges and it both to histogram dictionary.
@@ -81,95 +184,6 @@ class SimtelIOEventHistograms:
                 self.histograms[name] = hist
                 self.histograms[f"{name}_bin_x_edges"] = x_edges
                 self.histograms[f"{name}_bin_y_edges"] = y_edges
-
-    def fill(self):
-        """
-        Fill histograms with event data.
-
-        Involves looping over all event data, and therefore is the slowest part of the
-        histogram module. Adds the histograms to the histogram dictionary.
-
-        Assume that all event data files are generated with similar configurations
-        (self.file_info contains the file info of the last file).
-        """
-        for data_set in self.reader.data_sets:
-            self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
-            _file_info_table, shower_data, event_data, triggered_data = self.reader.read_event_data(
-                self.event_data_file, table_name_map=data_set
-            )
-            _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
-            self.file_info = {
-                "energy_min": _file_info_table["energy_min"].to("TeV"),
-                "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
-                "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
-            }
-
-            xy_bins = np.linspace(
-                -1.0 * self.core_distance_bins.max(),
-                self.core_distance_bins.max(),
-                len(self.core_distance_bins),
-            )
-
-            hist_defs = [
-                ("energy", event_data.simulated_energy, self.energy_bins, True),
-                ("energy_mc", shower_data.simulated_energy, self.energy_bins, True),
-                ("core_distance", event_data.core_distance_shower, self.core_distance_bins, True),
-                (
-                    "core_distance_mc",
-                    shower_data.core_distance_shower,
-                    self.core_distance_bins,
-                    True,
-                ),
-                ("angular_distance", triggered_data.angular_distance, self.view_cone_bins, True),
-                ("angular_distance_mc", shower_data.angular_distance, self.view_cone_bins, True),
-                (
-                    "x_core_shower_vs_y_core_shower",
-                    (event_data.x_core_shower, event_data.y_core_shower),
-                    [xy_bins, xy_bins],
-                    False,
-                ),
-                (
-                    "x_core_shower_vs_y_core_shower_mc",
-                    (shower_data.x_core_shower, shower_data.y_core_shower),
-                    [xy_bins, xy_bins],
-                    False,
-                ),
-                (
-                    "core_vs_energy",
-                    (event_data.core_distance_shower, event_data.simulated_energy),
-                    [self.core_distance_bins, self.energy_bins],
-                    False,
-                ),
-                (
-                    "core_vs_energy_mc",
-                    (shower_data.core_distance_shower, shower_data.simulated_energy),
-                    [self.core_distance_bins, self.energy_bins],
-                    False,
-                ),
-                (
-                    "angular_distance_vs_energy",
-                    (triggered_data.angular_distance, event_data.simulated_energy),
-                    [self.view_cone_bins, self.energy_bins],
-                    False,
-                ),
-                (
-                    "angular_distance_vs_energy_mc",
-                    (shower_data.angular_distance, shower_data.simulated_energy),
-                    [self.view_cone_bins, self.energy_bins],
-                    False,
-                ),
-            ]
-
-            for name, data, bins, hist1d in hist_defs:
-                self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
-
-            print(
-                len(shower_data.angular_distance),
-                min(shower_data.angular_distance),
-                max(shower_data.angular_distance),
-            )
-
-            break
 
     @property
     def energy_bins(self):
