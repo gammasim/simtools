@@ -54,6 +54,24 @@ class SimtelIOEventHistograms:
         """
         return self.histograms.get(key, default)
 
+    @staticmethod
+    def histogram_types():
+        """
+        Return histogram types and corresponding plot titles.
+
+        This is mostly used for plotting purposes, to define the suffixes and titles
+
+        Returns
+        -------
+        dict
+            Dictionary describing histogram types.
+        """
+        return {
+            "triggered": {"suffix": "", "title": "Triggered events"},
+            "mc": {"suffix": "_mc", "title": "Simulated events"},
+            "efficiency": {"suffix": "_eff", "title": "Efficiency"},
+        }
+
     def fill(self):
         """
         Fill histograms with event data.
@@ -83,6 +101,8 @@ class SimtelIOEventHistograms:
 
             # TODO temporary break to run one file only
             break
+
+        self._fill_efficiency_histograms()
 
     def _histogram_definitions(self, event_data, triggered_data, shower_data):
         """
@@ -198,6 +218,55 @@ class SimtelIOEventHistograms:
                 self.histograms[f"{name}_bin_x_edges"] = x_edges
                 self.histograms[f"{name}_bin_y_edges"] = y_edges
 
+    def _fill_efficiency_histograms(self):
+        """
+        Fill efficiency histograms (triggered divided by simulated).
+
+        Assumes that for each histogram with simulated events, there is a
+        corresponding histogram with triggered events.
+        """
+        new_histograms = {}
+        for name, mc_hist in self.histograms.items():
+            if name.endswith("_mc"):
+                base_name = name[:-3]
+                if base_name in self.histograms:
+                    eff_name = f"{base_name}_eff"
+                    sim_hist = self.histograms[base_name]
+
+                    if mc_hist.shape != sim_hist.shape:
+                        self._logger.warning(
+                            f"Shape mismatch for {base_name} and {name}, "
+                            "skipping efficiency calculation."
+                        )
+                        continue
+
+                    with np.errstate(divide="ignore", invalid="ignore"):
+                        eff_hist = np.divide(
+                            sim_hist,
+                            mc_hist,
+                            out=np.zeros_like(sim_hist, dtype=float),
+                            where=mc_hist > 0,
+                        )
+
+                    new_histograms[eff_name] = eff_hist
+
+                    if f"{base_name}_bin_edges" in self.histograms:
+                        new_histograms[f"{eff_name}_bin_edges"] = self.histograms[
+                            f"{base_name}_bin_edges"
+                        ]
+                    elif (
+                        f"{base_name}_bin_x_edges" in self.histograms
+                        and f"{base_name}_bin_y_edges" in self.histograms
+                    ):
+                        new_histograms[f"{eff_name}_bin_x_edges"] = self.histograms[
+                            f"{base_name}_bin_x_edges"
+                        ]
+                        new_histograms[f"{eff_name}_bin_y_edges"] = self.histograms[
+                            f"{base_name}_bin_y_edges"
+                        ]
+
+        self.histograms.update(new_histograms)
+
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
@@ -231,7 +300,7 @@ class SimtelIOEventHistograms:
             100,
         )
 
-    def calculate_cumulative_data(self):
+    def calculate_cumulative_data(self, is_1d=True):
         """
         Calculate cumulative distributions for triggered event histograms.
 
@@ -247,7 +316,7 @@ class SimtelIOEventHistograms:
 
         # Calculate normalized cumulative for 2D vs_energy histograms
         for hist_key in self.histograms:
-            if hist_key.endswith("_vs_energy") and not hist_key.endswith("_mc"):
+            if not is_1d and hist_key.endswith("_vs_energy") and not hist_key.endswith("_mc"):
                 output_key = f"normalized_cumulative_{hist_key}"
                 hist = self.histograms.get(hist_key)
                 cumulative_data[output_key] = self._calculate_cumulative_histogram(
@@ -256,7 +325,7 @@ class SimtelIOEventHistograms:
 
         # Calculate cumulative for 1D histograms
         for hist_key in ["energy", "core_distance", "angular_distance"]:
-            if hist_key in self.histograms:
+            if is_1d and hist_key in self.histograms:
                 output_key = f"cumulative_{hist_key}"
                 hist = self.histograms.get(hist_key)
                 reverse = hist_key == "energy"  # Only energy uses reverse cumulative
