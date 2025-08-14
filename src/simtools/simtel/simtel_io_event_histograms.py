@@ -88,6 +88,9 @@ class SimtelIOEventHistograms:
         """
         Generate list with definitions and data for filling of histograms.
 
+        All histograms are defined for simulated and triggered event (note
+        the subtlety of triggered events being read from event_data and triggered_data).
+
         Parameters
         ----------
         event_data : EventData
@@ -107,55 +110,65 @@ class SimtelIOEventHistograms:
             self.core_distance_bins.max(),
             len(self.core_distance_bins),
         )
-        return [
-            ("energy", event_data.simulated_energy, self.energy_bins, True),
-            ("energy_mc", shower_data.simulated_energy, self.energy_bins, True),
-            ("core_distance", event_data.core_distance_shower, self.core_distance_bins, True),
+        hist_specs = [
             (
-                "core_distance_mc",
-                shower_data.core_distance_shower,
+                "energy",
+                [(event_data, "simulated_energy")],
+                self.energy_bins,
+                True,
+                [(shower_data, "simulated_energy")],
+            ),
+            (
+                "core_distance",
+                [(event_data, "core_distance_shower")],
                 self.core_distance_bins,
                 True,
+                [(shower_data, "core_distance_shower")],
             ),
-            ("angular_distance", triggered_data.angular_distance, self.view_cone_bins, True),
-            ("angular_distance_mc", shower_data.angular_distance, self.view_cone_bins, True),
+            (
+                "angular_distance",
+                [(triggered_data, "angular_distance")],
+                self.view_cone_bins,
+                True,
+                [(shower_data, "angular_distance")],
+            ),
             (
                 "x_core_shower_vs_y_core_shower",
-                (event_data.x_core_shower, event_data.y_core_shower),
+                [(event_data, "x_core_shower"), (event_data, "y_core_shower")],
                 [xy_bins, xy_bins],
                 False,
-            ),
-            (
-                "x_core_shower_vs_y_core_shower_mc",
-                (shower_data.x_core_shower, shower_data.y_core_shower),
-                [xy_bins, xy_bins],
-                False,
+                [(shower_data, "x_core_shower"), (shower_data, "y_core_shower")],
             ),
             (
                 "core_vs_energy",
-                (event_data.core_distance_shower, event_data.simulated_energy),
+                [(event_data, "core_distance_shower"), (event_data, "simulated_energy")],
                 [self.core_distance_bins, self.energy_bins],
                 False,
-            ),
-            (
-                "core_vs_energy_mc",
-                (shower_data.core_distance_shower, shower_data.simulated_energy),
-                [self.core_distance_bins, self.energy_bins],
-                False,
+                [(shower_data, "core_distance_shower"), (shower_data, "simulated_energy")],
             ),
             (
                 "angular_distance_vs_energy",
-                (triggered_data.angular_distance, event_data.simulated_energy),
+                [(triggered_data, "angular_distance"), (event_data, "simulated_energy")],
                 [self.view_cone_bins, self.energy_bins],
                 False,
-            ),
-            (
-                "angular_distance_vs_energy_mc",
-                (shower_data.angular_distance, shower_data.simulated_energy),
-                [self.view_cone_bins, self.energy_bins],
-                False,
+                [(shower_data, "angular_distance"), (shower_data, "simulated_energy")],
             ),
         ]
+
+        hists = []
+        for name, fields_ev, bins, one_d, fields_mc in hist_specs:
+            hists.append(
+                (name, tuple(getattr(obj, f) for obj, f in fields_ev), bins, one_d)
+                if len(fields_ev) > 1
+                else (name, getattr(fields_ev[0][0], fields_ev[0][1]), bins, one_d)
+            )
+
+            hists.append(
+                (f"{name}_mc", tuple(getattr(obj, f) for obj, f in fields_mc), bins, one_d)
+                if len(fields_mc) > 1
+                else (f"{name}_mc", getattr(fields_mc[0][0], fields_mc[0][1]), bins, one_d)
+            )
+        return hists
 
     def _fill_histogram_and_bin_edges(self, name, data, bins, hist1d=True):
         """
