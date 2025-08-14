@@ -1120,13 +1120,116 @@ def plot_simtel_step_traces(
     return fig
 
 
+def _detect_peaks(trace, peak_width, signal_mod):
+    """Return indices of peaks using CWT if available, else find_peaks fallback."""
+    import numpy as np  # pylint: disable=import-outside-toplevel
+
+    peaks = []
+    try:
+        if hasattr(signal_mod, "find_peaks_cwt"):
+            peaks = signal_mod.find_peaks_cwt(trace, widths=np.array([peak_width]))
+        if not np.any(peaks):
+            peaks, _ = signal_mod.find_peaks(trace, prominence=np.max(trace) * 0.1)
+    except (ValueError, RuntimeError, TypeError):
+        peaks = []
+    return np.asarray(peaks, dtype=int) if np.size(peaks) else np.array([], dtype=int)
+
+
+def _collect_peak_samples(w, sum_threshold, peak_width, signal_mod):
+    """Compute peak sample per pixel, return samples, considered pixel ids and count with peaks."""
+    import numpy as np  # pylint: disable=import-outside-toplevel
+
+    n_pix, _ = w.shape
+    sums = w.sum(axis=1)
+    has_signal = sums > float(sum_threshold)
+    pix_ids = np.arange(n_pix)[has_signal]
+    if pix_ids.size == 0:
+        return None, None, 0
+
+    peak_samples = []
+    found_count = 0
+    for pid in pix_ids:
+        trace = w[int(pid)]
+        pks = _detect_peaks(trace, peak_width, signal_mod)
+        if pks.size:
+            found_count += 1
+            peak_idx = int(pks[np.argmax(trace[pks])])
+        else:
+            peak_idx = int(np.argmax(trace))
+        peak_samples.append(peak_idx)
+
+    return np.asarray(peak_samples), pix_ids, found_count
+
+
+def _histogram_edges(n_samp, timing_bins):
+    """Return contiguous histogram bin edges for sample indices."""
+    import numpy as np  # pylint: disable=import-outside-toplevel
+
+    if timing_bins and timing_bins > 0:
+        return np.linspace(-0.5, n_samp - 0.5, int(timing_bins) + 1)
+    return np.arange(-0.5, n_samp + 0.5, 1.0)
+
+
+def _draw_peak_hist(
+    ax,
+    peak_samples,
+    edges,
+    mean_sample,
+    std_sample,
+    tel_id,
+    et_name,
+    considered,
+    found_count,
+):
+    """Draw contiguous-bar histogram, stats overlays, and annotations."""
+    import numpy as np  # pylint: disable=import-outside-toplevel
+
+    counts, edges = np.histogram(peak_samples, bins=edges)
+    ax.bar(edges[:-1], counts, width=np.diff(edges), color="#5B90DC", align="edge")
+    ax.set_xlim(edges[0], edges[-1])
+    ax.set_xlabel("peak sample")
+    ax.set_ylabel("N pixels")
+    ax.axvline(
+        mean_sample,
+        color="#D8153C",
+        linestyle="--",
+        label=f"mean={mean_sample:.2f}",
+    )
+    ax.axvspan(
+        mean_sample - std_sample,
+        mean_sample + std_sample,
+        color="#D8153C",
+        alpha=0.2,
+        label=f"std={std_sample:.2f}",
+    )
+    ax.set_title(f"CT{tel_id} peak timing ({et_name})")
+    ax.text(
+        0.98,
+        0.95,
+        f"considered: {considered}\npeaks found: {found_count}",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=7,
+        bbox={
+            "boxstyle": "round,pad=0.2",
+            "facecolor": "white",
+            "alpha": 0.6,
+            "linewidth": 0.0,
+        },
+    )
+    ax.legend(fontsize=7)
+
+
 def plot_simtel_peak_timing(
     filename,
     event_type: str | None = None,
     tel_id: int | None = None,
     sum_threshold: float = 10.0,
     peak_width: int = 8,
-    examples: int = 5,
+    examples: int = 3,
+    timing_bins: int | None = None,
+    return_stats: bool = False,
 ):
     """
     Peak finding per pixel; report mean/std of peak sample and plot a histogram.
@@ -1142,19 +1245,16 @@ def plot_simtel_peak_timing(
         Expected peak width (samples).
     examples : int
         Number of example pixels to overlay with detected peaks.
+    timing_bins : int | None
+        If set, use this many bins for the peak-sample histogram; otherwise use
+        one bin per sample (edges at integer samples) to ensure contiguous bars.
+    return_stats : bool
+        If True, return (fig, stats_dict) where stats includes considered, found, mean, std.
     """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.io import EventSource
-
-    try:
-        from scipy import signal
-    except ImportError as exc:
-        _logger.error(
-            "scipy is required for peak finding but not available: "
-            f"{exc}. Install scipy to enable this plot."
-        )
-        return None
+    from scipy import signal as _signal
 
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source, event_type)
@@ -1177,64 +1277,44 @@ def plot_simtel_peak_timing(
     w = np.asarray(waveforms)
     if w.ndim == 3:
         w = w[0]
-    n_pix, n_samp = w.shape
+    _, n_samp = w.shape
 
-    # Select pixels with sufficient integrated signal
-    sums = w.sum(axis=1)
-    has_signal = sums > float(sum_threshold)
-    pix_ids = np.arange(n_pix)[has_signal]
-    if pix_ids.size == 0:
+    # Collect peak samples
+    peak_samples, pix_ids, found_count = _collect_peak_samples(
+        w, sum_threshold, peak_width, _signal
+    )
+    if peak_samples is None or pix_ids is None:
         _logger.warning("No pixels exceeded sum_threshold for peak timing")
         return None
 
-    peak_samples = []
-    for pid in pix_ids:
-        trace = w[int(pid)]
-        peaks = []
-        try:
-            if hasattr(signal, "find_peaks_cwt"):
-                peaks = signal.find_peaks_cwt(trace, widths=np.array([peak_width]))
-            if not np.any(peaks):
-                peaks, _ = signal.find_peaks(trace, prominence=np.max(trace) * 0.1)
-        except (ValueError, RuntimeError, TypeError):
-            peaks = []
-        if not np.any(peaks):
-            peak_idx = int(np.argmax(trace))
-        else:
-            # choose highest-amplitude peak among candidates
-            peaks = np.asarray(peaks, dtype=int)
-            peak_idx = int(peaks[np.argmax(trace[peaks])])
-        peak_samples.append(peak_idx)
-
-    peak_samples = np.asarray(peak_samples)
     mean_sample = float(np.mean(peak_samples))
     std_sample = float(np.std(peak_samples))
-    _logger.info(
-        f"Peak timing over {peak_samples.size} pixels: "
-        f"mean sample={mean_sample:.2f}, std={std_sample:.2f}"
-    )
+
+    parts = [
+        f"Peak timing over {peak_samples.size} pixels:",
+        f"mean={mean_sample:.2f}, std={std_sample:.2f};",
+        f"considered={pix_ids.size}, peaks_found={found_count}",
+    ]
+    msg = " ".join(parts)
+    _logger.info(msg)
 
     # Build figure with histogram + example traces
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
-    ax1.hist(peak_samples, bins=min(50, max(10, n_samp // 2)), color="#5B90DC")
-    ax1.set_xlabel("peak sample")
-    ax1.set_ylabel("N pixels")
-    ax1.axvline(
-        mean_sample,
-        color="#D8153C",
-        linestyle="--",
-        label=f"mean={mean_sample:.2f}",
-    )
-    ax1.axvspan(
-        mean_sample - std_sample,
-        mean_sample + std_sample,
-        color="#D8153C",
-        alpha=0.2,
-        label=f"std={std_sample:.2f}",
-    )
+
+    # Histogram with contiguous bars
+    edges = _histogram_edges(n_samp, timing_bins)
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    ax1.set_title(f"CT{tel_id} peak timing ({et_name})")
-    ax1.legend(fontsize=7)
+    _draw_peak_hist(
+        ax1,
+        peak_samples,
+        edges,
+        mean_sample,
+        std_sample,
+        tel_id,
+        et_name,
+        pix_ids.size,
+        found_count,
+    )
 
     # Example traces with peaks
     readout = source.subarray.tel[tel_id].camera.readout
@@ -1247,23 +1327,24 @@ def plot_simtel_peak_timing(
     ex_ids = pix_ids[: max(1, int(examples))]
     for pid in ex_ids:
         trace = w[int(pid)]
-        # detect peaks again for plotting
-        try:
-            if hasattr(signal, "find_peaks_cwt"):
-                pks = signal.find_peaks_cwt(trace, widths=np.array([peak_width]))
-            else:
-                pks, _ = signal.find_peaks(trace, prominence=np.max(trace) * 0.1)
-        except (ValueError, RuntimeError, TypeError):
-            pks = []
+        pks = _detect_peaks(trace, peak_width, _signal)
         ax2.plot(t, trace, drawstyle="steps-mid", label=f"pix {int(pid)}")
-        if np.any(pks):
-            pks = np.asarray(pks, dtype=int)
+        if pks.size:
             ax2.scatter(t[pks], trace[pks], s=10)
     ax2.set_xlabel("time [ns]")
     ax2.set_ylabel("R1 samples [a.u.]")
     ax2.legend(fontsize=7)
 
     fig.tight_layout()
+
+    if return_stats:
+        stats = {
+            "considered": int(pix_ids.size),
+            "found": int(found_count),
+            "mean": float(mean_sample),
+            "std": float(std_sample),
+        }
+        return fig, stats
     return fig
 
 
