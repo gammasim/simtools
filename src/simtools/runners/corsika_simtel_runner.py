@@ -43,6 +43,7 @@ class CorsikaSimtelRunner:
         use_multipipe=False,
         sim_telarray_seeds=None,
         sequential=False,
+        calibration_runner_args=None,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = (
@@ -55,6 +56,7 @@ class CorsikaSimtelRunner:
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
         self.sequential = "--sequential" if sequential else ""
+        self.calibration_runner_args = calibration_runner_args
 
         self.base_corsika_config.set_output_file_and_directory(use_multipipe)
         self.corsika_runner = CorsikaRunner(
@@ -124,11 +126,18 @@ class CorsikaSimtelRunner:
 
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
-                run_command = simulator_array.make_run_command(
-                    run_number=run_number,
-                    input_file="-",  # instruct sim_telarray to take input from standard output
-                    weak_pointing=self._determine_pointing_option(self.label),
-                )
+                if self.calibration_runner_args:
+                    run_command = simulator_array.make_run_command_for_calibration_simulations(
+                        run_number=run_number,
+                        input_file="-",  # instruct sim_telarray to take input from standard output
+                        calibration_runner_args=self.calibration_runner_args,
+                    )
+                else:
+                    run_command = simulator_array.make_run_command(
+                        run_number=run_number,
+                        input_file="-",  # instruct sim_telarray to take input from standard output
+                        weak_pointing=self._determine_pointing_option(self.label),
+                    )
                 file.write(f"{run_command}")
                 file.write("\n")
         self._logger.info(f"Multipipe script: {multipipe_file}")
