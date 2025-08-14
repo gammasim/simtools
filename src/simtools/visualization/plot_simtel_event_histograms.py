@@ -34,9 +34,7 @@ def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=N
     """
     _logger.info(f"Plotting histograms written to {output_path}")
 
-    plots = _generate_plot_configurations(
-        histograms, histograms.calculate_cumulative_data(), limits
-    )
+    plots = _generate_plot_configurations(histograms, limits)
     _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
 
 
@@ -50,7 +48,7 @@ def _get_limits(limits):
     )
 
 
-def _generate_plot_configurations(histograms, cumulative_data, limits):
+def _generate_plot_configurations(histograms, limits):
     """Generate plot configurations for all histogram types."""
     # Plot label constants
     labels = {
@@ -64,12 +62,12 @@ def _generate_plot_configurations(histograms, cumulative_data, limits):
     }
 
     plots = {}
-    plots.update(_generate_1d_plots(histograms, cumulative_data, labels, limits))
-    plots.update(_generate_2d_plots(histograms, cumulative_data, labels, limits))
+    plots.update(_generate_1d_plots(histograms, labels, limits))
+    plots.update(_generate_2d_plots(histograms, labels, limits))
     return plots
 
 
-def _generate_1d_plots(histograms, cumulative_data, labels, limits):
+def _generate_1d_plots(histograms, labels, limits):
     """Generate 1D histogram plot configurations."""
     hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
     hist_1d_cumulative_params = {"color": "tab:blue", "edgecolor": "tab:blue", "lw": 1}
@@ -112,15 +110,19 @@ def _generate_1d_plots(histograms, cumulative_data, labels, limits):
         },
     ]
 
-    for config in plot_configs:
-        plots[config["base_key"]] = _create_1d_plot_config(
-            histograms, config, hist_1d_params, labels["event_count"], False
-        )
+    cumulative_data = histograms.calculate_cumulative_data(is_1d=True)
 
-        mc_key = f"{config['base_key']}_mc"
-        plots[mc_key] = _create_1d_plot_config(
-            histograms, config, hist_1d_params, labels["event_count"], True
-        )
+    for config in plot_configs:
+        for histo_type in histograms.histogram_types().values():
+            _key = f"{config['base_key']}{histo_type['suffix']}"
+            plots[_key] = _create_1d_plot_config(
+                histograms,
+                config,
+                hist_1d_params,
+                labels["event_count"],
+                suffix=histo_type["suffix"],
+                title=histo_type["title"],
+            )
 
         cumulative_key = f"{config['base_key']}_cumulative"
         plots[cumulative_key] = _create_1d_cumulative_plot_config(
@@ -135,11 +137,9 @@ def _generate_1d_plots(histograms, cumulative_data, labels, limits):
     return plots
 
 
-def _create_1d_plot_config(histograms, config, plot_params, event_count_label, is_mc=False):
+def _create_1d_plot_config(histograms, config, plot_params, event_count_label, suffix, title):
     """Create a 1D plot configuration."""
-    suffix = "_mc" if is_mc else ""
     histogram_key = f"{config['histogram_key']}{suffix}"
-    event_type = "Simulated events" if is_mc else "Triggered events"
 
     lines = {}
     if config["line_value"] is not None:
@@ -153,7 +153,7 @@ def _create_1d_plot_config(histograms, config, plot_params, event_count_label, i
         "labels": {
             "x": config["x_label"],
             "y": event_count_label,
-            "title": f"{event_type}: {config['title_base']}",
+            "title": f"{title}: {config['title_base']}",
         },
         "scales": config["scales"],
         "lines": lines,
@@ -185,12 +185,7 @@ def _create_1d_cumulative_plot_config(
     }
 
 
-def _generate_2d_plots(
-    histograms,
-    cumulative_data,
-    labels,
-    limits,
-):
+def _generate_2d_plots(histograms, labels, limits):
     """Generate 2D histogram plot configurations."""
     hist_2d_params = {"norm": "log", "cmap": "viridis", "show_contour": False}
     hist_2d_equal_params = {
@@ -239,11 +234,14 @@ def _generate_2d_plots(
         },
     ]
 
+    cumulative_data = histograms.calculate_cumulative_data(is_1d=False)
+
     for config in plot_configs:
-        plots[config["base_key"]] = _create_2d_plot_config(histograms, config, False)
-        mc_config = config.copy()
-        mc_config["event_type"] = "Simulated events"
-        plots[f"{config['base_key']}_mc"] = _create_2d_plot_config(histograms, mc_config, True)
+        for histo_type in histograms.histogram_types().values():
+            _key = f"{config['base_key']}{histo_type['suffix']}"
+            plots[_key] = _create_2d_plot_config(
+                histograms, config, histo_type["suffix"], histo_type["title"]
+            )
 
         # Cumulative version (only for plots that make sense to have cumulative)
         if config["base_key"] != "x_core_shower_vs_y_core_shower":
@@ -258,9 +256,8 @@ def _generate_2d_plots(
     return plots
 
 
-def _create_2d_plot_config(histograms, config, is_mc=False):
+def _create_2d_plot_config(histograms, config, suffix, title):
     """Create a 2D plot configuration."""
-    suffix = "_mc" if is_mc else ""
     base_key = config["base_key"]
     data_key = f"{base_key}{suffix}"
 
@@ -283,7 +280,7 @@ def _create_2d_plot_config(histograms, config, is_mc=False):
         "labels": {
             "x": config["x_label"],
             "y": config["y_label"],
-            "title": f"{config['event_type']}: {distance_type}",
+            "title": f"{title}: {distance_type}",
         },
         "lines": config["lines"],
         "scales": config.get("scales", {}),
