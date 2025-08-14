@@ -864,8 +864,8 @@ class SimulatorLightEmission(SimtelRunner):
             fig_pk = plot_simtel_peak_timing(
                 filename,
                 event_type="flasher",
-                sum_threshold=float(args_dict.get("peak_timing_sum_threshold", 20.0)),
-                peak_width=int(args_dict.get("peak_timing_peak_width", 10)),
+                sum_threshold=float(args_dict.get("peak_timing_sum_threshold", 15.0)),
+                peak_width=int(args_dict.get("peak_timing_peak_width", 8)),
                 examples=int(args_dict.get("peak_timing_examples", 5)),
             )
             if fig_pk is not None:
