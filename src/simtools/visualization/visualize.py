@@ -20,6 +20,8 @@ __all__ = [
     "plot_hist_2d",
     "plot_simtel_ctapipe",
     "plot_simtel_event_image",
+    "plot_simtel_integrated_pedestal_image",
+    "plot_simtel_integrated_signal_image",
     "plot_simtel_peak_timing",
     "plot_simtel_step_traces",
     "plot_simtel_time_traces",
@@ -1345,6 +1347,150 @@ def plot_simtel_peak_timing(
             "std": float(std_sample),
         }
         return fig, stats
+    return fig
+
+
+def plot_simtel_integrated_signal_image(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    half_width: int = 8,
+):
+    """Plot camera image of integrated signal per pixel around the flasher peak.
+
+    The integration window is centered on each pixel's peak sample with +/- half_width samples.
+
+    Returns matplotlib.figure.Figure or None if unavailable.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.io import EventSource
+    from ctapipe.visualization import CameraDisplay
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if r1_tel_ids:
+        tel_id = tel_id or r1_tel_ids[0]
+    else:
+        _logger.warning("Event has no R1 data for integrated-signal image")
+        return None
+
+    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
+    if waveforms is None:
+        _logger.warning("No R1 waveforms available in event")
+        return None
+
+    w = np.asarray(waveforms)
+    if w.ndim == 3:
+        w = w[0]
+    n_pix, n_samp = w.shape
+
+    win_len = 2 * int(half_width) + 1
+    img = np.zeros(n_pix, dtype=float)
+    for pid in range(n_pix):
+        trace = w[pid]
+        peak_idx = int(np.argmax(trace))
+        a = max(0, peak_idx - half_width)
+        b = min(n_samp, peak_idx + half_width + 1)
+        img[pid] = float(np.sum(trace[a:b]))
+
+    geometry = source.subarray.tel[tel_id].camera.geometry
+    fig, ax = plt.subplots(dpi=300)
+    disp = CameraDisplay(geometry, image=img, norm="lin", ax=ax)
+    disp.cmap = "viridis"
+    disp.add_colorbar(fraction=0.02, pad=-0.1)
+    disp.set_limits_percent(100)
+
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    ax.set_title(
+        f"CT{tel_id} integrated signal (win {win_len}) ({et_name})",
+        pad=20,
+    )
+    ax.set_axis_off()
+    fig.tight_layout()
+    return fig
+
+
+def plot_simtel_integrated_pedestal_image(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    half_width: int = 8,
+    gap: int = 16,
+):
+    """Plot camera image of integrated pedestal per pixel away from the flasher peak.
+
+    For each pixel, a pedestal window of length (2*half_width+1) samples is chosen starting
+    at peak_idx + gap when possible; otherwise a window before the peak is used.
+
+    Returns matplotlib.figure.Figure or None if unavailable.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.io import EventSource
+    from ctapipe.visualization import CameraDisplay
+
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source, event_type)
+    if event is None:
+        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+        return None
+
+    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if r1_tel_ids:
+        tel_id = tel_id or r1_tel_ids[0]
+    else:
+        _logger.warning("Event has no R1 data for integrated-pedestal image")
+        return None
+
+    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
+    if waveforms is None:
+        _logger.warning("No R1 waveforms available in event")
+        return None
+
+    w = np.asarray(waveforms)
+    if w.ndim == 3:
+        w = w[0]
+    n_pix, n_samp = w.shape
+
+    win_len = 2 * int(half_width) + 1
+    img = np.zeros(n_pix, dtype=float)
+    for pid in range(n_pix):
+        trace = w[pid]
+        peak_idx = int(np.argmax(trace))
+        start = peak_idx + int(gap)
+        if start + win_len <= n_samp:
+            a = start
+            b = start + win_len
+        else:
+            # fallback before peak
+            start = max(0, peak_idx - int(gap) - win_len)
+            a = start
+            b = min(n_samp, start + win_len)
+        if a >= b:
+            a = 0
+            b = min(n_samp, win_len)
+        img[pid] = float(np.sum(trace[a:b]))
+
+    geometry = source.subarray.tel[tel_id].camera.geometry
+    fig, ax = plt.subplots(dpi=300)
+    disp = CameraDisplay(geometry, image=img, norm="lin", ax=ax)
+    disp.cmap = "cividis"
+    disp.add_colorbar(fraction=0.02, pad=-0.1)
+    disp.set_limits_percent(100)
+
+    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    ax.set_title(
+        f"CT{tel_id} integrated pedestal (win {win_len}, gap {gap}) ({et_name})",
+        pad=20,
+    )
+    ax.set_axis_off()
+    fig.tight_layout()
     return fig
 
 

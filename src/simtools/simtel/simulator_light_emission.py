@@ -16,6 +16,8 @@ from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.visualization.visualize import (
     plot_simtel_ctapipe,
+    plot_simtel_integrated_pedestal_image,
+    plot_simtel_integrated_signal_image,
     plot_simtel_peak_timing,
     plot_simtel_time_traces,
     plot_simtel_waveform_pcolormesh,
@@ -842,9 +844,28 @@ class SimulatorLightEmission(SimtelRunner):
             self._logger.warning(f"ctapipe image plotting failed: {ex}")
 
     def _plot_flasher_outputs(self, filename, args_dict, distance, figures):
-        """Plot generic image plus traces, peak timing, and pcolormesh for flashers."""
+        """Plot generic image plus traces, peak timing, waveform matrix, and charge images."""
         # Generic image (first event)
         self._plot_calibration_outputs(filename, args_dict, distance, figures)
+
+        # Integrated charge around peak
+
+        fig_sig = plot_simtel_integrated_signal_image(
+            filename, event_type="flasher", half_width=int(args_dict.get("charge_half_width", 8))
+        )
+        if fig_sig is not None:
+            figures.append(fig_sig)
+            self._logger.info("Added integrated signal image")
+
+        fig_ped = plot_simtel_integrated_pedestal_image(
+            filename,
+            event_type="flasher",
+            half_width=int(args_dict.get("pedestal_half_width", 8)),
+            gap=int(args_dict.get("pedestal_gap", 16)),
+        )
+        if fig_ped is not None:
+            figures.append(fig_ped)
+            self._logger.info("Added integrated pedestal image")
 
         # Time traces (prefer flasher-type event if available)
         n_pixels = args_dict.get("n_trace_pixels", 6)
