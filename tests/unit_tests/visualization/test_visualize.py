@@ -434,6 +434,41 @@ def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
     assert any("No event found" in r.message for r in caplog.records)
 
 
+def test_plot_simtel_event_image_with_cleaning(monkeypatch):
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_event_image(DUMMY_SIMTEL, return_cleaned=True)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_event_image_missing_dl1(monkeypatch, caplog):
+    ev, tel_id = _fake_event(dl1_image=None)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=visualize._logger.name):
+        fig = visualize.plot_simtel_event_image(DUMMY_SIMTEL)
+    assert fig is None
+    assert any("Event has no DL1 or R1 telescope data" in r.message for r in caplog.records)
+
+
+def test_plot_simtel_event_image_annotations(monkeypatch):
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_event_image(DUMMY_SIMTEL, distance=100 * u.m)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
 def test_plot_simtel_time_traces_returns_figure(monkeypatch):
     w = _make_waveforms(5, 20)
     ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
@@ -444,6 +479,44 @@ def test_plot_simtel_time_traces_returns_figure(monkeypatch):
     fig = visualize.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=3)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
+
+
+def test_plot_simtel_time_traces_pixel_selection(monkeypatch):
+    w = _make_waveforms(10, 20)
+    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=5)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_time_traces_with_tel_id(monkeypatch):
+    w = _make_waveforms(5, 20)
+    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=tel_id, n_pixels=3)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_time_traces_invalid_tel_id(monkeypatch, caplog):
+    w = _make_waveforms(5, 20)
+    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=visualize._logger.name):
+        fig = visualize.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=9999)
+    assert fig is None
+    assert any("No R1 waveforms available" in r.message for r in caplog.records)
 
 
 def test_plot_simtel_waveform_pcolormesh_returns_figure(monkeypatch):
