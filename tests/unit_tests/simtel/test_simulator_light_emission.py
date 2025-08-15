@@ -370,7 +370,7 @@ def test_make_simtel_script(mock_simulator):
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
                 "/path/to/sim_telarray/bin/sim_telarray/ "
-                "-I -I/path/to/config/ "
+                "-I/path/to/config/ -I/path/to/sim_telarray/bin/sim_telarray/ "
                 "-c /path/to/config/config.cfg "
                 "-DNUM_TELESCOPES=1 "
                 "-C altitude=999.0 -C atmospheric_transmission=atm_test "
