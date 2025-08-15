@@ -17,6 +17,8 @@ from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
 
+DUMMY_SIMTEL = "dummy.simtel.gz"
+
 
 @pytest.fixture
 def wavelength():
@@ -364,9 +366,11 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
 
     class _CameraCalibrator:
         def __init__(self, *a, **k):
+            # Intentional no-op stub used in tests to avoid real calibration
             pass
 
         def __call__(self, *a, **k):
+            # Intentional no-op stub used in tests
             return None
 
     class _CameraDisplay:
@@ -374,9 +378,11 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
             self.cmap = None
 
         def add_colorbar(self, *a, **k):
+            # Intentional no-op stub used in tests
             pass
 
         def set_limits_percent(self, *a, **k):
+            # Intentional no-op stub used in tests
             pass
 
     def _tailcuts_clean(*a, **k):
@@ -406,7 +412,7 @@ def test_plot_simtel_event_image_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = visualize.plot_simtel_event_image("dummy.simtel.gz", return_cleaned=False)
+    fig = visualize.plot_simtel_event_image(DUMMY_SIMTEL, return_cleaned=False)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -423,7 +429,7 @@ def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=visualize._logger.name):  # pylint:disable=protected-access
-        fig = visualize.plot_simtel_event_image("dummy.simtel.gz")
+        fig = visualize.plot_simtel_event_image(DUMMY_SIMTEL)
     assert fig is None
     assert any("No event found" in r.message for r in caplog.records)
 
@@ -435,7 +441,7 @@ def test_plot_simtel_time_traces_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = visualize.plot_simtel_time_traces("dummy.simtel.gz", n_pixels=3)
+    fig = visualize.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=3)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -447,7 +453,7 @@ def test_plot_simtel_waveform_pcolormesh_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = visualize.plot_simtel_waveform_pcolormesh("dummy.simtel.gz", pixel_step=2)
+    fig = visualize.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL, pixel_step=2)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -459,7 +465,7 @@ def test_plot_simtel_step_traces_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = visualize.plot_simtel_step_traces("dummy.simtel.gz", pixel_step=5, max_pixels=3)
+    fig = visualize.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=5, max_pixels=3)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -472,7 +478,7 @@ def test_plot_simtel_time_traces_no_waveforms(monkeypatch, caplog):
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=visualize._logger.name):  # pylint:disable=protected-access
-        fig = visualize.plot_simtel_time_traces("dummy.simtel.gz")
+        fig = visualize.plot_simtel_time_traces(DUMMY_SIMTEL)
     assert fig is None
     assert any("No R1 waveforms available" in r.message for r in caplog.records)
 
@@ -547,7 +553,7 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
     # Install fake ctapipe that wraps our source
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig, stats = visualize.plot_simtel_peak_timing("dummy.simtel.gz", return_stats=True)
+    fig, stats = visualize.plot_simtel_peak_timing(DUMMY_SIMTEL, return_stats=True)
     assert isinstance(fig, plt.Figure)
     assert isinstance(stats, dict)
     # Threshold is strict '>' 10.0, so pixel with sum=10 is excluded
@@ -663,7 +669,7 @@ def test_plot_simtel_integrated_signal_image_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = visualize.plot_simtel_integrated_signal_image("dummy.simtel.gz", half_width=2)
+    fig = visualize.plot_simtel_integrated_signal_image(DUMMY_SIMTEL, half_width=2)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -676,6 +682,6 @@ def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = visualize.plot_simtel_integrated_pedestal_image("dummy.simtel.gz", half_width=2, gap=5)
+    fig = visualize.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, gap=5)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)

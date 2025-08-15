@@ -31,6 +31,12 @@ __all__ = [
     "set_style",
 ]
 
+# Reusable literal constants
+AXES_FRACTION = "axes fraction"
+NO_R1_WAVEFORMS_MSG = "No R1 waveforms available in event"
+TIME_NS_LABEL = "time [ns]"
+R1_SAMPLES_LABEL = "R1 samples [a.u.]"
+
 COLORS = {}
 COLORS["classic"] = [
     "#ba2c54",
@@ -726,7 +732,7 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
         f"distance: {d_str}",
         xy=(0, 0),
         xytext=(0.1, 1),
-        xycoords="axes fraction",
+        xycoords=AXES_FRACTION,
         va="top",
         size=7,
     )
@@ -734,7 +740,7 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
         f"dl1 image,\ntotal ADC counts: {np.round(np.sum(image))}\n",
         xy=(0, 0),
         xytext=(0.75, 1),
-        xycoords="axes fraction",
+        xycoords=AXES_FRACTION,
         va="top",
         ha="left",
         size=7,
@@ -871,7 +877,7 @@ def plot_simtel_event_image(
         f"distance: {d_str}",
         xy=(0, 0),
         xytext=(0.1, 1),
-        xycoords="axes fraction",
+        xycoords=AXES_FRACTION,
         va="top",
         size=7,
     )
@@ -940,7 +946,7 @@ def plot_simtel_time_traces(
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
-        _logger.warning("No R1 waveforms available in event")
+        _logger.warning(NO_R1_WAVEFORMS_MSG)
         return None
 
     # Handle waveform shape (n_chan, n_pix, n_samp) or (n_pix, n_samp)
@@ -966,8 +972,8 @@ def plot_simtel_time_traces(
     fig, ax = plt.subplots(dpi=300)
     for pid in pix_ids:
         ax.plot(t, w[pid], label=f"pix {int(pid)}", drawstyle="steps-mid")
-    ax.set_xlabel("time [ns]")
-    ax.set_ylabel("R1 samples [a.u.]")
+    ax.set_xlabel(TIME_NS_LABEL)
+    ax.set_ylabel(R1_SAMPLES_LABEL)
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
@@ -1024,7 +1030,7 @@ def plot_simtel_waveform_pcolormesh(
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
-        _logger.warning("No R1 waveforms available in event")
+        _logger.warning(NO_R1_WAVEFORMS_MSG)
         return None
 
     w = np.asarray(waveforms)
@@ -1049,12 +1055,12 @@ def plot_simtel_waveform_pcolormesh(
     fig, ax = plt.subplots(dpi=300)
     mesh = ax.pcolormesh(t, pix_idx, w_sel, shading="auto", vmax=vmax)
     cbar = fig.colorbar(mesh, ax=ax)
-    cbar.set_label("R1 samples [a.u.]")
+    cbar.set_label(R1_SAMPLES_LABEL)
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
     ax.set_title(f"{tel_label} waveform matrix ({et_name})")
-    ax.set_xlabel("time [ns]")
+    ax.set_xlabel(TIME_NS_LABEL)
     ax.set_ylabel("pixel id")
     fig.tight_layout()
     return fig
@@ -1099,7 +1105,7 @@ def plot_simtel_step_traces(
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
-        _logger.warning("No R1 waveforms available in event")
+        _logger.warning(NO_R1_WAVEFORMS_MSG)
         return None
 
     w = np.asarray(waveforms)
@@ -1121,8 +1127,8 @@ def plot_simtel_step_traces(
     fig, ax = plt.subplots(dpi=300)
     for pid in pix_ids:
         ax.plot(t, w[int(pid)], label=f"pix {int(pid)}", drawstyle="steps-mid")
-    ax.set_xlabel("time [ns]")
-    ax.set_ylabel("R1 samples [a.u.]")
+    ax.set_xlabel(TIME_NS_LABEL)
+    ax.set_ylabel(R1_SAMPLES_LABEL)
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
@@ -1283,7 +1289,7 @@ def plot_simtel_peak_timing(
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
-        _logger.warning("No R1 waveforms available in event")
+        _logger.warning(NO_R1_WAVEFORMS_MSG)
         return None
 
     w = np.asarray(waveforms)
@@ -1345,8 +1351,8 @@ def plot_simtel_peak_timing(
         ax2.plot(t, trace, drawstyle="steps-mid", label=f"pix {int(pid)}")
         if pks.size:
             ax2.scatter(t[pks], trace[pks], s=10)
-    ax2.set_xlabel("time [ns]")
-    ax2.set_ylabel("R1 samples [a.u.]")
+    ax2.set_xlabel(TIME_NS_LABEL)
+    ax2.set_ylabel(R1_SAMPLES_LABEL)
     ax2.legend(fontsize=7)
 
     fig.tight_layout()
@@ -1394,7 +1400,7 @@ def plot_simtel_integrated_signal_image(
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
-        _logger.warning("No R1 waveforms available in event")
+        _logger.warning(NO_R1_WAVEFORMS_MSG)
         return None
 
     w = np.asarray(waveforms)
@@ -1464,7 +1470,7 @@ def plot_simtel_integrated_pedestal_image(
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
-        _logger.warning("No R1 waveforms available in event")
+        _logger.warning(NO_R1_WAVEFORMS_MSG)
         return None
 
     w = np.asarray(waveforms)

@@ -17,6 +17,8 @@ from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general as gen
 from simtools.visualization.visualize import plot_simtel_ctapipe
 
+SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
+
 
 @pytest.fixture(name="label")
 def label_fixture():
@@ -396,10 +398,8 @@ def test_make_simtel_script(mock_simulator):
 
 
 @patch("os.system")
-@patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._make_light_emission_script"
-)
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._make_simtel_script")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._make_light_emission_script")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._make_simtel_script")
 @patch("builtins.open", create=True)
 def test_prepare_script(
     mock_open,
@@ -500,8 +500,8 @@ def test_calculate_distance_telescope_calibration_device_variable(mock_simulator
     assert distances[1].value == pytest.approx(200)
 
 
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.run_simulation")
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.save_figures_to_pdf")
 def test_simulate_variable_distances(
     mock_save_figures, mock_run_simulation, mock_simulator_variable
 ):
@@ -516,8 +516,8 @@ def test_simulate_variable_distances(
     mock_save_figures.assert_called_once()
 
 
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.run_simulation")
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.save_figures_to_pdf")
 def test_simulate_layout_positions(mock_save_figures, mock_run_simulation, mock_simulator):
     """Test simulating light emission for layout positions."""
     args_dict = {"telescope": "LSTN-01"}
@@ -529,11 +529,9 @@ def test_simulate_layout_positions(mock_save_figures, mock_run_simulation, mock_
     mock_save_figures.assert_called_once()
 
 
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._plot_simulation_output")
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_distance_for_plotting")
-@patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_simulation_output_filename"
-)
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._plot_simulation_output")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_distance_for_plotting")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_simulation_output_filename")
 def test_process_simulation_output(
     mock_get_simulation_output_filename,
     mock_get_distance_for_plotting,
@@ -593,9 +591,7 @@ def test_get_distance_for_plotting_with_z_pos(mock_simulator_variable):
     assert distance == 1000 * u.m
 
 
-@patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_simulation_output_filename"
-)
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_simulation_output_filename")
 def test_process_simulation_output_attribute_error(
     mock_get_simulation_output_filename, mock_simulator_variable
 ):
@@ -636,7 +632,7 @@ def test_get_distance_for_plotting(mock_simulator_variable):
         assert np.isclose(distance.to_value(u.m), 1500.0)
 
 
-@patch("simtools.simtel.simulator_light_emission.save_figs_to_pdf")
+@patch(f"{SIM_MOD_PATH}.save_figs_to_pdf")
 def test_save_figures_to_pdf(mock_save_figs_to_pdf, mock_simulator_variable):
     """Test the save_figures_to_pdf method."""
     figures = [Mock(), Mock()]  # Mock figures
@@ -652,7 +648,7 @@ def test_save_figures_to_pdf(mock_save_figs_to_pdf, mock_simulator_variable):
     )
 
 
-@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.process_simulation_output")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.process_simulation_output")
 @patch("subprocess.run")
 @patch("builtins.open", new_callable=mock_open)
 def test_run_simulation(
@@ -730,7 +726,7 @@ def _make_dummy_fig():
 def sim_instance():
     # Create instance without running __init__ to avoid heavy deps
     inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger("simtools.simtel.simulator_light_emission")
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
 
     def fake_calib(filename, args_dict, distance, figures):
         figures.append(_make_dummy_fig())
@@ -756,7 +752,7 @@ def test_plot_flasher_outputs_success(monkeypatch, sim_instance, caplog):
 
     figures = []
     caplog.clear()
-    with caplog.at_level(logging.INFO, logger="simtools.simtel.simulator_light_emission"):
+    with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
         sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 6}, None, figures)
 
     # 1 calibration + 5 plots (signal, pedestal, traces, peak timing, pcolormesh)
@@ -788,7 +784,7 @@ def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
 
     figures = []
     caplog.clear()
-    with caplog.at_level(logging.INFO, logger="simtools.simtel.simulator_light_emission"):
+    with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
         sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 3}, None, figures)
 
     # Only calibration figure appended
