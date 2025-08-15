@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=aff0d452"></script>
+    <script src="_static/documentation_options.js?v=b2fe2b92"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g427c62b" />
+  <meta name="docsearch:version" content="0.1.dev1+gd79d744" />
   </head>
   
   
@@ -621,10 +621,10 @@
 </li>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_json_or_yaml_files">compare_json_or_yaml_files() (in module testing.validate_output)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator.compute_efficiency_and_uncertainties">compute_efficiency_and_uncertainties() (production_configuration.calculate_statistical_uncertainties_grid_point.StatisticalUncertaintyEvaluator method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_lower_energy_limit">compute_lower_energy_limit() (in module production_configuration.derive_corsika_limits)</a>
@@ -708,6 +708,8 @@
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system">convert_telescope_altitude_from_corsika_system() (layout.telescope_position.TelescopePosition static method)</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">convert_telescope_altitude_to_corsika_system() (layout.telescope_position.TelescopePosition static method)</a>
+</li>
+      <li><a href="api-reference/mc_model.html#model.model_repository.copy_and_update_production_table">copy_and_update_production_table() (in module model.model_repository)</a>
 </li>
       <li><a href="api-reference/io.html#simtools.io.table_handler.copy_metadata_to_hdf5">copy_metadata_to_hdf5() (in module simtools.io.table_handler)</a>
 </li>
@@ -1652,6 +1654,27 @@
         <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.main">(in module simulate_light_emission)</a>
 </li>
       </ul></li>
+      <li>
+    maintain_simulation_model_add_production_table
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-maintain-simulation-model-add-production-table.html#module-maintain_simulation_model_add_production_table">module</a>
+</li>
+      </ul></li>
+      <li>
+    maintain_simulation_model_compare_productions
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-maintain-simulation-model-compare-productions.html#module-maintain_simulation_model_compare_productions">module</a>
+</li>
+      </ul></li>
+      <li>
+    maintain_simulation_model_verify_production_tables
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-maintain-simulation-model-verify-production-tables.html#module-maintain_simulation_model_verify_production_tables">module</a>
+</li>
+      </ul></li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_array.SimulatorArray.make_run_command">make_run_command() (simtel.simulator_array.SimulatorArray method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations">make_run_command_for_calibration_simulations() (simtel.simulator_array.SimulatorArray method)</a>
@@ -1864,6 +1887,12 @@
 </li>
         <li><a href="api-reference/array_layout.html#module-layout.telescope_position">layout.telescope_position</a>
 </li>
+        <li><a href="user-guide/applications/simtools-maintain-simulation-model-add-production-table.html#module-maintain_simulation_model_add_production_table">maintain_simulation_model_add_production_table</a>
+</li>
+        <li><a href="user-guide/applications/simtools-maintain-simulation-model-compare-productions.html#module-maintain_simulation_model_compare_productions">maintain_simulation_model_compare_productions</a>
+</li>
+        <li><a href="user-guide/applications/simtools-maintain-simulation-model-verify-production-tables.html#module-maintain_simulation_model_verify_production_tables">maintain_simulation_model_verify_production_tables</a>
+</li>
         <li><a href="user-guide/applications/simtools-merge-tables.html#module-merge_tables">merge_tables</a>
 </li>
         <li><a href="api-reference/mc_model.html#module-model.array_model">model.array_model</a>
@@ -2015,8 +2044,6 @@
         <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#module-validate_file_using_schema">validate_file_using_schema</a>
 </li>
         <li><a href="user-guide/applications/simtools-validate-optics.html#module-validate_optics">validate_optics</a>
-</li>
-        <li><a href="user-guide/applications/simtools-verify-simulation-model-production-tables.html#module-verify_simulation_model_production_tables">verify_simulation_model_production_tables</a>
 </li>
         <li><a href="api-reference/dependencies.html#module-version">version</a>
 </li>
@@ -3003,13 +3030,6 @@
 </li>
       <li><a href="api-reference/utils.html#utils.names.validate_site_name">validate_site_name() (in module utils.names)</a>
 </li>
-      <li>
-    verify_simulation_model_production_tables
-
-      <ul>
-        <li><a href="user-guide/applications/simtools-verify-simulation-model-production-tables.html#module-verify_simulation_model_production_tables">module</a>
-</li>
-      </ul></li>
       <li><a href="api-reference/mc_model.html#model.model_repository.verify_simulation_model_production_tables">verify_simulation_model_production_tables() (in module model.model_repository)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.VERITASHandler">VERITASHandler (class in visualization.legend_handlers)</a>

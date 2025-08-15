@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=aff0d452"></script>
+    <script src="../../_static/documentation_options.js?v=b2fe2b92"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g427c62b" />
+  <meta name="docsearch:version" content="0.1.dev1+gd79d744" />
   </head>
   
   
@@ -440,7 +440,9 @@
 <span class="sd">functions to interact with and verify the repository.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
@@ -570,6 +572,202 @@
         <span class="o">/</span> <span class="n">parameter_name</span>
         <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2">.json&quot;</span>
     <span class="p">)</span>
+
+
+<div class="viewcode-block" id="copy_and_update_production_table">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_repository.copy_and_update_production_table">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_and_update_production_table</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Copy and update simulation model production tables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict: dict</span>
+<span class="sd">        Dictionary containing the arguments for copying and updating production tables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">modifications</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;modifications&quot;</span><span class="p">])</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="n">modifications</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;changes&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">model_version</span> <span class="o">=</span> <span class="n">modifications</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span>
+
+    <span class="n">simulation_models_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simulation_models_path&quot;</span><span class="p">])</span>
+    <span class="n">source_prod_table_path</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">simulation_models_path</span> <span class="o">/</span> <span class="s2">&quot;productions&quot;</span> <span class="o">/</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;source_prod_table_dir&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">target_prod_table_path</span> <span class="o">=</span> <span class="n">simulation_models_path</span> <span class="o">/</span> <span class="s2">&quot;productions&quot;</span> <span class="o">/</span> <span class="n">model_version</span>
+    <span class="n">model_parameters_dir</span> <span class="o">=</span> <span class="n">simulation_models_path</span> <span class="o">/</span> <span class="s2">&quot;model_parameters&quot;</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Copying production tables from </span><span class="si">{</span><span class="n">source_prod_table_path</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">target_prod_table_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_prod_table_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The target production table directory &#39;</span><span class="si">{</span><span class="n">target_prod_table_path</span><span class="si">}</span><span class="s2">&#39; already exists.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">source_prod_table_path</span><span class="p">,</span> <span class="n">target_prod_table_path</span><span class="p">)</span>
+
+    <span class="n">_apply_changes_to_production_tables</span><span class="p">(</span><span class="n">target_prod_table_path</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">parameters</span> <span class="ow">in</span> <span class="n">changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_data</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">):</span>
+                <span class="n">_create_new_parameter_entry</span><span class="p">(</span><span class="n">telescope</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_data</span><span class="p">,</span> <span class="n">model_parameters_dir</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_changes_to_production_tables</span><span class="p">(</span><span class="n">target_prod_table_path</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply changes to the production tables in the target directory.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_prod_table_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;configuration&quot;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">_apply_changes_to_production_table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_changes_to_production_table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively apply changes to the new production tables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: dict or list</span>
+<span class="sd">        The JSON data to be updated.</span>
+<span class="sd">    changes: dict</span>
+<span class="sd">        The changes to be applied.</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        The model version to be set in the JSON data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;model_version&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_version</span>
+        <span class="n">_update_parameters</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">changes</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">_apply_changes_to_production_table</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_parameters</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">changes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update parameters in the given dictionary based on changes.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">updates</span> <span class="ow">in</span> <span class="n">changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">telescope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_data</span> <span class="ow">in</span> <span class="n">updates</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">telescope</span><span class="p">]:</span>
+                <span class="n">old</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">telescope</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+                <span class="n">new</span> <span class="o">=</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updating &#39;</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&#39; from </span><span class="si">{</span><span class="n">old</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">telescope</span><span class="p">][</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Adding new parameter &#39;</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;with version </span><span class="si">{</span><span class="n">param_data</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">telescope</span><span class="p">][</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_new_parameter_entry</span><span class="p">(</span><span class="n">telescope</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_data</span><span class="p">,</span> <span class="n">model_parameters_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new model parameter JSON file by copying the latest version and updating fields.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    telescope: str</span>
+<span class="sd">        Name of the telescope.</span>
+<span class="sd">    param: str</span>
+<span class="sd">        Name of the parameter.</span>
+<span class="sd">    param_data: dict</span>
+<span class="sd">        Dictionary containing the parameter data including version and value.</span>
+<span class="sd">    model_parameters_dir: str</span>
+<span class="sd">        Path to the model parameters directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">telescope_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_parameters_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">telescope</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">telescope_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Directory for telescope &#39;</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">&#39; does not exist in &#39;</span><span class="si">{</span><span class="n">model_parameters_dir</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">param_dir</span> <span class="o">=</span> <span class="n">telescope_dir</span> <span class="o">/</span> <span class="n">param</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">param_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Directory for parameter &#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&#39; does not exist in &#39;</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">latest_file</span> <span class="o">=</span> <span class="n">_get_latest_model_parameter_file</span><span class="p">(</span><span class="n">param_dir</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">latest_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;No files found for parameter &#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&#39; in directory &#39;</span><span class="si">{</span><span class="n">param_dir</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">latest_file</span><span class="p">)</span>
+
+    <span class="n">json_data</span><span class="p">[</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_update_model_parameter_version</span><span class="p">(</span>
+        <span class="n">json_data</span><span class="p">,</span> <span class="n">param_data</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">telescope</span>
+    <span class="p">)</span>
+    <span class="n">json_data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+
+    <span class="n">new_file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">param_data</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.json&quot;</span>
+    <span class="n">new_file_path</span> <span class="o">=</span> <span class="n">param_dir</span> <span class="o">/</span> <span class="n">new_file_name</span>
+
+    <span class="k">with</span> <span class="n">new_file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Created new model parameter JSON file: </span><span class="si">{</span><span class="n">new_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_latest_model_parameter_file</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the latest model parameter JSON file for a parameter in the given directory.</span>
+
+<span class="sd">    Assume files are named in the format &#39;parameter-version.json&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    directory: str</span>
+<span class="sd">        Path to the directory containing parameter JSON files.</span>
+<span class="sd">    parameter: str</span>
+<span class="sd">        Name of the parameter to find.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Path to the latest JSON file for the parameter.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If no files for the parameter are found in the directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">directory_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">directory_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">-*.json&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;No JSON files found for parameter &#39;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&#39; in directory &#39;</span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Sort files by version number (assumes version is part of the filename)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">safe_parse_version</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">version_str</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">version_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">)</span>
+
+    <span class="n">files</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">safe_parse_version</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_model_parameter_version</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">param_data</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">telescope</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check for major version jump and print a warning if necessary.&quot;&quot;&quot;</span>
+    <span class="n">latest_version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">new_version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">new_version</span> <span class="o">&gt;</span> <span class="n">latest_version</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Major version jump from </span><span class="si">{</span><span class="n">latest_version</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_version</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;for parameter &#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&#39; in telescope &#39;</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
 </pre></div>
 
                 </article>
