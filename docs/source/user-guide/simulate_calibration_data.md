@@ -10,6 +10,8 @@ The simulation pipeline allows to simulate calibration data for various componen
 
 To generate calibration events, including pedestal, dark pedestal, and flasher events, use the `simtools-simulate-calibration-events` command.
 
+- [simtools-simulate-flasher](simulate_flasher): Simulate flasher devices for camera calibration.
+
 ## Muons
 
 ## Illuminators

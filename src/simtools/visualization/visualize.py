@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 """Module for visualization."""
 
-import copy
 import logging
 import re
 from collections import OrderedDict
-from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -23,6 +21,7 @@ __all__ = [
     "save_figure",
     "set_style",
 ]
+
 
 COLORS = {}
 COLORS["classic"] = [
@@ -627,105 +626,6 @@ def plot_hist_2d(data, **kwargs):
     return fig
 
 
-def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):
-    """
-    Read in a sim_telarray file and plots reconstructed photoelectrons via ctapipe.
-
-    Parameters
-    ----------
-    filename : str
-        Path to the sim_telarray file.
-    cleaning_args : tuple, optional
-        Cleaning parameters as (boundary_thresh, picture_thresh, min_number_picture_neighbors).
-    distance : astropy Quantity, optional
-        Distance to the target.
-    return_cleaned : bool, optional
-        If True, apply cleaning to the image.
-
-    Returns
-    -------
-    fig : matplotlib.figure.Figure
-        The matplotlib figure containing the plot.
-    """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.calib import CameraCalibrator
-    from ctapipe.image import tailcuts_clean
-    from ctapipe.io import EventSource
-    from ctapipe.visualization import CameraDisplay
-
-    default_cleaning_levels = {
-        "CHEC": (2, 4, 2),
-        "LSTCam": (3.5, 7, 2),
-        "FlashCam": (3.5, 7, 2),
-        "NectarCam": (4, 8, 2),
-    }
-
-    source = EventSource(filename, max_events=1)
-    event = None
-    events = [copy.deepcopy(event) for event in source]
-    if len(events) > 1:
-        event = events[-1]
-    else:
-        try:
-            event = events[0]
-        except IndexError:
-            event = events
-    tel_id = sorted(event.r1.tel.keys())[0]
-
-    calib = CameraCalibrator(subarray=source.subarray)
-    calib(event)
-
-    geometry = source.subarray.tel[1].camera.geometry
-    image = event.dl1.tel[tel_id].image
-    cleaned = image.copy()
-
-    if return_cleaned:
-        if cleaning_args is None:
-            boundary, picture, min_neighbors = default_cleaning_levels[geometry.name]
-        else:
-            boundary, picture, min_neighbors = cleaning_args
-        mask = tailcuts_clean(
-            geometry,
-            image,
-            picture_thresh=picture,
-            boundary_thresh=boundary,
-            min_number_picture_neighbors=min_neighbors,
-        )
-        cleaned[~mask] = 0
-
-    fig, ax = plt.subplots(dpi=300)
-    title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id}"
-    disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
-    disp.cmap = "RdBu_r"
-    disp.add_colorbar(fraction=0.02, pad=-0.1)
-    disp.set_limits_percent(100)
-    ax.set_title(title, pad=20)
-    ax.annotate(
-        f"tel type: {source.subarray.tel[1].type.name}\n"
-        f"optics: {source.subarray.tel[1].optics.name}\n"
-        f"camera: {source.subarray.tel[1].camera_name}\n"
-        f"distance: {distance.to(u.m)}",
-        xy=(0, 0),
-        xytext=(0.1, 1),
-        xycoords="axes fraction",
-        va="top",
-        size=7,
-    )
-    ax.annotate(
-        f"dl1 image,\ntotal $p.e._{{reco}}$: {np.round(np.sum(image))}\n",
-        xy=(0, 0),
-        xytext=(0.75, 1),
-        xycoords="axes fraction",
-        va="top",
-        ha="left",
-        size=7,
-    )
-    ax.set_axis_off()
-    fig.tight_layout()
-    return fig
-
-
 def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"):
     """
     Save figure to output file(s).
@@ -741,6 +641,9 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     title: str
         Title of the figure to be added to the log message.
     """
+    # pylint: disable=import-outside-toplevel
+    from pathlib import Path
+
     figure_format = figure_format or ["pdf", "png"]
     for fmt in figure_format:
         _file = Path(output_file).with_suffix(f".{fmt}")

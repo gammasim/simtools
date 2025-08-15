@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# pylint: disable=protected-access,redefined-outer-name,unused-argument
+
 import logging
 from pathlib import Path
 
@@ -51,12 +53,12 @@ def test_plot_1d(db, io_handler, wavelength):
         new_data[y_title] = new_data[y_title] * (1 - 0.1 * (i + 1))
         data[f"{100 * (1 - 0.1 * (i + 1))}%% reflectivity"] = new_data
 
-    plt = visualize.plot_1d(data, title=title, palette="autumn")
+    fig = visualize.plot_1d(data, title=title, palette="autumn")
 
     plot_file = io_handler.get_output_file(file_name="plot_1d.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
-    plt.savefig(plot_file)
+    fig.savefig(plot_file)
 
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
@@ -69,12 +71,12 @@ def test_plot_table(io_handler):
     title = "Test plot table"
     table = astropy.io.ascii.read("tests/resources/Transmission_Spectrum_PlexiGlass.dat")
 
-    plt = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
+    fig = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 
     plot_file = io_handler.get_output_file(file_name="plot_table.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
-    plt.savefig(plot_file)
+    fig.savefig(plot_file)
 
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
@@ -95,7 +97,7 @@ def test_add_unit(caplog, wavelength):
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
 
 
-def test_save_figure(tmp_test_directory, io_handler):
+def test_save_figure(io_handler):
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
     ax.set_title("Test Figure")
@@ -264,3 +266,40 @@ def test_plot_ratio_difference():
     yticks = len(ratio_ax.get_yticks())
     assert yticks <= 7
     plt.close(fig4)
+
+
+def test__histogram_edges_default_and_binned():
+    edges_default = visualize._histogram_edges(10, timing_bins=None)
+    assert np.allclose(edges_default[:3], [-0.5, 0.5, 1.5])
+    # For n_samp=10, edges go from -0.5 to 9.5 in steps of 1.0 -> 11 edges
+    assert edges_default.size == 11
+
+    edges_binned = visualize._histogram_edges(10, timing_bins=5)
+    # 5 bins -> 6 edges spanning -0.5 .. 9.5
+    assert np.isclose(edges_binned[0], -0.5)
+    assert np.isclose(edges_binned[-1], 9.5)
+    assert edges_binned.size == 6
+
+
+def test__draw_peak_hist_basic():
+    fig, ax = plt.subplots()
+    peak_samples = np.array([1, 2, 2, 3, 4, 4, 4])
+    edges = np.arange(-0.5, 6.5, 1.0)
+    visualize._draw_peak_hist(
+        ax,
+        peak_samples,
+        edges,
+        mean_sample=3.0,
+        std_sample=1.0,
+        tel_label="CT1",
+        et_name="flasher",
+        considered=7,
+        found_count=6,
+    )
+    # Bars added
+    assert len(ax.containers) >= 1
+    # Limits set to edge bounds
+    x0, x1 = ax.get_xlim()
+    assert np.isclose(x0, edges[0])
+    assert np.isclose(x1, edges[-1])
+    plt.close(fig)
