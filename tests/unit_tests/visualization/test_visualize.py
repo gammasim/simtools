@@ -515,7 +515,7 @@ def test__draw_peak_hist_basic():
 
 
 def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
-    # Build fake scipy.signal
+    # Build fake scipy.signal with fallback to find_peaks on argmax
     import sys
     from types import ModuleType
 
@@ -523,12 +523,10 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
     signal_mod = ModuleType("signal")
 
     def _find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-        # return the argmax as the only peak
         peak = int(np.argmax(trace))
         return np.array([peak]), {}
 
     def _find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-        # no cwt peaks -> force fallback
         return []
 
     signal_mod.find_peaks = _find_peaks
@@ -546,4 +544,138 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    monkeypatch.setattr(visualize, "EventSource", lambda *a, **k: src, raising=False)
+    # Install fake ctapipe that wraps our source
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig, stats = visualize.plot_simtel_peak_timing("dummy.simtel.gz", return_stats=True)
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(stats, dict)
+    # Threshold is strict '>' 10.0, so pixel with sum=10 is excluded
+    assert stats["considered"] == n_pix - 1
+    assert stats["found"] == n_pix - 1
+    assert np.isclose(stats["mean"], peak_idx)
+    assert np.isclose(stats["std"], 0.0)
+    plt.close(fig)
+
+
+def test__detect_peaks_prefers_cwt():
+    class _Sig:
+        @staticmethod
+        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
+            return [3, 7]
+
+        @staticmethod
+        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
+            return np.array([5]), {}
+
+    trace = np.zeros(10)
+    trace[7] = 1.0
+    peaks = visualize._detect_peaks(trace, peak_width=4, signal_mod=_Sig)  # pylint:disable=protected-access
+    np.testing.assert_array_equal(peaks, np.array([3, 7]))
+
+
+def test__detect_peaks_fallback_to_find_peaks():
+    class _Sig:
+        @staticmethod
+        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
+            return []
+
+        @staticmethod
+        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
+            return np.array([2]), {}
+
+    trace = np.array([0, 0.1, 2.0, 0.5, 0.0])
+    peaks = visualize._detect_peaks(trace, peak_width=3, signal_mod=_Sig)  # pylint:disable=protected-access
+    np.testing.assert_array_equal(peaks, np.array([2]))
+
+
+def test__detect_peaks_handles_errors():
+    class _Sig:
+        @staticmethod
+        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
+            raise RuntimeError("bad cwt")
+
+        @staticmethod
+        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
+            raise ValueError("bad fp")
+
+    trace = np.ones(5)
+    peaks = visualize._detect_peaks(trace, peak_width=2, signal_mod=_Sig)  # pylint:disable=protected-access
+    assert peaks.size == 0
+
+
+def test__collect_peak_samples_basic():
+    # Three pixels, two above threshold
+    w = np.array(
+        [
+            [0, 1, 3, 2, 0],  # sum=6
+            [0, 0, 0, 0, 0],  # sum=0 (excluded)
+            [1, 0, 2, 5, 1],  # sum=9
+        ],
+        dtype=float,
+    )
+
+    class _Sig:
+        @staticmethod
+        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
+            return []
+
+        @staticmethod
+        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
+            # return argmax as peak
+            return np.array([int(np.argmax(trace))]), {}
+
+    peak_samples, pix_ids, found = visualize._collect_peak_samples(  # pylint:disable=protected-access
+        w, sum_threshold=5.0, peak_width=3, signal_mod=_Sig
+    )
+    np.testing.assert_array_equal(pix_ids, np.array([0, 2]))
+    np.testing.assert_array_equal(peak_samples, np.array([2, 3]))
+    assert found == 2
+
+
+def test__collect_peak_samples_threshold_excludes_all():
+    w = np.ones((2, 4), dtype=float)
+
+    class _Sig:
+        @staticmethod
+        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
+            return []
+
+        @staticmethod
+        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
+            return np.array([0]), {}
+
+    peak_samples, pix_ids, found = visualize._collect_peak_samples(  # pylint:disable=protected-access
+        w, sum_threshold=10.0, peak_width=3, signal_mod=_Sig
+    )
+    assert peak_samples is None
+    assert pix_ids is None
+    assert found == 0
+
+
+def test_plot_simtel_integrated_signal_image_returns_figure(monkeypatch):
+    w = _make_waveforms(5, 16)
+    # add a clear peak to vary across pixels
+    w[0, 8] += 10
+    w[1, 9] += 12
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_integrated_signal_image("dummy.simtel.gz", half_width=2)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
+    w = _make_waveforms(4, 20)
+    w[2, 10] += 15
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = visualize.plot_simtel_integrated_pedestal_image("dummy.simtel.gz", half_width=2, gap=5)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
