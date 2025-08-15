@@ -500,7 +500,7 @@ def test__draw_peak_hist_basic():
         edges,
         mean_sample=3.0,
         std_sample=1.0,
-        tel_id=1,
+        tel_label="CT1",
         et_name="flasher",
         considered=7,
         found_count=6,
@@ -546,4 +546,4 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    monkeypatch.setattr(visualize, "EventSource", lambda *a, **k: src)
+    monkeypatch.setattr(visualize, "EventSource", lambda *a, **k: src, raising=False)
