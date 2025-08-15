@@ -182,19 +182,21 @@ def calculate_circular_mean(angles):
     return np.arctan2(sin_sum, cos_sum)
 
 
-@u.quantity_input(angle=u.rad)
-def solid_angle(angle):
+@u.quantity_input(angle_min=u.rad, angle_max=u.rad)
+def solid_angle(angle_max, angle_min=0 * u.rad):
     """
-    Calculate the solid angle subtended by a given angle.
+    Calculate the solid angle subtended by a given range of angles.
 
     Parameters
     ----------
-    angle: astropy.units.Quantity
-        The angle for which to calculate the solid angle.
+    angle_max: astropy.units.Quantity
+        The maximum angle for which to calculate the solid angle.
+    angle_min: astropy.units.Quantity
+        The minimum angle for which to calculate the solid angle (default is 0 rad).
 
     Returns
     -------
     astropy.units.Quantity
-        The solid angle subtended by the given angle (in steradians).
+        The solid angle subtended by the given range of angles (in steradians).
     """
-    return 2 * np.pi * (1 - np.cos(angle)) * u.rad
+    return 2 * np.pi * (np.cos(angle_min.to("rad")) - np.cos(angle_max.to("rad"))) * u.sr

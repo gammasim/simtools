@@ -97,6 +97,8 @@ class SimtelIOEventHistograms:
                 "energy_min": _file_info_table["energy_min"].to("TeV"),
                 "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
                 "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
+                "solid_angle": _file_info_table["solid_angle"].to("sr"),
+                "scatter_area": _file_info_table["scatter_area"].to("cm2"),
             }
 
             hist_defs = self._histogram_definitions(event_data, triggered_data, shower_data)
