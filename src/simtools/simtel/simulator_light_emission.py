@@ -355,46 +355,63 @@ class SimulatorLightEmission(SimtelRunner):
         telpos_file = self._write_telpos_file()
 
         app_name, app_mode = self.le_application
-        command = f"rm {self.output_directory}/"
-        command += f"{app_name}_{app_mode}.simtel.gz\n"
-        command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
-        command += f"/{app_name}"
+        parts = []
+        # cleanup previous outputs
+        parts.append(f"rm {self.output_directory}/{app_name}_{app_mode}.simtel.gz\n")
+        # application path
+        parts.append(str(self._simtel_path.joinpath("sim_telarray/LightEmission/")))
+        parts.append(f"/{app_name}")
+
+        # altitude/telpos and atmosphere
         corsika_observation_level = self._site_model.get_parameter_value_with_unit(
             "corsika_observation_level"
         )
-        # ff-1m/ff-gct expect --altitude (not -h) and do not support --telpos-file
-        if app_name in ("ff-1m", "ff-gct"):
-            # Provide include paths so ff-1m can find atmprofN.dat
-            command += " -I."
-            command += f" -I{self._simtel_path.joinpath('sim_telarray/cfg')}"
-            command += f" -I{config_directory}"
-            command += f" --altitude {corsika_observation_level.to(u.m).value}"
-            # Prepare canonical atmosphere file names and use integer ID
-            atmo_id = self._prepare_ff_atmosphere_files(config_directory)
-            command += f" --atmosphere {atmo_id}"
-        else:
-            command += f" -h  {corsika_observation_level.to(u.m).value}"
-            command += f" --telpos-file {telpos_file}"
-
-        if self.light_source_type == "flasher":
-            command = self._add_flasher_command_options(command)
-        elif self.light_source_type == "led":
-            command = self._add_led_command_options(command)
-        elif self.light_source_type == "laser":
-            command = self._add_laser_command_options(
-                command, x_tel, y_tel, z_tel, config_directory
+        parts.append(
+            self._build_altitude_atmo_block(
+                app_name, config_directory, corsika_observation_level, telpos_file
             )
+        )
 
-        # Add common options for specific light source type
-        # Do not add -A for flasher apps (ff-1m/ff-gct do not support it)
+        # light-source specific options
+        parts.append(self._build_source_specific_block(x_tel, y_tel, z_tel, config_directory))
+
+        # optional atmosphere include for LED
         if self.light_source_type == "led":
-            command += f" -A {config_directory}/"
-            command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
+            parts.append(f" -A {config_directory}/")
+            parts.append(f"{self._telescope_model.get_parameter_value('atmospheric_profile')}")
 
-        command += f" -o {self.output_directory}/{app_name}.iact.gz"
-        command += "\n"
+        # output
+        parts.append(f" -o {self.output_directory}/{app_name}.iact.gz")
+        parts.append("\n")
 
-        return command
+        return "".join(parts)
+
+    def _build_altitude_atmo_block(
+        self, app_name, config_directory: Path, corsika_observation_level, telpos_file: Path
+    ) -> str:
+        """Return CLI segment for altitude/atmosphere and telpos handling."""
+        if app_name in ("ff-1m", "ff-gct"):
+            seg = []
+            seg.append(" -I.")
+            seg.append(f" -I{self._simtel_path.joinpath('sim_telarray/cfg')}")
+            seg.append(f" -I{config_directory}")
+            seg.append(f" --altitude {corsika_observation_level.to(u.m).value}")
+            atmo_id = self._prepare_ff_atmosphere_files(config_directory)
+            seg.append(f" --atmosphere {atmo_id}")
+            return "".join(seg)
+        # default path
+        return f" -h  {corsika_observation_level.to(u.m).value} --telpos-file {telpos_file}"
+
+    def _build_source_specific_block(self, x_tel, y_tel, z_tel, config_directory: Path) -> str:
+        """Return CLI segment for light-source specific flags."""
+        if self.light_source_type == "flasher":
+            return self._add_flasher_command_options("")
+        if self.light_source_type == "led":
+            return self._add_led_command_options("")
+        if self.light_source_type == "laser":
+            return self._add_laser_command_options("", x_tel, y_tel, z_tel, config_directory)
+        self._logger.warning("Unknown light_source_type '%s'", self.light_source_type)
+        return ""
 
     def _add_flasher_command_options(self, command):
         """
