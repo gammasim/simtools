@@ -107,7 +107,7 @@ class SimtelIOEventHistograms:
                 self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
 
             # TODO temporary break to run one file only
-            break
+            # break
 
         self.calculate_efficiency_data()
         self.calculate_cumulative_data()

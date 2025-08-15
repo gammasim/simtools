@@ -10,6 +10,7 @@ from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import table_handler
+from simtools.utils.geometry import solid_angle
 
 
 @dataclass
@@ -80,7 +81,11 @@ class SimtelIOEventDataReader:
         )
 
         data_sets = []
-        for i in range(len(dataset_dict["SHOWERS"])):
+        sorted_indices = sorted(
+            range(len(dataset_dict["SHOWERS"])),
+            key=lambda i: int(dataset_dict["SHOWERS"][i].split("_")[-1]),
+        )
+        for i in sorted_indices:
             data_sets.append(
                 {
                     "SHOWERS": dataset_dict["SHOWERS"][i],
@@ -399,4 +404,31 @@ class SimtelIOEventDataReader:
                 value = value * simulation_file_info[key].unit
             reduced_info[key] = value
 
+        reduced_info["solid_angle"] = solid_angle(
+            angle_min=reduced_info.get("viewcone_min", 0.0 * u.rad),
+            angle_max=reduced_info.get("viewcone_max", 0.0 * u.rad),
+        )
+        reduced_info["scatter_area"] = self.scatter_area(
+            core_scatter_min=reduced_info.get("core_scatter_min", 0.0 * u.m),
+            core_scatter_max=reduced_info.get("core_scatter_max", 0.0 * u.m),
+        )
+
         return reduced_info
+
+    def scatter_area(self, core_scatter_min, core_scatter_max):
+        """
+        Calculate the scatter area of the core.
+
+        Parameters
+        ----------
+        core_scatter_min : astropy.units.Quantity
+            Minimum core scatter radius.
+        core_scatter_max : astropy.units.Quantity
+            Maximum core scatter radius.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Scatter area.
+        """
+        return np.pi * (core_scatter_max**2 - core_scatter_min**2)
