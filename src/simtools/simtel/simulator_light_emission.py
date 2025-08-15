@@ -14,7 +14,7 @@ from simtools.io import io_handler
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
-from simtools.visualization.visualize import (
+from simtools.visualization.light_emission_plots import (
     plot_simtel_ctapipe,
     plot_simtel_integrated_pedestal_image,
     plot_simtel_integrated_signal_image,
