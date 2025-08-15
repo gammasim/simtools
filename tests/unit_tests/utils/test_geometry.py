@@ -113,19 +113,19 @@ def test_calculate_circular_mean():
 def test_solid_angle():
     # Test with angle in radians
     angle_rad = 1 * u.rad
-    expected_solid_angle_rad = 2 * np.pi * (1 - np.cos(angle_rad)) * u.rad
+    expected_solid_angle_rad = 2 * np.pi * (1 - np.cos(angle_rad)) * u.sr
     assert transf.solid_angle(angle_rad) == expected_solid_angle_rad
 
     # Test with angle in degrees
     angle_deg = 90 * u.deg
-    expected_solid_angle_deg = 2 * np.pi * (1 - np.cos(angle_deg.to(u.rad))) * u.rad
+    expected_solid_angle_deg = 2 * np.pi * (1 - np.cos(angle_deg.to(u.rad))) * u.sr
     assert transf.solid_angle(angle_deg) == expected_solid_angle_deg
 
     # Test with zero angle
     angle_zero = 0 * u.rad
-    assert transf.solid_angle(angle_zero) == 0 * u.rad
+    assert transf.solid_angle(angle_zero) == 0 * u.sr
 
     # Test with a full circle (360 degrees)
     angle_full_circle = 360 * u.deg
-    expected_solid_angle_full_circle = 2 * np.pi * (1 - np.cos(angle_full_circle.to(u.rad))) * u.rad
+    expected_solid_angle_full_circle = 2 * np.pi * (1 - np.cos(angle_full_circle.to(u.rad))) * u.sr
     assert transf.solid_angle(angle_full_circle) == expected_solid_angle_full_circle
