@@ -81,10 +81,13 @@ class SimtelIOEventDataReader:
         )
 
         data_sets = []
-        sorted_indices = sorted(
-            range(len(dataset_dict["SHOWERS"])),
-            key=lambda i: int(dataset_dict["SHOWERS"][i].split("_")[-1]),
-        )
+        try:
+            sorted_indices = sorted(
+                range(len(dataset_dict["SHOWERS"])),
+                key=lambda i: int(dataset_dict["SHOWERS"][i].name.split("_")[-1]),
+            )
+        except (ValueError, AttributeError):
+            sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
         for i in sorted_indices:
             data_sets.append(
                 {

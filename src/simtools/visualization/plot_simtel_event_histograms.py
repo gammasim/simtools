@@ -50,8 +50,7 @@ def _get_limits(limits):
 
 def _generate_plot_configurations(histograms, limits):
     """Generate plot configurations for all histogram types."""
-    # Plot label constants
-    labels = {
+    plot_labels = {
         "core_distance": "Core Distance [m]",
         "energy": "Energy [TeV]",
         "pointing_direction": "Distance to pointing direction [deg]",
@@ -59,8 +58,8 @@ def _generate_plot_configurations(histograms, limits):
         "core_y": "Core Y [m]",
     }
 
-    plots = _generate_1d_plots(histograms, labels, limits)
-    plots.update(_generate_2d_plots(histograms, labels, limits))
+    plots = _generate_1d_plots(histograms, plot_labels, limits)
+    plots.update(_generate_2d_plots(histograms, plot_labels, limits))
     return plots
 
 
@@ -84,26 +83,39 @@ def _generate_1d_plots(histograms, labels, limits):
             "scales": {},
             "lines": {"x": viewcone_radius},
         },
+        # TODO should go to io_histograms? part of histo_type? (rename)
+        "cr_rates": {
+            "x_label": labels["energy"],
+            "scales": {"x": "log", "y": "log"},
+        },
+        "trigger_rates": {
+            "x_label": labels["energy"],
+            "scales": {"x": "log", "y": "log"},
+        },
     }
 
     plots = {}
     for name, config in plot_config.items():
         for histo_type in histograms.histogram_types().values():
             histogram_key = f"{name}{histo_type['suffix']}"
-            plots[histogram_key] = _create_1d_plot_config(
-                histograms,
-                histogram_key=histogram_key,
-                config=config,
-                plot_params=hist_1d_params,
-                y_label=histo_type["ordinate"],
-                title=histo_type["title"],
-            )
+            if histograms.get(histogram_key) is not None:
+                plots[histogram_key] = _create_1d_plot_config(
+                    histograms,
+                    histogram_key=histogram_key,
+                    config=config,
+                    plot_params=hist_1d_params,
+                    y_label=histo_type["ordinate"],
+                    title=histo_type["title"],
+                )
+            else:
+                _logger.warning(f"Histogram {histogram_key} not found.")
 
     return plots
 
 
 def _create_1d_plot_config(histograms, histogram_key, config, plot_params, y_label, title):
     """Create a 1D plot configuration."""
+    print(f"Creating plot config for {histogram_key} with params: {plot_params}")
     return {
         "data": histograms.get(histogram_key),
         "bins": histograms.get(f"{histogram_key}_bin_edges"),
