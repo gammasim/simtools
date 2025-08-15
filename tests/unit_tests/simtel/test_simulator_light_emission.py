@@ -746,16 +746,25 @@ def test_plot_flasher_outputs_success(monkeypatch, sim_instance, caplog):
     monkeypatch.setattr(
         sim_mod, "plot_simtel_waveform_pcolormesh", lambda *a, **k: _make_dummy_fig()
     )
+    # New integrated images
+    monkeypatch.setattr(
+        sim_mod, "plot_simtel_integrated_signal_image", lambda *a, **k: _make_dummy_fig()
+    )
+    monkeypatch.setattr(
+        sim_mod, "plot_simtel_integrated_pedestal_image", lambda *a, **k: _make_dummy_fig()
+    )
 
     figures = []
     caplog.clear()
     with caplog.at_level(logging.INFO, logger="simtools.simtel.simulator_light_emission"):
         sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 6}, None, figures)
 
-    # 1 calibration + 3 plots
-    assert len(figures) == 4
+    # 1 calibration + 5 plots (signal, pedestal, traces, peak timing, pcolormesh)
+    assert len(figures) == 6
 
     messages = "\n".join(r.message for r in caplog.records)
+    assert "Added integrated signal image" in messages
+    assert "Added integrated pedestal image" in messages
     assert "Added time-trace figure" in messages
     assert "Added peak timing figure" in messages
     assert "Added waveform pcolormesh figure" in messages
@@ -773,6 +782,9 @@ def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
     monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", _raise)
     monkeypatch.setattr(sim_mod, "plot_simtel_peak_timing", _raise)
     monkeypatch.setattr(sim_mod, "plot_simtel_waveform_pcolormesh", _raise)
+    # Integrated images return None to simulate absence without raising
+    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_signal_image", lambda *a, **k: None)
+    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_pedestal_image", lambda *a, **k: None)
 
     figures = []
     caplog.clear()
@@ -789,3 +801,115 @@ def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
 
     for f in figures:
         plt.close(f)
+
+
+def test_add_mst_lst_flasher_options():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._flasher_model = MagicMock()
+    inst._telescope_model = MagicMock()
+    inst.runs = 1
+    inst.photons_per_run = 1.23e6
+
+    def gpvu(name):
+        mp = {
+            "flasher_position": [0.5 * u.cm, -1.5 * u.cm],
+            "flasher_depth": 250.0 * u.cm,
+            "spectrum": 405 * u.nm,
+        }
+        return mp[name]
+
+    inst._flasher_model.get_parameter_value_with_unit.side_effect = gpvu
+    inst._flasher_model.get_parameter_value.side_effect = lambda n: {
+        "lightpulse": "Gauss:3.2",
+        "angular_distribution": "isotropic",
+        "bunch_size": 2.0,
+    }[n]
+
+    inst._telescope_model.get_parameter_value_with_unit.return_value = 120.0 * u.cm
+
+    cmd = inst._add_mst_lst_flasher_options("")
+
+    assert "--events 1" in cmd
+    assert "--photons 1230000.0" in cmd
+    assert "--bunchsize 2.0" in cmd
+    assert "--xy 0.5,-1.5" in cmd
+    assert "--distance 250.0" in cmd
+    assert "--camera-radius 60.0" in cmd
+    assert "--spectrum 405" in cmd
+    assert "--lightpulse Gauss:3.2" in cmd
+    assert "--angular-distribution isotropic" in cmd
+
+
+def test_add_sst_flasher_options():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._flasher_model = MagicMock()
+    inst.runs = 2
+    inst.photons_per_run = 5e5
+
+    def gpvu(name):
+        mp = {
+            "flasher_position": [0.0 * u.cm, 0.0 * u.cm],
+            "flasher_depth": 100.0 * u.cm,
+            "flasher_inclination": 1.0 * u.deg,
+            "mirror_camera_distance": 55.0 * u.cm,
+            "spectrum": 380.0 * u.nm,
+        }
+        return mp[name]
+
+    inst._flasher_model.get_parameter_value_with_unit.side_effect = gpvu
+    inst._flasher_model.get_parameter_value.side_effect = lambda n: {
+        "lightpulse": "Gauss:2.0",
+        "angular_distribution": "gauss:11",
+        "flasher_pattern": "all",
+        "bunch_size": 1.0,
+    }[n]
+
+    cmd = inst._add_sst_flasher_options("")
+
+    assert "--events 2" in cmd
+    assert "--photons 500000.0" in cmd
+    assert "--bunchsize 1.0" in cmd
+    assert "--flasher-xy 0.0" in cmd
+    assert "--flasher-depth 100.0" in cmd
+    assert "--flasher-inclination 1.0" in cmd
+    assert "--mirror-camera-distance 55.0" in cmd
+    assert "--spectrum 380" in cmd
+    assert "--lightpulse Gauss:2.0" in cmd
+    assert "--angular-distribution gauss:11" in cmd
+    assert "--fire all" in cmd
+
+
+def test_add_flasher_command_options_branch():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._telescope_model = MagicMock()
+    inst._flasher_model = MagicMock()
+
+    inst._telescope_model.name = "SSTS-05"
+    with (
+        patch.object(inst, "_add_sst_flasher_options", return_value="sst") as sst,
+        patch.object(inst, "_add_mst_lst_flasher_options", return_value="mst") as mst,
+    ):
+        out = inst._add_flasher_command_options("")
+        assert out == "sst"
+        sst.assert_called_once()
+        mst.assert_not_called()
+
+    inst._telescope_model.name = "MSTN-04"
+    with (
+        patch.object(inst, "_add_sst_flasher_options", return_value="sst") as sst,
+        patch.object(inst, "_add_mst_lst_flasher_options", return_value="mst") as mst,
+    ):
+        out = inst._add_flasher_command_options("")
+        assert out == "mst"
+        mst.assert_called_once()
+        sst.assert_not_called()
+
+
+def test_get_distance_for_plotting_flasher():
+    inst = object.__new__(SimulatorLightEmission)
+    inst.light_source_type = "flasher"
+    inst._flasher_model = MagicMock()
+    inst._flasher_model.get_parameter_value_with_unit.return_value = 150.0 * u.cm
+
+    d = inst._get_distance_for_plotting()
+    assert d.to_value(u.m) == pytest.approx(1.5)
