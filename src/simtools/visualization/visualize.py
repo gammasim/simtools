@@ -704,7 +704,9 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
         cleaned[~mask] = 0
 
     fig, ax = plt.subplots(dpi=300)
-    title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id}"
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
+    title = f"{tel_label}, run {event.index.obs_id} event {event.index.event_id}"
     disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
     disp.cmap = "RdBu_r"
     disp.add_colorbar(fraction=0.02, pad=-0.1)
@@ -729,7 +731,7 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
         size=7,
     )
     ax.annotate(
-        f"dl1 image,\ntotal $p.e._{{reco}}$: {np.round(np.sum(image))}\n",
+        f"dl1 image,\ntotal ADC counts: {np.round(np.sum(image))}\n",
         xy=(0, 0),
         xytext=(0.75, 1),
         xycoords="axes fraction",
@@ -849,7 +851,9 @@ def plot_simtel_event_image(
     disp.set_limits_percent(100)
 
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id} ({et_name})"
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
+    title = f"{tel_label}, run {event.index.obs_id} event {event.index.event_id} ({et_name})"
     ax.set_title(title, pad=20)
 
     if distance is not None:
@@ -965,7 +969,9 @@ def plot_simtel_time_traces(
     ax.set_xlabel("time [ns]")
     ax.set_ylabel("R1 samples [a.u.]")
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    ax.set_title(f"CT{tel_id} waveforms ({et_name})")
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
+    ax.set_title(f"{tel_label} waveforms ({et_name})")
     ax.legend(loc="best", fontsize=7)
     fig.tight_layout()
     return fig
@@ -1045,7 +1051,9 @@ def plot_simtel_waveform_pcolormesh(
     cbar = fig.colorbar(mesh, ax=ax)
     cbar.set_label("R1 samples [a.u.]")
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    ax.set_title(f"CT{tel_id} waveform matrix ({et_name})")
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
+    ax.set_title(f"{tel_label} waveform matrix ({et_name})")
     ax.set_xlabel("time [ns]")
     ax.set_ylabel("pixel id")
     fig.tight_layout()
@@ -1116,7 +1124,9 @@ def plot_simtel_step_traces(
     ax.set_xlabel("time [ns]")
     ax.set_ylabel("R1 samples [a.u.]")
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    ax.set_title(f"CT{tel_id} step traces ({et_name})")
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
+    ax.set_title(f"{tel_label} step traces ({et_name})")
     ax.legend(loc="best", fontsize=7, ncol=2)
     fig.tight_layout()
     return fig
@@ -1178,7 +1188,7 @@ def _draw_peak_hist(
     edges,
     mean_sample,
     std_sample,
-    tel_id,
+    tel_label,
     et_name,
     considered,
     found_count,
@@ -1204,7 +1214,7 @@ def _draw_peak_hist(
         alpha=0.2,
         label=f"std={std_sample:.2f}",
     )
-    ax.set_title(f"CT{tel_id} peak timing ({et_name})")
+    ax.set_title(f"{tel_label} peak timing ({et_name})")
     ax.text(
         0.98,
         0.95,
@@ -1306,13 +1316,15 @@ def plot_simtel_peak_timing(
     # Histogram with contiguous bars
     edges = _histogram_edges(n_samp, timing_bins)
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
     _draw_peak_hist(
         ax1,
         peak_samples,
         edges,
         mean_sample,
         std_sample,
-        tel_id,
+        tel_label,
         et_name,
         pix_ids.size,
         found_count,
@@ -1407,8 +1419,10 @@ def plot_simtel_integrated_signal_image(
     disp.set_limits_percent(100)
 
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
     ax.set_title(
-        f"CT{tel_id} integrated signal (win {win_len}) ({et_name})",
+        f"{tel_label} integrated signal (win {win_len}) ({et_name})",
         pad=20,
     )
     ax.set_axis_off()
@@ -1485,8 +1499,10 @@ def plot_simtel_integrated_pedestal_image(
     disp.set_limits_percent(100)
 
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
+    tel = source.subarray.tel[tel_id]
+    tel_label = getattr(tel, "name", f"CT{tel_id}")
     ax.set_title(
-        f"CT{tel_id} integrated pedestal (win {win_len}, gap {gap}) ({et_name})",
+        f"{tel_label} integrated pedestal (win {win_len}, gap {gap}) ({et_name})",
         pad=20,
     )
     ax.set_axis_off()
