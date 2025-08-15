@@ -65,12 +65,12 @@ def _calculate_trigger_rates(histograms, array_name):
     efficiency = histograms.get("energy_eff")
     energy_axis = histograms.get("energy_eff_bin_edges")
 
-    cr_spectra = get_cosmic_ray_spectrum()
-    print("CR Spectra", cr_spectra)
+    cr_spectrum = get_cosmic_ray_spectrum()
+    _logger.info(f"Cosmic ray spectrum: {cr_spectrum}")
     cr_rates = []
     for energy_bin, _ in enumerate(energy_axis[:-1]):
         cr_rates.append(
-            cr_spectra.integrate_energy(
+            cr_spectrum.integrate_energy(
                 energy_axis[energy_bin] * u.TeV, energy_axis[energy_bin + 1] * u.TeV
             )
             .decompose(bases=[u.s, u.cm, u.sr])
@@ -87,16 +87,11 @@ def _calculate_trigger_rates(histograms, array_name):
         * histograms.file_info["scatter_area"].to("cm2")
         * histograms.file_info["solid_angle"].to("sr")
     )
-
-    print("Trigger rates", trigger_rates)
-
     trigger_rate = np.sum(trigger_rates, axis=0)
-
-    print("III", histograms.file_info)
 
     _logger.info(f"Scatter area from MC: {histograms.file_info['scatter_area'].to('m2')}")
     _logger.info(f"Solid angle from MC: {histograms.file_info['solid_angle']}")
-    _logger.info(f"Trigger rate for array {array_name}: {trigger_rate.to('Hz')}")
+    _logger.info(f"Trigger rate for {array_name} array: {trigger_rate.to('Hz')}")
 
 
 def get_cosmic_ray_spectrum():
