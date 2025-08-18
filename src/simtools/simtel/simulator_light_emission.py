@@ -11,7 +11,6 @@ import numpy as np
 
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.io import io_handler
-from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.visualization.light_emission_plots import (
@@ -727,10 +726,7 @@ class SimulatorLightEmission(SimtelRunner):
         try:
             filename = self._get_simulation_output_filename()
         except AttributeError:
-            try:
-                zpos = self.light_emission_config["z_pos"]["default"]
-            except (KeyError, TypeError):
-                zpos = "unknown"
+            zpos = self.light_emission_config["z_pos"]["default"]
             self._logger.warning(f"Telescope not triggered at distance of {zpos}")
             return
 
@@ -752,22 +748,17 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _plot_calibration_outputs(self, filename, args_dict, distance, figures):
         """Only the generic ctapipe camera image for calibration/LED/laser."""
-        try:
-            fig = self._plot_simulation_output(
-                filename,
-                args_dict["boundary_thresh"],
-                args_dict["picture_thresh"],
-                args_dict["min_neighbors"],
-                distance,
-                args_dict["return_cleaned"],
-            )
-            if fig is not None:
-                figures.append(fig)
-                self._logger.info("Added ctapipe camera image figure")
-        except AttributeError:
-            self._logger.warning("Telescope not triggered")
-        except (RuntimeError, ValueError, OSError) as ex:
-            self._logger.warning(f"ctapipe image plotting failed: {ex}")
+        fig = self._plot_simulation_output(
+            filename,
+            args_dict["boundary_thresh"],
+            args_dict["picture_thresh"],
+            args_dict["min_neighbors"],
+            distance,
+            args_dict["return_cleaned"],
+        )
+        if fig is not None:
+            figures.append(fig)
+            self._logger.info("Added ctapipe camera image figure")
 
     def _plot_flasher_outputs(self, filename, args_dict, distance, figures):
         """Plot generic image plus traces, peak timing, waveform matrix, and charge images."""
@@ -867,11 +858,8 @@ class SimulatorLightEmission(SimtelRunner):
         """
         # Flasher: use flasher_depth from model if available
         if self.light_source_type == "flasher" and self._flasher_model is not None:
-            try:
-                d_cm = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
-                return d_cm.to(u.m)
-            except InvalidModelParameterError:
-                pass
+            d_cm = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
+            return d_cm.to(u.m)
 
         # Variable LED/light emission configuration with z_pos
         try:
@@ -884,12 +872,8 @@ class SimulatorLightEmission(SimtelRunner):
         if getattr(self, "distance", None) is not None:
             if isinstance(self.distance, u.Quantity):
                 return self.distance
-            try:
-                return float(self.distance) * u.m
-            except (TypeError, ValueError):
-                return 0 * u.m
 
-        return 0 * u.m
+        return float(self.distance) * u.m
 
     def _plot_simulation_output(
         self, filename, boundary_thresh, picture_thresh, min_neighbors, distance, return_cleaned
