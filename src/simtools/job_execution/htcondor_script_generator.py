@@ -103,6 +103,13 @@ def _get_submit_script(args_dict):
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
 
+    array_layout_name = (
+        args_dict["array_layout_name"][0]
+        if isinstance(args_dict["array_layout_name"], list)
+        and len(args_dict["array_layout_name"]) == 1
+        else args_dict["array_layout_name"]
+    )
+
     return f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
@@ -115,14 +122,14 @@ simtools-simulate-prod \\
     --label {label} \\
     --model_version {args_dict["model_version"]} \\
     --site {args_dict["site"]} \\
-    --array_layout_name {args_dict["array_layout_name"]} \\
+    --array_layout_name {array_layout_name} \\
     --primary {args_dict["primary"]} \\
     --azimuth_angle {azimuth_angle_string} \\
     --zenith_angle {zenith_angle_string} \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
-    --run_number $((process_id)) \\
+    --run_number $((process_id+1)) \\
     --run_number_offset {args_dict["run_number_offset"]} \\
     --number_of_runs 1 \\
     --data_directory /tmp/simtools-data \\
