@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Runners for simulation software. &#8212; simtools</title>
+    <title>Runners for simulation software &#8212; simtools</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=b2fe2b92"></script>
+    <script src="../_static/documentation_options.js?v=17c83477"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Reporting" href="reporting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gd79d744" />
+  <meta name="docsearch:version" content="0.1.dev1+g840d012ed" />
   </head>
   
   
@@ -401,7 +401,7 @@
 <li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Runners for simulation software.</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Runners for simulation software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
@@ -450,7 +450,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Runners for simulation software.</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Runners for simulation software</span></li>
   </ul>
 </nav>
 </div>
@@ -468,8 +468,77 @@
                 <article class="bd-article">
                   
   <section id="runners-for-simulation-software">
-<span id="runners"></span><h1>Runners for simulation software.<a class="headerlink" href="#runners-for-simulation-software" title="Link to this heading">#</a></h1>
-<p>Support module for running CORSIKA and sim_telarray.</p>
+<span id="runners"></span><h1>Runners for simulation software<a class="headerlink" href="#runners-for-simulation-software" title="Link to this heading">#</a></h1>
+<p>Support modules for running simtools, CORSIKA, and sim_telarray.</p>
+<section id="simtools-runner">
+<h2>simtools_runner<a class="headerlink" href="#simtools-runner" title="Link to this heading">#</a></h2>
+<p id="module-runners.simtools_runner"><span id="simtools-runner-1"></span>Tools for running applications in the simtools framework.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="runners.simtools_runner.read_runtime_environment">
+<span class="sig-prename descclassname"><span class="pre">runners.simtools_runner.</span></span><span class="sig-name descname"><span class="pre">read_runtime_environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_environment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/workdir/external/'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtools_runner.html#read_runtime_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtools_runner.read_runtime_environment" title="Link to this definition">#</a></dt>
+<dd><p>Read the runtime environment (e.g. docker runtime) and generate the required command.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>runtime_environment</strong><span class="classifier">str or None</span></dt><dd><p>Path to the runtime environment configuration file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Runtime command.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="runners.simtools_runner.run_application">
+<span class="sig-prename descclassname"><span class="pre">runners.simtools_runner.</span></span><span class="sig-name descname"><span class="pre">run_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_environment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtools_runner.html#run_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtools_runner.run_application" title="Link to this definition">#</a></dt>
+<dd><p>Run a simtools application and return stdout and stderr.</p>
+<p>Allow to specify a runtime environment (e.g., Docker) and a working directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>runtime_environment</strong><span class="classifier">list</span></dt><dd><p>Command to run the application in the specified runtime environment.</p>
+</dd>
+<dt><strong>application</strong><span class="classifier">str</span></dt><dd><p>Name of the application to run.</p>
+</dd>
+<dt><strong>configuration</strong><span class="classifier">dict</span></dt><dd><p>Configuration for the application.</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>Logger for logging application output.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>stdout and stderr from the application run.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="runners.simtools_runner.run_applications">
+<span class="sig-prename descclassname"><span class="pre">runners.simtools_runner.</span></span><span class="sig-name descname"><span class="pre">run_applications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtools_runner.html#run_applications"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtools_runner.run_applications" title="Link to this definition">#</a></dt>
+<dd><p>Run simtools applications step-by-step as defined in a configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing command line arguments.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>Logger for logging application output.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="corsika-runner">
 <h2>corsika_runner<a class="headerlink" href="#corsika-runner" title="Link to this heading">#</a></h2>
 <p id="module-runners.corsika_runner"><span id="corsika-runner-1"></span>Generate run scripts and directories for CORSIKA simulations.</p>
@@ -947,6 +1016,12 @@ multiple array models are simulated.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-runner">simtools_runner</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtools_runner.read_runtime_environment"><code class="docutils literal notranslate"><span class="pre">read_runtime_environment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtools_runner.run_application"><code class="docutils literal notranslate"><span class="pre">run_application()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtools_runner.run_applications"><code class="docutils literal notranslate"><span class="pre">run_applications()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-runner">corsika_runner</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.corsika_runner.CorsikaRunner"><code class="docutils literal notranslate"><span class="pre">CorsikaRunner</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.corsika_runner.CorsikaRunner.get_file_name"><code class="docutils literal notranslate"><span class="pre">CorsikaRunner.get_file_name()</span></code></a></li>

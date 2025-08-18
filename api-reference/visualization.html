@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=b2fe2b92"></script>
+    <script src="../_static/documentation_options.js?v=17c83477"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gd79d744" />
+  <meta name="docsearch:version" content="0.1.dev1+g840d012ed" />
   </head>
   
   
@@ -401,7 +401,7 @@
 <li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
@@ -1057,7 +1057,7 @@ Return None, if no plot configurations are found.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_tables.plot">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.plot" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.plot" title="Link to this definition">#</a></dt>
 <dd><p>Plot tabular data from data or from model parameter files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1068,6 +1068,8 @@ Return None, if no plot configurations are found.</p>
 </dd>
 <dt><strong>db_config: dict, optional</strong></dt><dd><p>Database configuration dictionary for accessing the model parameter database.</p>
 </dd>
+<dt><strong>data_path: Path or str, optional</strong></dt><dd><p>Path to the data files (optional). Expect all files to be in the same directory.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -1075,12 +1077,16 @@ Return None, if no plot configurations are found.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_tables.read_table_data">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">read_table_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#read_table_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.read_table_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">read_table_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#read_table_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.read_table_data" title="Link to this definition">#</a></dt>
 <dd><p>Read table data from file or parameter database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>config: dict</strong></dt><dd><p>Configuration dictionary for plotting.</p>
+</dd>
+<dt><strong>db_config: dict</strong></dt><dd><p>Database configuration dictionary for accessing the model parameter database.</p>
+</dd>
+<dt><strong>data_path: Path or str, optional</strong></dt><dd><p>Path to the data files (optional). Expect all files to be in the same directory.</p>
 </dd>
 </dl>
 </dd>
