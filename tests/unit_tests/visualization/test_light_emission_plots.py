@@ -12,7 +12,7 @@ import numpy as np
 from simtools.visualization import light_emission_plots as lep
 
 logger = logging.getLogger(__name__)
-DUMMY_SIMTEL = "dummy.simtel.gz"
+DUMMY_SIMTEL = "DUMMY_SIMTEL"
 
 
 # Helpers for ctapipe stubs and waveform generation
@@ -84,9 +84,11 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
 
     class _CameraCalibrator:
         def __init__(self, *a, **k):
+            # Minimal stub for ctapipe.calib.CameraCalibrator.
             pass
 
         def __call__(self, *a, **k):
+            # No-op: simulate a callable calibrator without modifying the event.
             return None
 
     class _CameraDisplay:
