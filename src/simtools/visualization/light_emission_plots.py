@@ -532,17 +532,14 @@ def plot_simtel_peak_timing(
     return fig
 
 
-def plot_simtel_integrated_signal_image(
-    filename,
-    event_type: str | None = None,
-    tel_id: int | None = None,
-    half_width: int = 8,
-):
-    """Plot camera image of integrated signal per pixel around the flasher peak."""
+def _prepare_waveforms_for_image(filename, event_type, tel_id, context_no_r1):
+    """Fetch R1 waveforms for one event/telescope and return prepared arrays.
+
+    Returns (w, n_pix, n_samp, source, event, tel_id) or None on failure.
+    """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.io import EventSource
-    from ctapipe.visualization import CameraDisplay
 
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source, event_type)
@@ -554,7 +551,7 @@ def plot_simtel_integrated_signal_image(
     if r1_tel_ids:
         tel_id = tel_id or r1_tel_ids[0]
     else:
-        _logger.warning("Event has no R1 data for integrated-signal image")
+        _logger.warning(f"Event has no R1 data for {context_no_r1}")
         return None
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
@@ -566,9 +563,28 @@ def plot_simtel_integrated_signal_image(
     if w.ndim == 3:
         w = w[0]
     n_pix, n_samp = w.shape
+    return w, n_pix, n_samp, source, event, tel_id
+
+
+def plot_simtel_integrated_signal_image(
+    filename,
+    event_type: str | None = None,
+    tel_id: int | None = None,
+    half_width: int = 8,
+):
+    """Plot camera image of integrated signal per pixel around the flasher peak."""
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.visualization import CameraDisplay
+
+    prepared = _prepare_waveforms_for_image(filename, event_type, tel_id, "integrated-signal image")
+    if prepared is None:
+        return None
+    w, n_pix, n_samp, source, event, tel_id = prepared
 
     win_len = 2 * int(half_width) + 1
     img = np.zeros(n_pix, dtype=float)
+
     for pid in range(n_pix):
         trace = w[pid]
         peak_idx = int(np.argmax(trace))
@@ -605,31 +621,14 @@ def plot_simtel_integrated_pedestal_image(
     """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
     # pylint:disable=import-outside-toplevel
     import numpy as np
-    from ctapipe.io import EventSource
     from ctapipe.visualization import CameraDisplay
 
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
+    prepared = _prepare_waveforms_for_image(
+        filename, event_type, tel_id, "integrated-pedestal image"
+    )
+    if prepared is None:
         return None
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for integrated-pedestal image")
-        return None
-
-    waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
-    if waveforms is None:
-        _logger.warning(NO_R1_WAVEFORMS_MSG)
-        return None
-
-    w = np.asarray(waveforms)
-    if w.ndim == 3:
-        w = w[0]
-    n_pix, n_samp = w.shape
+    w, n_pix, n_samp, source, event, tel_id = prepared
 
     win_len = 2 * int(half_width) + 1
     img = np.zeros(n_pix, dtype=float)
