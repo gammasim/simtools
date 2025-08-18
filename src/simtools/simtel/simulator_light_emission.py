@@ -306,12 +306,12 @@ class SimulatorLightEmission(SimtelRunner):
         src_path = config_directory.joinpath(atmo_name)
         for canonical in ("atmprof1.dat", "atm_profile_model_1.dat"):
             dst = config_directory.joinpath(canonical)
+            if dst.exists() or dst.is_symlink():
+                try:
+                    dst.unlink()
+                except OSError:
+                    pass
             try:
-                if dst.exists() or dst.is_symlink():
-                    try:
-                        dst.unlink()
-                    except OSError:
-                        pass
                 dst.symlink_to(src_path)
             except OSError:
                 try:
