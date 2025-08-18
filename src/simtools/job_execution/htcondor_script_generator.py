@@ -131,6 +131,7 @@ simtools-simulate-prod \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
+    --view_cone {args_dict["view_cone"]} \\
     --run_number $((process_id)) \\
     --run_number_offset {run_number_offset} \\
     --number_of_runs 1 \\
