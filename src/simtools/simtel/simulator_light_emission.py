@@ -663,10 +663,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += f" -r {kwargs['level']}"
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
-        try:
-            dist_val = int(self.distance.to(u.m).value)  # type: ignore[union-attr]
-        except (AttributeError, TypeError, ValueError):
-            dist_val = 0
+        dist_val = int(self._get_distance_for_plotting().to_value(u.m))
         command += (
             f" -p {postscript_dir}/"
             f"{self.le_application[0]}_{self.le_application[1]}_d_{dist_val}.ps"
