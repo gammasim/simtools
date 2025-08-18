@@ -799,7 +799,7 @@ def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
         plt.close(f)
 
 
-def test_add_mst_lst_flasher_options():
+def test_add_flasher_options():
     inst = object.__new__(SimulatorLightEmission)
     inst._flasher_model = MagicMock()
     inst._telescope_model = MagicMock()
@@ -823,7 +823,7 @@ def test_add_mst_lst_flasher_options():
 
     inst._telescope_model.get_parameter_value_with_unit.return_value = 120.0 * u.cm
 
-    cmd = inst._add_mst_lst_flasher_options("")
+    cmd = inst._add_flasher_options("")
 
     assert "--events 1" in cmd
     assert "--photons 1230000.0" in cmd
@@ -836,69 +836,22 @@ def test_add_mst_lst_flasher_options():
     assert "--angular-distribution isotropic" in cmd
 
 
-def test_add_sst_flasher_options():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._flasher_model = MagicMock()
-    inst.runs = 2
-    inst.photons_per_run = 5e5
-
-    def gpvu(name):
-        mp = {
-            "flasher_position": [0.0 * u.cm, 0.0 * u.cm],
-            "flasher_depth": 100.0 * u.cm,
-            "flasher_inclination": 1.0 * u.deg,
-            "mirror_camera_distance": 55.0 * u.cm,
-            "spectrum": 380.0 * u.nm,
-        }
-        return mp[name]
-
-    inst._flasher_model.get_parameter_value_with_unit.side_effect = gpvu
-    inst._flasher_model.get_parameter_value.side_effect = lambda n: {
-        "lightpulse": "Gauss:2.0",
-        "angular_distribution": "gauss:11",
-        "flasher_pattern": "all",
-        "bunch_size": 1.0,
-    }[n]
-
-    cmd = inst._add_sst_flasher_options("")
-
-    assert "--events 2" in cmd
-    assert "--photons 500000.0" in cmd
-    assert "--bunchsize 1.0" in cmd
-    assert "--flasher-xy 0.0" in cmd
-    assert "--flasher-depth 100.0" in cmd
-    assert "--flasher-inclination 1.0" in cmd
-    assert "--mirror-camera-distance 55.0" in cmd
-    assert "--spectrum 380" in cmd
-    assert "--lightpulse Gauss:2.0" in cmd
-    assert "--angular-distribution gauss:11" in cmd
-    assert "--fire all" in cmd
-
-
 def test_add_flasher_command_options_branch():
     inst = object.__new__(SimulatorLightEmission)
     inst._telescope_model = MagicMock()
     inst._flasher_model = MagicMock()
 
-    inst._telescope_model.name = "SSTS-05"
-    with (
-        patch.object(inst, "_add_sst_flasher_options", return_value="sst") as sst,
-        patch.object(inst, "_add_mst_lst_flasher_options", return_value="mst") as mst,
-    ):
-        out = inst._add_flasher_command_options("")
-        assert out == "sst"
-        sst.assert_called_once()
-        mst.assert_not_called()
-
-    inst._telescope_model.name = "MSTN-04"
-    with (
-        patch.object(inst, "_add_sst_flasher_options", return_value="sst") as sst,
-        patch.object(inst, "_add_mst_lst_flasher_options", return_value="mst") as mst,
-    ):
+    with patch.object(inst, "_add_flasher_options", return_value="mst") as mst:
+        inst._telescope_model.name = "SSTS-05"
         out = inst._add_flasher_command_options("")
         assert out == "mst"
         mst.assert_called_once()
-        sst.assert_not_called()
+
+    with patch.object(inst, "_add_flasher_options", return_value="mst") as mst:
+        inst._telescope_model.name = "MSTN-04"
+        out = inst._add_flasher_command_options("")
+        assert out == "mst"
+        mst.assert_called_once()
 
 
 def test_get_distance_for_plotting_flasher():

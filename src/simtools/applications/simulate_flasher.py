@@ -8,23 +8,16 @@ Run the application in the command line.
 Example Usage
 -------------
 
-1. Simulate flashers for an MST telescope:
+1. Simulate flashers for a telescope (single-mirror flasher model used for all):
 
     .. code-block:: console
 
         simtools-simulate-flasher --telescope MSTN-04 --site North \
         --flasher FLSN-01 --model_version 6.0.0
 
-2. Simulate flashers for an SST telescope:
-
-    .. code-block:: console
-
-        simtools-simulate-flasher --telescope SSTS-04 --site South \
-        --flasher FLSS-01 --model_version 6.0.0
-
 Command Line Arguments
 ----------------------
-telescope (str, required)
+telecope (str, required)
     Telescope model name (e.g. LSTN-01, MSTN-04, SSTS-04, ...)
 site (str, required)
     Site name (North or South).
@@ -134,14 +127,9 @@ def _parse(label):
     )
 
 
-def flasher_configs(telescope_model_name):
+def flasher_configs():
     """
-    Get flasher configurations based on telescope type.
-
-    Parameters
-    ----------
-    telescope_model_name
-        Telescope model name (LST-01, LST-02, MST-04, ...)
+    Get flasher configurations (uniform across telescope types).
 
     Returns
     -------
@@ -149,8 +137,7 @@ def flasher_configs(telescope_model_name):
         Application name and mode
 
     """
-    if "SST" in telescope_model_name:
-        return ("ff-gct", "flasher")
+    # Use currently ff-1m for all telescopes
     return ("ff-1m", "flasher")
 
 
@@ -178,7 +165,7 @@ def main():
         label=label,
     )
 
-    le_application = flasher_configs(telescope_model.name)
+    le_application = flasher_configs()
 
     picture_thresh = int(args_dict["picture_thresh"]) if args_dict.get("picture_thresh") else 50
     boundary_thresh = int(args_dict["boundary_thresh"]) if args_dict.get("boundary_thresh") else 20
