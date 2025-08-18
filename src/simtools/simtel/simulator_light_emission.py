@@ -195,7 +195,7 @@ class SimulatorLightEmission(SimtelRunner):
             "flasher_depth": {
                 "len": 1,
                 "unit": u.Unit("cm"),
-                "default": 2.46 * u.cm,
+                "default": 60 * u.cm,
                 "names": ["depth", "distance"],
             },
             "flasher_inclination": {
@@ -299,7 +299,7 @@ class SimulatorLightEmission(SimtelRunner):
         return telpos_file
 
     def _prepare_ff_atmosphere_files(self, config_directory: Path) -> int:
-        """Prepare canonical atmosphere aliases for ff-1m/ff-gct and return model id 1."""
+        """Prepare canonical atmosphere aliases for ff-1m and return model id 1."""
         atmo_name = self._telescope_model.get_parameter_value("atmospheric_profile")
         self._logger.debug(f"Using atmosphere profile: {atmo_name}")
 
@@ -380,7 +380,7 @@ class SimulatorLightEmission(SimtelRunner):
         self, app_name, config_directory: Path, corsika_observation_level, telpos_file: Path
     ) -> str:
         """Return CLI segment for altitude/atmosphere and telpos handling."""
-        if app_name in ("ff-1m", "ff-gct"):
+        if app_name in ("ff-1m",):
             seg = []
             seg.append(" -I.")
             seg.append(f" -I{self._simtel_path.joinpath('sim_telarray/cfg')}")
@@ -389,7 +389,7 @@ class SimulatorLightEmission(SimtelRunner):
             atmo_id = self._prepare_ff_atmosphere_files(config_directory)
             seg.append(f" --atmosphere {atmo_id}")
             return "".join(seg)
-        # default path
+        # default path (not used for flasher now, but kept for completeness)
         return f" -h  {corsika_observation_level.to(u.m).value} --telpos-file {telpos_file}"
 
     def _build_source_specific_block(self, x_tel, y_tel, z_tel, config_directory: Path) -> str:
@@ -404,90 +404,12 @@ class SimulatorLightEmission(SimtelRunner):
         return ""
 
     def _add_flasher_command_options(self, command):
-        """
-        Add flasher-specific command options to the light emission script.
+        """Add flasher-specific options to the script (uniform ff-1m)."""
+        return self._add_flasher_options(command)
 
-        Parameters
-        ----------
-        command : str
-            The command string to add options to
-
-        Returns
-        -------
-        str
-            The updated command string
-        """
-        telescope_name = self._telescope_model.name
-        if "SST" in telescope_name:
-            command = self._add_sst_flasher_options(command)
-        else:
-            command = self._add_mst_lst_flasher_options(command)
-        return command
-
-    def _add_sst_flasher_options(self, command):
-        """
-        Add SST-specific flasher options to the command.
-
-        Parameters
-        ----------
-        command : str
-            The command string to add options to
-
-        Returns
-        -------
-        str
-            The updated command string
-        """
-        # For dual mirror we use ff-gct style flashers (dual-mirror design)
-        flasher_xy = self._flasher_model.get_parameter_value_with_unit("flasher_position")
-        flasher_depth = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
-        flasher_inclination = self._flasher_model.get_parameter_value_with_unit(
-            "flasher_inclination"
-        )
-        mirror_camera_distance = self._flasher_model.get_parameter_value_with_unit(
-            "mirror_camera_distance"
-        )
-        spectrum = self._flasher_model.get_parameter_value_with_unit("spectrum")
-        pulse = self._flasher_model.get_parameter_value("lightpulse")
-        angular = self._flasher_model.get_parameter_value("angular_distribution")
-        fire_pattern = self._flasher_model.get_parameter_value("flasher_pattern")
-        bunch_size = self._flasher_model.get_parameter_value("bunch_size")
-
-        # Convert to plain numbers for CLI
-        fx = flasher_xy[0].to(u.cm).value
-        fdepth = flasher_depth.to(u.cm).value
-        finc = flasher_inclination.to(u.deg).value
-        mcd = mirror_camera_distance.to(u.cm).value
-        spec_nm = int(spectrum.to(u.nm).value)
-
-        command += f" --events {self.runs}"
-        command += f" --photons {self.photons_per_run}"
-        command += f" --bunchsize {bunch_size}"
-        command += f" --flasher-xy {fx}"
-        command += f" --flasher-depth {fdepth}"
-        command += f" --flasher-inclination {finc}"
-        command += f" --mirror-camera-distance {mcd}"
-        command += f" --spectrum {spec_nm}"
-        command += f" --lightpulse {pulse}"
-        command += f" --angular-distribution {angular}"
-        command += f" --fire {fire_pattern}"
-        return command
-
-    def _add_mst_lst_flasher_options(self, command):
-        """
-        Add MST/LST-specific flasher options to the command.
-
-        Parameters
-        ----------
-        command : str
-            The command string to add options to
-
-        Returns
-        -------
-        str
-            The updated command string
-        """
-        # For MST/LST we use ff-1m style flashers (single-mirror design)
+    def _add_flasher_options(self, command):
+        """Add flasher options for all telescope types (ff-1m style)."""
+        # For MST/LST we used to use ff-1m; now apply same for all telescopes
         flasher_xy = self._flasher_model.get_parameter_value_with_unit("flasher_position")
         flasher_distance = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
         # Camera radius required for application, Radius of fiducial sphere enclosing camera
