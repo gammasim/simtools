@@ -300,36 +300,26 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _prepare_ff_atmosphere_files(self, config_directory: Path) -> int:
         """Prepare canonical atmosphere aliases for ff-1m/ff-gct and return model id 1."""
-        try:
-            atmo_name = self._telescope_model.get_parameter_value("atmospheric_profile")
-            self._logger.debug(f"Using atmosphere profile: {atmo_name}")
-        except InvalidModelParameterError:
-            atmo_name = None
-
-        if not atmo_name:
-            return 1
+        atmo_name = self._telescope_model.get_parameter_value("atmospheric_profile")
+        self._logger.debug(f"Using atmosphere profile: {atmo_name}")
 
         src_path = config_directory.joinpath(atmo_name)
-        if src_path.exists():
-            for canonical in ("atmprof1.dat", "atm_profile_model_1.dat"):
-                dst = config_directory.joinpath(canonical)
-                try:
-                    if dst.exists() or dst.is_symlink():
-                        try:
-                            dst.unlink()
-                        except OSError:
-                            pass
-                    dst.symlink_to(src_path)
-                except OSError:
+        for canonical in ("atmprof1.dat", "atm_profile_model_1.dat"):
+            dst = config_directory.joinpath(canonical)
+            try:
+                if dst.exists() or dst.is_symlink():
                     try:
-                        shutil.copy2(src_path, dst)
-                    except OSError as copy_err:
-                        self._logger.warning(
-                            f"Failed to create atmosphere alias {dst.name}: {copy_err}"
-                        )
-        else:
-            self._logger.info(f"Atmosphere file '{src_path}' not found; using defaults")
-
+                        dst.unlink()
+                    except OSError:
+                        pass
+                dst.symlink_to(src_path)
+            except OSError:
+                try:
+                    shutil.copy2(src_path, dst)
+                except OSError as copy_err:
+                    self._logger.warning(
+                        f"Failed to create atmosphere alias {dst.name}: {copy_err}"
+                    )
         return 1
 
     def _make_light_emission_script(self):
