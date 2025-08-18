@@ -83,7 +83,6 @@ def _generate_1d_plots(histograms, labels, limits):
             "scales": {},
             "lines": {"x": viewcone_radius},
         },
-        # TODO should go to io_histograms? part of histo_type? (rename)
         "cr_rates": {
             "x_label": labels["energy"],
             "scales": {"x": "log", "y": "log"},
