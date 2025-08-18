@@ -386,6 +386,7 @@ def test_read_runtime_environment_with_full_options(monkeypatch):
         common_network,
         common_image,
     ]
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value=None))
     with pytest.raises(
         RuntimeError, match=f"Container engine '{common_container_engine}' not found."
     ):
