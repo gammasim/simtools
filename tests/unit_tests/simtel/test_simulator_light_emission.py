@@ -1073,3 +1073,62 @@ def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypat
     assert not a2.is_symlink()
     assert a1.read_text(encoding="utf-8") == "atmcontent3"
     assert a2.read_text(encoding="utf-8") == "atmcontent3"
+
+
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._plot_flasher_outputs")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._plot_calibration_outputs")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_distance_for_plotting")
+@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_simulation_output_filename")
+def test_process_simulation_output_uses_flasher_branch(
+    mock_get_filename,
+    mock_get_distance,
+    mock_plot_calib,
+    mock_plot_flasher,
+    mock_simulator_variable,
+):
+    # Arrange
+    inst = mock_simulator_variable
+    inst.light_source_type = "flasher"
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+    mock_get_filename.return_value = "dummy.simtel.gz"
+    mock_get_distance.return_value = 321 * u.m
+
+    # Act
+    inst.process_simulation_output(args_dict, figures)
+
+    # Assert
+    mock_plot_flasher.assert_called_once()
+    fargs = mock_plot_flasher.call_args[0]
+    assert fargs[0] == "dummy.simtel.gz"
+    assert fargs[1] == args_dict
+    assert fargs[2].to_value(u.m) == pytest.approx(321)
+    assert fargs[3] is figures
+    mock_plot_calib.assert_not_called()
+
+
+def test_plot_simulation_output_delegates_to_ctapipe(monkeypatch):
+    inst = object.__new__(SimulatorLightEmission)
+    captured = {}
+
+    def fake_ctapipe(filename, *, cleaning_args, distance, return_cleaned):
+        captured["filename"] = filename
+        captured["cleaning_args"] = cleaning_args
+        captured["distance"] = distance
+        captured["return_cleaned"] = return_cleaned
+        return "OK"
+
+    monkeypatch.setattr(sim_mod, "plot_simtel_ctapipe", fake_ctapipe)
+
+    result = inst._plot_simulation_output("out.simtel.gz", 4, 2, 1, 42 * u.m, False)
+
+    assert result == "OK"
+    assert captured["filename"] == "out.simtel.gz"
+    assert captured["cleaning_args"] == [4, 2, 1]
+    assert captured["distance"].to_value(u.m) == pytest.approx(42)
+    assert captured["return_cleaned"] is False
