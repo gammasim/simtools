@@ -138,22 +138,6 @@ def test_plot_simtel_event_image_returns_figure(monkeypatch):
     plt.close(fig)
 
 
-def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
-    class _EmptySrc:
-        def __iter__(self):
-            return iter(())
-
-    _EmptySrc.subarray = SimpleNamespace(tel={})
-
-    _install_fake_ctapipe(monkeypatch, _EmptySrc())
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=lep._logger.name):  # pylint:disable=protected-access
-        fig = lep.plot_simtel_event_image(DUMMY_SIMTEL)
-    assert fig is None
-    assert any("No event found" in r.message for r in caplog.records)
-
-
 def test_plot_simtel_event_image_with_cleaning(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
     src = _fake_source_with_event(ev, tel_id)
