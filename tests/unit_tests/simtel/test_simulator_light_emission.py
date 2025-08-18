@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, PropertyMock, call, mock_open, patch
@@ -862,3 +863,162 @@ def test_get_distance_for_plotting_flasher():
 
     d = inst._get_distance_for_plotting()
     assert d.to_value(u.m) == pytest.approx(1.5)
+
+
+def test_prepare_ff_atmosphere_files_creates_aliases(tmp_path, caplog):
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.get_parameter_value.return_value = "atm_test_profile.dat"
+
+    src = tmp_path / "atm_test_profile.dat"
+    src.write_text("atmcontent", encoding="utf-8")
+
+    with caplog.at_level(logging.DEBUG, logger=SIM_MOD_PATH):
+        rid = inst._prepare_ff_atmosphere_files(tmp_path)
+
+    assert rid == 1
+    for name in ("atmprof1.dat", "atm_profile_model_1.dat"):
+        alias = tmp_path / name
+        assert alias.exists()
+        # Content must match source (works for symlink or copied file)
+        assert alias.read_text(encoding="utf-8") == "atmcontent"
+
+
+def test_prepare_ff_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.get_parameter_value.return_value = "atm_prof2.dat"
+
+    src = tmp_path / "atm_prof2.dat"
+    src.write_text("X", encoding="utf-8")
+
+    def raise_oserr(self, target):
+        raise OSError("symlink not permitted")
+
+    monkeypatch.setattr(Path, "symlink_to", raise_oserr, raising=True)
+
+    def fake_copy2(src_path, dst_path):
+        Path(dst_path).write_bytes(Path(src_path).read_bytes())
+        return str(dst_path)
+
+    monkeypatch.setattr(shutil, "copy2", fake_copy2, raising=True)
+
+    rid = inst._prepare_ff_atmosphere_files(tmp_path)
+    assert rid == 1
+
+    a1 = tmp_path / "atmprof1.dat"
+    a2 = tmp_path / "atm_profile_model_1.dat"
+    assert a1.exists()
+    assert a2.exists()
+    assert not a1.is_symlink()
+    assert not a2.is_symlink()
+    assert a1.read_text(encoding="utf-8") == "X"
+    assert a2.read_text(encoding="utf-8") == "X"
+
+
+def test_build_altitude_atmo_block_ff1m(tmp_path, monkeypatch):
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst._simtel_path = Path("/simroot")
+
+    monkeypatch.setattr(inst, "_prepare_ff_atmosphere_files", lambda *_: 42)
+
+    block = inst._build_altitude_atmo_block("ff-1m", tmp_path, 2150 * u.m, tmp_path / "telpos.dat")
+
+    assert " -I." in block
+    assert f" -I{inst._simtel_path.joinpath('sim_telarray/cfg')}" in block
+    assert f" -I{tmp_path}" in block
+    assert "--altitude 2150.0" in block
+    assert "--atmosphere 42" in block
+
+
+def test_build_altitude_atmo_block_default(tmp_path):
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst._simtel_path = Path("/simroot")
+
+    telpos = tmp_path / "telpos.dat"
+    block = inst._build_altitude_atmo_block("xyzls", tmp_path, 2100 * u.m, telpos)
+    assert block == f" -h  2100.0 --telpos-file {telpos}"
+
+
+def test_build_source_specific_block_branches(tmp_path, caplog, monkeypatch):
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+
+    monkeypatch.setattr(inst, "_add_flasher_command_options", lambda cmd: "FLASHER")
+    monkeypatch.setattr(inst, "_add_led_command_options", lambda cmd: "LED")
+    monkeypatch.setattr(
+        inst,
+        "_add_laser_command_options",
+        lambda cmd, x, y, z, cfg: "LASER" if cfg == tmp_path else "BAD",
+    )
+
+    inst.light_source_type = None
+
+    out = inst._build_source_specific_block(1, 2, 3, tmp_path)
+    # Default light_source_type is None -> warning + empty string
+    assert out == ""
+
+    with caplog.at_level(logging.WARNING, logger=SIM_MOD_PATH):
+        inst.light_source_type = "unknown"
+        out = inst._build_source_specific_block(1, 2, 3, tmp_path)
+        assert out == ""
+        assert any("Unknown light_source_type" in r.message for r in caplog.records)
+
+    inst.light_source_type = "flasher"
+    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "FLASHER"
+
+    inst.light_source_type = "led"
+    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "LED"
+
+    inst.light_source_type = "laser"
+    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "LASER"
+
+
+def test_make_simtel_script_includes_bypass_for_flasher():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst.light_source_type = "flasher"
+    inst.le_application = ("ff-1m", "layout")
+    inst.output_directory = "/directory"
+
+    inst._simtel_path = MagicMock()
+    inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
+
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.config_file_directory = "/path/to/config/"
+    type(inst._telescope_model).config_file_path = PropertyMock(
+        return_value="/path/to/config/config.cfg"
+    )
+    inst._telescope_model.get_parameter_value.side_effect = (
+        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
+    )
+
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+
+    mock_file_content = "dummy"
+    with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)):
+        cmd = inst._make_simtel_script()
+
+    expected = (
+        "SIM_TELARRAY_CONFIG_PATH='' "
+        "/path/to/sim_telarray/bin/sim_telarray/ "
+        "-I/path/to/config/ -I/path/to/sim_telarray/bin/sim_telarray/ "
+        "-c /path/to/config/config.cfg "
+        "-DNUM_TELESCOPES=1 "
+        "-C altitude=999.0 -C atmospheric_transmission=atm_test "
+        "-C TRIGGER_TELESCOPES=1 "
+        "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
+        "-C MAXIMUM_TELESCOPES=1 "
+        "-C telescope_theta=0 -C telescope_phi=0 "
+        "-C Bypass_Optics=1 "
+        "-C power_law=2.68 -C input_file=/directory/ff-1m.iact.gz "
+        "-C output_file=/directory/ff-1m_layout.simtel.gz "
+        "-C histogram_file=/directory/ff-1m_layout.ctsim.hdata\n"
+    )
+
+    assert cmd == expected
