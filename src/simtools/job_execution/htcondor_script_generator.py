@@ -17,13 +17,12 @@ def generate_submission_script(args_dict):
     args_dict: dict
         Arguments dictionary.
     """
-    _logger.info("Generating HT Condor submission scripts ")
-
     work_dir = Path(args_dict["output_path"])
     log_dir = work_dir / "logs"
     work_dir.mkdir(parents=True, exist_ok=True)
     log_dir.mkdir(parents=True, exist_ok=True)
     submit_file_name = "simulate_prod.submit"
+    _logger.info(f"Generating HT Condor submission scripts (path: {work_dir})")
 
     with open(work_dir / f"{submit_file_name}.condor", "w", encoding="utf-8") as submit_file_handle:
         submit_file_handle.write(
