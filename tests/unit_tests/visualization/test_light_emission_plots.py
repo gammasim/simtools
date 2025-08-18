@@ -96,9 +96,11 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
             self.cmap = None
 
         def add_colorbar(self, *a, **k):
+            # Minimal stub: tests don't assert on colorbars
             pass
 
         def set_limits_percent(self, *a, **k):
+            # Minimal stub: emulate API without scaling
             pass
 
     def _tailcuts_clean(*a, **k):
