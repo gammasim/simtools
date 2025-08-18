@@ -65,7 +65,7 @@ def main():
 
     version_list = version_string.strip().split("\n")
     for version_entry in version_list:
-        key, value = version_entry.split(": ")
+        key, value = version_entry.split(": ", 1)
         version_dict[key] = value
 
     ascii_handler.write_data_to_file(
