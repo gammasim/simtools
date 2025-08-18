@@ -100,6 +100,8 @@ def _get_submit_script(args_dict):
     )
     core_scatter = args_dict["core_scatter"]
     core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
+    view_cone = args_dict["view_cone"]
+    view_cone_string = f'"{view_cone[0].to(u.deg).value} deg {view_cone[1].to(u.deg).value} deg"'
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
 
@@ -131,7 +133,7 @@ simtools-simulate-prod \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
-    --view_cone {args_dict["view_cone"]} \\
+    --view_cone {view_cone_string} \\
     --run_number $((process_id)) \\
     --run_number_offset {run_number_offset} \\
     --number_of_runs 1 \\
