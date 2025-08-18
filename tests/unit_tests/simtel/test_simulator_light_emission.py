@@ -1132,3 +1132,136 @@ def test_plot_simulation_output_delegates_to_ctapipe(monkeypatch):
     assert captured["cleaning_args"] == [4, 2, 1]
     assert captured["distance"].to_value(u.m) == pytest.approx(42)
     assert captured["return_cleaned"] is False
+
+
+def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch, caplog):
+    # Instance with mocked logger and telescope model
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.get_parameter_value.return_value = "atm_failed.dat"
+
+    # Create source file
+    src = tmp_path / "atm_failed.dat"
+    src.write_text("atm", encoding="utf-8")
+
+    # Force symlink_to to fail, then copy2 to fail, to trigger warning branch
+    monkeypatch.setattr(
+        Path,
+        "symlink_to",
+        lambda self, target: (_ for _ in ()).throw(OSError("no symlink")),
+        raising=True,
+    )
+    monkeypatch.setattr(
+        shutil, "copy2", lambda s, d: (_ for _ in ()).throw(OSError("copy failed")), raising=True
+    )
+
+    with caplog.at_level(logging.WARNING, logger=SIM_MOD_PATH):
+        rid = inst._prepare_ff_atmosphere_files(tmp_path)
+
+    assert rid == 1
+    # Two aliases attempted -> two warnings, one per destination name
+    warnings = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("atmprof1.dat" in w and "Failed to create atmosphere alias" in w for w in warnings)
+    assert any(
+        "atm_profile_model_1.dat" in w and "Failed to create atmosphere alias" in w
+        for w in warnings
+    )
+
+
+def test_plot_flasher_outputs_logs_peak_stats(monkeypatch, sim_instance, caplog):
+    # Suppress other figures to focus on stats log, but keep calibration fig
+    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_signal_image", lambda *a, **k: None)
+    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_pedestal_image", lambda *a, **k: None)
+    monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", lambda *a, **k: None)
+    monkeypatch.setattr(sim_mod, "plot_simtel_waveform_pcolormesh", lambda *a, **k: None)
+
+    # Return a fig and stats dict from peak timing
+    stats = {"considered": 10, "found": 8, "mean": 12.34, "std": 1.23}
+    monkeypatch.setattr(
+        sim_mod, "plot_simtel_peak_timing", lambda *a, **k: (_make_dummy_fig(), stats)
+    )
+
+    figures = []
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
+        sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 4}, None, figures)
+
+    # Expect one calibration fig + one peak timing fig
+    assert len(figures) == 2
+    messages = "\n".join(r.message for r in caplog.records)
+    assert "Peak timing stats:" in messages
+    assert "considered=10" in messages
+    assert "peaks_found=8" in messages
+    assert "mean=12.34" in messages
+    assert "std=1.23" in messages
+    for f in figures:
+        plt.close(f)
+
+
+def test_photons_per_run_flasher_model_non_test():
+    # When flasher model is provided and not in test mode, use model value
+    tel = MagicMock()
+    tel.write_sim_telarray_config_file = MagicMock()
+    flasher = MagicMock()
+    flasher.get_parameter_value.return_value = 7.89e6
+
+    inst = SimulatorLightEmission(
+        telescope_model=tel,
+        calibration_model=None,
+        flasher_model=flasher,
+        site_model=None,
+        light_emission_config={},
+        le_application=("ff-1m", "layout"),
+        simtel_path=None,
+        light_source_type="flasher",
+        label="photons-test",
+        test=False,
+    )
+
+    assert inst.photons_per_run == pytest.approx(7.89e6)
+    flasher.get_parameter_value.assert_called_once_with("photons_per_flasher")
+
+
+def test_photons_per_run_flasher_model_test_mode():
+    # When flasher model is provided and in test mode, force 1e8 and don't query model
+    tel = MagicMock()
+    tel.write_sim_telarray_config_file = MagicMock()
+    flasher = MagicMock()
+
+    inst = SimulatorLightEmission(
+        telescope_model=tel,
+        calibration_model=None,
+        flasher_model=flasher,
+        site_model=None,
+        light_emission_config={},
+        le_application=("ff-1m", "layout"),
+        simtel_path=None,
+        light_source_type="flasher",
+        label="photons-test2",
+        test=True,
+    )
+
+    assert inst.photons_per_run == pytest.approx(1e8)
+    flasher.get_parameter_value.assert_not_called()
+
+
+def test_photons_per_run_no_models():
+    # When neither calibration nor flasher model is provided, default to 1e8
+    tel = MagicMock()
+    tel.write_sim_telarray_config_file = MagicMock()
+
+    inst = SimulatorLightEmission(
+        telescope_model=tel,
+        calibration_model=None,
+        flasher_model=None,
+        site_model=None,
+        light_emission_config={},
+        le_application=("xyzls", "layout"),
+        simtel_path=None,
+        light_source_type="led",
+        label="photons-test3",
+        test=False,
+    )
+
+    assert inst.photons_per_run == pytest.approx(1e8)
