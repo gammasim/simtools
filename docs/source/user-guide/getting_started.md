@@ -112,6 +112,8 @@ Ask one of the developers for the credentials to access the database.
 Credentials for database access are passed on to simtools applications using environmental variables stored
 in a file named `.env`, see the [Environment Variables](#environment-variables) section below.
 
+(environment-variables)=
+
 ## Environment Variables
 
 The environment variables listed below are used by simtools applications and defined by the user in a `.env` file to be placed in the working directory. Copy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named `.env` and update it accordingly.
