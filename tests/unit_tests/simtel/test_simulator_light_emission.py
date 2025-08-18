@@ -15,7 +15,7 @@ from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general as gen
-from simtools.visualization.visualize import plot_simtel_ctapipe
+from simtools.visualization.light_emission_plots import plot_simtel_ctapipe
 
 SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
 
