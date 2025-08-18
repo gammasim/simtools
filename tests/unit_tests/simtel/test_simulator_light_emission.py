@@ -1022,3 +1022,54 @@ def test_make_simtel_script_includes_bypass_for_flasher():
     )
 
     assert cmd == expected
+
+
+def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypatch):
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.get_parameter_value.return_value = "atm_prof3.dat"
+
+    # Source atmosphere file
+    src = tmp_path / "atm_prof3.dat"
+    src.write_text("atmcontent3", encoding="utf-8")
+
+    # Pre-create alias files so that unlink() will be attempted on them
+    a1 = tmp_path / "atmprof1.dat"
+    a2 = tmp_path / "atm_profile_model_1.dat"
+    a1.write_text("old1", encoding="utf-8")
+    a2.write_text("old2", encoding="utf-8")
+
+    calls = []
+    orig_unlink = Path.unlink
+
+    def fake_unlink(self):
+        # Record attempts to unlink our aliases and raise OSError to exercise except path
+        if self.name in ("atmprof1.dat", "atm_profile_model_1.dat"):
+            calls.append(self)
+            raise OSError("cannot unlink")
+        return orig_unlink(self)
+
+    monkeypatch.setattr(Path, "unlink", fake_unlink, raising=True)
+
+    # Ensure that symlink creation fails so copy fallback is used (since files still exist)
+    # In practice, symlink_to on existing path raises FileExistsError, but make it explicit
+    def fake_symlink_to(self, target):
+        raise OSError("file exists")
+
+    monkeypatch.setattr(Path, "symlink_to", fake_symlink_to, raising=True)
+
+    # Run
+    rid = inst._prepare_ff_atmosphere_files(tmp_path)
+
+    # Assertions
+    assert rid == 1
+    assert len(calls) == 2
+
+    assert a1.exists()
+    assert a2.exists()
+    # Should end up as regular files with copied content
+    assert not a1.is_symlink()
+    assert not a2.is_symlink()
+    assert a1.read_text(encoding="utf-8") == "atmcontent3"
+    assert a2.read_text(encoding="utf-8") == "atmcontent3"
