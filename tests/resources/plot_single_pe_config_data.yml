@@ -9,7 +9,7 @@ plot:
   xlim: [0., 40.]
   ylim: [1.e-11, null]
   tables:
-    - file_name: tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+    - file_name: SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
       type: "legacy_lst_single_pe"
       label: 'LST-legacy'
       column_x: 'amplitude'
