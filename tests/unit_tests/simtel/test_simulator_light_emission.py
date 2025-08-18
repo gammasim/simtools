@@ -20,6 +20,11 @@ from simtools.visualization.light_emission_plots import plot_simtel_ctapipe
 
 SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
 
+# Test constants to avoid duplicated string literals
+DUMMY_SIMTEL = "dummy.simtel.gz"
+ATM_ALIAS1 = "atmprof1.dat"
+ATM_ALIAS2 = "atm_profile_model_1.dat"
+
 
 @pytest.fixture(name="label")
 def label_fixture():
@@ -754,7 +759,7 @@ def test_plot_flasher_outputs_success(monkeypatch, sim_instance, caplog):
     figures = []
     caplog.clear()
     with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
-        sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 6}, None, figures)
+        sim_instance._plot_flasher_outputs(DUMMY_SIMTEL, {"n_trace_pixels": 6}, None, figures)
 
     # 1 calibration + 5 plots (signal, pedestal, traces, peak timing, pcolormesh)
     assert len(figures) == 6
@@ -786,7 +791,7 @@ def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
     figures = []
     caplog.clear()
     with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
-        sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 3}, None, figures)
+        sim_instance._plot_flasher_outputs(DUMMY_SIMTEL, {"n_trace_pixels": 3}, None, figures)
 
     # Only calibration figure appended
     assert len(figures) == 1
@@ -878,7 +883,7 @@ def test_prepare_ff_atmosphere_files_creates_aliases(tmp_path, caplog):
         rid = inst._prepare_ff_atmosphere_files(tmp_path)
 
     assert rid == 1
-    for name in ("atmprof1.dat", "atm_profile_model_1.dat"):
+    for name in (ATM_ALIAS1, ATM_ALIAS2):
         alias = tmp_path / name
         assert alias.exists()
         # Content must match source (works for symlink or copied file)
@@ -908,8 +913,8 @@ def test_prepare_ff_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
     rid = inst._prepare_ff_atmosphere_files(tmp_path)
     assert rid == 1
 
-    a1 = tmp_path / "atmprof1.dat"
-    a2 = tmp_path / "atm_profile_model_1.dat"
+    a1 = tmp_path / ATM_ALIAS1
+    a2 = tmp_path / ATM_ALIAS2
     assert a1.exists()
     assert a2.exists()
     assert not a1.is_symlink()
@@ -1035,8 +1040,8 @@ def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypat
     src.write_text("atmcontent3", encoding="utf-8")
 
     # Pre-create alias files so that unlink() will be attempted on them
-    a1 = tmp_path / "atmprof1.dat"
-    a2 = tmp_path / "atm_profile_model_1.dat"
+    a1 = tmp_path / ATM_ALIAS1
+    a2 = tmp_path / ATM_ALIAS2
     a1.write_text("old1", encoding="utf-8")
     a2.write_text("old2", encoding="utf-8")
 
@@ -1045,7 +1050,7 @@ def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypat
 
     def fake_unlink(self):
         # Record attempts to unlink our aliases and raise OSError to exercise except path
-        if self.name in ("atmprof1.dat", "atm_profile_model_1.dat"):
+        if self.name in (ATM_ALIAS1, ATM_ALIAS2):
             calls.append(self)
             raise OSError("cannot unlink")
         return orig_unlink(self)
@@ -1096,7 +1101,7 @@ def test_process_simulation_output_uses_flasher_branch(
         "return_cleaned": True,
     }
     figures = []
-    mock_get_filename.return_value = "dummy.simtel.gz"
+    mock_get_filename.return_value = DUMMY_SIMTEL
     mock_get_distance.return_value = 321 * u.m
 
     # Act
@@ -1105,7 +1110,7 @@ def test_process_simulation_output_uses_flasher_branch(
     # Assert
     mock_plot_flasher.assert_called_once()
     fargs = mock_plot_flasher.call_args[0]
-    assert fargs[0] == "dummy.simtel.gz"
+    assert fargs[0] == DUMMY_SIMTEL
     assert fargs[1] == args_dict
     assert fargs[2].to_value(u.m) == pytest.approx(321)
     assert fargs[3] is figures
@@ -1162,11 +1167,8 @@ def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch
     assert rid == 1
     # Two aliases attempted -> two warnings, one per destination name
     warnings = [r.message for r in caplog.records if r.levelno == logging.WARNING]
-    assert any("atmprof1.dat" in w and "Failed to create atmosphere alias" in w for w in warnings)
-    assert any(
-        "atm_profile_model_1.dat" in w and "Failed to create atmosphere alias" in w
-        for w in warnings
-    )
+    assert any(ATM_ALIAS1 in w and "Failed to create atmosphere alias" in w for w in warnings)
+    assert any((ATM_ALIAS2 in w and "Failed to create atmosphere alias" in w) for w in warnings)
 
 
 def test_plot_flasher_outputs_logs_peak_stats(monkeypatch, sim_instance, caplog):
@@ -1185,7 +1187,7 @@ def test_plot_flasher_outputs_logs_peak_stats(monkeypatch, sim_instance, caplog)
     figures = []
     caplog.clear()
     with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
-        sim_instance._plot_flasher_outputs("dummy.simtel.gz", {"n_trace_pixels": 4}, None, figures)
+        sim_instance._plot_flasher_outputs(DUMMY_SIMTEL, {"n_trace_pixels": 4}, None, figures)
 
     # Expect one calibration fig + one peak timing fig
     assert len(figures) == 2

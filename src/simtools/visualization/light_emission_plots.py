@@ -28,11 +28,9 @@ TIME_NS_LABEL = "time [ns]"
 R1_SAMPLES_LABEL = "R1 samples [a.u.]"
 
 
-def _select_event_by_type(source, preferred: str | None):
-    """Return the first event from the source; log if filtering requested."""
+def _select_event_by_type(source):
+    """Return the first event from the source."""
     for ev in source:
-        if preferred:
-            _logger.info(f"Event type filtering ('{preferred}') not applied; returning first event")
         return ev
     _logger.warning("No events available from source")
     return None
@@ -60,9 +58,6 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
 
     source = EventSource(filename, max_events=1)
     event = next(iter(source), None)
-    if event is None:
-        _logger.warning(f"No events found in {filename}")
-        return None
 
     tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if not tel_ids:
@@ -101,13 +96,10 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     disp.set_limits_percent(100)
     ax.set_title(title, pad=20)
 
-    if distance is not None:
-        try:
-            d_str = f"{distance.to(u.m)}"
-        except (AttributeError, TypeError, ValueError):
-            d_str = str(distance)
-    else:
-        d_str = "n/a"
+    try:
+        d_str = f"{distance.to(u.m)}"
+    except (AttributeError, TypeError, ValueError):
+        d_str = str(distance)
 
     ax.annotate(
         f"tel type: {source.subarray.tel[tel_id].type.name}\n"
@@ -136,7 +128,6 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
 
 def plot_simtel_time_traces(
     filename,
-    event_type: str | None = None,
     tel_id: int | None = None,
     n_pixels: int = 3,
 ):
@@ -147,19 +138,13 @@ def plot_simtel_time_traces(
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
-        return None
+    event = _select_event_by_type(source)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
         tel_id = tel_id or r1_tel_ids[0]
     else:
         dl1_tel_ids = sorted(getattr(event.dl1, "tel", {}).keys())
-        if not dl1_tel_ids:
-            _logger.warning("Event has no R1 or DL1 telescope data for traces")
-            return None
         tel_id = tel_id or dl1_tel_ids[0]
 
     calib = CameraCalibrator(subarray=source.subarray)
@@ -208,7 +193,6 @@ def plot_simtel_time_traces(
 
 def plot_simtel_waveform_pcolormesh(
     filename,
-    event_type: str | None = None,
     tel_id: int | None = None,
     pixel_step: int | None = None,
     vmax: float | None = None,
@@ -219,10 +203,7 @@ def plot_simtel_waveform_pcolormesh(
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
-        return None
+    event = _select_event_by_type(source)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -271,7 +252,6 @@ def plot_simtel_waveform_pcolormesh(
 
 def plot_simtel_step_traces(
     filename,
-    event_type: str | None = None,
     tel_id: int | None = None,
     pixel_step: int = 100,
     max_pixels: int | None = None,
@@ -282,10 +262,7 @@ def plot_simtel_step_traces(
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
-        return None
+    event = _select_event_by_type(source)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -432,7 +409,6 @@ def _draw_peak_hist(
 
 def plot_simtel_peak_timing(
     filename,
-    event_type: str | None = None,
     tel_id: int | None = None,
     sum_threshold: float = 10.0,
     peak_width: int = 8,
@@ -451,10 +427,7 @@ def plot_simtel_peak_timing(
     from scipy import signal as _signal
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
-        return None
+    event = _select_event_by_type(source)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -532,7 +505,7 @@ def plot_simtel_peak_timing(
     return fig
 
 
-def _prepare_waveforms_for_image(filename, event_type, tel_id, context_no_r1):
+def _prepare_waveforms_for_image(filename, tel_id, context_no_r1):
     """Fetch R1 waveforms for one event/telescope and return prepared arrays.
 
     Returns (w, n_pix, n_samp, source, event, tel_id) or None on failure.
@@ -542,10 +515,7 @@ def _prepare_waveforms_for_image(filename, event_type, tel_id, context_no_r1):
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
-        return None
+    event = _select_event_by_type(source)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -568,7 +538,6 @@ def _prepare_waveforms_for_image(filename, event_type, tel_id, context_no_r1):
 
 def plot_simtel_integrated_signal_image(
     filename,
-    event_type: str | None = None,
     tel_id: int | None = None,
     half_width: int = 8,
 ):
@@ -577,7 +546,7 @@ def plot_simtel_integrated_signal_image(
     import numpy as np
     from ctapipe.visualization import CameraDisplay
 
-    prepared = _prepare_waveforms_for_image(filename, event_type, tel_id, "integrated-signal image")
+    prepared = _prepare_waveforms_for_image(filename, tel_id, "integrated-signal image")
     if prepared is None:
         return None
     w, n_pix, n_samp, source, event, tel_id = prepared
@@ -613,7 +582,6 @@ def plot_simtel_integrated_signal_image(
 
 def plot_simtel_integrated_pedestal_image(
     filename,
-    event_type: str | None = None,
     tel_id: int | None = None,
     half_width: int = 8,
     gap: int = 16,
@@ -623,9 +591,7 @@ def plot_simtel_integrated_pedestal_image(
     import numpy as np
     from ctapipe.visualization import CameraDisplay
 
-    prepared = _prepare_waveforms_for_image(
-        filename, event_type, tel_id, "integrated-pedestal image"
-    )
+    prepared = _prepare_waveforms_for_image(filename, tel_id, "integrated-pedestal image")
     if prepared is None:
         return None
     w, n_pix, n_samp, source, event, tel_id = prepared
@@ -669,7 +635,6 @@ def plot_simtel_integrated_pedestal_image(
 
 def plot_simtel_event_image(
     filename,
-    event_type: str | None = None,
     cleaning_args=None,
     distance=None,
     return_cleaned: bool = False,
@@ -682,10 +647,7 @@ def plot_simtel_event_image(
     from ctapipe.visualization import CameraDisplay
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source, event_type)
-    if event is None:
-        _logger.warning(f"No event found in {filename} matching type='{event_type}'")
-        return None
+    event = _select_event_by_type(source)
 
     calib = CameraCalibrator(subarray=source.subarray)
     calib(event)
@@ -741,13 +703,10 @@ def plot_simtel_event_image(
     title = f"{tel_label}, run {event.index.obs_id} event {event.index.event_id} ({et_name})"
     ax.set_title(title, pad=20)
 
-    if distance is not None:
-        try:
-            d_str = f"{distance.to(u.m)}"
-        except (AttributeError, TypeError, ValueError):
-            d_str = str(distance)
-    else:
-        d_str = "n/a"
+    try:
+        d_str = f"{distance.to(u.m)}"
+    except (AttributeError, TypeError, ValueError):
+        d_str = str(distance)
 
     ax.annotate(
         f"tel type: {source.subarray.tel[tel_id].type.name}\n"

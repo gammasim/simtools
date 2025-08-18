@@ -768,7 +768,7 @@ class SimulatorLightEmission(SimtelRunner):
         # Integrated charge around peak
 
         fig_sig = plot_simtel_integrated_signal_image(
-            filename, event_type="flasher", half_width=int(args_dict.get("charge_half_width", 8))
+            filename, half_width=int(args_dict.get("charge_half_width", 8))
         )
         if fig_sig is not None:
             figures.append(fig_sig)
@@ -776,7 +776,6 @@ class SimulatorLightEmission(SimtelRunner):
 
         fig_ped = plot_simtel_integrated_pedestal_image(
             filename,
-            event_type="flasher",
             half_width=int(args_dict.get("pedestal_half_width", 8)),
             gap=int(args_dict.get("pedestal_gap", 16)),
         )
@@ -789,7 +788,6 @@ class SimulatorLightEmission(SimtelRunner):
         try:
             fig_tr = plot_simtel_time_traces(
                 filename,
-                event_type="flasher",
                 n_pixels=n_pixels,
             )
             if fig_tr is not None:
@@ -802,7 +800,6 @@ class SimulatorLightEmission(SimtelRunner):
         try:
             pk_result = plot_simtel_peak_timing(
                 filename,
-                event_type="flasher",
                 sum_threshold=float(args_dict.get("peak_timing_sum_threshold", 20.0)),
                 peak_width=int(args_dict.get("peak_timing_peak_width", 10)),
                 examples=int(args_dict.get("peak_timing_examples", 5)),
@@ -833,7 +830,6 @@ class SimulatorLightEmission(SimtelRunner):
         try:
             fig_pc = plot_simtel_waveform_pcolormesh(
                 filename,
-                event_type="flasher",
                 pixel_step=args_dict.get("pcolormesh_pixel_step"),
                 vmax=args_dict.get("pcolormesh_vmax"),
             )
