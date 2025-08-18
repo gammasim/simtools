@@ -1199,7 +1199,7 @@ def test_plot_flasher_outputs_logs_peak_stats(monkeypatch, sim_instance, caplog)
         plt.close(f)
 
 
-def test_photons_per_run_flasher_model_non_test():
+def test_photons_per_run_flasher_model_non_test(tmp_path):
     # When flasher model is provided and not in test mode, use model value
     tel = MagicMock()
     tel.write_sim_telarray_config_file = MagicMock()
@@ -1213,7 +1213,7 @@ def test_photons_per_run_flasher_model_non_test():
         site_model=None,
         light_emission_config={},
         le_application=("ff-1m", "layout"),
-        simtel_path=None,
+        simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test",
         test=False,
@@ -1223,7 +1223,7 @@ def test_photons_per_run_flasher_model_non_test():
     flasher.get_parameter_value.assert_called_once_with("photons_per_flasher")
 
 
-def test_photons_per_run_flasher_model_test_mode():
+def test_photons_per_run_flasher_model_test_mode(tmp_path):
     # When flasher model is provided and in test mode, force 1e8 and don't query model
     tel = MagicMock()
     tel.write_sim_telarray_config_file = MagicMock()
@@ -1236,7 +1236,7 @@ def test_photons_per_run_flasher_model_test_mode():
         site_model=None,
         light_emission_config={},
         le_application=("ff-1m", "layout"),
-        simtel_path=None,
+        simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test2",
         test=True,
@@ -1246,7 +1246,7 @@ def test_photons_per_run_flasher_model_test_mode():
     flasher.get_parameter_value.assert_not_called()
 
 
-def test_photons_per_run_no_models():
+def test_photons_per_run_no_models(tmp_path):
     # When neither calibration nor flasher model is provided, default to 1e8
     tel = MagicMock()
     tel.write_sim_telarray_config_file = MagicMock()
@@ -1258,7 +1258,7 @@ def test_photons_per_run_no_models():
         site_model=None,
         light_emission_config={},
         le_application=("xyzls", "layout"),
-        simtel_path=None,
+        simtel_path=tmp_path,
         light_source_type="led",
         label="photons-test3",
         test=False,
