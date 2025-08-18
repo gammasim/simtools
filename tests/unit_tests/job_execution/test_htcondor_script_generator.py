@@ -27,7 +27,7 @@ def args_dict():
         "array_layout_name": "test_layout",
         "primary": "gamma",
         "nshow": 1000,
-        "run_number_offset": 0,
+        "run_number_offset": 1,
         "run_number": 1,
         "number_of_runs": 10,
         "log_level": "INFO",
