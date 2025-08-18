@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import shutil
 import subprocess
 from pathlib import Path
 from unittest import mock
@@ -352,7 +353,7 @@ def test_convert_dict_to_args_with_empty_dict():
     assert result == []
 
 
-def test_read_runtime_environment_with_full_options():
+def test_read_runtime_environment_with_full_options(monkeypatch):
     common_image = (
         "ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-"
         "bernlohr-1.68-prod6-baseline-qgs2-no_opt:20250715-152108"
@@ -385,15 +386,23 @@ def test_read_runtime_environment_with_full_options():
         common_network,
         common_image,
     ]
+    with pytest.raises(
+        RuntimeError, match=f"Container engine '{common_container_engine}' not found."
+    ):
+        simtools_runner.read_runtime_environment(runtime_environment, workdir)
+
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
     result = simtools_runner.read_runtime_environment(runtime_environment, workdir)
+
     assert result == expected_command
 
 
-def test_read_runtime_environment_with_minimal_options():
+def test_read_runtime_environment_with_minimal_options(monkeypatch):
     runtime_environment = {
         "image": "ghcr.io/gammasim/simtools-prod-sim-telarray",
         "container_engine": "docker",
     }
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
     workdir = TEST_WORKDIR
     expected_command = [
         "docker",
@@ -416,12 +425,13 @@ def test_read_runtime_environment_with_no_runtime_environment():
     assert result == []
 
 
-def test_read_runtime_environment_with_missing_options():
+def test_read_runtime_environment_with_missing_options(monkeypatch):
     runtime_environment = {
         "image": "ghcr.io/gammasim/simtools-prod-sim-telarray",
         "network": "simtools-mongo-network",
         "container_engine": "docker",
     }
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
     workdir = TEST_WORKDIR
     expected_command = [
         "docker",

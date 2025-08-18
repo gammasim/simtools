@@ -187,7 +187,7 @@ def get_build_options(run_time=None):
     """
     sim_telarray_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
     if sim_telarray_path is None:
-        raise TypeError("SIMTOOLS_SIMTEL_PATH not defined.")
+        raise ValueError("SIMTOOLS_SIMTEL_PATH not defined.")
 
     build_opts_path = Path(sim_telarray_path) / "build_opts.yml"
 

@@ -185,7 +185,7 @@ def test_get_sim_telarray_version_no_release(monkeypatch, subprocess_run):
 def test_build_options(monkeypatch, fake_path):
     # no SIMTEL_PATH defined
     monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-    with pytest.raises(TypeError, match="SIMTOOLS_SIMTEL_PATH not defined"):
+    with pytest.raises(ValueError, match="SIMTOOLS_SIMTEL_PATH not defined"):
         dependencies.get_build_options()
     # SIMTEL_PATH defined, but no build_opts.yml file
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
@@ -299,7 +299,7 @@ def test_get_corsika_version_empty_line(
 
 def test_get_build_options_no_env_var(monkeypatch):
     monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-    with pytest.raises(TypeError, match="SIMTOOLS_SIMTEL_PATH not defined."):
+    with pytest.raises(ValueError, match="SIMTOOLS_SIMTEL_PATH not defined."):
         dependencies.get_build_options()
 
 

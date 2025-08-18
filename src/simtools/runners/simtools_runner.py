@@ -1,5 +1,6 @@
 """Tools for running applications in the simtools framework."""
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -55,8 +56,6 @@ def run_application(runtime_environment, application, configuration, logger):
     ----------
     runtime_environment : list
         Command to run the application in the specified runtime environment.
-    workdir : str
-        Working directory for the application.
     application : str
         Name of the application to run.
     configuration : dict
@@ -251,6 +250,8 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
         return []
 
     engine = runtime_environment.get("container_engine", "docker")
+    if shutil.which(engine) is None:
+        raise RuntimeError(f"Container engine '{engine}' not found.")
     cmd = [engine, "run", "--rm", "-v", f"{Path.cwd()}:{workdir}", "-w", workdir]
 
     if options := runtime_environment.get("options"):
