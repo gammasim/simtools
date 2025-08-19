@@ -10,10 +10,9 @@ applications:
     test: true
     # zenith/off_axis/source_distance use defaults
   integration_tests:
-  - test_output_files:
-    - output_file: incident_angles_calculate_incident_angles.ecsv
-    - output_file: incident_angles_calculate_incident_angles.png
-    - output_file: incident_angles_calculate_incident_angles.log
+  - output_file: incident_angles_calculate_incident_angles.ecsv
+  - output_file: incident_angles_calculate_incident_angles.png
+  - output_file: incident_angles_calculate_incident_angles.log
   test_name: incident_angles
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
