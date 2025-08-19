@@ -1,5 +1,6 @@
 """Histograms for shower and triggered events."""
 
+import copy
 import logging
 
 import astropy.units as u
@@ -36,47 +37,6 @@ class SimtelIOEventHistograms:
 
         self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=telescope_list)
 
-    def get(self, key, default=None):
-        """
-        Provide direct access to histogram dictionary.
-
-        Parameters
-        ----------
-        key : str
-            Key for the histogram.
-        default : any
-            Default value to return if key is not found.
-
-        Returns
-        -------
-        any
-            Histogram data or default value.
-        """
-        return self.histograms.get(key, default)
-
-    @staticmethod
-    def histogram_types():
-        """
-        Return histogram types and corresponding plot titles.
-
-        This is mostly used for plotting purposes, to define the suffixes and titles
-
-        Returns
-        -------
-        dict
-            Dictionary describing histogram types.
-        """
-        return {
-            "triggered": {"suffix": "", "title": "Triggered events", "ordinate": "Event Count"},
-            "mc": {"suffix": "_mc", "title": "Simulated events", "ordinate": "Event Count"},
-            "cumulative": {
-                "suffix": "_cumulative",
-                "title": "Cumulative triggered events",
-                "ordinate": "Fraction of Events",
-            },
-            "efficiency": {"suffix": "_eff", "title": "Efficiency", "ordinate": "Efficiency"},
-        }
-
     def fill(self):
         """
         Fill histograms with event data.
@@ -101,17 +61,18 @@ class SimtelIOEventHistograms:
                 "scatter_area": _file_info_table["scatter_area"].to("cm2"),
             }
 
-            hist_defs = self._histogram_definitions(event_data, triggered_data, shower_data)
+            self.histograms = self._define_histograms(event_data, triggered_data, shower_data)
 
-            for name, data, bins, hist1d in hist_defs:
-                self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
+            for name, data in self.histograms.items():
+                self._logger.debug(f"Filling histogram {name}")
+                self._fill_histogram_and_bin_edges(data)
 
         self.calculate_efficiency_data()
         self.calculate_cumulative_data()
 
-    def _histogram_definitions(self, event_data, triggered_data, shower_data):
+    def _define_histograms(self, event_data, triggered_data, shower_data):
         """
-        Generate list with definitions and data for filling of histograms.
+        Define histograms including event data, binning, naming, and labels.
 
         All histograms are defined for simulated and triggered event (note
         the subtlety of triggered events being read from event_data and triggered_data).
@@ -127,101 +88,121 @@ class SimtelIOEventHistograms:
 
         Returns
         -------
-         list
-            List with histogram definitions and data.
+        dict
+            Dictionary with histogram definitions.
         """
         xy_bins = np.linspace(
             -1.0 * self.core_distance_bins.max(),
             self.core_distance_bins.max(),
             len(self.core_distance_bins),
         )
-        hist_specs = [
-            (
-                "energy",
-                [(event_data, "simulated_energy")],
-                self.energy_bins,
-                True,
-                [(shower_data, "simulated_energy")],
-            ),
-            (
-                "core_distance",
-                [(event_data, "core_distance_shower")],
-                self.core_distance_bins,
-                True,
-                [(shower_data, "core_distance_shower")],
-            ),
-            (
-                "angular_distance",
-                [(triggered_data, "angular_distance")],
-                self.view_cone_bins,
-                True,
-                [(shower_data, "angular_distance")],
-            ),
-            (
-                "x_core_shower_vs_y_core_shower",
-                [(event_data, "x_core_shower"), (event_data, "y_core_shower")],
-                [xy_bins, xy_bins],
-                False,
-                [(shower_data, "x_core_shower"), (shower_data, "y_core_shower")],
-            ),
-            (
-                "core_vs_energy",
-                [(event_data, "core_distance_shower"), (event_data, "simulated_energy")],
-                [self.core_distance_bins, self.energy_bins],
-                False,
-                [(shower_data, "core_distance_shower"), (shower_data, "simulated_energy")],
-            ),
-            (
-                "angular_distance_vs_energy",
-                [(triggered_data, "angular_distance"), (event_data, "simulated_energy")],
-                [self.view_cone_bins, self.energy_bins],
-                False,
-                [(shower_data, "angular_distance"), (shower_data, "simulated_energy")],
-            ),
-        ]
+        hists = {}
 
-        hists = []
-        for name, fields_ev, bins, one_d, fields_mc in hist_specs:
-            hists.append(
-                (name, tuple(getattr(obj, f) for obj, f in fields_ev), bins, one_d)
-                if len(fields_ev) > 1
-                else (name, getattr(fields_ev[0][0], fields_ev[0][1]), bins, one_d)
+        energy_axis_title = "Energy (TeV)"
+        event_count_axis_title = "Event Count"
+
+        hists["energy"] = self.get_histogram_definition(
+            event_data_column="simulated_energy",
+            event_data=event_data,
+            bin_edges=self.energy_bins,
+            axis_titles=[energy_axis_title, event_count_axis_title],
+            plot_scales={"x": "log", "y": "log"},
+        )
+        hists["core_distance"] = self.get_histogram_definition(
+            event_data_column="core_distance_shower",
+            event_data=event_data,
+            bin_edges=self.core_distance_bins,
+            axis_titles=["Core Distance (m)", event_count_axis_title],
+        )
+        hists["angular_distance"] = self.get_histogram_definition(
+            event_data_column="angular_distance",
+            event_data=triggered_data,
+            bin_edges=self.view_cone_bins,
+            axis_titles=["Angular Distance (deg)", event_count_axis_title],
+        )
+        hists["x_core_shower_vs_y_core_shower"] = self.get_histogram_definition(
+            event_data_column=("x_core_shower", "y_core_shower"),
+            event_data=(event_data, event_data),
+            bin_edges=(xy_bins, xy_bins),
+            is_1d=False,
+            axis_titles=["Core X (m)", "Core Y (m)", event_count_axis_title],
+        )
+        hists["core_vs_energy"] = self.get_histogram_definition(
+            event_data_column=("core_distance_shower", "simulated_energy"),
+            event_data=(event_data, event_data),
+            bin_edges=(self.core_distance_bins, self.energy_bins),
+            is_1d=False,
+            axis_titles=["Core Distance (m)", energy_axis_title, event_count_axis_title],
+            plot_scales={"y": "log"},
+        )
+        hists["angular_distance_vs_energy"] = self.get_histogram_definition(
+            event_data_column=("angular_distance", "simulated_energy"),
+            event_data=(triggered_data, event_data),
+            bin_edges=(self.view_cone_bins, self.energy_bins),
+            is_1d=False,
+            axis_titles=["Angular Distance (deg)", energy_axis_title, event_count_axis_title],
+            plot_scales={"y": "log"},
+        )
+        for hist in hists.values():
+            hist["suffix"] = ""
+            hist["title"] = "Triggered Events"
+        hists_mc = {}
+        for key, hist in hists.items():
+            key_mc = f"{key}_mc"
+            hists_mc[key_mc] = copy.copy(hist)
+            hists_mc[key_mc]["suffix"] = "_mc"
+            hists_mc[key_mc]["title"] = "Simulated Events"
+            hists_mc[key_mc]["event_data"] = (
+                shower_data if hist["1d"] else (shower_data, shower_data)
             )
 
-            hists.append(
-                (f"{name}_mc", tuple(getattr(obj, f) for obj, f in fields_mc), bins, one_d)
-                if len(fields_mc) > 1
-                else (f"{name}_mc", getattr(fields_mc[0][0], fields_mc[0][1]), bins, one_d)
-            )
+        hists.update(hists_mc)
         return hists
 
-    def _fill_histogram_and_bin_edges(self, name, data, bins, hist1d=True):
-        """
-        Fill histogram and bin edges and it both to histogram dictionary.
+    def get_histogram_definition(
+        self,
+        event_data_column=None,
+        event_data=None,
+        histogram=None,
+        bin_edges=None,
+        title=None,
+        axis_titles=None,
+        suffix=None,
+        is_1d=True,
+        plot_scales=None,
+    ):
+        """Return a single histogram definition."""
+        return {
+            "histogram": histogram,
+            "event_data_column": event_data_column,
+            "event_data": event_data,
+            "1d": is_1d,
+            "bin_edges": bin_edges,
+            "title": title,
+            "axis_titles": axis_titles,
+            "suffix": suffix,
+            "plot_scales": plot_scales,
+        }
 
-        Adds histogram to existing histogram if it exists, otherwise initializes it.
-
+    def _fill_histogram_and_bin_edges(self, data):
         """
-        if name in self.histograms:
-            if hist1d:
-                bins = self.histograms[f"{name}_bin_edges"]
-                hist, _ = np.histogram(data, bins=bins)
-                self.histograms[name] += hist
-            else:
-                x_bins = self.histograms[f"{name}_bin_x_edges"]
-                y_bins = self.histograms[f"{name}_bin_y_edges"]
-                hist, _, _ = np.histogram2d(data[0], data[1], bins=[x_bins, y_bins])
-                self.histograms[name] += hist
+        Fill histogram and bin edges into the histogram dictionary.
+
+        Adds to existing histogram if present, otherwise initializes it.
+        """
+        if data["1d"]:
+            hist, _ = np.histogram(
+                getattr(data["event_data"], data["event_data_column"]),
+                bins=data["bin_edges"],
+            )
         else:
-            if hist1d:
-                hist, bin_edges = np.histogram(data, bins=bins)
-                self.histograms[name] = hist
-                self.histograms[f"{name}_bin_edges"] = bin_edges
-            else:
-                hist, x_edges, y_edges = np.histogram2d(data[0], data[1], bins=bins)
-                self.histograms[name] = hist
-                self.histograms[f"{name}_bin_x_edges"] = x_edges
-                self.histograms[f"{name}_bin_y_edges"] = y_edges
+            hist, _, _ = np.histogram2d(
+                getattr(data["event_data"][0], data["event_data_column"][0]),
+                getattr(data["event_data"][1], data["event_data_column"][1]),
+                bins=[data["bin_edges"][0], data["bin_edges"][1]],
+            )
+
+        data["histogram"] = hist if data["histogram"] is None else data["histogram"] + hist
 
     def calculate_efficiency_data(self):
         """
@@ -246,7 +227,6 @@ class SimtelIOEventHistograms:
                 )
 
         eff_histograms = {}
-        suffix = self.histogram_types()["efficiency"]["suffix"]
         for name, mc_hist in self.histograms.items():
             if not name.endswith("_mc"):
                 continue
@@ -256,29 +236,26 @@ class SimtelIOEventHistograms:
             if trig_hist is None:
                 continue
 
-            if mc_hist.shape != trig_hist.shape:
+            if mc_hist["histogram"].shape != trig_hist["histogram"].shape:
                 self._logger.warning(
                     f"Shape mismatch for {base_name} and {name}, skipping efficiency calculation."
                 )
                 continue
 
-            eff_name = f"{base_name}{suffix}"
-            eff_histograms[eff_name] = calculate_efficiency(trig_hist, mc_hist)
-            self._copy_bin_edges(base_name, eff_name, eff_histograms)
+            eff = copy.copy(mc_hist)
+            eff.update(
+                {
+                    "histogram": calculate_efficiency(trig_hist["histogram"], mc_hist["histogram"]),
+                    "suffix": "_eff",
+                    "title": "Efficiency",
+                }
+            )
+            eff["axis_titles"] = copy.copy(mc_hist["axis_titles"])
+            eff["axis_titles"][-1] = "Efficiency"
+            eff_histograms[f"{base_name}_eff"] = eff
 
         self.histograms.update(eff_histograms)
         return eff_histograms
-
-    def _copy_bin_edges(self, base_name, new_name, new_histograms):
-        """Copy bin edges into histogram dictionary."""
-        if f"{base_name}_bin_edges" in self.histograms:
-            new_histograms[f"{new_name}_bin_edges"] = self.histograms[f"{base_name}_bin_edges"]
-        elif (
-            f"{base_name}_bin_x_edges" in self.histograms
-            and f"{base_name}_bin_y_edges" in self.histograms
-        ):
-            new_histograms[f"{new_name}_bin_x_edges"] = self.histograms[f"{base_name}_bin_x_edges"]
-            new_histograms[f"{new_name}_bin_y_edges"] = self.histograms[f"{base_name}_bin_y_edges"]
 
     @property
     def energy_bins(self):
@@ -315,39 +292,38 @@ class SimtelIOEventHistograms:
 
     def calculate_cumulative_data(self):
         """
-        Calculate cumulative distributions for triggered event histograms.
-
-        Takes into account the different histogram types and their axes.
+        Calculate cumulative distributions for triggered histograms.
 
         Returns
         -------
         dict
             Dictionary containing the cumulative histograms.
-
         """
         cumulative_data = {}
-        suffix = self.histogram_types()["cumulative"]["suffix"]
+        suffix = "_cumulative"
 
-        # Calculate normalized cumulative for 2D vs_energy histograms
-        for hist_key in self.histograms:
-            if hist_key.endswith("_vs_energy") and not hist_key.endswith("_mc"):
-                output_key = f"{hist_key}{suffix}"
-                hist = self.histograms.get(hist_key)
-                cumulative_data[output_key] = self._calculate_cumulative_histogram(
-                    hist, axis=0, normalize=True
-                )
-                self._copy_bin_edges(hist_key, output_key, cumulative_data)
+        def add_cumulative(name, hist, **kwargs):
+            new = copy.copy(hist)
+            new["histogram"] = self._calculate_cumulative_histogram(hist["histogram"], **kwargs)
+            new["axis_titles"] = copy.copy(hist["axis_titles"])
+            new.update(
+                {
+                    "suffix": suffix,
+                    "title": "Cumulative triggered events",
+                }
+            )
+            new["axis_titles"][-1] = "Fraction of Events"
+            cumulative_data[f"{name}{suffix}"] = new
 
-        # Calculate cumulative for 1D histograms
-        for hist_key in ["energy", "core_distance", "angular_distance"]:
-            if hist_key in self.histograms:
-                output_key = f"{hist_key}{suffix}"
-                hist = self.histograms.get(hist_key)
-                reverse = hist_key == "energy"  # Only energy uses reverse cumulative
-                cumulative_data[output_key] = self._calculate_cumulative_histogram(
-                    hist, reverse=reverse
-                )
-                self._copy_bin_edges(hist_key, output_key, cumulative_data)
+        # 2D histograms vs energy
+        for name, hist in self.histograms.items():
+            if name.endswith("_vs_energy") and not name.endswith("_mc"):
+                add_cumulative(name, hist, axis=0, normalize=True)
+
+        # 1D histograms
+        for name in ["energy", "core_distance", "angular_distance"]:
+            if (hist := self.histograms.get(name)) is not None:
+                add_cumulative(name, hist, reverse=name == "energy")
 
         self.histograms.update(cumulative_data)
         return cumulative_data
