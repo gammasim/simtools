@@ -311,8 +311,9 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
     )
     mock_simulator.distance = 1000 * u.m
 
-    command = mock_simulator._create_postscript(integration_window=["7", "3"], level="5")
-
+    command = mock_simulator._create_postscript(
+        integration_window=["7", "3"], level="5", event_type="flasher"
+    )
     assert command == expected_command
 
 
@@ -567,14 +568,9 @@ def test_process_simulation_output(
     mock_get_distance_for_plotting.assert_called_once()
     mock_plot_simulation_output.assert_called_once_with(
         "mock_filename.simtel.gz",
-        5,
-        3,
-        2,
-        1000 * u.m,
-        True,
+        distance=1000 * u.m,
     )
-    assert len(figures) == 1
-    assert figures[0] == mock_figure
+    assert figures == [mock_figure]
 
 
 def test_get_simulation_output_filename(mock_simulator_variable):
@@ -1118,25 +1114,26 @@ def test_process_simulation_output_uses_flasher_branch(
 
 
 def test_plot_simulation_output_delegates_to_ctapipe(monkeypatch):
+    """Test that plot_simulation_output delegates to the correct plotting function."""
     inst = object.__new__(SimulatorLightEmission)
     captured = {}
 
-    def fake_ctapipe(filename, *, cleaning_args, distance, return_cleaned):
+    def fake_plot_function(filename, *, distance):
         captured["filename"] = filename
-        captured["cleaning_args"] = cleaning_args
         captured["distance"] = distance
-        captured["return_cleaned"] = return_cleaned
         return "OK"
 
-    monkeypatch.setattr(sim_mod, "plot_simtel_ctapipe", fake_ctapipe)
+    monkeypatch.setattr(sim_mod, "plot_simtel_event_image", fake_plot_function)
 
-    result = inst._plot_simulation_output("out.simtel.gz", 4, 2, 1, 42 * u.m, False)
-
-    assert result == "OK"
-    assert captured["filename"] == "out.simtel.gz"
-    assert captured["cleaning_args"] == [4, 2, 1]
-    assert captured["distance"].to_value(u.m) == pytest.approx(42)
-    assert captured["return_cleaned"] is False
+    assert (
+        inst._plot_simulation_output(
+            "test_file.simtel.gz",
+            distance=500 * u.m,
+        )
+        == "OK"
+    )
+    assert captured["filename"] == "test_file.simtel.gz"
+    assert captured["distance"] == 500 * u.m
 
 
 def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch, caplog):

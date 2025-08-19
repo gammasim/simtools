@@ -13,8 +13,8 @@ from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.io import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
-from simtools.visualization.light_emission_plots import (
-    plot_simtel_ctapipe,
+from simtools.visualization.simtel_event_plots import (
+    plot_simtel_event_image,
     plot_simtel_integrated_pedestal_image,
     plot_simtel_integrated_signal_image,
     plot_simtel_peak_timing,
@@ -629,7 +629,7 @@ class SimulatorLightEmission(SimtelRunner):
                 if not line.startswith(line_prefix):
                     file.write(line)
 
-    def _create_postscript(self, **kwargs):
+    def _create_postscript(self):
         """
         Write out post-script file using read_cta in hessioxxx/bin/read_cta.
 
@@ -658,8 +658,8 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4"
         command += " --integration-window "
-        command += f"{kwargs['integration_window'][0]},{kwargs['integration_window'][1]}"
-        command += f" -r {kwargs['level']}"
+        command += "3,7"
+        command += " -r 5"
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
         dist_val = int(self._get_distance_for_plotting().to_value(u.m))
@@ -673,7 +673,7 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return command
 
-    def prepare_script(self, generate_postscript=False, **kwargs):
+    def prepare_script(self, generate_postscript=False):
         """
         Build and return bash run script containing the light-emission command.
 
@@ -712,7 +712,7 @@ class SimulatorLightEmission(SimtelRunner):
 
             if generate_postscript:
                 self._logger.debug("Write out postscript file")
-                command_plot = self._create_postscript(**kwargs)
+                command_plot = self._create_postscript()
                 file.write("# Generate postscript\n\n")
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")
@@ -742,20 +742,13 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_source_type == "flasher":
             self._plot_flasher_outputs(filename, args_dict, distance, figures)
         else:
-            self._plot_calibration_outputs(filename, args_dict, distance, figures)
+            self._plot_calibration_outputs(filename, distance, figures)
 
         self._logger.info(f"Figures added: {len(figures) - before}")
 
-    def _plot_calibration_outputs(self, filename, args_dict, distance, figures):
+    def _plot_calibration_outputs(self, filename, distance, figures):
         """Only the generic ctapipe camera image for calibration/LED/laser."""
-        fig = self._plot_simulation_output(
-            filename,
-            args_dict["boundary_thresh"],
-            args_dict["picture_thresh"],
-            args_dict["min_neighbors"],
-            distance,
-            args_dict["return_cleaned"],
-        )
+        fig = self._plot_simulation_output(filename, distance)
         if fig is not None:
             figures.append(fig)
             self._logger.info("Added ctapipe camera image figure")
@@ -763,7 +756,7 @@ class SimulatorLightEmission(SimtelRunner):
     def _plot_flasher_outputs(self, filename, args_dict, distance, figures):
         """Plot generic image plus traces, peak timing, waveform matrix, and charge images."""
         # Generic image (first event)
-        self._plot_calibration_outputs(filename, args_dict, distance, figures)
+        self._plot_calibration_outputs(filename, distance, figures)
 
         # Integrated charge around peak
 
@@ -871,15 +864,11 @@ class SimulatorLightEmission(SimtelRunner):
 
         return float(self.distance) * u.m
 
-    def _plot_simulation_output(
-        self, filename, boundary_thresh, picture_thresh, min_neighbors, distance, return_cleaned
-    ):
+    def _plot_simulation_output(self, filename, distance):
         """Plot the simulation output."""
-        return plot_simtel_ctapipe(
+        return plot_simtel_event_image(
             filename,
-            cleaning_args=[boundary_thresh, picture_thresh, min_neighbors],
             distance=distance,
-            return_cleaned=return_cleaned,
         )
 
     def save_figures_to_pdf(self, figures, telescope):

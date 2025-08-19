@@ -58,7 +58,6 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
 
     source = EventSource(filename, max_events=1)
     event = next(iter(source), None)
-
     tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if not tel_ids:
         _logger.warning("First event has no R1 telescope data")

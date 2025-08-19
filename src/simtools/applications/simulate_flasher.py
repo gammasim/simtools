@@ -76,50 +76,6 @@ def _parse(label):
         type=str,
         required=True,
     )
-    config.parser.add_argument(
-        "--return_cleaned",
-        help="If set, perform image cleaning and return cleaned image.",
-        action="store_true",
-        required=False,
-    )
-    config.parser.add_argument(
-        "--picture_thresh",
-        help="Threshold above which all pixels are retained.",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--boundary_thresh",
-        help=(
-            "Threshold above which pixels are retained if they have a neighbor "
-            "already above the picture threshold."
-        ),
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--min_neighbors",
-        help=(
-            "Minimum number of picture neighbors a picture pixel must have "
-            "(ignored if keep_isolated_pixels)."
-        ),
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--level",
-        help="read_cta plotting level (default 5)",
-        type=int,
-        default=5,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--integration_window",
-        help="Integration window width,offset (default 7 3)",
-        nargs="*",
-        default=["7", "3"],
-        required=False,
-    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version"],
@@ -167,10 +123,6 @@ def main():
 
     le_application = flasher_configs()
 
-    picture_thresh = int(args_dict["picture_thresh"]) if args_dict.get("picture_thresh") else 50
-    boundary_thresh = int(args_dict["boundary_thresh"]) if args_dict.get("boundary_thresh") else 20
-    min_neighbors = int(args_dict["min_neighbors"]) if args_dict.get("min_neighbors") else 2
-
     sim_runner = SimulatorLightEmission(
         telescope_model=telescope_model,
         flasher_model=flasher_model,
@@ -184,14 +136,7 @@ def main():
     )
 
     figures = []
-    simulation_args = {
-        "boundary_thresh": boundary_thresh,
-        "picture_thresh": picture_thresh,
-        "min_neighbors": min_neighbors,
-        "return_cleaned": args_dict.get("return_cleaned", False),
-        "level": args_dict.get("level", 5),
-        "integration_window": args_dict.get("integration_window", ["7", "3"]),
-    }
+    simulation_args = {}
 
     sim_runner.run_simulation(simulation_args, figures)
 

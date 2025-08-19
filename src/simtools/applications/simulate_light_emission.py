@@ -170,51 +170,6 @@ def _parse(label):
         default=None,
         required=True,
     )
-    config.parser.add_argument(
-        "--return_cleaned",
-        help="ctapipe, if image should be cleaned, \
-              notice as well image cleaning parameters",
-        type=str,
-        default=False,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--picture_thresh",
-        help="ctapipe, threshold above which all pixels are retained",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--boundary_thresh",
-        help="ctapipe, threshold above which pixels are retained if\
-              they have a neighbor already above the picture_thresh",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--min_neighbors",
-        help="ctapipe, A picture pixel survives cleaning only if it has at\
-              least this number of picture neighbors. This has no effect in\
-              case keep_isolated_pixels is True",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--level",
-        help="read 5",
-        type=int,
-        default=5,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--integration_window",
-        help="ctapipe, A picture pixel survives cleaning only if it has at\
-              least this number of picture neighbors. This has no effect in\
-              case keep_isolated_pixels is True",
-        nargs="*",
-        default=["7", "3"],
-        required=False,
-    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version"],
