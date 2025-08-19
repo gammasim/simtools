@@ -139,8 +139,8 @@ def test_plot_simtel_event_image_returns_figure(monkeypatch):
     plt.close(fig)
 
 
-def test_plot_simtel_event_image_missing_dl1(monkeypatch, caplog):
-    ev, tel_id = _fake_event(dl1_image=None, r1_waveforms=_make_waveforms())
+def test_plot_simtel_event_image_missing_r1(monkeypatch, caplog):
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
     _install_fake_ctapipe(monkeypatch, src)
@@ -148,9 +148,8 @@ def test_plot_simtel_event_image_missing_dl1(monkeypatch, caplog):
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
         fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
-    assert fig is not None
-    assert any("No DL1 image available" in r.message for r in caplog.records)
-    plt.close(fig)
+    assert fig is None
+    assert any("First event has no R1 telescope data" in r.message for r in caplog.records)
 
 
 def test_plot_simtel_event_image_annotations(monkeypatch):
@@ -166,8 +165,7 @@ def test_plot_simtel_event_image_annotations(monkeypatch):
 
 
 def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
-    ev, tel_id = _fake_event(dl1_image=None, r1_waveforms=_make_waveforms())
-    src = _fake_source_with_event(ev, tel_id)
+    src = _fake_source_with_event(None, None)
 
     _install_fake_ctapipe(monkeypatch, src)
 
@@ -175,7 +173,7 @@ def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
     with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
         fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
     assert fig is None
-    assert any("No event data available" in r.message for r in caplog.records)
+    assert any("No event found in the file." in r.message for r in caplog.records)
 
 
 def test_plot_simtel_time_traces_returns_figure(monkeypatch):
