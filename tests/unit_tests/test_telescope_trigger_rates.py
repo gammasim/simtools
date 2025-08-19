@@ -69,5 +69,5 @@ def test_telescope_trigger_rates_without_array_layout_name():
         )
         mock_histograms_instance.fill.assert_called_once()
         mock_plot.assert_called_once_with(
-            mock_histograms_instance, output_path=Path("output_dir"), array_name="array1"
+            mock_histograms_instance.histograms, output_path=Path("output_dir"), array_name="array1"
         )
