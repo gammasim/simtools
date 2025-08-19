@@ -40,20 +40,62 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--number_of_rays",
-        help="Number of rays to simulate per pixel",
-        type=int,
-        default=10000,
+        "--camera_shift",
+        help="Camera shift along optical axis",
+        type=float,
+        default=0.0,
         required=False,
     )
+    config.parser.add_argument(
+        "--overwrite_rdna",
+        help="Overwrite random reflection angle",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--algn",
+        help="Accuracy of mirror alignment",
+        type=float,
+        default=7.0,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--use_prod4",
+        help="Use prod-4 config files (SST: prod-5) instead of prod-6",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--use_real_camera",
+        help="Use actual camera definition (same as with USE_REAL_CAMERA=1)",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--flip_mirror_layout",
+        help="Flip mirror layout x/y",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--no_optimisation",
+        help="No optimisation in rx. Containment radii around c.o.g.",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--perfect_mirror",
+        help="Assume perfect mirror shape/alignment/reflection",
+        action="store_true",
+        required=False,
+    )
+
     config.parser.add_argument(
         "--ray_tracing_config",
         help="Path to ray tracing configuration file",
         type=str,
         required=False,
     )
-
-    # Default configuration
     return config.initialize(db_config=True)
 
 
@@ -77,7 +119,6 @@ def main():
         simtel_path=args_dict["simtel_path"],
         db_config=db_config,
         config_data={
-            "site": args_dict["site"],
             "telescope": args_dict["telescope"],
             "model_version": args_dict["model_version"],
             "number_of_rays": args_dict["number_of_rays"],
