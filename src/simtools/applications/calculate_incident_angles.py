@@ -96,7 +96,10 @@ def _parse(label):
         type=str,
         required=False,
     )
-    return config.initialize(db_config=True)
+    return config.initialize(
+        db_config=True,
+        simulation_model=["telescope", "site", "model_version"],
+    )
 
 
 def main():
@@ -113,15 +116,14 @@ def main():
     output_dir = (
         output_base / label if not args_dict.get("use_plain_output_path", False) else output_base
     )
-
     # Create the calculator
     calculator = IncidentAnglesCalculator(
         simtel_path=args_dict["simtel_path"],
         db_config=db_config,
         config_data={
             "telescope": args_dict["telescope"],
+            "site": args_dict["site"],
             "model_version": args_dict["model_version"],
-            "number_of_rays": args_dict["number_of_rays"],
             "zenith_angle": args_dict["zenith"] * u.deg,
             "off_axis_angle": args_dict["off_axis_angle"] * u.deg,
             "source_distance": args_dict["source_distance"] * u.km,
