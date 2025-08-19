@@ -9,7 +9,6 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 
 __all__ = [
-    "plot_simtel_ctapipe",
     "plot_simtel_event_image",
     "plot_simtel_integrated_pedestal_image",
     "plot_simtel_integrated_signal_image",
@@ -36,7 +35,7 @@ def _select_event_by_type(source):
     return None
 
 
-def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):
+def plot_simtel_event_image(filename, distance=None):
     """
     Read in a sim_telarray file and plot DL1 image via ctapipe.
 
@@ -45,19 +44,15 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.calib import CameraCalibrator
-    from ctapipe.image import tailcuts_clean
     from ctapipe.io import EventSource
     from ctapipe.visualization import CameraDisplay
 
-    default_cleaning_levels = {
-        "CHEC": (2, 4, 2),
-        "LSTCam": (3.5, 7, 2),
-        "FlashCam": (3.5, 7, 2),
-        "NectarCam": (4, 8, 2),
-    }
-
     source = EventSource(filename, max_events=1)
     event = next(iter(source), None)
+    if not event:
+        _logger.warning("No event found in the file.")
+        return None
+
     tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if not tel_ids:
         _logger.warning("First event has no R1 telescope data")
@@ -69,27 +64,12 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
 
     geometry = source.subarray.tel[tel_id].camera.geometry
     image = event.dl1.tel[tel_id].image
-    cleaned = image.copy()
-
-    if return_cleaned:
-        if cleaning_args is None:
-            boundary, picture, min_neighbors = default_cleaning_levels[geometry.name]
-        else:
-            boundary, picture, min_neighbors = cleaning_args
-        mask = tailcuts_clean(
-            geometry,
-            image,
-            picture_thresh=picture,
-            boundary_thresh=boundary,
-            min_number_picture_neighbors=min_neighbors,
-        )
-        cleaned[~mask] = 0
 
     fig, ax = plt.subplots(dpi=300)
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
     title = f"{tel_label}, run {event.index.obs_id} event {event.index.event_id}"
-    disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
+    disp = CameraDisplay(geometry, image=image, norm="symlog", ax=ax)
     disp.cmap = "RdBu_r"
     disp.add_colorbar(fraction=0.02, pad=-0.1)
     disp.set_limits_percent(100)
@@ -626,97 +606,6 @@ def plot_simtel_integrated_pedestal_image(
     ax.set_title(
         f"{tel_label} integrated pedestal (win {win_len}, gap {gap}) ({et_name})",
         pad=20,
-    )
-    ax.set_axis_off()
-    fig.tight_layout()
-    return fig
-
-
-def plot_simtel_event_image(
-    filename,
-    cleaning_args=None,
-    distance=None,
-    return_cleaned: bool = False,
-):
-    """Plot a single sim_telarray event image filtered by event type."""
-    # pylint:disable=import-outside-toplevel
-    from ctapipe.calib import CameraCalibrator
-    from ctapipe.image import tailcuts_clean
-    from ctapipe.io import EventSource
-    from ctapipe.visualization import CameraDisplay
-
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)
-
-    calib = CameraCalibrator(subarray=source.subarray)
-    calib(event)
-
-    dl1_tel_ids = sorted(getattr(event.dl1, "tel", {}).keys())
-    if dl1_tel_ids:
-        tel_id = dl1_tel_ids[0]
-    else:
-        r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-        if not r1_tel_ids:
-            _logger.warning("Event has no DL1 or R1 telescope data")
-            return None
-        tel_id = r1_tel_ids[0]
-
-    geometry = source.subarray.tel[tel_id].camera.geometry
-    try:
-        image = event.dl1.tel[tel_id].image
-    except (AttributeError, KeyError):
-        _logger.warning("No DL1 image available for selected telescope")
-        return None
-
-    cleaned = image.copy()
-
-    if return_cleaned:
-        if cleaning_args is None:
-            defaults = {
-                "CHEC": (2, 4, 2),
-                "LSTCam": (3.5, 7, 2),
-                "FlashCam": (3.5, 7, 2),
-                "NectarCam": (4, 8, 2),
-            }
-            boundary, picture, min_neighbors = defaults.get(geometry.name, (3, 6, 2))
-        else:
-            boundary, picture, min_neighbors = cleaning_args
-        mask = tailcuts_clean(
-            geometry,
-            image,
-            picture_thresh=picture,
-            boundary_thresh=boundary,
-            min_number_picture_neighbors=min_neighbors,
-        )
-        cleaned[~mask] = 0
-
-    fig, ax = plt.subplots(dpi=300)
-    disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
-    disp.cmap = "RdBu_r"
-    disp.add_colorbar(fraction=0.02, pad=-0.1)
-    disp.set_limits_percent(100)
-
-    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    tel = source.subarray.tel[tel_id]
-    tel_label = getattr(tel, "name", f"CT{tel_id}")
-    title = f"{tel_label}, run {event.index.obs_id} event {event.index.event_id} ({et_name})"
-    ax.set_title(title, pad=20)
-
-    try:
-        d_str = f"{distance.to(u.m)}"
-    except (AttributeError, TypeError, ValueError):
-        d_str = str(distance)
-
-    ax.annotate(
-        f"tel type: {source.subarray.tel[tel_id].type.name}\n"
-        f"optics: {source.subarray.tel[tel_id].optics.name}\n"
-        f"camera: {source.subarray.tel[tel_id].camera_name}\n"
-        f"distance: {d_str}",
-        xy=(0, 0),
-        xytext=(0.1, 1),
-        xycoords=AXES_FRACTION,
-        va="top",
-        size=7,
     )
     ax.set_axis_off()
     fig.tight_layout()
