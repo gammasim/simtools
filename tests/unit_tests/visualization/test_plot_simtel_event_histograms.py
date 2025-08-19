@@ -603,12 +603,12 @@ def test_create_2d_plot_config_core_xy():
         "bin_edges": [np.array([0, 1, 2]), np.array([0, 1, 2])],
         "plot_scales": {},
         "title": "Triggered events: core x vs core y: core x vs core y: core xy",
-        "axis_titles": ["Core X [m]", "Core Y [m]", EVENT_COUNT],
+        "axis_titles": [CORE_X_LABEL, CORE_Y_LABEL, EVENT_COUNT],
     }
     config = {
         "base_key": "core_xy",
-        "x_label": "Core X [m]",
-        "y_label": "Core Y [m]",
+        "x_label": CORE_X_LABEL,
+        "y_label": CORE_Y_LABEL,
         "plot_params": {"norm": "log", "cmap": "viridis"},
         "lines": {},
         "scales": {},
