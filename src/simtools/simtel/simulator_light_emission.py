@@ -658,7 +658,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4"
         command += " --integration-window "
-        command += "3,7"
+        command += "7,3"
         command += " -r 5"
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
@@ -748,7 +748,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _plot_calibration_outputs(self, filename, distance, figures):
         """Only the generic ctapipe camera image for calibration/LED/laser."""
-        fig = self._plot_simulation_output(filename, distance)
+        fig = self._plot_simulation_output(filename, distance=distance)
         if fig is not None:
             figures.append(fig)
             self._logger.info("Added ctapipe camera image figure")
@@ -864,7 +864,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         return float(self.distance) * u.m
 
-    def _plot_simulation_output(self, filename, distance):
+    def _plot_simulation_output(self, filename, *, distance):
         """Plot the simulation output."""
         return plot_simtel_event_image(
             filename,

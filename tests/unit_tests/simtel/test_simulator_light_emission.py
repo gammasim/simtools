@@ -16,7 +16,7 @@ from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general as gen
-from simtools.visualization.light_emission_plots import plot_simtel_ctapipe
+from simtools.visualization.simtel_event_plots import plot_simtel_event_image
 
 SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
 
@@ -311,22 +311,18 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
     )
     mock_simulator.distance = 1000 * u.m
 
-    command = mock_simulator._create_postscript(
-        integration_window=["7", "3"], level="5", event_type="flasher"
-    )
+    command = mock_simulator._create_postscript()
+
     assert command == expected_command
 
 
-def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
+def test_plot_simtel_event_image(mock_simulator, mock_output_path):
     mock_simulator.output_directory = "./tests/resources/"
-    cleaning_args = [5, 3, 2]
     filename = f"{mock_simulator.output_directory}/"
     filename += f"{mock_simulator.le_application[0]}_{mock_simulator.le_application[1]}.simtel.gz"
     distance = 1000 * u.m
-    fig = plot_simtel_ctapipe(
-        filename, cleaning_args=cleaning_args, distance=distance, return_cleaned=True
-    )
-    assert isinstance(fig, plt.Figure)  # Check if fig is an instance of matplotlib figure
+    fig = plot_simtel_event_image(filename, distance=distance)
+    assert isinstance(fig, plt.Figure)
 
 
 def test_make_simtel_script(mock_simulator):
@@ -421,7 +417,7 @@ def test_prepare_script(
     mock_make_simtel_script.return_value = "simtel_script_command"
     mock_simulator.distance = 1000 * u.m
     script_path = mock_simulator.prepare_script(
-        generate_postscript=True, integration_window=["7", "3"], level="5"
+        generate_postscript=True,
     )
 
     assert gen.program_is_executable(script_path)
@@ -724,13 +720,14 @@ def _make_dummy_fig():
     return fig
 
 
-@pytest.fixture
-def sim_instance():
+@pytest.fixture(name="sim_instance")
+def fixture_sim_instance(mock_simulator_variable):
     # Create instance without running __init__ to avoid heavy deps
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst.light_emission_config = mock_simulator_variable.light_emission_config
 
-    def fake_calib(filename, args_dict, distance, figures):
+    def fake_calib(filename, distance, figures):
         figures.append(_make_dummy_fig())
 
     inst._plot_calibration_outputs = fake_calib

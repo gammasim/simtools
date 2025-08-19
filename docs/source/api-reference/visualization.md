@@ -7,7 +7,7 @@ the visualization module.
 
 - {ref}`visualize <visualizationvisualize>`
 - {ref}`legend_handlers <visualizationlegendhandlers>`
-- {ref}`light_emission_plots <visualizationlightemissionplots>`
+- {ref}`simtel_event_plots <visualizationsimtel_event_plots>`
 
 (visualizationvisualize)=
 
@@ -63,9 +63,9 @@ the visualization module.
 
 (visualizationlightemissionplots)=
 
-## light_emission_plots
+## simtel_event_plots
 
 ```{eval-rst}
-.. automodule:: visualization.light_emission_plots
+.. automodule:: visualization.simtel_event_plots
    :members:
 ```
