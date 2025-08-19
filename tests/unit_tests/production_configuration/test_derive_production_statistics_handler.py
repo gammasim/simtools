@@ -14,7 +14,7 @@ BASE_PATH = "tests/resources/production_dl2_fits/"
 FILE_NAME_TEMPLATE = "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 MOCK_OPEN_PATH = "builtins.open"
 OUTPUT_FILE = "output.json"
-COLLECT_DATA_PATH = "simtools.utils.general.collect_data_from_file"
+COLLECT_DATA_PATH = "simtools.io.ascii_handler.collect_data_from_file"
 
 
 @pytest.fixture
@@ -279,7 +279,7 @@ def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"grid_points": ["test1", "test2"]}):
         with patch(
             MOCK_OPEN_PATH, mock_open(read_data=json.dumps({"grid_points": ["test1", "test2"]}))
         ):
@@ -318,7 +318,7 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"grid_points": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with an empty grid_points list
@@ -344,7 +344,7 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"wrong_key": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with the wrong key

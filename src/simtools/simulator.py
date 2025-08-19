@@ -12,7 +12,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_operations import io_handler, io_table_handler
+from simtools.io import io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
@@ -49,8 +49,8 @@ class Simulator:
         Instance label.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command.
-    mongo_db_config: dict
-        MongoDB configuration.
+    db_config: dict
+        Database configuration.
     """
 
     def __init__(
@@ -58,15 +58,18 @@ class Simulator:
         args_dict,
         label=None,
         extra_commands=None,
-        mongo_db_config=None,
+        db_config=None,
     ):
         """Initialize Simulator class."""
-        self._logger = logging.getLogger(__name__)
-        self.args_dict = args_dict
-
-        self.simulation_software = self.args_dict["simulation_software"]
-        self._logger.debug(f"Init Simulator {self.simulation_software}")
+        self.logger = logging.getLogger(__name__)
         self.label = label
+
+        self.args_dict = args_dict
+        self.db_config = db_config
+
+        self.simulation_software = self.args_dict.get("simulation_software", "corsika_sim_telarray")
+        self.run_mode = self.args_dict.get("run_mode")
+        self.logger.debug(f"Init Simulator {self.simulation_software}")
 
         self.io_handler = io_handler.IOHandler()
 
@@ -82,8 +85,8 @@ class Simulator:
             ),
             "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
         }
-        self.array_models = self._initialize_array_models(mongo_db_config)
-        self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
+        self.array_models = self._initialize_array_models()
+        self._simulation_runner = self._initialize_simulation_runner()
 
     @property
     def simulation_software(self):
@@ -103,37 +106,30 @@ class Simulator:
 
         Raises
         ------
-        gen.InvalidConfigDataError
+        ValueError
 
         """
         if simulation_software not in ["sim_telarray", "corsika", "corsika_sim_telarray"]:
-            self._logger.error(f"Invalid simulation software: {simulation_software}")
-            raise gen.InvalidConfigDataError
+            raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
 
-    def _initialize_array_models(self, mongo_db_config):
+    def _initialize_array_models(self):
         """
         Initialize array simulation models.
-
-        Parameters
-        ----------
-        mongo_db_config: dict
-            Database configuration.
 
         Returns
         -------
         list
             List of ArrayModel objects.
         """
-        model_version = self.args_dict.get("model_version", [])
-        versions = [model_version] if not isinstance(model_version, list) else model_version
+        versions = gen.enforce_list_type(self.args_dict.get("model_version", []))
 
         return [
             ArrayModel(
                 label=self.label,
                 site=self.args_dict.get("site"),
                 layout_name=self.args_dict.get("array_layout_name"),
-                mongo_db_config=mongo_db_config,
+                mongo_db_config=self.db_config,
                 model_version=version,
                 sim_telarray_seeds={
                     "seed": self._get_seed_for_random_instrument_instances(
@@ -188,35 +184,24 @@ class Simulator:
         -------
         list
             List of run numbers.
-
-        Raises
-        ------
-        KeyError
-            If 'run_number', 'run_number_offset' and 'number_of_runs' are
-            not found in the configuration.
         """
-        try:
-            offset_run_number = self.args_dict["run_number_offset"] + self.args_dict["run_number"]
-            if self.args_dict["number_of_runs"] <= 1:
-                return self._validate_run_list_and_range(
-                    run_list=offset_run_number,
-                    run_range=None,
-                )
-            return self._validate_run_list_and_range(
-                run_list=None,
-                run_range=[
-                    offset_run_number,
-                    offset_run_number + self.args_dict["number_of_runs"],
-                ],
+        offset_run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+            "run_number", 1
+        )
+        if self.args_dict.get("number_of_runs", 1) <= 1:
+            return self._prepare_run_list_and_range(
+                run_list=offset_run_number,
+                run_range=None,
             )
-        except KeyError as exc:
-            self._logger.error(
-                "Error in initializing run list "
-                "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
-            )
-            raise exc
+        return self._prepare_run_list_and_range(
+            run_list=None,
+            run_range=[
+                offset_run_number,
+                offset_run_number + self.args_dict["number_of_runs"],
+            ],
+        )
 
-    def _validate_run_list_and_range(self, run_list, run_range):
+    def _prepare_run_list_and_range(self, run_list, run_range):
         """
         Prepare list of run numbers from a list or from a range.
 
@@ -233,49 +218,40 @@ class Simulator:
         -------
         list
             list of unique run numbers (integers)
-
         """
         if run_list is None and run_range is None:
-            self._logger.debug("Nothing to validate - run_list and run_range not given.")
+            self.logger.debug("Nothing to prepare - run_list and run_range not given.")
             return None
 
         validated_runs = []
         if run_list is not None:
-            if not isinstance(run_list, list):
-                run_list = [run_list]
-            if not all(isinstance(r, int) for r in run_list):
-                msg = "run_list must contain only integers."
-                self._logger.error(msg)
-                raise InvalidRunsToSimulateError
-            validated_runs = list(run_list)
+            validated_runs = gen.enforce_list_type(run_list)
+            if not all(isinstance(r, int) for r in validated_runs):
+                raise InvalidRunsToSimulateError(f"Run list must contain only integers: {run_list}")
 
         if run_range is not None:
             if not all(isinstance(r, int) for r in run_range) or len(run_range) != 2:
-                msg = "run_range must contain two integers only."
-                self._logger.error(msg)
-                raise InvalidRunsToSimulateError
-
+                raise InvalidRunsToSimulateError(
+                    f"Run_range must contain two integers only: {run_range}"
+                )
             run_range = np.arange(run_range[0], run_range[1])
-            self._logger.debug(f"run_range: {run_range}")
             validated_runs.extend(list(run_range))
 
         validated_runs_unique = sorted(set(validated_runs))
-        self._logger.info(f"run_list: {validated_runs_unique}")
-        return list(validated_runs_unique)
+        self.logger.info(f"Runlist: {validated_runs_unique}")
+        return validated_runs_unique
 
-    def _initialize_simulation_runner(self, db_config):
+    def _corsika_configuration(self):
         """
-        Initialize corsika configuration and simulation runners.
+        Define CORSIKA configurations based on the simulation model.
 
-        Parameters
-        ----------
-        db_config: dict
-            Database configuration.
+        For 'corsika_sim_telarray', this is a list since multiple configurations
+        might be defined to run in a single job using multipipe.
 
         Returns
         -------
-        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
-            Simulation runner object.
+        CorsikaConfig or list of CorsikaConfig
+            CORSIKA configuration(s) based on the simulation model.
         """
         corsika_configurations = []
         for array_model in self.array_models:
@@ -284,9 +260,26 @@ class Simulator:
                     array_model=array_model,
                     label=self.label,
                     args_dict=self.args_dict,
-                    db_config=db_config,
+                    db_config=self.db_config,
+                    dummy_simulations=self._is_calibration_run(),
                 )
             )
+        return (
+            corsika_configurations
+            if self.simulation_software == "corsika_sim_telarray"
+            else corsika_configurations[0]
+        )
+
+    def _initialize_simulation_runner(self):
+        """
+        Initialize corsika configuration and simulation runners.
+
+        Returns
+        -------
+        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
+            Simulation runner object.
+        """
+        corsika_configurations = self._corsika_configuration()
 
         runner_class = {
             "corsika": CorsikaRunner,
@@ -294,16 +287,9 @@ class Simulator:
             "corsika_sim_telarray": CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
-        # In case of CorsikaSimtelRunner we should pass all corsika_configurations
-        # to the runner, since we define multiple configurations to run in a single job
-        # using multipipe. In other cases we pass only the first one (there's only one anyway).
         runner_args = {
             "label": self.label,
-            "corsika_config": (
-                corsika_configurations
-                if runner_class is CorsikaSimtelRunner
-                else corsika_configurations[0]
-            ),
+            "corsika_config": corsika_configurations,
             "simtel_path": self.args_dict.get("simtel_path"),
             "use_multipipe": runner_class is CorsikaSimtelRunner,
         }
@@ -314,6 +300,8 @@ class Simulator:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = self.args_dict.get("sequential", False)
+            if self._is_calibration_run():
+                runner_args["calibration_runner_args"] = self.args_dict
 
         return runner_class(**runner_args)
 
@@ -326,9 +314,7 @@ class Simulator:
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
         """
-        input_file_list = self._enforce_list_type(input_file_list)
-
-        for file in input_file_list:
+        for file in gen.enforce_list_type(input_file_list):
             run = self._guess_run_from_file(file)
             self._fill_results(file, run)
             if run not in self.runs:
@@ -346,7 +332,7 @@ class Simulator:
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
-        self._logger.info(
+        self.logger.info(
             f"Starting submission for {len(runs_and_files_to_submit)} "
             f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
         )
@@ -373,7 +359,7 @@ class Simulator:
         """
         Return a dictionary with run numbers and simulation files.
 
-        The latter are expected to be given for the simtel simulator.
+        The latter are expected to be given for the sim_telarray simulator.
 
         Parameters
         ----------
@@ -390,38 +376,18 @@ class Simulator:
         ------
         ValueError
             If no runs are to be submitted.
-
         """
         _runs_and_files = {}
-        self._logger.debug(f"Getting runs and files to submit ({input_file_list})")
+        self.logger.debug(f"Getting runs and files to submit ({input_file_list})")
 
-        if self.simulation_software == "sim_telarray":
-            input_file_list = self._enforce_list_type(input_file_list)
+        if self.simulation_software == "sim_telarray" and self.run_mode is None:
+            input_file_list = gen.enforce_list_type(input_file_list)
             _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
-        elif self.simulation_software in ["corsika", "corsika_sim_telarray"]:
+        else:
             _runs_and_files = dict.fromkeys(self._get_runs_to_simulate())
         if len(_runs_and_files) == 0:
             raise ValueError("No runs to submit.")
         return _runs_and_files
-
-    @staticmethod
-    def _enforce_list_type(input_file_list):
-        """
-        Enforce the input list to be a list.
-
-        Parameters
-        ----------
-        input_file_list: str or list of str
-            Single file or list of files of shower simulations.
-
-        Returns
-        -------
-        list
-            List of input files.
-        """
-        if not input_file_list:
-            return []
-        return input_file_list if isinstance(input_file_list, list) else [input_file_list]
 
     def _guess_run_from_file(self, file):
         """
@@ -446,7 +412,7 @@ class Simulator:
             run_str = re.search(r"run\d*", file_name).group()
             return int(run_str[3:])
         except (ValueError, AttributeError):
-            self._logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
+            self.logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
             return 1
 
     def _fill_results(self, file, run_number):
@@ -535,24 +501,8 @@ class Simulator:
             List with the full path of all output files.
 
         """
-        self._logger.info(f"Getting list of {file_type} files")
+        self.logger.info(f"Getting list of {file_type} files")
         return self._results[file_type]
-
-    def print_list_of_files(self, file_type="simtel_output"):
-        """
-        Print list of output files generated by simulations.
-
-        Options are "input", "simtel_output", "hist", "log".
-
-        Parameters
-        ----------
-        file_type : str
-            File type to be listed.
-
-        """
-        self._logger.info(f"Printing list of {file_type} files")
-        for file in self._results[file_type]:
-            print(file)
 
     def _make_resources_report(self, input_file_list):
         """
@@ -632,7 +582,7 @@ class Simulator:
         """
         if run_list is None and run_range is None:
             return [] if self.runs is None else self.runs
-        return self._validate_run_list_and_range(run_list, run_range)
+        return self._prepare_run_list_and_range(run_list, run_range)
 
     def save_file_lists(self):
         """Save files lists for output and log files."""
@@ -642,12 +592,12 @@ class Simulator:
             )
             file_list = self.get_file_list(file_type=file_type)
             if all(element is not None for element in file_list) and len(file_list) > 0:
-                self._logger.info(f"Saving list of {file_type} files to {file_name}")
+                self.logger.info(f"Saving list of {file_type} files to {file_name}")
                 with open(file_name, "w", encoding="utf-8") as f:
                     for line in self.get_file_list(file_type=file_type):
                         f.write(f"{line}\n")
             else:
-                self._logger.debug(f"No files to save for {file_type} files.")
+                self.logger.debug(f"No files to save for {file_type} files.")
 
     def save_reduced_event_lists(self):
         """
@@ -657,7 +607,7 @@ class Simulator:
         but with a 'hdf5' extension.
         """
         if "sim_telarray" not in self.simulation_software:
-            self._logger.warning(
+            self.logger.warning(
                 "Reduced event lists can only be saved for sim_telarray simulations."
             )
             return
@@ -666,7 +616,7 @@ class Simulator:
         output_files = self.get_file_list(file_type="event_data")
         for input_file, output_file in zip(input_files, output_files):
             generator = SimtelIOEventDataWriter([input_file])
-            io_table_handler.write_tables(
+            table_handler.write_tables(
                 tables=generator.process_files(),
                 output_file=Path(output_file),
                 overwrite_existing=True,
@@ -684,7 +634,7 @@ class Simulator:
             Directory for the tarball with output files.
 
         """
-        self._logger.info(
+        self.logger.info(
             f"Packing the output files for registering on the grid ({directory_for_grid_upload})"
         )
         output_files = self.get_file_list(file_type="simtel_output")
@@ -734,26 +684,26 @@ class Simulator:
             source_file = Path(file_to_move)
             destination_file = directory_for_grid_upload / source_file.name
             if destination_file.exists():
-                self._logger.warning(f"Overwriting existing file: {destination_file}")
+                self.logger.warning(f"Overwriting existing file: {destination_file}")
             shutil.move(source_file, destination_file)
 
-        self._logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
+        self.logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
 
     def validate_metadata(self):
         """Validate metadata in the sim_telarray output files."""
         if "sim_telarray" not in self.simulation_software:
-            self._logger.info("No sim_telarray files to validate.")
+            self.logger.info("No sim_telarray files to validate.")
             return
 
         for model in self.array_models:
             files = self.get_file_list(file_type="simtel_output")
             output_file = next((f for f in files if model.model_version in f), None)
             if output_file:
-                self._logger.info(f"Validating metadata for {output_file}")
+                self.logger.info(f"Validating metadata for {output_file}")
                 assert_sim_telarray_metadata(output_file, model)
-                self._logger.info(f"Metadata for sim_telarray file {output_file} is valid.")
+                self.logger.info(f"Metadata for sim_telarray file {output_file} is valid.")
             else:
-                self._logger.warning(
+                self.logger.warning(
                     f"No sim_telarray file found for model version {model.model_version}: {files}"
                 )
 
@@ -804,3 +754,14 @@ class Simulator:
                         new_file.write(line)
 
             corsika_log_files.append(str(new_log))
+
+    def _is_calibration_run(self):
+        """
+        Check if this simulation is a calibration run.
+
+        Returns
+        -------
+        bool
+            True if it is a calibration run, False otherwise.
+        """
+        return self.run_mode in ["pedestals", "dark_pedestals", "nsb_only_pedestals", "flasher"]

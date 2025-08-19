@@ -307,6 +307,12 @@ class CommandLineParser(argparse.ArgumentParser):
                 selected_parameters=simulation_configuration["corsika_configuration"],
                 available_parameters=self._get_dictionary_with_shower_configuration(),
             )
+        if "sim_telarray_configuration" in simulation_configuration:
+            self._initialize_simulation_configuration(
+                group_name="sim_telarray configuration",
+                selected_parameters=simulation_configuration["sim_telarray_configuration"],
+                available_parameters=self._get_dictionary_with_sim_telarray_configuration(),
+            )
 
     def _initialize_simulation_software(self):
         """Initialize simulation software arguments."""
@@ -351,11 +357,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 ),
                 "type": CommandLineParser.azimuth_angle,
                 "required": True,
+                "default": 0 * u.deg,
             },
             "zenith_angle": {
                 "help": "Zenith angle in degrees (between 0 and 180).",
                 "type": CommandLineParser.zenith_angle,
                 "required": True,
+                "default": 20 * u.deg,
             },
             "nshow": {
                 "help": "Number of showers per run to simulate.",
@@ -426,6 +434,27 @@ class CommandLineParser(argparse.ArgumentParser):
                 "type": CommandLineParser.parse_integer_and_quantity,
                 "required": False,
                 "default": ["10 1400 m"],
+            },
+        }
+
+    @staticmethod
+    def _get_dictionary_with_sim_telarray_configuration():
+        """Return dictionary with sim_telarray configuration parameters."""
+        return {
+            "sim_telarray_instrument_seeds": {
+                "help": (
+                    "Random seed used for sim_telarray instrument setup. "
+                    "If '--sim_telarray_random_instrument_instances' is not set: "
+                    "use as sim_telarray seed ('random_seed' parameter). Otherwise: "
+                    "use as base seed to generate the random instrument instance seeds."
+                ),
+                "type": str,
+                "required": False,
+            },
+            "sim_telarray_random_instrument_instances": {
+                "help": "Number of random instrument instances initialized in sim_telarray.",
+                "type": int,
+                "required": False,
             },
         }
 

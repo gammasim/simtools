@@ -6,9 +6,9 @@ Incomplete documentation.
 
 The simulation pipeline allows to simulate calibration data for various components of the Cherenkov Telescope Array Observatory (CTAO) including the simulation of calibration devices.
 
-## Pedestals
+## Calibration events
 
-## Flasher and laser simulations
+To generate calibration events, including pedestal, dark pedestal, and flasher events, use the `simtools-simulate-calibration-events` command.
 
 ## Muons
 

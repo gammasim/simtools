@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
@@ -63,7 +62,7 @@ def array_simulator(io_handler, db_config, simulations_args_dict):
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        mongo_db_config=db_config,
+        db_config=db_config,
     )
 
 
@@ -76,7 +75,7 @@ def shower_simulator(io_handler, db_config, simulations_args_dict):
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        mongo_db_config=db_config,
+        db_config=db_config,
     )
 
 
@@ -89,7 +88,21 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        mongo_db_config=db_config,
+        db_config=db_config,
+    )
+
+
+@pytest.fixture
+def calibration_simulator(io_handler, db_config, simulations_args_dict):
+    args_dict = copy.deepcopy(simulations_args_dict)
+    args_dict["simulation_software"] = "corsika_sim_telarray"
+    args_dict["label"] = "test-calibration-shower-array-simulator"
+    args_dict["sequential"] = True
+    args_dict["run_mode"] = "nsb_only_pedestals"
+    return Simulator(
+        label=args_dict["label"],
+        args_dict=args_dict,
+        db_config=db_config,
     )
 
 
@@ -99,7 +112,7 @@ def test_init_simulator(shower_simulator, array_simulator, shower_array_simulato
     assert isinstance(array_simulator._simulation_runner, SimulatorArray)
 
 
-def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator, caplog):
+def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator):
     assert array_simulator.simulation_software == "sim_telarray"
     assert shower_simulator.simulation_software == "corsika"
     assert shower_array_simulator.simulation_software == "corsika_sim_telarray"
@@ -109,20 +122,14 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
     test_array_simulator.simulation_software = "corsika"
     assert test_array_simulator.simulation_software == "corsika"
 
-    with pytest.raises(gen.InvalidConfigDataError):
-        with caplog.at_level(logging.ERROR):
-            test_array_simulator.simulation_software = "this_simulator_is_not_there"
-    assert "Invalid simulation software" in caplog.text
+    with pytest.raises(
+        ValueError, match="Invalid simulation software: this_simulator_is_not_there"
+    ):
+        test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
-def test_initialize_run_list(shower_simulator, caplog):
+def test_initialize_run_list(shower_simulator):
     assert shower_simulator._initialize_run_list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    test_shower_simulator = copy.deepcopy(shower_simulator)
-    test_shower_simulator.args_dict.pop("run_number_offset", None)
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            test_shower_simulator._initialize_run_list()
-    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
 
 
 def test_initialize_run_list_valid_cases(shower_simulator):
@@ -141,61 +148,36 @@ def test_initialize_run_list_valid_cases(shower_simulator):
     assert result == [15, 16, 17]  # range from 15 to 17
 
 
-def test_initialize_run_list_missing_keys(shower_simulator, caplog):
-    # Test missing 'run_number'
-    shower_simulator.args_dict.pop("run_number", None)
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            shower_simulator._initialize_run_list()
-    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
-
-    # Test missing 'run_number_offset'
-    shower_simulator.args_dict["run_number"] = 5
-    shower_simulator.args_dict.pop("run_number_offset", None)
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            shower_simulator._initialize_run_list()
-    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
-
-    # Test missing 'number_of_runs'
-    shower_simulator.args_dict["run_number_offset"] = 10
-    shower_simulator.args_dict.pop("number_of_runs", None)
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            shower_simulator._initialize_run_list()
-    assert INITIALIZE_RUN_LIST_ERROR_MSG in caplog.text
-
-
-def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
+def test_prepare_run_list_and_range(shower_simulator, shower_array_simulator):
     for simulator_now in [shower_simulator, shower_array_simulator]:
-        assert not simulator_now._validate_run_list_and_range(None, None)
+        assert not simulator_now._prepare_run_list_and_range(None, None)
 
         run_list = [1, 24, 3]
 
-        assert simulator_now._validate_run_list_and_range(run_list=run_list, run_range=None) == [
+        assert simulator_now._prepare_run_list_and_range(run_list=run_list, run_range=None) == [
             1,
             3,
             24,
         ]
 
         with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
+            simulator_now._prepare_run_list_and_range(run_list=[1, "a", 4], run_range=None)
 
-        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
+        assert simulator_now._prepare_run_list_and_range(run_list=None, run_range=[3, 6]) == [
             3,
             4,
             5,
         ]
 
-        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
+        assert simulator_now._prepare_run_list_and_range(run_list=None, run_range=[6, 3]) == []
 
         with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
+            simulator_now._prepare_run_list_and_range(run_list=None, run_range=[3, "b"])
 
         with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
+            simulator_now._prepare_run_list_and_range(run_list=None, run_range=[3, 4, 5])
 
-        assert simulator_now._validate_run_list_and_range(run_list=5, run_range=None) == [5]
+        assert simulator_now._prepare_run_list_and_range(run_list=5, run_range=None) == [5]
 
 
 def test_fill_results_without_run(array_simulator, input_file_list):
@@ -259,12 +241,6 @@ def test_get_runs_and_files_to_submit(
         }
 
 
-def test_enforce_list_type(array_simulator):
-    assert array_simulator._enforce_list_type(None) == []
-    assert array_simulator._enforce_list_type([1, 2, 3]) == [1, 2, 3]
-    assert array_simulator._enforce_list_type(5) == [5]
-
-
 def test_guess_run_from_file(array_simulator, caplog):
     assert array_simulator._guess_run_from_file("run12345_bla_ble") == 12345
 
@@ -303,16 +279,6 @@ def test_get_list_of_files(shower_simulator):
     test_shower_simulator._results["simtel_output"] = ["file_name"] * 10
     assert len(test_shower_simulator.get_file_list("simtel_output")) == len(shower_simulator.runs)
     assert len(test_shower_simulator.get_file_list("not_a_valid_file_type")) == 0
-
-
-def test_print_list_of_files(array_simulator, input_file_list, capsys):
-    array_simulator._fill_results_without_run(input_file_list)
-    array_simulator.print_list_of_files("log")
-    captured = capsys.readouterr()
-    assert "log.gz" in captured.out
-    assert captured.out.count("log.gz") == 3
-    array_simulator.print_list_of_files("blabla")
-    assert captured.out.count("blabal") == 0
 
 
 def test_resources(shower_simulator, capsys):
@@ -405,9 +371,9 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     )
 
 
-def test_initialize_array_models_with_single_version(shower_simulator, db_config, model_version):
+def test_initialize_array_models_with_single_version(shower_simulator, model_version):
     # Test with a single model version
-    array_models = shower_simulator._initialize_array_models(mongo_db_config=db_config)
+    array_models = shower_simulator._initialize_array_models()
     assert len(array_models) == 1
     assert isinstance(array_models[0], ArrayModel)
     assert array_models[0].model_version == model_version
@@ -415,11 +381,11 @@ def test_initialize_array_models_with_single_version(shower_simulator, db_config
     assert array_models[0].layout_name == shower_simulator.args_dict.get("array_layout_name")
 
 
-def test_initialize_array_models_with_multiple_versions(shower_simulator, db_config):
+def test_initialize_array_models_with_multiple_versions(shower_simulator):
     # Test with multiple model versions
     model_versions = ["5.0.0", "6.0.0"]
     shower_simulator.args_dict["model_version"] = model_versions
-    array_models = shower_simulator._initialize_array_models(mongo_db_config=db_config)
+    array_models = shower_simulator._initialize_array_models()
     assert len(array_models) == 2
     for i, model_version in enumerate(model_versions):
         assert isinstance(array_models[i], ArrayModel)
@@ -465,7 +431,7 @@ def test_pack_for_register_with_multiple_versions(
     local_shower_array_simulator = Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        mongo_db_config=db_config,
+        db_config=db_config,
     )
 
     # Define file patterns
@@ -632,7 +598,7 @@ def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, 
     mock_corsika_runner = mocker.patch("simtools.simulator.CorsikaRunner", autospec=True)
 
     # Call the method
-    simulation_runner = shower_simulator._initialize_simulation_runner(db_config)
+    simulation_runner = shower_simulator._initialize_simulation_runner()
 
     # Assertions
     assert isinstance(simulation_runner, CorsikaRunner)
@@ -641,6 +607,7 @@ def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, 
         label=shower_simulator.label,
         args_dict=shower_simulator.args_dict,
         db_config=db_config,
+        dummy_simulations=False,
     )
     mock_corsika_runner.assert_called_once_with(
         label=shower_simulator.label,
@@ -657,7 +624,7 @@ def test_initialize_simulation_runner_with_sim_telarray(array_simulator, db_conf
     mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
 
     # Call the method
-    simulation_runner = array_simulator._initialize_simulation_runner(db_config)
+    simulation_runner = array_simulator._initialize_simulation_runner()
 
     # Assertions
     assert isinstance(simulation_runner, SimulatorArray)
@@ -680,7 +647,7 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
     )
 
     # Call the method
-    simulation_runner = shower_array_simulator._initialize_simulation_runner(db_config)
+    simulation_runner = shower_array_simulator._initialize_simulation_runner()
 
     # Assertions
     assert isinstance(simulation_runner, CorsikaSimtelRunner)
@@ -694,6 +661,33 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
         sim_telarray_seeds=shower_array_simulator.sim_telarray_seeds,
         sequential=shower_array_simulator.args_dict.get("sequential", False),
         keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
+    )
+
+
+def test_initialize_simulation_runner_with_calibration_simulator(
+    calibration_simulator, db_config, mocker
+):
+    # Mock CorsikaConfig and CorsikaSimtelRunner to avoid actual initialization
+    mock_corsika_config = mocker.patch(CORSIKA_CONFIG_MOCK_PATCH, autospec=True)
+    mock_corsika_simtel_runner = mocker.patch(
+        "simtools.simulator.CorsikaSimtelRunner", autospec=True
+    )
+
+    # Call the method
+    simulation_runner = calibration_simulator._initialize_simulation_runner()
+
+    # Assertions
+    assert isinstance(simulation_runner, CorsikaSimtelRunner)
+    mock_corsika_config.assert_called()
+    mock_corsika_simtel_runner.assert_called_once_with(
+        label=calibration_simulator.label,
+        corsika_config=[mock_corsika_config.return_value] * len(calibration_simulator.array_models),
+        simtel_path=calibration_simulator.args_dict.get("simtel_path"),
+        use_multipipe=True,
+        sim_telarray_seeds=calibration_simulator.sim_telarray_seeds,
+        sequential=calibration_simulator.args_dict.get("sequential", False),
+        keep_seeds=calibration_simulator.args_dict.get("corsika_test_seeds", False),
+        calibration_runner_args=calibration_simulator.args_dict,
     )
 
 
@@ -721,7 +715,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer = mocker.patch(
         "simtools.simulator.SimtelIOEventDataWriter", return_value=mock_generator
     )
-    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
 
     array_simulator.save_reduced_event_lists()
 
@@ -729,13 +723,13 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
     mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
 
-    assert mock_io_table_handler.write_tables.call_count == 2
-    mock_io_table_handler.write_tables.assert_any_call(
+    assert mock_table_handler.write_tables.call_count == 2
+    mock_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
         output_file=Path("output_file1.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
-    mock_io_table_handler.write_tables.assert_any_call(
+    mock_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
         output_file=Path("output_file2.reduced_event_data.hdf5"),
         overwrite_existing=True,
@@ -745,9 +739,20 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
 def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
     mocker.patch.object(array_simulator, "get_file_list", return_value=[])
     mock_simtel_io_writer = mocker.patch("simtools.simulator.SimtelIOEventDataWriter")
-    mock_io_table_handler = mocker.patch("simtools.simulator.io_table_handler")
+    mock_io_table_handler = mocker.patch("simtools.simulator.table_handler")
 
     array_simulator.save_reduced_event_lists()
 
     mock_simtel_io_writer.assert_not_called()
     mock_io_table_handler.write_tables.assert_not_called()
+
+
+def test_is_calibration_run(shower_simulator):
+    shower_simulator.run_mode = "nsb_only_pedestals"
+    assert shower_simulator._is_calibration_run() is True
+
+    shower_simulator.run_mode = None
+    assert shower_simulator._is_calibration_run() is False
+
+    shower_simulator.run_mode = "not_a_calibration_run"
+    assert shower_simulator._is_calibration_run() is False

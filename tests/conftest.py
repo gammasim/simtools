@@ -10,7 +10,7 @@ import pytest
 from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
-import simtools.io_operations.io_handler
+import simtools.io.io_handler
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -50,7 +50,7 @@ def data_path():
 @pytest.fixture
 def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
-    tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
+    tmp_io_handler = simtools.io.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
         data_path=data_path,
@@ -447,11 +447,10 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
             "model_version": model_version,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
+            "simtel_path": simtel_path,
         },
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
-        test=True,
     )
 
 

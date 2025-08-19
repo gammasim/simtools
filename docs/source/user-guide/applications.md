@@ -75,6 +75,9 @@ simtools-generate-default-metadata <applications/simtools-generate-default-metad
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
+simtools-maintain-simulation-model-add-production-table <applications/simtools-maintain-simulation-model-add-production-table>
+simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
+simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
@@ -85,6 +88,7 @@ simtools-production-derive-statistics <applications/simtools-production-derive-s
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
+simtools-simulate-calibration-events <applications/simtools-simulate-calibration-events>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
@@ -96,4 +100,3 @@ simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
-simtools-verify-simulation-model-production-tables <applications/simtools-verify-simulation-model-production-tables>
