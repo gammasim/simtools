@@ -99,7 +99,7 @@ def _calculate_trigger_rates(histograms, array_name):
 
 def get_cosmic_ray_spectrum():
     """
-    Get the cosmic ray spectrum for the given energy range.
+    Return the cosmic ray spectrum.
 
     To be extended in future to read a larger variety of spectra.
 

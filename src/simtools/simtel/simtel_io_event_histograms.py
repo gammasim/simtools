@@ -106,9 +106,6 @@ class SimtelIOEventHistograms:
             for name, data, bins, hist1d in hist_defs:
                 self._fill_histogram_and_bin_edges(name, data, bins, hist1d=hist1d)
 
-            # TODO temporary break to run one file only
-            break
-
         self.calculate_efficiency_data()
         self.calculate_cumulative_data()
 
@@ -239,12 +236,12 @@ class SimtelIOEventHistograms:
             Dictionary containing the efficiency histograms.
         """
 
-        def calculate_efficiency(sim_hist, mc_hist):
+        def calculate_efficiency(trig_hist, mc_hist):
             with np.errstate(divide="ignore", invalid="ignore"):
                 return np.divide(
-                    sim_hist,
+                    trig_hist,
                     mc_hist,
-                    out=np.zeros_like(sim_hist, dtype=float),
+                    out=np.zeros_like(trig_hist, dtype=float),
                     where=mc_hist > 0,
                 )
 
@@ -255,18 +252,18 @@ class SimtelIOEventHistograms:
                 continue
 
             base_name = name[:-3]
-            sim_hist = self.histograms.get(base_name)
-            if sim_hist is None:
+            trig_hist = self.histograms.get(base_name)
+            if trig_hist is None:
                 continue
 
-            if mc_hist.shape != sim_hist.shape:
+            if mc_hist.shape != trig_hist.shape:
                 self._logger.warning(
                     f"Shape mismatch for {base_name} and {name}, skipping efficiency calculation."
                 )
                 continue
 
             eff_name = f"{base_name}{suffix}"
-            eff_histograms[eff_name] = calculate_efficiency(sim_hist, mc_hist)
+            eff_histograms[eff_name] = calculate_efficiency(trig_hist, mc_hist)
             self._copy_bin_edges(base_name, eff_name, eff_histograms)
 
         self.histograms.update(eff_histograms)
