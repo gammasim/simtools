@@ -881,7 +881,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def run_simulation(self, args_dict, figures):
         """Run the light emission simulation."""
-        run_script = self.prepare_script(generate_postscript=True, **args_dict)
+        run_script = self.prepare_script(generate_postscript=True)
         log_file = Path(self.output_directory) / "logfile.log"
         with open(log_file, "w", encoding="utf-8") as log_file:
             subprocess.run(
