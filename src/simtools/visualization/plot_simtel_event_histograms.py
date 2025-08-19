@@ -44,19 +44,24 @@ def _get_limits(name, limits):
 
     Fine tuned to expected histograms to be plotted.
     """
+
+    def _safe_value(limits, key):
+        val = limits.get(key)
+        return getattr(val, "value", None)
+
     mapping = {
-        "energy": {"x": limits.get("lower_energy_limit").value},
-        "core_distance": {"x": limits.get("upper_radius_limit").value},
-        "angular_distance": {"x": limits.get("viewcone_radius").value},
+        "energy": {"x": _safe_value(limits, "lower_energy_limit")},
+        "core_distance": {"x": _safe_value(limits, "upper_radius_limit")},
+        "angular_distance": {"x": _safe_value(limits, "viewcone_radius")},
         "core_vs_energy": {
-            "x": limits.get("upper_radius_limit").value,
-            "y": limits.get("lower_energy_limit").value,
+            "x": _safe_value(limits, "upper_radius_limit"),
+            "y": _safe_value(limits, "lower_energy_limit"),
         },
         "angular_distance_vs_energy": {
-            "x": limits.get("viewcone_radius").value,
-            "y": limits.get("lower_energy_limit").value,
+            "x": _safe_value(limits, "viewcone_radius"),
+            "y": _safe_value(limits, "lower_energy_limit"),
         },
-        "x_core_shower_vs_y_core_shower": {"r": limits.get("upper_radius_limit").value},
+        "x_core_shower_vs_y_core_shower": {"r": _safe_value(limits, "upper_radius_limit")},
     }
     return mapping.get(name)
 

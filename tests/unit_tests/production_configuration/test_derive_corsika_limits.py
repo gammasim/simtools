@@ -253,7 +253,7 @@ def test_compute_viewcone(hdf5_file_name, mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"angular_distance": mock_hist}
+    mock_histograms.histograms = {"angular_distance": {"histogram": mock_hist}}
     mock_histograms.view_cone_bins = mock_bins
 
     result = derive_corsika_limits.compute_viewcone(mock_histograms, 0.2)
@@ -275,7 +275,7 @@ def test_compute_lower_energy_limit(hdf5_file_name, mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"energy": mock_hist}
+    mock_histograms.histograms = {"energy": {"histogram": mock_hist}}
     mock_histograms.energy_bins = mock_bins
     mock_histograms.file_info = {}
 
@@ -298,7 +298,7 @@ def test_compute_upper_radius_limit(hdf5_file_name, mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"core_distance": mock_hist}
+    mock_histograms.histograms = {"core_distance": {"histogram": mock_hist}}
     mock_histograms.core_distance_bins = mock_bins
     mock_histograms.file_info = {}
 
@@ -419,7 +419,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_path):
     mock_plot.assert_called_once()
     args, kwargs = mock_plot.call_args
     # First positional argument should be the histograms instance
-    assert args[0] is mock_histograms
+    assert args[0] is mock_histograms.histograms
     assert kwargs["output_path"] == tmp_path
     assert kwargs["limits"] == {
         "lower_energy_limit": 1.0 * u.TeV,
