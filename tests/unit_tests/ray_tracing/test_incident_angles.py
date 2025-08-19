@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import logging
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -104,3 +105,70 @@ def test_plot_no_results_logs_warning(caplog, calculator):
     caplog.set_level(logging.WARNING, logger=ia.__name__)
     calculator.plot_incident_angles()
     assert any("No results to plot" in rec.message for rec in caplog.records)
+
+
+def test_repr_contains_label_and_models(calculator):
+    s = repr(calculator)
+    assert "IncidentAnglesCalculator(" in s
+    assert f"label={calculator.label}" in s
+    assert "telescope=" in s
+    assert "site=" in s
+
+
+def test_write_run_script_includes_use_real_camera_flag(calculator):
+    # Prepare IO files and write script with real camera option
+    calculator.use_real_camera = True
+    photons, stars, log_file = calculator._prepare_psf_io_files()
+    script = calculator._write_run_script(photons, stars, log_file)
+    txt = script.read_text(encoding="utf-8")
+    assert "-C USE_REAL_CAMERA=1" in txt
+
+
+def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp_output_dir):
+    script = tmp_output_dir / "fail.sh"
+    script.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    script.chmod(0o755)
+    log_file = tmp_output_dir / "run.log"
+
+    def _raise(*a, **k):
+        raise subprocess.CalledProcessError(1, "cmd")
+
+    monkeypatch.setattr(ia.subprocess, "check_call", lambda *a, **k: _raise())
+
+    with pytest.raises(RuntimeError, match="Incident angles run failed, see log"):
+        calculator._run_script(script, log_file)
+
+
+def test_save_results_no_data_logs_warning(caplog, calculator, tmp_output_dir):
+    calculator.results = QTable()  # empty
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator._save_results()
+    assert any("No results to save" in rec.message for rec in caplog.records)
+    # No file should be created
+    out = list(calculator.output_dir.glob("incident_angles_*.ecsv"))
+    assert not out
+
+
+def test_export_results_success_and_no_results(caplog, calculator):
+    # No results path
+    calculator.results = QTable()
+    caplog.clear()
+    caplog.set_level(logging.ERROR, logger=ia.__name__)
+    calculator.export_results()
+    assert any("Cannot export results" in rec.message for rec in caplog.records)
+
+    # Valid results path
+    calculator.results = QTable()
+    calculator.results["x_pix"] = [0.0, 1.0]
+    calculator.results["y_pix"] = [0.0, 1.0]
+    calculator.results["incident_angle"] = [1.0, 2.0] * u.deg
+
+    calculator.export_results()
+    table_file = calculator.output_dir / f"incident_angles_{calculator.label}.ecsv"
+    summary_file = calculator.output_dir / f"incident_angles_summary_{calculator.label}.txt"
+    assert table_file.exists()
+    assert summary_file.exists()
+    content = summary_file.read_text(encoding="utf-8")
+    assert "Incident angle results for" in content
+    assert "Site:" in content
+    assert "Number of data points:" in content
