@@ -7,13 +7,21 @@ applications:
     output_path: simtools-output
     site: South
     telescope: SSTS-design
+    parameter_version: 0.0.99
+    write_reference_nsb_rate_as_parameter: true
+    use_plain_output_path: true
+    zenith_angle: 0.
   integration_tests:
   - output_file: validate_camera_efficiency_SSTS-design_nsb.pdf
   - output_file: validate_camera_efficiency_SSTS-design_nsb.png
   - output_file: validate_camera_efficiency_SSTS-design_cherenkov.png
   - output_file: validate_camera_efficiency_SSTS-design_cherenkov.pdf
-  - output_file: camera_efficiency_summary_South_SSTS-design_za20.0deg_azm000deg_validate_camera_efficiency.txt
-  - output_file: camera_efficiency_table_South_SSTS-design_za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+  - output_file: camera_efficiency_summary_South_SSTS-design_za0.0deg_azm000deg_validate_camera_efficiency.txt
+  - output_file: camera_efficiency_table_South_SSTS-design_za0.0deg_azm000deg_validate_camera_efficiency.ecsv
+  - model_parameter_validation:
+      parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
+      reference_parameter_name: nsb_pixel_rate
+      tolerance: 1.e-1
   test_name: SSTS
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

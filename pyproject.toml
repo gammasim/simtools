@@ -98,6 +98,9 @@ scripts.simtools-generate-default-metadata = "simtools.applications.generate_def
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-sim-telarray-histograms = "simtools.applications.generate_sim_telarray_histograms:main"
 scripts.simtools-generate-simtel-event-data = "simtools.applications.generate_simtel_event_data:main"
+scripts.simtools-maintain-simulation-model-add-production-table = "simtools.applications.maintain_simulation_model_add_production_table:main"
+scripts.simtools-maintain-simulation-model-compare-productions = "simtools.applications.maintain_simulation_model_compare_productions:main"
+scripts.simtools-maintain-simulation-model-verify-production-tables = "simtools.applications.maintain_simulation_model_verify_production_tables:main"
 scripts.simtools-merge-tables = "simtools.applications.merge_tables:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
 scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
@@ -108,6 +111,7 @@ scripts.simtools-production-derive-statistics = "simtools.applications.productio
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
 scripts.simtools-production-merge-corsika-limits = "simtools.applications.production_merge_corsika_limits:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
+scripts.simtools-simulate-calibration-events = "simtools.applications.simulate_calibration_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
@@ -119,7 +123,6 @@ scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fo
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
 scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
-scripts.simtools-verify-simulation-model-production-tables = "simtools.applications.verify_simulation_model_production_tables:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

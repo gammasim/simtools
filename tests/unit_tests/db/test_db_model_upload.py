@@ -18,7 +18,7 @@ def is_dir():
     return "simtools.db.db_model_upload.Path.is_dir"
 
 
-@patch("simtools.db.db_model_upload.gen.collect_data_from_file")
+@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
 def test_add_values_from_json_to_db(mock_collect_data_from_file):
     mock_collect_data_from_file.return_value = {
         "parameter": "test_param",
@@ -41,7 +41,7 @@ def test_add_values_from_json_to_db(mock_collect_data_from_file):
     )
 
 
-@patch("simtools.db.db_model_upload.gen.collect_data_from_file")
+@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
 def test_read_production_table(mock_collect_data_from_file):
     mock_collect_data_from_file.return_value = {
         "parameters": {"LSTN-design": "param_value_1", "LSTN-01": "param_value_2"},

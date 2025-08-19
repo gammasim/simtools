@@ -7,12 +7,16 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.db import db_handler
+from simtools.io import ascii_handler
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
 
 
-def validate_application_output(config, from_command_line=None, from_config_file=None):
+def validate_application_output(
+    config, from_command_line=None, from_config_file=None, db_config=None
+):
     """
     Validate application output against expected output.
 
@@ -37,7 +41,7 @@ def validate_application_output(config, from_command_line=None, from_config_file
         _logger.info(f"Testing application output: {integration_test}")
 
         if from_command_line == from_config_file:
-            _validate_output_files(config, integration_test)
+            _validate_output_files(config, integration_test, db_config)
 
             if "file_type" in integration_test:
                 assert assertions.assert_file_type(
@@ -49,7 +53,7 @@ def validate_application_output(config, from_command_line=None, from_config_file
         _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file)
 
 
-def _validate_output_files(config, integration_test):
+def _validate_output_files(config, integration_test, db_config):
     """Validate output files."""
     if "reference_output_file" in integration_test:
         _validate_reference_output_file(config, integration_test)
@@ -59,6 +63,12 @@ def _validate_output_files(config, integration_test):
         _validate_output_path_and_file(
             config,
             [{"path_descriptor": "output_path", "file": integration_test["output_file"]}],
+        )
+    if "model_parameter_validation" in integration_test:
+        _validate_model_parameter_json_file(
+            config,
+            integration_test["model_parameter_validation"],
+            db_config,
         )
 
 
@@ -112,6 +122,44 @@ def _validate_output_path_and_file(config, integration_file_tests):
                 output_file_path,
                 file_test["expected_output"],
             )
+
+
+def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):
+    """
+    Validate model parameter json file and compare it with a reference parameter from the database.
+
+    Requires database connection to pull the model parameter for a given telescope or site model.
+
+    Parameters
+    ----------
+    config: dict
+        Configuration dictionary.
+    model_parameter_validation: dict
+        Dictionary with model parameter validation configuration.
+
+    """
+    _logger.info(f"Checking model parameter json file: {model_parameter_validation}")
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+
+    reference_parameter_name = model_parameter_validation.get("reference_parameter_name")
+
+    reference_model_parameter = db.get_model_parameter(
+        parameter=reference_parameter_name,
+        site=config["configuration"].get("site"),
+        array_element_name=config["configuration"].get("telescope"),
+        model_version=config["configuration"].get("model_version"),
+    )
+    parameter_file = (
+        Path(config["configuration"]["output_path"])
+        / config["configuration"].get("telescope")
+        / model_parameter_validation["parameter_file"]
+    )
+    model_parameter = ascii_handler.collect_data_from_file(parameter_file)
+    assert _compare_value_from_parameter_dict(
+        model_parameter["value"],
+        reference_model_parameter[reference_parameter_name]["value"],
+        model_parameter_validation["tolerance"],
+    )
 
 
 def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
@@ -171,8 +219,8 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
         True if the files are equal.
 
     """
-    data1 = gen.collect_data_from_file(file1)
-    data2 = gen.collect_data_from_file(file2)
+    data1 = ascii_handler.collect_data_from_file(file1)
+    data2 = ascii_handler.collect_data_from_file(file2)
     data1.pop("schema_version", None)
     data2.pop("schema_version", None)
 

@@ -63,7 +63,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -133,7 +133,7 @@ jobs:
             --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v5.2.0
+      - uses: SonarSource/sonarqube-scan-action@v5.3.0
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
