@@ -106,8 +106,6 @@ def _generate_1d_plots(histograms, labels, limits):
                     y_label=histo_type["ordinate"],
                     title=histo_type["title"],
                 )
-            else:
-                _logger.warning(f"Histogram {histogram_key} not found.")
 
     return plots
 
