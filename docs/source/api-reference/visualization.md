@@ -61,7 +61,7 @@ the visualization module.
    :members:
 ```
 
-(visualizationlightemissionplots)=
+(visualizationsimtel_event_plots)=
 
 ## simtel_event_plots
 
