@@ -67,6 +67,7 @@ def test_initialization(calculator, config_data):
 def test_run_produces_results(monkeypatch, calculator):
     class _FakeImage:
         def __init__(self, *a, **k):
+            # Intentionally left empty: no initialization needed for this test
             pass
 
         def read_photon_list_from_simtel_file(self, _fname):
