@@ -9,7 +9,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.visualization import light_emission_plots as lep
+from simtools.visualization import simtel_event_plots as sep
 
 logger = logging.getLogger(__name__)
 DUMMY_SIMTEL = "DUMMY_SIMTEL"
@@ -128,53 +128,54 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
 
 
 def test_plot_simtel_event_image_returns_figure(monkeypatch):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
     src = _fake_source_with_event(ev, tel_id)
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_event_image(DUMMY_SIMTEL, return_cleaned=False)
+    fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
-
-
-def test_plot_simtel_event_image_with_cleaning(monkeypatch):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = lep.plot_simtel_event_image(DUMMY_SIMTEL, return_cleaned=True)
-    assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
 
 def test_plot_simtel_event_image_missing_dl1(monkeypatch, caplog):
-    ev, tel_id = _fake_event(dl1_image=None)
+    ev, tel_id = _fake_event(dl1_image=None, r1_waveforms=_make_waveforms())
     src = _fake_source_with_event(ev, tel_id)
 
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=lep._logger.name):  # pylint:disable=protected-access
-        fig = lep.plot_simtel_event_image(DUMMY_SIMTEL)
-    assert fig is None
-    assert any(
-        "Event has no DL1 or R1 telescope data" in r.message
-        or "No DL1 image available" in r.message
-        for r in caplog.records
-    )
+    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+        fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
+    assert fig is not None
+    assert any("No DL1 image available" in r.message for r in caplog.records)
+    plt.close(fig)
 
 
 def test_plot_simtel_event_image_annotations(monkeypatch):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]))
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
     src = _fake_source_with_event(ev, tel_id)
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_event_image(DUMMY_SIMTEL, distance=100 * u.m)
+    fig = sep.plot_simtel_event_image(DUMMY_SIMTEL, distance=100 * u.m)
     assert isinstance(fig, plt.Figure)
+    assert any("distance: 100.0 m" in a.get_text() for a in fig.axes[0].texts)
     plt.close(fig)
+
+
+def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
+    ev, tel_id = _fake_event(dl1_image=None, r1_waveforms=_make_waveforms())
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+        fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
+    assert fig is None
+    assert any("No event data available" in r.message for r in caplog.records)
 
 
 def test_plot_simtel_time_traces_returns_figure(monkeypatch):
@@ -184,7 +185,7 @@ def test_plot_simtel_time_traces_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=3)
+    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=3)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -196,7 +197,7 @@ def test_plot_simtel_time_traces_pixel_selection(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=5)
+    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=5)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -208,7 +209,7 @@ def test_plot_simtel_time_traces_with_tel_id(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=tel_id, n_pixels=3)
+    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=tel_id, n_pixels=3)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -221,8 +222,8 @@ def test_plot_simtel_time_traces_invalid_tel_id(monkeypatch, caplog):
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=lep._logger.name):  # pylint:disable=protected-access
-        fig = lep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=9999)
+    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+        fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=9999)
     assert fig is None
     assert any("No R1 waveforms available" in r.message for r in caplog.records)
 
@@ -234,7 +235,7 @@ def test_plot_simtel_waveform_pcolormesh_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL, pixel_step=2)
+    fig = sep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL, pixel_step=2)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -246,7 +247,7 @@ def test_plot_simtel_step_traces_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=5, max_pixels=3)
+    fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=5, max_pixels=3)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -258,18 +259,18 @@ def test_plot_simtel_time_traces_no_waveforms(monkeypatch, caplog):
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=lep._logger.name):  # pylint:disable=protected-access
-        fig = lep.plot_simtel_time_traces(DUMMY_SIMTEL)
+    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+        fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL)
     assert fig is None
     assert any("No R1 waveforms available" in r.message for r in caplog.records)
 
 
 def test__histogram_edges_default_and_binned():
-    edges_default = lep._histogram_edges(10, timing_bins=None)
+    edges_default = sep._histogram_edges(10, timing_bins=None)
     assert np.allclose(edges_default[:3], [-0.5, 0.5, 1.5])
     assert edges_default.size == 11
 
-    edges_binned = lep._histogram_edges(10, timing_bins=5)
+    edges_binned = sep._histogram_edges(10, timing_bins=5)
     assert np.isclose(edges_binned[0], -0.5)
     assert np.isclose(edges_binned[-1], 9.5)
     assert edges_binned.size == 6
@@ -279,7 +280,7 @@ def test__draw_peak_hist_basic():
     fig, ax = plt.subplots()
     peak_samples = np.array([1, 2, 2, 3, 4, 4, 4])
     edges = np.arange(-0.5, 6.5, 1.0)
-    lep._draw_peak_hist(
+    sep._draw_peak_hist(
         ax,
         peak_samples,
         edges,
@@ -327,7 +328,7 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig, stats = lep.plot_simtel_peak_timing(DUMMY_SIMTEL, return_stats=True)
+    fig, stats = sep.plot_simtel_peak_timing(DUMMY_SIMTEL, return_stats=True)
     assert isinstance(fig, plt.Figure)
     assert isinstance(stats, dict)
     assert stats["considered"] == n_pix - 1
@@ -349,7 +350,7 @@ def test__detect_peaks_prefers_cwt():
 
     trace = np.zeros(10)
     trace[7] = 1.0
-    peaks = lep._detect_peaks(trace, peak_width=4, signal_mod=_Sig)  # pylint:disable=protected-access
+    peaks = sep._detect_peaks(trace, peak_width=4, signal_mod=_Sig)  # pylint:disable=protected-access
     np.testing.assert_array_equal(peaks, np.array([3, 7]))
 
 
@@ -364,7 +365,7 @@ def test__detect_peaks_fallback_to_find_peaks():
             return np.array([2]), {}
 
     trace = np.array([0, 0.1, 2.0, 0.5, 0.0])
-    peaks = lep._detect_peaks(trace, peak_width=3, signal_mod=_Sig)  # pylint:disable=protected-access
+    peaks = sep._detect_peaks(trace, peak_width=3, signal_mod=_Sig)  # pylint:disable=protected-access
     np.testing.assert_array_equal(peaks, np.array([2]))
 
 
@@ -379,7 +380,7 @@ def test__detect_peaks_handles_errors():
             raise ValueError("bad fp")
 
     trace = np.ones(5)
-    peaks = lep._detect_peaks(trace, peak_width=2, signal_mod=_Sig)  # pylint:disable=protected-access
+    peaks = sep._detect_peaks(trace, peak_width=2, signal_mod=_Sig)  # pylint:disable=protected-access
     assert peaks.size == 0
 
 
@@ -402,7 +403,7 @@ def test__collect_peak_samples_basic():
         def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
             return np.array([int(np.argmax(trace))]), {}
 
-    peak_samples, pix_ids, found = lep._collect_peak_samples(  # pylint:disable=protected-access
+    peak_samples, pix_ids, found = sep._collect_peak_samples(  # pylint:disable=protected-access
         w, sum_threshold=5.0, peak_width=3, signal_mod=_Sig
     )
     np.testing.assert_array_equal(pix_ids, np.array([0, 2]))
@@ -422,7 +423,7 @@ def test__collect_peak_samples_threshold_excludes_all():
         def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
             return np.array([0]), {}
 
-    peak_samples, pix_ids, found = lep._collect_peak_samples(  # pylint:disable=protected-access
+    peak_samples, pix_ids, found = sep._collect_peak_samples(  # pylint:disable=protected-access
         w, sum_threshold=10.0, peak_width=3, signal_mod=_Sig
     )
     assert peak_samples is None
@@ -439,7 +440,7 @@ def test_plot_simtel_integrated_signal_image_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_integrated_signal_image(DUMMY_SIMTEL, half_width=2)
+    fig = sep.plot_simtel_integrated_signal_image(DUMMY_SIMTEL, half_width=2)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -452,6 +453,6 @@ def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = lep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, gap=5)
+    fig = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, gap=5)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
