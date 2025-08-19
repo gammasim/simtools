@@ -1,100 +1,106 @@
 #!/usr/bin/python3
-
-"""
-Unit tests for the incident_angles module.
-"""
-
-import unittest
+import logging
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import astropy.units as u
+import pytest
 from astropy.table import QTable
 
+from simtools.ray_tracing import incident_angles as ia
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 
 
-class TestIncidentAnglesCalculator(unittest.TestCase):
-    """Test the IncidentAnglesCalculator class."""
-
-    def setUp(self):
-        """Set up the test."""
-        self.config_file = "test_config.cfg"
-        self.tel_id = 1
-        self.output_dir = Path("test_output")
-        self.ray_tracing_config = "test_ray_tracing.cfg"
-        self.number_of_rays = 100
-
-        # Create a mock instance
-        self.calculator = IncidentAnglesCalculator(
-            config_file=self.config_file,
-            tel_id=self.tel_id,
-            output_dir=self.output_dir,
-            ray_tracing_config=self.ray_tracing_config,
-            number_of_rays=self.number_of_rays,
-        )
-
-    @patch("simtools.ray_tracing.ray_tracing.RayTracing")
-    def test_initialization(self, mock_ray_tracing):
-        """Test initialization of the calculator."""
-        # Check that attributes are set correctly
-        assert self.calculator.config_file == self.config_file
-        assert self.calculator.tel_id == self.tel_id
-        assert self.calculator.output_dir == self.output_dir
-        assert self.calculator.ray_tracing_config == self.ray_tracing_config
-        assert self.calculator.number_of_rays == self.number_of_rays
-        assert self.calculator.results is None
-
-    @patch("simtools.ray_tracing.ray_tracing.RayTracing")
-    def test_run(self, mock_ray_tracing):
-        """Test the run method."""
-        # Mock the ray tracing results
-        mock_instance = mock_ray_tracing.return_value
-        mock_instance.run.return_value = "ray_tracing_output.txt"
-
-        # Create mock ray tracing data
-        mock_data = {
-            "x_pix": [0, 1, 2],
-            "y_pix": [0, 1, 2],
-            "incident_angle_deg": [10, 20, 30],
-        }
-
-        # Mock the parse_ray_tracing_output method
-        with patch.object(self.calculator, "_parse_ray_tracing_output", return_value=mock_data):
-            self.calculator.run()
-
-            # Check that ray tracing was called with the correct parameters
-            mock_ray_tracing.assert_called_once_with(
-                telescope_model_file=self.config_file,
-                telescope_model_name=self.tel_id,
-                number_of_rays=self.number_of_rays,
-                ray_tracing_config_file=self.ray_tracing_config,
-                output_path=self.output_dir,
-            )
-
-            # Check that the result was saved
-            assert isinstance(self.calculator.results, QTable)
-            assert len(self.calculator.results) == 3
-            assert "x_pix" in self.calculator.results.colnames
-            assert "y_pix" in self.calculator.results.colnames
-            assert "incident_angle" in self.calculator.results.colnames
-
-    @patch("simtools.ray_tracing.ray_tracing.RayTracing")
-    @patch("matplotlib.pyplot.savefig")
-    def test_plot_incident_angles(self, mock_savefig, mock_ray_tracing):
-        """Test the plot_incident_angles method."""
-        # Mock data in self.results
-        self.calculator.results = QTable()
-        self.calculator.results["x_pix"] = [0, 1, 2]
-        self.calculator.results["y_pix"] = [0, 1, 2]
-        self.calculator.results["incident_angle"] = [10, 20, 30] * u.deg
-
-        # Call the plot method
-        self.calculator.plot_incident_angles()
-
-        # Check that savefig was called
-        mock_savefig.assert_called()
+@pytest.fixture
+def config_data():
+    return {"telescope": "LST-1", "site": "North", "model_version": "prod6"}
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.fixture
+def tmp_output_dir(tmp_path):
+    return tmp_path
+
+
+@pytest.fixture
+def mock_models(monkeypatch):
+    tel = MagicMock()
+    tel.name = "LST-1"
+    tel.config_file_path = Path("cfg.cfg")
+    tel.config_file_directory = Path()
+    tel.write_sim_telarray_config_file = MagicMock()
+    tel.get_parameter_value.side_effect = lambda key: 280.0 if key == "focal_length" else 0.0
+
+    site = MagicMock()
+    site.site = "North"
+    site.get_parameter_value.side_effect = (
+        lambda key: 2150.0 if key == "corsika_observation_level" else 0.0
+    )
+
+    monkeypatch.setattr(ia, "initialize_simulation_models", lambda *a, **k: (tel, site))
+    return SimpleNamespace(tel=tel, site=site)
+
+
+@pytest.fixture
+def calculator(mock_models, config_data, tmp_output_dir):
+    return IncidentAnglesCalculator(
+        simtel_path=Path("/simtel"),
+        db_config={"db": "config"},
+        config_data=config_data,
+        output_dir=tmp_output_dir,
+        label="test-label",
+    )
+
+
+def test_initialization(calculator, config_data):
+    assert calculator._simtel_path == Path("/simtel")
+    assert calculator.config_data == config_data
+    assert calculator.output_dir.is_dir()
+    assert calculator.results is None
+    # rt_params should carry units
+    assert calculator.rt_params["zenith_angle"].unit == u.deg
+    assert calculator.rt_params["off_axis_angle"].unit == u.deg
+    assert calculator.rt_params["source_distance"].unit == u.km
+
+
+def test_run_produces_results(monkeypatch, calculator):
+    class _FakeImage:
+        def __init__(self, *a, **k):
+            pass
+
+        def read_photon_list_from_simtel_file(self, _fname):
+            self.photon_pos_x = [0.0, 1.0, 2.0]
+            self.photon_pos_y = [0.0, 1.0, 2.0]
+
+    monkeypatch.setattr(ia, "PSFImage", _FakeImage)
+    monkeypatch.setattr(ia.subprocess, "check_call", lambda *a, **k: 0)
+    saved = {}
+    monkeypatch.setattr(ia.plt, "savefig", lambda path, **k: saved.setdefault("png", path))
+
+    res = calculator.run()
+
+    assert isinstance(res, QTable)
+    assert len(res) == 3
+    assert {"x_pix", "y_pix", "incident_angle"}.issubset(res.colnames)
+    assert res["incident_angle"].unit == u.deg
+    assert (calculator.output_dir / f"incident_angles_{calculator.label}.png").exists() or saved
+
+
+def test_plot_incident_angles_saves_png(monkeypatch, calculator):
+    calculator.results = QTable()
+    calculator.results["x_pix"] = [0.0, 1.0, 2.0]
+    calculator.results["y_pix"] = [0.0, 1.0, 2.0]
+    calculator.results["incident_angle"] = [10, 20, 30] * u.deg
+
+    called = {}
+    monkeypatch.setattr(ia.plt, "savefig", lambda *a, **k: called.setdefault("ok", True))
+
+    calculator.plot_incident_angles()
+    assert called.get("ok", False)
+
+
+def test_plot_no_results_logs_warning(caplog, calculator):
+    calculator.results = QTable()  # empty
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator.plot_incident_angles()
+    assert any("No results to plot" in rec.message for rec in caplog.records)
