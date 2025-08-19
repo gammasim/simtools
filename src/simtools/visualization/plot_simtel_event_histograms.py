@@ -38,179 +38,103 @@ def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=N
     _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
 
 
-def _get_limits(limits):
-    """Extract limits from the provided dictionary for plotting."""
-    if not limits:
-        return None, None, None
-    return tuple(
-        limits.get(key).value if key in limits else None
-        for key in ("upper_radius_limit", "lower_energy_limit", "viewcone_radius")
-    )
+def _get_limits(name, limits):
+    """
+    Extract limits from the provided dictionary for plotting.
+
+    Fine tuned to expected histograms to be plotted.
+    """
+    mapping = {
+        "energy": {"x": limits.get("lower_energy_limit").value},
+        "core_distance": {"x": limits.get("upper_radius_limit").value},
+        "angular_distance": {"x": limits.get("viewcone_radius").value},
+        "core_vs_energy": {
+            "x": limits.get("upper_radius_limit").value,
+            "y": limits.get("lower_energy_limit").value,
+        },
+        "angular_distance_vs_energy": {
+            "x": limits.get("viewcone_radius").value,
+            "y": limits.get("lower_energy_limit").value,
+        },
+        "x_core_shower_vs_y_core_shower": {"r": limits.get("upper_radius_limit").value},
+    }
+    return mapping.get(name)
 
 
 def _generate_plot_configurations(histograms, limits):
     """Generate plot configurations for all histogram types."""
-    plot_labels = {
-        "core_distance": "Core Distance [m]",
-        "energy": "Energy [TeV]",
-        "pointing_direction": "Distance to pointing direction [deg]",
-        "core_x": "Core X [m]",
-        "core_y": "Core Y [m]",
-    }
-
-    plots = _generate_1d_plots(histograms, plot_labels, limits)
-    plots.update(_generate_2d_plots(histograms, plot_labels, limits))
-    return plots
-
-
-def _generate_1d_plots(histograms, labels, limits):
-    """Generate 1D histogram plot configurations."""
     hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
-    upper_radius_limit, lower_energy_limit, viewcone_radius = _get_limits(limits)
-    plot_config = {
-        "energy": {
-            "x_label": labels["energy"],
-            "scales": {"x": "log", "y": "log"},
-            "lines": {"x": lower_energy_limit},
-        },
-        "core_distance": {
-            "x_label": labels["core_distance"],
-            "scales": {},
-            "lines": {"x": upper_radius_limit},
-        },
-        "angular_distance": {
-            "x_label": labels["pointing_direction"],
-            "scales": {},
-            "lines": {"x": viewcone_radius},
-        },
-        "cr_rates": {
-            "x_label": labels["energy"],
-            "scales": {"x": "log", "y": "log"},
-        },
-        "trigger_rates": {
-            "x_label": labels["energy"],
-            "scales": {"x": "log", "y": "log"},
-        },
-    }
-
+    hist_2d_params = {"norm": "log", "cmap": "viridis", "show_contour": False}
+    hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
     plots = {}
-    for name, config in plot_config.items():
-        for histo_type in histograms.histogram_types().values():
-            histogram_key = f"{name}{histo_type['suffix']}"
-            if histograms.get(histogram_key) is not None:
-                plots[histogram_key] = _create_1d_plot_config(
-                    histograms,
-                    histogram_key=histogram_key,
-                    config=config,
-                    plot_params=hist_1d_params,
-                    y_label=histo_type["ordinate"],
-                    title=histo_type["title"],
-                )
+    for name, hist in histograms.items():
+        if hist["histogram"] is None:
+            continue
+        if hist["1d"]:
+            plots[name] = _create_1d_plot_config(
+                hist, name=name, plot_params=hist_1d_params, limits=limits
+            )
+        else:
+            if "cumulative" in name or "efficiency" in name:
+                plot_params = hist_2d_normalized_params
+            else:
+                plot_params = hist_2d_params
 
+            plots[name] = _create_2d_plot_config(
+                hist, name=name, plot_params=plot_params, limits=limits
+            )
     return plots
 
 
-def _create_1d_plot_config(histograms, histogram_key, config, plot_params, y_label, title):
+def _get_axis_title(axis_titles, axis):
+    """Return axis title for given axis."""
+    if axis_titles is None:
+        return None
+    if axis == "x" and len(axis_titles) > 0:
+        return axis_titles[0]
+    if axis == "y" and len(axis_titles) > 1:
+        return axis_titles[1]
+    if axis == "z" and len(axis_titles) > 2:
+        return axis_titles[2]
+    return None
+
+
+def _create_1d_plot_config(histogram, name, plot_params, limits):
     """Create a 1D plot configuration."""
-    print(f"Creating plot config for {histogram_key} with params: {plot_params}")
+    _logger.debug(f"Creating plot config for {name} with params: {plot_params}")
     return {
-        "data": histograms.get(histogram_key),
-        "bins": histograms.get(f"{histogram_key}_bin_edges"),
+        "data": histogram["histogram"],
+        "bins": histogram["bin_edges"],
         "plot_type": "histogram",
         "plot_params": plot_params,
         "labels": {
-            "x": config["x_label"],
-            "y": y_label,
-            "title": f"{title}: {histogram_key.replace('_', ' ')}",
+            "x": _get_axis_title(histogram.get("axis_titles"), "x"),
+            "y": _get_axis_title(histogram.get("axis_titles"), "y"),
+            "title": f"{histogram['title']}: {name.replace('_', ' ')}",
         },
-        "scales": config["scales"],
-        "lines": config.get("lines"),
-        "filename": histogram_key,
+        "scales": histogram["plot_scales"],
+        "lines": _get_limits(name, limits) if limits else {},
+        "filename": name,
     }
 
 
-def _generate_2d_plots(histograms, labels, limits):
-    """Generate 2D histogram plot configurations."""
-    hist_2d_params = {"norm": "log", "cmap": "viridis", "show_contour": False}
-    hist_2d_equal_params = {
-        "norm": "log",
-        "cmap": "viridis",
-        "aspect": "equal",
-        "show_contour": False,
-    }
-    hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
-    upper_radius_limit, lower_energy_limit, viewcone_radius = _get_limits(limits)
-    triggered_events_type = "Triggered events"
-    plot_config = {
-        "core_vs_energy": {
-            "event_type": triggered_events_type,
-            "x_label": labels["core_distance"],
-            "y_label": labels["energy"],
-            "plot_params": hist_2d_params,
-            "plot_params_normalized": hist_2d_normalized_params,
-            "lines": {"x": upper_radius_limit, "y": lower_energy_limit},
-            "scales": {"y": "log"},
-        },
-        "angular_distance_vs_energy": {
-            "event_type": triggered_events_type,
-            "x_label": labels["pointing_direction"],
-            "y_label": labels["energy"],
-            "plot_params": hist_2d_params,
-            "plot_params_normalized": hist_2d_normalized_params,
-            "lines": {"x": viewcone_radius, "y": lower_energy_limit},
-            "scales": {"y": "log"},
-        },
-        "x_core_shower_vs_y_core_shower": {
-            "event_type": triggered_events_type,
-            "x_label": labels["core_x"],
-            "y_label": labels["core_y"],
-            "plot_params": hist_2d_equal_params,
-            "plot_params_normalized": hist_2d_normalized_params,
-            "lines": {"r": upper_radius_limit},
-            "scales": {},
-        },
-    }
-
-    plots = {}
-    for name, config in plot_config.items():
-        for histo_type in histograms.histogram_types().values():
-            histogram_key = f"{name}{histo_type['suffix']}"
-            if histograms.get(histogram_key) is not None:
-                plots[histogram_key] = _create_2d_plot_config(
-                    histograms,
-                    histogram_key=histogram_key,
-                    config=config,
-                    z_label=histo_type["ordinate"],
-                    title=histo_type["title"],
-                )
-
-    return plots
-
-
-def _create_2d_plot_config(histograms, histogram_key, config, z_label, title):
+def _create_2d_plot_config(histogram, name, plot_params, limits):
     """Create a 2D plot configuration."""
-    if "cumulative" in histogram_key or "efficiency" in histogram_key:
-        plot_params = config["plot_params_normalized"]
-    else:
-        plot_params = config["plot_params"]
-
+    _logger.debug(f"Creating plot config for {name} with params: {plot_params}")
     return {
-        "data": histograms.get(histogram_key),
-        "bins": [
-            histograms.get(f"{histogram_key}_bin_x_edges"),
-            histograms.get(f"{histogram_key}_bin_y_edges"),
-        ],
+        "data": histogram["histogram"],
+        "bins": [histogram["bin_edges"][0], histogram["bin_edges"][1]],
         "plot_type": "histogram2d",
         "plot_params": plot_params,
         "labels": {
-            "x": config["x_label"],
-            "y": config["y_label"],
-            "title": f"{title}: {histogram_key.replace('_', ' ')}",
+            "x": _get_axis_title(histogram.get("axis_titles"), "x"),
+            "y": _get_axis_title(histogram.get("axis_titles"), "y"),
+            "title": f"{histogram['title']}: {name.replace('_', ' ')}",
         },
-        "lines": config["lines"],
-        "scales": config.get("scales", {}),
-        "colorbar_label": z_label,
-        "filename": histogram_key,
+        "lines": _get_limits(name, limits) if limits else {},
+        "scales": histogram["plot_scales"],
+        "colorbar_label": _get_axis_title(histogram.get("axis_titles"), "z"),
+        "filename": name,
     }
 
 

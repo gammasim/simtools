@@ -94,7 +94,7 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
 
     if plot_histograms:
         plot_simtel_event_histograms.plot(
-            histograms,
+            histograms.histograms,
             output_path=io_handler.IOHandler().get_output_directory(),
             limits=limits,
             array_name=array_name,
@@ -269,7 +269,7 @@ def compute_lower_energy_limit(histograms, loss_fraction):
     """
     energy_min = (
         _compute_limits(
-            histograms.histograms.get("energy"),
+            histograms.histograms["energy"]["histogram"],
             histograms.energy_bins,
             loss_fraction,
             limit_type="lower",
@@ -311,7 +311,7 @@ def compute_upper_radius_limit(histograms, loss_fraction):
     """
     radius_limit = (
         _compute_limits(
-            histograms.histograms.get("core_distance"),
+            histograms.histograms["core_distance"]["histogram"],
             histograms.core_distance_bins,
             loss_fraction,
             limit_type="upper",
@@ -349,7 +349,7 @@ def compute_viewcone(histograms, loss_fraction):
     """
     viewcone_limit = (
         _compute_limits(
-            histograms.histograms.get("angular_distance"),
+            histograms.histograms["angular_distance"]["histogram"],
             histograms.view_cone_bins,
             loss_fraction,
             limit_type="upper",
