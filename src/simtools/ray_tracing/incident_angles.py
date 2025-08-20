@@ -1,4 +1,8 @@
-"""Calculate incident angles using a sim_telarray PSF-style run."""
+"""Calculate incident angles using a sim_telarray PSF-style run.
+
+Parses the imaging list (.lis) produced by sim_telarray and uses column 22:
+Angle of incidence at focal surface w.r.t. optical axis [deg].
+"""
 
 from __future__ import annotations
 
@@ -8,15 +12,13 @@ from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
-import numpy as np
 from astropy.table import QTable
 
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.ray_tracing.psf_analysis import PSFImage
 
 
 class IncidentAnglesCalculator:
-    """Run a PSF-style sim_telarray job and compute camera incident angles."""
+    """Run a PSF-style sim_telarray job and compute incident angles at the focal surface."""
 
     def __init__(
         self,
@@ -24,11 +26,15 @@ class IncidentAnglesCalculator:
         db_config,
         config_data,
         output_dir,
-        label=None,
+        label: str | None = None,
         ray_tracing_config=None,
-        use_real_camera=False,
-        test=False,
-    ):
+        use_real_camera: bool = False,
+        perfect_mirror: bool = False,
+        overwrite_rdna: bool = False,
+        mirror_reflection_random_angle: float | None = None,
+        algn: float | None = None,
+        test: bool = False,
+    ) -> None:
         self.logger = logging.getLogger(__name__)
 
         # Store parameters
@@ -38,6 +44,10 @@ class IncidentAnglesCalculator:
         self.label = label or f"incident_angles_{config_data['telescope']}"
         self.ray_tracing_config = ray_tracing_config
         self.use_real_camera = use_real_camera
+        self.perfect_mirror = perfect_mirror
+        self.overwrite_rdna = overwrite_rdna
+        self.mirror_reflection_random_angle = mirror_reflection_random_angle
+        self.algn = algn
         self.test = test
         self.results: QTable | None = None
 
@@ -46,7 +56,9 @@ class IncidentAnglesCalculator:
 
         # Load models from database
         self.logger.info(
-            f"Initializing models for {config_data['site']}, {config_data['telescope']}"
+            "Initializing models for %s, %s",
+            config_data["site"],
+            config_data["telescope"],
         )
         self.telescope_model, self.site_model = initialize_simulation_models(
             self.label,
@@ -59,16 +71,13 @@ class IncidentAnglesCalculator:
         # Configure run parameters
         self.rt_params = self._setup_rt_params(config_data)
 
-    def __repr__(self):
-        """Return a short, informative representation for logging/debugging."""
-        return (
-            f"IncidentAnglesCalculator(label={self.label}, telescope={self.telescope_model.name}, "
-            f"site={self.site_model.site})\n"
-        )
+    def __repr__(self) -> str:
+        """Return a concise representation helpful for logging/debugging."""
+        return f"IncidentAnglesCalculator(label={self.label})"
 
     def _setup_rt_params(self, config_data):
         zenith = config_data.get("zenith_angle", 20.0 * u.deg).to(u.deg)
-        off = config_data.get("off_axis_angle", [0.0] * u.deg).to(u.deg)
+        off = config_data.get("off_axis_angle", 0.0 * u.deg).to(u.deg)
         src_dist = config_data.get("source_distance", 10.0 * u.km).to(u.km)
         n_rays = int(config_data.get("number_of_rays", 10000))
         return {
@@ -78,8 +87,8 @@ class IncidentAnglesCalculator:
             "number_of_rays": n_rays,
         }
 
-    def run(self):
-        """Run the job, parse photon list, compute and store incident angles."""
+    def run(self) -> QTable:
+        """Run sim_telarray, parse imaging list, and return an angle table."""
         self.logger.info("Running sim_telarray PSF-style simulation for incident angles")
 
         # Export model configuration files (include site model)
@@ -89,11 +98,9 @@ class IncidentAnglesCalculator:
         run_script = self._write_run_script(photons_file, stars_file, log_file)
         self._run_script(run_script, log_file)
 
-        data = self._compute_incident_angles_from_photons(photons_file)
+        data = self._compute_incidence_angles_from_imaging_list(photons_file)
         self.results = QTable()
-        self.results["x_pix"] = data["x_pix"]
-        self.results["y_pix"] = data["y_pix"]
-        self.results["incident_angle"] = data["incident_angle_deg"] * u.deg
+        self.results["angle_incidence_focal"] = data["angle_incidence_focal_deg"] * u.deg
 
         self._save_results()
         self.plot_incident_angles()
@@ -107,12 +114,13 @@ class IncidentAnglesCalculator:
         if not photons_file.exists() or self.test:
             with photons_file.open("w", encoding="utf-8") as pf:
                 pf.write(f"#{'=' * 50}\n")
-                pf.write("# List of photons for Incident Angle simulations\n")
+                pf.write("# Imaging list for Incident Angle simulations\n")
                 pf.write(f"#{'=' * 50}\n")
                 pf.write(f"# config_file = {self.telescope_model.config_file_path}\n")
                 pf.write(f"# zenith_angle [deg] = {self.rt_params['zenith_angle'].value}\n")
-                off = float(np.atleast_1d(self.rt_params["off_axis_angle"].value)[0])
-                pf.write(f"# off_axis_angle [deg] = {off}\n")
+                pf.write(
+                    f"# off_axis_angle [deg] = {self.rt_params['off_axis_angle'].to_value(u.deg)}\n"
+                )
                 pf.write(f"# source_distance [km] = {self.rt_params['source_distance'].value}\n")
 
             with stars_file.open("w", encoding="utf-8") as sf:
@@ -128,7 +136,7 @@ class IncidentAnglesCalculator:
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
         theta = float(self.rt_params["zenith_angle"].to_value(u.deg))
-        off = float(np.atleast_1d(self.rt_params["off_axis_angle"].to(u.deg).value)[0])
+        off = float(self.rt_params["off_axis_angle"].to_value(u.deg))
         star_photons = self.rt_params["number_of_rays"] if not self.test else 5000
 
         def cfg(par, val):
@@ -140,6 +148,33 @@ class IncidentAnglesCalculator:
         ]
         if self.use_real_camera:
             opts.append("-C USE_REAL_CAMERA=1")
+
+        if self.perfect_mirror:
+            opts.extend(
+                [
+                    "-DPERFECT_DISH=1",
+                    "-C telescope_random_angle=0",
+                    "-C telescope_random_error=0",
+                    "-C random_focal_length=0",
+                    "-C mirror_reflection_random_angle=0",
+                    "-C mirror_align_random_distance=0",
+                    "-C mirror_align_random_horizontal=0,28,0,0",
+                    "-C mirror_align_random_vertical=0,28,0,0",
+                ]
+            )
+
+        if self.mirror_reflection_random_angle is not None:
+            opts.append(cfg("mirror_reflection_random_angle", self.mirror_reflection_random_angle))
+        elif self.overwrite_rdna:
+            opts.append(cfg("mirror_reflection_random_angle", 0))
+
+        if self.algn is not None:
+            opts.extend(
+                [
+                    cfg("mirror_align_random_horizontal", f"{self.algn},28.,0.0,0.0"),
+                    cfg("mirror_align_random_vertical", f"{self.algn},28.,0.0,0.0"),
+                ]
+            )
 
         opts += [
             cfg("IMAGING_LIST", str(photons_file)),
@@ -163,79 +198,59 @@ class IncidentAnglesCalculator:
         with script_path.open("w", encoding="utf-8") as sh:
             sh.write("#!/usr/bin/env bash\n\n")
             sh.write("set -e\nset -o pipefail\n\n")
-            # Redirect all stdout/stderr to logfile
             sh.write(f"exec > '{log_file}' 2>&1\n\n")
             sh.write(f"{command}\n")
         script_path.chmod(script_path.stat().st_mode | 0o110)
         return script_path
 
     def _run_script(self, script_path: Path, log_file: Path) -> None:
-        """Execute the generated shell script and stream output to the log file."""
-        self.logger.info(f"Executing {script_path} (logging to {log_file})")
+        self.logger.info("Executing %s (logging to %s)", script_path, log_file)
         try:
             subprocess.check_call([str(script_path)])
         except subprocess.CalledProcessError as exc:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
 
-    def _compute_incident_angles_from_photons(self, photons_file: Path) -> dict:
-        img = PSFImage(
-            focal_length=self.telescope_model.get_parameter_value("focal_length"),
-            containment_fraction=0.8,
-            simtel_path=str(self._simtel_path),
-        )
-        img.read_photon_list_from_simtel_file(str(photons_file))
+    def _compute_incidence_angles_from_imaging_list(self, photons_file: Path) -> dict:
+        """Parse imaging list .lis and extract column 22: angle at focal surface [deg]."""
+        angles: list[float] = []
+        with photons_file.open("r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip() or line.lstrip().startswith("#"):
+                    continue
+                parts = line.split()
+                if len(parts) < 22:
+                    continue
+                try:
+                    angles.append(float(parts[21]))
+                except ValueError:
+                    continue
+        return {"angle_incidence_focal_deg": angles}
 
-        x = np.array(img.photon_pos_x)
-        y = np.array(img.photon_pos_y)
-        f_cm = float(self.telescope_model.get_parameter_value("focal_length"))
-        r = np.sqrt(x**2 + y**2)
-        inc_rad = np.arctan2(r, f_cm)
-        inc_deg = np.rad2deg(inc_rad)
-        return {"x_pix": x.tolist(), "y_pix": y.tolist(), "incident_angle_deg": inc_deg.tolist()}
-
-    def _save_results(self):
+    def _save_results(self) -> None:
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to save")
             return
         output_file = self.output_dir / f"incident_angles_{self.label}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
 
-    def plot_incident_angles(self):
-        """Create and save a scatter + histogram plot of incident angles."""
+    def plot_incident_angles(self) -> None:
+        """Plot and save a histogram of the focal-surface incidence angles."""
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to plot")
             return
-
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        scatter = ax1.scatter(
-            self.results["x_pix"],
-            self.results["y_pix"],
-            c=self.results["incident_angle"].value,
-            s=10,
-            cmap="viridis",
-            alpha=0.8,
-        )
-        ax1.set_xlabel("Pixel X position")
-        ax1.set_ylabel("Pixel Y position")
-        ax1.set_title(f"Incident Angles - {self.telescope_model.name}")
-        ax1.grid(True, alpha=0.3)
-        ax1.set_aspect("equal")
-        cbar = plt.colorbar(scatter, ax=ax1)
-        cbar.set_label("Incident Angle (deg)")
-
-        ax2.hist(self.results["incident_angle"].value, bins=50, alpha=0.7, color="royalblue")
-        ax2.set_xlabel("Incident Angle (deg)")
-        ax2.set_ylabel("Count")
-        ax2.set_title("Incident Angle Distribution")
-        ax2.grid(True, alpha=0.3)
+        fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+        ax.hist(self.results["angle_incidence_focal"].value, bins=50, alpha=0.8, color="royalblue")
+        ax.set_xlabel("Angle of incidence at focal surface (deg)")
+        ax.set_ylabel("Count")
+        ax.set_title("Incident angle distribution (focal surface)")
+        ax.grid(True, alpha=0.3)
         plt.tight_layout()
-
         out_png = self.output_dir / f"incident_angles_{self.label}.png"
         plt.savefig(out_png, dpi=200)
         plt.close(fig)
 
-    def export_results(self):
-        """Write results to ECSV and a plain-text summary file."""
+    def export_results(self) -> None:
+        """Export the results ECSV and a short text summary file."""
         if self.results is None or len(self.results) == 0:
             self.logger.error("Cannot export results because they do not exist")
             return
