@@ -17,7 +17,7 @@ Example Usage
 
 Command Line Arguments
 ----------------------
-telecope (str, required)
+telescope (str, required)
     Telescope model name (e.g. LSTN-01, MSTN-04, SSTS-04, ...)
 site (str, required)
     Site name (North or South).
