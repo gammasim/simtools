@@ -24,6 +24,13 @@ Requirements for the 'simtools-simulate-prod-htcondor-generator' application:
   'output_path/env.txt'.  Ensure that the path to the simulation software is correctly set to
   'SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray'.
 
+To submit jobs, change to the output directory and run:
+
+.. code-block:: console
+
+    condor_submit simulate_prod.submit
+
+Simulation data products will be stored in the output directory.
 
 Command line arguments
 ----------------------
