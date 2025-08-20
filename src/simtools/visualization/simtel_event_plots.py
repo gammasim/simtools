@@ -173,7 +173,6 @@ def plot_simtel_time_traces(
 def plot_simtel_waveform_pcolormesh(
     filename,
     tel_id: int | None = None,
-    pixel_step: int | None = None,
     vmax: float | None = None,
 ):
     """Pseudocolor image of waveforms (samples vs pixel id) for one event."""
@@ -201,12 +200,8 @@ def plot_simtel_waveform_pcolormesh(
         w = w[0]
     n_pix, n_samp = w.shape
 
-    if pixel_step and pixel_step > 1:
-        pix_idx = np.arange(0, n_pix, pixel_step)
-        w_sel = w[pix_idx]
-    else:
-        pix_idx = np.arange(n_pix)
-        w_sel = w
+    pix_idx = np.arange(n_pix)
+    w_sel = w
 
     readout = source.subarray.tel[tel_id].camera.readout
     try:

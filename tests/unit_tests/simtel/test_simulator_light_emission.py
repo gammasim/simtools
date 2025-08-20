@@ -7,21 +7,18 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, PropertyMock, call, mock_open, patch
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import simtools.simtel.simulator_light_emission as sim_mod
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general as gen
-from simtools.visualization.simtel_event_plots import plot_simtel_event_image
 
 SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
 
 # Test constants to avoid duplicated string literals
-DUMMY_SIMTEL = "dummy.simtel.gz"
+DUMMY_SIMTEL = "dummy.simtel.zst"
 ATM_ALIAS1 = "atmprof1.dat"
 ATM_ALIAS2 = "atm_profile_model_1.dat"
 
@@ -81,7 +78,7 @@ def mock_simulator(
     )
 
     le_application = "xyzls", "layout"
-    light_source_type = "led"
+    light_source_type = "illuminator"
     return SimulatorLightEmission(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
@@ -115,7 +112,7 @@ def mock_simulator_variable(
     )
 
     le_application = "xyzls", "variable"
-    light_source_type = "led"
+    light_source_type = "illuminator"
     return SimulatorLightEmission(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
@@ -130,37 +127,7 @@ def mock_simulator_variable(
 
 
 @pytest.fixture
-def mock_simulator_laser(
-    db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
-):
-    telescope_model = TelescopeModel(
-        site="North",
-        telescope_name="LSTN-01",
-        model_version=model_version,
-        label="test-simtel-light-emission",
-        mongo_db_config=db_config,
-    )
-    calibration_model = CalibrationModel(
-        site="North",
-        calibration_device_model_name="ILLN-01",
-        mongo_db_config=db_config,
-        model_version=model_version,
-        label="test-simtel-light-emission",
-    )
-
-    le_application = "ls-beam", "layout"
-    light_source_type = "laser"
-    return SimulatorLightEmission(
-        telescope_model=telescope_model,
-        calibration_model=calibration_model,
-        site_model=site_model_north,
-        light_emission_config=default_config,
-        le_application=le_application,
-        simtel_path=simtel_path,
-        light_source_type=light_source_type,
-        label=label,
-        test=True,
-    )
+# removed laser fixture; laser mode no longer supported
 
 
 @pytest.fixture
@@ -182,14 +149,14 @@ def calibration_model_illn(db_config, io_handler, model_version):
 def test_initialization(mock_simulator, default_config):
     assert isinstance(mock_simulator, SimulatorLightEmission)
     assert mock_simulator.le_application[0] == "xyzls"
-    assert mock_simulator.light_source_type == "led"
+    assert mock_simulator.light_source_type == "illuminator"
     assert mock_simulator.light_emission_config == {}
 
 
 def test_initialization_variable(mock_simulator_variable, default_config):
     assert isinstance(mock_simulator_variable, SimulatorLightEmission)
     assert mock_simulator_variable.le_application[0] == "xyzls"
-    assert mock_simulator_variable.light_source_type == "led"
+    assert mock_simulator_variable.light_source_type == "illuminator"
     assert mock_simulator_variable.light_emission_config == default_config
 
 
@@ -208,7 +175,7 @@ def test_make_light_emission_script(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f"rm {mock_output_path}/xyzls_layout.simtel.gz\n"
+        f"rm {mock_output_path}/xyzls_layout.simtel.zst\n"
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
@@ -237,7 +204,7 @@ def test_make_light_emission_script_variable(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f"rm {mock_output_path}/xyzls_variable.simtel.gz\n"
+        f"rm {mock_output_path}/xyzls_variable.simtel.zst\n"
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
@@ -257,36 +224,7 @@ def test_make_light_emission_script_variable(
 
     assert command == expected_command
 
-
-def test_make_light_emission_script_laser(
-    mock_simulator_laser,
-    site_model_north,
-    mock_output_path,
-):
-    command = mock_simulator_laser._make_light_emission_script()
-
-    expected_command = (
-        f"rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
-        f"sim_telarray/LightEmission/ls-beam"
-        f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
-        f" --telpos-file {mock_output_path}/telpos.dat"
-        " --events 1"
-        " --bunches 2500000"
-        " --step 0.1"
-        " --bunchsize 1"
-        " --spectrum 300"
-        " --lightpulse Gauss:0.0"
-        " --laser-position '-51627.0,5510.0,9200.0'"
-        " --telescope-theta 79.951773"
-        " --telescope-phi 186.091952"
-        " --laser-theta 10.048226999999997"
-        " --laser-phi 173.908048"
-        f" --atmosphere {mock_output_path}/model/6.0.0/"
-        f"{site_model_north.get_parameter_value('atmospheric_profile')}"
-        f" -o {mock_output_path}/ls-beam.iact.gz\n"
-    )
-
-    assert command == expected_command
+    # removed laser command test; laser mode no longer supported
 
 
 def test_calibration_pointing_direction(mock_simulator):
@@ -307,22 +245,13 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
         " --plot-with-sum-only"
         " --plot-with-pixel-amp --plot-with-pixel-id"
         f" -p {mock_output_path}/postscripts/xyzls_layout_d_1000.ps"
-        f" {mock_output_path}/xyzls_layout.simtel.gz\n"
+        f" {mock_output_path}/xyzls_layout.simtel.zst\n"
     )
     mock_simulator.distance = 1000 * u.m
 
     command = mock_simulator._create_postscript()
 
     assert command == expected_command
-
-
-def test_plot_simtel_event_image(mock_simulator, mock_output_path):
-    mock_simulator.output_directory = "./tests/resources/"
-    filename = f"{mock_simulator.output_directory}/"
-    filename += f"{mock_simulator.le_application[0]}_{mock_simulator.le_application[1]}.simtel.gz"
-    distance = 1000 * u.m
-    fig = plot_simtel_event_image(filename, distance=distance)
-    assert isinstance(fig, plt.Figure)
 
 
 def test_make_simtel_script(mock_simulator):
@@ -384,7 +313,7 @@ def test_make_simtel_script(mock_simulator):
                 "-C MAXIMUM_TELESCOPES=1 "
                 "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
                 "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
-                "-C output_file=/directory/xyzls_layout.simtel.gz "
+                "-C output_file=/directory/xyzls_layout.simtel.zst "
                 "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
             )
 
@@ -421,8 +350,8 @@ def test_prepare_script(
     )
 
     assert gen.program_is_executable(script_path)
-    mock_make_light_emission_script.assert_called_once()  # Ensure this mock is called
-    mock_make_simtel_script.assert_called_once()  # Ensure this mock is called
+    mock_make_light_emission_script.assert_called_once()
+    mock_make_simtel_script.assert_called_once()
 
     expected_calls = [
         "#!/usr/bin/env bash\n\n",
@@ -516,7 +445,7 @@ def test_simulate_variable_distances(
 
     assert mock_run_simulation.call_count == 2
 
-    mock_save_figures.assert_called_once()
+    # plotting removed
 
 
 @patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
@@ -529,44 +458,7 @@ def test_simulate_layout_positions(mock_save_figures, mock_run_simulation, mock_
 
     mock_run_simulation.assert_called_once()
 
-    mock_save_figures.assert_called_once()
-
-
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._plot_simulation_output")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_distance_for_plotting")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_simulation_output_filename")
-def test_process_simulation_output(
-    mock_get_simulation_output_filename,
-    mock_get_distance_for_plotting,
-    mock_plot_simulation_output,
-    mock_simulator_variable,
-):
-    """Test the process_simulation_output method."""
-    args_dict = {
-        "boundary_thresh": 5,
-        "picture_thresh": 3,
-        "min_neighbors": 2,
-        "return_cleaned": True,
-    }
-    figures = []
-
-    # Mock return values
-    mock_get_simulation_output_filename.return_value = "mock_filename.simtel.gz"
-    mock_get_distance_for_plotting.return_value = 1000 * u.m
-    mock_figure = Mock()
-    mock_plot_simulation_output.return_value = mock_figure
-
-    # Call the method
-    mock_simulator_variable.process_simulation_output(args_dict, figures)
-
-    # Assertions
-    mock_get_simulation_output_filename.assert_called_once()
-    mock_get_distance_for_plotting.assert_called_once()
-    mock_plot_simulation_output.assert_called_once_with(
-        "mock_filename.simtel.gz",
-        distance=1000 * u.m,
-    )
-    assert figures == [mock_figure]
+    # plotting removed
 
 
 def test_get_simulation_output_filename(mock_simulator_variable):
@@ -576,17 +468,8 @@ def test_get_simulation_output_filename(mock_simulator_variable):
 
     filename = mock_simulator_variable._get_simulation_output_filename()
 
-    expected_filename = "./tests/resources//xyzls_variable.simtel.gz"
+    expected_filename = "./tests/resources//xyzls_variable.simtel.zst"
     assert filename == expected_filename
-
-
-def test_get_distance_for_plotting_with_z_pos(mock_simulator_variable):
-    """Test _get_distance_for_plotting when z_pos is available."""
-    mock_simulator_variable.light_emission_config = {"z_pos": {"default": 1000 * u.m}}
-
-    distance = mock_simulator_variable._get_distance_for_plotting()
-
-    assert distance == 1000 * u.m
 
 
 @patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_simulation_output_filename")
@@ -613,37 +496,6 @@ def test_process_simulation_output_attribute_error(
             "Telescope not triggered at distance of "
             f"{mock_simulator_variable.light_emission_config['z_pos']['default']}"
         )
-
-
-def test_get_distance_for_plotting(mock_simulator_variable):
-    """Test the _get_distance_for_plotting method."""
-    mock_simulator_variable.light_emission_config = {"z_pos": {"default": 1000 * u.m}}
-    distance = mock_simulator_variable._get_distance_for_plotting()
-    assert distance == 1000 * u.m
-
-    mock_simulator_variable.light_emission_config = {}
-    mock_simulator_variable.distance = 1500.0001 * u.m
-
-    with patch.object(mock_simulator_variable._logger, "warning"):
-        distance = mock_simulator_variable._get_distance_for_plotting()
-        # allow rounding to nearest meter
-        assert np.isclose(distance.to_value(u.m), 1500.0)
-
-
-@patch(f"{SIM_MOD_PATH}.save_figs_to_pdf")
-def test_save_figures_to_pdf(mock_save_figs_to_pdf, mock_simulator_variable):
-    """Test the save_figures_to_pdf method."""
-    figures = [Mock(), Mock()]  # Mock figures
-    telescope = "LSTN-01"
-
-    mock_simulator_variable.save_figures_to_pdf(figures, telescope)
-
-    # Assert save_figs_to_pdf was called with the correct arguments
-    mock_save_figs_to_pdf.assert_called_once_with(
-        figures,
-        f"{mock_simulator_variable.output_directory}/"
-        f"{telescope}_{mock_simulator_variable.le_application[0]}_{mock_simulator_variable.le_application[1]}.pdf",
-    )
 
 
 @patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.process_simulation_output")
@@ -714,90 +566,6 @@ def test_write_telpos_file(mock_simulator, tmp_path):
     assert content == "100.0 200.0 300.0 400.0"
 
 
-def _make_dummy_fig():
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1])
-    return fig
-
-
-@pytest.fixture(name="sim_instance")
-def fixture_sim_instance(mock_simulator_variable):
-    # Create instance without running __init__ to avoid heavy deps
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst.light_emission_config = mock_simulator_variable.light_emission_config
-
-    def fake_calib(filename, distance, figures):
-        figures.append(_make_dummy_fig())
-
-    inst._plot_calibration_outputs = fake_calib
-    return inst
-
-
-def test_plot_flasher_outputs_success(monkeypatch, sim_instance, caplog):
-    # Stub visualize functions to return figures
-    monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", lambda *a, **k: _make_dummy_fig())
-    monkeypatch.setattr(sim_mod, "plot_simtel_peak_timing", lambda *a, **k: _make_dummy_fig())
-    monkeypatch.setattr(
-        sim_mod, "plot_simtel_waveform_pcolormesh", lambda *a, **k: _make_dummy_fig()
-    )
-    # New integrated images
-    monkeypatch.setattr(
-        sim_mod, "plot_simtel_integrated_signal_image", lambda *a, **k: _make_dummy_fig()
-    )
-    monkeypatch.setattr(
-        sim_mod, "plot_simtel_integrated_pedestal_image", lambda *a, **k: _make_dummy_fig()
-    )
-
-    figures = []
-    caplog.clear()
-    with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
-        sim_instance._plot_flasher_outputs(DUMMY_SIMTEL, {"n_trace_pixels": 6}, None, figures)
-
-    # 1 calibration + 5 plots (signal, pedestal, traces, peak timing, pcolormesh)
-    assert len(figures) == 6
-
-    messages = "\n".join(r.message for r in caplog.records)
-    assert "Added integrated signal image" in messages
-    assert "Added integrated pedestal image" in messages
-    assert "Added time-trace figure" in messages
-    assert "Added peak timing figure" in messages
-    assert "Added waveform pcolormesh figure" in messages
-
-    # Close figures
-    for f in figures:
-        plt.close(f)
-
-
-def test_plot_flasher_outputs_handles_errors(monkeypatch, sim_instance, caplog):
-    # Stub visualize functions to raise exceptions
-    def _raise(*a, **k):
-        raise RuntimeError("boom")
-
-    monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", _raise)
-    monkeypatch.setattr(sim_mod, "plot_simtel_peak_timing", _raise)
-    monkeypatch.setattr(sim_mod, "plot_simtel_waveform_pcolormesh", _raise)
-    # Integrated images return None to simulate absence without raising
-    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_signal_image", lambda *a, **k: None)
-    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_pedestal_image", lambda *a, **k: None)
-
-    figures = []
-    caplog.clear()
-    with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
-        sim_instance._plot_flasher_outputs(DUMMY_SIMTEL, {"n_trace_pixels": 3}, None, figures)
-
-    # Only calibration figure appended
-    assert len(figures) == 1
-
-    messages = "\n".join(r.message for r in caplog.records)
-    assert "No event time traces available" in messages or "No event time" in messages
-    assert "Peak timing plot not available" in messages
-    assert "Waveform pcolormesh not available" in messages
-
-    for f in figures:
-        plt.close(f)
-
-
 def test_add_flasher_options():
     inst = object.__new__(SimulatorLightEmission)
     inst._flasher_model = MagicMock()
@@ -851,16 +619,6 @@ def test_add_flasher_command_options_branch():
         out = inst._add_flasher_command_options("")
         assert out == "mst"
         mst.assert_called_once()
-
-
-def test_get_distance_for_plotting_flasher():
-    inst = object.__new__(SimulatorLightEmission)
-    inst.light_source_type = "flasher"
-    inst._flasher_model = MagicMock()
-    inst._flasher_model.get_parameter_value_with_unit.return_value = 150.0 * u.cm
-
-    d = inst._get_distance_for_plotting()
-    assert d.to_value(u.m) == pytest.approx(1.5)
 
 
 def test_prepare_ff_atmosphere_files_creates_aliases(tmp_path, caplog):
@@ -947,11 +705,11 @@ def test_build_source_specific_block_branches(tmp_path, caplog, monkeypatch):
     inst._logger = logging.getLogger(SIM_MOD_PATH)
 
     monkeypatch.setattr(inst, "_add_flasher_command_options", lambda cmd: "FLASHER")
-    monkeypatch.setattr(inst, "_add_led_command_options", lambda cmd: "LED")
+    monkeypatch.setattr(inst, "_add_illuminator_command_options", lambda cmd: "LED")
     monkeypatch.setattr(
         inst,
-        "_add_laser_command_options",
-        lambda cmd, x, y, z, cfg: "LASER" if cfg == tmp_path else "BAD",
+        "_add_flasher_command_options",
+        lambda cmd: "FLASHER",
     )
 
     inst.light_source_type = None
@@ -969,11 +727,11 @@ def test_build_source_specific_block_branches(tmp_path, caplog, monkeypatch):
     inst.light_source_type = "flasher"
     assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "FLASHER"
 
-    inst.light_source_type = "led"
+    inst.light_source_type = "illuminator"
     assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "LED"
 
-    inst.light_source_type = "laser"
-    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "LASER"
+    inst.light_source_type = "flasher"
+    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "FLASHER"
 
 
 def test_make_simtel_script_includes_bypass_for_flasher():
@@ -1015,7 +773,7 @@ def test_make_simtel_script_includes_bypass_for_flasher():
         "-C telescope_theta=0 -C telescope_phi=0 "
         "-C Bypass_Optics=1 "
         "-C power_law=2.68 -C input_file=/directory/ff-1m.iact.gz "
-        "-C output_file=/directory/ff-1m_layout.simtel.gz "
+        "-C output_file=/directory/ff-1m_layout.simtel.zst "
         "-C histogram_file=/directory/ff-1m_layout.ctsim.hdata\n"
     )
 
@@ -1073,66 +831,6 @@ def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypat
     assert a2.read_text(encoding="utf-8") == "atmcontent3"
 
 
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._plot_flasher_outputs")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._plot_calibration_outputs")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_distance_for_plotting")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._get_simulation_output_filename")
-def test_process_simulation_output_uses_flasher_branch(
-    mock_get_filename,
-    mock_get_distance,
-    mock_plot_calib,
-    mock_plot_flasher,
-    mock_simulator_variable,
-):
-    # Arrange
-    inst = mock_simulator_variable
-    inst.light_source_type = "flasher"
-    args_dict = {
-        "boundary_thresh": 5,
-        "picture_thresh": 3,
-        "min_neighbors": 2,
-        "return_cleaned": True,
-    }
-    figures = []
-    mock_get_filename.return_value = DUMMY_SIMTEL
-    mock_get_distance.return_value = 321 * u.m
-
-    # Act
-    inst.process_simulation_output(args_dict, figures)
-
-    # Assert
-    mock_plot_flasher.assert_called_once()
-    fargs = mock_plot_flasher.call_args[0]
-    assert fargs[0] == DUMMY_SIMTEL
-    assert fargs[1] == args_dict
-    assert fargs[2].to_value(u.m) == pytest.approx(321)
-    assert fargs[3] is figures
-    mock_plot_calib.assert_not_called()
-
-
-def test_plot_simulation_output_delegates_to_ctapipe(monkeypatch):
-    """Test that plot_simulation_output delegates to the correct plotting function."""
-    inst = object.__new__(SimulatorLightEmission)
-    captured = {}
-
-    def fake_plot_function(filename, *, distance):
-        captured["filename"] = filename
-        captured["distance"] = distance
-        return "OK"
-
-    monkeypatch.setattr(sim_mod, "plot_simtel_event_image", fake_plot_function)
-
-    assert (
-        inst._plot_simulation_output(
-            "test_file.simtel.gz",
-            distance=500 * u.m,
-        )
-        == "OK"
-    )
-    assert captured["filename"] == "test_file.simtel.gz"
-    assert captured["distance"] == 500 * u.m
-
-
 def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch, caplog):
     # Instance with mocked logger and telescope model
     inst = object.__new__(SimulatorLightEmission)
@@ -1163,36 +861,6 @@ def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch
     warnings = [r.message for r in caplog.records if r.levelno == logging.WARNING]
     assert any(ATM_ALIAS1 in w and "Failed to create atmosphere alias" in w for w in warnings)
     assert any((ATM_ALIAS2 in w and "Failed to create atmosphere alias" in w) for w in warnings)
-
-
-def test_plot_flasher_outputs_logs_peak_stats(monkeypatch, sim_instance, caplog):
-    # Suppress other figures to focus on stats log, but keep calibration fig
-    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_signal_image", lambda *a, **k: None)
-    monkeypatch.setattr(sim_mod, "plot_simtel_integrated_pedestal_image", lambda *a, **k: None)
-    monkeypatch.setattr(sim_mod, "plot_simtel_time_traces", lambda *a, **k: None)
-    monkeypatch.setattr(sim_mod, "plot_simtel_waveform_pcolormesh", lambda *a, **k: None)
-
-    # Return a fig and stats dict from peak timing
-    stats = {"considered": 10, "found": 8, "mean": 12.34, "std": 1.23}
-    monkeypatch.setattr(
-        sim_mod, "plot_simtel_peak_timing", lambda *a, **k: (_make_dummy_fig(), stats)
-    )
-
-    figures = []
-    caplog.clear()
-    with caplog.at_level(logging.INFO, logger=SIM_MOD_PATH):
-        sim_instance._plot_flasher_outputs(DUMMY_SIMTEL, {"n_trace_pixels": 4}, None, figures)
-
-    # Expect one calibration fig + one peak timing fig
-    assert len(figures) == 2
-    messages = "\n".join(r.message for r in caplog.records)
-    assert "Peak timing stats:" in messages
-    assert "considered=10" in messages
-    assert "peaks_found=8" in messages
-    assert "mean=12.34" in messages
-    assert "std=1.23" in messages
-    for f in figures:
-        plt.close(f)
 
 
 def test_photons_per_run_flasher_model_non_test(tmp_path):
@@ -1255,7 +923,7 @@ def test_photons_per_run_no_models(tmp_path):
         light_emission_config={},
         le_application=("xyzls", "layout"),
         simtel_path=tmp_path,
-        light_source_type="led",
+        light_source_type="illuminator",
         label="photons-test3",
         test=False,
     )

@@ -16,4 +16,4 @@ To generate calibration events, including pedestal, dark pedestal, and flasher e
 
 ## Illuminators
 
-- [simtools-simulate-light-emission](simulate_light_emission): Simulate light emission emission from illuminators including telescope simulations.
+- [simtools-simulate-light-emission](simulate_illuminator): Simulate illuminators for camera calibration.

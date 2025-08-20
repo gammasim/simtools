@@ -1,6 +1,6 @@
 
-simtools-simulate-light-emission
-================================
+simtools-simulate-illuminator
+=============================
 
-.. automodule:: simulate_light_emission
+.. automodule:: simulate_illuminator
    :members:
