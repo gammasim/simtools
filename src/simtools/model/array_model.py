@@ -322,9 +322,10 @@ class ArrayModel:
             / "model_files.tar.gz"
         )
 
+        base = Path(self.get_config_directory())
         with tarfile.open(archive_name, "w:gz") as tar:
             for file in model_files:
-                tar.add(file, arcname=file.name)
+                tar.add(file, arcname=file.relative_to(base))
 
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name

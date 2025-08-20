@@ -199,10 +199,20 @@ def test_model_version_setter_with_valid_list(array_model):
 
 def test_pack_model_files(array_model, io_handler):
     mock_tarfile = MagicMock()
-    mock_tarfile_open = MagicMock(return_value=mock_tarfile)
-    # Ensure the mocked tarfile.open works as a context manager and yields mock_tarfile
-    mock_tarfile_open.return_value.__enter__.return_value = mock_tarfile
-    mock_rglob = MagicMock(return_value=[Path("file1"), Path("file2")])
+    mock_tarfile_open = MagicMock()
+    # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
+    mock_cm = MagicMock()
+    mock_cm.__enter__.return_value = mock_tarfile
+    # ensure exiting the context calls close() on the mock tarfile to match real behavior
+    mock_cm.__exit__.side_effect = lambda *args: mock_tarfile.close()
+    mock_tarfile_open.return_value = mock_cm
+    # Return files under the mocked config directory so relative_to(base) works
+    mock_rglob = MagicMock(
+        return_value=[
+            Path("/mock/output/directory/file1"),
+            Path("/mock/output/directory/file2"),
+        ]
+    )
     mock_get_output_directory = MagicMock(return_value=Path("/mock/output/directory"))
 
     with (
