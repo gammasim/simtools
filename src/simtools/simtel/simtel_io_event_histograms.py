@@ -67,6 +67,8 @@ class SimtelIOEventHistograms:
                 self._logger.debug(f"Filling histogram {name}")
                 self._fill_histogram_and_bin_edges(data)
 
+        self.print_summary()
+
         self.calculate_efficiency_data()
         self.calculate_cumulative_data()
 
@@ -458,3 +460,15 @@ class SimtelIOEventHistograms:
         new_y_bins = y_bins[::rebin_factor]
 
         return new_hist, x_bins, new_y_bins
+
+    def print_summary(self):
+        """
+        Print a summary of the histogram statistics.
+
+        Total number of events is retrieved from the 'energy' histograms.
+        """
+        total_simulated = np.sum(self.histograms.get("energy_mc", {}).get("histogram", []))
+        total_triggered = np.sum(self.histograms.get("energy", {}).get("histogram", []))
+
+        self._logger.info(f"Total simulated events: {total_simulated}")
+        self._logger.info(f"Total triggered events: {total_triggered}")

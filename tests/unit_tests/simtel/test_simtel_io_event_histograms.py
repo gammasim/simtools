@@ -587,3 +587,22 @@ def test_energy_bins_with_histogram_edges(mock_reader, hdf5_file_name):
     histograms.histograms["energy_bin_edges"] = mock_edges
     bins = histograms.energy_bins
     assert np.array_equal(bins, mock_edges)
+
+
+def test_print_summary(mock_histograms, mocker, caplog):
+    """Test the print_summary method."""
+    histograms = mock_histograms
+
+    # Mock histogram data
+    mock_histograms.histograms = {
+        "energy_mc": {"histogram": np.array([10, 20, 30])},
+        "energy": {"histogram": np.array([5, 15, 25])},
+    }
+
+    # Capture log output
+    with caplog.at_level(logging.INFO):
+        histograms.print_summary()
+
+    # Verify log messages
+    assert "Total simulated events: 60" in caplog.text
+    assert "Total triggered events: 45" in caplog.text
