@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=cb47b5e8"></script>
+    <script src="../../_static/documentation_options.js?v=e5b2d4ef"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-simulate-prod" href="simtools-simulate-prod.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g50c54bd22" />
+  <meta name="docsearch:version" content="0.1.dev1+ge28d37383" />
   </head>
   
   
@@ -535,6 +535,11 @@ credentials.  These should be listed similarly to a ‘.env’ file and copied t
 ‘output_path/env.txt’.  Ensure that the path to the simulation software is correctly set to
 ‘SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray’.</p></li>
 </ul>
+<p>To submit jobs, change to the output directory and run:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">condor_submit simulate_prod.submit</span>
+</pre></div>
+</div>
+<p>Simulation data products will be stored in the output directory.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">

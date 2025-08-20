@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=cb47b5e8"></script>
+    <script src="../../_static/documentation_options.js?v=e5b2d4ef"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g50c54bd22" />
+  <meta name="docsearch:version" content="0.1.dev1+ge28d37383" />
   </head>
   
   
@@ -454,13 +454,12 @@
 <span class="sd">    args_dict: dict</span>
 <span class="sd">        Arguments dictionary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating HT Condor submission scripts &quot;</span><span class="p">)</span>
-
     <span class="n">work_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span>
     <span class="n">log_dir</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">&quot;logs&quot;</span>
     <span class="n">work_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">log_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">submit_file_name</span> <span class="o">=</span> <span class="s2">&quot;simulate_prod.submit&quot;</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating HT Condor submission scripts (path: </span><span class="si">{</span><span class="n">work_dir</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">submit_file_name</span><span class="si">}</span><span class="s2">.condor&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">submit_file_handle</span><span class="p">:</span>
         <span class="n">submit_file_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
@@ -539,8 +538,19 @@
     <span class="p">)</span>
     <span class="n">core_scatter</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;core_scatter&quot;</span><span class="p">]</span>
     <span class="n">core_scatter_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">core_scatter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">core_scatter</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1"> m&quot;&#39;</span>
+    <span class="n">view_cone</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;view_cone&quot;</span><span class="p">]</span>
+    <span class="n">view_cone_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">view_cone</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">view_cone</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
 
     <span class="n">label</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;simulate-prod&quot;</span>
+
+    <span class="n">array_layout_name</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">else</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">run_number_offset</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;run_number_offset&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">1</span>
 
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;#!/usr/bin/env bash</span>
 
@@ -554,15 +564,16 @@
 <span class="s2">    --label </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --model_version </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --site </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
-<span class="s2">    --array_layout_name </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --array_layout_name </span><span class="si">{</span><span class="n">array_layout_name</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --primary </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --azimuth_angle </span><span class="si">{</span><span class="n">azimuth_angle_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --zenith_angle </span><span class="si">{</span><span class="n">zenith_angle_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --nshow </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;nshow&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --energy_range </span><span class="si">{</span><span class="n">energy_range_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --core_scatter </span><span class="si">{</span><span class="n">core_scatter_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --view_cone </span><span class="si">{</span><span class="n">view_cone_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --run_number $((process_id)) </span><span class="se">\\</span>
-<span class="s2">    --run_number_offset </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;run_number_offset&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --run_number_offset </span><span class="si">{</span><span class="n">run_number_offset</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
 <span class="s2">    --number_of_runs 1 </span><span class="se">\\</span>
 <span class="s2">    --data_directory /tmp/simtools-data </span><span class="se">\\</span>
 <span class="s2">    --output_path /tmp/simtools-output </span><span class="se">\\</span>
