@@ -25,14 +25,6 @@ flasher (str, required)
     Flasher device in array, e.g., FLSN-01.
 model_version (str, optional)
     Version of the simulation model.
-plot (flag, optional)
-    Produce a multiple pages pdf file with the image plots.
-integration_window (list, optional)
-    Integration window for the signal.
-boundary_thresh, picture_thresh, min_neighbors (int, optional)
-    Parameters for the image cleaning.
-return_cleaned (bool, optional)
-    Whether to return the cleaned image.
 
 Example
 -------
@@ -66,11 +58,6 @@ def _parse(label):
         description=("Simulate flasher devices (flat fielding) using the light emission package."),
     )
     config.parser.add_argument(
-        "--plot",
-        help="Produce a multiple pages pdf file with the image plots.",
-        action="store_true",
-    )
-    config.parser.add_argument(
         "--flasher",
         help="Flasher device in array, i.e. FLSN-01",
         type=str,
@@ -84,17 +71,8 @@ def _parse(label):
 
 
 def flasher_configs():
-    """
-    Get flasher configurations (uniform across telescope types).
-
-    Returns
-    -------
-    tuple
-        Application name and mode
-
-    """
-    # Use currently ff-1m for all telescopes
-    return ("ff-1m", "flasher")
+    """Return default setup for flasher runs (no distances)."""
+    return {"light_source_setup": "layout"}
 
 
 def main():
@@ -121,29 +99,23 @@ def main():
         label=label,
     )
 
-    le_application = flasher_configs()
+    flasher_cfg = flasher_configs()
 
     sim_runner = SimulatorLightEmission(
         telescope_model=telescope_model,
         flasher_model=flasher_model,
         site_model=site_model,
         light_emission_config=args_dict,
-        le_application=le_application,
+        light_source_setup=flasher_cfg["light_source_setup"],
         simtel_path=args_dict["simtel_path"],
         light_source_type="flasher",
         label=args_dict["label"],
         test=args_dict.get("test", False),
     )
 
-    figures = []
-    simulation_args = {}
+    sim_runner.run_simulation()
 
-    sim_runner.run_simulation(simulation_args, figures)
-
-    if args_dict.get("plot", False) and figures:
-        sim_runner.save_figures_to_pdf(figures, args_dict["telescope"])
-
-    logger.info("Flasher simulation completed.")
+    logger.info("Flasher simulation completed. Use simtools-plot-simtel-events for plots.")
 
 
 if __name__ == "__main__":

@@ -81,6 +81,7 @@ simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
+simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-print-version <applications/simtools-print-version>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>

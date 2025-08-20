@@ -15,19 +15,17 @@ Example Usage
 1. Simulate light emission with varying distances:
 
     .. code-block:: console
-
-        simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        simtools-simulate-illuminator --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup variable \
-        --model_version 6.0.0 --light_source_type led
+        --model_version 6.0.0
 
 2. Simulate light emission with telescopes at fixed positions according to the layout:
 
     .. code-block:: console
 
-        simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        simtools-simulate-illuminator --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup layout \
-        --model_version 6.0.0 \
-        --light_source_type led
+        --model_version 6.0.0
 
 Command Line Arguments
 ----------------------
@@ -44,14 +42,11 @@ light_source_setup (str, optional)
 model_version (str, optional)
     Version of the simulation model.
 light_source_type (str, optional)
-    Select calibration light source type: led (default) or laser.
-    This changes the pre-compiled (sim_telarray) application that is used to run the
-    light emission package with. Currently we use xyzls (laser), and ls-beam can be
-    accessed by using the laser option.
+    Select calibration light source type: illuminator (default).
+    This controls the pre-compiled (sim_telarray) application used to run the
+    light emission package (xyzls).
 off_axis_angle (float, optional)
     Off axis angle for light source direction.
-plot (flag, optional)
-    Produce a multiple pages pdf file with the image plots.
 
 
 Example
@@ -61,9 +56,9 @@ Simulate isotropic light source at different distances for the MSTN-04:
 
 .. code-block:: console
 
-    simtools-simulate-light-emission --telescope MSTN-04 --site North \
+    simtools-simulate-illuminator --telescope MSTN-04 --site North \
     --illuminator ILLN-01 --light_source_setup variable \
-    --model_version 6.0.0 --light_source_type led    ```
+    --model_version 6.0.0    ```
 
 Expected Output:
 
@@ -136,16 +131,11 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--plot",
-        help="Produce a multiple pages pdf file with the image plots.",
-        action="store_true",
-    )
-    config.parser.add_argument(
         "--light_source_type",
-        help="Select calibration light source type: led or laser",
+        help="Select calibration light source type: illuminator",
         type=str,
-        default="led",
-        choices=["led", "laser"],
+        default="illuminator",
+        choices=["illuminator"],
         required=False,
     )
     config.parser.add_argument(
@@ -177,7 +167,7 @@ def _parse(label):
     )
 
 
-def light_emission_configs(le_application, args_dict):
+def light_emission_configs(args_dict):
     """
     Define default light emission configurations.
 
@@ -190,8 +180,8 @@ def light_emission_configs(le_application, args_dict):
 
     Parameters
     ----------
-    le_application: str
-        Light emission application.
+    args_dict: dict
+        Dictionary with command line arguments.
 
     args_dict: dict
         Dictionary with command line arguments.
@@ -201,7 +191,7 @@ def light_emission_configs(le_application, args_dict):
     default_config: dict
         Default light emission configuration.
     """
-    if le_application in ("xyzls", "ls-beam") and args_dict["light_source_setup"] == "variable":
+    if args_dict["light_source_setup"] == "variable":
         return {
             "x_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["x_position"]},
             "y_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["y_position"]},
@@ -221,33 +211,11 @@ def light_emission_configs(le_application, args_dict):
     return {}
 
 
-def select_application(args_dict):
-    """
-    Select sim_telarray application for light emission simulations.
-
-    Parameters
-    ----------
-    args_dict: dict
-        Dictionary with command line arguments.
-
-    Returns
-    -------
-    le_application: str
-        Light emission application.
-    """
-    if args_dict["light_source_type"] == "led":
-        return "xyzls", args_dict["light_source_setup"]
-    if args_dict["light_source_type"] == "laser":
-        return "ls-beam", args_dict["light_source_setup"]
-    return None, args_dict["light_source_setup"]
-
-
 def main():
     """Simulate light emission."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
-    le_application = select_application(args_dict)
-    light_emission_config = light_emission_configs(le_application[0], args_dict)
+    light_emission_config = light_emission_configs(args_dict)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -273,7 +241,7 @@ def main():
         calibration_model=calibration_model,
         site_model=site_model,
         light_emission_config=light_emission_config,
-        le_application=le_application,
+        light_source_setup=args_dict["light_source_setup"],
         simtel_path=args_dict["simtel_path"],
         light_source_type=args_dict["light_source_type"],
         label=label,
@@ -281,9 +249,14 @@ def main():
     )
 
     if args_dict["light_source_setup"] == "variable":
-        light_source.simulate_variable_distances(args_dict)
+        outputs = light_source.simulate_variable_distances(args_dict)
     elif args_dict["light_source_setup"] == "layout":
-        light_source.simulate_layout_positions(args_dict)
+        outputs = light_source.simulate_layout_positions(args_dict)
+    else:
+        outputs = []
+
+    if outputs:
+        logger.info("Simulation outputs:\n%s", "\n".join(str(p) for p in outputs))
 
 
 if __name__ == "__main__":
