@@ -65,34 +65,34 @@ def test_initialization(calculator, config_data):
 
 
 def test_run_produces_results(monkeypatch, calculator):
-    class _FakeImage:
-        def __init__(self, *a, **k):
-            # Intentionally left empty: no initialization needed for this test
-            pass
-
-        def read_photon_list_from_simtel_file(self, _fname):
-            self.photon_pos_x = [0.0, 1.0, 2.0]
-            self.photon_pos_y = [0.0, 1.0, 2.0]
-
-    monkeypatch.setattr(ia, "PSFImage", _FakeImage)
+    # Simulate successful sim_telarray run
     monkeypatch.setattr(ia.subprocess, "check_call", lambda *a, **k: 0)
     saved = {}
     monkeypatch.setattr(ia.plt, "savefig", lambda path, **k: saved.setdefault("png", path))
+
+    # Pre-create imaging list with three data lines where column 22 holds the angle [deg]
+    photons_file = calculator.output_dir / f"incident_angles_photons_{calculator.label}.lis"
+    photons_file.parent.mkdir(parents=True, exist_ok=True)
+    lines = []
+    lines.append("# header\n")
+    # build lines with 21 placeholders + the angle (index 21 is 22nd column)
+    for ang in (10.0, 20.0, 30.0):
+        parts = ["0"] * 21 + [str(ang)]
+        lines.append(" ".join(parts) + "\n")
+    photons_file.write_text("".join(lines), encoding="utf-8")
 
     res = calculator.run()
 
     assert isinstance(res, QTable)
     assert len(res) == 3
-    assert {"x_pix", "y_pix", "incident_angle"}.issubset(res.colnames)
-    assert res["incident_angle"].unit == u.deg
+    assert {"angle_incidence_focal"}.issubset(res.colnames)
+    assert res["angle_incidence_focal"].unit == u.deg
     assert (calculator.output_dir / f"incident_angles_{calculator.label}.png").exists() or saved
 
 
 def test_plot_incident_angles_saves_png(monkeypatch, calculator):
     calculator.results = QTable()
-    calculator.results["x_pix"] = [0.0, 1.0, 2.0]
-    calculator.results["y_pix"] = [0.0, 1.0, 2.0]
-    calculator.results["incident_angle"] = [10, 20, 30] * u.deg
+    calculator.results["angle_incidence_focal"] = [10, 20, 30] * u.deg
 
     called = {}
     monkeypatch.setattr(ia.plt, "savefig", lambda *a, **k: called.setdefault("ok", True))
@@ -108,12 +108,10 @@ def test_plot_no_results_logs_warning(caplog, calculator):
     assert any("No results to plot" in rec.message for rec in caplog.records)
 
 
-def test_repr_contains_label_and_models(calculator):
+def test_repr_contains_label(calculator):
     s = repr(calculator)
     assert "IncidentAnglesCalculator(" in s
     assert f"label={calculator.label}" in s
-    assert "telescope=" in s
-    assert "site=" in s
 
 
 def test_write_run_script_includes_use_real_camera_flag(calculator):
@@ -160,9 +158,7 @@ def test_export_results_success_and_no_results(caplog, calculator):
 
     # Valid results path
     calculator.results = QTable()
-    calculator.results["x_pix"] = [0.0, 1.0]
-    calculator.results["y_pix"] = [0.0, 1.0]
-    calculator.results["incident_angle"] = [1.0, 2.0] * u.deg
+    calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
 
     calculator.export_results()
     table_file = calculator.output_dir / f"incident_angles_{calculator.label}.ecsv"

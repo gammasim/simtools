@@ -40,6 +40,13 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
+        "--number_of_rays",
+        help="Number of star photons to trace (per run)",
+        type=int,
+        default=10000,
+        required=False,
+    )
+    config.parser.add_argument(
         "--camera_shift",
         help="Camera shift along optical axis",
         type=float,
@@ -50,6 +57,12 @@ def _parse(label):
         "--overwrite_rdna",
         help="Overwrite random reflection angle",
         action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--mirror_reflection_random_angle",
+        help="Set mirror_reflection_random_angle in degrees (overrides overwrite_rdna)",
+        type=float,
         required=False,
     )
     config.parser.add_argument(
@@ -127,10 +140,16 @@ def main():
             "zenith_angle": args_dict["zenith"] * u.deg,
             "off_axis_angle": args_dict["off_axis_angle"] * u.deg,
             "source_distance": args_dict["source_distance"] * u.km,
+            "number_of_rays": int(args_dict.get("number_of_rays", 10000)),
         },
         output_dir=output_dir,
         label=args_dict.get("label", label),
         ray_tracing_config=args_dict.get("ray_tracing_config"),
+        use_real_camera=bool(args_dict.get("use_real_camera", False)),
+        perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
+        overwrite_rdna=bool(args_dict.get("overwrite_rdna", False)),
+        mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
+        algn=args_dict.get("algn", None),
         test=args_dict.get("test", False),
     )
 
