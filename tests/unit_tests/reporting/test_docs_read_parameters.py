@@ -1,15 +1,17 @@
 import re
 from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-import astropy.units as u
 import pytest
 
 from simtools.reporting.docs_read_parameters import ReadParameters
+from simtools.utils import names
 
 # Test constants
 QE_FILE_NAME = "qe_lst1_20200318_high+low.dat"
+DESCRIPTION = "Test parameter"
+SHORT_DESC = "Short"
 
 
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
@@ -27,24 +29,6 @@ def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_conf
     assert isinstance(description_dict.get("focal_length").get("description"), str)
     assert isinstance(description_dict.get("focal_length").get("short_description"), str)
     assert isinstance(description_dict.get("focal_length").get("inst_class"), str)
-
-
-def test_get_array_element_parameter_data(telescope_model_lst, io_handler, db_config):
-    args = {
-        "telescope": telescope_model_lst.name,
-        "site": telescope_model_lst.site,
-        "model_version": telescope_model_lst.model_version,
-    }
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
-
-    result = read_parameters.get_array_element_parameter_data(telescope_model_lst)
-
-    # Assert the result contains the expected data
-    if result[1] == "focal_length":
-        assert result[0] == "Structure"
-        assert result[3] == (2800.0 * u.cm)
-        assert result[4] == "Nominal overall focal length of the entire telescope."
 
 
 def test_produce_array_element_report(telescope_model_lst, io_handler, db_config, mocker):
@@ -177,12 +161,23 @@ def test__generate_plots(tmp_path, db_config):
     input_file = tmp_path / "dummy_param.dat"
     input_file.write_text("dummy content")
 
+    # Test case for parameter other than "camera_config_file"
     with patch.object(
         read_parameters, "_plot_parameter_tables", return_value=["plot2"]
     ) as mock_plot:
         result = read_parameters._generate_plots("some_param", "1.0.0", input_file, tmp_path, False)
         assert result == ["plot2"]
         mock_plot.assert_called_once()
+
+    # Test case for parameter "camera_config_file"
+    with patch.object(
+        read_parameters, "_plot_camera_config", return_value=["camera_plot"]
+    ) as mock_camera_plot:
+        result = read_parameters._generate_plots(
+            "camera_config_file", "1.0.0", input_file, tmp_path, False
+        )
+        assert result == ["camera_plot"]
+        mock_camera_plot.assert_called_once()
 
 
 def test__plot_camera_config_no_parameter_version(tmp_path, db_config):
@@ -233,7 +228,8 @@ def test__wrap_at_underscores(io_handler, db_config):
     read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
 
     # "this_is_a_test" -> parts: ['this', 'is', 'a', 'test']
-    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 -> wrap before "test"
+    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 -> wrap
+    # before "test"
     result_1 = read_parameters._wrap_at_underscores("this_is_a_test", 10)
     assert result_1 == "this_is_a test"
 
@@ -473,7 +469,7 @@ def test_get_array_element_parameter_data_none_value(io_handler, db_config, mock
         return_value=(
             {
                 "test_param": {
-                    "description": "Test parameter",
+                    "description": DESCRIPTION,
                     "short_description": "Test",
                     "inst_class": "Structure",
                 }
@@ -1114,3 +1110,225 @@ def test_get_calibration_data(io_handler, db_config):
     assert result[0][0] == "Camera"
     assert len(result[0]) == 6
     assert len(result) == 3
+
+
+class DummyTelescope:
+    def __init__(self, site, name, model_version, param_versions=None):
+        self.site = site
+        self.name = name
+        self.model_version = model_version
+        self._param_versions = param_versions or {}
+
+    def get_parameter_version(self, parameter):
+        return self._param_versions.get(parameter)
+
+
+def test_get_array_element_parameter_data_simple(tmp_path, monkeypatch):
+    """Simple test for get_array_element_parameter_data using mocked DB calls."""
+
+    # Prepare ReadParameters with a harmless config and an output path
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0", "observatory": None}
+    rp = ReadParameters(db_config=None, args=args, output_path=tmp_path)
+
+    # Replace the db on the instance with a mock to avoid any DB access
+    rp.db = Mock()
+
+    # Create a minimal set of parameter data returned by the DB
+    all_parameter_data = {
+        "test_param": {
+            "unit": "m",
+            "value": 42,
+            "parameter_version": "1.0.0",
+            "file": False,
+            "instrument": "OTHER",  # different from telescope name to avoid bolding
+        }
+    }
+
+    rp.db.get_model_parameters.return_value = all_parameter_data
+    rp.db.export_model_files.return_value = None
+
+    # Mock parameter descriptions that get_array_element_parameter_data expects
+    rp.get_all_parameter_descriptions = Mock(
+        return_value={
+            "test_param": {
+                "description": DESCRIPTION,
+                "short_description": SHORT_DESC,
+                "inst_class": "Telescope",
+            }
+        }
+    )
+
+    # Dummy telescope that provides parameter versions
+    tel = DummyTelescope(
+        site="North",
+        name="LSTN-01",
+        model_version="1.0.0",
+        param_versions={"test_param": "1.0.0"},
+    )
+
+    # Patch names to expose our test_param and avoid reading resource files
+    monkeypatch.setattr(names, "model_parameters", lambda *args, **kwargs: {"test_param": {}})
+    monkeypatch.setattr(names, "is_design_type", lambda _name: False)
+
+    data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
+
+    # Expect one row with formatted value '42 m'
+    assert data == [["Telescope", "test_param", "1.0.0", "42 m", DESCRIPTION, "Short"]]
+
+
+def test_get_array_element_parameter_data_instrument_specific(tmp_path, monkeypatch):
+    """Test that instrument-specific parameters are wrapped in bold/italic markers."""
+
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0", "observatory": None}
+    rp = ReadParameters(db_config=None, args=args, output_path=tmp_path)
+    rp.db = Mock()
+
+    all_parameter_data = {
+        "test_param": {
+            "unit": "m",
+            "value": 42,
+            "parameter_version": "1.0.0",
+            "file": False,
+            "instrument": "LSTN-01",
+        }
+    }
+
+    rp.db.get_model_parameters.return_value = all_parameter_data
+    rp.db.export_model_files.return_value = None
+
+    rp.get_all_parameter_descriptions = Mock(
+        return_value={
+            "test_param": {
+                "description": DESCRIPTION,
+                "short_description": SHORT_DESC,
+                "inst_class": "Telescope",
+            }
+        }
+    )
+
+    tel = DummyTelescope(
+        site="North",
+        name="LSTN-01",
+        model_version="1.0.0",
+        param_versions={"test_param": "1.0.0"},
+    )
+
+    monkeypatch.setattr(names, "model_parameters", lambda *args, **kwargs: {"test_param": {}})
+    monkeypatch.setattr(names, "is_design_type", lambda _name: False)
+
+    data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
+
+    assert data == [
+        [
+            "Telescope",
+            "***test_param***",
+            "***1.0.0***",
+            "***42 m***",
+            f"***{DESCRIPTION}***",
+            f"***{SHORT_DESC}***",
+        ]
+    ]
+
+
+def test_get_array_element_parameter_data_file_parameter(tmp_path, monkeypatch):
+    """Test that file parameters are converted to markdown links using _convert_to_md."""
+
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0", "observatory": None}
+    rp = ReadParameters(db_config=None, args=args, output_path=tmp_path)
+    rp.db = Mock()
+
+    # Parameter with file flag set
+    all_parameter_data = {
+        "file_param": {
+            "unit": None,
+            "value": "myfile.dat",
+            "parameter_version": "1.0.0",
+            "file": True,
+            "instrument": "OTHER",
+        }
+    }
+
+    rp.db.get_model_parameters.return_value = all_parameter_data
+    # export_model_files is called by get_array_element_parameter_data; mock it
+    rp.db.export_model_files.return_value = None
+
+    rp.get_all_parameter_descriptions = Mock(
+        return_value={
+            "file_param": {
+                "description": DESCRIPTION,
+                "short_description": SHORT_DESC,
+                "inst_class": "Telescope",
+            }
+        }
+    )
+
+    # Monkeypatch _convert_to_md to avoid file IO and return a relative path
+    def _fake_convert_to_md(self, parameter, parameter_version, input_file, design_type):
+        return "_data_files/myfile.md"
+
+    monkeypatch.setattr(ReadParameters, "_convert_to_md", _fake_convert_to_md)
+
+    tel = DummyTelescope(
+        site="North",
+        name="LSTN-01",
+        model_version="1.0.0",
+        param_versions={"file_param": "1.0.0"},
+    )
+
+    monkeypatch.setattr(names, "model_parameters", lambda *args, **kwargs: {"file_param": {}})
+    monkeypatch.setattr(names, "is_design_type", lambda _name: False)
+
+    data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
+
+    # Expect the value to be a markdown link using the returned relative path
+    assert data == [
+        [
+            "Telescope",
+            "file_param",
+            "1.0.0",
+            "[myfile.dat](_data_files/myfile.md)",
+            DESCRIPTION,
+            SHORT_DESC,
+        ]
+    ]
+
+
+def test_plot_camera_config(tmp_path, db_config, mocker):
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+
+    # Mock input file and output path
+    input_file = tmp_path / "camera_config_file.dat"
+    input_file.touch()
+    plot_name = input_file.stem.replace(".", "-")
+    plot_path = tmp_path / f"{plot_name}.png"
+
+    # Mock plot_pixels.plot to avoid actual plotting
+    mock_plot = mocker.patch("simtools.visualization.plot_pixels.plot")
+
+    # Test when plot does not exist
+    result = read_parameters._plot_camera_config(
+        "camera_config_file", "1.0.0", input_file, tmp_path
+    )
+    assert result == [plot_name]
+    mock_plot.assert_called_once_with(
+        config={
+            "file_name": input_file.name,
+            "telescope": args["telescope"],
+            "parameter_version": "1.0.0",
+            "site": args["site"],
+            "model_version": args["model_version"],
+            "parameter": "camera_config_file",
+        },
+        output_file=plot_path.with_suffix(""),
+        db_config=db_config,
+    )
+
+    # Test when plot already exists
+    plot_path.touch()
+    mock_plot.reset_mock()
+    result = read_parameters._plot_camera_config(
+        "camera_config_file", "1.0.0", input_file, tmp_path
+    )
+    assert result == [plot_name]
+    mock_plot.assert_not_called()
