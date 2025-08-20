@@ -17,13 +17,12 @@ def generate_submission_script(args_dict):
     args_dict: dict
         Arguments dictionary.
     """
-    _logger.info("Generating HT Condor submission scripts ")
-
     work_dir = Path(args_dict["output_path"])
     log_dir = work_dir / "logs"
     work_dir.mkdir(parents=True, exist_ok=True)
     log_dir.mkdir(parents=True, exist_ok=True)
     submit_file_name = "simulate_prod.submit"
+    _logger.info(f"Generating HT Condor submission scripts (path: {work_dir})")
 
     with open(work_dir / f"{submit_file_name}.condor", "w", encoding="utf-8") as submit_file_handle:
         submit_file_handle.write(
@@ -101,8 +100,19 @@ def _get_submit_script(args_dict):
     )
     core_scatter = args_dict["core_scatter"]
     core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
+    view_cone = args_dict["view_cone"]
+    view_cone_string = f'"{view_cone[0].to(u.deg)} {view_cone[1].to(u.deg)}"'
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
+
+    array_layout_name = (
+        args_dict["array_layout_name"][0]
+        if isinstance(args_dict["array_layout_name"], list)
+        and len(args_dict["array_layout_name"]) == 1
+        else args_dict["array_layout_name"]
+    )
+
+    run_number_offset = args_dict["run_number_offset"] or 1
 
     return f"""#!/usr/bin/env bash
 
@@ -116,15 +126,16 @@ simtools-simulate-prod \\
     --label {label} \\
     --model_version {args_dict["model_version"]} \\
     --site {args_dict["site"]} \\
-    --array_layout_name {args_dict["array_layout_name"]} \\
+    --array_layout_name {array_layout_name} \\
     --primary {args_dict["primary"]} \\
     --azimuth_angle {azimuth_angle_string} \\
     --zenith_angle {zenith_angle_string} \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
+    --view_cone {view_cone_string} \\
     --run_number $((process_id)) \\
-    --run_number_offset {args_dict["run_number_offset"]} \\
+    --run_number_offset {run_number_offset} \\
     --number_of_runs 1 \\
     --data_directory /tmp/simtools-data \\
     --output_path /tmp/simtools-output \\
