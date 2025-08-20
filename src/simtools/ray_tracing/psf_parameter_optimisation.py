@@ -530,7 +530,7 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
     # Create off-axis angle array
     max_offset = args_dict.get("max_offset", 4.5)
-    offset_steps = args_dict.get("offset_steps", 0.5)
+    offset_steps = args_dict.get("offset_steps", 0.02)
     off_axis_angles = np.linspace(
         0,
         max_offset,

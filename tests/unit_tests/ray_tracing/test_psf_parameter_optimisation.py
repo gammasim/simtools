@@ -4,6 +4,7 @@ import logging
 from collections import OrderedDict
 from unittest.mock import MagicMock, patch
 
+import astropy.units as u
 import numpy as np
 import pytest
 
@@ -35,7 +36,7 @@ def mock_telescope_model():
         "camera_center_y": 0.0,
         "telescope_axis_height": 1000.0,
     }[param]
-    mock_tel.name = "test_telescope"
+    mock_tel.name = "LSTN-01"
     return mock_tel
 
 
@@ -188,14 +189,14 @@ def test_get_previous_values(mock_telescope_model, caplog):
     assert "MRRA = 0.005" in caplog.text
 
 
-def test_generate_random_parameters_fixed_false(mock_args_dict):
+def test_generate_random_parameters_fixed_false(mock_args_dict, mock_telescope_model):
     """Test generating random parameters with fixed=False."""
     all_parameters = []
     n_runs = 3
     mock_args_dict["fixed"] = False
 
     psf_opt.generate_random_parameters(
-        all_parameters, n_runs, mock_args_dict, 0.005, 0.15, 0.03, 0.004
+        all_parameters, n_runs, mock_args_dict, 0.005, 0.15, 0.03, 0.004, mock_telescope_model
     )
 
     assert len(all_parameters) == n_runs
@@ -209,7 +210,7 @@ def test_generate_random_parameters_fixed_false(mock_args_dict):
         assert len(pars["mirror_align_random_horizontal"]) == 4
 
 
-def test_generate_random_parameters_fixed_true(mock_args_dict, caplog):
+def test_generate_random_parameters_fixed_true(mock_args_dict, mock_telescope_model, caplog):
     """Test generating random parameters with fixed=True."""
     all_parameters = []
     n_runs = 2
@@ -217,7 +218,7 @@ def test_generate_random_parameters_fixed_true(mock_args_dict, caplog):
 
     with caplog.at_level(logging.DEBUG):
         psf_opt.generate_random_parameters(
-            all_parameters, n_runs, mock_args_dict, 0.005, 0.15, 0.03, 0.004
+            all_parameters, n_runs, mock_args_dict, 0.005, 0.15, 0.03, 0.004, mock_telescope_model
         )
 
     assert len(all_parameters) == n_runs
@@ -228,6 +229,53 @@ def test_generate_random_parameters_fixed_true(mock_args_dict, caplog):
     # When fixed=True, the first mirror reflection parameter should be exactly the original value
     for pars in all_parameters:
         assert pars["mirror_reflection_random_angle"][0] == 0.005
+
+
+def test_generate_random_parameters_dual_mirror_telescope(mock_args_dict, caplog):
+    """Test that dual mirror telescopes have mar set to 0."""
+    all_parameters = []
+    n_runs = 3
+    mock_args_dict["fixed"] = False
+
+    # Create a mock dual mirror telescope (SST type)
+    mock_dual_mirror_tel = MagicMock()
+    mock_dual_mirror_tel.name = "SSTS-01"
+
+    psf_opt.generate_random_parameters(
+        all_parameters, n_runs, mock_args_dict, 0.005, 0.15, 0.03, 0.004, mock_dual_mirror_tel
+    )
+
+    assert len(all_parameters) == n_runs
+
+    # Check that all parameter sets have mar set to 0
+    for pars in all_parameters:
+        assert pars["mirror_align_random_horizontal"][0] == 0.0
+        assert pars["mirror_align_random_vertical"][0] == 0.0
+
+
+def test_generate_random_parameters_single_mirror_telescope(mock_args_dict, mock_telescope_model):
+    """Test that single mirror telescopes use random mar values."""
+    all_parameters = []
+    n_runs = 3
+    mock_args_dict["fixed"] = False
+
+    # Use the default mock telescope model which should not be dual mirror
+    mock_telescope_model.name = "LSTN-01"
+
+    psf_opt.generate_random_parameters(
+        all_parameters, n_runs, mock_args_dict, 0.005, 0.15, 0.03, 0.004, mock_telescope_model
+    )
+
+    assert len(all_parameters) == n_runs
+
+    # Check that parameter sets have non-zero mar values (within expected range)
+    for pars in all_parameters:
+        mar_horizontal = pars["mirror_align_random_horizontal"][0]
+        mar_vertical = pars["mirror_align_random_vertical"][0]
+
+        assert mar_horizontal >= 0.0
+        assert mar_vertical >= 0.0
+        assert mar_horizontal == mar_vertical  # They should be the same
 
 
 def test_run_ray_tracing_simulation(mock_telescope_model, mock_site_model, mock_args_dict):
@@ -726,3 +774,352 @@ def test_find_best_parameters_no_plotting(
 
         # Check that plots were NOT created
         mock_plots.assert_not_called()
+
+
+def test_create_d80_vs_offaxis_plot(
+    mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+):
+    """Test creating D80 vs off-axis angle plot."""
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+        "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+        "mirror_align_random_vertical": [0.005, 28.0, 0.0, 0.0],
+    }
+
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_ray_class,
+        patch("matplotlib.pyplot.figure") as mock_figure,
+        patch("matplotlib.pyplot.title") as mock_title,
+        patch("matplotlib.pyplot.xlabel") as mock_xlabel,
+        patch("matplotlib.pyplot.ylabel") as mock_ylabel,
+        patch("matplotlib.pyplot.xticks") as mock_xticks,
+        patch("matplotlib.pyplot.xlim") as mock_xlim,
+        patch("matplotlib.pyplot.grid") as mock_grid,
+        patch("matplotlib.pyplot.close") as mock_close,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.visualize.save_figure") as mock_save,
+    ):
+        mock_ray = MagicMock()
+        mock_ray_class.return_value = mock_ray
+
+        psf_opt.create_d80_vs_offaxis_plot(
+            mock_telescope_model, mock_site_model, mock_args_dict, best_pars, tmp_path
+        )
+
+        # Check that telescope parameters were changed
+        mock_telescope_model.change_multiple_parameters.assert_called_once_with(**best_pars)
+
+        # Check ray tracing was set up correctly
+        mock_ray_class.assert_called_once()
+        mock_ray.simulate.assert_called_once_with(test=False, force=True)
+        mock_ray.analyze.assert_called_once_with(force=True)
+
+        # Check plotting was called for both d80_cm and d80_deg
+        assert mock_figure.call_count == 2
+        assert mock_title.call_count == 2
+        assert mock_xlabel.call_count == 2
+        assert mock_ylabel.call_count == 2
+        assert mock_xticks.call_count == 2
+        assert mock_xlim.call_count == 2
+        assert mock_grid.call_count == 2
+        assert mock_save.call_count == 2
+        mock_close.assert_called_once_with("all")
+
+
+def test_write_tested_parameters_to_file(tmp_path):
+    """Test writing tested parameters to file."""
+    results = [
+        (
+            {
+                "mirror_reflection_random_angle": [0.005, 0.15, 0.035],
+                "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
+            },
+            0.2,
+            3.5,
+            {},
+        ),
+        (
+            {
+                "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+                "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+            },
+            0.1,
+            3.2,
+            {},
+        ),
+    ]
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+        "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+    }
+    best_d80 = 3.2
+
+    param_file = psf_opt.write_tested_parameters_to_file(results, best_pars, best_d80, tmp_path)
+
+    # Check that file was created
+    assert param_file.exists()
+    assert param_file == tmp_path / "tested_psf_parameters.txt"
+
+    # Check file contents
+    content = param_file.read_text()
+    assert "Tested parameter sets:" in content
+    assert "Set 1: RMSD=0.20000, D80=3.50000 cm" in content
+    assert "* Set 2: RMSD=0.10000, D80=3.20000 cm" in content
+    assert "<-- BEST" in content
+    assert "Best parameters:" in content
+    assert "Best D80: 3.20000 cm" in content
+
+
+def test_add_units_to_psf_parameters():
+    """Test adding astropy units to PSF parameters."""
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+        "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+        "mirror_align_random_vertical": [0.005, 28.0, 0.0, 0.0],
+        "other_parameter": [1.0, 2.0],
+    }
+
+    result = psf_opt._add_units_to_psf_parameters(best_pars)
+
+    # Check mirror_reflection_random_angle units: [deg, dimensionless, deg]
+    mrra = result["mirror_reflection_random_angle"]
+    assert mrra[0].unit == u.deg
+    assert mrra[1].unit == u.dimensionless_unscaled
+    assert mrra[2].unit == u.deg
+    assert mrra[0].value == 0.006
+    assert mrra[1].value == 0.15
+    assert mrra[2].value == 0.035
+
+    # Check mirror_align_random_horizontal units: [deg, deg, dimensionless, dimensionless]
+    marh = result["mirror_align_random_horizontal"]
+    assert marh[0].unit == u.deg
+    assert marh[1].unit == u.deg
+    assert marh[2].unit == u.dimensionless_unscaled
+    assert marh[3].unit == u.dimensionless_unscaled
+    assert marh[0].value == 0.005
+    assert marh[1].value == 28.0
+
+    # Check mirror_align_random_vertical units: [deg, deg, dimensionless, dimensionless]
+    marv = result["mirror_align_random_vertical"]
+    assert marv[0].unit == u.deg
+    assert marv[1].unit == u.deg
+    assert marv[2].unit == u.dimensionless_unscaled
+    assert marv[3].unit == u.dimensionless_unscaled
+
+    # Check other parameters are kept as-is
+    assert result["other_parameter"] == [1.0, 2.0]
+
+
+def test_export_psf_parameters_as_json_success(mock_telescope_model, tmp_path, caplog):
+    """Test successful export of PSF parameters as JSON."""
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+        "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+    }
+    parameter_version = "1.0.0"
+    func_logger = logging.getLogger("test_logger")
+
+    with (
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.writer.ModelDataWriter.dump_model_parameter"
+        ) as mock_dump,
+        caplog.at_level(logging.INFO),
+    ):
+        psf_opt.export_psf_parameters_as_json(
+            best_pars, mock_telescope_model, parameter_version, tmp_path, func_logger
+        )
+
+        # Check that dump_model_parameter was called for each parameter
+        assert mock_dump.call_count == 2
+
+        # Check logging
+        assert "Exporting best PSF parameters as JSON model parameter files" in caplog.text
+        assert f"JSON model parameter files exported to {tmp_path}" in caplog.text
+
+
+def test_export_psf_parameters_as_json_import_error(mock_telescope_model, tmp_path, caplog):
+    """Test export with import error."""
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+    }
+    parameter_version = "1.0.0"
+    func_logger = logging.getLogger("test_logger")
+
+    with (
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.writer.ModelDataWriter.dump_model_parameter"
+        ) as mock_dump,
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_dump.side_effect = ImportError("Module not found")
+
+        psf_opt.export_psf_parameters_as_json(
+            best_pars, mock_telescope_model, parameter_version, tmp_path, func_logger
+        )
+
+        assert "Could not export JSON parameters: Module not found" in caplog.text
+
+
+def test_export_psf_parameters_as_json_value_error(mock_telescope_model, tmp_path, caplog):
+    """Test export with value error."""
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+    }
+    parameter_version = "1.0.0"
+    func_logger = logging.getLogger("test_logger")
+
+    with (
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.writer.ModelDataWriter.dump_model_parameter"
+        ) as mock_dump,
+        caplog.at_level(logging.ERROR),
+    ):
+        mock_dump.side_effect = ValueError("Invalid parameter")
+
+        psf_opt.export_psf_parameters_as_json(
+            best_pars, mock_telescope_model, parameter_version, tmp_path, func_logger
+        )
+
+        assert "Error exporting JSON parameters: Invalid parameter" in caplog.text
+
+
+def test_run_psf_optimization_workflow(mock_telescope_model, mock_site_model, tmp_path):
+    """Test the complete PSF optimization workflow."""
+    args_dict = {
+        "test": True,
+        "data": "test_data.txt",
+        "model_path": "/path/to/model",
+        "write_psf_parameters": True,
+        "output_path": str(tmp_path),
+        "parameter_version": "1.0.0",
+    }
+    func_logger = logging.getLogger("test_logger")
+
+    # Mock sample results
+    sample_results = [
+        (
+            {
+                "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+                "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+            },
+            0.1,
+            3.2,
+            {},
+        )
+    ]
+    best_pars = {
+        "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
+        "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
+    }
+
+    with (
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.get_previous_values"
+        ) as mock_get_prev,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.generate_random_parameters"
+        ) as mock_gen_params,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data"
+        ) as mock_load_data,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.find_best_parameters"
+        ) as mock_find_best,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.write_tested_parameters_to_file"
+        ) as mock_write_params,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.create_d80_vs_offaxis_plot"
+        ) as mock_create_plot,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters_as_json"
+        ) as mock_export_json,
+        patch("builtins.print") as mock_print,
+    ):
+        # Set up mocks
+        mock_get_prev.return_value = (0.005, 0.15, 0.03, 0.004)
+        mock_load_data.return_value = ({}, None)
+        mock_find_best.return_value = (best_pars, 3.2, sample_results)
+        mock_write_params.return_value = tmp_path / "test_params.txt"
+
+        # Run the workflow
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, args_dict, tmp_path, func_logger
+        )
+
+        # Check that all main functions were called
+        mock_get_prev.assert_called_once_with(mock_telescope_model)
+        mock_gen_params.assert_called_once()
+        mock_load_data.assert_called_once_with(args_dict)
+        mock_find_best.assert_called_once()
+        mock_write_params.assert_called_once_with(sample_results, best_pars, 3.2, tmp_path)
+        mock_create_plot.assert_called_once_with(
+            mock_telescope_model, mock_site_model, args_dict, best_pars, tmp_path
+        )
+
+        # Check JSON export was called since write_psf_parameters=True
+        mock_export_json.assert_called_once_with(
+            best_pars, mock_telescope_model, "1.0.0", str(tmp_path), func_logger
+        )
+
+        # Check output messages
+        mock_print.assert_any_call(f"\nParameter results written to {tmp_path / 'test_params.txt'}")
+        mock_print.assert_any_call("D80 vs off-axis angle plots created successfully")
+        mock_print.assert_any_call("\nBest parameters:")
+
+
+def test_run_psf_optimization_workflow_no_json_export(
+    mock_telescope_model, mock_site_model, tmp_path
+):
+    """Test workflow without JSON export."""
+    args_dict = {
+        "test": False,  # Use full n_runs (50)
+        "data": None,
+        "write_psf_parameters": False,  # No JSON export
+        "output_path": str(tmp_path),
+    }
+    func_logger = logging.getLogger("test_logger")
+
+    with (
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.get_previous_values"
+        ) as mock_get_prev,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.generate_random_parameters"
+        ) as mock_gen_params,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data"
+        ) as mock_load_data,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.find_best_parameters"
+        ) as mock_find_best,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.write_tested_parameters_to_file"
+        ) as mock_write_params,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.create_d80_vs_offaxis_plot"
+        ) as mock_create_plot,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters_as_json"
+        ) as mock_export_json,
+    ):
+        # Set up mocks
+        mock_get_prev.return_value = (0.005, 0.15, 0.03, 0.004)
+        mock_load_data.return_value = ({}, None)
+        mock_find_best.return_value = ({}, 3.2, [])
+        mock_write_params.return_value = tmp_path / "test_params.txt"
+
+        # Run the workflow
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, args_dict, tmp_path, func_logger
+        )
+
+        # Check that generate_random_parameters was called with n_runs=50 (not test mode)
+        call_args = mock_gen_params.call_args[0]
+        n_runs = call_args[1]  # Second argument is n_runs
+        assert n_runs == 50
+
+        # Check JSON export was NOT called since write_psf_parameters=False
+        mock_export_json.assert_not_called()
+
+        # Check that d80 plot creation was called
+        mock_create_plot.assert_called_once()
