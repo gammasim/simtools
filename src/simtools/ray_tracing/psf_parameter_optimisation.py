@@ -13,7 +13,10 @@ from collections import OrderedDict
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 
+from simtools.data_model import model_data_writer as writer
+from simtools.model import model_utils
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.visualization import visualize
@@ -130,7 +133,9 @@ def get_previous_values(tel_model):
     return mrra_0, mfr_0, mrra2_0, mar_0
 
 
-def generate_random_parameters(all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0):
+def generate_random_parameters(
+    all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, tel_model
+):
     """
     Generate random parameters for tuning.
 
@@ -150,11 +155,21 @@ def generate_random_parameters(all_parameters, n_runs, args_dict, mrra_0, mfr_0,
         Initial value of the second mirror_reflection_random_angle.
     mar_0 : float
         Initial value of mirror_align_random_horizontal/vertical.
+    tel_model : TelescopeModel
+        Telescope model object to check if it's a dual mirror telescope.
     """
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
     if args_dict["fixed"]:
         logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
+
+    # Check if telescope is dual mirror and set mar to 0 if so
+    is_dual_mirror = model_utils.is_two_mirror_telescope(tel_model.name)
+    if is_dual_mirror:
+        mar_fixed_value = 0.0
+    else:
+        mar_fixed_value = None
+
     for _ in range(n_runs):
         mrra_range = 0.004 if not args_dict["fixed"] else 0
         mrf_range = 0.1
@@ -164,7 +179,13 @@ def generate_random_parameters(all_parameters, n_runs, args_dict, mrra_0, mfr_0,
         mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
         mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
         mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
-        mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
+
+        # Set mar to 0 for dual mirror telescopes, otherwise use random value
+        if mar_fixed_value is not None:
+            mar = mar_fixed_value
+        else:
+            mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
+
         add_parameters(all_parameters, mrra, mar, mrf, mrra2)
 
 
@@ -483,3 +504,258 @@ def find_best_parameters(
         _create_all_plots(results, best_pars, data_to_plot, pdf_pages)
 
     return best_pars, best_d80, results
+
+
+def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
+    """
+    Create D80 vs off-axis angle plot using the best parameters.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object.
+    site_model : SiteModel
+        Site model object.
+    args_dict : dict
+        Dictionary containing parsed command-line arguments.
+    best_pars : dict
+        Best parameter set.
+    output_dir : Path
+        Output directory for saving plots.
+    """
+    logger.info("Creating D80 vs off-axis angle plot with best parameters...")
+
+    # Apply best parameters to telescope model
+    tel_model.change_multiple_parameters(**best_pars)
+
+    # Create off-axis angle array
+    max_offset = args_dict.get("max_offset", 4.5)
+    offset_steps = args_dict.get("offset_steps", 0.5)
+    off_axis_angles = np.linspace(
+        0,
+        max_offset,
+        int(max_offset / offset_steps) + 1,
+    )
+
+    # Run ray tracing simulation for multiple off-axis angles
+    ray = RayTracing(
+        telescope_model=tel_model,
+        site_model=site_model,
+        simtel_path=args_dict["simtel_path"],
+        zenith_angle=args_dict["zenith"] * u.deg,
+        source_distance=args_dict["src_distance"] * u.km,
+        off_axis_angle=off_axis_angles * u.deg,
+    )
+
+    logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
+    ray.simulate(test=args_dict["test"], force=True)
+    ray.analyze(force=True)
+
+    # Create D80 plots
+    for key in ["d80_cm", "d80_deg"]:
+        plt.figure(figsize=(10, 6), tight_layout=True)
+
+        ray.plot(key, marker="o", linestyle="-", color="blue", linewidth=2, markersize=6)
+
+        plt.title(
+            f"PSF D80 vs Off-axis Angle - {tel_model.name}\n"
+            f"Best Parameters: "
+            f"refl=[{best_pars['mirror_reflection_random_angle'][0]:.4f}, "
+            f"{best_pars['mirror_reflection_random_angle'][1]:.4f}, "
+            f"{best_pars['mirror_reflection_random_angle'][2]:.4f}], "
+            f"align={best_pars['mirror_align_random_horizontal'][0]:.4f}"
+        )
+        plt.xlabel("Off-axis Angle (degrees)")
+        plt.ylabel("D80 (cm)" if key == "d80_cm" else "D80 (degrees)")
+        plt.xticks(rotation=45)
+        plt.xlim(0, max_offset)
+        plt.grid(True, alpha=0.3)
+
+        plot_file_name = f"tune_psf_{tel_model.name}_best_params_{key}.pdf"
+        plot_file = output_dir.joinpath(plot_file_name)
+        visualize.save_figure(plt, plot_file, log_title=f"D80 vs off-axis ({key})")
+
+    plt.close("all")
+
+
+def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir):
+    """
+    Write all tested parameters and their metrics to a text file.
+
+    Parameters
+    ----------
+    results : list
+        List of (pars, rmsd, d80, simulated_data) tuples
+    best_pars : dict
+        Best parameter set
+    best_d80 : float
+        Best D80 value
+    output_dir : Path
+        Output directory path
+    """
+    param_file = output_dir.joinpath("tested_psf_parameters.txt")
+    with open(param_file, "w", encoding="utf-8") as f:
+        f.write("Tested parameter sets:\n")
+        for i, (pars, rmsd, d80, _) in enumerate(results):
+            is_best = pars == best_pars
+            prefix = "*" if is_best else " "
+            f.write(f"{prefix} Set {i + 1}: RMSD={rmsd:.5f}, D80={d80:.5f} cm\n")
+            for par, value in pars.items():
+                f.write(f"    {par} = {value}\n")
+            if is_best:
+                f.write("    <-- BEST\n")
+        f.write("\nBest parameters:\n")
+        for par, value in best_pars.items():
+            f.write(f"{par} = {value}\n")
+        f.write(f"Best D80: {best_d80:.5f} cm\n")
+    return param_file
+
+
+def _add_units_to_psf_parameters(best_pars):
+    """
+    Add proper astropy units to PSF parameters based on their schemas.
+
+    Parameters
+    ----------
+    best_pars : dict
+        Dictionary with PSF parameter names as keys and values as lists
+
+    Returns
+    -------
+    dict
+        Dictionary with same keys but values converted to astropy quantities with units
+    """
+    psf_pars_with_units = {}
+
+    for param_name, param_values in best_pars.items():
+        if param_name == "mirror_reflection_random_angle":
+            # [deg, dimensionless, deg]
+            psf_pars_with_units[param_name] = [
+                param_values[0] * u.deg,
+                param_values[1] * u.dimensionless_unscaled,
+                param_values[2] * u.deg,
+            ]
+        elif param_name in ["mirror_align_random_horizontal", "mirror_align_random_vertical"]:
+            # [deg, deg, dimensionless, dimensionless]
+            psf_pars_with_units[param_name] = [
+                param_values[0] * u.deg,
+                param_values[1] * u.deg,
+                param_values[2] * u.dimensionless_unscaled,
+                param_values[3] * u.dimensionless_unscaled,
+            ]
+        else:
+            # For any other parameters, keep as-is
+            psf_pars_with_units[param_name] = param_values
+
+    return psf_pars_with_units
+
+
+def export_psf_parameters_as_json(best_pars, tel_model, parameter_version, output_dir, func_logger):
+    """
+    Export PSF parameters as JSON model parameter files.
+
+    Parameters
+    ----------
+    best_pars : dict
+        Best parameter set
+    tel_model : TelescopeModel
+        Telescope model object
+    parameter_version : str
+        Parameter version string
+    output_dir : Path
+        Output directory path
+    func_logger : Logger
+        Logger object
+    """
+    try:
+        func_logger.info("Exporting best PSF parameters as JSON model parameter files")
+        psf_pars_with_units = _add_units_to_psf_parameters(best_pars)
+        parameter_output_path = output_dir / tel_model.name
+        for parameter_name, parameter_value in psf_pars_with_units.items():
+            writer.ModelDataWriter.dump_model_parameter(
+                parameter_name=parameter_name,
+                value=parameter_value,
+                instrument=tel_model.name,
+                parameter_version=parameter_version,
+                output_file=f"{parameter_name}-{parameter_version}.json",
+                output_path=parameter_output_path,
+                use_plain_output_path=True,
+            )
+        func_logger.info(f"JSON model parameter files exported to {output_dir}")
+    except ImportError as e:
+        func_logger.warning(f"Could not export JSON parameters: {e}")
+    except (ValueError, KeyError, OSError) as e:
+        func_logger.error(f"Error exporting JSON parameters: {e}")
+
+
+def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, func_logger):
+    """
+    Run the complete PSF parameter optimization workflow.
+
+    This function consolidates the main optimization logic to make the application lighter.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object
+    site_model : SiteModel
+        Site model object
+    args_dict : dict
+        Dictionary containing parsed command-line arguments
+    output_dir : Path
+        Output directory path
+    func_logger : Logger
+        Logger object
+
+    Returns
+    -------
+    None
+        All results are saved to files and printed to console
+    """
+    # Generate parameter sets
+    all_parameters = []
+    mrra_0, mfr_0, mrra2_0, mar_0 = get_previous_values(tel_model)
+
+    n_runs = 5 if args_dict["test"] else 50
+    generate_random_parameters(
+        all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, tel_model
+    )
+
+    data_to_plot, radius = load_and_process_data(args_dict)
+
+    # Preparing figure name and PDF pages for plotting
+    plot_file_name = "_".join(("tune_psf", tel_model.name + ".pdf"))
+    plot_file = output_dir.joinpath(plot_file_name)
+    pdf_pages = PdfPages(plot_file)
+
+    # Find best parameters
+    best_pars, best_d80, results = find_best_parameters(
+        all_parameters, tel_model, site_model, args_dict, data_to_plot, radius, pdf_pages
+    )
+
+    plt.close()
+    pdf_pages.close()
+
+    # Write all tested parameters and their metrics to a file
+    param_file = write_tested_parameters_to_file(results, best_pars, best_d80, output_dir)
+    print(f"\nParameter results written to {param_file}")
+
+    # Automatically create D80 vs off-axis angle plot for best parameters
+    create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
+    print("D80 vs off-axis angle plots created successfully")
+
+    print("\nBest parameters:")
+    for par, value in best_pars.items():
+        print(f"{par} = {value}")
+
+    # Export best parameters as JSON model parameter files (if flag is provided)
+    if args_dict.get("write_psf_parameters", False):
+        # Use the base output path from args_dict for proper telescope/parameter structure
+        base_output_path = args_dict.get("output_path", output_dir.parent)
+        export_psf_parameters_as_json(
+            best_pars,
+            tel_model,
+            args_dict.get("parameter_version", "0.0.0"),
+            base_output_path,
+            func_logger,
+        )
