@@ -79,12 +79,6 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--use_real_camera",
-        help="Use actual camera definition (same as with USE_REAL_CAMERA=1)",
-        action="store_true",
-        required=False,
-    )
-    config.parser.add_argument(
         "--flip_mirror_layout",
         help="Flip mirror layout x/y",
         action="store_true",
@@ -145,7 +139,6 @@ def main():
         output_dir=output_dir,
         label=args_dict.get("label", label),
         ray_tracing_config=args_dict.get("ray_tracing_config"),
-        use_real_camera=bool(args_dict.get("use_real_camera", False)),
         perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
         overwrite_rdna=bool(args_dict.get("overwrite_rdna", False)),
         mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
