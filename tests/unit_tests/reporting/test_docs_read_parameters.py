@@ -1175,14 +1175,7 @@ def test_get_array_element_parameter_data_simple(tmp_path, monkeypatch):
     # Expect one row with formatted value '42 m'
     assert data == [["Telescope", "test_param", "1.0.0", "42 m", DESCRIPTION, "Short"]]
 
-
-def test_get_array_element_parameter_data_instrument_specific(tmp_path, monkeypatch):
-    """Test that instrument-specific parameters are wrapped in bold/italic markers."""
-
-    args = {"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0", "observatory": None}
-    rp = ReadParameters(db_config=None, args=args, output_path=tmp_path)
-    rp.db = Mock()
-
+    # Test that instrument-specific parameters are wrapped in bold/italic markers."""
     all_parameter_data = {
         "test_param": {
             "unit": "m",
@@ -1194,27 +1187,6 @@ def test_get_array_element_parameter_data_instrument_specific(tmp_path, monkeypa
     }
 
     rp.db.get_model_parameters.return_value = all_parameter_data
-    rp.db.export_model_files.return_value = None
-
-    rp.get_all_parameter_descriptions = Mock(
-        return_value={
-            "test_param": {
-                "description": DESCRIPTION,
-                "short_description": SHORT_DESC,
-                "inst_class": "Telescope",
-            }
-        }
-    )
-
-    tel = DummyTelescope(
-        site="North",
-        name="LSTN-01",
-        model_version="1.0.0",
-        param_versions={"test_param": "1.0.0"},
-    )
-
-    monkeypatch.setattr(names, "model_parameters", lambda *args, **kwargs: {"test_param": {}})
-    monkeypatch.setattr(names, "is_design_type", lambda _name: False)
 
     data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
 
