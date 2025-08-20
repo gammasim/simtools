@@ -49,6 +49,13 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_io_event_histograms
+
+```{eval-rst}
+.. automodule:: simtel.simtel_io_event_histograms
+   :members:
+```
+
 ## simtel_io_histograms
 
 (simtel-io-histograms-1)=

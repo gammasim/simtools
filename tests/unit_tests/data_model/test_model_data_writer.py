@@ -304,7 +304,7 @@ def test_prepare_data_dict_for_writing():
     }
     assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_5) == {
         "value": [5.5, 6.6],
-        "unit": ["null", "null"],
+        "unit": "null",
         "type": "float64",
     }
     data_dict_6 = {

@@ -7,6 +7,7 @@ applications:
     azimuth_angle: North
     core_scatter: 10 500 m
     energy_range: 100 GeV 1 TeV
+    view_cone: 0 deg 10 deg
     eslope: -2.0
     label: test-production-North
     log_level: DEBUG
@@ -19,7 +20,6 @@ applications:
     run_number: 10
     simulation_software: corsika_sim_telarray
     site: North
-    view_cone: 0 deg 0 deg
     zenith_angle: 20
   integration_tests:
   - test_output_files:

@@ -39,9 +39,12 @@ class CorsikaConfig:
         MongoDB configuration.
     label : str
         Instance label.
+    dummy_simulations : bool
+        If True, the configuration is generated for dummy simulations
+        (e.g., sim_telarray requires for some run modes a valid CORSIKA input file).
     """
 
-    def __init__(self, array_model, args_dict, db_config=None, label=None):
+    def __init__(self, array_model, args_dict, db_config=None, label=None, dummy_simulations=False):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
@@ -51,13 +54,13 @@ class CorsikaConfig:
         self.azimuth_angle = None
         self._run_number = None
         self.config_file_path = None
-        # The following uses the setter defined below, that is why the args_dict is passed
-        self.primary_particle = args_dict
+        self.primary_particle = args_dict  # see setter for primary_particle
+        self.dummy_simulations = dummy_simulations
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
         self.config = self.fill_corsika_configuration(args_dict, db_config)
-        self._is_file_updated = False
+        self.is_file_updated = False
 
     def __repr__(self):
         """CorsikaConfig class representation."""
@@ -110,7 +113,7 @@ class CorsikaConfig:
         if args_dict is None:
             return {}
 
-        self._is_file_updated = False
+        self.is_file_updated = False
         self.azimuth_angle = int(args_dict["azimuth_angle"].to("deg").value)
         self.zenith_angle = args_dict["zenith_angle"].to("deg").value
 
@@ -119,7 +122,10 @@ class CorsikaConfig:
         )
 
         config = {}
-        config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
+        if self.dummy_simulations:
+            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations()
+        else:
+            config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
 
         if db_config is None:  # all following parameter require DB
             return config
@@ -199,6 +205,30 @@ class CorsikaConfig:
                         f"{model_versions[i]} and {model_versions[i + 1]}. "
                         f"Values are {current_value} and {next_value} respectively."
                     )
+
+    def _corsika_configuration_for_dummy_simulations(self):
+        """
+        Return CORSIKA configuration for dummy simulations.
+
+        Settings are such that that the simulations are fast
+        and none (or not many) Cherenkov photons are generated.
+
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA parameters for dummy simulations.
+        """
+        return {
+            "EVTNR": [1],
+            "NSHOW": [1],
+            "PRMPAR": [1],  # CORSIKA ID 1 for primary gamma
+            "ESLOPE": [-2.0],
+            "ERANGE": [0.1, 0.1],
+            "THETAP": [20.0, 20.0],
+            "PHIP": [0.0, 0.0],
+            "VIEWCONE": [0.0, 0.0],
+            "CSCAT": [1, 0.0, 10.0],
+        }
 
     def _corsika_configuration_from_user_input(self, args_dict):
         """
@@ -492,16 +522,8 @@ class CorsikaConfig:
             if par_name in values:
                 par_value = values[par_name]
         if len(par_value) == 0:
-            self._logger.error(f"Parameter {par_name} is not a CORSIKA config parameter")
-            raise KeyError
+            raise KeyError(f"Parameter {par_name} is not a CORSIKA config parameter")
         return par_value if len(par_value) > 1 else par_value[0]
-
-    def print_config_parameter(self):
-        """Print CORSIKA config parameters for inspection."""
-        for parameter_type, parameter_dict in self.config.items():
-            print(f"Parameter type: {parameter_type}\n")
-            for par, value in parameter_dict.items():
-                print(f"{par} = {value}")
 
     @staticmethod
     def _get_text_single_line(pars, line_begin=""):
@@ -538,7 +560,7 @@ class CorsikaConfig:
             the output directly to sim_telarray.
 
         """
-        if self._is_file_updated:
+        if self.is_file_updated:
             self._logger.debug(f"CORSIKA input file already updated: {self.config_file_path}")
             return self.config_file_path
         _output_generic_file_name = self.set_output_file_and_directory(use_multipipe=use_multipipe)
@@ -605,7 +627,7 @@ class CorsikaConfig:
             model_directory=self.array_model.get_config_directory()
         )
 
-        self._is_file_updated = True
+        self.is_file_updated = True
         return self.config_file_path
 
     def get_corsika_config_file_name(self, file_type, run_number=None):
@@ -758,9 +780,7 @@ class CorsikaConfig:
 
     def validate_run_number(self, run_number):
         """
-        Validate run number and return it.
-
-        Return run number from configuration if None.
+        Validate run number and return it. Return run number from configuration if None.
 
         Parameters
         ----------
@@ -775,12 +795,12 @@ class CorsikaConfig:
         Raises
         ------
         ValueError
-            If run_number is not a valid value (e.g., < 1).
+            If run_number is not a valid value (< 1 or > 999999).
         """
         if run_number is None:
             return self.run_number
         if not float(run_number).is_integer() or run_number < 1 or run_number > 999999:
-            msg = f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
-            self._logger.error(msg)
-            raise ValueError(msg)
+            raise ValueError(
+                f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
+            )
         return run_number
