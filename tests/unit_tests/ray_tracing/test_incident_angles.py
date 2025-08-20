@@ -114,13 +114,39 @@ def test_repr_contains_label(calculator):
     assert f"label={calculator.label}" in s
 
 
-def test_write_run_script_includes_use_real_camera_flag(calculator):
-    # Prepare IO files and write script with real camera option
-    calculator.use_real_camera = True
+def test_write_run_script_perfect_mirror_flags(calculator):
+    calculator.perfect_mirror = True
     photons, stars, log_file = calculator._prepare_psf_io_files()
     script = calculator._write_run_script(photons, stars, log_file)
     txt = script.read_text(encoding="utf-8")
-    assert "-C USE_REAL_CAMERA=1" in txt
+    assert "-DPERFECT_DISH=1" in txt
+    assert "-C telescope_random_angle=0" in txt
+    assert "-C mirror_reflection_random_angle=0" in txt
+
+
+def test_write_run_script_reflection_angle_and_overwrite(calculator):
+    # explicit value wins
+    calculator.mirror_reflection_random_angle = 0.123
+    photons, stars, log_file = calculator._prepare_psf_io_files()
+    script = calculator._write_run_script(photons, stars, log_file)
+    txt = script.read_text(encoding="utf-8")
+    assert "-C mirror_reflection_random_angle=0.123" in txt
+
+    # overwrite flag sets to zero if no explicit value
+    calculator.mirror_reflection_random_angle = None
+    calculator.overwrite_rdna = True
+    script = calculator._write_run_script(photons, stars, log_file)
+    txt = script.read_text(encoding="utf-8")
+    assert "-C mirror_reflection_random_angle=0" in txt
+
+
+def test_write_run_script_alignment_algn(calculator):
+    calculator.algn = 0.05
+    photons, stars, log_file = calculator._prepare_psf_io_files()
+    script = calculator._write_run_script(photons, stars, log_file)
+    txt = script.read_text(encoding="utf-8")
+    assert "-C mirror_align_random_horizontal=0.05,28.,0.0,0.0" in txt
+    assert "-C mirror_align_random_vertical=0.05,28.,0.0,0.0" in txt
 
 
 def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp_output_dir):

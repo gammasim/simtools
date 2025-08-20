@@ -28,7 +28,6 @@ class IncidentAnglesCalculator:
         output_dir,
         label: str | None = None,
         ray_tracing_config=None,
-        use_real_camera: bool = False,
         perfect_mirror: bool = False,
         overwrite_rdna: bool = False,
         mirror_reflection_random_angle: float | None = None,
@@ -43,7 +42,6 @@ class IncidentAnglesCalculator:
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
         self.ray_tracing_config = ray_tracing_config
-        self.use_real_camera = use_real_camera
         self.perfect_mirror = perfect_mirror
         self.overwrite_rdna = overwrite_rdna
         self.mirror_reflection_random_angle = mirror_reflection_random_angle
@@ -146,9 +144,6 @@ class IncidentAnglesCalculator:
             f"-c {self.telescope_model.config_file_path}",
             f"-I{self.telescope_model.config_file_directory}",
         ]
-        if self.use_real_camera:
-            opts.append("-C USE_REAL_CAMERA=1")
-
         if self.perfect_mirror:
             opts.extend(
                 [
