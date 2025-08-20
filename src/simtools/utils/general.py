@@ -206,6 +206,29 @@ def get_log_level_from_user(log_level):
     return possible_levels[log_level_lower]
 
 
+def enforce_list_type(value):
+    """
+    Return input value as list.
+
+    - Single values will return as a list with a single element.
+    - None values will return as empty list.
+    - Values of list type are not changed.
+
+    Parameters
+    ----------
+    value: any
+        Input value to be converted to a list.
+
+    Returns
+    -------
+    list
+        List of input values.
+    """
+    if not value:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
 def program_is_executable(program):
     """
     Check if program exists and is executable.
@@ -676,6 +699,84 @@ def convert_keys_in_dict_to_lowercase(data):
     if isinstance(data, list):
         return [convert_keys_in_dict_to_lowercase(i) for i in data]
     return data
+
+
+def remove_key_from_dict(data, key_to_remove):
+    """
+    Remove a specific key from a dictionary recursively.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary to be processed.
+    key_to_remove: str
+        Key to be removed from the dictionary.
+
+    Returns
+    -------
+    dict
+        Dictionary with the specified key removed.
+    """
+    if isinstance(data, dict):
+        return {
+            k: remove_key_from_dict(v, key_to_remove) for k, v in data.items() if k != key_to_remove
+        }
+    if isinstance(data, list):
+        return [remove_key_from_dict(i, key_to_remove) for i in data]
+    return data
+
+
+def _find_differences_dict(obj1, obj2, path, diffs):
+    """Recursively find differences between two dictionaries."""
+    for key in sorted(set(obj1) | set(obj2)):
+        subpath = f"{path}['{key}']" if path else f"['{key}']"
+        if key not in obj1:
+            diffs.append(f"{subpath}: added in second object")
+        elif key not in obj2:
+            diffs.append(f"{subpath}: removed in second object")
+        else:
+            diffs.extend(find_differences_in_json_objects(obj1[key], obj2[key], subpath))
+
+
+def find_differences_in_json_objects(obj1, obj2, path=""):
+    """
+    Recursively find differences between two JSON-like objects.
+
+    Parameters
+    ----------
+    obj1: dict, list, or any
+        First object to compare.
+    obj2: dict, list, or any
+        Second object to compare.
+    path: str
+        Path to the current object in the JSON structure, used for reporting differences.
+
+    Returns
+    -------
+    list
+        List of differences found between the two objects, with paths indicating where the
+        differences occur.
+    """
+    diffs = []
+
+    if not isinstance(obj1, type(obj2)):
+        diffs.append(f"{path}: type changed from {type(obj1).__name__} to {type(obj2).__name__}")
+        return diffs
+
+    if isinstance(obj1, dict):
+        _find_differences_dict(obj1, obj2, path, diffs)
+
+    elif isinstance(obj1, list):
+        if len(obj1) != len(obj2):
+            diffs.append(f"{path}: list length changed from {len(obj1)} to {len(obj2)}")
+        for i, (a, b) in enumerate(zip(obj1, obj2)):
+            subpath = f"{path}[{i}]" if path else f"[{i}]"
+            diffs.extend(find_differences_in_json_objects(a, b, subpath))
+
+    elif obj1 != obj2:
+        diffs.append(f"{path}: value changed from {obj1} to {obj2}")
+
+    return diffs
 
 
 def clear_default_sim_telarray_cfg_directories(command):
