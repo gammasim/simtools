@@ -84,9 +84,6 @@ r"""
 
 import logging
 
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-
 from simtools.configuration import configurator
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
@@ -124,7 +121,16 @@ def _parse():
         help=("Keep the first entry of mirror_reflection_random_angle fixed."),
         action="store_true",
     )
-    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
+    config.parser.add_argument(
+        "--write_psf_parameters",
+        help=("Write the best PSF parameters as JSON model parameter files"),
+        action="store_true",
+        required=False,
+    )
+    return config.initialize(
+        db_config=True,
+        simulation_model=["telescope", "model_version", "parameter_version"],
+    )
 
 
 def main():  # noqa: D103
@@ -145,45 +151,8 @@ def main():  # noqa: D103
         model_version=args_dict["model_version"],
     )
 
-    all_parameters = []
-    mrra_0, mfr_0, mrra2_0, mar_0 = psf_opt.get_previous_values(tel_model)
-
-    n_runs = 5 if args_dict["test"] else 50
-    psf_opt.generate_random_parameters(
-        all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0
-    )
-
-    data_to_plot, radius = psf_opt.load_and_process_data(args_dict)
-
-    # Preparing figure name
-    plot_file_name = "_".join((label, tel_model.name + ".pdf"))
-    plot_file = output_dir.joinpath(plot_file_name)
-    pdf_pages = PdfPages(plot_file)
-
-    best_pars, best_d80, results = psf_opt.find_best_parameters(
-        all_parameters, tel_model, site_model, args_dict, data_to_plot, radius, pdf_pages
-    )
-
-    plt.close()
-    pdf_pages.close()
-
-    # Write all tested parameters and their metrics to a file
-    param_file = output_dir.joinpath("tested_psf_parameters.txt")
-    with open(param_file, "w", encoding="utf-8") as f:
-        f.write("Tested parameter sets:\n")
-        for i, (pars, rmsd, d80, _) in enumerate(results):
-            is_best = pars == best_pars
-            prefix = "*" if is_best else " "
-            f.write(f"{prefix} Set {i + 1}: RMSD={rmsd:.5f}, D80={d80:.5f} cm\n")
-            for par, value in pars.items():
-                f.write(f"    {par} = {value}\n")
-            if is_best:
-                f.write("    <-- BEST\n")
-        f.write("\nBest parameters:\n")
-        for par, value in best_pars.items():
-            f.write(f"{par} = {value}\n")
-        f.write(f"Best D80: {best_d80:.5f} cm\n")
-    print(f"\nParameter results written to {param_file}")
+    # Run the complete PSF optimization workflow
+    psf_opt.run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, logger)
 
 
 if __name__ == "__main__":
