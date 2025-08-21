@@ -83,7 +83,7 @@ def mock_simulator(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        light_emission_config={},
+        light_emission_config={"events": 1, "output_prefix": None},
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         light_source_setup="layout",
@@ -116,7 +116,7 @@ def mock_simulator_variable(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        light_emission_config=default_config,
+        light_emission_config={**default_config, "events": 1, "output_prefix": None},
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         light_source_setup="variable",
@@ -144,17 +144,20 @@ def calibration_model_illn(db_config, io_handler, model_version):
 def test_initialization(mock_simulator, default_config):
     assert isinstance(mock_simulator, SimulatorLightEmission)
     assert mock_simulator.light_source_type == "illuminator"
-    assert mock_simulator.light_emission_config == {}
+    assert mock_simulator.light_emission_config.get("events", 1) == 1
 
 
 def test_initialization_variable(mock_simulator_variable, default_config):
     assert isinstance(mock_simulator_variable, SimulatorLightEmission)
     assert mock_simulator_variable.light_source_type == "illuminator"
-    assert mock_simulator_variable.light_emission_config == default_config
+    # default config plus CLI-derived settings
+    for k, v in default_config.items():
+        assert mock_simulator_variable.light_emission_config[k] == v
+    assert mock_simulator_variable.light_emission_config.get("events", 1) == 1
 
 
 def test_runs(mock_simulator):
-    assert mock_simulator.runs == 1
+    assert mock_simulator.events == 1
 
 
 def test_photons_per_run_default(mock_simulator):
@@ -272,6 +275,7 @@ def test_make_simtel_script(mock_simulator):
             )
 
             mock_simulator.output_directory = "/directory"
+            mock_simulator.light_emission_config = {"output_prefix": None, "events": 1}
 
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
@@ -511,7 +515,7 @@ def test_add_flasher_options():
     inst = object.__new__(SimulatorLightEmission)
     inst._flasher_model = MagicMock()
     inst._telescope_model = MagicMock()
-    inst.runs = 1
+    inst.events = 1
     inst.photons_per_run = 1.23e6
 
     def gpvu(name):
@@ -679,7 +683,9 @@ def test_make_simtel_script_includes_bypass_for_flasher():
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
     inst.light_source_type = "flasher"
+    inst.light_source_setup = "layout"
     inst.output_directory = "/directory"
+    inst.light_emission_config = {"output_prefix": None, "events": 1}
 
     inst._simtel_path = MagicMock()
     inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
@@ -818,7 +824,7 @@ def test_photons_per_run_flasher_model_non_test(tmp_path):
         calibration_model=None,
         flasher_model=flasher,
         site_model=None,
-        light_emission_config={},
+        light_emission_config={"events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test",
@@ -842,7 +848,7 @@ def test_photons_per_run_flasher_model_test_mode(tmp_path):
         calibration_model=None,
         flasher_model=flasher,
         site_model=None,
-        light_emission_config={},
+        light_emission_config={"events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test2",
@@ -863,7 +869,7 @@ def test_photons_per_run_no_models(tmp_path):
         calibration_model=None,
         flasher_model=None,
         site_model=None,
-        light_emission_config={},
+        light_emission_config={"events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="illuminator",
         label="photons-test3",
