@@ -183,7 +183,7 @@ class DatabaseHandler:
         """
         Generate compound indexes for the MongoDB collections.
 
-        Indexed bases in the typical query patterns.
+        Indexes based on the typical query patterns.
         """
         collection_names = [
             "telescopes",
