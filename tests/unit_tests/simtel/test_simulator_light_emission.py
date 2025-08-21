@@ -431,8 +431,6 @@ def test_simulate_variable_distances(mock_run_simulation, mock_simulator_variabl
 
     assert mock_run_simulation.call_count == 2
 
-    # plotting removed
-
 
 @patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
 def test_simulate_layout_positions(mock_run_simulation, mock_simulator):
@@ -442,8 +440,6 @@ def test_simulate_layout_positions(mock_run_simulation, mock_simulator):
     mock_simulator.simulate_layout_positions(args_dict)
 
     mock_run_simulation.assert_called_once()
-
-    # plotting removed
 
 
 def test_get_simulation_output_filename(mock_simulator_variable):
