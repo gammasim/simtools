@@ -94,10 +94,6 @@ class FlasherModel(ModelParameter):
             "centroid_offset_deg": {"value": 0.5, "unit": "deg", "type": "float"},
             # Bunch size for LE
             "bunch_size": {"value": 1.0, "type": "float"},
-            # Metadata for PE target and efficiency
-            "pe_nominal": {"value": 150.0, "type": "float"},
-            "pe_range": {"value": [40.0, 400.0], "type": "float_list"},
-            "efficiency_total": {"value": 0.347, "type": "float"},
             # Placeholder for future spectral file usage
             "spectrum_file": {"value": None, "type": "string"},
         }
