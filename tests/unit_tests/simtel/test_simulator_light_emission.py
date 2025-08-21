@@ -1062,3 +1062,54 @@ def test_get_simulation_output_filename_prefix_and_exception():
 
     out = inst._get_simulation_output_filename()
     assert out == "/out/pre_xyzls_variable.simtel.zst"
+
+
+def test_light_emission_default_configuration_schema():
+    cfg = SimulatorLightEmission.light_emission_default_configuration()
+    # Basic type and required keys
+    assert isinstance(cfg, dict)
+    for key in ("zenith_angle", "azimuth_angle", "source_distance", "off_axis_angle", "fadc_bins"):
+        assert key in cfg
+        assert "len" in cfg[key]
+        assert "default" in cfg[key]
+        assert "names" in cfg[key]
+    # Units
+    assert cfg["zenith_angle"]["unit"] == u.deg
+    assert cfg["azimuth_angle"]["unit"] == u.deg
+    assert cfg["source_distance"]["unit"] == u.m
+    assert cfg["off_axis_angle"]["unit"] == u.deg
+    # Defaults have expected types
+    assert cfg["zenith_angle"]["default"].unit == u.deg
+    assert cfg["source_distance"]["default"].unit == u.m
+
+
+def test_flasher_default_configuration_schema():
+    cfg = SimulatorLightEmission.flasher_default_configuration()
+    assert isinstance(cfg, dict)
+    for key in (
+        "events",
+        "photons_per_flasher",
+        "bunch_size",
+        "flasher_position",
+        "flasher_depth",
+        "flasher_inclination",
+        "spectrum",
+        "lightpulse",
+        "angular_distribution",
+        "flasher_pattern",
+    ):
+        assert key in cfg
+        assert "len" in cfg[key]
+        assert "default" in cfg[key]
+        assert "names" in cfg[key]
+
+    # Vector and units checks
+    pos = cfg["flasher_position"]
+    assert pos["len"] == 2
+    assert pos["unit"] == u.cm
+    assert len(pos["default"]) == 2
+    assert pos["default"].unit == u.cm
+
+    assert cfg["flasher_depth"]["unit"] == u.cm
+    assert cfg["flasher_inclination"]["unit"] == u.deg
+    assert cfg["spectrum"]["unit"] == u.nm

@@ -81,7 +81,9 @@ def _time_axis_from_readout(readout, n_samp):
     """
     try:
         dt = (1 / readout.sampling_rate).to(u.ns).value
-    except (AttributeError, ZeroDivisionError, TypeError):
+    except (AttributeError, TypeError):
+        dt = 1.0
+    if not np.isfinite(dt) or dt <= 0:
         dt = 1.0
     return np.arange(int(n_samp)) * float(dt)
 

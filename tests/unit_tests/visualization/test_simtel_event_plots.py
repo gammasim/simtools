@@ -461,3 +461,139 @@ def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
     fig = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, gap=5)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
+
+
+def test__time_axis_from_readout_valid_and_errors():  # pylint:disable=protected-access
+    class R:
+        def __init__(self, sr):
+            self.sampling_rate = sr
+
+    # Valid sampling rate: 1 GHz -> 1 ns steps
+    t = sep._time_axis_from_readout(R(1 * u.GHz), 4)
+    np.testing.assert_array_equal(t, np.array([0.0, 1.0, 2.0, 3.0]))
+
+    # None sampling rate -> default dt=1.0
+    t = sep._time_axis_from_readout(R(None), 3)
+    np.testing.assert_array_equal(t, np.array([0.0, 1.0, 2.0]))
+
+    # Zero division path -> default dt=1.0
+    t = sep._time_axis_from_readout(R(0 * u.Hz), 2)
+    np.testing.assert_array_equal(t, np.array([0.0, 1.0]))
+
+
+def test__select_event_by_type_first_and_index_and_oob(caplog):  # pylint:disable=protected-access
+    evs = ["e0", "e1", "e2"]
+    selector = sep._select_event_by_type(evs)
+    assert selector() == "e0"
+    assert selector(event_index=1) == "e1"
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        assert selector(event_index=99) is None
+    assert any("out of range" in r.message for r in caplog.records)
+
+
+def test_plot_simtel_waveform_pcolormesh_no_r1(monkeypatch, caplog):
+    # Event without R1 data
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        fig = sep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL)
+    assert fig is None
+    assert any("no R1 data for waveform plot" in r.message for r in caplog.records)
+
+
+def test_plot_simtel_step_traces_no_r1(monkeypatch, caplog):
+    ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0, 2.0]), r1_waveforms=None)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL)
+    assert fig is None
+    assert any("no R1 data for traces plot" in r.message for r in caplog.records)
+
+
+def test_plot_simtel_peak_timing_threshold_excludes_all(monkeypatch, caplog):
+    w = np.ones((3, 5), dtype=float)  # sums are 5 each
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        fig = sep.plot_simtel_peak_timing(DUMMY_SIMTEL, sum_threshold=10.0)
+    assert fig is None
+    assert any("sum_threshold" in r.message for r in caplog.records)
+
+
+def test_plot_simtel_time_traces_calibrator_error(monkeypatch):
+    # Prepare event with waveforms but force calibrator to raise, so image=None path is used
+    w = _make_waveforms(6, 12)
+    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    class _CalibErr:
+        def __init__(self, *a, **k):
+            pass
+
+        def __call__(self, *a, **k):
+            raise ValueError("calib failed")
+
+    # Monkeypatch the symbol used inside sep
+    monkeypatch.setattr(sep, "CameraCalibrator", _CalibErr)
+
+    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=2)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_event_image_distance_float(monkeypatch):
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = sep.plot_simtel_event_image(DUMMY_SIMTEL, distance=123.4)
+    assert isinstance(fig, plt.Figure)
+    assert any("distance: 123.4" in a.get_text() for a in fig.axes[0].texts)
+    plt.close(fig)
+
+
+def test_plot_simtel_waveform_pcolormesh_defaults(monkeypatch):
+    # Cover pixel_step=None branch
+    w = _make_waveforms(5, 10)
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = sep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL, pixel_step=None)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test_plot_simtel_step_traces_defaults(monkeypatch):
+    # Cover max_pixels=None branch
+    w = _make_waveforms(7, 9)
+    ev, tel_id = _fake_event(r1_waveforms=w)
+    src = _fake_source_with_event(ev, tel_id)
+
+    _install_fake_ctapipe(monkeypatch, src)
+
+    fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=3, max_pixels=None)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+def test__histogram_edges_zero_bins():  # pylint:disable=protected-access
+    edges = sep._histogram_edges(5, timing_bins=0)
+    np.testing.assert_array_equal(edges, np.arange(-0.5, 5.5, 1.0))
