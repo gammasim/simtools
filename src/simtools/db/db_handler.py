@@ -179,6 +179,27 @@ class DatabaseHandler:
         else:
             raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
 
+    def generate_compound_indexes(self):
+        """
+        Generate compound indexes for the MongoDB collections.
+
+        Indexed bases in the typical query patterns.
+        """
+        collection_names = [
+            "telescopes",
+            "sites",
+            "configuration_sim_telarray",
+            "configuration_corsika",
+            "calibration_devices",
+        ]
+        for collection_name in collection_names:
+            db_collection = self.get_collection(self._get_db_name(), collection_name)
+            db_collection.create_index(
+                [("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]
+            )
+        db_collection = self.get_collection(self._get_db_name(), "production_tables")
+        db_collection.create_index([("collection", 1), ("model_version", 1)])
+
     def get_model_parameter(
         self,
         parameter,
