@@ -10,6 +10,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
+from simtools.io.io_handler import IOHandler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
@@ -810,6 +811,9 @@ def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch
 
 def test_photons_per_run_flasher_model_non_test(tmp_path):
     # When flasher model is provided and not in test mode, use model value
+    IOHandler().set_paths(
+        output_path=str(tmp_path), data_path=str(tmp_path), model_path=str(tmp_path)
+    )
     tel = MagicMock()
     tel.write_sim_telarray_config_file = MagicMock()
     flasher = MagicMock()
@@ -832,7 +836,9 @@ def test_photons_per_run_flasher_model_non_test(tmp_path):
 
 
 def test_photons_per_run_flasher_model_test_mode(tmp_path):
-    # When flasher model is provided and in test mode, force 1e8 and don't query model
+    IOHandler().set_paths(
+        output_path=str(tmp_path), data_path=str(tmp_path), model_path=str(tmp_path)
+    )
     tel = MagicMock()
     tel.write_sim_telarray_config_file = MagicMock()
     flasher = MagicMock()
