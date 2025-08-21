@@ -104,6 +104,12 @@ class SimulatorLightEmission(SimtelRunner):
         # Runtime variables
         self.distance = None
 
+    def _get_prefix(self) -> str:
+        prefix = self.light_emission_config.get("output_prefix", "")
+        if prefix is not None:
+            return f"{prefix}_"
+        return ""
+
     def _infer_application(self) -> tuple[str, str]:
         """Infer the LightEmission application and mode from type/setup.
 
@@ -348,11 +354,9 @@ class SimulatorLightEmission(SimtelRunner):
         )
         telpos_file = self._write_telpos_file()
 
-        app_name, app_mode = self._infer_application()
+        app_name, _ = self._infer_application()
 
         parts: list[str] = []
-        # cleanup previous outputs
-        parts.append(f"rm {self.output_directory}/{app_name}_{app_mode}.simtel.zst\n")
         # application path
         parts.append(str(self._simtel_path.joinpath("sim_telarray/LightEmission/")))
         parts.append(f"/{app_name}")
@@ -544,8 +548,10 @@ class SimulatorLightEmission(SimtelRunner):
             command += super().get_config_option("Bypass_Optics", "1")
 
         command += super().get_config_option("power_law", "2.68")
+        app_name, app_mode = self._infer_application()
+        pref = self._get_prefix()
         command += super().get_config_option(
-            "input_file", f"{self.output_directory}/{self._infer_application()[0]}.iact.gz"
+            "input_file", f"{self.output_directory}/{app_name}.iact.gz"
         )
         dist_suffix = ""
         if self.light_source_type == "variable":
@@ -557,19 +563,11 @@ class SimulatorLightEmission(SimtelRunner):
                 dist_suffix = ""
         command += super().get_config_option(
             "output_file",
-            (
-                f"{self.output_directory}/"
-                f"{self._infer_application()[0]}_{self._infer_application()[1]}"
-                f"{dist_suffix}.simtel.zst"
-            ),
+            f"{self.output_directory}/{pref}{app_name}_{app_mode}{dist_suffix}.simtel.zst",
         )
         command += super().get_config_option(
             "histogram_file",
-            (
-                f"{self.output_directory}/"
-                f"{self._infer_application()[0]}_{self._infer_application()[1]}"
-                f"{dist_suffix}.ctsim.hdata\n"
-            ),
+            f"{self.output_directory}/{pref}{app_name}_{app_mode}{dist_suffix}.ctsim.hdata\n",
         )
 
         # Remove the default sim_telarray configuration directories
@@ -629,10 +627,9 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
         dist_val = int(self._get_distance_for_plotting().to_value(u.m))
-        command += (
-            f" -p {postscript_dir}/{self._infer_application()[0]}_{self._infer_application()[1]}"
-            f"_d_{dist_val}.ps"
-        )
+        app_name, app_mode = self._infer_application()
+        pref = self._get_prefix()
+        command += f" -p {postscript_dir}/{pref}{app_name}_{app_mode}_d_{dist_val}.ps"
         simtel_file = Path(self._get_simulation_output_filename())
         command += f" {simtel_file}\n"
         return command
@@ -658,6 +655,12 @@ class SimulatorLightEmission(SimtelRunner):
         _script_file = _script_dir.joinpath(f"{self._infer_application()[0]}-lightemission.sh")
         self._logger.debug(f"Run bash script - {_script_file}")
 
+        target_out = Path(self._get_simulation_output_filename())
+        if target_out.exists():
+            msg = f"Simtel output file exists already, cancelling simulation: {target_out}"
+            self._logger.error(msg)
+            raise FileExistsError(msg)
+
         command_le = self._make_light_emission_script()
         command_simtel = self._make_simtel_script()
 
@@ -665,11 +668,15 @@ class SimulatorLightEmission(SimtelRunner):
             file.write("#!/usr/bin/env bash\n")
 
             file.write(f"{command_le}\n\n")
+            app_name, _ = self._infer_application()
             file.write(
-                f"[ -s '{self.output_directory}/{self._infer_application()[0]}.iact.gz' ] || "
+                f"[ -s '{self.output_directory}/{app_name}.iact.gz' ] || "
                 f"{{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }}\n\n"
             )
             file.write(f"{command_simtel}\n\n")
+
+            # Cleanup intermediate IACT file at the end of the run
+            file.write(f"rm -f '{self.output_directory}/{app_name}.iact.gz'\n\n")
 
             if generate_postscript:
                 self._logger.debug("Write out postscript file")
@@ -692,7 +699,8 @@ class SimulatorLightEmission(SimtelRunner):
             except Exception:  # pylint:disable=broad-except
                 dist_suffix = ""
         app_name, app_mode = self._infer_application()
-        return f"{self.output_directory}/{app_name}_{app_mode}{dist_suffix}.simtel.zst"
+        pref = self._get_prefix()
+        return f"{self.output_directory}/{pref}{app_name}_{app_mode}{dist_suffix}.simtel.zst"
 
     def _get_distance_for_plotting(self):
         """Get the distance to be used for plotting as an astropy Quantity.
