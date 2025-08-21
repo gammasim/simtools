@@ -182,7 +182,7 @@ def calculate_circular_mean(angles):
     return np.arctan2(sin_sum, cos_sum)
 
 
-@u.quantity_input(angle_min=u.rad, angle_max=u.rad)
+@u.quantity_input(angle_max=u.rad, angle_min=u.rad)
 def solid_angle(angle_max, angle_min=0 * u.rad):
     """
     Calculate the solid angle subtended by a given range of angles.
