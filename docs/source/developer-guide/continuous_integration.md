@@ -31,7 +31,7 @@ Consistent code style is enforced by running the following linters:
 - linting of pyproject.toml
 - linting of CITATION.cff
 - running pylint on the code
-- linting docker files using [hadolint](https://github.com/hadolint/hadolint)
+- linting Docker files using [hadolint](https://github.com/hadolint/hadolint)
 - validate env files
 - check for natural language
 
