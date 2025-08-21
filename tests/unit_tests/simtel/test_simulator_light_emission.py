@@ -568,7 +568,7 @@ def test_add_flasher_command_options_branch():
         mst.assert_called_once()
 
 
-def test_prepare_ff_atmosphere_files_creates_aliases(tmp_path, caplog):
+def test_prepare_flasher_atmosphere_files_creates_aliases(tmp_path, caplog):
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
     inst._telescope_model = MagicMock()
@@ -578,7 +578,7 @@ def test_prepare_ff_atmosphere_files_creates_aliases(tmp_path, caplog):
     src.write_text("atmcontent", encoding="utf-8")
 
     with caplog.at_level(logging.DEBUG, logger=SIM_MOD_PATH):
-        rid = inst._prepare_ff_atmosphere_files(tmp_path)
+        rid = inst._prepare_flasher_atmosphere_files(tmp_path)
 
     assert rid == 1
     for name in (ATM_ALIAS1, ATM_ALIAS2):
@@ -588,7 +588,7 @@ def test_prepare_ff_atmosphere_files_creates_aliases(tmp_path, caplog):
         assert alias.read_text(encoding="utf-8") == "atmcontent"
 
 
-def test_prepare_ff_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
+def test_prepare_flasher_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
     inst._telescope_model = MagicMock()
@@ -608,7 +608,7 @@ def test_prepare_ff_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
 
     monkeypatch.setattr(shutil, "copy2", fake_copy2, raising=True)
 
-    rid = inst._prepare_ff_atmosphere_files(tmp_path)
+    rid = inst._prepare_flasher_atmosphere_files(tmp_path)
     assert rid == 1
 
     a1 = tmp_path / ATM_ALIAS1
@@ -626,7 +626,7 @@ def test_build_altitude_atmo_block_ff1m(tmp_path, monkeypatch):
     inst._logger = logging.getLogger(SIM_MOD_PATH)
     inst._simtel_path = Path("/simroot")
 
-    monkeypatch.setattr(inst, "_prepare_ff_atmosphere_files", lambda *_: 42)
+    monkeypatch.setattr(inst, "_prepare_flasher_atmosphere_files", lambda *_: 42)
 
     block = inst._build_altitude_atmo_block("ff-1m", tmp_path, 2150 * u.m, tmp_path / "telpos.dat")
 
@@ -726,7 +726,7 @@ def test_make_simtel_script_includes_bypass_for_flasher():
     assert cmd == expected
 
 
-def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypatch):
+def test_prepare_flasher_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypatch):
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
     inst._telescope_model = MagicMock()
@@ -762,7 +762,7 @@ def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypat
     monkeypatch.setattr(Path, "symlink_to", fake_symlink_to, raising=True)
 
     # Run
-    rid = inst._prepare_ff_atmosphere_files(tmp_path)
+    rid = inst._prepare_flasher_atmosphere_files(tmp_path)
 
     # Assertions
     assert rid == 1
@@ -777,7 +777,7 @@ def test_prepare_ff_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypat
     assert a2.read_text(encoding="utf-8") == "atmcontent3"
 
 
-def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch, caplog):
+def test_prepare_flasher_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch, caplog):
     # Instance with mocked logger and telescope model
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
@@ -800,7 +800,7 @@ def test_prepare_ff_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch
     )
 
     with caplog.at_level(logging.WARNING, logger=SIM_MOD_PATH):
-        rid = inst._prepare_ff_atmosphere_files(tmp_path)
+        rid = inst._prepare_flasher_atmosphere_files(tmp_path)
 
     assert rid == 1
     # Two aliases attempted -> two warnings, one per destination name
