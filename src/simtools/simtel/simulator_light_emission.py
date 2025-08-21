@@ -303,7 +303,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         return telpos_file
 
-    def _prepare_ff_atmosphere_files(self, config_directory: Path) -> int:
+    def _prepare_flasher_atmosphere_files(self, config_directory: Path) -> int:
         """Prepare canonical atmosphere aliases for ff-1m and return model id 1."""
         atmo_name = self._telescope_model.get_parameter_value("atmospheric_profile")
         self._logger.debug(f"Using atmosphere profile: {atmo_name}")
@@ -388,7 +388,7 @@ class SimulatorLightEmission(SimtelRunner):
             seg.append(f" -I{self._simtel_path.joinpath('sim_telarray/cfg')}")
             seg.append(f" -I{config_directory}")
             seg.append(f" --altitude {corsika_observation_level.to(u.m).value}")
-            atmo_id = self._prepare_ff_atmosphere_files(config_directory)
+            atmo_id = self._prepare_flasher_atmosphere_files(config_directory)
             seg.append(f" --atmosphere {atmo_id}")
             return "".join(seg)
         # default path (not used for flasher now, but kept for completeness)
