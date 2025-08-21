@@ -7,11 +7,12 @@ applications:
     output_path: simtools-output
     site: North
     telescope: MSTN-04
-    plot: true
     test: true
   integration_tests:
   - output_file: logfile.log
-  - output_file: MSTN-04_ff-1m_flasher.pdf
+  - output_file: ff-1m_flasher.simtel.zst
+  - output_file: ff-1m_flasher.ctsim.hdata
+  - output_file: ff-1m.iact.gz
   model_version_use_current: true
   test_name: run-flasher
 schema_name: application_workflow.metaschema
