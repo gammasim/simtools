@@ -5,7 +5,7 @@ Plot sim_telarray event products using the simtools visualization utilities.
 
 This application produces figures from one or more sim_telarray (.simtel.gz) files
 by calling functions in `simtools.visualization.simtel_event_plots`. It is meant to
-run after simulations (e.g., simtools-simulate-flasher, simtools-simulate-light-emission).
+run after simulations (e.g., simtools-simulate-flasher, simtools-simulate-illuminator).
 
 What it does
 ------------
@@ -60,10 +60,10 @@ Examples
 1) Camera image and time traces for a single file, save a PDF:
 
    simtools-plot-simtel-events \
-     --simtel_files output/light_emission/xyzls.simtel.gz \
+     --simtel_files output/simulate_illuminator/xyzls.simtel.gz \
      --plots event_image time_traces \
      --tel_id 1 \
-     --output_file light_emission_inspect
+     --output_file simulate_illuminator_inspect
 
 2) All plots for multiple files, PNGs and PDFs:
 
