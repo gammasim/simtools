@@ -42,12 +42,10 @@ light_source_setup (str, optional)
     - "layout" for actual telescope positions.
 model_version (str, optional)
     Version of the simulation model.
-light_source_type (str, optional)
-    Select calibration light source type: illuminator (default).
-    This controls the pre-compiled (sim_telarray) application used to run the
-    light emission package (xyzls).
 off_axis_angle (float, optional)
     Off axis angle for light source direction.
+events (int, optional)
+    Number of events to simulate.
 
 
 Example
@@ -131,14 +129,7 @@ def _parse(label):
         default=0.0,
         required=False,
     )
-    config.parser.add_argument(
-        "--light_source_type",
-        help="Select calibration light source type: illuminator",
-        type=str,
-        default="illuminator",
-        choices=["illuminator"],
-        required=False,
-    )
+
     config.parser.add_argument(
         "--light_source_setup",
         help="Select calibration light source positioning/setup: \
@@ -160,6 +151,20 @@ def _parse(label):
         type=str,
         default=None,
         required=True,
+    )
+    config.parser.add_argument(
+        "--events",
+        help="Number of events to simulate",
+        type=int,
+        default=1,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--output_prefix",
+        help="Prefix for output files (default: empty)",
+        type=str,
+        default=None,
+        required=False,
     )
     return config.initialize(
         db_config=True,
@@ -193,7 +198,7 @@ def light_emission_configs(args_dict):
         Default light emission configuration.
     """
     if args_dict["light_source_setup"] == "variable":
-        return {
+        cfg = {
             "x_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["x_position"]},
             "y_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["y_position"]},
             "z_pos": {
@@ -209,7 +214,9 @@ def light_emission_configs(args_dict):
                 "names": ["direction", "cx,cy,cz"],
             },
         }
-    return {}
+        args_dict.update(cfg)
+        return args_dict
+    return args_dict
 
 
 def main():
@@ -217,7 +224,7 @@ def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     light_emission_config = light_emission_configs(args_dict)
-
+    print(light_emission_config)
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
@@ -244,7 +251,7 @@ def main():
         light_emission_config=light_emission_config,
         light_source_setup=args_dict["light_source_setup"],
         simtel_path=args_dict["simtel_path"],
-        light_source_type=args_dict["light_source_type"],
+        light_source_type="illuminator",
         label=label,
         test=args_dict["test"],
     )
