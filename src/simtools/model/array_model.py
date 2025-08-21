@@ -1,6 +1,7 @@
 """Definition of the ArrayModel class."""
 
 import logging
+import tarfile
 from pathlib import Path
 
 import astropy.units as u
@@ -301,6 +302,33 @@ class ArrayModel:
                 self.label, f"model/{self.model_version}"
             )
         return self._config_file_directory
+
+    def pack_model_files(self):
+        """
+        Pack all model files into a tar.gz archive.
+
+        Returns
+        -------
+        Path
+            Path of the packed model files archive.
+        """
+        model_files = list(Path(self.get_config_directory()).rglob("*"))
+        if not model_files:
+            self._logger.warning("No model files found to pack.")
+            return None
+
+        archive_name = (
+            self.io_handler.get_output_directory(self.label, f"model/{self.model_version}")
+            / "model_files.tar.gz"
+        )
+
+        base = Path(self.get_config_directory())
+        with tarfile.open(archive_name, "w:gz") as tar:
+            for file in model_files:
+                tar.add(file, arcname=file.relative_to(base))
+
+        self._logger.info(f"Packed model files into {archive_name}")
+        return archive_name
 
     def _load_array_element_positions_from_file(
         self, array_elements_file: str | Path, site: str
