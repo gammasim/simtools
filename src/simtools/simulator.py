@@ -664,6 +664,7 @@ class Simulator:
         # Group files by model version
         for model in self.array_models:
             model_version = model.model_version
+            model_files = gen.enforce_list_type(model.pack_model_files())
 
             # Filter files for this model version
             model_logs = [f for f in log_files if model_version in f]
@@ -675,8 +676,8 @@ class Simulator:
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
 
                 with tarfile.open(tar_file_path, "w:gz") as tar:
-                    # Add all relevant log, histogram, and CORSIKA log files to the tarball
-                    files_to_tar = model_logs + model_hists + model_corsika_logs
+                    # Add all relevant model, log, histogram, and CORSIKA log files to the tarball
+                    files_to_tar = model_logs + model_hists + model_corsika_logs + model_files
                     for file_to_tar in files_to_tar:
                         tar.add(file_to_tar, arcname=Path(file_to_tar).name)
 
