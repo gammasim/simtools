@@ -72,7 +72,6 @@ class FlasherModel(ModelParameter):
     def _inject_mst_defaults_if_missing(self):
         """Provide dummy defaults (here NectarCam) when flasher collection is absent."""
         defaults = {
-            # Use robust photon count for LE; PE targets kept as metadata.
             "photons_per_flasher": {"value": 2.5e6, "type": "float"},
             # Position near optical axis (cm)
             "flasher_position": {
