@@ -79,6 +79,7 @@ scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.co
 scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
 scripts.simtools-db-add-simulation-model-from-repository-to-db = "simtools.applications.db_add_simulation_model_from_repository_to_db:main"
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
+scripts.simtools-db-generate-compound-indexes = "simtools.applications.db_generate_compound_indexes:main"
 scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
