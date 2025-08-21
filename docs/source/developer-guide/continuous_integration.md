@@ -12,7 +12,7 @@ There is a scheduled run of unit tests over the main branch each night, which in
 
 :::{important}
 Simtools uses the CTAO sonar quality gates for code quality. Passing those gates is a requirement for merging code into the main branch.
-See the [simtools sonar project page](https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w) for the current status.
+See the [simtools sonar project page](https://sonar-ctao.zeuthen.desy.de/tutorials?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14) for the current status.
 :::
 
 ## Integration tests
