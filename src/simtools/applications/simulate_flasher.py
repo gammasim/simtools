@@ -8,7 +8,7 @@ Run the application in the command line.
 Example Usage
 -------------
 
-1. Simulate flashers for a telescope (single-mirror flasher model used for all):
+1. Simulate flashers for a telescope:
 
     .. code-block:: console
 
