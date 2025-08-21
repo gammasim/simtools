@@ -79,9 +79,8 @@ class SimulatorLightEmission(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
 
-        # LightEmission - defaults
-        self._rep_number = 0
-        self.runs = 1
+        self.events = self.light_emission_config["events"]
+
         # photons per run
         if self._calibration_model is not None:
             self.photons_per_run = (
@@ -431,7 +430,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = flasher_distance.to(u.cm).value
         spec_nm = int(spectrum.to(u.nm).value)
 
-        command += f" --events {self.runs}"
+        command += f" --events {self.events}"
         command += f" --photons {self.photons_per_run}"
         command += f" --bunchsize {bunch_size}"
         command += f" --xy {fx},{fy}"

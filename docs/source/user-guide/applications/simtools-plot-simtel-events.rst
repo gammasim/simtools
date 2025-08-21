@@ -1,9 +1,9 @@
 simtools-plot-simtel-events
 =================================
 
-Plot sim_telarray event products using simtools visualization utilities. This app decouples
-plotting from simulation, so you can run it after completing simulations like
-``simtools-simulate-flasher`` or ``simtools-simulate-light-emission``.
+Plot sim_telarray event products using simtools visualization utilities. This app
+can be run after simulations as
+``simtools-simulate-flasher`` or ``simtools-simulate-illuminator``.
 
 Usage
 -----
@@ -44,10 +44,10 @@ Examples
 .. code-block:: console
 
     simtools-plot-simtel-events \
-      --simtel_files simtools-output/light_emission/xyzls.simtel.gz \
+      --simtel_files simtools-output/simulate_illuminator/xyzls.simtel.gz \
       --plots event_image time_traces \
       --tel_id 1 \
-      --output_file light_emission_inspect
+      --output_file illuminator_inspect
 
 2) All plots for multiple files, PNGs and PDFs:
 
