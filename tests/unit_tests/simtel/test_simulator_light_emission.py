@@ -168,7 +168,6 @@ def test_make_light_emission_script(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f"rm {mock_output_path}/xyzls_layout.simtel.zst\n"
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
@@ -197,7 +196,6 @@ def test_make_light_emission_script_variable(
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
-        f"rm {mock_output_path}/xyzls_variable.simtel.zst\n"
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
         f" --telpos-file {mock_output_path}/telpos.dat"
@@ -344,16 +342,33 @@ def test_prepare_script(
     mock_make_light_emission_script.assert_called_once()
     mock_make_simtel_script.assert_called_once()
 
+    check_line = (
+        f"[ -s '{mock_simulator.output_directory}/{mock_simulator._infer_application()[0]}.iact.gz' ] || "
+        "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }\n\n"
+    )
+    cleanup_line = f"rm -f '{mock_simulator.output_directory}/{mock_simulator._infer_application()[0]}.iact.gz'\n\n"
     expected_calls = [
         "#!/usr/bin/env bash\n\n",
         "light_emission_script_command\n\n",
+        check_line,
         "simtel_script_command\n\n",
+        cleanup_line,
         "# Generate postscript\n\n",
         "postscript_command\n\n",
         "# End\n\n",
     ]
     for call_args, expected_content in zip(mock_file.write.call_args_list, expected_calls):
         assert call_args[0][0] == expected_content
+
+
+def test_prepare_script_raises_if_output_exists(mock_simulator, tmp_path):
+    mock_simulator.output_directory = tmp_path
+
+    expected_out = tmp_path / "xyzls_layout.simtel.zst"
+    expected_out.write_text("", encoding="utf-8")
+
+    with pytest.raises(FileExistsError):
+        mock_simulator.prepare_script(generate_postscript=False)
 
 
 def test_remove_line_from_config(mock_simulator):

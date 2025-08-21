@@ -70,6 +70,14 @@ def _parse(label):
         default=1,
         required=False,
     )
+    config.parser.add_argument(
+        "--output_prefix",
+        help="Prefix for output files (default: empty)",
+        type=str,
+        default=None,
+        required=False,
+    )
+
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version"],
