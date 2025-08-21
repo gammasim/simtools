@@ -659,34 +659,30 @@ class SimulatorLightEmission(SimtelRunner):
         """
         # Flasher: use flasher_depth from model if available
         if self.light_source_type == "flasher" and self._flasher_model is not None:
-            d_cm = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
-            return d_cm.to(u.m)
+            return self._flasher_model.get_parameter_value_with_unit("flasher_depth").to(u.m)
 
-        cfg = self.light_emission_config or {}
-        z_entry = None
-        if "z_pos" in cfg and isinstance(cfg["z_pos"], dict):
-            z_default = cfg["z_pos"].get("default")
-            if isinstance(z_default, list | tuple) and z_default:
-                z_entry = z_default[0]
-            else:
-                z_entry = z_default
-
-        if z_entry is not None:
-            if isinstance(z_entry, u.Quantity):
-                return z_entry.to(u.m)
+        def _as_meters(val):
+            if isinstance(val, u.Quantity):
+                return val.to(u.m)
             try:
-                return float(z_entry) * u.m
+                return float(val) * u.m
             except (TypeError, ValueError):
-                pass
+                return None
 
-        # Fallback to self.distance if already computed
-        if getattr(self, "distance", None) is not None:
-            if isinstance(self.distance, u.Quantity):
-                return self.distance
-            try:
-                return float(self.distance) * u.m
-            except Exception:  # pylint:disable=broad-except
-                pass
+        # Try z_pos from configuration (first element if list/tuple)
+        cfg = self.light_emission_config or {}
+        z = cfg.get("z_pos")
+        if isinstance(z, dict):
+            z_def = z.get("default")
+            z_val = z_def[0] if isinstance(z_def, list | tuple) and z_def else z_def
+            z_q = _as_meters(z_val)
+            if z_q is not None:
+                return z_q
+
+        # Fallback to self.distance
+        d_q = _as_meters(getattr(self, "distance", None))
+        if d_q is not None:
+            return d_q
 
         # Safe default when distance is not available
         return 0 * u.m

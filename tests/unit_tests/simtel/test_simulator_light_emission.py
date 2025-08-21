@@ -22,6 +22,41 @@ SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
 DUMMY_SIMTEL = "dummy.simtel.zst"
 ATM_ALIAS1 = "atmprof1.dat"
 ATM_ALIAS2 = "atm_profile_model_1.dat"
+SIMTEL_BIN = "/path/to/sim_telarray/bin/sim_telarray/"
+CONFIG_DIR = "/path/to/config/"
+CONFIG_FILE = "/path/to/config/config.cfg"
+PATH_OPEN_TARGET = "pathlib.Path.open"
+OUT_DIR = "/directory"
+
+
+def _prepare_inst_with_common_mocks(
+    inst,
+    *,
+    light_source_setup: str = "layout",
+    light_source_type: str | None = None,
+):
+    """Prepare a SimulatorLightEmission instance with common test mocks."""
+    inst.light_source_setup = light_source_setup
+    inst.output_directory = OUT_DIR
+    inst.light_emission_config = {"output_prefix": None, "events": 1}
+
+    inst._simtel_path = MagicMock()
+    inst._simtel_path.joinpath.return_value = SIMTEL_BIN
+
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.config_file_directory = CONFIG_DIR
+    type(inst._telescope_model).config_file_path = PropertyMock(return_value=CONFIG_FILE)
+    inst._telescope_model.get_parameter_value.side_effect = (
+        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
+    )
+
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+
+    if light_source_type is not None:
+        inst.light_source_type = light_source_type
+
+    return inst
 
 
 @pytest.fixture(name="label")
@@ -246,17 +281,16 @@ def test_make_simtel_script(mock_simulator):
             return_value=([0, 0, 1], [76.980826, 180.17047, 0, 0])
         )
 
-        mock_simulator._simtel_path.joinpath.return_value = (
-            "/path/to/sim_telarray/bin/sim_telarray/"
-        )
-        path_to_config_directory = "/path/to/config/"
+        # Set paths and config
+        mock_simulator._simtel_path.joinpath.return_value = SIMTEL_BIN
+        path_to_config_directory = CONFIG_DIR
         mock_simulator._telescope_model.config_file_directory = path_to_config_directory
-        path_to_config_file = "/path/to/config/config.cfg"
+        path_to_config_file = CONFIG_FILE
         config_file_path_mock = PropertyMock(return_value=path_to_config_file)
         type(mock_simulator._telescope_model).config_file_path = config_file_path_mock
 
         # Patch Path.open to mock file handling for the config file
-        with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)) as mock_path_open:
+        with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)) as mock_path_open:
 
             def get_telescope_model_param(param):
                 if param == "atmospheric_transmission":
@@ -274,23 +308,23 @@ def test_make_simtel_script(mock_simulator):
                 "999" if param == "corsika_observation_level" else MagicMock()
             )
 
-            mock_simulator.output_directory = "/directory"
+            mock_simulator.output_directory = OUT_DIR
             mock_simulator.light_emission_config = {"output_prefix": None, "events": 1}
 
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
-                "/path/to/sim_telarray/bin/sim_telarray/ "
-                "-I/path/to/config/ -I/path/to/sim_telarray/bin/sim_telarray/ "
-                "-c /path/to/config/config.cfg "
+                f"{SIMTEL_BIN} "
+                f"-I{CONFIG_DIR} -I{SIMTEL_BIN} "
+                f"-c {CONFIG_FILE} "
                 "-DNUM_TELESCOPES=1  "
                 "-C altitude=999.0 -C atmospheric_transmission=atm_test "
                 "-C TRIGGER_TELESCOPES=1 "
                 "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
                 "-C MAXIMUM_TELESCOPES=1 "
                 "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
-                "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
-                "-C output_file=/directory/xyzls_layout.simtel.zst "
-                "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
+                f"-C power_law=2.68 -C input_file={OUT_DIR}/xyzls.iact.gz "
+                f"-C output_file={OUT_DIR}/xyzls_layout.simtel.zst "
+                f"-C histogram_file={OUT_DIR}/xyzls_layout.ctsim.hdata\n"
             )
 
             command = mock_simulator._make_simtel_script()
@@ -678,35 +712,17 @@ def test_build_source_specific_block_branches(tmp_path, caplog, monkeypatch):
 def test_make_simtel_script_includes_bypass_for_flasher():
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst.light_source_type = "flasher"
-    inst.light_source_setup = "layout"
-    inst.output_directory = "/directory"
-    inst.light_emission_config = {"output_prefix": None, "events": 1}
-
-    inst._simtel_path = MagicMock()
-    inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
-
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.config_file_directory = "/path/to/config/"
-    type(inst._telescope_model).config_file_path = PropertyMock(
-        return_value="/path/to/config/config.cfg"
-    )
-    inst._telescope_model.get_parameter_value.side_effect = (
-        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
-    )
-
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+    _prepare_inst_with_common_mocks(inst, light_source_type="flasher")
 
     mock_file_content = "dummy"
-    with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)):
+    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
         cmd = inst._make_simtel_script()
 
     expected = (
         "SIM_TELARRAY_CONFIG_PATH='' "
-        "/path/to/sim_telarray/bin/sim_telarray/ "
-        "-I/path/to/config/ -I/path/to/sim_telarray/bin/sim_telarray/ "
-        "-c /path/to/config/config.cfg "
+        f"{SIMTEL_BIN} "
+        f"-I{CONFIG_DIR} -I{SIMTEL_BIN} "
+        f"-c {CONFIG_FILE} "
         "-DNUM_TELESCOPES=1  "
         "-C altitude=999.0 -C atmospheric_transmission=atm_test "
         "-C TRIGGER_TELESCOPES=1 "
@@ -714,9 +730,9 @@ def test_make_simtel_script_includes_bypass_for_flasher():
         "-C MAXIMUM_TELESCOPES=1 "
         "-C telescope_theta=0 -C telescope_phi=0 "
         "-C Bypass_Optics=1 "
-        "-C power_law=2.68 -C input_file=/directory/ff-1m.iact.gz "
-        "-C output_file=/directory/ff-1m_flasher.simtel.zst "
-        "-C histogram_file=/directory/ff-1m_flasher.ctsim.hdata\n"
+        f"-C power_law=2.68 -C input_file={OUT_DIR}/ff-1m.iact.gz "
+        f"-C output_file={OUT_DIR}/ff-1m_flasher.simtel.zst "
+        f"-C histogram_file={OUT_DIR}/ff-1m_flasher.ctsim.hdata\n"
     )
 
     assert cmd == expected
@@ -884,31 +900,14 @@ def test_get_prefix_non_none_returns_with_underscore():
 def test_make_simtel_script_variable_type_sets_zero_angles():
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
+    _prepare_inst_with_common_mocks(inst)
     inst.light_source_type = "variable"
-    inst.light_source_setup = "layout"
-    inst.output_directory = "/directory"
-    inst.light_emission_config = {"output_prefix": None, "events": 1}
-
-    inst._simtel_path = MagicMock()
-    inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
-
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.config_file_directory = "/path/to/config/"
-    type(inst._telescope_model).config_file_path = PropertyMock(
-        return_value="/path/to/config/config.cfg"
-    )
-    inst._telescope_model.get_parameter_value.side_effect = (
-        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
-    )
-
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
 
     # Avoid calling real calibration method
     inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
     mock_file_content = "dummy"
-    with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)):
+    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
         cmd = inst._make_simtel_script()
 
     assert "-C telescope_theta=0 -C telescope_phi=0 " in cmd
@@ -917,25 +916,9 @@ def test_make_simtel_script_variable_type_sets_zero_angles():
 def test_make_simtel_script_variable_dist_suffix_exception():
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
+    _prepare_inst_with_common_mocks(inst)
     inst.light_source_type = "illuminator"
     inst.light_source_setup = "variable"
-    inst.output_directory = "/directory"
-    inst.light_emission_config = {"output_prefix": None, "events": 1}
-
-    inst._simtel_path = MagicMock()
-    inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
-
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.config_file_directory = "/path/to/config/"
-    type(inst._telescope_model).config_file_path = PropertyMock(
-        return_value="/path/to/config/config.cfg"
-    )
-    inst._telescope_model.get_parameter_value.side_effect = (
-        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
-    )
-
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
 
     # Force exception path for distance suffix
     inst._get_distance_for_plotting = MagicMock(side_effect=Exception("boom"))
@@ -943,7 +926,7 @@ def test_make_simtel_script_variable_dist_suffix_exception():
     inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
     mock_file_content = "dummy"
-    with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)):
+    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
         cmd = inst._make_simtel_script()
 
     assert "-C output_file=/directory/xyzls_variable.simtel.zst " in cmd
