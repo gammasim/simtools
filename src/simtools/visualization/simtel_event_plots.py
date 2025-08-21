@@ -28,7 +28,21 @@ R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 
 
 def _select_event_by_type(source):
-    """Return the first event from the source (default), or a specific event by index."""
+    """
+    Build an event selector for a ctapipe EventSource.
+
+    Parameters
+    ----------
+    source : ctapipe.io.EventSource
+        Iterable event source.
+
+    Returns
+    -------
+    callable
+        A function ``select_event(event_index: int | None) -> Any`` that returns
+        the first event (when ``event_index`` is None) or the event at the given
+        index. Returns ``None`` if no event is available or the index is out of range.
+    """
 
     def select_event(event_index=None):
         if event_index is None:
@@ -46,9 +60,22 @@ def _select_event_by_type(source):
 
 def plot_simtel_event_image(filename, distance=None, event_index=None):
     """
-    Read in a sim_telarray file and plot DL1 image via ctapipe.
+    Read a sim_telarray file and plot the DL1 image for one event via ctapipe.
 
-    Returns matplotlib.figure.Figure or None.
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    distance : astropy.units.Quantity | float | None, optional
+        Distance to annotate in the plot. If a Quantity, interpreted in meters.
+        If not provided, no unit conversion is attempted.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+
+    Returns
+    -------
+    matplotlib.figure.Figure | None
+        The created figure, or ``None`` if no suitable event/image is available.
     """
     # pylint:disable=import-outside-toplevel
     import numpy as np
@@ -120,7 +147,25 @@ def plot_simtel_time_traces(
     n_pixels: int = 3,
     event_index: int | None = None,
 ):
-    """Plot time traces (R1 waveforms) for a few camera pixels of a selected event."""
+    """
+    Plot R1 time traces for a few pixels of one event.
+
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None, optional
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    n_pixels : int, optional
+        Number of pixels with highest signal to plot. Default is 3.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+
+    Returns
+    -------
+    matplotlib.figure.Figure | None
+        The created figure, or ``None`` if R1 waveforms are unavailable.
+    """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.calib import CameraCalibrator
@@ -187,7 +232,27 @@ def plot_simtel_waveform_pcolormesh(
     event_index: int | None = None,
     pixel_step: int | None = None,
 ):
-    """Pseudocolor image of waveforms (samples vs pixel id) for one event."""
+    """
+    Create a pseudocolor image of R1 waveforms (sample index vs. pixel id).
+
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None, optional
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    vmax : float | None, optional
+        Upper limit for color normalization. If None, determined automatically.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+    pixel_step : int | None, optional
+        Step between plotted pixel ids (e.g., 1 plots all, 2 plots every second pixel).
+
+    Returns
+    -------
+    matplotlib.figure.Figure | None
+        The created figure, or ``None`` if R1 waveforms are unavailable.
+    """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.io import EventSource
@@ -244,7 +309,27 @@ def plot_simtel_step_traces(
     max_pixels: int | None = None,
     event_index: int | None = None,
 ):
-    """Plot step-style traces for regularly sampled pixels: pix 0, N, 2N, ..."""
+    """
+    Plot step-style R1 traces for regularly sampled pixels (0, N, 2N, ...).
+
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None, optional
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    pixel_step : int, optional
+        Interval between pixel indices to plot. Default is 100.
+    max_pixels : int | None, optional
+        Maximum number of pixels to plot. If None, plot all selected by ``pixel_step``.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+
+    Returns
+    -------
+    matplotlib.figure.Figure | None
+        The created figure, or ``None`` if R1 waveforms are unavailable.
+    """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.io import EventSource
@@ -295,7 +380,23 @@ def plot_simtel_step_traces(
 
 
 def _detect_peaks(trace, peak_width, signal_mod):
-    """Return indices of peaks using CWT if available, else find_peaks fallback."""
+    """
+    Detect peak indices using CWT if available, otherwise ``find_peaks``.
+
+    Parameters
+    ----------
+    trace : numpy.ndarray
+        One-dimensional waveform samples for a single pixel.
+    peak_width : int
+        Characteristic peak width (samples) for CWT.
+    signal_mod : module
+        SciPy ``signal``-like module providing ``find_peaks_cwt``/``find_peaks``.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of integer indices of detected peaks (possibly empty).
+    """
     import numpy as np  # pylint: disable=import-outside-toplevel
 
     peaks = []
@@ -310,7 +411,29 @@ def _detect_peaks(trace, peak_width, signal_mod):
 
 
 def _collect_peak_samples(w, sum_threshold, peak_width, signal_mod):
-    """Compute peak sample per pixel, return samples, considered pixel ids and count with peaks."""
+    """
+    Compute peak-sample indices per pixel from waveform matrix.
+
+    Parameters
+    ----------
+    w : numpy.ndarray
+        Waveform array of shape ``(n_pix, n_samples)`` (or ``(1, n_pix, n_samples)``).
+    sum_threshold : float
+        Minimum sum over samples for a pixel to be considered.
+    peak_width : int
+        Characteristic peak width (samples) for CWT.
+    signal_mod : module
+        SciPy ``signal``-like module providing peak finding routines.
+
+    Returns
+    -------
+    tuple[numpy.ndarray | None, numpy.ndarray | None, int]
+        ``(peak_samples, pix_ids, found_count)`` where ``peak_samples`` are the
+        selected peak indices per considered pixel, ``pix_ids`` are the pixel
+        indices that passed ``sum_threshold``, and ``found_count`` is the number
+        of pixels with at least one detected peak. Returns ``(None, None, 0)`` if
+        no pixels passed the threshold.
+    """
     import numpy as np  # pylint: disable=import-outside-toplevel
 
     n_pix, _ = w.shape
@@ -336,7 +459,21 @@ def _collect_peak_samples(w, sum_threshold, peak_width, signal_mod):
 
 
 def _histogram_edges(n_samp, timing_bins):
-    """Return contiguous histogram bin edges for sample indices."""
+    """
+    Compute contiguous histogram bin edges for sample indices.
+
+    Parameters
+    ----------
+    n_samp : int
+        Number of samples per trace.
+    timing_bins : int | None
+        Number of histogram bins. If None, use unit-width bins.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of bin edges spanning the sample index range.
+    """
     import numpy as np  # pylint: disable=import-outside-toplevel
 
     if timing_bins and timing_bins > 0:
@@ -355,7 +492,34 @@ def _draw_peak_hist(
     considered,
     found_count,
 ):
-    """Draw contiguous-bar histogram, stats overlays, and annotations."""
+    """
+    Draw a histogram of peak samples with overlays and annotations.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Target axes to draw into.
+    peak_samples : numpy.ndarray
+        Peak sample indices per pixel.
+    edges : numpy.ndarray
+        Histogram bin edges.
+    mean_sample : float
+        Mean of peak sample indices.
+    std_sample : float
+        Standard deviation of peak sample indices.
+    tel_label : str
+        Telescope label used in the title.
+    et_name : str
+        Event type name used in the title.
+    considered : int
+        Number of pixels considered (passed threshold).
+    found_count : int
+        Number of pixels with at least one detected peak.
+
+    Returns
+    -------
+    None
+    """
     import numpy as np  # pylint: disable=import-outside-toplevel
 
     counts, edges = np.histogram(peak_samples, bins=edges)
@@ -408,7 +572,31 @@ def plot_simtel_peak_timing(
     """
     Peak finding per pixel; report mean/std of peak sample and plot a histogram.
 
-    Returns matplotlib.figure.Figure or (fig, stats_dict) if return_stats.
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None, optional
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    sum_threshold : float, optional
+        Minimum sum over samples for a pixel to be considered. Default is 10.0.
+    peak_width : int, optional
+        Characteristic peak width (samples) for CWT. Default is 8.
+    examples : int, optional
+        Number of example pixel traces to overlay. Default is 3.
+    timing_bins : int | None, optional
+        Number of histogram bins. If None, use unit-width bins.
+    return_stats : bool, optional
+        If True, also return a statistics dictionary. Default is False.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+
+    Returns
+    -------
+    matplotlib.figure.Figure | tuple[matplotlib.figure.Figure, dict] | None
+        The created figure, or ``None`` if R1 waveforms are unavailable. If
+        ``return_stats`` is True, a tuple ``(fig, stats)`` is returned, where
+        ``stats`` has keys ``{"considered", "found", "mean", "std"}``.
     """
     # pylint:disable=import-outside-toplevel
     import numpy as np
@@ -495,9 +683,27 @@ def plot_simtel_peak_timing(
 
 
 def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=None):
-    """Fetch R1 waveforms for one event/telescope and return prepared arrays.
+    """
+    Fetch R1 waveforms for one event/telescope and return prepared arrays.
 
-    Returns (w, n_pix, n_samp, source, event, tel_id) or None on failure.
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    context_no_r1 : str
+        Short description used in warnings when no R1 data is available.
+    event_index : int | None, optional
+        Zero-based index of the event to use. If None, the first event is used.
+
+    Returns
+    -------
+    tuple | None
+        ``(w, n_pix, n_samp, source, event, tel_id)`` where ``w`` is a
+        ``numpy.ndarray`` of shape ``(n_pix, n_samples)``, ``n_pix`` and
+        ``n_samp`` are integers, and ``source``, ``event`` and ``tel_id`` are
+        the ctapipe objects used. Returns ``None`` on failure.
     """
     # pylint:disable=import-outside-toplevel
     import numpy as np
@@ -531,7 +737,25 @@ def plot_simtel_integrated_signal_image(
     half_width: int = 8,
     event_index: int | None = None,
 ):
-    """Plot camera image of integrated signal per pixel around the flasher peak."""
+    """
+    Plot camera image of integrated signal per pixel around the flasher peak.
+
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None, optional
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    half_width : int, optional
+        Half window width (samples) around the peak for integration. Default is 8.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+
+    Returns
+    -------
+    matplotlib.figure.Figure | None
+        The created figure, or ``None`` if R1 waveforms are unavailable.
+    """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.visualization import CameraDisplay
@@ -579,7 +803,28 @@ def plot_simtel_integrated_pedestal_image(
     gap: int = 16,
     event_index: int | None = None,
 ):
-    """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
+    """
+    Plot camera image of integrated pedestal per pixel away from the flasher peak.
+
+    Parameters
+    ----------
+    filename : str | pathlib.Path
+        Path to the ``.simtel`` file.
+    tel_id : int | None, optional
+        Telescope ID to use. If None, the first telescope with R1 data is chosen.
+    half_width : int, optional
+        Half window width (samples) for integration. Default is 8.
+    gap : int, optional
+        Offset (samples) from the peak position to start the pedestal window.
+        Default is 16.
+    event_index : int | None, optional
+        Zero-based index of the event to plot. If None, the first event is used.
+
+    Returns
+    -------
+    matplotlib.figure.Figure | None
+        The created figure, or ``None`` if R1 waveforms are unavailable.
+    """
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.visualization import CameraDisplay
