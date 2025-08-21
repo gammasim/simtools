@@ -557,8 +557,7 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_source_setup == "variable":
             try:
                 dist_val = int(self._get_distance_for_plotting().to_value(u.m))
-                if dist_val > 0:
-                    dist_suffix = f"_d_{dist_val}"
+                dist_suffix = f"_d_{dist_val}"
             except Exception:  # pylint:disable=broad-except
                 dist_suffix = ""
 
@@ -642,8 +641,7 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_source_setup == "variable":
             try:
                 dist_val = int(self._get_distance_for_plotting().to_value(u.m))
-                if dist_val > 0:
-                    dist_suffix = f"_d_{dist_val}"
+                dist_suffix = f"_d_{dist_val}"
             except Exception:  # pylint:disable=broad-except
                 dist_suffix = ""
         app_name, app_mode = self._infer_application()
