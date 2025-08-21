@@ -353,7 +353,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts: list[str] = []
         # cleanup previous outputs
-        parts.append(f"rm {self.output_directory}/{app_name}_{app_mode}.simtel.gz\n")
+        parts.append(f"rm {self.output_directory}/{app_name}_{app_mode}.simtel.zst\n")
         # application path
         parts.append(str(self._simtel_path.joinpath("sim_telarray/LightEmission/")))
         parts.append(f"/{app_name}")
@@ -507,7 +507,8 @@ class SimulatorLightEmission(SimtelRunner):
             _, angles = self.calibration_pointing_direction()
 
         simtel_bin = self._simtel_path.joinpath("sim_telarray/bin/sim_telarray/")
-        command = "SIM_TELARRAY_CONFIG_PATH='' " + f"{simtel_bin} "
+        # Build command without prefix; caller will add SIM_TELARRAY_CONFIG_PATH once
+        command = f"{simtel_bin} "
         command += f"-I{self._telescope_model.config_file_directory} "
         command += f"-I{simtel_bin} "
         command += f"-c {self._telescope_model.config_file_path} "
@@ -532,7 +533,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += super().get_config_option("PULSE_ANALYSIS", "-30")
         command += super().get_config_option("MAXIMUM_TELESCOPES", 1)
 
-        if self.light_source_setup == "variable":
+        if self.light_source_type == "variable":
             command += super().get_config_option("telescope_theta", 0)
             command += super().get_config_option("telescope_phi", 0)
         else:
@@ -548,7 +549,7 @@ class SimulatorLightEmission(SimtelRunner):
             "input_file", f"{self.output_directory}/{self._infer_application()[0]}.iact.gz"
         )
         dist_suffix = ""
-        if self.light_source_setup == "variable":
+        if self.light_source_type == "variable":
             try:
                 dist_val = int(self._get_distance_for_plotting().to_value(u.m))
                 if dist_val > 0:

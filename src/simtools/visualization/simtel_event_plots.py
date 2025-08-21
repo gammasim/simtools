@@ -185,6 +185,7 @@ def plot_simtel_waveform_pcolormesh(
     tel_id: int | None = None,
     vmax: float | None = None,
     event_index: int | None = None,
+    pixel_step: int | None = None,
 ):
     """Pseudocolor image of waveforms (samples vs pixel id) for one event."""
     # pylint:disable=import-outside-toplevel
@@ -211,8 +212,9 @@ def plot_simtel_waveform_pcolormesh(
         w = w[0]
     n_pix, n_samp = w.shape
 
-    pix_idx = np.arange(n_pix)
-    w_sel = w
+    step = max(1, int(pixel_step)) if pixel_step is not None else 1
+    pix_idx = np.arange(n_pix)[::step]
+    w_sel = w[pix_idx]
 
     readout = source.subarray.tel[tel_id].camera.readout
     try:
