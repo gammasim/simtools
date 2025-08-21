@@ -657,7 +657,6 @@ class SimulatorLightEmission(SimtelRunner):
         For illuminator runs, use the configured z_pos quantity.
         Otherwise, fall back to self.distance if set, or 0 m.
         """
-        # Flasher: use flasher_depth from model if available
         if self.light_source_type == "flasher" and self._flasher_model is not None:
             return self._flasher_model.get_parameter_value_with_unit("flasher_depth").to(u.m)
 
@@ -669,7 +668,6 @@ class SimulatorLightEmission(SimtelRunner):
             except (TypeError, ValueError):
                 return None
 
-        # Try z_pos from configuration (first element if list/tuple)
         cfg = self.light_emission_config or {}
         z = cfg.get("z_pos")
         if isinstance(z, dict):
@@ -679,12 +677,10 @@ class SimulatorLightEmission(SimtelRunner):
             if z_q is not None:
                 return z_q
 
-        # Fallback to self.distance
         d_q = _as_meters(getattr(self, "distance", None))
         if d_q is not None:
             return d_q
 
-        # Safe default when distance is not available
         return 0 * u.m
 
     def run_simulation(self) -> Path:
