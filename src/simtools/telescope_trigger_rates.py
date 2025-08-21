@@ -78,6 +78,8 @@ def _calculate_trigger_rates(histograms, array_name):
             * histograms.file_info["scatter_area"].to("cm2")
             * histograms.file_info["solid_angle"].to("sr")
         )
+        * histograms.file_info["scatter_area"].to("cm2")
+        * histograms.file_info["solid_angle"].to("sr")
         * u.Hz
     )
     trigger_rates = efficiency * cr_rates
