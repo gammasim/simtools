@@ -201,7 +201,7 @@ class DatabaseHandler:
             db_collection.create_index(
                 [("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]
             )
-        db_collection = self.get_collection(db_name, "production_tables")
+        db_collection = self.get_collection("production_tables", db_name=db_name)
         db_collection.create_index([("collection", 1), ("model_version", 1)])
 
     def get_model_parameter(
@@ -533,7 +533,7 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
-        collection = self.get_collection(self.db_name, collection_name)
+        collection = self.get_collection(collection_name, db_name=self.db_name)
         posts = list(collection.find(query))
         if not posts:
             raise ValueError(
@@ -570,7 +570,7 @@ class DatabaseHandler:
             pass
 
         query = {"model_version": model_version, "collection": collection_name}
-        collection = self.get_collection(self.db_name, "production_tables")
+        collection = self.get_collection("production_tables", db_name=self.db_name)
         post = collection.find_one(query)
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
@@ -597,7 +597,7 @@ class DatabaseHandler:
         list
             List of model versions
         """
-        collection = self.get_collection(self.db_name, "production_tables")
+        collection = self.get_collection("production_tables", db_name=self.db_name)
         return sorted(
             {post["model_version"] for post in collection.find({"collection": collection_name})}
         )
