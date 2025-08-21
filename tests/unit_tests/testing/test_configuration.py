@@ -30,7 +30,7 @@ def test_get_list_of_test_configurations_test_names(integration_test_config_file
     for test_name in test_names:
         assert isinstance(test_name, str)
         assert "simtools" in test_name
-    assert "simtools-calculate-trigger-rate_file_list" in test_names
+    assert "simtools-simulate-prod_gamma_20_deg_south_check_output" in test_names
 
 
 def test_get_list_of_test_configurations(integration_test_config_files):
