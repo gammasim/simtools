@@ -10,6 +10,9 @@ import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
 
+# Test constants
+MOCK_MODEL_PATH = "/path/to/model"
+
 
 @pytest.fixture
 def sample_psf_data():
@@ -56,7 +59,7 @@ def mock_args_dict():
         "zenith": 20.0,
         "src_distance": 10.0,
         "data": "test_data.txt",
-        "model_path": "/path/to/model",
+        "model_path": MOCK_MODEL_PATH,
         "plot_all": True,
     }
 
@@ -329,27 +332,23 @@ def test__run_ray_tracing_simulation_no_parameters(
 @pytest.mark.parametrize(
     (
         "has_radius",
-        "has_plotting",
-        "has_original_data",
+        "return_simulated_data",
         "should_raise_error",
         "expected_d80",
         "expected_error_message",
         "description",
     ),
     [
-        (True, False, False, False, 3.5, None, "data only with radius"),
+        (True, True, False, 3.5, None, "data only with radius"),
         (
             False,
-            False,
-            False,
+            True,
             True,
             None,
             "Radius data is not available.",
             "data only without radius",
         ),
-        (True, True, False, False, 3.5, None, "with plotting enabled"),
-        (True, True, True, False, 3.5, None, "plotting with original data cleanup"),
-        (True, True, False, False, 3.5, None, "plotting without original data cleanup"),
+        (True, False, False, 3.5, None, "without returning simulated data"),
     ],
 )
 def test_run_psf_simulation(
@@ -359,129 +358,128 @@ def test_run_psf_simulation(
     sample_psf_data,
     sample_parameters,
     has_radius,
-    has_plotting,
-    has_original_data,
+    return_simulated_data,
     should_raise_error,
     expected_d80,
     expected_error_message,
     description,
 ):
-    """Test PSF simulation functions under different scenarios."""
+    """Test PSF simulation function under different scenarios."""
     radius = sample_psf_data[psf_opt.RADIUS_CM] if has_radius else None
+    data_to_plot = {"measured": sample_psf_data}
 
-    # Set up data_to_plot based on original data scenario
+    with patch(
+        "simtools.ray_tracing.psf_parameter_optimisation._run_ray_tracing_simulation"
+    ) as mock_sim:
+        mock_image = MagicMock()
+        mock_image.get_cumulative_data.return_value = sample_psf_data
+        mock_sim.return_value = (3.5, mock_image)
+
+        kwargs = {"return_simulated_data": return_simulated_data} if return_simulated_data else {}
+
+        if should_raise_error:
+            with pytest.raises(ValueError, match=expected_error_message):
+                psf_opt.run_psf_simulation(
+                    mock_telescope_model,
+                    mock_site_model,
+                    mock_args_dict,
+                    sample_parameters,
+                    data_to_plot,
+                    radius,
+                    **kwargs,
+                )
+        else:
+            result = psf_opt.run_psf_simulation(
+                mock_telescope_model,
+                mock_site_model,
+                mock_args_dict,
+                sample_parameters,
+                data_to_plot,
+                radius,
+                **kwargs,
+            )
+
+            # Common assertions
+            d80, rmsd = result[0], result[1]
+            assert d80 == expected_d80
+            assert rmsd >= 0
+
+            if return_simulated_data:
+                simulated_data = result[2]
+                np.testing.assert_array_equal(simulated_data, sample_psf_data)
+                mock_image.get_cumulative_data.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    (
+        "has_original_data",
+        "is_best",
+        "description",
+    ),
+    [
+        (False, True, "with plotting and no original data"),
+        (True, False, "with plotting and original data cleanup"),
+    ],
+)
+def test_run_psf_simulation_with_plotting(
+    mock_telescope_model,
+    mock_site_model,
+    mock_args_dict,
+    sample_psf_data,
+    sample_parameters,
+    has_original_data,
+    is_best,
+    description,
+):
+    """Test PSF simulation function with plotting scenarios."""
+    radius = sample_psf_data[psf_opt.RADIUS_CM]
+
+    # Set up test data
+    original_simulated_data = None
     if has_original_data:
         original_simulated_data = np.array([(1.5, 0.6), (2.5, 0.9)], dtype=sample_psf_data.dtype)
         data_to_plot = {"measured": sample_psf_data, "simulated": original_simulated_data}
     else:
         data_to_plot = {"measured": sample_psf_data}
-        original_simulated_data = None
 
-    # Common mock setup
-    mock_image = MagicMock()
-    mock_image.get_cumulative_data.return_value = sample_psf_data
+    with patch(
+        "simtools.ray_tracing.psf_parameter_optimisation._run_ray_tracing_simulation"
+    ) as mock_sim:
+        mock_image = MagicMock()
+        mock_image.get_cumulative_data.return_value = sample_psf_data
+        mock_sim.return_value = (3.5, mock_image)
 
-    if has_plotting:
-        with (
-            patch(
-                "simtools.ray_tracing.psf_parameter_optimisation._run_ray_tracing_simulation"
-            ) as mock_sim,
-            patch("simtools.ray_tracing.psf_parameter_optimisation.visualize.plot_1d") as mock_plot,
-            patch("matplotlib.pyplot.clf") as mock_clf,
-        ):
-            mock_sim.return_value = (3.5, mock_image)
+        mock_pdf_pages = MagicMock()
+        mock_args_dict["plot_all"] = True
+        kwargs = {"pdf_pages": mock_pdf_pages, "is_best": is_best}
 
-            # Set up plotting mocks
-            mock_fig = MagicMock()
-            mock_ax = MagicMock()
-            mock_fig.get_axes.return_value = [mock_ax]
-            mock_plot.return_value = mock_fig
-            mock_pdf_pages = MagicMock()
-            mock_args_dict["plot_all"] = True
-
-            kwargs = {"pdf_pages": mock_pdf_pages, "is_best": not has_original_data}
-
-            if should_raise_error:
-                with pytest.raises(ValueError, match=expected_error_message):
-                    psf_opt.run_psf_simulation(
-                        mock_telescope_model,
-                        mock_site_model,
-                        mock_args_dict,
-                        sample_parameters,
-                        data_to_plot,
-                        radius,
-                        **kwargs,
-                    )
-            else:
-                result = psf_opt.run_psf_simulation(
-                    mock_telescope_model,
-                    mock_site_model,
-                    mock_args_dict,
-                    sample_parameters,
-                    data_to_plot,
-                    radius,
-                    **kwargs,
-                )
-
-                # Common assertions
-                d80, rmsd = result[0], result[1]
-                assert d80 == expected_d80
-                assert rmsd >= 0
-
-                # Plotting-specific assertions
-                mock_plot.assert_called_once()
-                mock_pdf_pages.savefig.assert_called_once()
-                mock_clf.assert_called_once()
-
-                if not has_original_data:  # is_best=True case
-                    mock_ax.set_ylim.assert_called_once_with(0, 1.05)
-                    mock_ax.set_ylabel.assert_called_once_with(psf_opt.CUMULATIVE_PSF)
-
-                # Check data cleanup behavior
-                if has_original_data:
-                    assert "simulated" in data_to_plot
-                    np.testing.assert_array_equal(
-                        data_to_plot["simulated"], original_simulated_data
-                    )
-                else:
-                    assert "simulated" not in data_to_plot
-    else:
         with patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._run_ray_tracing_simulation"
-        ) as mock_sim:
-            mock_sim.return_value = (3.5, mock_image)
-            kwargs = {"return_simulated_data": True}
+            "simtools.ray_tracing.psf_parameter_optimisation._create_psf_simulation_plot"
+        ) as mock_plot_func:
+            result = psf_opt.run_psf_simulation(
+                mock_telescope_model,
+                mock_site_model,
+                mock_args_dict,
+                sample_parameters,
+                data_to_plot,
+                radius,
+                **kwargs,
+            )
 
-            if should_raise_error:
-                with pytest.raises(ValueError, match=expected_error_message):
-                    psf_opt.run_psf_simulation(
-                        mock_telescope_model,
-                        mock_site_model,
-                        mock_args_dict,
-                        sample_parameters,
-                        data_to_plot,
-                        radius,
-                        **kwargs,
-                    )
+            # Common assertions
+            d80, rmsd = result[0], result[1]
+            assert d80 == 3.5
+            assert rmsd >= 0
+
+            # Plotting-specific assertions
+            mock_plot_func.assert_called_once()
+
+            # Check data cleanup behavior
+            if has_original_data:
+                assert "simulated" in data_to_plot
+                np.testing.assert_array_equal(data_to_plot["simulated"], original_simulated_data)
             else:
-                result = psf_opt.run_psf_simulation(
-                    mock_telescope_model,
-                    mock_site_model,
-                    mock_args_dict,
-                    sample_parameters,
-                    data_to_plot,
-                    radius,
-                    **kwargs,
-                )
-
-                # Common assertions
-                d80, rmsd, simulated_data = result
-                assert d80 == expected_d80
-                assert rmsd >= 0
-
-                # Data-only specific assertions
-                np.testing.assert_array_equal(simulated_data, sample_psf_data)
-                mock_image.get_cumulative_data.assert_called_once()
+                assert "simulated" not in data_to_plot
 
 
 @pytest.mark.parametrize(
@@ -513,7 +511,7 @@ def test_load_and_process_data(
 
             data_to_plot, radius = psf_opt.load_and_process_data(mock_args_dict)
 
-            mock_find.assert_called_once_with("test_data.txt", "/path/to/model")
+            mock_find.assert_called_once_with("test_data.txt", MOCK_MODEL_PATH)
             mock_load.assert_called_once_with("found_file.txt")
 
             if expected_measured:
@@ -528,6 +526,65 @@ def test_load_and_process_data(
         assert isinstance(data_to_plot, OrderedDict)
         assert len(data_to_plot) == 0
         assert radius is None
+
+
+def test__create_psf_simulation_plot(sample_psf_data, sample_parameters):
+    """Test the _create_psf_simulation_plot function."""
+    data_to_plot = {"measured": sample_psf_data}
+    pars = sample_parameters
+    d80 = 3.5
+    rmsd = 0.123
+
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.visualize.plot_1d") as mock_plot,
+        patch("matplotlib.pyplot.clf") as mock_clf,
+    ):
+        mock_fig = MagicMock()
+        mock_ax = MagicMock()
+        mock_fig.get_axes.return_value = [mock_ax]
+        mock_plot.return_value = mock_fig
+        mock_pdf_pages = MagicMock()
+
+        # Test with is_best=True
+        psf_opt._create_psf_simulation_plot(
+            data_to_plot, pars, d80, rmsd, is_best=True, pdf_pages=mock_pdf_pages
+        )
+
+        # Check that all matplotlib functions were called
+        mock_plot.assert_called_once_with(
+            data_to_plot,
+            plot_difference=True,
+            no_markers=True,
+        )
+        mock_ax.set_ylim.assert_called_once_with(0, 1.05)
+        mock_ax.set_ylabel.assert_called_once_with(psf_opt.CUMULATIVE_PSF)
+        mock_ax.set_title.assert_called_once()
+        mock_ax.text.assert_called_once()
+        mock_fig.text.assert_called_once()  # Footnote for best parameters
+        mock_pdf_pages.savefig.assert_called_once_with(mock_fig, bbox_inches="tight")
+        mock_clf.assert_called_once()
+
+        # Reset mocks for second test
+        mock_plot.reset_mock()
+        mock_ax.reset_mock()
+        mock_fig.reset_mock()
+        mock_pdf_pages.reset_mock()
+        mock_clf.reset_mock()
+
+        # Test with is_best=False
+        psf_opt._create_psf_simulation_plot(
+            data_to_plot, pars, d80, rmsd, is_best=False, pdf_pages=mock_pdf_pages
+        )
+
+        # Check that matplotlib functions were called, but no footnote
+        mock_plot.assert_called_once()
+        mock_ax.set_ylim.assert_called_once_with(0, 1.05)
+        mock_ax.set_ylabel.assert_called_once_with(psf_opt.CUMULATIVE_PSF)
+        mock_ax.set_title.assert_called_once()
+        mock_ax.text.assert_called_once()
+        mock_fig.text.assert_not_called()  # No footnote for non-best parameters
+        mock_pdf_pages.savefig.assert_called_once_with(mock_fig, bbox_inches="tight")
+        mock_clf.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -695,15 +752,9 @@ def test_run_all_simulations(
         assert best_pars == all_parameters[expected_best_index]
         assert len(results) == expected_results_count
 
-        # Check expected values based on scenario
-        if description == "all simulations succeed":
-            assert best_d80 == 3.2  # Better result
-            assert best_rmsd == 0.1  # Lower RMSD
-            assert mock_sim.call_count == 2
-        elif description == "with simulation failures":
-            assert best_d80 == 3.2  # Only successful result
-            assert best_rmsd == 0.1  # Only successful RMSD
-            assert mock_sim.call_count == 2  # Still called for both, but one fails
+        assert best_d80 == 3.2  # Best result available
+        assert best_rmsd == 0.1  # Best RMSD available
+        assert mock_sim.call_count == 2  # Both parameter sets are attempted
 
         # Check logging if expected
         if expected_log_message:
@@ -1021,7 +1072,7 @@ def test_run_psf_optimization_workflow(
     args_dict = {
         "test": test_mode,
         "data": data_file,
-        "model_path": "/path/to/model",
+        "model_path": MOCK_MODEL_PATH,
         "write_psf_parameters": write_json,
         "output_path": str(tmp_path),
         "parameter_version": "1.0.0",
@@ -1097,9 +1148,9 @@ def test_run_psf_optimization_workflow(
         assert n_runs == expected_n_runs, f"Expected n_runs={expected_n_runs} for {description}"
 
         if write_json:
-            # JSON export should be called
+            # JSON export should be called with output_dir.parent (tmp_path.parent in this test)
             mock_export_json.assert_called_once_with(
-                best_pars, mock_telescope_model, "1.0.0", str(tmp_path), func_logger
+                best_pars, mock_telescope_model, "1.0.0", tmp_path.parent, func_logger
             )
             # Check output messages for test mode
             mock_print.assert_any_call(
