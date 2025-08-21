@@ -2,6 +2,7 @@
 
 import logging
 import shutil
+import stat
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, PropertyMock, call, mock_open, patch
@@ -465,6 +466,10 @@ def test_simulate_variable_distances(mock_run_simulation, mock_simulator_variabl
 
     assert mock_run_simulation.call_count == 2
 
+    args_dict = {"distances_ls": [100, 200], "telescope": "LSTN-01"}
+    mock_simulator_variable.simulate_variable_distances(args_dict)
+    assert mock_run_simulation.call_count == 4
+
 
 @patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
 def test_simulate_layout_positions(mock_run_simulation, mock_simulator):
@@ -507,6 +512,111 @@ def test_run_simulation(mock_open, mock_subprocess_run, mock_simulator_variable)
         stdout=mock_open.return_value.__enter__.return_value,
         stderr=mock_open.return_value.__enter__.return_value,
     )
+
+
+def test__build_source_specific_block_unknown_logs_warning(mock_simulator, caplog):
+    mock_simulator.light_source_type = "unknown"
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=mock_simulator._logger.name):
+        seg = mock_simulator._build_source_specific_block(0, 0, 0, Path())
+        assert seg == ""
+        assert any("Unknown light_source_type" in r.message for r in caplog.records)
+
+
+def test__get_prefix_none_and_value(mock_simulator):
+    mock_simulator.light_emission_config["output_prefix"] = None
+    assert mock_simulator._get_prefix() == ""
+    mock_simulator.light_emission_config["output_prefix"] = "xyzls"
+    assert mock_simulator._get_prefix() == "xyzls_"
+
+
+def test__get_distance_for_plotting_branches(mock_simulator):
+    # flasher branch
+    mock_simulator.light_source_type = "flasher"
+    # Provide a flasher model mock since the fixture doesn't include one
+    mock_simulator._flasher_model = MagicMock()
+    mock_simulator._flasher_model.get_parameter_value_with_unit.return_value = 60 * u.cm
+    assert mock_simulator._get_distance_for_plotting().to(u.cm).value == 60
+
+    # variable z_pos dict with list default
+    mock_simulator.light_source_type = "illuminator"
+    mock_simulator.light_emission_config["z_pos"] = {"default": [100 * u.m]}
+    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 100
+
+    # fallback to instance.distance
+    mock_simulator.light_emission_config.pop("z_pos")
+    mock_simulator.distance = 42 * u.m
+    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 42
+
+    # fallback to instance.distance
+    mock_simulator.distance = 42
+    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 42
+
+    # final fallback to 0 m
+    mock_simulator.distance = None
+    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 0
+
+
+def test_distance_list_valid_and_error(mock_simulator):
+    vals = mock_simulator.distance_list(["1", 2, 3.5])
+    assert [v.to_value(u.m) for v in vals] == [1.0, 2.0, 3.5]
+    with pytest.raises(ValueError, match="numeric"):
+        mock_simulator.distance_list(["a", 1])
+
+
+def test_update_light_emission_config_keyerror(mock_simulator):
+    with pytest.raises(KeyError):
+        mock_simulator.update_light_emission_config("nope", 1)
+
+
+def test__build_altitude_atmo_block_flasher(mock_simulator, tmp_path, monkeypatch):
+    mock_simulator._simtel_path = Path("/opt/simtel")
+    monkeypatch.setattr(mock_simulator, "_prepare_flasher_atmosphere_files", lambda d: 1)
+    seg = mock_simulator._build_altitude_atmo_block(
+        "ff-1m",
+        tmp_path,
+        1000 * u.m,
+        tmp_path / "telpos.dat",
+    )
+    assert "--altitude 1000.0" in seg
+    assert "--atmosphere 1" in seg
+    assert f"-I{mock_simulator._simtel_path.joinpath('sim_telarray/cfg')}" in seg
+
+
+def test__prepare_flasher_atmosphere_files_creates_aliases(mock_simulator, tmp_path):
+    src_name = "atm_src_profile.dat"
+    (tmp_path / src_name).write_text("x", encoding="utf-8")
+    # Ensure telescope model is a mock for this test
+    mock_simulator._telescope_model = MagicMock()
+    mock_simulator._telescope_model.get_parameter_value.return_value = src_name
+    atmo_id = mock_simulator._prepare_flasher_atmosphere_files(tmp_path)
+    assert atmo_id == 1
+    assert (tmp_path / "atmprof1.dat").exists()
+    assert (tmp_path / "atm_profile_model_1.dat").exists()
+
+
+def test_prepare_script_raises_if_output_exists_dup_removed():
+    # Removed duplicated test to avoid redefinition; original test covers this case.
+    pass
+
+
+def test_run_simulation_warns_when_no_output(mock_simulator, tmp_path, monkeypatch, caplog):
+    # Create a tiny runnable script file
+    script = tmp_path / "run.sh"
+    script.write_text("#!/usr/bin/env bash\necho hi\n", encoding="utf-8")
+    script.chmod(script.stat().st_mode | stat.S_IXUSR)
+
+    monkeypatch.setattr(mock_simulator, "prepare_script", lambda: script)
+    target_out = tmp_path / "target.simtel.zst"
+    if target_out.exists():
+        target_out.unlink()
+    mock_simulator._get_simulation_output_filename = lambda: str(target_out)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=mock_simulator._logger.name):
+        out_path = mock_simulator.run_simulation()
+    assert Path(out_path) == target_out
+    assert any("Expected simtel output not found" in r.message for r in caplog.records)
 
 
 def test_write_telpos_file(mock_simulator, tmp_path):
