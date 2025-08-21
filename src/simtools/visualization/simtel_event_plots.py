@@ -58,6 +58,32 @@ def _select_event_by_type(source):
     return select_event
 
 
+def _time_axis_from_readout(readout, n_samp):
+    """
+    Compute time axis in nanoseconds from a camera readout.
+
+    Parameters
+    ----------
+    readout : Any
+        Camera readout providing ``sampling_rate`` as an astropy Quantity.
+    n_samp : int
+        Number of samples per trace.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of shape ``(n_samp,)`` with time in nanoseconds.
+    """
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+
+    try:
+        dt = (1 / readout.sampling_rate).to(u.ns).value
+    except (AttributeError, ZeroDivisionError, TypeError):
+        dt = 1.0
+    return np.arange(int(n_samp)) * float(dt)
+
+
 def plot_simtel_event_image(filename, distance=None, event_index=None):
     """
     Read a sim_telarray file and plot the DL1 image for one event via ctapipe.
@@ -205,11 +231,7 @@ def plot_simtel_time_traces(
         pix_ids = np.argsort(integrals)[-n_pixels:][::-1]
 
     readout = source.subarray.tel[tel_id].camera.readout
-    try:
-        dt = (1 / readout.sampling_rate).to(u.ns).value
-    except (AttributeError, ZeroDivisionError, TypeError):
-        dt = 1.0
-    t = np.arange(n_samp) * dt
+    t = _time_axis_from_readout(readout, n_samp)
 
     fig, ax = plt.subplots(dpi=300)
     for pid in pix_ids:
@@ -282,11 +304,7 @@ def plot_simtel_waveform_pcolormesh(
     w_sel = w[pix_idx]
 
     readout = source.subarray.tel[tel_id].camera.readout
-    try:
-        dt = (1 / readout.sampling_rate).to(u.ns).value
-    except (AttributeError, ZeroDivisionError, TypeError):
-        dt = 1.0
-    t = np.arange(n_samp) * dt
+    t = _time_axis_from_readout(readout, n_samp)
 
     fig, ax = plt.subplots(dpi=300)
     mesh = ax.pcolormesh(t, pix_idx, w_sel, shading="auto", vmax=vmax)
@@ -355,11 +373,7 @@ def plot_simtel_step_traces(
     n_pix, n_samp = w.shape
 
     readout = source.subarray.tel[tel_id].camera.readout
-    try:
-        dt = (1 / readout.sampling_rate).to(u.ns).value
-    except (AttributeError, ZeroDivisionError, TypeError):
-        dt = 1.0
-    t = np.arange(n_samp) * dt
+    t = _time_axis_from_readout(readout, n_samp)
 
     pix_ids = np.arange(0, n_pix, max(1, pixel_step))
     if max_pixels is not None:
@@ -652,11 +666,7 @@ def plot_simtel_peak_timing(
     )
 
     readout = source.subarray.tel[tel_id].camera.readout
-    try:
-        dt = (1 / readout.sampling_rate).to(u.ns).value
-    except (AttributeError, ZeroDivisionError, TypeError):
-        dt = 1.0
-    t = np.arange(n_samp) * dt
+    t = _time_axis_from_readout(readout, n_samp)
 
     ex_ids = pix_ids[: max(1, int(examples))]
     for pid in ex_ids:
