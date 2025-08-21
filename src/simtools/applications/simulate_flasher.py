@@ -63,6 +63,13 @@ def _parse(label):
         type=str,
         required=True,
     )
+    config.parser.add_argument(
+        "--events",
+        help="Number of events to simulate (default: 1)",
+        type=int,
+        default=1,
+        required=False,
+    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version"],
