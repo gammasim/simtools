@@ -90,7 +90,7 @@ simtools-production-merge-corsika-limits <applications/simtools-production-merge
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-calibration-events <applications/simtools-simulate-calibration-events>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
-simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
+simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>

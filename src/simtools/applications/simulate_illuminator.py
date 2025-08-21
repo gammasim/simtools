@@ -15,6 +15,7 @@ Example Usage
 1. Simulate light emission with varying distances:
 
     .. code-block:: console
+
         simtools-simulate-illuminator --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup variable \
         --model_version 6.0.0
