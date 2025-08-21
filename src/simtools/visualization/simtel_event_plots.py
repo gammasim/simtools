@@ -7,6 +7,11 @@ import logging
 
 import astropy.units as u
 import matplotlib.pyplot as plt
+import numpy as np
+from ctapipe.calib import CameraCalibrator
+from ctapipe.io import EventSource
+from ctapipe.visualization import CameraDisplay
+from scipy import signal as _signal
 
 __all__ = [
     "plot_simtel_event_image",
@@ -74,9 +79,6 @@ def _time_axis_from_readout(readout, n_samp):
     numpy.ndarray
         Array of shape ``(n_samp,)`` with time in nanoseconds.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-
     try:
         dt = (1 / readout.sampling_rate).to(u.ns).value
     except (AttributeError, ZeroDivisionError, TypeError):
@@ -103,12 +105,6 @@ def plot_simtel_event_image(filename, distance=None, event_index=None):
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if no suitable event/image is available.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.calib import CameraCalibrator
-    from ctapipe.io import EventSource
-    from ctapipe.visualization import CameraDisplay
-
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source)(event_index=event_index)
     if not event:
@@ -192,11 +188,6 @@ def plot_simtel_time_traces(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.calib import CameraCalibrator
-    from ctapipe.io import EventSource
-
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source)(event_index=event_index)
 
@@ -275,10 +266,6 @@ def plot_simtel_waveform_pcolormesh(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.io import EventSource
-
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source)(event_index=event_index)
 
@@ -348,10 +335,6 @@ def plot_simtel_step_traces(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.io import EventSource
-
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source)(event_index=event_index)
 
@@ -411,8 +394,6 @@ def _detect_peaks(trace, peak_width, signal_mod):
     numpy.ndarray
         Array of integer indices of detected peaks (possibly empty).
     """
-    import numpy as np  # pylint: disable=import-outside-toplevel
-
     peaks = []
     try:
         if hasattr(signal_mod, "find_peaks_cwt"):
@@ -448,8 +429,6 @@ def _collect_peak_samples(w, sum_threshold, peak_width, signal_mod):
         of pixels with at least one detected peak. Returns ``(None, None, 0)`` if
         no pixels passed the threshold.
     """
-    import numpy as np  # pylint: disable=import-outside-toplevel
-
     n_pix, _ = w.shape
     sums = w.sum(axis=1)
     has_signal = sums > float(sum_threshold)
@@ -488,8 +467,6 @@ def _histogram_edges(n_samp, timing_bins):
     numpy.ndarray
         Array of bin edges spanning the sample index range.
     """
-    import numpy as np  # pylint: disable=import-outside-toplevel
-
     if timing_bins and timing_bins > 0:
         return np.linspace(-0.5, n_samp - 0.5, int(timing_bins) + 1)
     return np.arange(-0.5, n_samp + 0.5, 1.0)
@@ -534,8 +511,6 @@ def _draw_peak_hist(
     -------
     None
     """
-    import numpy as np  # pylint: disable=import-outside-toplevel
-
     counts, edges = np.histogram(peak_samples, bins=edges)
     ax.bar(edges[:-1], counts, width=np.diff(edges), color="#5B90DC", align="edge")
     ax.set_xlim(edges[0], edges[-1])
@@ -612,11 +587,6 @@ def plot_simtel_peak_timing(
         ``return_stats`` is True, a tuple ``(fig, stats)`` is returned, where
         ``stats`` has keys ``{"considered", "found", "mean", "std"}``.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.io import EventSource
-    from scipy import signal as _signal
-
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source)(event_index=event_index)
 
@@ -715,10 +685,6 @@ def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=No
         ``n_samp`` are integers, and ``source``, ``event`` and ``tel_id`` are
         the ctapipe objects used. Returns ``None`` on failure.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.io import EventSource
-
     source = EventSource(filename, max_events=None)
     event = _select_event_by_type(source)(event_index=event_index)
 
@@ -766,10 +732,6 @@ def plot_simtel_integrated_signal_image(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.visualization import CameraDisplay
-
     prepared = _prepare_waveforms_for_image(
         filename, tel_id, "integrated-signal image", event_index=event_index
     )
@@ -835,10 +797,6 @@ def plot_simtel_integrated_pedestal_image(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    # pylint:disable=import-outside-toplevel
-    import numpy as np
-    from ctapipe.visualization import CameraDisplay
-
     prepared = _prepare_waveforms_for_image(
         filename, tel_id, "integrated-pedestal image", event_index=event_index
     )
