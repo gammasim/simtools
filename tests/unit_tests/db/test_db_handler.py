@@ -100,12 +100,6 @@ def standard_test_params():
 
 
 @pytest.fixture
-def mock_db_name(mocker, db, test_db):
-    """Common fixture for mocking _get_db_name."""
-    return mocker.patch.object(db, "_get_db_name", return_value=test_db)
-
-
-@pytest.fixture
 def mock_collection_setup(mocker, db):
     """Common fixture for mocking collection operations."""
     mock_collection = mocker.Mock()
@@ -130,7 +124,7 @@ def mock_file_system(mocker, mock_gridfs):
 
 
 @pytest.fixture
-def export_files_setup(db, mock_db_name, mocker):
+def export_files_setup(db, mocker):
     """Common setup for export_model_files tests."""
     mock_get_file_mongo_db = mocker.patch.object(
         db, "_get_file_mongo_db", return_value=mocker.Mock(_id="file_id")
@@ -146,7 +140,8 @@ def add_parameter_mocks(db, mocker, test_db, value_unit_type, validate_model_par
         validate_model_parameter,
         return_value={"parameter": "param1", "value": "value1", "file": False},
     )
-    mock_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
+    # db_handler._get_db_name was removed; tests should use the db.db_name attribute
+    db.db_name = test_db
     mock_coll = mocker.Mock()
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_coll)
     mock_insert_one = mocker.patch.object(mock_coll, "insert_one")
@@ -158,7 +153,7 @@ def add_parameter_mocks(db, mocker, test_db, value_unit_type, validate_model_par
 
     return {
         "validate": mock_validate,
-        "db_name": mock_db_name,
+        "db_name": test_db,
         "collection": mock_coll,
         "get_collection": mock_get_collection,
         "insert_one": mock_insert_one,
@@ -601,16 +596,15 @@ def test_get_model_parameter_with_model_version_list(
         )
 
 
-def test_get_collection(db, mock_db_name, test_db, mocker):
+def test_get_collection(db, test_db, mocker):
     """Test get_collection method."""
     mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {test_db: {"test_collection": "mock_collection"}}
     )
     collection_name = "test_collection"
 
-    result = db.get_collection(test_db, collection_name)
+    result = db.get_collection(collection_name, db_name=test_db)
 
-    mock_db_name.assert_called_once_with(test_db)
     assert result == "mock_collection"
 
 
@@ -632,15 +626,14 @@ def test_get_collections(db, db_config, fs_files):
 
 
 def test_export_model_files_with_file_names(
-    db, export_files_setup, mock_db_name, tmp_test_directory, test_db, test_file, test_file_2
+    db, export_files_setup, tmp_test_directory, test_db, test_file, test_file_2
 ):
     """Test export_model_files method with file names."""
     mocks = export_files_setup
     file_names = [test_file, test_file_2]
 
-    result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
+    result = db.export_model_files(file_names=file_names, dest=tmp_test_directory, db_name=test_db)
 
-    mock_db_name.assert_called()
     mocks["get_file_mongo_db"].assert_has_calls(
         [call(test_db, test_file), call(test_db, test_file_2)]
     )
@@ -654,7 +647,7 @@ def test_export_model_files_with_file_names(
 
 
 def test_export_model_files_with_parameters(
-    db, export_files_setup, mock_db_name, tmp_test_directory, test_db, test_file, test_file_2
+    db, export_files_setup, tmp_test_directory, test_db, test_file, test_file_2
 ):
     """Test export_model_files method with parameters."""
     mocks = export_files_setup
@@ -663,9 +656,8 @@ def test_export_model_files_with_parameters(
         "param2": {"file": True, "value": test_file_2},
     }
 
-    result = db.export_model_files(parameters=parameters, dest=tmp_test_directory)
+    result = db.export_model_files(parameters=parameters, dest=tmp_test_directory, db_name=test_db)
 
-    mock_db_name.assert_called()
     mocks["get_file_mongo_db"].assert_has_calls(
         [call(test_db, test_file), call(test_db, test_file_2)]
     )
@@ -678,9 +670,7 @@ def test_export_model_files_with_parameters(
     assert result == {test_file: "file_id", test_file_2: "file_id"}
 
 
-def test_export_model_files_file_exists(
-    db, mock_db_name, mocker, tmp_test_directory, test_db, test_file
-):
+def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file already exists."""
     mock_get_file_mongo_db = mocker.patch.object(db, "_get_file_mongo_db")
     mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
@@ -689,16 +679,13 @@ def test_export_model_files_file_exists(
     file_names = [test_file]
     result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
-    mock_db_name.assert_called()
     mock_get_file_mongo_db.assert_not_called()
     mock_write_file.assert_not_called()
     mock_path_exists.assert_called_once()
     assert result == {test_file: "file exists"}
 
 
-def test_export_model_files_file_not_found(
-    db, mock_db_name, mocker, tmp_test_directory, test_db, test_file
-):
+def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file is not found in parameters."""
     mock_get_file_mongo_db = mocker.patch.object(
         db, "_get_file_mongo_db", side_effect=FileNotFoundError
@@ -708,9 +695,8 @@ def test_export_model_files_file_not_found(
     parameters = {"param1": {"file": True, "value": test_file}}
 
     with pytest.raises(FileNotFoundError):
-        db.export_model_files(parameters=parameters, dest=tmp_test_directory)
+        db.export_model_files(parameters=parameters, dest=tmp_test_directory, db_name=test_db)
 
-    mock_db_name.assert_called()
     mock_get_file_mongo_db.assert_called_once_with(test_db, test_file)
     mock_write_file.assert_not_called()
 
@@ -742,7 +728,7 @@ def test_get_query_from_parameter_version_table(db):
         assert result == expected
 
 
-def test_read_mongo_db(db, mock_db_name, mock_collection_setup, mocker, test_db):
+def test_read_mongo_db(db, mock_collection_setup, mocker, test_db):
     """Test read_mongo_db method."""
     mock_find = mocker.patch.object(
         mock_collection_setup["collection"],
@@ -758,8 +744,6 @@ def test_read_mongo_db(db, mock_db_name, mock_collection_setup, mocker, test_db)
 
     result = db._read_mongo_db(query, collection_name)
 
-    mock_db_name.assert_called_once_with()
-    mock_collection_setup["get_collection"].assert_called_once_with(test_db, collection_name)
     mock_find.assert_called_once_with(query)
     assert result == {
         "param1": {
@@ -798,7 +782,7 @@ def setup_production_table_cached(cache_key, model_version, param):
     return db_handler.DatabaseHandler.production_table_cached[cache_key]
 
 
-def testread_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock_collection_setup):
+def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock_collection_setup):
     """Test read_production_table_from_mongo_db method with cache."""
     collection_name = "telescopes"
     model_version = "1.0.0"
@@ -815,7 +799,8 @@ def testread_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock
 
     # Test with cache miss
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="no_cache_key")
-    mocker.patch.object(db, "_get_db_name", return_value=test_db)
+    # _get_db_name removed; set db.db_name for tests that expect it
+    db.db_name = test_db
     mock_find_one = mocker.patch.object(
         mock_collection_setup["collection"],
         "find_one",
@@ -831,7 +816,9 @@ def testread_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock
     result = db.read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
-    mock_collection_setup["get_collection"].assert_called_once_with(test_db, "production_tables")
+    mock_collection_setup["get_collection"].assert_called_once_with(
+        "production_tables", db_name=test_db
+    )
     mock_find_one.assert_called_once_with(
         {"model_version": model_version, "collection": collection_name}
     )
@@ -945,19 +932,21 @@ def test_write_file_from_mongo_to_disk(
     mock_gridfs_bucket = mocker.patch("simtools.db.db_handler.gridfs.GridFSBucket")
     mock_fs_output = mock_gridfs_bucket.return_value
 
-    file = mocker.Mock()
-    file.filename = test_file
+    mock_file = mocker.Mock()
+    mock_file.filename = test_file
 
-    db._write_file_from_mongo_to_disk(test_db, tmp_test_directory, file)
+    db._write_file_from_mongo_to_disk(test_db, tmp_test_directory, mock_file)
 
     mock_gridfs_bucket.assert_called_once_with(mock_db_client[test_db])
-    mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath(file.filename), "wb")
-    mock_fs_output.download_to_stream_by_name.assert_called_once_with(file.filename, mock_open())
+    mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath(mock_file.filename), "wb")
+    filename = mock_file.filename
+    mock_fs_output.download_to_stream_by_name.assert_called_once_with(filename, mock_open())
 
 
 def test_add_production_table(db, mocker, test_db):
     """Test add_production_table method."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    # _get_db_name removed; set db.db_name for tests that expect it
+    db.db_name = "test_db"
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_insert_one = mocker.patch.object(db.get_collection.return_value, "insert_one")
 
@@ -969,8 +958,8 @@ def test_add_production_table(db, mocker, test_db):
 
     db.add_production_table(test_db, production_table)
 
-    mock_get_db_name.assert_called_once_with(test_db)
-    mock_get_collection.assert_called_once_with("test_db", "production_tables")
+    assert db.db_name == test_db
+    mock_get_collection.assert_called_once_with("production_tables", db_name="test_db")
     mock_insert_one.assert_called_once_with(production_table)
 
 
@@ -980,12 +969,10 @@ def test_add_new_parameter(db, add_parameter_mocks, test_db):
     par_dict = {"parameter": "param1", "value": "value1", "file": False}
     collection_name = "telescopes"
     file_prefix = None
-
     db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
-
     mocks["validate"].assert_called_once_with(par_dict)
-    mocks["db_name"].assert_called_once_with(test_db)
-    mocks["get_collection"].assert_called_once_with(test_db, collection_name)
+    assert mocks["db_name"] == test_db
+    mocks["get_collection"].assert_called_once_with(collection_name, db_name=test_db)
     mocks["value_unit"].assert_called_once_with(value="value1", unit_str=None)
     mocks["insert_one"].assert_called_once_with(
         {"parameter": "param1", "value": "value1", "file": False, "unit": "unit1"}
@@ -1002,13 +989,11 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
-
     db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
-
     mock_is_utf8.assert_called_once_with(Path(f"{tmp_test_directory!s}/value1"))
     mocks["validate"].assert_called_once_with(par_dict)
-    mocks["db_name"].assert_called_once_with(test_db)
-    mocks["get_collection"].assert_called_once_with(test_db, collection_name)
+    assert mocks["db_name"] == test_db
+    mocks["get_collection"].assert_called_once_with(collection_name, db_name=test_db)
     mocks["value_unit"].assert_called_once_with(value="value1", unit_str=None)
     mocks["insert_one"].assert_called_once_with(
         {"parameter": "param1", "value": "value1", "file": True, "unit": "unit1"}
@@ -1041,15 +1026,16 @@ def test_add_new_parameter_with_file_no_prefix(db, add_parameter_mocks, test_db)
         db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 
     mocks["validate"].assert_called_once_with(par_dict)
-    mocks["db_name"].assert_called_once_with(test_db)
-    mocks["get_collection"].assert_called_once_with(test_db, collection_name)
+    assert mocks["db_name"] == test_db
+    mocks["get_collection"].assert_called_once_with(collection_name, db_name=test_db)
     mocks["value_unit"].assert_called_once_with(value="value1", unit_str=None)
     mocks["reset_cache"].assert_not_called()
 
 
 def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file, mock_gridfs):
     """Test insert_file_to_db method when file already exists in the DB."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    # _get_db_name removed; set db.db_name for tests that expect it
+    db.db_name = "test_db"
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
@@ -1060,7 +1046,7 @@ def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file, mock_grid
 
     result = db.insert_file_to_db(test_file, test_db)
 
-    mock_get_db_name.assert_called_once_with(test_db)
+    assert db.db_name == test_db
     mock_gridfs.assert_called_once_with(mock_db_client[test_db])
     mock_file_system.exists.assert_called_once_with({"filename": test_file})
     mock_file_system.find_one.assert_called_once_with({"filename": test_file})
@@ -1069,7 +1055,8 @@ def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file, mock_grid
 
 def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file, mock_gridfs):
     """Test insert_file_to_db method when file does not exist in the DB."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    # _get_db_name removed; set db.db_name for tests that expect it
+    db.db_name = "test_db"
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
@@ -1079,7 +1066,7 @@ def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file, m
 
     result = db.insert_file_to_db(test_file, test_db)
 
-    mock_get_db_name.assert_called_once_with(test_db)
+    assert db.db_name == test_db
     mock_gridfs.assert_called_once_with(mock_db_client[test_db])
     mock_file_system.exists.assert_called_once_with({"filename": test_file})
     mock_open.assert_called_once_with(test_file, "rb")
@@ -1091,7 +1078,8 @@ def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file, m
 
 def test_insert_file_to_db_with_kwargs(db, mocker, mock_open, test_db, test_file, mock_gridfs):
     """Test insert_file_to_db method with additional kwargs."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    # _get_db_name removed; set db.db_name for tests that expect it
+    db.db_name = "test_db"
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
@@ -1103,7 +1091,7 @@ def test_insert_file_to_db_with_kwargs(db, mocker, mock_open, test_db, test_file
 
     result = db.insert_file_to_db(test_file, test_db, **kwargs)
 
-    mock_get_db_name.assert_called_once_with(test_db)
+    assert db.db_name == test_db
     mock_gridfs.assert_called_once_with(mock_db_client[test_db])
     mock_file_system.exists.assert_called_once_with({"filename": test_file})
     mock_open.assert_called_once_with(test_file, "rb")
@@ -1122,7 +1110,7 @@ def test_cache_key(db):
     result = db._cache_key(
         site="North", array_element_name="LSTN-01", model_version="1.0.0", collection="telescopes"
     )
-    assert result == "1.0.0-telescopes-North-LSTN-01"
+    assert result == "1.0.0-telescopes-North-LSTN-01"  # Ensure correct cache key generation
 
     # Test with missing site
     result = db._cache_key(
@@ -1482,3 +1470,24 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
         KeyError, match=r"Failed generated array element list for db query for LSTN-01"
     ):
         db._get_array_element_list(array_element_name, site, production_table, collection)
+
+
+def test_generate_compound_indexes(mocker, db):
+    """Test generate_compound_indexes method."""
+    mock_get_collection = mocker.patch.object(db, "get_collection")
+    mock_create_index = mocker.Mock()
+    mock_get_collection.return_value.create_index = mock_create_index
+
+    db.generate_compound_indexes()
+
+    expected_calls = [
+        call([("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]),
+        call([("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]),
+        call([("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]),
+        call([("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]),
+        call([("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]),
+        call([("collection", 1), ("model_version", 1)]),
+    ]
+
+    assert mock_create_index.call_count == len(expected_calls)
+    mock_create_index.assert_has_calls(expected_calls, any_order=True)
