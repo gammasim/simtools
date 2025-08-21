@@ -2,6 +2,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name,unused-argument
 
+import importlib
 import logging
 from types import SimpleNamespace
 
@@ -122,6 +123,9 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
     monkeypatch.setitem(sys.modules, "ctapipe.calib", calib_mod)
     monkeypatch.setitem(sys.modules, "ctapipe.visualization", vis_mod)
     monkeypatch.setitem(sys.modules, "ctapipe.image", image_mod)
+
+    # Ensure the production module re-imports ctapipe symbols from our fakes
+    importlib.reload(sep)
 
 
 # Tests migrated from test_visualize to target the new module
@@ -316,6 +320,9 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "scipy", scipy_mod)
     monkeypatch.setitem(sys.modules, "scipy.signal", signal_mod)
+
+    # Reload after scipy monkeypatch so the production import uses our stub
+    importlib.reload(sep)
 
     n_pix, n_samp, peak_idx = 6, 20, 7
     w = np.zeros((n_pix, n_samp), dtype=float)
