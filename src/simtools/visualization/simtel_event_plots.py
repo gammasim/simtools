@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 AXES_FRACTION = "axes fraction"
 NO_R1_WAVEFORMS_MSG = "No R1 waveforms available in event"
 TIME_NS_LABEL = "time [ns]"
-R1_SAMPLES_LABEL = "R1 samples [a.u.]"
+R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 
 
 def _select_event_by_type(source):
