@@ -59,7 +59,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.photons_per_run = (
             (self._calibration_model.get_parameter_value("photons_per_run"))
             if not self.test
-            else 1e6
+            else 1e8
         )
 
         self.le_application = le_application
