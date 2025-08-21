@@ -28,14 +28,23 @@ R1_SAMPLES_LABEL = "R1 samples [a.u.]"
 
 
 def _select_event_by_type(source):
-    """Return the first event from the source."""
-    for ev in source:
-        return ev
-    _logger.warning("No events available from source")
-    return None
+    """Return the first event from the source (default), or a specific event by index."""
+
+    def select_event(event_index=None):
+        if event_index is None:
+            for ev in source:
+                return ev
+        else:
+            for idx, ev in enumerate(source):
+                if idx == event_index:
+                    return ev
+        _logger.warning("No events available from source or event_index out of range")
+        return None
+
+    return select_event
 
 
-def plot_simtel_event_image(filename, distance=None):
+def plot_simtel_event_image(filename, distance=None, event_index=None):
     """
     Read in a sim_telarray file and plot DL1 image via ctapipe.
 
@@ -47,8 +56,8 @@ def plot_simtel_event_image(filename, distance=None):
     from ctapipe.io import EventSource
     from ctapipe.visualization import CameraDisplay
 
-    source = EventSource(filename, max_events=1)
-    event = next(iter(source), None)
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source)(event_index=event_index)
     if not event:
         _logger.warning("No event found in the file.")
         return None
@@ -109,6 +118,7 @@ def plot_simtel_time_traces(
     filename,
     tel_id: int | None = None,
     n_pixels: int = 3,
+    event_index: int | None = None,
 ):
     """Plot time traces (R1 waveforms) for a few camera pixels of a selected event."""
     # pylint:disable=import-outside-toplevel
@@ -117,7 +127,7 @@ def plot_simtel_time_traces(
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)
+    event = _select_event_by_type(source)(event_index=event_index)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -174,6 +184,7 @@ def plot_simtel_waveform_pcolormesh(
     filename,
     tel_id: int | None = None,
     vmax: float | None = None,
+    event_index: int | None = None,
 ):
     """Pseudocolor image of waveforms (samples vs pixel id) for one event."""
     # pylint:disable=import-outside-toplevel
@@ -181,7 +192,7 @@ def plot_simtel_waveform_pcolormesh(
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)
+    event = _select_event_by_type(source)(event_index=event_index)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -229,6 +240,7 @@ def plot_simtel_step_traces(
     tel_id: int | None = None,
     pixel_step: int = 100,
     max_pixels: int | None = None,
+    event_index: int | None = None,
 ):
     """Plot step-style traces for regularly sampled pixels: pix 0, N, 2N, ..."""
     # pylint:disable=import-outside-toplevel
@@ -236,7 +248,7 @@ def plot_simtel_step_traces(
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)
+    event = _select_event_by_type(source)(event_index=event_index)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -389,6 +401,7 @@ def plot_simtel_peak_timing(
     examples: int = 3,
     timing_bins: int | None = None,
     return_stats: bool = False,
+    event_index: int | None = None,
 ):
     """
     Peak finding per pixel; report mean/std of peak sample and plot a histogram.
@@ -401,7 +414,7 @@ def plot_simtel_peak_timing(
     from scipy import signal as _signal
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)
+    event = _select_event_by_type(source)(event_index=event_index)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -479,7 +492,7 @@ def plot_simtel_peak_timing(
     return fig
 
 
-def _prepare_waveforms_for_image(filename, tel_id, context_no_r1):
+def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=None):
     """Fetch R1 waveforms for one event/telescope and return prepared arrays.
 
     Returns (w, n_pix, n_samp, source, event, tel_id) or None on failure.
@@ -489,7 +502,7 @@ def _prepare_waveforms_for_image(filename, tel_id, context_no_r1):
     from ctapipe.io import EventSource
 
     source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)
+    event = _select_event_by_type(source)(event_index=event_index)
 
     r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
     if r1_tel_ids:
@@ -514,13 +527,16 @@ def plot_simtel_integrated_signal_image(
     filename,
     tel_id: int | None = None,
     half_width: int = 8,
+    event_index: int | None = None,
 ):
     """Plot camera image of integrated signal per pixel around the flasher peak."""
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.visualization import CameraDisplay
 
-    prepared = _prepare_waveforms_for_image(filename, tel_id, "integrated-signal image")
+    prepared = _prepare_waveforms_for_image(
+        filename, tel_id, "integrated-signal image", event_index=event_index
+    )
     if prepared is None:
         return None
     w, n_pix, n_samp, source, event, tel_id = prepared
@@ -559,13 +575,16 @@ def plot_simtel_integrated_pedestal_image(
     tel_id: int | None = None,
     half_width: int = 8,
     gap: int = 16,
+    event_index: int | None = None,
 ):
     """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
     # pylint:disable=import-outside-toplevel
     import numpy as np
     from ctapipe.visualization import CameraDisplay
 
-    prepared = _prepare_waveforms_for_image(filename, tel_id, "integrated-pedestal image")
+    prepared = _prepare_waveforms_for_image(
+        filename, tel_id, "integrated-pedestal image", event_index=event_index
+    )
     if prepared is None:
         return None
     w, n_pix, n_samp, source, event, tel_id = prepared

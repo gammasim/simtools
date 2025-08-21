@@ -174,6 +174,12 @@ def _parse(label: str):
         default=None,
         help="Optional distance annotation for event_image (same units as input expects)",
     )
+    config.parser.add_argument(
+        "--event_index",
+        type=int,
+        default=None,
+        help="0-based index of the event to plot; default is the first event",
+    )
     # outputs
     config.parser.add_argument(
         "--output_file",
@@ -256,11 +262,18 @@ def _collect_figures_for_file(
 
     for plot in plots:
         if plot == "event_image":
-            fig = plot_simtel_event_image(filename, distance=args.get("distance"))
+            fig = plot_simtel_event_image(
+                filename,
+                distance=args.get("distance"),
+                event_index=args.get("event_index"),
+            )
             add(fig, "event_image")
         elif plot == "time_traces":
             fig = plot_simtel_time_traces(
-                filename, tel_id=args.get("tel_id"), n_pixels=args.get("n_pixels", 3)
+                filename,
+                tel_id=args.get("tel_id"),
+                n_pixels=args.get("n_pixels", 3),
+                event_index=args.get("event_index"),
             )
             add(fig, "time_traces")
         elif plot == "waveform_pcolormesh":
@@ -268,6 +281,7 @@ def _collect_figures_for_file(
                 filename,
                 tel_id=args.get("tel_id"),
                 vmax=args.get("vmax"),
+                event_index=args.get("event_index"),
             )
             add(fig, "waveform_pcolormesh")
         elif plot == "step_traces":
@@ -276,11 +290,15 @@ def _collect_figures_for_file(
                 tel_id=args.get("tel_id"),
                 pixel_step=args.get("pixel_step"),
                 max_pixels=args.get("max_pixels"),
+                event_index=args.get("event_index"),
             )
             add(fig, "step_traces")
         elif plot == "integrated_signal_image":
             fig = plot_simtel_integrated_signal_image(
-                filename, tel_id=args.get("tel_id"), half_width=args.get("half_width", 8)
+                filename,
+                tel_id=args.get("tel_id"),
+                half_width=args.get("half_width", 8),
+                event_index=args.get("event_index"),
             )
             add(fig, "integrated_signal_image")
         elif plot == "integrated_pedestal_image":
@@ -289,6 +307,7 @@ def _collect_figures_for_file(
                 tel_id=args.get("tel_id"),
                 half_width=args.get("half_width", 8),
                 gap=args.get("gap", 16),
+                event_index=args.get("event_index"),
             )
             add(fig, "integrated_pedestal_image")
         elif plot == "peak_timing":
@@ -302,6 +321,7 @@ def _collect_figures_for_file(
                     examples=args.get("examples", 3),
                     timing_bins=args.get("timing_bins"),
                     return_stats=True,
+                    event_index=args.get("event_index"),
                 )
                 # function may return just fig or (fig, stats)
                 if isinstance(fig_stats, tuple) and len(fig_stats) == 2:
@@ -317,6 +337,7 @@ def _collect_figures_for_file(
                     peak_width=args.get("peak_width", 8),
                     examples=args.get("examples", 3),
                     timing_bins=args.get("timing_bins"),
+                    event_index=args.get("event_index"),
                 )
             add(fig, "peak_timing")
         else:
