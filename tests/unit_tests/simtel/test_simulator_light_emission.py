@@ -226,23 +226,6 @@ def test_calibration_pointing_direction(mock_simulator):
     np.testing.assert_array_almost_equal(angles, expected_angles, decimal=3)
 
 
-def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
-    expected_command = (
-        f"hessioxxx/bin/read_cta"
-        " --min-tel 1 --min-trg-tel 1"
-        " -q --integration-scheme 4 --integration-window 7,3 -r 5"
-        " --plot-with-sum-only"
-        " --plot-with-pixel-amp --plot-with-pixel-id"
-        f" -p {mock_output_path}/postscripts/xyzls_layout_d_1000.ps"
-        f" {mock_output_path}/xyzls_layout.simtel.zst\n"
-    )
-    mock_simulator.distance = 1000 * u.m
-
-    command = mock_simulator._create_postscript()
-
-    assert command == expected_command
-
-
 def test_make_simtel_script(mock_simulator):
     mock_file_content = "Sample content of config file"
 
@@ -334,9 +317,7 @@ def test_prepare_script(
     mock_make_light_emission_script.return_value = "light_emission_script_command"
     mock_make_simtel_script.return_value = "simtel_script_command"
     mock_simulator.distance = 1000 * u.m
-    script_path = mock_simulator.prepare_script(
-        generate_postscript=True,
-    )
+    script_path = mock_simulator.prepare_script()
 
     assert gen.program_is_executable(script_path)
     mock_make_light_emission_script.assert_called_once()
@@ -353,8 +334,6 @@ def test_prepare_script(
         check_line,
         "simtel_script_command\n\n",
         cleanup_line,
-        "# Generate postscript\n\n",
-        "postscript_command\n\n",
         "# End\n\n",
     ]
     for call_args, expected_content in zip(mock_file.write.call_args_list, expected_calls):
@@ -368,7 +347,7 @@ def test_prepare_script_raises_if_output_exists(mock_simulator, tmp_path):
     expected_out.write_text("", encoding="utf-8")
 
     with pytest.raises(FileExistsError):
-        mock_simulator.prepare_script(generate_postscript=False)
+        mock_simulator.prepare_script()
 
 
 def test_remove_line_from_config(mock_simulator):
