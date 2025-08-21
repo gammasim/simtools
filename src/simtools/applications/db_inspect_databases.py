@@ -53,7 +53,7 @@ def main():  # noqa: D103
         print("   Collections:", collections)
         print("   Indexes:")
         for collection_name in collections:
-            db_collection = db.get_collection(db_name=db_name, collection_name=collection_name)
+            db_collection = db.get_collection(collection_name=collection_name, db_name=db_name)
             for idx in db_collection.list_indexes():
                 print(f"     {collection_name}: {idx}")
 
