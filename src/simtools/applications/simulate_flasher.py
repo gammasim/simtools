@@ -59,7 +59,7 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--flasher",
-        help="Flasher device in array, i.e. FLSN-01",
+        help="Flasher device in array associated with a specific telescope, i.e. FLSN-01",
         type=str,
         required=True,
     )
