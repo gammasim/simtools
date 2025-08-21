@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Simulate flasher devices (flat fielding) using the light emission package.
+Simulate flasher devices using the light emission package.
 
 Run the application in the command line.
 
@@ -55,7 +55,7 @@ def _parse(label):
     """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
-        description=("Simulate flasher devices (flat fielding) using the light emission package."),
+        description=("Simulate flasher devices using the light emission package."),
     )
     config.parser.add_argument(
         "--flasher",
