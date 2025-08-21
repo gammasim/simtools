@@ -873,3 +873,99 @@ def test_photons_per_run_no_models(tmp_path):
     )
 
     assert inst.photons_per_run == pytest.approx(1e8)
+
+
+def test_get_prefix_non_none_returns_with_underscore():
+    inst = object.__new__(SimulatorLightEmission)
+    inst.light_emission_config = {"output_prefix": "pre", "events": 1}
+    assert inst._get_prefix() == "pre_"
+
+
+def test_make_simtel_script_variable_type_sets_zero_angles():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst.light_source_type = "variable"
+    inst.light_source_setup = "layout"
+    inst.output_directory = "/directory"
+    inst.light_emission_config = {"output_prefix": None, "events": 1}
+
+    inst._simtel_path = MagicMock()
+    inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
+
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.config_file_directory = "/path/to/config/"
+    type(inst._telescope_model).config_file_path = PropertyMock(
+        return_value="/path/to/config/config.cfg"
+    )
+    inst._telescope_model.get_parameter_value.side_effect = (
+        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
+    )
+
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+
+    # Avoid calling real calibration method
+    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
+
+    mock_file_content = "dummy"
+    with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)):
+        cmd = inst._make_simtel_script()
+
+    assert "-C telescope_theta=0 -C telescope_phi=0 " in cmd
+
+
+def test_make_simtel_script_variable_dist_suffix_exception():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst.light_source_type = "illuminator"
+    inst.light_source_setup = "variable"
+    inst.output_directory = "/directory"
+    inst.light_emission_config = {"output_prefix": None, "events": 1}
+
+    inst._simtel_path = MagicMock()
+    inst._simtel_path.joinpath.return_value = "/path/to/sim_telarray/bin/sim_telarray/"
+
+    inst._telescope_model = MagicMock()
+    inst._telescope_model.config_file_directory = "/path/to/config/"
+    type(inst._telescope_model).config_file_path = PropertyMock(
+        return_value="/path/to/config/config.cfg"
+    )
+    inst._telescope_model.get_parameter_value.side_effect = (
+        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
+    )
+
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+
+    # Force exception path for distance suffix
+    inst._get_distance_for_plotting = MagicMock(side_effect=Exception("boom"))
+    # Avoid calling real calibration method
+    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
+
+    mock_file_content = "dummy"
+    with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)):
+        cmd = inst._make_simtel_script()
+
+    assert "-C output_file=/directory/xyzls_variable.simtel.zst " in cmd
+    assert "-C histogram_file=/directory/xyzls_variable.ctsim.hdata\n" in cmd
+
+
+def test_get_simulation_output_filename_prefix_and_exception():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    inst.output_directory = "/out"
+    inst.light_source_type = "illuminator"
+    inst.light_source_setup = "variable"
+    inst.light_emission_config = {"output_prefix": "pre", "events": 1}
+
+    # Cause exception so no distance suffix is appended
+    inst._get_distance_for_plotting = MagicMock(side_effect=Exception("err"))
+
+    # Use real inference for app name/mode
+    def infer():
+        return ("xyzls", "variable")
+
+    inst._infer_application = infer
+
+    out = inst._get_simulation_output_filename()
+    assert out == "/out/pre_xyzls_variable.simtel.zst"
