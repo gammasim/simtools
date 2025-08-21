@@ -54,8 +54,7 @@ def main():  # noqa: D103
     databases = databases if requested == "all" else [requested]
     for db_name in databases:
         logger.info(f"Generating compound indexes for database: {db_name}")
-        db.set_db_name(db_name)
-        db.generate_compound_indexes()
+        db.generate_compound_indexes(db_name=db_name)
 
 
 if __name__ == "__main__":
