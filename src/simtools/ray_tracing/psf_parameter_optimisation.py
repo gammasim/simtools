@@ -230,6 +230,81 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     return d80, im
 
 
+def _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_pages):
+    """
+    Create a plot for PSF simulation results.
+
+    Parameters
+    ----------
+    data_to_plot : dict
+        Data dictionary for plotting.
+    pars : dict
+        Parameter set dictionary.
+    d80 : float
+        D80 value.
+    rmsd : float
+        RMSD value.
+    is_best : bool
+        Whether this is the best parameter set.
+    pdf_pages : PdfPages
+        PDF pages object for saving plots.
+    """
+    fig = visualize.plot_1d(
+        data_to_plot,
+        plot_difference=True,
+        no_markers=True,
+    )
+    ax = fig.get_axes()[0]
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel(CUMULATIVE_PSF)
+
+    # Create title with asterisk for best parameters
+    title_prefix = "* " if is_best else ""
+    ax.set_title(
+        f"{title_prefix}refl_rnd = "
+        f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
+        f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
+        f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
+        f"align_rnd = {pars['mirror_align_random_vertical'][0]:.5f}, "
+        f"{pars['mirror_align_random_vertical'][1]:.5f}, "
+        f"{pars['mirror_align_random_vertical'][2]:.5f}, "
+        f"{pars['mirror_align_random_vertical'][3]:.5f}"
+    )
+
+    # Highlight D80 text for best parameters
+    d80_color = "red" if is_best else "black"
+    d80_weight = "bold" if is_best else "normal"
+    d80_text = f"D80 = {d80:.5f} cm"
+
+    ax.text(
+        0.5,
+        0.3,
+        f"{d80_text}\nRMSD = {rmsd:.4f}",
+        verticalalignment="center",
+        horizontalalignment="left",
+        transform=ax.transAxes,
+        color=d80_color,
+        weight=d80_weight,
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "yellow", "alpha": 0.7}
+        if is_best
+        else None,
+    )
+
+    # Add footnote for best parameters
+    if is_best:
+        fig.text(
+            0.02,
+            0.02,
+            "* Best parameter set (lowest RMSD)",
+            fontsize=8,
+            style="italic",
+            color="red",
+        )
+
+    pdf_pages.savefig(fig, bbox_inches="tight")
+    plt.clf()
+
+
 def run_psf_simulation(
     tel_model,
     site_model,
@@ -273,11 +348,10 @@ def run_psf_simulation(
     """
     d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
 
-    if radius is not None:
-        simulated_data = im.get_cumulative_data(radius * u.cm)
-    else:
+    if radius is None:
         raise ValueError("Radius data is not available.")
 
+    simulated_data = im.get_cumulative_data(radius * u.cm)
     rmsd = calculate_rmsd(data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF])
 
     # Handle plotting if requested
@@ -286,60 +360,7 @@ def run_psf_simulation(
         original_simulated = data_to_plot.get("simulated")
         data_to_plot["simulated"] = simulated_data
 
-        fig = visualize.plot_1d(
-            data_to_plot,
-            plot_difference=True,
-            no_markers=True,
-        )
-        ax = fig.get_axes()[0]
-        ax.set_ylim(0, 1.05)
-        ax.set_ylabel(CUMULATIVE_PSF)
-
-        # Create title with asterisk for best parameters
-        title_prefix = "* " if is_best else ""
-        ax.set_title(
-            f"{title_prefix}refl_rnd = "
-            f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
-            f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
-            f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
-            f"align_rnd = {pars['mirror_align_random_vertical'][0]:.5f}, "
-            f"{pars['mirror_align_random_vertical'][1]:.5f}, "
-            f"{pars['mirror_align_random_vertical'][2]:.5f}, "
-            f"{pars['mirror_align_random_vertical'][3]:.5f}"
-        )
-
-        # Highlight D80 text for best parameters
-        d80_color = "red" if is_best else "black"
-        d80_weight = "bold" if is_best else "normal"
-        d80_text = f"D80 = {d80:.5f} cm"
-
-        ax.text(
-            0.5,
-            0.3,
-            f"{d80_text}\nRMSD = {rmsd:.4f}",
-            verticalalignment="center",
-            horizontalalignment="left",
-            transform=ax.transAxes,
-            color=d80_color,
-            weight=d80_weight,
-            bbox={"boxstyle": "round,pad=0.3", "facecolor": "yellow", "alpha": 0.7}
-            if is_best
-            else None,
-        )
-
-        # Add footnote for best parameters
-        if is_best:
-            fig.text(
-                0.02,
-                0.02,
-                "* Best parameter set (lowest RMSD)",
-                fontsize=8,
-                style="italic",
-                color="red",
-            )
-
-        pdf_pages.savefig(fig, bbox_inches="tight")
-        plt.clf()
+        _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_pages)
 
         # Restore original simulated data
         if original_simulated is not None:
@@ -347,9 +368,7 @@ def run_psf_simulation(
         elif "simulated" in data_to_plot:
             del data_to_plot["simulated"]
 
-    if return_simulated_data:
-        return d80, rmsd, simulated_data
-    return d80, rmsd
+    return (d80, rmsd, simulated_data) if return_simulated_data else (d80, rmsd)
 
 
 def load_and_process_data(args_dict):
@@ -569,7 +588,7 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
     # Create off-axis angle array
     max_offset = args_dict.get("max_offset", 4.5)
-    offset_steps = args_dict.get("offset_steps", 0.02)
+    offset_steps = args_dict.get("offset_steps", 0.1)
     off_axis_angles = np.linspace(
         0,
         max_offset,
@@ -789,12 +808,11 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
 
     # Export best parameters as JSON model parameter files (if flag is provided)
     if args_dict.get("write_psf_parameters", False):
-        # Use the base output path from args_dict for proper telescope/parameter structure
-        base_output_path = args_dict.get("output_path", output_dir.parent)
+        # Use the output_dir directly for proper tune_psf/telescope structure
         export_psf_parameters_as_json(
             best_pars,
             tel_model,
             args_dict.get("parameter_version", "0.0.0"),
-            base_output_path,
+            output_dir.parent,
             func_logger,
         )

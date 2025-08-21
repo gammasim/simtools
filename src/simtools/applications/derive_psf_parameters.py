@@ -17,6 +17,16 @@ r"""
     the Root Mean Squared Deviation between data and simulations. The range in which the \
     parameter are drawn uniformly are defined based on the previous value on the telescope model.
 
+    The optimization workflow includes:
+
+    * Loading and preprocessing PSF data from measurement files
+    * Generating random parameter combinations for optimization
+    * Running ray-tracing simulations for each parameter set
+    * Calculating RMSD between measured and simulated PSF curves
+    * Identifying the best-fit parameters with minimum RMSD
+    * Creating comprehensive plots and D80 vs off-axis angle analysis
+    * Optionally exporting optimized parameters as JSON model files
+
     The assumption are:
 
     a) mirror_align_random_horizontal and mirror_align_random_vertical are the same.
@@ -37,6 +47,8 @@ r"""
         Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version.
+    parameter_version (str, optional)
+        Parameter version for JSON export.
     src_distance (float, optional)
         Source distance in km.
     zenith (float, optional)
@@ -49,6 +61,8 @@ r"""
         Keep the first entry of mirror_reflection_random_angle fixed.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
+    write_psf_parameters (activation mode, optional)
+        Write the best PSF parameters as JSON model parameter files.
 
     Example
     -------
@@ -67,13 +81,31 @@ r"""
     .. code-block:: console
 
         simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
-            --model_version 6.0.0 --data PSFcurve_data_v2.txt --plot_all --test
+            --model_version 6.0.0 --data tests/resources/PSFcurve_data_v2.txt --plot_all --test
+
+    Run with JSON parameter export:
+
+    .. code-block:: console
+
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
+            --model_version 6.0.0 \\
+            --data tests/resources/PSFcurve_data_v2.txt --write_psf_parameters
 
     The output is saved in simtools-output/derive_psf_parameters.
+
+    Output files include:
+
+    * Parameter optimization results in tested_psf_parameters.txt
+    * PSF comparison plots in tune_psf_[telescope].pdf
+    * D80 vs off-axis angle plots (d80_vs_offaxis_cm.png, d80_vs_offaxis_deg.png)
+    * JSON model parameter files (if --write_psf_parameters is specified)
 
     Expected final print-out message:
 
     .. code-block:: console
+
+        Parameter results written to simtools-output/derive_psf_parameters/tested_psf_parameters.txt
+        D80 vs off-axis angle plots created successfully
 
         Best parameters:
         mirror_reflection_random_angle = [0.006, 0.133, 0.005]
