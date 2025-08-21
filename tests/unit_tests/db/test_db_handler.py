@@ -1110,7 +1110,7 @@ def test_cache_key(db):
     result = db._cache_key(
         site="North", array_element_name="LSTN-01", model_version="1.0.0", collection="telescopes"
     )
-    assert result == "1.0.0-telescopes-North-LSTN-01"  # Ensure correct cache key generation
+    assert result == "1.0.0-telescopes-North-LSTN-01"
 
     # Test with missing site
     result = db._cache_key(
