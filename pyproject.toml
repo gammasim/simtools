@@ -72,7 +72,6 @@ optional-dependencies."tests" = [
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
 urls."documentation" = "https://gammasim.github.io/simtools/"
 urls."repository" = "https://github.com/gammasim/simtools"
-scripts.simtools-calculate-trigger-rate = "simtools.applications.calculate_trigger_rate:main"
 scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
 scripts.simtools-convert-geo-coordinates-of-array-elements = "simtools.applications.convert_geo_coordinates_of_array_elements:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
