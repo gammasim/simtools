@@ -554,13 +554,14 @@ class SimulatorLightEmission(SimtelRunner):
             "input_file", f"{self.output_directory}/{app_name}.iact.gz"
         )
         dist_suffix = ""
-        if self.light_source_type == "variable":
+        if self.light_source_setup == "variable":
             try:
                 dist_val = int(self._get_distance_for_plotting().to_value(u.m))
                 if dist_val > 0:
                     dist_suffix = f"_d_{dist_val}"
             except Exception:  # pylint:disable=broad-except
                 dist_suffix = ""
+
         command += super().get_config_option(
             "output_file",
             f"{self.output_directory}/{pref}{app_name}_{app_mode}{dist_suffix}.simtel.zst",
@@ -593,55 +594,9 @@ class SimulatorLightEmission(SimtelRunner):
                 if not line.startswith(line_prefix):
                     file.write(line)
 
-    def _create_postscript(self):
-        """
-        Write out post-script file using read_cta in hessioxxx/bin/read_cta.
-
-        parts from the documentation
-        -r level        (Use 10/5 tail-cut image cleaning and redo reconstruction.)
-                level >= 1: show parameters from sim_hessarray.
-                level >= 2: redo shower reconstruction
-                level >= 3: redo image cleaning (and shower reconstruction
-                            with new image parameters)
-                level >= 4: redo amplitude summation
-                level >= 5: PostScript file includes original and
-                            new shower reconstruction.
-        --integration-window w,o[,ps] *(Set integration window width and offset.)
-            For some integration schemes there is a pulse shaping option.
-
-
-        Returns
-        -------
-        str
-            Command to create the postscript file
-        """
-        postscript_dir = self.output_directory.joinpath("postscripts")
-        postscript_dir.mkdir(parents=True, exist_ok=True)
-
-        command = "hessioxxx/bin/read_cta"
-        command += " --min-tel 1 --min-trg-tel 1"
-        command += " -q --integration-scheme 4"
-        command += " --integration-window "
-        command += "7,3"
-        command += " -r 5"
-        command += " --plot-with-sum-only"
-        command += " --plot-with-pixel-amp --plot-with-pixel-id"
-        dist_val = int(self._get_distance_for_plotting().to_value(u.m))
-        app_name, app_mode = self._infer_application()
-        pref = self._get_prefix()
-        command += f" -p {postscript_dir}/{pref}{app_name}_{app_mode}_d_{dist_val}.ps"
-        simtel_file = Path(self._get_simulation_output_filename())
-        command += f" {simtel_file}\n"
-        return command
-
-    def prepare_script(self, generate_postscript=False):
+    def prepare_script(self):
         """
         Build and return bash run script containing the light-emission command.
-
-        Parameters
-        ----------
-        generate_postscript: bool
-            If postscript should be generated with read_cta.
 
         Returns
         -------
@@ -677,13 +632,6 @@ class SimulatorLightEmission(SimtelRunner):
 
             # Cleanup intermediate IACT file at the end of the run
             file.write(f"rm -f '{self.output_directory}/{app_name}.iact.gz'\n\n")
-
-            if generate_postscript:
-                self._logger.debug("Write out postscript file")
-                command_plot = "postscript_command"
-                file.write("# Generate postscript\n\n")
-                file.write(f"{command_plot}\n\n")
-                file.write("# End\n\n")
 
         _script_file.chmod(_script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return _script_file
@@ -745,7 +693,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def run_simulation(self) -> Path:
         """Run the light emission simulation and return the output simtel file path."""
-        run_script = self.prepare_script(generate_postscript=False)
+        run_script = self.prepare_script()
         log_path = Path(self.output_directory) / "logfile.log"
         with open(log_path, "w", encoding="utf-8") as fh:
             subprocess.run(
@@ -798,7 +746,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def calculate_distance_telescope_calibration_device(self):
         """Calculate distance(s) between telescope and calibration device."""
-        if not self.light_emission_config:
+        if self.light_source_setup == "layout":
             # Layout positions: Use DB coordinates
             x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
