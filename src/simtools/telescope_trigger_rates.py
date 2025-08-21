@@ -75,11 +75,9 @@ def _calculate_trigger_rates(histograms, array_name):
                 cr_spectrum.integrate_energy(e1, e2).decompose(bases=[u.s, u.cm, u.sr]).value
                 for e1, e2 in zip(e_min, e_max)
             ]
-            * histograms.file_info["scatter_area"].to("cm2")
-            * histograms.file_info["solid_angle"].to("sr")
         )
-        * histograms.file_info["scatter_area"].to("cm2")
-        * histograms.file_info["solid_angle"].to("sr")
+        * histograms.file_info["scatter_area"].to("cm2").value
+        * histograms.file_info["solid_angle"].to("sr").value
         * u.Hz
     )
     trigger_rates = efficiency * cr_rates
