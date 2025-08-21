@@ -4,10 +4,10 @@ applications:
   configuration:
     array_layout_name: alpha
     azimuth_angle: South
-    core_scatter: 10 700 m
+    core_scatter: 5 700 m
     corsika_test_seeds: true
     data_directory: simtools-data
-    energy_range: 100 GeV 500 GeV
+    energy_range: 100 GeV 300 GeV
     label: multiple_model_versions
     log_level: DEBUG
     model_version:
@@ -16,7 +16,8 @@ applications:
     nshow: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output
-    primary: gamma
+    primary: 1
+    primary_id_type: corsika7_id
     run_number: 1
     save_reduced_event_lists: true
     sim_telarray_instrument_seeds: 1745,290
@@ -27,7 +28,16 @@ applications:
   - test_output_files:
     - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.log_hist.tar.gz
       path_descriptor: pack_for_grid_register
-    - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.simtel.zst
+    - expected output:
+        pe_sum:
+        - 20
+        - 1000
+        photons:
+        - 90
+        - 1000
+        trigger_time:
+        - 0
+      file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.simtel.zst
       path_descriptor: pack_for_grid_register
     - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.reduced_event_data.hdf5
       path_descriptor: pack_for_grid_register

@@ -7,7 +7,7 @@ applications:
     label: test-flasher-production-south-msts
     log_level: DEBUG
     model_version: 6.0.0
-    number_of_events: 10
+    number_of_events: 3
     output_path: simtools-output
     run_number: 10
     sim_telarray_random_instrument_instances: 100
@@ -16,7 +16,7 @@ applications:
     zenith_angle: 20
     stars: null
     nsb_scaling_factor: 1.
-    flasher_photons: 245
+    flasher_photons: 100
     flasher_var_photons: 0.
     flasher_exp_time: 1.59
     flasher_sig_time: 0.4
