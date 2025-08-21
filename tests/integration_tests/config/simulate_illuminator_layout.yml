@@ -4,7 +4,6 @@ applications:
   configuration:
     illuminator: ILLN-01
     light_source_setup: layout
-    light_source_type: illuminator
     model_version: 6.0.0
     output_path: simtools-output
     site: North
