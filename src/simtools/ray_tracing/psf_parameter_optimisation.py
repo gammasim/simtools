@@ -230,11 +230,46 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     return d80, im
 
 
-def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to_plot, radius):
+def run_psf_simulation(
+    tel_model,
+    site_model,
+    args_dict,
+    pars,
+    data_to_plot,
+    radius,
+    pdf_pages=None,
+    is_best=False,
+    return_simulated_data=False,
+):
     """
-    Run the simulation for one set of parameters and return D80, RMSD, and simulated data.
+    Run the simulation for one set of parameters and return D80, RMSD.
 
-    No plotting is done in this function.
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object.
+    site_model : SiteModel
+        Site model object.
+    args_dict : dict
+        Dictionary containing parsed command-line arguments.
+    pars : dict
+        Parameter set dictionary.
+    data_to_plot : dict
+        Data dictionary for plotting.
+    radius : array-like
+        Radius data.
+    pdf_pages : PdfPages, optional
+        PDF pages object for plotting. If None, no plotting is done.
+    is_best : bool, optional
+        Whether this is the best parameter set for highlighting in plots.
+    return_simulated_data : bool, optional
+        If True, returns simulated data as third element in return tuple.
+
+    Returns
+    -------
+    tuple
+        (d80, rmsd) if return_simulated_data=False
+        (d80, rmsd, simulated_data) if return_simulated_data=True
     """
     d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
 
@@ -245,23 +280,12 @@ def run_psf_simulation_data_only(tel_model, site_model, args_dict, pars, data_to
 
     rmsd = calculate_rmsd(data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF])
 
-    return d80, rmsd, simulated_data
-
-
-def run_psf_simulation(
-    tel_model, site_model, args_dict, pars, data_to_plot, radius, pdf_pages=None, is_best=False
-):
-    """Run the tuning for one set of parameters."""
-    d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
-
-    if radius is not None:
-        data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
-    else:
-        raise ValueError("Radius data is not available.")
-    rmsd = calculate_rmsd(
-        data_to_plot["measured"][CUMULATIVE_PSF], data_to_plot["simulated"][CUMULATIVE_PSF]
-    )
+    # Handle plotting if requested
     if pdf_pages is not None and args_dict.get("plot_all", False):
+        # Temporarily store simulated data for plotting
+        original_simulated = data_to_plot.get("simulated")
+        data_to_plot["simulated"] = simulated_data
+
         fig = visualize.plot_1d(
             data_to_plot,
             plot_difference=True,
@@ -316,6 +340,15 @@ def run_psf_simulation(
 
         pdf_pages.savefig(fig, bbox_inches="tight")
         plt.clf()
+
+        # Restore original simulated data
+        if original_simulated is not None:
+            data_to_plot["simulated"] = original_simulated
+        elif "simulated" in data_to_plot:
+            del data_to_plot["simulated"]
+
+    if return_simulated_data:
+        return d80, rmsd, simulated_data
     return d80, rmsd
 
 
@@ -442,8 +475,14 @@ def _run_all_simulations(all_parameters, tel_model, site_model, args_dict, data_
     for i, pars in enumerate(all_parameters):
         try:
             logger.info(f"Running simulation {i + 1}/{len(all_parameters)}")
-            d80, rmsd, simulated_data = run_psf_simulation_data_only(
-                tel_model, site_model, args_dict, pars, data_to_plot, radius
+            d80, rmsd, simulated_data = run_psf_simulation(
+                tel_model,
+                site_model,
+                args_dict,
+                pars,
+                data_to_plot,
+                radius,
+                return_simulated_data=True,
             )
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Simulation failed for parameters {pars}: {e}")
