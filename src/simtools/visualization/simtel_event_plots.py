@@ -31,7 +31,7 @@ R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 
 
 def _compute_integration_window(
-    peak_idx: int, n_samp: int, half_width: int, mode: str, gap: int | None
+    peak_idx: int, n_samp: int, half_width: int, mode: str, offset: int | None
 ) -> tuple[int, int]:
     """Return [a, b) window bounds for integration for signal/pedestal modes."""
     hw = int(half_width)
@@ -41,7 +41,7 @@ def _compute_integration_window(
         b = min(n_samp, peak_idx + hw + 1)
         return a, b
 
-    g = int(gap) if gap is not None else 16
+    g = int(offset) if offset is not None else 16
     start = peak_idx + g
     if start + win_len <= n_samp:
         return start, start + win_len
@@ -54,13 +54,13 @@ def _compute_integration_window(
 
 
 def _format_integrated_title(
-    tel_label: str, et_name: str, half_width: int, mode: str, gap: int | None
+    tel_label: str, et_name: str, half_width: int, mode: str, offset: int | None
 ) -> str:
     win_len = 2 * int(half_width) + 1
     if mode == "signal":
         return f"{tel_label} integrated signal (win {win_len}) ({et_name})"
-    g = int(gap) if gap is not None else 16
-    return f"{tel_label} integrated pedestal (win {win_len}, gap {g}) ({et_name})"
+    g = int(offset) if offset is not None else 16
+    return f"{tel_label} integrated pedestal (win {win_len}, offset {g}) ({et_name})"
 
 
 def _select_event_by_type(source):
@@ -760,7 +760,7 @@ def plot_simtel_integrated_pedestal_image(
     filename,
     tel_id: int | None = None,
     half_width: int = 8,
-    gap: int = 16,
+    offset: int = 16,
     event_index: int | None = None,
 ):
     """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
@@ -770,7 +770,7 @@ def plot_simtel_integrated_pedestal_image(
         half_width=half_width,
         event_index=event_index,
         mode="pedestal",
-        gap=gap,
+        offset=offset,
     )
 
 
@@ -780,11 +780,11 @@ def _plot_simtel_integrated_image(
     half_width: int,
     event_index: int | None,
     mode: str,
-    gap: int | None = None,
+    offset: int | None = None,
 ):
     """Shared implementation for integrated signal/pedestal images.
 
-    mode: "signal" or "pedestal". For "pedestal", ``gap`` is used.
+    mode: "signal" or "pedestal". For "pedestal", ``offset`` is used.
     """
     context = "integrated-signal image" if mode == "signal" else "integrated-pedestal image"
     prepared = _prepare_waveforms_for_image(filename, tel_id, context, event_index=event_index)
@@ -797,7 +797,7 @@ def _plot_simtel_integrated_image(
     for pid in range(n_pix):
         trace = w[pid]
         peak_idx = int(np.argmax(trace))
-        a, b = _compute_integration_window(peak_idx, n_samp, half_width, mode, gap)
+        a, b = _compute_integration_window(peak_idx, n_samp, half_width, mode, offset)
         img[pid] = float(np.sum(trace[a:b]))
 
     geometry = source.subarray.tel[tel_id].camera.geometry
@@ -810,7 +810,7 @@ def _plot_simtel_integrated_image(
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
-    ax.set_title(_format_integrated_title(tel_label, et_name, half_width, mode, gap), pad=20)
+    ax.set_title(_format_integrated_title(tel_label, et_name, half_width, mode, offset), pad=20)
     ax.set_axis_off()
     fig.tight_layout()
     return fig
