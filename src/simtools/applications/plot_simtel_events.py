@@ -77,7 +77,6 @@ Examples
 """
 
 import logging
-from collections.abc import Iterable
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -200,21 +199,7 @@ def _parse(label: str):
     return config.initialize(db_config=False, require_command_line=True)
 
 
-def _ensure_iter(x) -> Iterable:
-    """Return ``x`` as an iterable.
-
-    - If ``x`` is ``None``, return an empty list.
-    - If ``x`` is a list or tuple, return it unchanged.
-    - Otherwise, wrap ``x`` in a single-item list.
-    """
-    if x is None:
-        return []
-    if isinstance(x, list | tuple):
-        return x
-    return [x]
-
-
-def _maybe_save_png(fig, out_dir: Path, stem: str, suffix: str, dpi: int):
+def _save_png(fig, out_dir: Path, stem: str, suffix: str, dpi: int):
     """Save ``fig`` as a PNG into ``out_dir`` using ``stem`` and ``suffix``.
 
     Errors during saving are logged as warnings and otherwise ignored.
@@ -260,7 +245,7 @@ def _collect_figures_for_file(
         if fig is not None:
             figures.append(fig)
             if save_pngs:
-                _maybe_save_png(fig, out_dir, base_stem, tag, dpi)
+                _save_png(fig, out_dir, base_stem, tag, dpi)
         else:
             logger.warning("Plot '%s' returned no figure for %s", tag, filename)
 
@@ -357,8 +342,8 @@ def main():
 
     ioh = io_handler.IOHandler()
 
-    simtel_files = [Path(p).expanduser() for p in _ensure_iter(args["simtel_files"])]
-    plots = list(_ensure_iter(args.get("plots")))
+    simtel_files = [Path(p).expanduser() for p in gen.ensure_iterable(args["simtel_files"])]
+    plots = list(gen.ensure_iterable(args.get("plots")))
 
     for simtel in simtel_files:
         out_dir, pdf_path = _make_output_paths(ioh, args.get("output_file"), simtel)
