@@ -99,18 +99,7 @@ r"""
     * PSF comparison plots in tune_psf_[telescope].pdf
     * D80 vs off-axis angle plots (d80_vs_offaxis_cm.png, d80_vs_offaxis_deg.png)
     * JSON model parameter files (if --write_psf_parameters is specified)
-
-    Expected final print-out message:
-
-    .. code-block:: console
-
-        Parameter results written to simtools-output/derive_psf_parameters/tested_psf_parameters.txt
-        D80 vs off-axis angle plots created successfully
-
-        Best parameters:
-        mirror_reflection_random_angle = [0.006, 0.133, 0.005]
-        mirror_align_random_horizontal = [0.005, 28.0, 0.0, 0.0]
-        mirror_align_random_vertical = [0.005, 28.0, 0.0, 0.0]
+    * Cumulative PSF plots for all tested combinations (if --plot_all is specified)
 
 """
 

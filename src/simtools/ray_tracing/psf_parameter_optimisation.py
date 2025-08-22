@@ -356,17 +356,9 @@ def run_psf_simulation(
 
     # Handle plotting if requested
     if pdf_pages is not None and args_dict.get("plot_all", False):
-        # Temporarily store simulated data for plotting
-        original_simulated = data_to_plot.get("simulated")
         data_to_plot["simulated"] = simulated_data
-
         _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_pages)
-
-        # Restore original simulated data
-        if original_simulated is not None:
-            data_to_plot["simulated"] = original_simulated
-        elif "simulated" in data_to_plot:
-            del data_to_plot["simulated"]
+        del data_to_plot["simulated"]
 
     return (d80, rmsd, simulated_data) if return_simulated_data else (d80, rmsd)
 
