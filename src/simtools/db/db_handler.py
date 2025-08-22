@@ -81,6 +81,9 @@ class DatabaseHandler:
 
         self._set_up_connection()
         self._find_latest_simulation_model_db()
+        self.db_name = (
+            self.mongo_db_config.get("db_simulation_model", None) if self.mongo_db_config else None
+        )
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
@@ -178,6 +181,28 @@ class DatabaseHandler:
             )
         else:
             raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
+
+    def generate_compound_indexes(self, db_name=None):
+        """
+        Generate compound indexes for the MongoDB collections.
+
+        Indexes based on the typical query patterns.
+        """
+        db_name = db_name or self.db_name
+        collection_names = [
+            "telescopes",
+            "sites",
+            "configuration_sim_telarray",
+            "configuration_corsika",
+            "calibration_devices",
+        ]
+        for collection_name in collection_names:
+            db_collection = self.get_collection(collection_name, db_name=db_name)
+            db_collection.create_index(
+                [("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]
+            )
+        db_collection = self.get_collection("production_tables", db_name=db_name)
+        db_collection.create_index([("collection", 1), ("model_version", 1)])
 
     def get_model_parameter(
         self,
@@ -333,24 +358,23 @@ class DatabaseHandler:
         )
         return DatabaseHandler.model_parameters_cached[cache_key]
 
-    def get_collection(self, db_name, collection_name):
+    def get_collection(self, collection_name, db_name=None):
         """
         Get a collection from the DB.
 
         Parameters
         ----------
-        db_name: str
-            Name of the DB.
         collection_name: str
             Name of the collection.
+        db_name: str
+            Name of the DB.
 
         Returns
         -------
         pymongo.collection.Collection
             The collection from the DB.
-
         """
-        db_name = self._get_db_name(db_name)
+        db_name = db_name or self.db_name
         return DatabaseHandler.db_client[db_name][collection_name]
 
     def get_collections(self, db_name=None, model_collections_only=False):
@@ -370,7 +394,7 @@ class DatabaseHandler:
             List of collection names
 
         """
-        db_name = db_name or self._get_db_name()
+        db_name = db_name or self.db_name
         if db_name not in self.list_of_collections:
             self.list_of_collections[db_name] = DatabaseHandler.db_client[
                 db_name
@@ -451,7 +475,7 @@ class DatabaseHandler:
         file_id: dict of GridOut._id
             Dict of database IDs of files.
         """
-        db_name = self._get_db_name(db_name)
+        db_name = db_name or self.db_name
 
         if file_names:
             file_names = [file_names] if not isinstance(file_names, list) else file_names
@@ -467,8 +491,8 @@ class DatabaseHandler:
             if Path(dest).joinpath(file_name).exists():
                 instance_ids[file_name] = "file exists"
             else:
-                file_path_instance = self._get_file_mongo_db(self._get_db_name(), file_name)
-                self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file_path_instance)
+                file_path_instance = self._get_file_mongo_db(db_name, file_name)
+                self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
                 instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
         return instance_ids
 
@@ -509,8 +533,7 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
-        db_name = self._get_db_name()
-        collection = self.get_collection(db_name, collection_name)
+        collection = self.get_collection(collection_name, db_name=self.db_name)
         posts = list(collection.find(query))
         if not posts:
             raise ValueError(
@@ -547,7 +570,7 @@ class DatabaseHandler:
             pass
 
         query = {"model_version": model_version, "collection": collection_name}
-        collection = self.get_collection(self._get_db_name(), "production_tables")
+        collection = self.get_collection("production_tables", db_name=self.db_name)
         post = collection.find_one(query)
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
@@ -574,7 +597,7 @@ class DatabaseHandler:
         list
             List of model versions
         """
-        collection = self.get_collection(self._get_db_name(), "production_tables")
+        collection = self.get_collection("production_tables", db_name=self.db_name)
         return sorted(
             {post["model_version"] for post in collection.find({"collection": collection_name})}
         )
@@ -762,8 +785,7 @@ class DatabaseHandler:
         production_table: dict
             The production table to add to the DB.
         """
-        db_name = self._get_db_name(db_name)
-        collection = self.get_collection(db_name, "production_tables")
+        collection = self.get_collection("production_tables", db_name=db_name or self.db_name)
         self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
         DatabaseHandler.production_table_cached.clear()
@@ -794,8 +816,8 @@ class DatabaseHandler:
         """
         par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
 
-        db_name = self._get_db_name(db_name)
-        collection = self.get_collection(db_name, collection_name)
+        db_name = db_name or self.db_name
+        collection = self.get_collection(collection_name, db_name=db_name)
 
         par_dict["value"], _base_unit, _ = value_conversion.get_value_unit_type(
             value=par_dict["value"], unit_str=par_dict.get("unit", None)
@@ -825,22 +847,6 @@ class DatabaseHandler:
 
         self._reset_parameter_cache()
 
-    def _get_db_name(self, db_name=None):
-        """
-        Return database name. If not provided, return the default database name.
-
-        Parameters
-        ----------
-        db_name: str
-            Database name
-
-        Returns
-        -------
-        str
-            Database name
-        """
-        return self.mongo_db_config["db_simulation_model"] if db_name is None else db_name
-
     def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
         Insert a file to the DB.
@@ -863,7 +869,7 @@ class DatabaseHandler:
             "newly created DB GridOut._id.
 
         """
-        db_name = self._get_db_name(db_name)
+        db_name = db_name or self.db_name
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
 
