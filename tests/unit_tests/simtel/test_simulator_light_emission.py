@@ -39,20 +39,36 @@ def _prepare_inst_with_common_mocks(
     """Prepare a SimulatorLightEmission instance with common test mocks."""
     inst.light_source_setup = light_source_setup
     inst.output_directory = OUT_DIR
-    inst.light_emission_config = {"output_prefix": None, "events": 1}
+    inst.light_emission_config = {"output_prefix": None, "number_events": 1}
 
+    # Simtel installation path used to compose include paths
     inst._simtel_path = MagicMock()
     inst._simtel_path.joinpath.return_value = SIMTEL_BIN
 
+    # Telescope model provides configuration file and parameters used by sim_telarray
     inst._telescope_model = MagicMock()
     inst._telescope_model.config_file_directory = CONFIG_DIR
     type(inst._telescope_model).config_file_path = PropertyMock(return_value=CONFIG_FILE)
-    inst._telescope_model.get_parameter_value.side_effect = (
-        lambda p: "atm_test" if p == "atmospheric_transmission" else "X"
+    # Common parameters accessed by code under test
+    inst._telescope_model.get_parameter_value.side_effect = lambda p: (
+        "atm_test"
+        if p == "atmospheric_transmission"
+        else (1, 1, 1)
+        if p == "array_element_position_ground"
+        else "X"
     )
 
+    # Site model supplies altitude (observation level) with units
     inst._site_model = MagicMock()
     inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+    # Return concrete values for site params used in simtel script
+    inst._site_model.get_parameter_value.side_effect = (
+        lambda p: "atm_test"
+        if p == "atmospheric_transmission"
+        else "999"
+        if p == "corsika_observation_level"
+        else MagicMock()
+    )
 
     if light_source_type is not None:
         inst.light_source_type = light_source_type
@@ -119,7 +135,7 @@ def mock_simulator(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        light_emission_config={"events": 1, "output_prefix": None},
+        light_emission_config={"number_events": 1, "output_prefix": None},
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         light_source_setup="layout",
@@ -152,7 +168,7 @@ def mock_simulator_variable(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        light_emission_config={**default_config, "events": 1, "output_prefix": None},
+        light_emission_config={**default_config, "number_events": 1, "output_prefix": None},
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         light_source_setup="variable",
@@ -180,7 +196,7 @@ def calibration_model_illn(db_config, io_handler, model_version):
 def test_initialization(mock_simulator, default_config):
     assert isinstance(mock_simulator, SimulatorLightEmission)
     assert mock_simulator.light_source_type == "illuminator"
-    assert mock_simulator.light_emission_config.get("events", 1) == 1
+    assert mock_simulator.light_emission_config.get("number_events", 1) == 1
 
 
 def test_initialization_variable(mock_simulator_variable, default_config):
@@ -189,11 +205,11 @@ def test_initialization_variable(mock_simulator_variable, default_config):
     # default config plus CLI-derived settings
     for k, v in default_config.items():
         assert mock_simulator_variable.light_emission_config[k] == v
-    assert mock_simulator_variable.light_emission_config.get("events", 1) == 1
+    assert mock_simulator_variable.light_emission_config.get("number_events", 1) == 1
 
 
 def test_runs(mock_simulator):
-    assert mock_simulator.events == 1
+    assert mock_simulator.number_events == 1
 
 
 def test_photons_per_run_default(mock_simulator):
@@ -306,11 +322,15 @@ def test_make_simtel_script(mock_simulator):
 
             mock_simulator._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
             mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
-                "999" if param == "corsika_observation_level" else MagicMock()
+                "atm_test"
+                if param == "atmospheric_transmission"
+                else "999"
+                if param == "corsika_observation_level"
+                else MagicMock()
             )
 
             mock_simulator.output_directory = OUT_DIR
-            mock_simulator.light_emission_config = {"output_prefix": None, "events": 1}
+            mock_simulator.light_emission_config = {"output_prefix": None, "number_events": 1}
 
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
@@ -588,7 +608,8 @@ def test__prepare_flasher_atmosphere_files_creates_aliases(mock_simulator, tmp_p
     (tmp_path / src_name).write_text("x", encoding="utf-8")
     # Ensure telescope model is a mock for this test
     mock_simulator._telescope_model = MagicMock()
-    mock_simulator._telescope_model.get_parameter_value.return_value = src_name
+    mock_simulator._site_model = MagicMock()
+    mock_simulator._site_model.get_parameter_value.return_value = src_name
     atmo_id = mock_simulator._prepare_flasher_atmosphere_files(tmp_path)
     assert atmo_id == 1
     assert (tmp_path / "atmprof1.dat").exists()
@@ -655,7 +676,7 @@ def test_add_flasher_options():
     inst = object.__new__(SimulatorLightEmission)
     inst._flasher_model = MagicMock()
     inst._telescope_model = MagicMock()
-    inst.events = 1
+    inst.number_events = 1
     inst.photons_per_run = 1.23e6
 
     def gpvu(name):
@@ -709,8 +730,8 @@ def test_add_flasher_command_options_branch():
 def test_prepare_flasher_atmosphere_files_creates_aliases(tmp_path, caplog):
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.get_parameter_value.return_value = "atm_test_profile.dat"
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value.return_value = "atm_test_profile.dat"
 
     src = tmp_path / "atm_test_profile.dat"
     src.write_text("atmcontent", encoding="utf-8")
@@ -729,8 +750,8 @@ def test_prepare_flasher_atmosphere_files_creates_aliases(tmp_path, caplog):
 def test_prepare_flasher_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.get_parameter_value.return_value = "atm_prof2.dat"
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value.return_value = "atm_prof2.dat"
 
     src = tmp_path / "atm_prof2.dat"
     src.write_text("X", encoding="utf-8")
@@ -851,8 +872,8 @@ def test_make_simtel_script_includes_bypass_for_flasher():
 def test_prepare_flasher_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypatch):
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.get_parameter_value.return_value = "atm_prof3.dat"
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value.return_value = "atm_prof3.dat"
 
     # Source atmosphere file
     src = tmp_path / "atm_prof3.dat"
@@ -903,8 +924,8 @@ def test_prepare_flasher_atmosphere_files_warns_on_copy_failure(tmp_path, monkey
     # Instance with mocked logger and telescope model
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.get_parameter_value.return_value = "atm_failed.dat"
+    inst._site_model = MagicMock()
+    inst._site_model.get_parameter_value.return_value = "atm_failed.dat"
 
     # Create source file
     src = tmp_path / "atm_failed.dat"
@@ -946,7 +967,7 @@ def test_photons_per_run_flasher_model_non_test(tmp_path):
         calibration_model=None,
         flasher_model=flasher,
         site_model=None,
-        light_emission_config={"events": 1, "output_prefix": None},
+        light_emission_config={"number_events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test",
@@ -970,7 +991,7 @@ def test_photons_per_run_flasher_model_test_mode(tmp_path):
         calibration_model=None,
         flasher_model=flasher,
         site_model=None,
-        light_emission_config={"events": 1, "output_prefix": None},
+        light_emission_config={"number_events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test2",
@@ -991,7 +1012,7 @@ def test_photons_per_run_no_models(tmp_path):
         calibration_model=None,
         flasher_model=None,
         site_model=None,
-        light_emission_config={"events": 1, "output_prefix": None},
+        light_emission_config={"number_events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="illuminator",
         label="photons-test3",
@@ -1003,7 +1024,7 @@ def test_photons_per_run_no_models(tmp_path):
 
 def test_get_prefix_non_none_returns_with_underscore():
     inst = object.__new__(SimulatorLightEmission)
-    inst.light_emission_config = {"output_prefix": "pre", "events": 1}
+    inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
     assert inst._get_prefix() == "pre_"
 
 
@@ -1049,7 +1070,7 @@ def test_get_simulation_output_filename_prefix_and_exception():
     inst.output_directory = "/out"
     inst.light_source_type = "illuminator"
     inst.light_source_setup = "variable"
-    inst.light_emission_config = {"output_prefix": "pre", "events": 1}
+    inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
 
     # Cause exception so no distance suffix is appended
     inst._get_distance_for_plotting = MagicMock(side_effect=Exception("err"))
@@ -1087,7 +1108,7 @@ def test_flasher_default_configuration_schema():
     cfg = SimulatorLightEmission.flasher_default_configuration()
     assert isinstance(cfg, dict)
     for key in (
-        "events",
+        "number_events",
         "photons_per_flasher",
         "bunch_size",
         "flasher_position",
