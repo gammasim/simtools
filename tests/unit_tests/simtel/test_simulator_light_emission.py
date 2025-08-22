@@ -49,26 +49,30 @@ def _prepare_inst_with_common_mocks(
     inst._telescope_model = MagicMock()
     inst._telescope_model.config_file_directory = CONFIG_DIR
     type(inst._telescope_model).config_file_path = PropertyMock(return_value=CONFIG_FILE)
+
     # Common parameters accessed by code under test
-    inst._telescope_model.get_parameter_value.side_effect = lambda p: (
-        "atm_test"
-        if p == "atmospheric_transmission"
-        else (1, 1, 1)
-        if p == "array_element_position_ground"
-        else "X"
-    )
+    def _get_tm_param(name):
+        if name == "atmospheric_transmission":
+            return "atm_test"
+        if name == "array_element_position_ground":
+            return (1, 1, 1)
+        return "X"
+
+    inst._telescope_model.get_parameter_value.side_effect = _get_tm_param
 
     # Site model supplies altitude (observation level) with units
     inst._site_model = MagicMock()
     inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
+
     # Return concrete values for site params used in simtel script
-    inst._site_model.get_parameter_value.side_effect = (
-        lambda p: "atm_test"
-        if p == "atmospheric_transmission"
-        else "999"
-        if p == "corsika_observation_level"
-        else MagicMock()
-    )
+    def _get_site_param(param):
+        if param == "atmospheric_transmission":
+            return "atm_test"
+        if param == "corsika_observation_level":
+            return "999"
+        return MagicMock()
+
+    inst._site_model.get_parameter_value.side_effect = _get_site_param
 
     if light_source_type is not None:
         inst.light_source_type = light_source_type
@@ -321,13 +325,15 @@ def test_make_simtel_script(mock_simulator):
             )
 
             mock_simulator._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
-            mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
-                "atm_test"
-                if param == "atmospheric_transmission"
-                else "999"
-                if param == "corsika_observation_level"
-                else MagicMock()
-            )
+
+            def _get_site_param2(param):
+                if param == "atmospheric_transmission":
+                    return "atm_test"
+                if param == "corsika_observation_level":
+                    return "999"
+                return MagicMock()
+
+            mock_simulator._site_model.get_parameter_value.side_effect = _get_site_param2
 
             mock_simulator.output_directory = OUT_DIR
             mock_simulator.light_emission_config = {"output_prefix": None, "number_events": 1}

@@ -539,6 +539,7 @@ def test_plot_simtel_time_traces_calibrator_error(monkeypatch):
 
     class _CalibErr:
         def __init__(self, *a, **k):
+            # Minimal stub for ctapipe.calib.CameraCalibrator.
             pass
 
         def __call__(self, *a, **k):
