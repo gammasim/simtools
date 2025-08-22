@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 r"""
-Plot sim_telarray event products using the simtools visualization utilities.
+Plot simulated events..
 
-This application produces figures from one or more sim_telarray (.simtel.gz) files
+This application produces figures from one or more sim_telarray (.simtel.zst) files
 by calling functions in `simtools.visualization.simtel_event_plots`. It is meant to
 run after simulations (e.g., simtools-simulate-flasher, simtools-simulate-illuminator).
 
@@ -17,9 +17,9 @@ What it does
 Command line arguments
 ----------------------
 simtel_files (list, required)
-    One or more sim_telarray files to visualize (.simtel.gz).
+    One or more sim_telarray files to visualize (.simtel.zst).
 plots (list, optional)
-    Which plots to generate. Choose from: event_image, time_traces, waveform_pcolormesh,
+    Which plots to generate. Choose from: event_image, time_traces, waveform_matrix,
     step_traces, integrated_signal_image, integrated_pedestal_image, peak_timing, all.
     Default: event_image.
 tel_id (int, optional)
@@ -27,11 +27,11 @@ tel_id (int, optional)
 n_pixels (int, optional)
     For time_traces: number of pixel traces to draw. Default: 3.
 pixel_step (int, optional)
-    For step_traces and waveform_pcolormesh: step between pixel indices. Default: 100.
+    For step_traces and waveform_matrix: step between pixel indices. Default: 100.
 max_pixels (int, optional)
     For step_traces: cap the number of plotted pixels. Default: None.
 vmax (float, optional)
-    For waveform_pcolormesh: upper limit of color scale. Default: None.
+    For waveform_matrix: upper limit of color scale. Default: None.
 half_width (int, optional)
     For integrated_*_image: half window width in samples. Default: 8.
 gap (int, optional)
@@ -54,13 +54,15 @@ save_pngs (flag, optional)
     Also save individual PNG files per figure.
 dpi (int, optional)
     DPI for PNG outputs. Default: 300.
+output_path (str, optional)
+    Path to save the output files.
 
 Examples
 --------
 1) Camera image and time traces for a single file, save a PDF:
 
    simtools-plot-simtel-events \
-     --simtel_files output/simulate_illuminator/xyzls.simtel.gz \
+     --simtel_files tests/resources/ff-1m_flasher.simtel.zst \
      --plots event_image time_traces \
      --tel_id 1 \
      --output_file simulate_illuminator_inspect
@@ -68,13 +70,11 @@ Examples
 2) All plots for multiple files, PNGs and PDFs:
 
    simtools-plot-simtel-events \
-     --simtel_files f1.simtel.gz f2.simtel.gz \
+     --simtel_files f1.simtel.zst f2.simtel.zst \
      --plots all \
      --save_pngs --dpi 200
 
 """
-
-from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
@@ -92,13 +92,13 @@ from simtools.visualization.simtel_event_plots import (
     plot_simtel_peak_timing,
     plot_simtel_step_traces,
     plot_simtel_time_traces,
-    plot_simtel_waveform_pcolormesh,
+    plot_simtel_waveform_matrix,
 )
 
 PLOT_CHOICES = {
     "event_image": "event_image",
     "time_traces": "time_traces",
-    "waveform_pcolormesh": "waveform_pcolormesh",
+    "waveform_matrix": "waveform_matrix",
     "step_traces": "step_traces",
     "integrated_signal_image": "integrated_signal_image",
     "integrated_pedestal_image": "integrated_pedestal_image",
@@ -118,7 +118,7 @@ def _parse(label: str):
 
     config.parser.add_argument(
         "--simtel_files",
-        help="One or more sim_telarray files (.simtel.gz)",
+        help="One or more sim_telarray files (.simtel.zst)",
         nargs="+",
         required=True,
     )
@@ -201,6 +201,12 @@ def _parse(label: str):
 
 
 def _ensure_iter(x) -> Iterable:
+    """Return ``x`` as an iterable.
+
+    - If ``x`` is ``None``, return an empty list.
+    - If ``x`` is a list or tuple, return it unchanged.
+    - Otherwise, wrap ``x`` in a single-item list.
+    """
     if x is None:
         return []
     if isinstance(x, list | tuple):
@@ -209,6 +215,10 @@ def _ensure_iter(x) -> Iterable:
 
 
 def _maybe_save_png(fig, out_dir: Path, stem: str, suffix: str, dpi: int):
+    """Save ``fig`` as a PNG into ``out_dir`` using ``stem`` and ``suffix``.
+
+    Errors during saving are logged as warnings and otherwise ignored.
+    """
     png_path = out_dir.joinpath(f"{stem}_{suffix}.png")
     try:
         fig.savefig(png_path, dpi=dpi, bbox_inches="tight")
@@ -238,8 +248,13 @@ def _collect_figures_for_file(
     save_pngs: bool,
     dpi: int,
 ):
+    """Generate the selected plots for a single sim_telarray file.
+
+    Returns a list of figures. If ``save_pngs`` is True, also writes PNGs to
+    ``out_dir`` using ``base_stem`` for filenames.
+    """
     logger = logging.getLogger(__name__)
-    figures = []
+    figures: list[object] = []
 
     def add(fig, tag: str):
         if fig is not None:
@@ -249,99 +264,85 @@ def _collect_figures_for_file(
         else:
             logger.warning("Plot '%s' returned no figure for %s", tag, filename)
 
-    if "all" in plots:
-        plots = [
+    plots_to_run = (
+        [
             "event_image",
             "time_traces",
-            "waveform_pcolormesh",
+            "waveform_matrix",
             "step_traces",
             "integrated_signal_image",
             "integrated_pedestal_image",
             "peak_timing",
         ]
+        if "all" in plots
+        else list(plots)
+    )
 
-    for plot in plots:
-        if plot == "event_image":
-            fig = plot_simtel_event_image(
-                filename,
-                distance=args.get("distance"),
-                event_index=args.get("event_index"),
-            )
-            add(fig, "event_image")
-        elif plot == "time_traces":
-            fig = plot_simtel_time_traces(
+    def _call_peak_timing():
+        try:
+            fig_stats = plot_simtel_peak_timing(
                 filename,
                 tel_id=args.get("tel_id"),
-                n_pixels=args.get("n_pixels", 3),
+                sum_threshold=args.get("sum_threshold", 10.0),
+                peak_width=args.get("peak_width", 8),
+                examples=args.get("examples", 3),
+                timing_bins=args.get("timing_bins"),
+                return_stats=True,
                 event_index=args.get("event_index"),
             )
-            add(fig, "time_traces")
-        elif plot == "waveform_pcolormesh":
-            fig = plot_simtel_waveform_pcolormesh(
+            return fig_stats[0] if isinstance(fig_stats, tuple) else fig_stats
+        except TypeError:
+            return plot_simtel_peak_timing(
                 filename,
                 tel_id=args.get("tel_id"),
-                vmax=args.get("vmax"),
+                sum_threshold=args.get("sum_threshold", 10.0),
+                peak_width=args.get("peak_width", 8),
+                examples=args.get("examples", 3),
+                timing_bins=args.get("timing_bins"),
                 event_index=args.get("event_index"),
             )
-            add(fig, "waveform_pcolormesh")
-        elif plot == "step_traces":
-            fig = plot_simtel_step_traces(
-                filename,
-                tel_id=args.get("tel_id"),
-                pixel_step=args.get("pixel_step"),
-                max_pixels=args.get("max_pixels"),
-                event_index=args.get("event_index"),
-            )
-            add(fig, "step_traces")
-        elif plot == "integrated_signal_image":
-            fig = plot_simtel_integrated_signal_image(
-                filename,
-                tel_id=args.get("tel_id"),
-                half_width=args.get("half_width", 8),
-                event_index=args.get("event_index"),
-            )
-            add(fig, "integrated_signal_image")
-        elif plot == "integrated_pedestal_image":
-            fig = plot_simtel_integrated_pedestal_image(
-                filename,
-                tel_id=args.get("tel_id"),
-                half_width=args.get("half_width", 8),
-                gap=args.get("gap", 16),
-                event_index=args.get("event_index"),
-            )
-            add(fig, "integrated_pedestal_image")
-        elif plot == "peak_timing":
-            # try to get stats if available; save as sidecar json in future if needed
-            try:
-                fig_stats = plot_simtel_peak_timing(
-                    filename,
-                    tel_id=args.get("tel_id"),
-                    sum_threshold=args.get("sum_threshold", 10.0),
-                    peak_width=args.get("peak_width", 8),
-                    examples=args.get("examples", 3),
-                    timing_bins=args.get("timing_bins"),
-                    return_stats=True,
-                    event_index=args.get("event_index"),
-                )
-                # function may return just fig or (fig, stats)
-                if isinstance(fig_stats, tuple) and len(fig_stats) == 2:
-                    fig, _stats = fig_stats
-                else:
-                    fig = fig_stats
-            except TypeError:
-                # older signature without return_stats
-                fig = plot_simtel_peak_timing(
-                    filename,
-                    tel_id=args.get("tel_id"),
-                    sum_threshold=args.get("sum_threshold", 10.0),
-                    peak_width=args.get("peak_width", 8),
-                    examples=args.get("examples", 3),
-                    timing_bins=args.get("timing_bins"),
-                    event_index=args.get("event_index"),
-                )
-            add(fig, "peak_timing")
-        else:
-            logger.warning("Unknown plot selection '%s'", plot)
+
+    # function name -> (callable, defaults)
+    dispatch: dict[str, tuple[object, dict[str, object]]] = {
+        "event_image": (
+            plot_simtel_event_image,
+            {"distance": None, "event_index": None},
+        ),
+        "time_traces": (
+            plot_simtel_time_traces,
+            {"tel_id": None, "n_pixels": 3, "event_index": None},
+        ),
+        "waveform_matrix": (
+            plot_simtel_waveform_matrix,
+            {"tel_id": None, "vmax": None, "event_index": None},
+        ),
+        "step_traces": (
+            plot_simtel_step_traces,
+            {"tel_id": None, "pixel_step": None, "max_pixels": None, "event_index": None},
+        ),
+        "integrated_signal_image": (
+            plot_simtel_integrated_signal_image,
+            {"tel_id": None, "half_width": 8, "event_index": None},
+        ),
+        "integrated_pedestal_image": (
+            plot_simtel_integrated_pedestal_image,
+            {"tel_id": None, "half_width": 8, "gap": 16, "event_index": None},
+        ),
+    }
+
+    for plot_name in plots_to_run:
+        if plot_name == "peak_timing":
+            add(_call_peak_timing(), "peak_timing")
+            continue
+        entry = dispatch.get(plot_name)
+        if entry is None:
+            logger.warning("Unknown plot selection '%s'", plot_name)
+            continue
+        func, defaults = entry
+        # Build kwargs with user args overriding defaults
+        kwargs = {k: args.get(k, v) for k, v in defaults.items()}
+        fig = func(filename, **kwargs)  # type: ignore[misc]
+        add(fig, plot_name)
 
     return figures
 

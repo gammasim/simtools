@@ -230,14 +230,14 @@ def test_plot_simtel_time_traces_invalid_tel_id(monkeypatch, caplog):
     assert any("No R1 waveforms available" in r.message for r in caplog.records)
 
 
-def test_plot_simtel_waveform_pcolormesh_returns_figure(monkeypatch):
+def test_plot_simtel_waveform_matrix_returns_figure(monkeypatch):
     w = _make_waveforms(8, 32)
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = sep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL, pixel_step=2)
+    fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL, pixel_step=2)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -492,7 +492,7 @@ def test__select_event_by_type_first_and_index_and_oob(caplog):  # pylint:disabl
     assert any("out of range" in r.message for r in caplog.records)
 
 
-def test_plot_simtel_waveform_pcolormesh_no_r1(monkeypatch, caplog):
+def test_plot_simtel_waveform_matrix_no_r1(monkeypatch, caplog):
     # Event without R1 data
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
@@ -501,7 +501,7 @@ def test_plot_simtel_waveform_pcolormesh_no_r1(monkeypatch, caplog):
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL)
+        fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL)
     assert fig is None
     assert any("no R1 data for waveform plot" in r.message for r in caplog.records)
 
@@ -568,7 +568,7 @@ def test_plot_simtel_event_image_distance_float(monkeypatch):
     plt.close(fig)
 
 
-def test_plot_simtel_waveform_pcolormesh_defaults(monkeypatch):
+def test_plot_simtel_waveform_matrix_defaults(monkeypatch):
     # Cover pixel_step=None branch
     w = _make_waveforms(5, 10)
     ev, tel_id = _fake_event(r1_waveforms=w)
@@ -576,7 +576,7 @@ def test_plot_simtel_waveform_pcolormesh_defaults(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = sep.plot_simtel_waveform_pcolormesh(DUMMY_SIMTEL, pixel_step=None)
+    fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL, pixel_step=None)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 

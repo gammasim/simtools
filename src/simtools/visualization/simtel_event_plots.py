@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 """Plots for light emission (flasher/calibration) sim_telarray events."""
 
-from __future__ import annotations
-
 import logging
 
 import astropy.units as u
@@ -20,7 +18,7 @@ __all__ = [
     "plot_simtel_peak_timing",
     "plot_simtel_step_traces",
     "plot_simtel_time_traces",
-    "plot_simtel_waveform_pcolormesh",
+    "plot_simtel_waveform_matrix",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -240,7 +238,7 @@ def plot_simtel_time_traces(
     return fig
 
 
-def plot_simtel_waveform_pcolormesh(
+def plot_simtel_waveform_matrix(
     filename,
     tel_id: int | None = None,
     vmax: float | None = None,
@@ -402,7 +400,7 @@ def _detect_peaks(trace, peak_width, signal_mod):
             peaks = signal_mod.find_peaks_cwt(trace, widths=np.array([peak_width]))
         if not np.any(peaks):
             peaks, _ = signal_mod.find_peaks(trace, prominence=np.max(trace) * 0.1)
-    except (ValueError, RuntimeError, TypeError):
+    except (ValueError, TypeError):
         peaks = []
     return np.asarray(peaks, dtype=int) if np.size(peaks) else np.array([], dtype=int)
 

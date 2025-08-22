@@ -1,4 +1,4 @@
-"""Simulation using the light emission package for calibration and flasher devices."""
+"""Simulation using the light emission package for calibration devices."""
 
 import logging
 import shutil
@@ -79,7 +79,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
 
-        self.events = self.light_emission_config["events"]
+        self.number_events = self.light_emission_config["number_events"]
 
         # photons per run
         if self._calibration_model is not None:
@@ -179,11 +179,11 @@ class SimulatorLightEmission(SimtelRunner):
             Default configuration for flasher devices.
         """
         return {
-            "events": {
+            "number_events": {
                 "len": 1,
                 "unit": None,
                 "default": 1,
-                "names": ["events"],
+                "names": ["number_events"],
             },
             "photons_per_flasher": {
                 "len": 1,
@@ -311,7 +311,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _prepare_flasher_atmosphere_files(self, config_directory: Path) -> int:
         """Prepare canonical atmosphere aliases for ff-1m and return model id 1."""
-        atmo_name = self._telescope_model.get_parameter_value("atmospheric_profile")
+        atmo_name = self._site_model.get_parameter_value("atmospheric_profile")
         self._logger.debug(f"Using atmosphere profile: {atmo_name}")
 
         src_path = config_directory.joinpath(atmo_name)
@@ -434,7 +434,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = flasher_distance.to(u.cm).value
         spec_nm = int(spectrum.to(u.nm).value)
 
-        command += f" --events {self.events}"
+        command += f" --events {self.number_events}"
         command += f" --photons {self.photons_per_run}"
         command += f" --bunchsize {bunch_size}"
         command += f" --xy {fx},{fy}"
