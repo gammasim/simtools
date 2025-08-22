@@ -117,7 +117,7 @@ def test_calculate_rmsd():
     expected_rmsd = np.sqrt(np.mean((data - sim) ** 2))
     result = psf_opt.calculate_rmsd(data, sim)
 
-    assert pytest.approx(result) == expected_rmsd
+    assert np.isclose(result, expected_rmsd, atol=1e-9)
 
 
 def test_calculate_rmsd_identical_arrays():
@@ -126,7 +126,7 @@ def test_calculate_rmsd_identical_arrays():
     sim = np.array([1.0, 2.0, 3.0, 4.0])
 
     result = psf_opt.calculate_rmsd(data, sim)
-    assert pytest.approx(result) == 0.0
+    assert np.isclose(result, 0.0, atol=1e-9)
 
 
 def test_add_parameters():
@@ -169,8 +169,8 @@ def test_add_parameters_default_values():
     pars = all_parameters[0]
 
     # Check default values are used
-    assert pytest.approx(pars["mirror_reflection_random_angle"][1]) == 0.15
-    assert pytest.approx(pars["mirror_reflection_random_angle"][2]) == 0.035
+    assert np.isclose(pars["mirror_reflection_random_angle"][1], 0.15, atol=1e-9)
+    assert np.isclose(pars["mirror_reflection_random_angle"][2], 0.035, atol=1e-9)
 
 
 def test_get_previous_values(mock_telescope_model, caplog):
@@ -178,10 +178,10 @@ def test_get_previous_values(mock_telescope_model, caplog):
     with caplog.at_level(logging.DEBUG):
         mrra_0, mfr_0, mrra2_0, mar_0 = psf_opt.get_previous_values(mock_telescope_model)
 
-    assert pytest.approx(mrra_0) == 0.005
-    assert pytest.approx(mfr_0) == 0.15
-    assert pytest.approx(mrra2_0) == 0.03
-    assert pytest.approx(mar_0) == 0.004
+    assert np.isclose(mrra_0, 0.005, atol=1e-9)
+    assert np.isclose(mfr_0, 0.15, atol=1e-9)
+    assert np.isclose(mrra2_0, 0.03, atol=1e-9)
+    assert np.isclose(mar_0, 0.004, atol=1e-9)
 
     # Check debug logging
     assert "Previous parameter values:" in caplog.text
@@ -274,13 +274,13 @@ def test_generate_random_parameters(
     if check_fixed_value:
         # When fixed=True, the first mirror reflection parameter should be exactly the original value
         for pars in all_parameters:
-            assert pytest.approx(pars["mirror_reflection_random_angle"][0]) == 0.005
+            assert np.isclose(pars["mirror_reflection_random_angle"][0], 0.005, atol=1e-9)
 
     if check_mar_zero:
         # Check that all parameter sets have mar set to 0 for dual mirror telescopes
         for pars in all_parameters:
-            assert pytest.approx(pars["mirror_align_random_horizontal"][0]) == 0.0
-            assert pytest.approx(pars["mirror_align_random_vertical"][0]) == 0.0
+            assert np.isclose(pars["mirror_align_random_horizontal"][0], 0.0, atol=1e-9)
+            assert np.isclose(pars["mirror_align_random_vertical"][0], 0.0, atol=1e-9)
     elif telescope_name == "LSTN-01" and not check_fixed_value:
         # Check that parameter sets have non-zero mar values (within expected range) for single mirror telescopes
         for pars in all_parameters:
@@ -289,7 +289,7 @@ def test_generate_random_parameters(
 
             assert mar_horizontal >= 0.0
             assert mar_vertical >= 0.0
-            assert mar_horizontal == mar_vertical  # They should be the same
+            assert np.isclose(mar_horizontal, mar_vertical, atol=1e-9)  # They should be the same
 
 
 def test__run_ray_tracing_simulation(
@@ -315,7 +315,7 @@ def test__run_ray_tracing_simulation(
         mock_ray.simulate.assert_called_once_with(test=False, force=True)
         mock_ray.analyze.assert_called_once_with(force=True, use_rx=False)
 
-        assert pytest.approx(d80) == 3.2
+        assert np.isclose(d80, 3.2, atol=1e-9)
         assert im == mock_image
 
 
@@ -401,7 +401,7 @@ def test_run_psf_simulation(
 
             # Common assertions
             d80, rmsd = result[0], result[1]
-            assert pytest.approx(d80) == expected_d80
+            assert np.isclose(d80, expected_d80, atol=1e-9)
             assert rmsd >= 0
 
             if return_simulated_data:
@@ -458,7 +458,7 @@ def test_run_psf_simulation_with_plotting(
             )
 
             d80, rmsd = result[0], result[1]
-            assert pytest.approx(d80) == 3.5
+            assert np.isclose(d80, 3.5, atol=1e-9)
             assert rmsd >= 0
             mock_plot_func.assert_called_once()
 
@@ -637,18 +637,24 @@ def test__create_plot_for_parameters(
                 mock_fig.text.assert_called_once()  # Footnote for best parameters
 
 
+@pytest.fixture
+def test_config(request):
+    """Fixture to provide test configuration parameters."""
+    return {
+        "mock_side_effect": request.param[0],
+        "expected_best_index": request.param[1],
+        "expected_results_count": request.param[2],
+        "expected_log_level": request.param[3],
+        "expected_log_message": request.param[4],
+        "plot_all": request.param[5],
+        "pdf_pages": request.param[6],
+        "expected_plots_called": request.param[7],
+        "description": request.param[8],
+    }
+
+
 @pytest.mark.parametrize(
-    (
-        "mock_side_effect",
-        "expected_best_index",
-        "expected_results_count",
-        "expected_log_level",
-        "expected_log_message",
-        "plot_all",
-        "pdf_pages",
-        "expected_plots_called",
-        "description",
-    ),
+    "test_config",
     [
         (
             [(3.5, 0.2, "sample_psf_data"), (3.2, 0.1, "sample_psf_data")],  # All succeed
@@ -676,6 +682,7 @@ def test__create_plot_for_parameters(
             "with simulation failures and plotting",
         ),
     ],
+    indirect=True,
 )
 def test_find_best_parameters(
     mock_telescope_model,
@@ -684,15 +691,7 @@ def test_find_best_parameters(
     mock_data_to_plot,
     sample_psf_data,
     caplog,
-    mock_side_effect,
-    expected_best_index,
-    expected_results_count,
-    expected_log_level,
-    expected_log_message,
-    plot_all,
-    pdf_pages,
-    expected_plots_called,
-    description,
+    test_config,
 ):
     """Test finding the best parameters with various scenarios including plotting and failures."""
     all_parameters = [
@@ -710,13 +709,13 @@ def test_find_best_parameters(
     radius = sample_psf_data[psf_opt.RADIUS_CM]
 
     # Set up args_dict based on test parameters
-    mock_args_dict["plot_all"] = plot_all
+    mock_args_dict["plot_all"] = test_config["plot_all"]
 
     # Create mock_pdf_pages if needed
-    mock_pdf_pages_obj = MagicMock() if pdf_pages == "mock_pdf_pages" else None
+    mock_pdf_pages_obj = MagicMock() if test_config["pdf_pages"] == "mock_pdf_pages" else None
 
     processed_side_effect = []
-    for effect in mock_side_effect:
+    for effect in test_config["mock_side_effect"]:
         if isinstance(effect, tuple):
             # Replace string placeholder with actual sample_psf_data
             processed_effect = tuple(
@@ -733,8 +732,8 @@ def test_find_best_parameters(
         mock_sim.side_effect = processed_side_effect
 
         # Set up logging capture if needed
-        if expected_log_level:
-            with caplog.at_level(expected_log_level):
+        if test_config["expected_log_level"]:
+            with caplog.at_level(test_config["expected_log_level"]):
                 best_pars, best_d80, results = psf_opt.find_best_parameters(
                     all_parameters,
                     mock_telescope_model,
@@ -756,17 +755,17 @@ def test_find_best_parameters(
             )
 
         # Common assertions
-        assert best_pars == all_parameters[expected_best_index]
-        assert len(results) == expected_results_count
-        assert pytest.approx(best_d80) == 3.2  # Best result available
+        assert best_pars == all_parameters[test_config["expected_best_index"]]
+        assert len(results) == test_config["expected_results_count"]
+        assert np.isclose(best_d80, 3.2, atol=1e-9)  # Best result available
         assert mock_sim.call_count == 2  # Both parameter sets are attempted
 
         # Check logging if expected
-        if expected_log_message:
-            assert expected_log_message in caplog.text
+        if test_config["expected_log_message"]:
+            assert test_config["expected_log_message"] in caplog.text
 
         # Check plotting behavior based on plot_all setting
-        if expected_plots_called:
+        if test_config["expected_plots_called"]:
             mock_plots.assert_called_once()
         else:
             mock_plots.assert_not_called()
@@ -891,9 +890,9 @@ def test__add_units_to_psf_parameters(sample_parameters):
     assert mrra[0].unit == u.deg
     assert mrra[1].unit == u.dimensionless_unscaled
     assert mrra[2].unit == u.deg
-    assert pytest.approx(mrra[0].value) == 0.006
-    assert pytest.approx(mrra[1].value) == 0.15
-    assert pytest.approx(mrra[2].value) == 0.035
+    assert np.isclose(mrra[0].value, 0.006, atol=1e-9)
+    assert np.isclose(mrra[1].value, 0.15, atol=1e-9)
+    assert np.isclose(mrra[2].value, 0.035, atol=1e-9)
 
     # Check mirror_align_random_horizontal units: [deg, deg, dimensionless, dimensionless]
     marh = result["mirror_align_random_horizontal"]
@@ -901,8 +900,8 @@ def test__add_units_to_psf_parameters(sample_parameters):
     assert marh[1].unit == u.deg
     assert marh[2].unit == u.dimensionless_unscaled
     assert marh[3].unit == u.dimensionless_unscaled
-    assert pytest.approx(marh[0].value) == 0.005
-    assert pytest.approx(marh[1].value) == 28.0
+    assert np.isclose(marh[0].value, 0.005, atol=1e-9)
+    assert np.isclose(marh[1].value, 28.0, atol=1e-9)
 
     # Check mirror_align_random_vertical units: [deg, deg, dimensionless, dimensionless]
     marv = result["mirror_align_random_vertical"]
@@ -912,7 +911,7 @@ def test__add_units_to_psf_parameters(sample_parameters):
     assert marv[3].unit == u.dimensionless_unscaled
 
     # Check other parameters are kept as-is
-    assert result["other_parameter"] == [1.0, 2.0]
+    assert np.allclose(result["other_parameter"], [1.0, 2.0])
 
 
 @pytest.mark.parametrize(
