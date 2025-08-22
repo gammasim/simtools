@@ -23,6 +23,10 @@ site (str, required)
     Site name (North or South).
 flasher (str, required)
     Flasher device in array, e.g., FLSN-01.
+number_of_events (int, optional):
+    Number of events to simulate (default: 1).
+output_prefix (str, optional):
+    Prefix for output files (default: empty).
 model_version (str, optional)
     Version of the simulation model.
 
