@@ -28,7 +28,7 @@ applications:
   - test_output_files:
     - file: gamma_run000001_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.log_hist.tar.gz
       path_descriptor: pack_for_grid_register
-    - expected output:
+    - expected_output:
         pe_sum:
         - 20
         - 1000
