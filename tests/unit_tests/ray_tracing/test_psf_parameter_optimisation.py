@@ -126,7 +126,7 @@ def test_calculate_rmsd_identical_arrays():
     sim = np.array([1.0, 2.0, 3.0, 4.0])
 
     result = psf_opt.calculate_rmsd(data, sim)
-    assert result == 0.0
+    assert pytest.approx(result) == 0.0
 
 
 def test_add_parameters():
@@ -169,8 +169,8 @@ def test_add_parameters_default_values():
     pars = all_parameters[0]
 
     # Check default values are used
-    assert pars["mirror_reflection_random_angle"][1] == 0.15
-    assert pars["mirror_reflection_random_angle"][2] == 0.035
+    assert pytest.approx(pars["mirror_reflection_random_angle"][1]) == 0.15
+    assert pytest.approx(pars["mirror_reflection_random_angle"][2]) == 0.035
 
 
 def test_get_previous_values(mock_telescope_model, caplog):
@@ -178,10 +178,10 @@ def test_get_previous_values(mock_telescope_model, caplog):
     with caplog.at_level(logging.DEBUG):
         mrra_0, mfr_0, mrra2_0, mar_0 = psf_opt.get_previous_values(mock_telescope_model)
 
-    assert mrra_0 == 0.005
-    assert mfr_0 == 0.15
-    assert mrra2_0 == 0.03
-    assert mar_0 == 0.004
+    assert pytest.approx(mrra_0) == 0.005
+    assert pytest.approx(mfr_0) == 0.15
+    assert pytest.approx(mrra2_0) == 0.03
+    assert pytest.approx(mar_0) == 0.004
 
     # Check debug logging
     assert "Previous parameter values:" in caplog.text
@@ -274,13 +274,13 @@ def test_generate_random_parameters(
     if check_fixed_value:
         # When fixed=True, the first mirror reflection parameter should be exactly the original value
         for pars in all_parameters:
-            assert pars["mirror_reflection_random_angle"][0] == 0.005
+            assert pytest.approx(pars["mirror_reflection_random_angle"][0]) == 0.005
 
     if check_mar_zero:
         # Check that all parameter sets have mar set to 0 for dual mirror telescopes
         for pars in all_parameters:
-            assert pars["mirror_align_random_horizontal"][0] == 0.0
-            assert pars["mirror_align_random_vertical"][0] == 0.0
+            assert pytest.approx(pars["mirror_align_random_horizontal"][0]) == 0.0
+            assert pytest.approx(pars["mirror_align_random_vertical"][0]) == 0.0
     elif telescope_name == "LSTN-01" and not check_fixed_value:
         # Check that parameter sets have non-zero mar values (within expected range) for single mirror telescopes
         for pars in all_parameters:
@@ -315,7 +315,7 @@ def test__run_ray_tracing_simulation(
         mock_ray.simulate.assert_called_once_with(test=False, force=True)
         mock_ray.analyze.assert_called_once_with(force=True, use_rx=False)
 
-        assert d80 == 3.2
+        assert pytest.approx(d80) == 3.2
         assert im == mock_image
 
 
@@ -401,7 +401,7 @@ def test_run_psf_simulation(
 
             # Common assertions
             d80, rmsd = result[0], result[1]
-            assert d80 == expected_d80
+            assert pytest.approx(d80) == expected_d80
             assert rmsd >= 0
 
             if return_simulated_data:
@@ -458,7 +458,7 @@ def test_run_psf_simulation_with_plotting(
             )
 
             d80, rmsd = result[0], result[1]
-            assert d80 == 3.5
+            assert pytest.approx(d80) == 3.5
             assert rmsd >= 0
             mock_plot_func.assert_called_once()
 
@@ -758,7 +758,7 @@ def test_find_best_parameters(
         # Common assertions
         assert best_pars == all_parameters[expected_best_index]
         assert len(results) == expected_results_count
-        assert best_d80 == 3.2  # Best result available
+        assert pytest.approx(best_d80) == 3.2  # Best result available
         assert mock_sim.call_count == 2  # Both parameter sets are attempted
 
         # Check logging if expected
@@ -774,11 +774,13 @@ def test_find_best_parameters(
 
 def test_create_all_plots(mock_data_to_plot):
     """Test creating plots for all parameter sets."""
+    pars1 = {"param1": "value1"}
+    pars2 = {"param2": "value2"}
     results = [
-        ({"param1": "value1"}, 0.2, 3.5, {"data": "sim1"}),
-        ({"param2": "value2"}, 0.1, 3.2, {"data": "sim2"}),
+        (pars1, 0.2, 3.5, {"data": "sim1"}),
+        (pars2, 0.1, 3.2, {"data": "sim2"}),
     ]
-    best_pars = {"param2": "value2"}
+    best_pars = pars2
 
     with patch(
         "simtools.ray_tracing.psf_parameter_optimisation._create_plot_for_parameters"
@@ -845,30 +847,19 @@ def test_create_d80_vs_offaxis_plot(
 
 def test_write_tested_parameters_to_file(tmp_path):
     """Test writing tested parameters to file."""
-    results = [
-        (
-            {
-                "mirror_reflection_random_angle": [0.005, 0.15, 0.035],
-                "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
-            },
-            0.2,
-            3.5,
-            {},
-        ),
-        (
-            {
-                "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
-                "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
-            },
-            0.1,
-            3.2,
-            {},
-        ),
-    ]
-    best_pars = {
+    pars1 = {
+        "mirror_reflection_random_angle": [0.005, 0.15, 0.035],
+        "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
+    }
+    pars2 = {
         "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
         "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
     }
+    results = [
+        (pars1, 0.2, 3.5, {}),
+        (pars2, 0.1, 3.2, {}),
+    ]
+    best_pars = pars2  # Same object as used in results
     best_d80 = 3.2
 
     param_file = psf_opt.write_tested_parameters_to_file(results, best_pars, best_d80, tmp_path)
@@ -900,9 +891,9 @@ def test__add_units_to_psf_parameters(sample_parameters):
     assert mrra[0].unit == u.deg
     assert mrra[1].unit == u.dimensionless_unscaled
     assert mrra[2].unit == u.deg
-    assert mrra[0].value == 0.006
-    assert mrra[1].value == 0.15
-    assert mrra[2].value == 0.035
+    assert pytest.approx(mrra[0].value) == 0.006
+    assert pytest.approx(mrra[1].value) == 0.15
+    assert pytest.approx(mrra[2].value) == 0.035
 
     # Check mirror_align_random_horizontal units: [deg, deg, dimensionless, dimensionless]
     marh = result["mirror_align_random_horizontal"]
@@ -910,8 +901,8 @@ def test__add_units_to_psf_parameters(sample_parameters):
     assert marh[1].unit == u.deg
     assert marh[2].unit == u.dimensionless_unscaled
     assert marh[3].unit == u.dimensionless_unscaled
-    assert marh[0].value == 0.005
-    assert marh[1].value == 28.0
+    assert pytest.approx(marh[0].value) == 0.005
+    assert pytest.approx(marh[1].value) == 28.0
 
     # Check mirror_align_random_vertical units: [deg, deg, dimensionless, dimensionless]
     marv = result["mirror_align_random_vertical"]
