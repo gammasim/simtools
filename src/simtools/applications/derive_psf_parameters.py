@@ -91,7 +91,7 @@ r"""
             --model_version 6.0.0 \\
             --data tests/resources/PSFcurve_data_v2.txt --write_psf_parameters
 
-    The output is saved in simtools-output/derive_psf_parameters.
+    The output is saved in simtools-output/tune_psf.
 
     Output files include:
 
