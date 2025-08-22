@@ -1,0 +1,1346 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visualization.simtel_event_plots &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=7b3b549d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/visualization/simtel_event_plots';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.dev1+g6ec589c69" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">visualization.simtel_event_plots</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for visualization.simtel_event_plots</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Plots for light emission (flasher/calibration) sim_telarray events.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.calib</span><span class="w"> </span><span class="kn">import</span> <span class="n">CameraCalibrator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">CameraDisplay</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span> <span class="k">as</span> <span class="n">_signal</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;plot_simtel_event_image&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_simtel_integrated_pedestal_image&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_simtel_integrated_signal_image&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_simtel_peak_timing&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_simtel_step_traces&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_simtel_time_traces&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_simtel_waveform_matrix&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Reusable literal constants (duplicated from visualize to avoid circular deps)</span>
+<span class="n">AXES_FRACTION</span> <span class="o">=</span> <span class="s2">&quot;axes fraction&quot;</span>
+<span class="n">NO_R1_WAVEFORMS_MSG</span> <span class="o">=</span> <span class="s2">&quot;No R1 waveforms available in event&quot;</span>
+<span class="n">TIME_NS_LABEL</span> <span class="o">=</span> <span class="s2">&quot;time [ns]&quot;</span>
+<span class="n">R1_SAMPLES_LABEL</span> <span class="o">=</span> <span class="s2">&quot;R1 samples [d.c.]&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_integration_window</span><span class="p">(</span>
+    <span class="n">peak_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">half_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return [a, b) window bounds for integration for signal/pedestal modes.&quot;&quot;&quot;</span>
+    <span class="n">hw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">half_width</span><span class="p">)</span>
+    <span class="n">win_len</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;signal&quot;</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">peak_idx</span> <span class="o">-</span> <span class="n">hw</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_samp</span><span class="p">,</span> <span class="n">peak_idx</span> <span class="o">+</span> <span class="n">hw</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span> <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">16</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">peak_idx</span> <span class="o">+</span> <span class="n">g</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">+</span> <span class="n">win_len</span> <span class="o">&lt;=</span> <span class="n">n_samp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">win_len</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">peak_idx</span> <span class="o">-</span> <span class="n">g</span> <span class="o">-</span> <span class="n">win_len</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_samp</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">win_len</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_samp</span><span class="p">,</span> <span class="n">win_len</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_integrated_title</span><span class="p">(</span>
+    <span class="n">tel_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">et_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">half_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">win_len</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">half_width</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;signal&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2"> integrated signal (win </span><span class="si">{</span><span class="n">win_len</span><span class="si">}</span><span class="s2">) (</span><span class="si">{</span><span class="n">et_name</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span> <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">16</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2"> integrated pedestal (win </span><span class="si">{</span><span class="n">win_len</span><span class="si">}</span><span class="s2">, offset </span><span class="si">{</span><span class="n">g</span><span class="si">}</span><span class="s2">) (</span><span class="si">{</span><span class="n">et_name</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build an event selector for a ctapipe EventSource.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : ctapipe.io.EventSource</span>
+<span class="sd">        Iterable event source.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    callable</span>
+<span class="sd">        A function ``select_event(event_index: int | None) -&gt; Any`` that returns</span>
+<span class="sd">        the first event (when ``event_index`` is None) or the event at the given</span>
+<span class="sd">        index. Returns ``None`` if no event is available or the index is out of range.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_event</span><span class="p">(</span><span class="n">event_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ev</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ev</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="n">event_index</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">ev</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No events available from source or event_index out of range&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">select_event</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_time_axis_from_readout</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute time axis in nanoseconds from a camera readout.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    readout : Any</span>
+<span class="sd">        Camera readout providing ``sampling_rate`` as an astropy Quantity.</span>
+<span class="sd">    n_samp : int</span>
+<span class="sd">        Number of samples per trace.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Array of shape ``(n_samp,)`` with time in nanoseconds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">readout</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dt</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n_samp</span><span class="p">))</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_simtel_event_image">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_event_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_event_image</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a sim_telarray file and plot the DL1 image for one event via ctapipe.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str | pathlib.Path</span>
+<span class="sd">        Path to the ``.simtel`` file.</span>
+<span class="sd">    distance : astropy.units.Quantity | float | None, optional</span>
+<span class="sd">        Distance to annotate in the plot. If a Quantity, interpreted in meters.</span>
+<span class="sd">        If not provided, no unit conversion is attempted.</span>
+<span class="sd">    event_index : int | None, optional</span>
+<span class="sd">        Zero-based index of the event to plot. If None, the first event is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure | None</span>
+<span class="sd">        The created figure, or ``None`` if no suitable event/image is available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">EventSource</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">max_events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">)(</span><span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No event found in the file.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tel_ids</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;First event has no R1 telescope data&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">calib</span> <span class="o">=</span> <span class="n">CameraCalibrator</span><span class="p">(</span><span class="n">subarray</span><span class="o">=</span><span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="p">)</span>
+    <span class="n">calib</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">geometry</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">dl1</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">image</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">tel</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span>
+    <span class="n">tel_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;CT</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2">, run </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">obs_id</span><span class="si">}</span><span class="s2"> event </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">event_id</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">CameraDisplay</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;symlog&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;RdBu_r&quot;</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">add_colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">pad</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">set_limits_percent</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">d_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">distance</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">d_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;tel type: </span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;optics: </span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">optics</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;camera: </span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;distance: </span><span class="si">{</span><span class="n">d_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">xycoords</span><span class="o">=</span><span class="n">AXES_FRACTION</span><span class="p">,</span>
+        <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;dl1 image,</span><span class="se">\n</span><span class="s2">total ADC counts: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="p">))</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">xycoords</span><span class="o">=</span><span class="n">AXES_FRACTION</span><span class="p">,</span>
+        <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<div class="viewcode-block" id="plot_simtel_time_traces">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_time_traces">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_time_traces</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_pixels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot R1 time traces for a few pixels of one event.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str | pathlib.Path</span>
+<span class="sd">        Path to the ``.simtel`` file.</span>
+<span class="sd">    tel_id : int | None, optional</span>
+<span class="sd">        Telescope ID to use. If None, the first telescope with R1 data is chosen.</span>
+<span class="sd">    n_pixels : int, optional</span>
+<span class="sd">        Number of pixels with highest signal to plot. Default is 3.</span>
+<span class="sd">    event_index : int | None, optional</span>
+<span class="sd">        Zero-based index of the event to plot. If None, the first event is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure | None</span>
+<span class="sd">        The created figure, or ``None`` if R1 waveforms are unavailable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">EventSource</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">max_events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">)(</span><span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+
+    <span class="n">r1_tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">r1_tel_ids</span><span class="p">:</span>
+        <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_id</span> <span class="ow">or</span> <span class="n">r1_tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dl1_tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">dl1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_id</span> <span class="ow">or</span> <span class="n">dl1_tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">calib</span> <span class="o">=</span> <span class="n">CameraCalibrator</span><span class="p">(</span><span class="n">subarray</span><span class="o">=</span><span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">calib</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">dl1</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">image</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">waveforms</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="o">.</span><span class="n">tel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;waveform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">waveforms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">NO_R1_WAVEFORMS_MSG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">waveforms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pix_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="o">-</span><span class="n">n_pixels</span><span class="p">:][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">integrals</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pix_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">integrals</span><span class="p">)[</span><span class="o">-</span><span class="n">n_pixels</span><span class="p">:][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">readout</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">readout</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">_time_axis_from_readout</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">pix_ids</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">[</span><span class="n">pid</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;pix </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">drawstyle</span><span class="o">=</span><span class="s2">&quot;steps-mid&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">TIME_NS_LABEL</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">R1_SAMPLES_LABEL</span><span class="p">)</span>
+    <span class="n">et_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">&quot;event_type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)</span>
+    <span class="n">tel</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span>
+    <span class="n">tel_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;CT</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2"> waveforms (</span><span class="si">{</span><span class="n">et_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<div class="viewcode-block" id="plot_simtel_waveform_matrix">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_waveform_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_waveform_matrix</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pixel_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a pseudocolor image of R1 waveforms (sample index vs. pixel id).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str | pathlib.Path</span>
+<span class="sd">        Path to the ``.simtel`` file.</span>
+<span class="sd">    tel_id : int | None, optional</span>
+<span class="sd">        Telescope ID to use. If None, the first telescope with R1 data is chosen.</span>
+<span class="sd">    vmax : float | None, optional</span>
+<span class="sd">        Upper limit for color normalization. If None, determined automatically.</span>
+<span class="sd">    event_index : int | None, optional</span>
+<span class="sd">        Zero-based index of the event to plot. If None, the first event is used.</span>
+<span class="sd">    pixel_step : int | None, optional</span>
+<span class="sd">        Step between plotted pixel ids (e.g., 1 plots all, 2 plots every second pixel).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure | None</span>
+<span class="sd">        The created figure, or ``None`` if R1 waveforms are unavailable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">EventSource</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">max_events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">)(</span><span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+
+    <span class="n">r1_tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">r1_tel_ids</span><span class="p">:</span>
+        <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_id</span> <span class="ow">or</span> <span class="n">r1_tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Event has no R1 data for waveform plot&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">waveforms</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="o">.</span><span class="n">tel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;waveform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">waveforms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">NO_R1_WAVEFORMS_MSG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">waveforms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">pixel_step</span><span class="p">))</span> <span class="k">if</span> <span class="n">pixel_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="n">pix_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_pix</span><span class="p">)[::</span><span class="n">step</span><span class="p">]</span>
+    <span class="n">w_sel</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">pix_idx</span><span class="p">]</span>
+
+    <span class="n">readout</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">readout</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">_time_axis_from_readout</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">pix_idx</span><span class="p">,</span> <span class="n">w_sel</span><span class="p">,</span> <span class="n">shading</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">R1_SAMPLES_LABEL</span><span class="p">)</span>
+    <span class="n">et_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">&quot;event_type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)</span>
+    <span class="n">tel</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span>
+    <span class="n">tel_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;CT</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2"> waveform matrix (</span><span class="si">{</span><span class="n">et_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">TIME_NS_LABEL</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;pixel id&quot;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<div class="viewcode-block" id="plot_simtel_step_traces">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_step_traces">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_step_traces</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pixel_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">max_pixels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot step-style R1 traces for regularly sampled pixels (0, N, 2N, ...).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str | pathlib.Path</span>
+<span class="sd">        Path to the ``.simtel`` file.</span>
+<span class="sd">    tel_id : int | None, optional</span>
+<span class="sd">        Telescope ID to use. If None, the first telescope with R1 data is chosen.</span>
+<span class="sd">    pixel_step : int, optional</span>
+<span class="sd">        Interval between pixel indices to plot. Default is 100.</span>
+<span class="sd">    max_pixels : int | None, optional</span>
+<span class="sd">        Maximum number of pixels to plot. If None, plot all selected by ``pixel_step``.</span>
+<span class="sd">    event_index : int | None, optional</span>
+<span class="sd">        Zero-based index of the event to plot. If None, the first event is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure | None</span>
+<span class="sd">        The created figure, or ``None`` if R1 waveforms are unavailable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">EventSource</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">max_events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">)(</span><span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+
+    <span class="n">r1_tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">r1_tel_ids</span><span class="p">:</span>
+        <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_id</span> <span class="ow">or</span> <span class="n">r1_tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Event has no R1 data for traces plot&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">waveforms</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="o">.</span><span class="n">tel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;waveform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">waveforms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">NO_R1_WAVEFORMS_MSG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">waveforms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">readout</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">readout</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">_time_axis_from_readout</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">)</span>
+
+    <span class="n">pix_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">pixel_step</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">max_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pix_ids</span> <span class="o">=</span> <span class="n">pix_ids</span><span class="p">[:</span><span class="n">max_pixels</span><span class="p">]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">pix_ids</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;pix </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">drawstyle</span><span class="o">=</span><span class="s2">&quot;steps-mid&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">TIME_NS_LABEL</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">R1_SAMPLES_LABEL</span><span class="p">)</span>
+    <span class="n">et_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">&quot;event_type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)</span>
+    <span class="n">tel</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span>
+    <span class="n">tel_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;CT</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2"> step traces (</span><span class="si">{</span><span class="n">et_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_detect_peaks</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">peak_width</span><span class="p">,</span> <span class="n">signal_mod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detect peak indices using CWT if available, otherwise ``find_peaks``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    trace : numpy.ndarray</span>
+<span class="sd">        One-dimensional waveform samples for a single pixel.</span>
+<span class="sd">    peak_width : int</span>
+<span class="sd">        Characteristic peak width (samples) for CWT.</span>
+<span class="sd">    signal_mod : module</span>
+<span class="sd">        SciPy ``signal``-like module providing ``find_peaks_cwt``/``find_peaks``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Array of integer indices of detected peaks (possibly empty).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">signal_mod</span><span class="p">,</span> <span class="s2">&quot;find_peaks_cwt&quot;</span><span class="p">):</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">signal_mod</span><span class="o">.</span><span class="n">find_peaks_cwt</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">widths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">peak_width</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">peaks</span><span class="p">):</span>
+            <span class="n">peaks</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">signal_mod</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">prominence</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_peak_samples</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">sum_threshold</span><span class="p">,</span> <span class="n">peak_width</span><span class="p">,</span> <span class="n">signal_mod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute peak-sample indices per pixel from waveform matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    w : numpy.ndarray</span>
+<span class="sd">        Waveform array of shape ``(n_pix, n_samples)`` (or ``(1, n_pix, n_samples)``).</span>
+<span class="sd">    sum_threshold : float</span>
+<span class="sd">        Minimum sum over samples for a pixel to be considered.</span>
+<span class="sd">    peak_width : int</span>
+<span class="sd">        Characteristic peak width (samples) for CWT.</span>
+<span class="sd">    signal_mod : module</span>
+<span class="sd">        SciPy ``signal``-like module providing peak finding routines.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[numpy.ndarray | None, numpy.ndarray | None, int]</span>
+<span class="sd">        ``(peak_samples, pix_ids, found_count)`` where ``peak_samples`` are the</span>
+<span class="sd">        selected peak indices per considered pixel, ``pix_ids`` are the pixel</span>
+<span class="sd">        indices that passed ``sum_threshold``, and ``found_count`` is the number</span>
+<span class="sd">        of pixels with at least one detected peak. Returns ``(None, None, 0)`` if</span>
+<span class="sd">        no pixels passed the threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_pix</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">sums</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">has_signal</span> <span class="o">=</span> <span class="n">sums</span> <span class="o">&gt;</span> <span class="nb">float</span><span class="p">(</span><span class="n">sum_threshold</span><span class="p">)</span>
+    <span class="n">pix_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_pix</span><span class="p">)[</span><span class="n">has_signal</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pix_ids</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">peak_samples</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">found_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">pix_ids</span><span class="p">:</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)]</span>
+        <span class="n">pks</span> <span class="o">=</span> <span class="n">_detect_peaks</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">peak_width</span><span class="p">,</span> <span class="n">signal_mod</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pks</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">found_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">peak_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pks</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="n">pks</span><span class="p">])])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">peak_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">trace</span><span class="p">))</span>
+        <span class="n">peak_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peak_idx</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">peak_samples</span><span class="p">),</span> <span class="n">pix_ids</span><span class="p">,</span> <span class="n">found_count</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_histogram_edges</span><span class="p">(</span><span class="n">n_samp</span><span class="p">,</span> <span class="n">timing_bins</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute contiguous histogram bin edges for sample indices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_samp : int</span>
+<span class="sd">        Number of samples per trace.</span>
+<span class="sd">    timing_bins : int | None</span>
+<span class="sd">        Number of histogram bins. If None, use unit-width bins.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Array of bin edges spanning the sample index range.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">timing_bins</span> <span class="ow">and</span> <span class="n">timing_bins</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">timing_bins</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_draw_peak_hist</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">,</span>
+    <span class="n">peak_samples</span><span class="p">,</span>
+    <span class="n">edges</span><span class="p">,</span>
+    <span class="n">mean_sample</span><span class="p">,</span>
+    <span class="n">std_sample</span><span class="p">,</span>
+    <span class="n">tel_label</span><span class="p">,</span>
+    <span class="n">et_name</span><span class="p">,</span>
+    <span class="n">considered</span><span class="p">,</span>
+    <span class="n">found_count</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Draw a histogram of peak samples with overlays and annotations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ax : matplotlib.axes.Axes</span>
+<span class="sd">        Target axes to draw into.</span>
+
+<span class="sd">        Peak sample indices per pixel.</span>
+<span class="sd">    edges : numpy.ndarray</span>
+<span class="sd">        Histogram bin edges.</span>
+<span class="sd">    mean_sample : float</span>
+<span class="sd">        Mean of peak sample indices.</span>
+<span class="sd">    std_sample : float</span>
+<span class="sd">        Standard deviation of peak sample indices.</span>
+<span class="sd">    tel_label : str</span>
+<span class="sd">        Telescope label used in the title.</span>
+<span class="sd">    et_name : str</span>
+<span class="sd">        Event type name used in the title.</span>
+<span class="sd">    considered : int</span>
+<span class="sd">        Number of pixels considered (passed threshold).</span>
+<span class="sd">    found_count : int</span>
+<span class="sd">        Number of pixels with at least one detected peak.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">counts</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">peak_samples</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">counts</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">edges</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#5B90DC&quot;</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;edge&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;peak sample&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;N pixels&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+        <span class="n">mean_sample</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#D8153C&quot;</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;mean=</span><span class="si">{</span><span class="n">mean_sample</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span>
+        <span class="n">mean_sample</span> <span class="o">-</span> <span class="n">std_sample</span><span class="p">,</span>
+        <span class="n">mean_sample</span> <span class="o">+</span> <span class="n">std_sample</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#D8153C&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;std=</span><span class="si">{</span><span class="n">std_sample</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_label</span><span class="si">}</span><span class="s2"> peak timing (</span><span class="si">{</span><span class="n">et_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.98</span><span class="p">,</span>
+        <span class="mf">0.95</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;considered: </span><span class="si">{</span><span class="n">considered</span><span class="si">}</span><span class="se">\n</span><span class="s2">peaks found: </span><span class="si">{</span><span class="n">found_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
+        <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+        <span class="n">bbox</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;boxstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;round,pad=0.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;facecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;white&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+            <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_simtel_peak_timing">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_peak_timing">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_peak_timing</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sum_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">peak_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">timing_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Peak finding per pixel; report mean/std of peak sample and plot a histogram.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str | pathlib.Path</span>
+<span class="sd">        Path to the ``.simtel`` file.</span>
+<span class="sd">    tel_id : int | None, optional</span>
+<span class="sd">        Telescope ID to use. If None, the first telescope with R1 data is chosen.</span>
+<span class="sd">    sum_threshold : float, optional</span>
+<span class="sd">        Minimum sum over samples for a pixel to be considered. Default is 10.0.</span>
+<span class="sd">    peak_width : int, optional</span>
+<span class="sd">        Characteristic peak width (samples) for CWT. Default is 8.</span>
+<span class="sd">    examples : int, optional</span>
+<span class="sd">        Number of example pixel traces to overlay. Default is 3.</span>
+<span class="sd">    timing_bins : int | None, optional</span>
+<span class="sd">        Number of histogram bins. If None, use unit-width bins.</span>
+<span class="sd">    return_stats : bool, optional</span>
+<span class="sd">        If True, also return a statistics dictionary. Default is False.</span>
+<span class="sd">    event_index : int | None, optional</span>
+<span class="sd">        Zero-based index of the event to plot. If None, the first event is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure | tuple[matplotlib.figure.Figure, dict] | None</span>
+<span class="sd">        The created figure, or ``None`` if R1 waveforms are unavailable. If</span>
+<span class="sd">        ``return_stats`` is True, a tuple ``(fig, stats)`` is returned, where</span>
+<span class="sd">        ``stats`` has keys ``{&quot;considered&quot;, &quot;found&quot;, &quot;mean&quot;, &quot;std&quot;}``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">EventSource</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">max_events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">)(</span><span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+
+    <span class="n">r1_tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">r1_tel_ids</span><span class="p">:</span>
+        <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_id</span> <span class="ow">or</span> <span class="n">r1_tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Event has no R1 data for peak timing plot&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">waveforms</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="o">.</span><span class="n">tel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;waveform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">waveforms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">NO_R1_WAVEFORMS_MSG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">waveforms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">peak_samples</span><span class="p">,</span> <span class="n">pix_ids</span><span class="p">,</span> <span class="n">found_count</span> <span class="o">=</span> <span class="n">_collect_peak_samples</span><span class="p">(</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">sum_threshold</span><span class="p">,</span> <span class="n">peak_width</span><span class="p">,</span> <span class="n">_signal</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">peak_samples</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pix_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No pixels exceeded sum_threshold for peak timing&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">mean_sample</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">peak_samples</span><span class="p">))</span>
+    <span class="n">std_sample</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">peak_samples</span><span class="p">))</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">_histogram_edges</span><span class="p">(</span><span class="n">n_samp</span><span class="p">,</span> <span class="n">timing_bins</span><span class="p">)</span>
+    <span class="n">et_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">&quot;event_type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)</span>
+    <span class="n">tel</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span>
+    <span class="n">tel_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;CT</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_draw_peak_hist</span><span class="p">(</span>
+        <span class="n">ax1</span><span class="p">,</span>
+        <span class="n">peak_samples</span><span class="p">,</span>
+        <span class="n">edges</span><span class="p">,</span>
+        <span class="n">mean_sample</span><span class="p">,</span>
+        <span class="n">std_sample</span><span class="p">,</span>
+        <span class="n">tel_label</span><span class="p">,</span>
+        <span class="n">et_name</span><span class="p">,</span>
+        <span class="n">pix_ids</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">found_count</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">readout</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">readout</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">_time_axis_from_readout</span><span class="p">(</span><span class="n">readout</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">)</span>
+
+    <span class="n">ex_ids</span> <span class="o">=</span> <span class="n">pix_ids</span><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">examples</span><span class="p">))]</span>
+    <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">ex_ids</span><span class="p">:</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)]</span>
+        <span class="n">pks</span> <span class="o">=</span> <span class="n">_detect_peaks</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">peak_width</span><span class="p">,</span> <span class="n">_signal</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">trace</span><span class="p">,</span> <span class="n">drawstyle</span><span class="o">=</span><span class="s2">&quot;steps-mid&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;pix </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pks</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">pks</span><span class="p">],</span> <span class="n">trace</span><span class="p">[</span><span class="n">pks</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">TIME_NS_LABEL</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">R1_SAMPLES_LABEL</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">return_stats</span><span class="p">:</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;considered&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">pix_ids</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+            <span class="s2">&quot;found&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">found_count</span><span class="p">),</span>
+            <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">mean_sample</span><span class="p">),</span>
+            <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">std_sample</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">stats</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_waveforms_for_image</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">tel_id</span><span class="p">,</span> <span class="n">context_no_r1</span><span class="p">,</span> <span class="n">event_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fetch R1 waveforms for one event/telescope and return prepared arrays.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str | pathlib.Path</span>
+<span class="sd">        Path to the ``.simtel`` file.</span>
+<span class="sd">    tel_id : int | None</span>
+<span class="sd">        Telescope ID to use. If None, the first telescope with R1 data is chosen.</span>
+<span class="sd">    context_no_r1 : str</span>
+<span class="sd">        Short description used in warnings when no R1 data is available.</span>
+<span class="sd">    event_index : int | None, optional</span>
+<span class="sd">        Zero-based index of the event to use. If None, the first event is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple | None</span>
+<span class="sd">        ``(w, n_pix, n_samp, source, event, tel_id)`` where ``w`` is a</span>
+<span class="sd">        ``numpy.ndarray`` of shape ``(n_pix, n_samples)``, ``n_pix`` and</span>
+<span class="sd">        ``n_samp`` are integers, and ``source``, ``event`` and ``tel_id`` are</span>
+<span class="sd">        the ctapipe objects used. Returns ``None`` on failure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">EventSource</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">max_events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_select_event_by_type</span><span class="p">(</span><span class="n">source</span><span class="p">)(</span><span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+
+    <span class="n">r1_tel_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">r1_tel_ids</span><span class="p">:</span>
+        <span class="n">tel_id</span> <span class="o">=</span> <span class="n">tel_id</span> <span class="ow">or</span> <span class="n">r1_tel_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Event has no R1 data for </span><span class="si">{</span><span class="n">context_no_r1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">waveforms</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">r1</span><span class="o">.</span><span class="n">tel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;waveform&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">waveforms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">NO_R1_WAVEFORMS_MSG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">waveforms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_samp</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">tel_id</span>
+
+
+<div class="viewcode-block" id="plot_simtel_integrated_signal_image">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_integrated_signal_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_integrated_signal_image</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">half_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot camera image of integrated signal per pixel around the flasher peak.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_plot_simtel_integrated_image</span><span class="p">(</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+        <span class="n">tel_id</span><span class="o">=</span><span class="n">tel_id</span><span class="p">,</span>
+        <span class="n">half_width</span><span class="o">=</span><span class="n">half_width</span><span class="p">,</span>
+        <span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;signal&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_simtel_integrated_pedestal_image">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_integrated_pedestal_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_simtel_integrated_pedestal_image</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">half_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot camera image of integrated pedestal per pixel away from the flasher peak.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_plot_simtel_integrated_image</span><span class="p">(</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+        <span class="n">tel_id</span><span class="o">=</span><span class="n">tel_id</span><span class="p">,</span>
+        <span class="n">half_width</span><span class="o">=</span><span class="n">half_width</span><span class="p">,</span>
+        <span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;pedestal&quot;</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_simtel_integrated_image</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">tel_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">half_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">event_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shared implementation for integrated signal/pedestal images.</span>
+
+<span class="sd">    mode: &quot;signal&quot; or &quot;pedestal&quot;. For &quot;pedestal&quot;, ``offset`` is used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="s2">&quot;integrated-signal image&quot;</span> <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;signal&quot;</span> <span class="k">else</span> <span class="s2">&quot;integrated-pedestal image&quot;</span>
+    <span class="n">prepared</span> <span class="o">=</span> <span class="n">_prepare_waveforms_for_image</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">tel_id</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">event_index</span><span class="o">=</span><span class="n">event_index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prepared</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">tel_id</span> <span class="o">=</span> <span class="n">prepared</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_pix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_pix</span><span class="p">):</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span>
+        <span class="n">peak_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">trace</span><span class="p">))</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">_compute_integration_window</span><span class="p">(</span><span class="n">peak_idx</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">,</span> <span class="n">half_width</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">trace</span><span class="p">[</span><span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">]))</span>
+
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">geometry</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">CameraDisplay</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">img</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;lin&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;viridis&quot;</span> <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;signal&quot;</span> <span class="k">else</span> <span class="s2">&quot;cividis&quot;</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">add_colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">pad</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">disp</span><span class="o">.</span><span class="n">set_limits_percent</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="n">et_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">&quot;event_type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)</span>
+    <span class="n">tel</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">subarray</span><span class="o">.</span><span class="n">tel</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span>
+    <span class="n">tel_label</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;CT</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">_format_integrated_title</span><span class="p">(</span><span class="n">tel_label</span><span class="p">,</span> <span class="n">et_name</span><span class="p">,</span> <span class="n">half_width</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span> <span class="n">pad</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

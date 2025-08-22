@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=fa05c720"></script>
+    <script src="../_static/documentation_options.js?v=7b3b549d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7fdeab619" />
+  <meta name="docsearch:version" content="0.1.dev1+g6ec589c69" />
   </head>
   
   
@@ -474,6 +474,7 @@ the visualization module.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#visualizationvisualize"><span class="std std-ref">visualize</span></a></p></li>
 <li><p><a class="reference internal" href="#visualizationlegendhandlers"><span class="std std-ref">legend_handlers</span></a></p></li>
+<li><p><a class="reference internal" href="#visualizationsimtel-event-plots"><span class="std std-ref">simtel_event_plots</span></a></p></li>
 </ul>
 <section id="module-visualization.visualize">
 <span id="visualize"></span><span id="visualizationvisualize"></span><h2>visualize<a class="headerlink" href="#module-visualization.visualize" title="Link to this heading">#</a></h2>
@@ -1168,6 +1169,165 @@ generates a plot of the pixel layout for the given telescope model.</p>
 </dd></dl>
 
 </section>
+<section id="module-visualization.simtel_event_plots">
+<span id="simtel-event-plots"></span><span id="visualizationsimtel-event-plots"></span><h2>simtel_event_plots<a class="headerlink" href="#module-visualization.simtel_event_plots" title="Link to this heading">#</a></h2>
+<p>Plots for light emission (flasher/calibration) sim_telarray events.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_event_image">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_event_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_event_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_event_image" title="Link to this definition">#</a></dt>
+<dd><p>Read a sim_telarray file and plot the DL1 image for one event via ctapipe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str | pathlib.Path</span></dt><dd><p>Path to the <code class="docutils literal notranslate"><span class="pre">.simtel</span></code> file.</p>
+</dd>
+<dt><strong>distance</strong><span class="classifier">astropy.units.Quantity | float | None, optional</span></dt><dd><p>Distance to annotate in the plot. If a Quantity, interpreted in meters.
+If not provided, no unit conversion is attempted.</p>
+</dd>
+<dt><strong>event_index</strong><span class="classifier">int | None, optional</span></dt><dd><p>Zero-based index of the event to plot. If None, the first event is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure | None</dt><dd><p>The created figure, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no suitable event/image is available.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_integrated_pedestal_image">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_integrated_pedestal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_integrated_pedestal_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_integrated_pedestal_image" title="Link to this definition">#</a></dt>
+<dd><p>Plot camera image of integrated pedestal per pixel away from the flasher peak.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_integrated_signal_image">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_integrated_signal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_integrated_signal_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_integrated_signal_image" title="Link to this definition">#</a></dt>
+<dd><p>Plot camera image of integrated signal per pixel around the flasher peak.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_peak_timing">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_peak_timing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timing_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_peak_timing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_peak_timing" title="Link to this definition">#</a></dt>
+<dd><p>Peak finding per pixel; report mean/std of peak sample and plot a histogram.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str | pathlib.Path</span></dt><dd><p>Path to the <code class="docutils literal notranslate"><span class="pre">.simtel</span></code> file.</p>
+</dd>
+<dt><strong>tel_id</strong><span class="classifier">int | None, optional</span></dt><dd><p>Telescope ID to use. If None, the first telescope with R1 data is chosen.</p>
+</dd>
+<dt><strong>sum_threshold</strong><span class="classifier">float, optional</span></dt><dd><p>Minimum sum over samples for a pixel to be considered. Default is 10.0.</p>
+</dd>
+<dt><strong>peak_width</strong><span class="classifier">int, optional</span></dt><dd><p>Characteristic peak width (samples) for CWT. Default is 8.</p>
+</dd>
+<dt><strong>examples</strong><span class="classifier">int, optional</span></dt><dd><p>Number of example pixel traces to overlay. Default is 3.</p>
+</dd>
+<dt><strong>timing_bins</strong><span class="classifier">int | None, optional</span></dt><dd><p>Number of histogram bins. If None, use unit-width bins.</p>
+</dd>
+<dt><strong>return_stats</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, also return a statistics dictionary. Default is False.</p>
+</dd>
+<dt><strong>event_index</strong><span class="classifier">int | None, optional</span></dt><dd><p>Zero-based index of the event to plot. If None, the first event is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure | tuple[matplotlib.figure.Figure, dict] | None</dt><dd><p>The created figure, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if R1 waveforms are unavailable. If
+<code class="docutils literal notranslate"><span class="pre">return_stats</span></code> is True, a tuple <code class="docutils literal notranslate"><span class="pre">(fig,</span> <span class="pre">stats)</span></code> is returned, where
+<code class="docutils literal notranslate"><span class="pre">stats</span></code> has keys <code class="docutils literal notranslate"><span class="pre">{&quot;considered&quot;,</span> <span class="pre">&quot;found&quot;,</span> <span class="pre">&quot;mean&quot;,</span> <span class="pre">&quot;std&quot;}</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_step_traces">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_step_traces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_pixels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_step_traces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_step_traces" title="Link to this definition">#</a></dt>
+<dd><p>Plot step-style R1 traces for regularly sampled pixels (0, N, 2N, …).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str | pathlib.Path</span></dt><dd><p>Path to the <code class="docutils literal notranslate"><span class="pre">.simtel</span></code> file.</p>
+</dd>
+<dt><strong>tel_id</strong><span class="classifier">int | None, optional</span></dt><dd><p>Telescope ID to use. If None, the first telescope with R1 data is chosen.</p>
+</dd>
+<dt><strong>pixel_step</strong><span class="classifier">int, optional</span></dt><dd><p>Interval between pixel indices to plot. Default is 100.</p>
+</dd>
+<dt><strong>max_pixels</strong><span class="classifier">int | None, optional</span></dt><dd><p>Maximum number of pixels to plot. If None, plot all selected by <code class="docutils literal notranslate"><span class="pre">pixel_step</span></code>.</p>
+</dd>
+<dt><strong>event_index</strong><span class="classifier">int | None, optional</span></dt><dd><p>Zero-based index of the event to plot. If None, the first event is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure | None</dt><dd><p>The created figure, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if R1 waveforms are unavailable.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_time_traces">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_time_traces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_pixels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_time_traces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_time_traces" title="Link to this definition">#</a></dt>
+<dd><p>Plot R1 time traces for a few pixels of one event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str | pathlib.Path</span></dt><dd><p>Path to the <code class="docutils literal notranslate"><span class="pre">.simtel</span></code> file.</p>
+</dd>
+<dt><strong>tel_id</strong><span class="classifier">int | None, optional</span></dt><dd><p>Telescope ID to use. If None, the first telescope with R1 data is chosen.</p>
+</dd>
+<dt><strong>n_pixels</strong><span class="classifier">int, optional</span></dt><dd><p>Number of pixels with highest signal to plot. Default is 3.</p>
+</dd>
+<dt><strong>event_index</strong><span class="classifier">int | None, optional</span></dt><dd><p>Zero-based index of the event to plot. If None, the first event is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure | None</dt><dd><p>The created figure, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if R1 waveforms are unavailable.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.simtel_event_plots.plot_simtel_waveform_matrix">
+<span class="sig-prename descclassname"><span class="pre">visualization.simtel_event_plots.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_waveform_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/simtel_event_plots.html#plot_simtel_waveform_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.simtel_event_plots.plot_simtel_waveform_matrix" title="Link to this definition">#</a></dt>
+<dd><p>Create a pseudocolor image of R1 waveforms (sample index vs. pixel id).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str | pathlib.Path</span></dt><dd><p>Path to the <code class="docutils literal notranslate"><span class="pre">.simtel</span></code> file.</p>
+</dd>
+<dt><strong>tel_id</strong><span class="classifier">int | None, optional</span></dt><dd><p>Telescope ID to use. If None, the first telescope with R1 data is chosen.</p>
+</dd>
+<dt><strong>vmax</strong><span class="classifier">float | None, optional</span></dt><dd><p>Upper limit for color normalization. If None, determined automatically.</p>
+</dd>
+<dt><strong>event_index</strong><span class="classifier">int | None, optional</span></dt><dd><p>Zero-based index of the event to plot. If None, the first event is used.</p>
+</dd>
+<dt><strong>pixel_step</strong><span class="classifier">int | None, optional</span></dt><dd><p>Step between plotted pixel ids (e.g., 1 plots all, 2 plots every second pixel).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure | None</dt><dd><p>The created figure, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if R1 waveforms are unavailable.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1298,6 +1458,16 @@ generates a plot of the pixel layout for the given telescope model.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_pixels">plot_pixels</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_pixels.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_pixels.plot_pixel_layout_from_file"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout_from_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.simtel_event_plots">simtel_event_plots</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_event_image"><code class="docutils literal notranslate"><span class="pre">plot_simtel_event_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_integrated_pedestal_image"><code class="docutils literal notranslate"><span class="pre">plot_simtel_integrated_pedestal_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_integrated_signal_image"><code class="docutils literal notranslate"><span class="pre">plot_simtel_integrated_signal_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_peak_timing"><code class="docutils literal notranslate"><span class="pre">plot_simtel_peak_timing()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_step_traces"><code class="docutils literal notranslate"><span class="pre">plot_simtel_step_traces()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_time_traces"><code class="docutils literal notranslate"><span class="pre">plot_simtel_time_traces()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.simtel_event_plots.plot_simtel_waveform_matrix"><code class="docutils literal notranslate"><span class="pre">plot_simtel_waveform_matrix()</span></code></a></li>
 </ul>
 </li>
 </ul>

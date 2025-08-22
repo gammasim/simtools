@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=fa05c720"></script>
+    <script src="_static/documentation_options.js?v=7b3b549d"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7fdeab619" />
+  <meta name="docsearch:version" content="0.1.dev1+g6ec589c69" />
   </head>
   
   
@@ -1076,13 +1076,19 @@
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">fill_corsika_configuration() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/io.html#simtools.io.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module simtools.io.hdf5_handler)</a>
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.find_best_parameters">find_best_parameters() (in module derive_psf_parameters)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum">fit_afterpulse_spectrum() (camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum method)</a>
+</li>
+      <li><a href="user-guide/applications/simtools-simulate-flasher.html#simulate_flasher.flasher_configs">flasher_configs() (in module simulate_flasher)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.flasher_default_configuration">flasher_default_configuration() (simtel.simulator_light_emission.SimulatorLightEmission static method)</a>
+</li>
+      <li><a href="api-reference/mc_model.html#model.flasher_model.FlasherModel">FlasherModel (class in model.flasher_model)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1586,7 +1592,7 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.light_emission_configs">light_emission_configs() (in module simulate_light_emission)</a>
+      <li><a href="user-guide/applications/simtools-simulate-illuminator.html#simulate_illuminator.light_emission_configs">light_emission_configs() (in module simulate_illuminator)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">light_emission_default_configuration() (simtel.simulator_light_emission.SimulatorLightEmission static method)</a>
 </li>
@@ -1637,6 +1643,8 @@
 </li>
         <li><a href="user-guide/applications/simtools-plot-array-layout.html#plot_array_layout.main">(in module plot_array_layout)</a>
 </li>
+        <li><a href="user-guide/applications/simtools-plot-simtel-events.html#plot_simtel_events.main">(in module plot_simtel_events)</a>
+</li>
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#plot_tabular_data.main">(in module plot_tabular_data)</a>
 </li>
         <li><a href="user-guide/applications/simtools-plot-tabular-data-for-model-parameter.html#plot_tabular_data_for_model_parameter.main">(in module plot_tabular_data_for_model_parameter)</a>
@@ -1651,7 +1659,9 @@
 </li>
         <li><a href="user-guide/applications/simtools-production-merge-corsika-limits.html#production_merge_corsika_limits.main">(in module production_merge_corsika_limits)</a>
 </li>
-        <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.main">(in module simulate_light_emission)</a>
+        <li><a href="user-guide/applications/simtools-simulate-flasher.html#simulate_flasher.main">(in module simulate_flasher)</a>
+</li>
+        <li><a href="user-guide/applications/simtools-simulate-illuminator.html#simulate_illuminator.main">(in module simulate_illuminator)</a>
 </li>
       </ul></li>
       <li>
@@ -1727,6 +1737,13 @@
 
       <ul>
         <li><a href="api-reference/mc_model.html#module-model.camera">module</a>
+</li>
+      </ul></li>
+      <li>
+    model.flasher_model
+
+      <ul>
+        <li><a href="api-reference/mc_model.html#module-model.flasher_model">module</a>
 </li>
       </ul></li>
       <li>
@@ -1901,6 +1918,8 @@
 </li>
         <li><a href="api-reference/mc_model.html#module-model.camera">model.camera</a>
 </li>
+        <li><a href="api-reference/mc_model.html#module-model.flasher_model">model.flasher_model</a>
+</li>
         <li><a href="api-reference/mc_model.html#module-model.mirrors">model.mirrors</a>
 </li>
         <li><a href="api-reference/mc_model.html#module-model.model_parameter">model.model_parameter</a>
@@ -1914,6 +1933,8 @@
         <li><a href="api-reference/mc_model.html#module-model.telescope_model">model.telescope_model</a>
 </li>
         <li><a href="user-guide/applications/simtools-plot-array-layout.html#module-plot_array_layout">plot_array_layout</a>
+</li>
+        <li><a href="user-guide/applications/simtools-plot-simtel-events.html#module-plot_simtel_events">plot_simtel_events</a>
 </li>
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">plot_tabular_data</a>
 </li>
@@ -2005,7 +2026,9 @@
 </li>
         <li><a href="user-guide/applications/simtools-simulate-calibration-events.html#module-simulate_calibration_events">simulate_calibration_events</a>
 </li>
-        <li><a href="user-guide/applications/simtools-simulate-light-emission.html#module-simulate_light_emission">simulate_light_emission</a>
+        <li><a href="user-guide/applications/simtools-simulate-flasher.html#module-simulate_flasher">simulate_flasher</a>
+</li>
+        <li><a href="user-guide/applications/simtools-simulate-illuminator.html#module-simulate_illuminator">simulate_illuminator</a>
 </li>
         <li><a href="user-guide/applications/simtools-simulate-prod.html#module-simulate_prod">simulate_prod</a>
 </li>
@@ -2060,6 +2083,8 @@
         <li><a href="api-reference/visualization.html#module-visualization.plot_pixels">visualization.plot_pixels</a>
 </li>
         <li><a href="api-reference/visualization.html#module-visualization.plot_tables">visualization.plot_tables</a>
+</li>
+        <li><a href="api-reference/visualization.html#module-visualization.simtel_event_plots">visualization.simtel_event_plots</a>
 </li>
         <li><a href="api-reference/visualization.html#module-visualization.visualize">visualization.visualize</a>
 </li>
@@ -2197,6 +2222,27 @@
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.plot_production_statistics_comparison">plot_production_statistics_comparison() (production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler method)</a>
 </li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_event_image">plot_simtel_event_image() (in module visualization.simtel_event_plots)</a>
+</li>
+      <li>
+    plot_simtel_events
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-plot-simtel-events.html#module-plot_simtel_events">module</a>
+</li>
+      </ul></li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_integrated_pedestal_image">plot_simtel_integrated_pedestal_image() (in module visualization.simtel_event_plots)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_integrated_signal_image">plot_simtel_integrated_signal_image() (in module visualization.simtel_event_plots)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_peak_timing">plot_simtel_peak_timing() (in module visualization.simtel_event_plots)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_step_traces">plot_simtel_step_traces() (in module visualization.simtel_event_plots)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_time_traces">plot_simtel_time_traces() (in module visualization.simtel_event_plots)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.simtel_event_plots.plot_simtel_waveform_matrix">plot_simtel_waveform_matrix() (in module visualization.simtel_event_plots)</a>
+</li>
       <li><a href="api-reference/visualization.html#visualization.visualize.plot_table">plot_table() (in module visualization.visualize)</a>
 </li>
       <li>
@@ -2206,6 +2252,8 @@
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     plot_tabular_data_for_model_parameter
 
@@ -2219,8 +2267,6 @@
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel.position">position() (model.telescope_model.TelescopeModel method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing">prepare_data_dict_for_writing() (data_model.model_data_writer.ModelDataWriter static method)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.corsika_runner.CorsikaRunner.prepare_run_script">prepare_run_script() (runners.corsika_runner.CorsikaRunner method)</a>
@@ -2267,8 +2313,6 @@
       <li><a href="api-reference/mc_model.html#model.camera.Camera.process_line">process_line() (model.camera.Camera static method)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.process_photon_list">process_photon_list() (ray_tracing.psf_analysis.PSFImage method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.process_simulation_output">process_simulation_output() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_array_element_report">produce_array_element_report() (reporting.docs_read_parameters.ReadParameters method)</a>
 </li>
@@ -2556,8 +2600,6 @@
 </li>
       <li><a href="api-reference/visualization.html#visualization.visualize.save_figure">save_figure() (in module visualization.visualize)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf">save_figures_to_pdf() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
-</li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_file_lists">save_file_lists() (simulator.Simulator method)</a>
 </li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_reduced_event_lists">save_reduced_event_lists() (simulator.Simulator method)</a>
@@ -2565,8 +2607,6 @@
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SCTHandler">SCTHandler (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SCTObject">SCTObject (class in visualization.legend_handlers)</a>
-</li>
-      <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.select_application">select_application() (in module simulate_light_emission)</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.array_layout.ArrayLayout.select_assets">select_assets() (layout.array_layout.ArrayLayout method)</a>
 </li>
@@ -2701,12 +2741,12 @@
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter">SimtelIOEventDataWriter (class in simtel.simtel_io_event_writer)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms">SimtelIOEventHistograms (class in simtel.simtel_io_event_histograms)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms">SimtelIOHistograms (class in simtel.simtel_io_histograms)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelRunner">SimtelRunner (class in runners.simtel_runner)</a>
 </li>
       <li>
@@ -2766,15 +2806,22 @@
         <li><a href="user-guide/applications/simtools-simulate-calibration-events.html#module-simulate_calibration_events">module</a>
 </li>
       </ul></li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions">simulate_layout_positions() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
-</li>
       <li>
-    simulate_light_emission
+    simulate_flasher
 
       <ul>
-        <li><a href="user-guide/applications/simtools-simulate-light-emission.html#module-simulate_light_emission">module</a>
+        <li><a href="user-guide/applications/simtools-simulate-flasher.html#module-simulate_flasher">module</a>
 </li>
       </ul></li>
+      <li>
+    simulate_illuminator
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-simulate-illuminator.html#module-simulate_illuminator">module</a>
+</li>
+      </ul></li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions">simulate_layout_positions() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
+</li>
       <li>
     simulate_prod
 
@@ -3102,6 +3149,13 @@
 
       <ul>
         <li><a href="api-reference/visualization.html#module-visualization.plot_tables">module</a>
+</li>
+      </ul></li>
+      <li>
+    visualization.simtel_event_plots
+
+      <ul>
+        <li><a href="api-reference/visualization.html#module-visualization.simtel_event_plots">module</a>
 </li>
       </ul></li>
       <li>
