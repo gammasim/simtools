@@ -1070,6 +1070,27 @@ def test_make_simtel_script_variable_dist_suffix_exception():
     assert "-C histogram_file=/directory/xyzls_variable.ctsim.hdata\n" in cmd
 
 
+def test_make_simtel_script_variable_dist_suffix_success():
+    inst = object.__new__(SimulatorLightEmission)
+    inst._logger = logging.getLogger(SIM_MOD_PATH)
+    _prepare_inst_with_common_mocks(inst)
+    inst.light_source_type = "illuminator"
+    inst.light_source_setup = "variable"
+
+    # Return a concrete distance so the suffix is added
+    inst._get_distance_for_plotting = MagicMock(return_value=1000 * u.m)
+    # Avoid calling real calibration method
+    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
+
+    mock_file_content = "dummy"
+    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
+        cmd = inst._make_simtel_script()
+
+    # Distance suffix should be appended
+    assert "-C output_file=/directory/xyzls_variable_d_1000.simtel.zst " in cmd
+    assert "-C histogram_file=/directory/xyzls_variable_d_1000.ctsim.hdata\n" in cmd
+
+
 def test_get_simulation_output_filename_prefix_and_exception():
     inst = object.__new__(SimulatorLightEmission)
     inst._logger = logging.getLogger(SIM_MOD_PATH)
