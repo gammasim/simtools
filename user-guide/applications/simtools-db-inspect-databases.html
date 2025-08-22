@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=f7fba341"></script>
+    <script src="../../_static/documentation_options.js?v=c931b840"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,10 +54,10 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="simtools-derive-ctao-array-layouts" href="simtools-derive-ctao-array-layouts.html" />
-    <link rel="prev" title="simtools-db-get-parameter-from-db" href="simtools-db-get-parameter-from-db.html" />
+    <link rel="prev" title="simtools-db-generate-compound-indexes" href="simtools-db-generate-compound-indexes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g174ca3f94" />
+  <meta name="docsearch:version" content="0.1.dev1+g011f55595" />
   </head>
   
   
@@ -407,6 +407,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-db-inspect-databases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
@@ -518,7 +519,7 @@
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>db_name (str, optional)</dt><dd><p>Inspect a specific database.</p>
+<dt>db_name (str, optional)</dt><dd><p>Database name (use “all” for all databases)</p>
 </dd>
 </dl>
 </section>
@@ -535,12 +536,12 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-db-get-parameter-from-db.html"
+       href="simtools-db-generate-compound-indexes.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-db-get-parameter-from-db</p>
+        <p class="prev-next-title">simtools-db-generate-compound-indexes</p>
       </div>
     </a>
     <a class="right-next"

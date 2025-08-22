@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-generate-grid &#8212; simtools</title>
+    <title>simtools-db-generate-compound-indexes &#8212; simtools</title>
   
   
   
@@ -43,7 +43,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-generate-grid';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-db-generate-compound-indexes';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
@@ -53,8 +53,8 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-production-merge-corsika-limits" href="simtools-production-merge-corsika-limits.html" />
-    <link rel="prev" title="simtools-production-derive-statistics" href="simtools-production-derive-statistics.html" />
+    <link rel="next" title="simtools-db-inspect-databases" href="simtools-db-inspect-databases.html" />
+    <link rel="prev" title="simtools-db-get-parameter-from-db" href="simtools-db-get-parameter-from-db.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g011f55595" />
@@ -407,7 +407,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-db-generate-compound-indexes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
@@ -433,7 +433,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-production-generate-grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-calibration-events.html">simtools-simulate-calibration-events</a></li>
@@ -496,7 +496,7 @@
     
     <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">Applications</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-production-generate-grid</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-db-generate-compound-indexes</span></li>
   </ul>
 </nav>
 </div>
@@ -513,72 +513,19 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-production_generate_grid">
-<span id="simtools-production-generate-grid"></span><h1>simtools-production-generate-grid<a class="headerlink" href="#module-production_generate_grid" title="Link to this heading">#</a></h1>
-<p>Generate a grid of simulation points using flexible axes definitions.</p>
-<p>This application generates a grid of simulation points based on the provided axes
-definitions. The axes definitions (range, binning) are specified in a file.
-The viewcone, radius and energy thresholds are provided as a lookup table and
-are interpolated based on the generated grid points. The generated grid points are
-filtered based on the specified telescope IDs and the limits from the lookup table.
-The generated grid points are saved to a file.
-It can also convert the generated points to RA/Dec coordinates if the selected
-coordinate system is ‘ra_dec’.</p>
+  <section id="module-simtools.applications.db_generate_compound_indexes">
+<span id="simtools-db-generate-compound-indexes"></span><span id="db-generate-compound-indexes"></span><h1>simtools-db-generate-compound-indexes<a class="headerlink" href="#module-simtools.applications.db_generate_compound_indexes" title="Link to this heading">#</a></h1>
+<p>Generate compound indexes for the specified database.</p>
+<p>This needs to be done once after a database has been set up.
+Significantly accelerates database querying (at least a factor
+of 5 in query time with a factor of 10 less documents examined).</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>axes (str, required)</dt><dd><p>Path to a YAML or JSON file defining the axes of the grid.</p>
-</dd>
-<dt>coordinate_system (str, optional, default=’zenith_azimuth’)</dt><dd><p>The coordinate system for the grid generation (‘zenith_azimuth’ or ‘ra_dec’).</p>
-</dd>
-<dt>observing_time (str, optional, default=now)</dt><dd><p>Time of the observation (format: ‘YYYY-MM-DD HH:MM:SS’).</p>
-</dd>
-<dt>lookup_table (str, required)</dt><dd><p>Path to the lookup table for simulation limits. The table should contain
-varying azimuth and/or zenith angles.</p>
-</dd>
-<dt>telescope_ids (list of int, optional)</dt><dd><p>List of telescope IDs as used in sim_telarray to filter the events.</p>
-</dd>
-<dt>output_file (str, optional, default=’grid_output.json’)</dt><dd><p>Output file for the generated grid points (default: ‘grid_output.json’).</p>
+<dt>db_name (str, optional)</dt><dd><p>Database name (use “all” for all databases)</p>
 </dd>
 </dl>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>To generate a grid of simulation points, execute the script as follows:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-grid --site North --model_version 6.0.0 \</span>
-<span class="go">  --axes  tests/resources/production_grid_generation_axes_definition.yml \</span>
-<span class="go">  --coordinate_system ra_dec --observing_time &quot;2017-09-16 00:00:00&quot; \</span>
-<span class="go">  --lookup_table tests/resources/corsika_simulation_limits_lookup.ecsv \</span>
-<span class="go">    --telescope_ids 1</span>
-</pre></div>
-</div>
-</section>
-<dl class="py function">
-<dt class="sig sig-object py" id="production_generate_grid.load_axes">
-<span class="sig-prename descclassname"><span class="pre">production_generate_grid.</span></span><span class="sig-name descname"><span class="pre">load_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_generate_grid.html#load_axes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_generate_grid.load_axes" title="Link to this definition">#</a></dt>
-<dd><p>Load axes definitions from a YAML or JSON file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the axes YAML or JSON file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list[dict]</dt><dd><p>List of axes definitions with Quantity values.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="production_generate_grid.main">
-<span class="sig-prename descclassname"><span class="pre">production_generate_grid.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_generate_grid.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_generate_grid.main" title="Link to this definition">#</a></dt>
-<dd><p>Run the Grid Generation application.</p>
-</dd></dl>
-
 </section>
 
 
@@ -592,20 +539,20 @@ varying azimuth and/or zenith angles.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-production-derive-statistics.html"
+       href="simtools-db-get-parameter-from-db.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-production-derive-statistics</p>
+        <p class="prev-next-title">simtools-db-get-parameter-from-db</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-production-merge-corsika-limits.html"
+       href="simtools-db-inspect-databases.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-production-merge-corsika-limits</p>
+        <p class="prev-next-title">simtools-db-inspect-databases</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -629,9 +576,6 @@ varying azimuth and/or zenith angles.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_generate_grid.load_axes"><code class="docutils literal notranslate"><span class="pre">load_axes()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_generate_grid.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -639,7 +583,7 @@ varying azimuth and/or zenith angles.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/user-guide/applications/simtools-production-generate-grid.rst.txt"
+      <li><a href="../../_sources/user-guide/applications/simtools-db-generate-compound-indexes.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

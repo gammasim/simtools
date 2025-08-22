@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=f7fba341"></script>
+    <script src="../../_static/documentation_options.js?v=c931b840"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g174ca3f94" />
+  <meta name="docsearch:version" content="0.1.dev1+g011f55595" />
   </head>
   
   
@@ -518,6 +518,9 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_find_latest_simulation_model_db</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_up_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Open the connection to MongoDB.&quot;&quot;&quot;</span>
@@ -615,6 +618,31 @@
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Found LATEST in the DB name but no matching versions found in DB.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DatabaseHandler.generate_compound_indexes">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.generate_compound_indexes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_compound_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate compound indexes for the MongoDB collections.</span>
+
+<span class="sd">        Indexes based on the typical query patterns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
+        <span class="n">collection_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sites&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">collection_name</span> <span class="ow">in</span> <span class="n">collection_names</span><span class="p">:</span>
+            <span class="n">db_collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
+            <span class="n">db_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
+                <span class="p">[(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="n">db_collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
+        <span class="n">db_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">([(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span></div>
+
 
 <div class="viewcode-block" id="DatabaseHandler.get_model_parameter">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_model_parameter">[docs]</a>
@@ -781,24 +809,23 @@
 
 <div class="viewcode-block" id="DatabaseHandler.get_collection">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_collection">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a collection from the DB.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        db_name: str</span>
-<span class="sd">            Name of the DB.</span>
 <span class="sd">        collection_name: str</span>
 <span class="sd">            Name of the collection.</span>
+<span class="sd">        db_name: str</span>
+<span class="sd">            Name of the DB.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pymongo.collection.Collection</span>
 <span class="sd">            The collection from the DB.</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
         <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span></div>
 
 
@@ -821,7 +848,7 @@
 <span class="sd">            List of collection names</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
         <span class="k">if</span> <span class="n">db_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span>
                 <span class="n">db_name</span>
@@ -908,7 +935,7 @@
 <span class="sd">        file_id: dict of GridOut._id</span>
 <span class="sd">            Dict of database IDs of files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
 
         <span class="k">if</span> <span class="n">file_names</span><span class="p">:</span>
             <span class="n">file_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_names</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">file_names</span>
@@ -924,8 +951,8 @@
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="n">instance_ids</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;file exists&quot;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">file_path_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="n">file_name</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_path_instance</span><span class="p">)</span>
+                <span class="n">file_path_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_mongo_db</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_path_instance</span><span class="p">)</span>
                 <span class="n">instance_ids</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_path_instance</span><span class="o">.</span><span class="n">_id</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="k">return</span> <span class="n">instance_ids</span></div>
 
@@ -967,8 +994,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            if query returned no results.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">)</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="n">posts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">posts</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1007,7 +1033,7 @@
             <span class="k">pass</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection_name</span><span class="p">}</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">)</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="n">post</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">post</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The following query returned zero results: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1037,7 +1063,7 @@
 <span class="sd">        list</span>
 <span class="sd">            List of model versions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">)</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
             <span class="p">{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection_name</span><span class="p">})}</span>
         <span class="p">)</span></div>
@@ -1240,8 +1266,7 @@
 <span class="sd">        production_table: dict</span>
 <span class="sd">            The production table to add to the DB.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">)</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding production for </span><span class="si">{</span><span class="n">production_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collection&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> to to DB&quot;</span><span class="p">)</span>
         <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">production_table</span><span class="p">)</span>
         <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">production_table_cached</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
@@ -1275,8 +1300,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">par_dict</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="o">.</span><span class="n">validate_model_parameter</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
 
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">)</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
 
         <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">_base_unit</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_unit_type</span><span class="p">(</span>
             <span class="n">value</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">unit_str</span><span class="o">=</span><span class="n">par_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -1307,22 +1332,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset_parameter_cache</span><span class="p">()</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_db_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return database name. If not provided, return the default database name.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        db_name: str</span>
-<span class="sd">            Database name</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Database name</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">db_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">db_name</span>
-
 <div class="viewcode-block" id="DatabaseHandler.insert_file_to_db">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.insert_file_to_db">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">insert_file_to_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1347,7 +1356,7 @@
 <span class="sd">            &quot;newly created DB GridOut._id.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
         <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
         <span class="n">file_system</span> <span class="o">=</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">GridFS</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
 
