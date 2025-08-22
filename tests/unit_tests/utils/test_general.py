@@ -822,7 +822,8 @@ def test_find_differences_in_json_objects():
     ]
 
 
-def test_enforce_list_type():
-    assert gen.enforce_list_type(None) == []
-    assert gen.enforce_list_type([1, 2, 3]) == [1, 2, 3]
-    assert gen.enforce_list_type(5) == [5]
+def test_ensure_iterable():
+    assert gen.ensure_iterable(None) == []
+    assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
+    assert gen.ensure_iterable(5) == [5]
+    assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
