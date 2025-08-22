@@ -59,3 +59,10 @@ the visualization module.
 .. automodule:: visualization.plot_pixels
    :members:
 ```
+
+## plot_simtel_event_histograms
+
+
+```{eval-rst}
+.. automodule:: visualization.plot_simtel_event_histograms
+   :members:
