@@ -68,6 +68,10 @@ simtools-db-add-simulation-model-from-repository-to-db \
   --db_name "$DB_SIMULATION_MODEL" \
   --type "production_tables"
 
+# generate compound indexes
+simtools-db-generate-compound-indexes \
+  --db_name "$DB_SIMULATION_MODEL"
+
 cd "$CURRENT_DIR" || exit
 
 rm -rf ./tmp_model_parameters
