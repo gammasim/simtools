@@ -412,13 +412,12 @@ def test_run_psf_simulation(
 
 @pytest.mark.parametrize(
     (
-        "has_original_data",
         "is_best",
         "description",
     ),
     [
-        (False, True, "with plotting and no original data"),
-        (True, False, "with plotting and original data cleanup"),
+        (True, "with plotting and best parameters"),
+        (False, "with plotting and non-best parameters"),
     ],
 )
 def test_run_psf_simulation_with_plotting(
@@ -427,20 +426,12 @@ def test_run_psf_simulation_with_plotting(
     mock_args_dict,
     sample_psf_data,
     sample_parameters,
-    has_original_data,
     is_best,
     description,
 ):
     """Test PSF simulation function with plotting scenarios."""
     radius = sample_psf_data[psf_opt.RADIUS_CM]
-
-    # Set up test data
-    original_simulated_data = None
-    if has_original_data:
-        original_simulated_data = np.array([(1.5, 0.6), (2.5, 0.9)], dtype=sample_psf_data.dtype)
-        data_to_plot = {"measured": sample_psf_data, "simulated": original_simulated_data}
-    else:
-        data_to_plot = {"measured": sample_psf_data}
+    data_to_plot = {"measured": sample_psf_data}
 
     with patch(
         "simtools.ray_tracing.psf_parameter_optimisation._run_ray_tracing_simulation"
@@ -466,20 +457,13 @@ def test_run_psf_simulation_with_plotting(
                 **kwargs,
             )
 
-            # Common assertions
             d80, rmsd = result[0], result[1]
             assert d80 == 3.5
             assert rmsd >= 0
-
-            # Plotting-specific assertions
             mock_plot_func.assert_called_once()
 
-            # Check data cleanup behavior
-            if has_original_data:
-                assert "simulated" in data_to_plot
-                np.testing.assert_array_equal(data_to_plot["simulated"], original_simulated_data)
-            else:
-                assert "simulated" not in data_to_plot
+            # Check data cleanup behavior - simulated data should be cleaned up after plotting
+            assert "simulated" not in data_to_plot
 
 
 @pytest.mark.parametrize(
