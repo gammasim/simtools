@@ -12,7 +12,6 @@ applications:
   - output_file: logfile.log
   - output_file: ff-1m_flasher.simtel.zst
   - output_file: ff-1m_flasher.ctsim.hdata
-  - output_file: ff-1m.iact.gz
   model_version_use_current: true
   test_name: run-flasher
 schema_name: application_workflow.metaschema
