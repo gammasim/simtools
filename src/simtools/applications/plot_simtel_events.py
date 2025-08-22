@@ -34,8 +34,8 @@ vmax (float, optional)
     For waveform_matrix: upper limit of color scale. Default: None.
 half_width (int, optional)
     For integrated_*_image: half window width in samples. Default: 8.
-gap (int, optional)
-    For integrated_pedestal_image: gap between pedestal and peak windows. Default: 16.
+offset (int, optional)
+    For integrated_pedestal_image: offset between pedestal and peak windows. Default: 16.
 sum_threshold (float, optional)
     For peak_timing: minimum pixel sum to consider a pixel. Default: 10.0.
 peak_width (int, optional)
@@ -145,10 +145,10 @@ def _parse(label: str):
         "--half_width", type=int, default=8, help="Half window width for integrated images"
     )
     config.parser.add_argument(
-        "--gap",
+        "--offset",
         type=int,
         default=16,
-        help="Gap between pedestal and peak windows (integrated_pedestal_image)",
+        help="offset between pedestal and peak windows (integrated_pedestal_image)",
     )
     config.parser.add_argument(
         "--sum_threshold",
@@ -326,7 +326,7 @@ def _collect_figures_for_file(
         ),
         "integrated_pedestal_image": (
             plot_simtel_integrated_pedestal_image,
-            {"tel_id": None, "half_width": 8, "gap": 16, "event_index": None},
+            {"tel_id": None, "half_width": 8, "offset": 16, "event_index": None},
         ),
     }
 

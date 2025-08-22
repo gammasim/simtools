@@ -454,7 +454,7 @@ def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
 
     _install_fake_ctapipe(monkeypatch, src)
 
-    fig = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, gap=5)
+    fig = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, offset=5)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
