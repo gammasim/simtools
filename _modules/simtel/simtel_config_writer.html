@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c931b840"></script>
+    <script src="../../_static/documentation_options.js?v=fa05c720"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g011f55595" />
+  <meta name="docsearch:version" content="0.1.dev1+g7fdeab619" />
   </head>
   
   
@@ -955,7 +955,9 @@
 
         <span class="n">trigger_lines</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">tel_type</span><span class="p">,</span> <span class="n">tel_list</span> <span class="ow">in</span> <span class="n">trigger_per_telescope_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">trigger_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_triggers_for_telescope_type</span><span class="p">(</span><span class="n">array_triggers</span><span class="p">,</span> <span class="n">tel_type</span><span class="p">)</span>
+            <span class="n">trigger_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_triggers_for_telescope_type</span><span class="p">(</span>
+                <span class="n">array_triggers</span><span class="p">,</span> <span class="n">tel_type</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tel_list</span><span class="p">)</span>
+            <span class="p">)</span>
             <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger </span><span class="si">{</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s1">&#39;multiplicity&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> of &quot;</span>
             <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">tel_list</span><span class="p">))</span>
             <span class="n">width</span> <span class="o">=</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;ns&quot;</span><span class="p">)</span>
@@ -975,7 +977,9 @@
 
         <span class="k">return</span> <span class="n">array_triggers_file</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array_triggers_for_telescope_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array_triggers_for_telescope_type</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">,</span> <span class="n">num_telescopes_of_type</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get array trigger for a specific telescope type.</span>
 
@@ -985,14 +989,19 @@
 <span class="sd">            Array trigger definitions.</span>
 <span class="sd">        telescope_type: str</span>
 <span class="sd">            Telescope type.</span>
+<span class="sd">        num_telescopes_of_type: int</span>
+<span class="sd">            Number of telescopes of the specified type.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
 <span class="sd">            Array trigger for the telescope type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_array&quot;</span>
+        <span class="k">if</span> <span class="n">num_telescopes_of_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_single_telescope&quot;</span>
         <span class="k">for</span> <span class="n">trigger_dict</span> <span class="ow">in</span> <span class="n">array_triggers</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">telescope_type</span> <span class="o">+</span> <span class="s2">&quot;_array&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">telescope_type</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">trigger_dict</span>
         <span class="k">return</span> <span class="kc">None</span>
 
