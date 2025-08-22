@@ -55,7 +55,7 @@ def test_create_2d_histogram_plot_linear(sample_data):
     data, bins = sample_data
     plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
 
-    fig, ax = plt.subplots()
+    fig, _ = plt.subplots()
     pcm = _create_2d_histogram_plot(data, bins, plot_params)
 
     assert pcm is not None
@@ -67,7 +67,7 @@ def test_create_2d_histogram_plot_log(sample_data):
     data, bins = sample_data
     plot_params = {"norm": "log", "cmap": "viridis"}
 
-    fig, ax = plt.subplots()
+    fig, _ = plt.subplots()
     pcm = _create_2d_histogram_plot(data, bins, plot_params)
 
     assert pcm is not None
@@ -82,7 +82,7 @@ def test_create_2d_histogram_plot_no_positive_data():
     bins = (bins_x, bins_y)
     plot_params = {"norm": "log", "cmap": "viridis"}
 
-    fig, ax = plt.subplots()
+    fig, _ = plt.subplots()
     pcm = _create_2d_histogram_plot(data, bins, plot_params)
 
     assert pcm is not None
@@ -298,7 +298,7 @@ def test_create_plot_with_output_file(tmp_path):
         assert result is not None
         mock_fig.savefig.assert_called_once()
         # Ensure file path argument matches expected name
-        save_args, save_kwargs = mock_fig.savefig.call_args
+        save_args, _ = mock_fig.savefig.call_args
         assert str(output_file) in str(save_args[0])
         mock_close.assert_called_once_with(mock_fig)
         mock_show.assert_not_called()
@@ -539,7 +539,7 @@ def test_execute_plotting_loop_rebin_and_failed_plot():
         assert mock_create_plot.call_count == 2
         # Rebinned plot should be created exactly once for plotA_cumulative
         mock_create_rebinned_plot.assert_called_once()
-        args, kwargs = mock_create_rebinned_plot.call_args
+        args, _ = mock_create_rebinned_plot.call_args
         # args: (plot_args_dict, filename, output_path, rebin_factor)
         assert args[1] == "plotA_cumulative.png"
         assert args[2] is output_path
