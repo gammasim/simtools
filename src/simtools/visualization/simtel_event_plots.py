@@ -713,59 +713,14 @@ def plot_simtel_integrated_signal_image(
     half_width: int = 8,
     event_index: int | None = None,
 ):
-    """
-    Plot camera image of integrated signal per pixel around the flasher peak.
-
-    Parameters
-    ----------
-    filename : str | pathlib.Path
-        Path to the ``.simtel`` file.
-    tel_id : int | None, optional
-        Telescope ID to use. If None, the first telescope with R1 data is chosen.
-    half_width : int, optional
-        Half window width (samples) around the peak for integration. Default is 8.
-    event_index : int | None, optional
-        Zero-based index of the event to plot. If None, the first event is used.
-
-    Returns
-    -------
-    matplotlib.figure.Figure | None
-        The created figure, or ``None`` if R1 waveforms are unavailable.
-    """
-    prepared = _prepare_waveforms_for_image(
-        filename, tel_id, "integrated-signal image", event_index=event_index
+    """Plot camera image of integrated signal per pixel around the flasher peak."""
+    return _plot_simtel_integrated_image(
+        filename=filename,
+        tel_id=tel_id,
+        half_width=half_width,
+        event_index=event_index,
+        mode="signal",
     )
-    if prepared is None:
-        return None
-    w, n_pix, n_samp, source, event, tel_id = prepared
-
-    win_len = 2 * int(half_width) + 1
-    img = np.zeros(n_pix, dtype=float)
-
-    for pid in range(n_pix):
-        trace = w[pid]
-        peak_idx = int(np.argmax(trace))
-        a = max(0, peak_idx - half_width)
-        b = min(n_samp, peak_idx + half_width + 1)
-        img[pid] = float(np.sum(trace[a:b]))
-
-    geometry = source.subarray.tel[tel_id].camera.geometry
-    fig, ax = plt.subplots(dpi=300)
-    disp = CameraDisplay(geometry, image=img, norm="lin", ax=ax)
-    disp.cmap = "viridis"
-    disp.add_colorbar(fraction=0.02, pad=-0.1)
-    disp.set_limits_percent(100)
-
-    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
-    tel = source.subarray.tel[tel_id]
-    tel_label = getattr(tel, "name", f"CT{tel_id}")
-    ax.set_title(
-        f"{tel_label} integrated signal (win {win_len}) ({et_name})",
-        pad=20,
-    )
-    ax.set_axis_off()
-    fig.tight_layout()
-    return fig
 
 
 def plot_simtel_integrated_pedestal_image(
@@ -775,67 +730,75 @@ def plot_simtel_integrated_pedestal_image(
     gap: int = 16,
     event_index: int | None = None,
 ):
-    """
-    Plot camera image of integrated pedestal per pixel away from the flasher peak.
-
-    Parameters
-    ----------
-    filename : str | pathlib.Path
-        Path to the ``.simtel`` file.
-    tel_id : int | None, optional
-        Telescope ID to use. If None, the first telescope with R1 data is chosen.
-    half_width : int, optional
-        Half window width (samples) for integration. Default is 8.
-    gap : int, optional
-        Offset (samples) from the peak position to start the pedestal window.
-        Default is 16.
-    event_index : int | None, optional
-        Zero-based index of the event to plot. If None, the first event is used.
-
-    Returns
-    -------
-    matplotlib.figure.Figure | None
-        The created figure, or ``None`` if R1 waveforms are unavailable.
-    """
-    prepared = _prepare_waveforms_for_image(
-        filename, tel_id, "integrated-pedestal image", event_index=event_index
+    """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
+    return _plot_simtel_integrated_image(
+        filename=filename,
+        tel_id=tel_id,
+        half_width=half_width,
+        event_index=event_index,
+        mode="pedestal",
+        gap=gap,
     )
+
+
+def _plot_simtel_integrated_image(
+    filename,
+    tel_id: int | None,
+    half_width: int,
+    event_index: int | None,
+    mode: str,
+    gap: int | None = None,
+):
+    """Shared implementation for integrated signal/pedestal images.
+
+    mode: "signal" or "pedestal". For "pedestal", ``gap`` is used.
+    """
+    context = "integrated-signal image" if mode == "signal" else "integrated-pedestal image"
+    prepared = _prepare_waveforms_for_image(filename, tel_id, context, event_index=event_index)
     if prepared is None:
         return None
     w, n_pix, n_samp, source, event, tel_id = prepared
 
     win_len = 2 * int(half_width) + 1
     img = np.zeros(n_pix, dtype=float)
+
     for pid in range(n_pix):
         trace = w[pid]
         peak_idx = int(np.argmax(trace))
-        start = peak_idx + int(gap)
-        if start + win_len <= n_samp:
-            a = start
-            b = start + win_len
+        if mode == "signal":
+            a = max(0, peak_idx - int(half_width))
+            b = min(n_samp, peak_idx + int(half_width) + 1)
         else:
-            start = max(0, peak_idx - int(gap) - win_len)
-            a = start
-            b = min(n_samp, start + win_len)
-        if a >= b:
-            a = 0
-            b = min(n_samp, win_len)
+            g = int(gap) if gap is not None else 16
+            start = peak_idx + g
+            if start + win_len <= n_samp:
+                a = start
+                b = start + win_len
+            else:
+                start = max(0, peak_idx - g - win_len)
+                a = start
+                b = min(n_samp, start + win_len)
+            if a >= b:
+                a = 0
+                b = min(n_samp, win_len)
         img[pid] = float(np.sum(trace[a:b]))
 
     geometry = source.subarray.tel[tel_id].camera.geometry
     fig, ax = plt.subplots(dpi=300)
     disp = CameraDisplay(geometry, image=img, norm="lin", ax=ax)
-    disp.cmap = "cividis"
+    disp.cmap = "viridis" if mode == "signal" else "cividis"
     disp.add_colorbar(fraction=0.02, pad=-0.1)
     disp.set_limits_percent(100)
 
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
-    ax.set_title(
-        f"{tel_label} integrated pedestal (win {win_len}, gap {gap}) ({et_name})",
-        pad=20,
-    )
+    if mode == "signal":
+        title = f"{tel_label} integrated signal (win {win_len}) ({et_name})"
+    else:
+        g = int(gap) if gap is not None else 16
+        title = f"{tel_label} integrated pedestal (win {win_len}, gap {g}) ({et_name})"
+    ax.set_title(title, pad=20)
     ax.set_axis_off()
     fig.tight_layout()
     return fig
