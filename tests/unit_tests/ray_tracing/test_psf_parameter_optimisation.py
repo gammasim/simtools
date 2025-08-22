@@ -644,6 +644,9 @@ def test__create_plot_for_parameters(
         "expected_results_count",
         "expected_log_level",
         "expected_log_message",
+        "plot_all",
+        "pdf_pages",
+        "expected_plots_called",
         "description",
     ),
     [
@@ -653,7 +656,10 @@ def test__create_plot_for_parameters(
             2,  # Two successful results
             None,  # No logging expected
             None,  # No log message expected
-            "all simulations succeed",
+            False,  # No plotting
+            None,  # No PDF pages
+            False,  # No plots expected
+            "all simulations succeed without plotting",
         ),
         (
             [
@@ -664,11 +670,14 @@ def test__create_plot_for_parameters(
             1,  # Only one successful result
             logging.WARNING,  # Warning level logging
             "Simulation failed for parameters",  # Expected log message
-            "with simulation failures",
+            True,  # With plotting
+            "mock_pdf_pages",  # Mock PDF pages
+            True,  # Plots expected
+            "with simulation failures and plotting",
         ),
     ],
 )
-def test_run_all_simulations(
+def test_find_best_parameters(
     mock_telescope_model,
     mock_site_model,
     mock_args_dict,
@@ -680,9 +689,12 @@ def test_run_all_simulations(
     expected_results_count,
     expected_log_level,
     expected_log_message,
+    plot_all,
+    pdf_pages,
+    expected_plots_called,
     description,
 ):
-    """Test running all simulations and collecting results with success and failure scenarios."""
+    """Test finding the best parameters with various scenarios including plotting and failures."""
     all_parameters = [
         {
             "mirror_reflection_random_angle": [0.005, 0.15, 0.035],
@@ -697,6 +709,12 @@ def test_run_all_simulations(
     ]
     radius = sample_psf_data[psf_opt.RADIUS_CM]
 
+    # Set up args_dict based on test parameters
+    mock_args_dict["plot_all"] = plot_all
+
+    # Create mock_pdf_pages if needed
+    mock_pdf_pages_obj = MagicMock() if pdf_pages == "mock_pdf_pages" else None
+
     processed_side_effect = []
     for effect in mock_side_effect:
         if isinstance(effect, tuple):
@@ -708,41 +726,50 @@ def test_run_all_simulations(
         else:
             processed_side_effect.append(effect)
 
-    with patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim:
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch("simtools.ray_tracing.psf_parameter_optimisation._create_all_plots") as mock_plots,
+    ):
         mock_sim.side_effect = processed_side_effect
 
         # Set up logging capture if needed
         if expected_log_level:
             with caplog.at_level(expected_log_level):
-                best_pars, best_d80, best_rmsd, results = psf_opt._run_all_simulations(
+                best_pars, best_d80, results = psf_opt.find_best_parameters(
                     all_parameters,
                     mock_telescope_model,
                     mock_site_model,
                     mock_args_dict,
                     mock_data_to_plot,
                     radius,
+                    pdf_pages=mock_pdf_pages_obj,
                 )
         else:
-            best_pars, best_d80, best_rmsd, results = psf_opt._run_all_simulations(
+            best_pars, best_d80, results = psf_opt.find_best_parameters(
                 all_parameters,
                 mock_telescope_model,
                 mock_site_model,
                 mock_args_dict,
                 mock_data_to_plot,
                 radius,
+                pdf_pages=mock_pdf_pages_obj,
             )
 
         # Common assertions
         assert best_pars == all_parameters[expected_best_index]
         assert len(results) == expected_results_count
-
         assert best_d80 == 3.2  # Best result available
-        assert best_rmsd == 0.1  # Best RMSD available
         assert mock_sim.call_count == 2  # Both parameter sets are attempted
 
         # Check logging if expected
         if expected_log_message:
             assert expected_log_message in caplog.text
+
+        # Check plotting behavior based on plot_all setting
+        if expected_plots_called:
+            mock_plots.assert_called_once()
+        else:
+            mock_plots.assert_not_called()
 
 
 def test_create_all_plots(mock_data_to_plot):
@@ -771,72 +798,6 @@ def test_create_all_plots(mock_data_to_plot):
         second_call_args = calls[1][0]
         assert first_call_args[5] is False  # First call, is_best=False
         assert second_call_args[5] is True  # Second call, is_best=True
-
-
-@pytest.mark.parametrize(
-    ("plot_all", "pdf_pages", "expected_plots_called", "description"),
-    [
-        (True, "mock_pdf_pages", True, "with plotting enabled"),
-        (False, None, False, "without plotting"),
-    ],
-)
-def test_find_best_parameters(
-    mock_telescope_model,
-    mock_site_model,
-    mock_args_dict,
-    mock_data_to_plot,
-    sample_psf_data,
-    plot_all,
-    pdf_pages,
-    expected_plots_called,
-    description,
-):
-    """Test finding the best parameters with and without plotting."""
-    all_parameters = [
-        {
-            "mirror_reflection_random_angle": [0.005, 0.15, 0.035],
-            "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
-            "mirror_align_random_vertical": [0.004, 28.0, 0.0, 0.0],
-        },
-    ]
-    radius = sample_psf_data[psf_opt.RADIUS_CM]
-
-    # Set up args_dict based on test parameters
-    mock_args_dict["plot_all"] = plot_all
-
-    # Create mock_pdf_pages if needed
-    mock_pdf_pages_obj = MagicMock() if pdf_pages == "mock_pdf_pages" else None
-
-    with (
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._run_all_simulations"
-        ) as mock_run_all,
-        patch("simtools.ray_tracing.psf_parameter_optimisation._create_all_plots") as mock_plots,
-    ):
-        # Mock the simulation results
-        results = [(all_parameters[0], 0.1, 3.2, sample_psf_data)]
-        mock_run_all.return_value = (all_parameters[0], 3.2, 0.1, results)
-
-        best_pars, best_d80, returned_results = psf_opt.find_best_parameters(
-            all_parameters,
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            mock_data_to_plot,
-            radius,
-            pdf_pages=mock_pdf_pages_obj,
-        )
-
-        assert best_pars == all_parameters[0]
-        assert best_d80 == 3.2
-        assert returned_results == results
-        mock_run_all.assert_called_once()
-
-        # Check plotting behavior based on plot_all setting
-        if expected_plots_called:
-            mock_plots.assert_called_once()
-        else:
-            mock_plots.assert_not_called()
 
 
 def test_create_d80_vs_offaxis_plot(
