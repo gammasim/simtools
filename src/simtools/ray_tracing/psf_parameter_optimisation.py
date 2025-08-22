@@ -425,7 +425,7 @@ def _create_plot_for_parameters(pars, rmsd, d80, simulated_data, data_to_plot, i
         f"{pars['mirror_align_random_vertical'][1]:.5f}, "
         f"{pars['mirror_align_random_vertical'][2]:.5f}, "
         f"{pars['mirror_align_random_vertical'][3]:.5f}\n"
-        f"align_horizonal = {pars['mirror_align_random_horizontal'][0]:.5f}, "
+        f"align_horizontal = {pars['mirror_align_random_horizontal'][0]:.5f}, "
         f"{pars['mirror_align_random_horizontal'][1]:.5f}, "
         f"{pars['mirror_align_random_horizontal'][2]:.5f}, "
         f"{pars['mirror_align_random_horizontal'][3]:.5f}"
@@ -800,7 +800,6 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
 
     # Export best parameters as JSON model parameter files (if flag is provided)
     if args_dict.get("write_psf_parameters", False):
-        # Use the output_dir directly for proper tune_psf/telescope structure
         export_psf_parameters_as_json(
             best_pars,
             tel_model,
