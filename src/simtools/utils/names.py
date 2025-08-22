@@ -829,6 +829,6 @@ def file_name_with_version(file_name, suffix):
     if file_name is None or suffix is None:
         return None
     file_name = str(file_name)
-    if bool(re.search(r"\d+\.\d+\.\d+$", file_name)):
+    if re.search(r"\d+\.\d+\.\d+\Z", file_name):
         return Path(file_name + suffix)
     return Path(file_name).with_suffix(suffix)
