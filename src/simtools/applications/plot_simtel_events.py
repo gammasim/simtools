@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 r"""
-Plot simulated events..
+Plot simulated events.
 
 This application produces figures from one or more sim_telarray (.simtel.zst) files
-by calling functions in `simtools.visualization.simtel_event_plots`. It is meant to
+by calling functions in ``simtools.visualization.simtel_event_plots``. It is meant to
 run after simulations (e.g., simtools-simulate-flasher, simtools-simulate-illuminator).
 
 What it does
@@ -48,7 +48,7 @@ distance (float, optional)
     Optional distance annotation for event_image.
 output_file (str, optional)
     Base name for output. If provided, outputs will be placed under the standard IOHandler
-    output directory and named `<base>_<inputstem>.pdf`. If omitted, defaults are derived
+    output directory and named ``<base>_<inputstem>.pdf``. If omitted, defaults are derived
     from each input file name.
 save_pngs (flag, optional)
     Also save individual PNG files per figure.
