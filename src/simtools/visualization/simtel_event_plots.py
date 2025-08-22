@@ -30,6 +30,39 @@ TIME_NS_LABEL = "time [ns]"
 R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 
 
+def _compute_integration_window(
+    peak_idx: int, n_samp: int, half_width: int, mode: str, gap: int | None
+) -> tuple[int, int]:
+    """Return [a, b) window bounds for integration for signal/pedestal modes."""
+    hw = int(half_width)
+    win_len = 2 * hw + 1
+    if mode == "signal":
+        a = max(0, peak_idx - hw)
+        b = min(n_samp, peak_idx + hw + 1)
+        return a, b
+
+    g = int(gap) if gap is not None else 16
+    start = peak_idx + g
+    if start + win_len <= n_samp:
+        return start, start + win_len
+    start = max(0, peak_idx - g - win_len)
+    a = start
+    b = min(n_samp, start + win_len)
+    if a >= b:
+        return 0, min(n_samp, win_len)
+    return a, b
+
+
+def _format_integrated_title(
+    tel_label: str, et_name: str, half_width: int, mode: str, gap: int | None
+) -> str:
+    win_len = 2 * int(half_width) + 1
+    if mode == "signal":
+        return f"{tel_label} integrated signal (win {win_len}) ({et_name})"
+    g = int(gap) if gap is not None else 16
+    return f"{tel_label} integrated pedestal (win {win_len}, gap {g}) ({et_name})"
+
+
 def _select_event_by_type(source):
     """
     Build an event selector for a ctapipe EventSource.
@@ -490,7 +523,7 @@ def _draw_peak_hist(
     ----------
     ax : matplotlib.axes.Axes
         Target axes to draw into.
-    peak_samples : numpy.ndarray
+
         Peak sample indices per pixel.
     edges : numpy.ndarray
         Histogram bin edges.
@@ -757,30 +790,14 @@ def _plot_simtel_integrated_image(
     prepared = _prepare_waveforms_for_image(filename, tel_id, context, event_index=event_index)
     if prepared is None:
         return None
-    w, n_pix, n_samp, source, event, tel_id = prepared
 
-    win_len = 2 * int(half_width) + 1
+    w, n_pix, n_samp, source, event, tel_id = prepared
     img = np.zeros(n_pix, dtype=float)
 
     for pid in range(n_pix):
         trace = w[pid]
         peak_idx = int(np.argmax(trace))
-        if mode == "signal":
-            a = max(0, peak_idx - int(half_width))
-            b = min(n_samp, peak_idx + int(half_width) + 1)
-        else:
-            g = int(gap) if gap is not None else 16
-            start = peak_idx + g
-            if start + win_len <= n_samp:
-                a = start
-                b = start + win_len
-            else:
-                start = max(0, peak_idx - g - win_len)
-                a = start
-                b = min(n_samp, start + win_len)
-            if a >= b:
-                a = 0
-                b = min(n_samp, win_len)
+        a, b = _compute_integration_window(peak_idx, n_samp, half_width, mode, gap)
         img[pid] = float(np.sum(trace[a:b]))
 
     geometry = source.subarray.tel[tel_id].camera.geometry
@@ -793,12 +810,7 @@ def _plot_simtel_integrated_image(
     et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
-    if mode == "signal":
-        title = f"{tel_label} integrated signal (win {win_len}) ({et_name})"
-    else:
-        g = int(gap) if gap is not None else 16
-        title = f"{tel_label} integrated pedestal (win {win_len}, gap {g}) ({et_name})"
-    ax.set_title(title, pad=20)
+    ax.set_title(_format_integrated_title(tel_label, et_name, half_width, mode, gap), pad=20)
     ax.set_axis_off()
     fig.tight_layout()
     return fig
