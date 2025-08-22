@@ -528,7 +528,7 @@ class SimulatorLightEmission(SimtelRunner):
         )
         command += super().get_config_option(
             "atmospheric_transmission",
-            self._telescope_model.get_parameter_value("atmospheric_transmission"),
+            self._site_model.get_parameter_value("atmospheric_transmission"),
         )
         command += super().get_config_option("TRIGGER_TELESCOPES", "1")
 
