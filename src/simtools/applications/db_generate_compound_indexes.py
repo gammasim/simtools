@@ -1,7 +1,11 @@
 #!/usr/bin/python3
 
 """
-Inspect databases and print (available database names and collections).
+Generate compound indexes for the specified database.
+
+This needs to be done once after a database has been set up.
+Significantly accelerates database querying (at least a factor
+of 5 in query time with a factor of 10 less documents examined).
 
 Command line arguments
 ----------------------
@@ -17,7 +21,9 @@ from simtools.db import db_handler
 
 
 def _parse():
-    config = configurator.Configurator(description="Inspect databases")
+    config = configurator.Configurator(
+        description="Generate compound indexes for a specific database"
+    )
     config.parser.add_argument(
         "--db_name",
         help="Database name",
@@ -46,16 +52,9 @@ def main():  # noqa: D103
         )
 
     databases = databases if requested == "all" else [requested]
-
     for db_name in databases:
-        print("Database:", db_name)
-        collections = db.get_collections(db_name=db_name)
-        print("   Collections:", collections)
-        print("   Indexes:")
-        for collection_name in collections:
-            db_collection = db.get_collection(collection_name=collection_name, db_name=db_name)
-            for idx in db_collection.list_indexes():
-                print(f"     {collection_name}: {idx}")
+        logger.info(f"Generating compound indexes for database: {db_name}")
+        db.generate_compound_indexes(db_name=db_name)
 
 
 if __name__ == "__main__":
