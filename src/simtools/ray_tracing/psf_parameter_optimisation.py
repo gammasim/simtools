@@ -467,48 +467,6 @@ def _create_plot_for_parameters(pars, rmsd, d80, simulated_data, data_to_plot, i
         data_to_plot["simulated"] = original_simulated
 
 
-def _run_all_simulations(all_parameters, tel_model, site_model, args_dict, data_to_plot, radius):
-    """
-    Run all simulations and collect results.
-
-    Returns
-    -------
-    tuple
-        (best_pars, best_d80, best_rmsd, results)
-    """
-    best_rmsd = float("inf")
-    best_pars = None
-    best_d80 = None
-    results = []  # Store (pars, rmsd, d80, simulated_data)
-
-    logger.info(f"Running {len(all_parameters)} simulations...")
-
-    for i, pars in enumerate(all_parameters):
-        try:
-            logger.info(f"Running simulation {i + 1}/{len(all_parameters)}")
-            d80, rmsd, simulated_data = run_psf_simulation(
-                tel_model,
-                site_model,
-                args_dict,
-                pars,
-                data_to_plot,
-                radius,
-                return_simulated_data=True,
-            )
-        except (ValueError, RuntimeError) as e:
-            logger.warning(f"Simulation failed for parameters {pars}: {e}")
-            continue
-
-        results.append((pars, rmsd, d80, simulated_data))
-        if rmsd < best_rmsd:
-            best_rmsd = rmsd
-            best_pars = pars
-            best_d80 = d80
-
-    logger.info(f"Best RMSD found: {best_rmsd:.5f}")
-    return best_pars, best_d80, best_rmsd, results
-
-
 def _create_all_plots(results, best_pars, data_to_plot, pdf_pages):
     """
     Create plots for all parameter sets if requested.
@@ -544,10 +502,36 @@ def find_best_parameters(
     Loop over all parameter sets, run the simulation, compute RMSD,
     and return the best parameters and their RMSD.
     """
-    # Run all simulations and store data
-    best_pars, best_d80, _, results = _run_all_simulations(
-        all_parameters, tel_model, site_model, args_dict, data_to_plot, radius
-    )
+    best_rmsd = float("inf")
+    best_pars = None
+    best_d80 = None
+    results = []  # Store (pars, rmsd, d80, simulated_data)
+
+    logger.info(f"Running {len(all_parameters)} simulations...")
+
+    for i, pars in enumerate(all_parameters):
+        try:
+            logger.info(f"Running simulation {i + 1}/{len(all_parameters)}")
+            d80, rmsd, simulated_data = run_psf_simulation(
+                tel_model,
+                site_model,
+                args_dict,
+                pars,
+                data_to_plot,
+                radius,
+                return_simulated_data=True,
+            )
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Simulation failed for parameters {pars}: {e}")
+            continue
+
+        results.append((pars, rmsd, d80, simulated_data))
+        if rmsd < best_rmsd:
+            best_rmsd = rmsd
+            best_pars = pars
+            best_d80 = d80
+
+    logger.info(f"Best RMSD found: {best_rmsd:.5f}")
 
     # Create all plots if requested
     if pdf_pages is not None and args_dict.get("plot_all", False) and results:
