@@ -175,7 +175,7 @@ def generate_random_parameters(
         mrf_range = 0.1
         mrra2_range = 0.03
         mar_range = 0.005
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed=100)  # Fixed seed for reproducibility
         mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
         mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
         mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
@@ -485,7 +485,7 @@ def _create_all_plots(results, best_pars, data_to_plot, pdf_pages):
     logger.info("Creating plots for all parameter sets...")
 
     for i, (pars, rmsd, d80, simulated_data) in enumerate(results):
-        is_best = pars == best_pars
+        is_best = pars is best_pars
         logger.info(f"Creating plot {i + 1}/{len(results)}{' (BEST)' if is_best else ''}")
 
         _create_plot_for_parameters(
@@ -520,6 +520,7 @@ def find_best_parameters(
                 data_to_plot,
                 radius,
                 return_simulated_data=True,
+                pdf_pages=None,
             )
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Simulation failed for parameters {pars}: {e}")
@@ -631,7 +632,7 @@ def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir):
     with open(param_file, "w", encoding="utf-8") as f:
         f.write("Tested parameter sets:\n")
         for i, (pars, rmsd, d80, _) in enumerate(results):
-            is_best = pars == best_pars
+            is_best = pars is best_pars
             prefix = "*" if is_best else " "
             f.write(f"{prefix} Set {i + 1}: RMSD={rmsd:.5f}, D80={d80:.5f} cm\n")
             for par, value in pars.items():
