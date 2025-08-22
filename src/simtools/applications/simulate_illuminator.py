@@ -44,7 +44,7 @@ model_version (str, optional)
     Version of the simulation model.
 off_axis_angle (float, optional)
     Off axis angle for light source direction.
-events (int, optional)
+number_events (int, optional)
     Number of events to simulate.
 
 
@@ -153,7 +153,7 @@ def _parse(label):
         required=True,
     )
     config.parser.add_argument(
-        "--events",
+        "--number_events",
         help="Number of events to simulate",
         type=int,
         default=1,

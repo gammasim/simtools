@@ -64,8 +64,8 @@ def _parse(label):
         required=True,
     )
     config.parser.add_argument(
-        "--events",
-        help="Number of events to simulate (default: 1)",
+        "--number_events",
+        help="Number of number_events to simulate (default: 1)",
         type=int,
         default=1,
         required=False,
@@ -130,7 +130,7 @@ def main():
 
     sim_runner.run_simulation()
 
-    logger.info("Flasher simulation completed. Use simtools-plot-simtel-events for plots.")
+    logger.info("Flasher simulation completed. Use simtools-plot-simtel-number_events for plots.")
 
 
 if __name__ == "__main__":
