@@ -377,10 +377,6 @@ def test__detect_peaks_fallback_to_find_peaks():
 def test__detect_peaks_handles_errors():
     class _Sig:
         @staticmethod
-        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-            raise RuntimeError("bad cwt")
-
-        @staticmethod
         def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
             raise ValueError("bad fp")
 
