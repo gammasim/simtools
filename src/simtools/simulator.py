@@ -675,14 +675,7 @@ class Simulator:
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
                 # Add all relevant model, log, histogram, and CORSIKA log files to the tarball
                 files_to_tar = model_logs + model_hists + model_corsika_logs + model_files
-                try:
-                    gen.pack_tar_file(
-                        tar_file_path, files_to_tar, base=Path(files_to_tar[0]).parent
-                    )
-                except IndexError as e:
-                    raise IndexError(
-                        f"Error packing files for model version {model_version}"
-                    ) from e
+                gen.pack_tar_file(tar_file_path, files_to_tar)
 
         for file_to_move in output_files + reduced_event_files:
             source_file = Path(file_to_move)

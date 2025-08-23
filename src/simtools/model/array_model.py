@@ -297,8 +297,8 @@ class ArrayModel:
             Path of the config directory path for sim_telarray.
         """
         if self._config_file_directory is None:
-            self._config_file_directory = self.io_handler.get_output_directory(
-                self.label, f"model/{self.model_version}"
+            self._config_file_directory = self.io_handler.get_model_configuration_directory(
+                self.label, self.model_version
             )
         return self._config_file_directory
 
@@ -316,11 +316,8 @@ class ArrayModel:
             self._logger.warning("No model files found to pack.")
             return None
 
-        archive_name = (
-            self.io_handler.get_output_directory(self.label, f"model/{self.model_version}")
-            / "model_files.tar.gz"
-        )
-        general.pack_tar_file(archive_name, model_files, base=Path(self.get_config_directory()))
+        archive_name = self.get_config_directory() / "model_files.tar.gz"
+        general.pack_tar_file(archive_name, model_files)
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
