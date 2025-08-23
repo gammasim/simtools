@@ -845,7 +845,7 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
     mock_tarfile_open.return_value.__enter__.return_value = mock_tar
 
     # Call the function
-    gen.pack_tar_file(tar_file_name, [file1, file2], base=base_dir)
+    gen.pack_tar_file(tar_file_name, [file1, file2])
 
     # Verify tarfile.open was called correctly
     mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
@@ -853,4 +853,4 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
     mock_tar.add.assert_any_call(file2, arcname="file2.txt")
 
     with pytest.raises(ValueError, match="Unsafe file path"):
-        gen.pack_tar_file(tar_file_name, ["unsafe_file"], base=base_dir)
+        gen.pack_tar_file(tar_file_name, ["unsafe_file"])

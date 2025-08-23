@@ -224,7 +224,7 @@ def test_pack_model_files(array_model, io_handler):
     ):
         archive_path = array_model.pack_model_files()
 
-        assert archive_path == Path("/mock/output/directory/model_files.tar.gz")
+        assert archive_path == Path("/mock/output/directory/model/6.0.0/model_files.tar.gz")
         assert mock_tarfile.add.call_count == 2
 
     mock_rglob = MagicMock(return_value=[])
