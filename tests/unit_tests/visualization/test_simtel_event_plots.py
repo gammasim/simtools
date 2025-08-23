@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 from simtools.visualization import simtel_event_plots as sep
 
@@ -473,7 +474,8 @@ def test__time_axis_from_readout_valid_and_errors():  # pylint:disable=protected
     np.testing.assert_array_equal(t, np.array([0.0, 1.0, 2.0]))
 
     # Zero division path -> default dt=1.0
-    t = sep._time_axis_from_readout(R(0 * u.Hz), 2)
+    with pytest.warns(RuntimeWarning, match="divide by zero encountered in divide"):
+        t = sep._time_axis_from_readout(R(0 * u.Hz), 2)
     np.testing.assert_array_equal(t, np.array([0.0, 1.0]))
 
 
