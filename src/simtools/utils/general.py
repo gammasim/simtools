@@ -345,7 +345,7 @@ def resolve_file_patterns(file_names):
     return _files
 
 
-def pack_tar_file(tar_file_name, file_list, base=Path()):
+def pack_tar_file(tar_file_name, file_list):
     """
     Pack files into a tar.gz archive.
 
@@ -355,12 +355,9 @@ def pack_tar_file(tar_file_name, file_list, base=Path()):
         Name of the output tar.gz file.
     file_list: list
         List of files to include in the archive.
-    base: Path
-        Base directory to ensure relative paths are safe.
-
     """
-    base = Path(base)
     file_list = [Path(f) for f in file_list]
+    base = Path(os.path.commonpath([f.resolve() for f in file_list]))
     for f in file_list:
         if not f.is_file() or not f.resolve().is_relative_to(base.resolve()):
             raise ValueError(f"Unsafe file path: {f}")

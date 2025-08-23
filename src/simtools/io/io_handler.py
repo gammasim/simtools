@@ -156,3 +156,27 @@ class IOHandler(metaclass=IOHandlerSingleton):
         else:
             raise IncompleteIOHandlerInitError
         return file_prefix.joinpath(file_name).absolute()
+
+    def get_model_configuration_directory(self, label, model_version):
+        """
+        Get path of the simulation model configuration directory.
+
+        Parameters
+        ----------
+        label: str
+            Instance label.
+        model_version: str
+            Model version.
+
+        Returns
+        -------
+        Path
+        """
+        config_dir = self.get_output_directory(label=label).joinpath("model", model_version)
+        try:
+            config_dir.mkdir(parents=True, exist_ok=True)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(
+                f"Error creating model configuration directory {config_dir!s}"
+            ) from exc
+        return config_dir.absolute()

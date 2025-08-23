@@ -307,8 +307,8 @@ class ModelParameter:
         if self.name is None and self.site is None:
             return
 
-        self._config_file_directory = self.io_handler.get_output_directory(
-            label=self.label, sub_dir=f"model/{self.model_version}"
+        self._config_file_directory = self.io_handler.get_model_configuration_directory(
+            label=self.label, model_version=self.model_version
         )
 
         # Setting file name and the location
