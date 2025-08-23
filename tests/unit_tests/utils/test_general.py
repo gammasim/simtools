@@ -6,7 +6,7 @@ import os
 import time
 from copy import copy
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -827,3 +827,30 @@ def test_ensure_iterable():
     assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
     assert gen.ensure_iterable(5) == [5]
     assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
+
+
+@patch("tarfile.open")
+def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
+    tar_file_name = tmp_test_directory / "test_archive.tar.gz"
+    base_dir = tmp_test_directory / "base"
+    base_dir.mkdir()
+
+    # Create test files
+    file1 = base_dir / "file1.txt"
+    file2 = base_dir / "file2.txt"
+    file1.write_text("This is file 1.", encoding="utf-8")
+    file2.write_text("This is file 2.", encoding="utf-8")
+
+    mock_tar = MagicMock()
+    mock_tarfile_open.return_value.__enter__.return_value = mock_tar
+
+    # Call the function
+    gen.pack_tar_file(tar_file_name, [file1, file2], base=base_dir)
+
+    # Verify tarfile.open was called correctly
+    mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
+    mock_tar.add.assert_any_call(file1, arcname="file1.txt")
+    mock_tar.add.assert_any_call(file2, arcname="file2.txt")
+
+    with pytest.raises(ValueError, match="Unsafe file path"):
+        gen.pack_tar_file(tar_file_name, ["unsafe_file"], base=base_dir)
