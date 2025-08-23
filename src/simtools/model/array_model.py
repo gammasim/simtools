@@ -1,7 +1,6 @@
 """Definition of the ArrayModel class."""
 
 import logging
-import tarfile
 from pathlib import Path
 
 import astropy.units as u
@@ -13,7 +12,7 @@ from simtools.io import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils import names
+from simtools.utils import general, names
 
 __all__ = ["ArrayModel"]
 
@@ -321,12 +320,7 @@ class ArrayModel:
             self.io_handler.get_output_directory(self.label, f"model/{self.model_version}")
             / "model_files.tar.gz"
         )
-
-        base = Path(self.get_config_directory())
-        with tarfile.open(archive_name, "w:gz") as tar:
-            for file in model_files:
-                tar.add(file, arcname=file.relative_to(base))
-
+        general.pack_tar_file(archive_name, model_files, base=Path(self.get_config_directory()))
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
