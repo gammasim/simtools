@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 from astropy.table import Table
 
 from simtools.io import ascii_handler
@@ -447,7 +448,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
             wl = float(parts[0])
             for i, height in enumerate(height_bins):
                 extinction_value = float(parts[i + 1])
-                if extinction_value == 99999.0:
+                if np.isclose(extinction_value, 99999.0):
                     continue
                 wavelengths.append(wl)
                 heights.append(height)

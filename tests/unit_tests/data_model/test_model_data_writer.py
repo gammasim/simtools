@@ -199,9 +199,9 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
     )
     assert (Path(tmp_test_directory) / "array_element_position_utm.json").is_file()
     assert isinstance(position_dict, dict)
-    assert pytest.approx(position_dict["value"][0]) == 217659.6
-    assert pytest.approx(position_dict["value"][1]) == 3184995.1
-    assert pytest.approx(position_dict["value"][2]) == 2185.0
+    assert position_dict["value"][0] == pytest.approx(217659.6)
+    assert position_dict["value"][1] == pytest.approx(3184995.1)
+    assert position_dict["value"][2] == pytest.approx(2185.0)
     assert Path(tmp_test_directory / "array_element_position_utm.meta.yml").is_file()
 
     position_dict = writer.ModelDataWriter.dump_model_parameter(
@@ -213,10 +213,10 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         output_path=tmp_test_directory,
         use_plain_output_path=True,
     )
-    assert pytest.approx(position_dict["value"][0]) == 6.55
-    assert pytest.approx(position_dict["value"][1]) == 0.0
-    assert pytest.approx(position_dict["value"][2]) == 0.0
-    assert pytest.approx(position_dict["value"][3]) == 0.0
+    assert position_dict["value"][0] == pytest.approx(6.55)
+    assert position_dict["value"][1] == pytest.approx(0.0)
+    assert position_dict["value"][2] == pytest.approx(0.0)
+    assert position_dict["value"][3] == pytest.approx(0.0)
 
     with patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"

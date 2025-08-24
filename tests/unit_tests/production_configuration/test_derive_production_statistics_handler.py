@@ -75,7 +75,8 @@ def args_dict(tmp_path, metrics_file, grid_points_file):
 def mock_handler(args_dict, tmp_path):
     """Fixture to provide a mocked ProductionStatisticsHandler."""
     with patch(
-        "simtools.production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler._load_grid_points_production",
+        "simtools.production_configuration.derive_production_statistics_handler."
+        "ProductionStatisticsHandler._load_grid_points_production",
         return_value=[],
     ):
         return ProductionStatisticsHandler(args_dict, output_path=tmp_path)
@@ -106,7 +107,8 @@ def test_missing_required_args(args_dict, tmp_path):
     args_missing.pop("zeniths", None)
 
     with patch(
-        "simtools.production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler._load_grid_points_production",
+        "simtools.production_configuration.derive_production_statistics_handler."
+        "ProductionStatisticsHandler._load_grid_points_production",
         return_value=[],
     ):
         handler = ProductionStatisticsHandler(args_missing, output_path=tmp_path)
@@ -371,7 +373,8 @@ def test_initialize_evaluators_with_valid_files(mock_handler):
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.glob", return_value=["dummy_path"]),
         patch(
-            "simtools.production_configuration.derive_production_statistics_handler.StatisticalUncertaintyEvaluator",
+            "simtools.production_configuration.derive_production_statistics_handler."
+            "StatisticalUncertaintyEvaluator",
             return_value=mock_evaluator_instance,
         ),
     ):
@@ -408,7 +411,8 @@ def test_perform_interpolation_with_grid_points(mock_handler):
     mock_interp.interpolate.return_value = np.array([100])
 
     with patch(
-        "simtools.production_configuration.derive_production_statistics_handler.InterpolationHandler",
+        "simtools.production_configuration.derive_production_statistics_handler."
+        "InterpolationHandler",
         return_value=mock_interp,
     ):
         result = mock_handler.perform_interpolation()
