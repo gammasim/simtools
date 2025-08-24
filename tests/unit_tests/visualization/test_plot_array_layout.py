@@ -4,6 +4,7 @@ import astropy.units as u
 import matplotlib.figure as mpl_fig
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 from astropy.table import QTable, Table
 from matplotlib.collections import PatchCollection
@@ -127,7 +128,8 @@ def test_get_sphere_radius_with_column():
     row = tbl[0]
 
     result = get_sphere_radius(row)
-    assert result == 5.0 * u.m
+    assert np.isclose(result.value, 5.0)
+    assert result.unit.is_equivalent(u.m)
 
 
 def test_get_sphere_radius_without_column():
@@ -137,7 +139,8 @@ def test_get_sphere_radius_without_column():
 
     # Since the 'sphere_radius' column is missing, the function should return 1.0 m.
     result = get_sphere_radius(row)
-    assert result == 10.0 * u.m
+    assert np.isclose(result.value, 10.0)
+    assert result.unit.is_equivalent(u.m)
 
 
 # Helper class to simulate a telescope row with an index attribute
@@ -173,7 +176,8 @@ def test_get_telescope_name_with_asset_code_and_sequence_number():
 
 
 def test_get_telescope_name_default_fallback():
-    # When neither telescope_name nor asset_code/sequence_number exist, fallback should use tel.index.
+    # When neither telescope_name nor asset_code/sequence_number exist,
+    # fallback should use tel.index.
     data = {"other_column": "value"}
     dummy = DummyTel(data, index=5)
     result = get_telescope_name(dummy)
@@ -269,7 +273,7 @@ def test_get_patches_simplest(monkeypatch):
     assert "pos_y_rotated" in telescopes.colnames
 
     patches, returned_range = get_patches(ax, telescopes, False, None, 1.0)
-    assert pytest.approx(returned_range) == 7.7
+    assert returned_range == pytest.approx(7.7)
 
 
 def test_get_telescope_patch_circle(monkeypatch):

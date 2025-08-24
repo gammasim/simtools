@@ -102,9 +102,9 @@ def test_calculate_circular_mean():
 
     # Test simple cases
     angles = np.array([0, np.pi / 2, np.pi, 3 * np.pi / 2])
-    assert pytest.approx(transf.calculate_circular_mean(angles)) == 2.26196
+    assert transf.calculate_circular_mean(angles) == pytest.approx(2.26196)
 
     # Test mean of random angles
     angles = np.array([0.1, 0.2, 0.3])
     expected = 0.2
-    assert pytest.approx(transf.calculate_circular_mean(angles), abs=1e-6) == expected
+    assert transf.calculate_circular_mean(angles) == pytest.approx(expected, abs=1e-6)

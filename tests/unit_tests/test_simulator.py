@@ -218,7 +218,7 @@ def test_get_runs_and_files_to_submit(
     array_simulator, shower_simulator, shower_array_simulator, input_file_list
 ):
     with pytest.raises(ValueError, match="No runs to submit."):
-        assert array_simulator._get_runs_and_files_to_submit(input_file_list=None) == {}
+        array_simulator._get_runs_and_files_to_submit(input_file_list=None)
 
     assert array_simulator._get_runs_and_files_to_submit(input_file_list=input_file_list) == {
         1: "run1",

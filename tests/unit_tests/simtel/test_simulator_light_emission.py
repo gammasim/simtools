@@ -389,10 +389,14 @@ def test_prepare_script(
     mock_make_simtel_script.assert_called_once()
 
     check_line = (
-        f"[ -s '{mock_simulator.output_directory}/{mock_simulator._infer_application()[0]}.iact.gz' ] || "
+        f"[ -s '{mock_simulator.output_directory}/"
+        f"{mock_simulator._infer_application()[0]}.iact.gz' ] || "
         "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }\n\n"
     )
-    cleanup_line = f"rm -f '{mock_simulator.output_directory}/{mock_simulator._infer_application()[0]}.iact.gz'\n\n"
+    cleanup_line = (
+        f"rm -f '{mock_simulator.output_directory}"
+        f"/{mock_simulator._infer_application()[0]}.iact.gz'\n\n"
+    )
     expected_calls = [
         "#!/usr/bin/env bash\n\n",
         "light_emission_script_command\n\n",

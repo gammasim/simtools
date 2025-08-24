@@ -329,7 +329,8 @@ def test_auto_generate_parameter_reports(io_handler, db_config):
             return_value=mock_combinations,
         ),
         patch(
-            "simtools.reporting.docs_read_parameters.ReadParameters.produce_model_parameter_reports",
+            "simtools.reporting.docs_read_parameters.ReadParameters."
+            "produce_model_parameter_reports",
             new_callable=MagicMock,
         ) as mock_produce,
     ):
@@ -457,7 +458,7 @@ def test__generate_observatory_report_combinations(io_handler, db_config):
             "get_model_versions",
             return_value=case["mock_model_versions"],
         ):
-            result = list(report_generator._generate_observatory_report_combinations())
+            result = report_generator._generate_observatory_report_combinations()
             assert set(result) == set(case["expected_combinations"])
 
 
