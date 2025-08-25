@@ -11,6 +11,10 @@ from bson.objectid import ObjectId
 from simtools.db import db_handler
 from simtools.utils import names
 
+# Suppress warnings of type
+# 'pytest.PytestUnraisableExceptionWarning: Exception ignored in: <function MongoClient'
+pytestmark = pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+
 logger = logging.getLogger()
 
 
