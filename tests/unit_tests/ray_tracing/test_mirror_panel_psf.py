@@ -212,7 +212,7 @@ def test_run_simulations_and_analysis(
         mock_ray_instance.get_mean.return_value = 0.5 * u.cm
         mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
 
-        mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
+        mirror_panel_psf.run_simulations_and_analysis(rnda)
 
 
 def test_print_results(mock_mirror_panel_psf, capsys):
@@ -242,7 +242,7 @@ def test_get_starting_value_from_args(mock_mirror_panel_psf, caplog):
     mirror_psf.args_dict["rnda"] = 0.5
     with caplog.at_level("INFO"):
         rnda_start = mirror_psf._get_starting_value()
-    assert rnda_start == 0.5
+    assert rnda_start == pytest.approx(0.5)
     assert "Start value for mirror_reflection_random_angle: 0.5 deg" in caplog.text
 
 
@@ -252,7 +252,7 @@ def test_get_starting_value_from_model(mock_mirror_panel_psf, caplog):
     mirror_psf.telescope_model.get_parameter_value = lambda key: [0.3]
     with caplog.at_level("INFO"):
         rnda_start = mirror_psf._get_starting_value()
-    assert rnda_start == 0.3
+    assert rnda_start == pytest.approx(0.3)
     assert "Start value for mirror_reflection_random_angle: 0.3 deg" in caplog.text
 
 
@@ -270,8 +270,8 @@ def test_derive_random_reflection_angle_no_tuning(
         mirror_psf.derive_random_reflection_angle()
 
         mock_run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
-        assert mirror_psf.mean_d80 == 0.5
-        assert mirror_psf.sig_d80 == 0.1
+        assert mirror_psf.mean_d80 == pytest.approx(0.5)
+        assert mirror_psf.sig_d80 == pytest.approx(0.1)
 
 
 def test_derive_random_reflection_angle_with_tuning(
@@ -294,8 +294,8 @@ def test_derive_random_reflection_angle_with_tuning(
 
         mock_optimize.assert_called_once()
         mock_run_simulations.assert_called_once_with(mirror_psf.rnda_opt, save_figures=False)
-        assert mirror_psf.mean_d80 == 0.5
-        assert mirror_psf.sig_d80 == 0.1
+        assert mirror_psf.mean_d80 == pytest.approx(0.5)
+        assert mirror_psf.sig_d80 == pytest.approx(0.1)
 
 
 def test_optimize_reflection_angle(mock_mirror_panel_psf, mock_run_simulations_and_analysis_string):
