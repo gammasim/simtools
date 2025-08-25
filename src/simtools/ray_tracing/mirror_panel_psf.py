@@ -233,6 +233,7 @@ class MirrorPanelPSF:
                 else "all"
             ),
             use_random_focal_length=self.args_dict["use_random_focal_length"],
+            random_focal_length_seed=self.args_dict.get("random_focal_length_seed"),
         )
         ray.simulate(test=self.args_dict["test"], force=True)  # force has to be True, always
         ray.analyze(force=True)
