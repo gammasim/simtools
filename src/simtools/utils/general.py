@@ -4,6 +4,7 @@ import datetime
 import glob
 import logging
 import os
+import tarfile
 import time
 import urllib.error
 import urllib.request
@@ -342,6 +343,29 @@ def resolve_file_patterns(file_names):
     if not _files:
         raise FileNotFoundError(f"No files found: {file_names}")
     return _files
+
+
+def pack_tar_file(tar_file_name, file_list):
+    """
+    Pack files into a tar.gz archive.
+
+    Parameters
+    ----------
+    tar_file_name: str
+        Name of the output tar.gz file.
+    file_list: list
+        List of files to include in the archive.
+    """
+    file_list = [Path(f) for f in file_list]
+    base = Path(os.path.commonpath([f.resolve() for f in file_list]))
+    base_resolved = base.resolve()
+    for f in file_list:
+        if not f.is_file() or not f.resolve().is_relative_to(base_resolved):
+            raise ValueError(f"Unsafe file path: {f}")
+
+    with tarfile.open(tar_file_name, "w:gz") as tar:
+        for file in file_list:
+            tar.add(file, arcname=file.name)
 
 
 def get_log_excerpt(log_file, n_last_lines=30):
