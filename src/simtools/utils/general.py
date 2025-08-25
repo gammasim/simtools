@@ -358,8 +358,9 @@ def pack_tar_file(tar_file_name, file_list):
     """
     file_list = [Path(f) for f in file_list]
     base = Path(os.path.commonpath([f.resolve() for f in file_list]))
+    base_resolved = base.resolve()
     for f in file_list:
-        if not f.is_file() or not f.resolve().is_relative_to(base.resolve()):
+        if not f.is_file() or not f.resolve().is_relative_to(base_resolved):
             raise ValueError(f"Unsafe file path: {f}")
 
     with tarfile.open(tar_file_name, "w:gz") as tar:
