@@ -40,7 +40,8 @@ def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):
     with pytest.raises(
         ValueError,
         match=re.escape(
-            "Number of telescopes in sim_telarray file (13) does not match number of telescopes in array model (3)"
+            "Number of telescopes in sim_telarray file (13)"
+            " does not match number of telescopes in array model (3)"
         ),
     ):
         assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mock)

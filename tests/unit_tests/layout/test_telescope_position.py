@@ -100,9 +100,9 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
     assert _z.unit == "m"
 
     _x, _y, _z = tel.get_coordinates("ground", coordinate_field="value")
-    assert pytest.approx(_x, 0.1) == 50.0
-    assert pytest.approx(_y, 0.1) == -25.0
-    assert pytest.approx(_z, 0.1) == 2178
+    assert _x == pytest.approx(50.0, 0.1)
+    assert _y == pytest.approx(-25.0, 0.1)
+    assert _z == pytest.approx(2178.0, 0.1)
 
 
 def test_get_coordinate_variable():
@@ -296,12 +296,12 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     tel.set_coordinates("ground", 0.0, 0.0, 2158.0 * u.m)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
 
-    assert 28.7621 == pytest.approx(tel.crs["mercator"]["xx"]["value"], 1.0e-4)
-    assert -17.8920302 == pytest.approx(tel.crs["mercator"]["yy"]["value"], 1.0e-7)
-    assert 3185067.2783240844 == pytest.approx(tel.crs["utm"]["yy"]["value"], 1.0e-9)
-    assert 217609.2270142641 == pytest.approx(tel.crs["utm"]["xx"]["value"], 1.0e-9)
-    assert 3185067.2783240844 == pytest.approx(tel.crs["utm"]["yy"]["value"], 1.0e-9)
-    assert 2158.0 == pytest.approx(tel.crs["utm"]["zz"]["value"], 1.0e-9)
+    assert tel.crs["mercator"]["xx"]["value"] == pytest.approx(28.7621, 1.0e-4)
+    assert tel.crs["mercator"]["yy"]["value"] == pytest.approx(-17.8920302, 1.0e-7)
+    assert tel.crs["utm"]["yy"]["value"] == pytest.approx(3185067.2783240844, 1.0e-9)
+    assert tel.crs["utm"]["xx"]["value"] == pytest.approx(217609.2270142641, 1.0e-9)
+    assert tel.crs["utm"]["yy"]["value"] == pytest.approx(3185067.2783240844, 1.0e-9)
+    assert tel.crs["utm"]["zz"]["value"] == pytest.approx(2158.0, 1.0e-9)
 
     tel_nan = TelescopePosition(name="LSTN-02")
     tel_nan.set_coordinates("ground", np.nan, np.nan, 2158.0 * u.m)
@@ -317,7 +317,7 @@ def test_get_altitude():
     assert np.isnan(telescope.get_altitude())
 
     telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
-    assert pytest.approx(telescope.get_altitude().value, 0.1) == 2100.0
+    assert telescope.get_altitude().value == pytest.approx(2100.0, 0.1)
 
 
 def test_print_compact_format(capsys):

@@ -403,7 +403,7 @@ def test_convert_list_to_string():
 def test_convert_string_to_list():
     t_1 = gen.convert_string_to_list("1 2 3 4")
     assert len(t_1) == 4
-    assert pytest.approx(t_1[1]) == 2.0
+    assert pytest.approx(t_1[1]) == pytest.approx(2.0)
     assert isinstance(t_1[1], float)
 
     t_int = gen.convert_string_to_list("1 2 3 4", False)
@@ -413,10 +413,10 @@ def test_convert_string_to_list():
 
     t_2 = gen.convert_string_to_list("0.1 0.2 0.3 0.4")
     assert len(t_2) == 4
-    assert pytest.approx(t_2[1]) == 0.2
+    assert pytest.approx(t_2[1]) == pytest.approx(0.2)
 
     t_3 = gen.convert_string_to_list("0.1")
-    assert pytest.approx(t_3[0]) == 0.1
+    assert pytest.approx(t_3[0]) == pytest.approx(0.1)
 
     bla_bla = "bla bla"
     assert gen.convert_string_to_list("bla_bla") == "bla_bla"

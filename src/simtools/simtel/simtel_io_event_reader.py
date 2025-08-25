@@ -191,7 +191,7 @@ class SimtelIOEventDataReader:
                 & (shower_data.event_id == tr_event_id)
                 & (shower_data.file_id == tr_file_id)
             )
-            matched_idx = np.where(mask)[0]
+            matched_idx = np.nonzero(mask)[0]
             if len(matched_idx) == 1:
                 matched_indices.append(matched_idx[0])
             else:
