@@ -302,8 +302,6 @@ filterwarnings = [
   "error",
   # Ignore the warning about fontTools.misc.py23
   "ignore:The py23 module has been deprecated:DeprecationWarning",
-  # MongoClient warning
-  "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.report]
