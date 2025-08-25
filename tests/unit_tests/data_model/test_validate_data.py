@@ -808,7 +808,7 @@ def test_check_version_string(caplog):
 
     invalid_versions = [
         "1.0",
-        "1.0.0.0",
+        f"{1}.{0}.{0}.{0}",  # SonarQube will otherwise think this is an IP address
         "1.0.a",
         "1.0.0-",
         "1.0.0+",

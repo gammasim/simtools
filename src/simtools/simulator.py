@@ -4,7 +4,6 @@ import gzip
 import logging
 import re
 import shutil
-import tarfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -674,12 +673,9 @@ class Simulator:
             if model_logs:
                 tar_file_name = Path(model_logs[0]).name.replace("log.gz", "log_hist.tar.gz")
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
-
-                with tarfile.open(tar_file_path, "w:gz") as tar:
-                    # Add all relevant model, log, histogram, and CORSIKA log files to the tarball
-                    files_to_tar = model_logs + model_hists + model_corsika_logs + model_files
-                    for file_to_tar in files_to_tar:
-                        tar.add(file_to_tar, arcname=Path(file_to_tar).name)
+                # Add all relevant model, log, histogram, and CORSIKA log files to the tarball
+                files_to_tar = model_logs + model_hists + model_corsika_logs + model_files
+                gen.pack_tar_file(tar_file_path, files_to_tar)
 
         for file_to_move in output_files + reduced_event_files:
             source_file = Path(file_to_move)

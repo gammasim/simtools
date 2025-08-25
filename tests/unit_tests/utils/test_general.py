@@ -6,7 +6,7 @@ import os
 import time
 from copy import copy
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -827,3 +827,50 @@ def test_ensure_iterable():
     assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
     assert gen.ensure_iterable(5) == [5]
     assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
+
+
+@patch("tarfile.open")
+def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
+    tar_file_name = tmp_test_directory / "test_archive.tar.gz"
+    # Do not actually create directories or files; mock filesystem interactions
+    base_dir = tmp_test_directory / "base"
+
+    # Paths for files (not created on disk)
+    file1 = base_dir / "file1.txt"
+    file2 = base_dir / "file2.txt"
+
+    # Patch Path.is_file and Path.resolve to avoid touching the filesystem
+    orig_is_file = Path.is_file
+    orig_resolve = Path.resolve
+
+    def is_file_side(self):
+        # Only report our two test files as files
+        if str(self) in (str(file1), str(file2)):
+            return True
+        return orig_is_file(self)
+
+    def resolve_side(self, *args, **kwargs):
+        # For our test files, return the path itself (tmp_test_directory paths are absolute)
+        if str(self) in (str(file1), str(file2)):
+            return self
+        return orig_resolve(self, *args, **kwargs)
+
+    from unittest.mock import patch as _patch
+
+    patch_is_file = _patch.object(Path, "is_file", new=is_file_side)
+    patch_resolve = _patch.object(Path, "resolve", new=resolve_side)
+
+    mock_tar = MagicMock()
+    mock_tarfile_open.return_value.__enter__.return_value = mock_tar
+
+    # Call the function with Path methods patched
+    with patch_is_file, patch_resolve:
+        gen.pack_tar_file(tar_file_name, [file1, file2])
+
+    # Verify tarfile.open was called correctly
+    mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
+    mock_tar.add.assert_any_call(file1, arcname="file1.txt")
+    mock_tar.add.assert_any_call(file2, arcname="file2.txt")
+
+    with pytest.raises(ValueError, match="Unsafe file path"):
+        gen.pack_tar_file(tar_file_name, ["unsafe_file"])
