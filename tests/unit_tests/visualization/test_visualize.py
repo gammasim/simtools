@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# pylint: disable=protected-access,redefined-outer-name,unused-argument
+
 import logging
 from pathlib import Path
 
@@ -51,12 +53,12 @@ def test_plot_1d(db, io_handler, wavelength):
         new_data[y_title] = new_data[y_title] * (1 - 0.1 * (i + 1))
         data[f"{100 * (1 - 0.1 * (i + 1))}%% reflectivity"] = new_data
 
-    plt = visualize.plot_1d(data, title=title, palette="autumn")
+    fig = visualize.plot_1d(data, title=title, palette="autumn")
 
     plot_file = io_handler.get_output_file(file_name="plot_1d.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
-    plt.savefig(plot_file)
+    fig.savefig(plot_file)
 
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
@@ -69,12 +71,12 @@ def test_plot_table(io_handler):
     title = "Test plot table"
     table = astropy.io.ascii.read("tests/resources/Transmission_Spectrum_PlexiGlass.dat")
 
-    plt = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
+    fig = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 
     plot_file = io_handler.get_output_file(file_name="plot_table.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
-    plt.savefig(plot_file)
+    fig.savefig(plot_file)
 
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
@@ -95,7 +97,7 @@ def test_add_unit(caplog, wavelength):
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
 
 
-def test_save_figure(tmp_test_directory, io_handler):
+def test_save_figure(io_handler):
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
     ax.set_title("Test Figure")

@@ -122,7 +122,7 @@ class Simulator:
         list
             List of ArrayModel objects.
         """
-        versions = gen.enforce_list_type(self.args_dict.get("model_version", []))
+        versions = gen.ensure_iterable(self.args_dict.get("model_version", []))
 
         return [
             ArrayModel(
@@ -225,7 +225,7 @@ class Simulator:
 
         validated_runs = []
         if run_list is not None:
-            validated_runs = gen.enforce_list_type(run_list)
+            validated_runs = gen.ensure_iterable(run_list)
             if not all(isinstance(r, int) for r in validated_runs):
                 raise InvalidRunsToSimulateError(f"Run list must contain only integers: {run_list}")
 
@@ -314,7 +314,7 @@ class Simulator:
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
         """
-        for file in gen.enforce_list_type(input_file_list):
+        for file in gen.ensure_iterable(input_file_list):
             run = self._guess_run_from_file(file)
             self._fill_results(file, run)
             if run not in self.runs:
@@ -381,7 +381,7 @@ class Simulator:
         self.logger.debug(f"Getting runs and files to submit ({input_file_list})")
 
         if self.simulation_software == "sim_telarray" and self.run_mode is None:
-            input_file_list = gen.enforce_list_type(input_file_list)
+            input_file_list = gen.ensure_iterable(input_file_list)
             _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
         else:
             _runs_and_files = dict.fromkeys(self._get_runs_to_simulate())
@@ -664,7 +664,7 @@ class Simulator:
         # Group files by model version
         for model in self.array_models:
             model_version = model.model_version
-            model_files = gen.enforce_list_type(model.pack_model_files())
+            model_files = gen.ensure_iterable(model.pack_model_files())
 
             # Filter files for this model version
             model_logs = [f for f in log_files if model_version in f]

@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from unittest import mock
 
+import astropy.units as u
 import numpy as np
 import pytest
 
@@ -25,7 +26,7 @@ def simtel_config_writer(model_version):
 def test_write_array_config_file(
     simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
 ):
-    file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt")
+    _file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt")
     telescope_model = {
         "LSTN-01": telescope_model_lst,
         "LSTN-02": telescope_model_lst,
@@ -33,14 +34,14 @@ def test_write_array_config_file(
         "LSTN-04": telescope_model_lst,
     }
     simtel_config_writer.write_array_config_file(
-        config_file_path=file,
+        config_file_path=_file,
         telescope_model=telescope_model,
         site_model=site_model_north,
     )
-    assert file_has_text(file, "TELESCOPE == 1")
+    assert file_has_text(_file, "TELESCOPE == 1")
 
     # sim_telarray configuration files need to end with two new lines
-    with open(file) as f:
+    with open(_file) as f:
         lines = f.readlines()
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
@@ -50,7 +51,7 @@ def test_write_array_config_file(
         "_write_random_seeds_file",
     ) as write_random_seeds_file_mock:
         simtel_config_writer.write_array_config_file(
-            config_file_path=file,
+            config_file_path=_file,
             telescope_model=telescope_model,
             site_model=site_model_north,
             sim_telarray_seeds={
@@ -63,9 +64,9 @@ def test_write_array_config_file(
 
 
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
-    file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
+    _file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
     simtel_config_writer.write_telescope_config_file(
-        config_file_path=file,
+        config_file_path=_file,
         parameters={
             "num_gains": {
                 "parameter": "num_gains",
@@ -75,10 +76,10 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
             }
         },
     )
-    assert file_has_text(file, "num_gains = 1")
+    assert file_has_text(_file, "num_gains = 1")
 
     simtel_config_writer.write_telescope_config_file(
-        config_file_path=file,
+        config_file_path=_file,
         parameters={
             "array_triggers": {
                 "parameter": "array_triggers",
@@ -88,7 +89,7 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
             }
         },
     )
-    assert not file_has_text(file, "array_triggers = array_triggers.dat")
+    assert not file_has_text(_file, "array_triggers = array_triggers.dat")
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
@@ -106,17 +107,20 @@ def test_get_array_triggers_for_telescope_type(simtel_config_writer):
         {"name": "MSTN_single_telescope", "multiplicity": {"value": 1}},
     ]
 
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "LSTN")
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "LSTN", 2)
     assert result is not None
     assert result["name"] == "LSTN_array"
     assert result["multiplicity"]["value"] == 2
     assert result["width"]["value"] == 10
     assert result["width"]["unit"] == "ns"
 
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "MSTN")
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "MSTN", 1)
+    assert result["multiplicity"]["value"] == 1
+
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "MSTN", 2)
     assert result is None
 
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "SST")
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "SST", 2)
     assert result is None
 
 
@@ -134,8 +138,8 @@ def test_convert_model_parameters_to_simtel_format(
 
     array_triggers = [
         {
-            "name": "LSTN_array",
-            "multiplicity": {"value": 2},
+            "name": "LSTN_single_telescope",
+            "multiplicity": {"value": 1},
             "width": {"value": 10, "unit": "ns"},
             "min_separation": {"value": 40, "unit": "m"},
             "hard_stereo": {"value": True, "unit": None},
@@ -149,7 +153,7 @@ def test_convert_model_parameters_to_simtel_format(
 
     with open(Path(model_path) / value) as f:
         content = f.read()
-        assert "Trigger 2 of 1" in content
+        assert "Trigger 1 of 1" in content
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
@@ -346,3 +350,29 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text
     # Should still write basic parameters without build_opts
     assert file_has_text(test_file, "% Simtools parameters")
     assert file_has_text(test_file, "metaparam global set simtools_version")
+
+
+def test_write_single_mirror_list_file(simtel_config_writer, tmp_path, file_has_text):
+    mirror_number = 1
+    mirrors = mock.Mock()
+    mirrors.get_single_mirror_parameters.return_value = (
+        None,
+        None,
+        1.2 * u.m,
+        16.0 * u.m,
+        0,
+    )
+    single_mirror_list_file = tmp_path / "single_mirror_list.dat"
+
+    simtel_config_writer.write_single_mirror_list_file(
+        mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
+    )
+
+    assert single_mirror_list_file.exists()
+    assert file_has_text(single_mirror_list_file, "0. 0. 120.0 1600.0 0 0.")
+
+    simtel_config_writer.write_single_mirror_list_file(
+        mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=True
+    )
+
+    assert file_has_text(single_mirror_list_file, "0. 0. 120.0 0 0 0.")
