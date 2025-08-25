@@ -10,6 +10,7 @@ applications:
     telescope: MSTN-04
     test: true
     use_plain_output_path: true
+    log_level: DEBUG
   integration_tests:
   - output_file: logfile.log
   - output_file: xyzls_variable_d_200.simtel.zst

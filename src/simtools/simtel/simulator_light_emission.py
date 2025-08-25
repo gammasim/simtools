@@ -349,8 +349,8 @@ class SimulatorLightEmission(SimtelRunner):
             "array_element_position_ground"
         )
 
-        config_directory = self.io_handler.get_output_directory(
-            label=self.label, sub_dir=f"model/{self._site_model.model_version}"
+        config_directory = self.io_handler.get_model_configuration_directory(
+            label=self.label, model_version=self._site_model.model_version
         )
         telpos_file = self._write_telpos_file()
 
@@ -376,7 +376,6 @@ class SimulatorLightEmission(SimtelRunner):
             parts.append(f" -A {config_directory}/")
             parts.append(f"{self._telescope_model.get_parameter_value('atmospheric_profile')}")
 
-        # output
         parts.append(f" -o {self.output_directory}/{app_name}.iact.gz")
         parts.append("\n")
 

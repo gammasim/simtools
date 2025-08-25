@@ -97,11 +97,14 @@ class IOHandler(metaclass=IOHandlerSingleton):
                 path.joinpath(label_dir) if sub_dir is None else path.joinpath(label_dir, sub_dir)
             )
 
+        return self._mkdir(path)
+
+    def _mkdir(self, path):
+        """Create a directory and return path."""
         try:
             path.mkdir(parents=True, exist_ok=True)
-        except FileNotFoundError:
-            self._logger.error(f"Error creating directory {path!s}")
-            raise
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Error creating directory {path!s}") from exc
 
         return path.absolute()
 
@@ -156,3 +159,22 @@ class IOHandler(metaclass=IOHandlerSingleton):
         else:
             raise IncompleteIOHandlerInitError
         return file_prefix.joinpath(file_name).absolute()
+
+    def get_model_configuration_directory(self, label, model_version):
+        """
+        Get path of the simulation model configuration directory.
+
+        This is the directory where the sim_telarray configuration files will be stored.
+
+        Parameters
+        ----------
+        label: str
+            Instance label.
+        model_version: str
+            Model version.
+
+        Returns
+        -------
+        Path
+        """
+        return self._mkdir(self.get_output_directory(label=label).joinpath("model", model_version))
