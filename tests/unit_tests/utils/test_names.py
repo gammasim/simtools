@@ -634,7 +634,7 @@ def test_get_common_identifier_from_array_element_name():
 
 
 def test_get_array_element_name_from_common_identifier():
-    id_to_name, _ = names.array_element_common_identifiers()
+    _, _ = names.array_element_common_identifiers()
 
     # Check some known identifiers
     assert names.get_array_element_name_from_common_identifier(1) == "LSTN-01"

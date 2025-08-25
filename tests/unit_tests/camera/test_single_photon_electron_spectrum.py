@@ -81,8 +81,10 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
 @patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
 @patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.dump")
 @patch("builtins.open", new_callable=MagicMock)
-def test_write_single_pe_spectrum(mock_open, mock_dump, mock_get_output_directory, spe_spectrum):
-    mock_get_output_directory.return_value = Path("/mock/output/directory")
+def test_write_single_pe_spectrum(
+    mock_open, mock_dump, mock_get_output_directory, spe_spectrum, tmp_path
+):
+    mock_get_output_directory.return_value = tmp_path / "output" / "directory"
     mock_open.return_value.__enter__.return_value = MagicMock()
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
@@ -97,7 +99,7 @@ def test_write_single_pe_spectrum(mock_open, mock_dump, mock_get_output_director
     tmp_spe_spectrum.write_single_pe_spectrum()
 
     mock_open.assert_called_once_with(
-        Path("/mock/output/directory/output_file.dat"), "w", encoding="utf-8"
+        (tmp_path / "output" / "directory" / "output_file.dat"), "w", encoding="utf-8"
     )
     mock_dump.assert_called_once()
 

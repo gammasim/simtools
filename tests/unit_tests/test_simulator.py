@@ -218,7 +218,7 @@ def test_get_runs_and_files_to_submit(
     array_simulator, shower_simulator, shower_array_simulator, input_file_list
 ):
     with pytest.raises(ValueError, match="No runs to submit."):
-        assert array_simulator._get_runs_and_files_to_submit(input_file_list=None) == {}
+        array_simulator._get_runs_and_files_to_submit(input_file_list=None)
 
     assert array_simulator._get_runs_and_files_to_submit(input_file_list=input_file_list) == {
         1: "run1",
@@ -356,6 +356,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     mocker.patch("shutil.move")
     mocker.patch("tarfile.open")
     mocker.patch("pathlib.Path.exists", return_value=True)
+    mocker.patch("pathlib.Path.is_file", return_value=True)
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
@@ -461,6 +462,7 @@ def test_pack_for_register_with_multiple_versions(
     mock_tar_cm.__exit__ = mocker.MagicMock(return_value=None)
     mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)
 
+    mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch("pathlib.Path.exists", return_value=True)
     mocker.patch.object(local_shower_array_simulator, "_copy_corsika_log_file_for_all_versions")
 
@@ -485,7 +487,7 @@ def test_pack_for_register_with_multiple_versions(
 
     # Check tarball additions
     for filepath, arcname in expected_additions:
-        mock_tar.add.assert_any_call(filepath, arcname=arcname)
+        mock_tar.add.assert_any_call(Path(filepath), arcname=arcname)
 
     # Check file movement
     for version in model_versions:
