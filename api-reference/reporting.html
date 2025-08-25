@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=87436617"></script>
+    <script src="../_static/documentation_options.js?v=2c67123b"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Ray Tracing" href="ray_tracing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gce97510b4" />
+  <meta name="docsearch:version" content="0.1.dev1+g0b48cfd43" />
   </head>
   
   
@@ -528,6 +528,26 @@ the following dictionary as the value:
 <dd><p>Get data and descriptions for simulation configuration parameters.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="reporting.docs_read_parameters.ReadParameters.is_markdown_link">
+<span class="sig-name descname"><span class="pre">is_markdown_link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_read_parameters.html#ReadParameters.is_markdown_link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_read_parameters.ReadParameters.is_markdown_link" title="Link to this definition">#</a></dt>
+<dd><p>Return True if the string is a Markdown-style link: [text](target).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value</strong><span class="classifier">str</span></dt><dd><p>The string to check.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the string is a Markdown link, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="reporting.docs_read_parameters.ReadParameters.model_version">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_version</span></span><a class="headerlink" href="#reporting.docs_read_parameters.ReadParameters.model_version" title="Link to this definition">#</a></dt>
@@ -654,6 +674,7 @@ values across model versions.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_array_element_parameter_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_array_element_parameter_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_calibration_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_calibration_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_simulation_configuration_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_simulation_configuration_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.is_markdown_link"><code class="docutils literal notranslate"><span class="pre">ReadParameters.is_markdown_link()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.model_version"><code class="docutils literal notranslate"><span class="pre">ReadParameters.model_version</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_array_element_report"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_array_element_report()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_calibration_reports"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_calibration_reports()</span></code></a></li>
