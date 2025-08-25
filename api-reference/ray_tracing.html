@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=d7fb3a5c"></script>
+    <script src="../_static/documentation_options.js?v=152b249e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Production Configuration" href="production_configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g2c16a271f" />
+  <meta name="docsearch:version" content="0.1.dev1+g007dd8e2a" />
   </head>
   
   
@@ -475,7 +475,7 @@
 <p>Ray tracing simulations and analysis.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle=&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle=&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance=&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers='all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle=&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle=&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance=&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_focal_length_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers='all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
 <dd><p>Ray tracing simulations and analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -497,6 +497,8 @@
 <dt><strong>single_mirror_mode: bool</strong></dt><dd><p>Single mirror mode flag.</p>
 </dd>
 <dt><strong>use_random_focal_length: bool</strong></dt><dd><p>Use random focal length flag.</p>
+</dd>
+<dt><strong>random_focal_length_seed: int</strong></dt><dd><p>Seed for the random number generator used for focal length variation.</p>
 </dd>
 <dt><strong>mirror_numbers: list, str</strong></dt><dd><p>List of mirror numbers (or ‘all’).</p>
 </dd>

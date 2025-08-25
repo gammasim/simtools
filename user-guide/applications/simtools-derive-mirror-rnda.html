@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=d7fb3a5c"></script>
+    <script src="../../_static/documentation_options.js?v=152b249e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-derive-ctao-array-layouts" href="simtools-derive-ctao-array-layouts.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g2c16a271f" />
+  <meta name="docsearch:version" content="0.1.dev1+g007dd8e2a" />
   </head>
   
   
@@ -517,15 +517,13 @@
                   
   <section id="module-derive_mirror_rnda">
 <span id="simtools-derive-mirror-rnda"></span><h1>simtools-derive-mirror-rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading">#</a></h1>
-<p>Derive the simulation model parameter mirror_reflection_random_angle.</p>
-<p>This parameter, often referred to as “mirror roughness,” is used to align the simulation
-with the measured containment diameter of the optical point-spread function (PSF) for
-individual mirror panels.</p>
+<p>Derive mirror random reflection angle (mirror roughness) of a single mirror panel.</p>
 <section id="description">
 <h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
 <p>This application derives the value of the simulation model parameter
 <em>mirror_reflection_random_angle</em> using measurements of the focal length
-and PSF of individual mirror panels.</p>
+and point-spread function (PSF) of individual mirror panels.
+This parameter is sometimes referred to as the “mirror roughness”.</p>
 <p>PSF measurements are provided by one of the following options:</p>
 <blockquote>
 <div><ul class="simple">
@@ -536,7 +534,7 @@ mirror panels in cm (<code class="docutils literal notranslate"><span class="pre
 </ul>
 </div></blockquote>
 <p>The containment fraction used for the PSF diameter calculation is set through
-the argument <code class="docutils literal notranslate"><span class="pre">--containment_fraction</span></code> (typically 0.8 = 80%).</p>
+the argument <code class="docutils literal notranslate"><span class="pre">--containment_fraction</span></code> (typically 0.8 = 80%; called below D80).</p>
 <p>Mirror panels are simulated individually, using one of the following options to set the
 mirror panel focal length:</p>
 <blockquote>
@@ -551,7 +549,7 @@ Model Parameters DB). This option is switched with <code class="docutils literal
 <p>The tuning algorithm requires a starting value for the random reflection angle. This is either
 taken from the Model Parameters DB (default) or can be set using the argument <code class="docutils literal notranslate"><span class="pre">--rnda</span></code>.</p>
 <p>Ray-tracing simulations are performed for single mirror configurations for each
-mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
+mirror given in the mirror list. The mean simulated containment diameter for all the mirrors
 is compared with the mean measured containment diameter. The algorithm defines a new value for
 the random reflection angle based on the sign of the difference between measured and simulated
 containment diameters and a new set of simulations is performed. This process is repeated
@@ -579,7 +577,7 @@ D80 vs random reflection angle plot, on the left, and the D80 distributions
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>telescope (str, required)</dt><dd><p>Telescope name (e.g. North-LST-1, South-SST-D, …)</p>
+<dt>telescope (str, required)</dt><dd><p>Telescope name (e.g. LSTN-01, SSTS-25)</p>
 </dd>
 <dt>model_version (str, optional)</dt><dd><p>Model version</p>
 </dd>
@@ -602,6 +600,8 @@ can be used to replace the default random_focal_length from the model.</p>
 <dt>random_focal_length (float, optional)</dt><dd><p>Value of the random focal lengths to replace the default random_focal_length. Only used if
 ‘use_random_focal_length’ is activated.</p>
 </dd>
+<dt>random_focal_length_seed (int, optional)</dt><dd><p>Seed for the random number generator used for focal length variation.</p>
+</dd>
 <dt>no_tuning (activation mode, optional)</dt><dd><p>Turn off the tuning - A single case will be simulated and plotted.</p>
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating only few mirrors.</p>
@@ -610,8 +610,8 @@ can be used to replace the default random_focal_length from the model.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Derive mirror random reflection angle for a mid-sized telescope (MST),
-simulation production 5.0.0</p>
+<p>Derive mirror random reflection angle for a large-sized telescope (LSTS),
+simulation production 6.0.0</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \\</span>
 <span class="go">    --site South \\</span>
 <span class="go">    --telescope LSTS-design \\</span>
