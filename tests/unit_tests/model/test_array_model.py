@@ -221,6 +221,7 @@ def test_pack_model_files(array_model, io_handler):
         patch("pathlib.Path.rglob", mock_rglob),
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
         patch("pathlib.Path.is_file", mock_is_file),
+        patch("pathlib.Path.resolve", new=lambda self, *a, **k: self),
     ):
         archive_path = array_model.pack_model_files()
 
