@@ -413,7 +413,7 @@ class ReadParameters:
             if not design_type and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
-                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                if not self.is_markdown_link(value):
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
@@ -795,7 +795,7 @@ class ReadParameters:
             if not names.is_design_type(array_element) and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
-                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                if not self.is_markdown_link(value):
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
@@ -821,6 +821,22 @@ class ReadParameters:
             data.extend(sorted_class_data)
 
         return data
+
+    def is_markdown_link(self, value):
+        """
+        Return True if the string is a Markdown-style link: [text](target).
+
+        Parameters
+        ----------
+        value : str
+            The string to check.
+
+        Returns
+        -------
+        bool
+            True if the string is a Markdown link, False otherwise.
+        """
+        return bool(re.fullmatch(r"\[[^\]]*\]\([^)]+\)", value.strip()))
 
     def produce_calibration_reports(self):
         """Write calibration reports."""
