@@ -207,7 +207,9 @@ def test_read_table_and_normalize():
     config = {
         "tables": [
             {
-                "file_name": "tests/resources//SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv",
+                "file_name": (
+                    "tests/resources//SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
+                ),
                 "type": "legacy_lst_single_pe",
                 "label": "test_table",
                 "column_x": "amplitude",
@@ -218,7 +220,7 @@ def test_read_table_and_normalize():
     }
     data = plot_tables.read_table_data(config, None)
     assert isinstance(data, dict)
-    assert data["test_table"]["response"].max() == 1.0
+    assert data["test_table"]["response"].max() == pytest.approx(1.0)
 
 
 @pytest.mark.parametrize(
@@ -480,7 +482,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_collect_data.return_value = mock_schema
 
     # Test with valid configuration
-    configs, output_files = plot_tables.generate_plot_configurations(
+    configs, _ = plot_tables.generate_plot_configurations(
         parameter="test_parameter",
         parameter_version="1.0.0",
         site="South",

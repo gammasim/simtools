@@ -327,7 +327,8 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text
     assert file_has_text(test_file, "metaparam global set simtools_version")
     assert file_has_text(
         test_file,
-        f"metaparam global set simtools_model_production_version = {simtel_config_writer._model_version}",
+        "metaparam global set simtools_model_production_version = "
+        f"{simtel_config_writer._model_version}",
     )
 
     # Test with simtel_path and build_opts.yml
