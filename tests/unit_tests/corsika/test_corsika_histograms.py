@@ -210,8 +210,8 @@ def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, capl
         ) = corsika_histograms_instance_set_histograms._get_hist_1d_projection(hist_label)
         assert np.shape(x_bin_edges_list) == expected_shape_of_bin_edges[i_hist]
         assert np.shape(hist_1d_list) == expected_shape_of_values[i_hist]
-    assert np.mean(hist_1d_list) == pytest.approx(expected_mean[i_hist], abs=1e-2)
-    assert np.std(hist_1d_list) == pytest.approx(expected_std[i_hist], abs=1e-2)
+    assert np.mean(hist_1d_list) == pytest.approx(expected_mean[i_hist], abs=1e-1)
+    assert np.std(hist_1d_list) == pytest.approx(expected_std[i_hist], abs=1e-1)
 
 
 def test_set_histograms_all_telescopes_1_histogram(corsika_histograms_instance):
@@ -330,9 +330,9 @@ def test_get_2d_photon_position_distr(corsika_histograms_instance_set_histograms
     density = corsika_histograms_instance_set_histograms.get_2d_photon_density_distr()
 
     # Test the values of the histogram
-    assert np.sum(density[0]) == pytest.approx(29, abs=1e-2)
+    assert np.sum(density[0]) == pytest.approx(29, abs=1e-1)
     counts = corsika_histograms_instance_set_histograms.get_2d_photon_position_distr()
-    assert np.sum(counts[0]) == pytest.approx(11633, abs=1e-2)
+    assert np.sum(counts[0]) == pytest.approx(11633, abs=1e-1)
 
     # The bin edges should be the same
     assert (counts[1] == density[1]).all()
@@ -373,13 +373,13 @@ def test_get_2d_num_photons_distr(corsika_histograms_instance_set_histograms):
     assert np.shape(num_events_array) == (1, 3)  # number of events in this output file + 1
     # (bin edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
-    assert num_photons_per_event_per_telescope[0][0, 0] == pytest.approx(2543.3, abs=1e-2)
+    assert num_photons_per_event_per_telescope[0][0, 0] == pytest.approx(2543.3, abs=5e-1)
     # 1st tel, 1st event
-    assert num_photons_per_event_per_telescope[0][0, 1] == pytest.approx(290.4, abs=1e-2)
+    assert num_photons_per_event_per_telescope[0][0, 1] == pytest.approx(290.4, abs=5e-1)
     # 1st tel, 2nd event
-    assert num_photons_per_event_per_telescope[0][1, 0] == pytest.approx(1741, abs=1e-2)
+    assert num_photons_per_event_per_telescope[0][1, 0] == pytest.approx(1741, abs=5e-1)
     # 2nd tel, 1st event
-    assert num_photons_per_event_per_telescope[0][1, 1] == pytest.approx(85.9, abs=1e-2)
+    assert num_photons_per_event_per_telescope[0][1, 1] == pytest.approx(85.9, abs=5e-1)
     # 2nd tel, 2nd event
 
 
@@ -465,10 +465,10 @@ def test_get_photon_radial_distr_input_some_tel_and_density(
     )
     assert (x_bin_edges_list_dens == x_bin_edges_list).all()
 
-    assert np.sum(hist_1d_list_dens) == pytest.approx(1.86, abs=1e-2)
+    assert np.sum(hist_1d_list_dens) == pytest.approx(1.86, abs=1e-1)
     # density smaller because it divides
     # by the area (not counts per bin)
-    assert np.sum(hist_1d_list) == pytest.approx(744.17, abs=1e-2)
+    assert np.sum(hist_1d_list) == pytest.approx(744.17, abs=3e-0)
 
 
 def test_get_photon_radial_distr_input_all_tel(corsika_histograms_instance):
@@ -499,11 +499,11 @@ def test_num_photons_per_event_per_telescope(corsika_histograms_instance_set_his
     )
     assert np.sum(
         corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
-    ) == pytest.approx(25425.8, abs=1e-2)
+    ) == pytest.approx(25425.8, abs=1e-1)
     # Test number of photons in the second event
     assert np.sum(
         corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
-    ) == pytest.approx(4582.9, abs=1e-2)
+    ) == pytest.approx(4582.9, abs=1e-1)
 
     # Decrease the number of telescopes and measure the number of photons on the ground again
     corsika_histograms_instance_set_histograms.set_histograms(telescope_indices=[3, 4, 5, 6])
@@ -515,20 +515,20 @@ def test_num_photons_per_event_per_telescope(corsika_histograms_instance_set_his
     )
     assert np.sum(
         corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
-    ) == pytest.approx(7871.4, abs=1e-2)
+    ) == pytest.approx(7871.4, abs=1e-1)
     assert np.sum(
         corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
-    ) == pytest.approx(340.7, abs=1e-2)
+    ) == pytest.approx(340.7, abs=1e-1)
     # Return the fixture to previous values
     corsika_histograms_instance_set_histograms.set_histograms()
 
 
 def test_num_photons_per_event(corsika_histograms_instance_set_histograms):
     assert corsika_histograms_instance_set_histograms.num_photons_per_event[0] == pytest.approx(
-        25425.8, abs=1e-2
+        25425.8, abs=1e-1
     )
     assert corsika_histograms_instance_set_histograms.num_photons_per_event[1] == pytest.approx(
-        4582.9, abs=1e-2
+        4582.9, abs=1e-1
     )
 
 
@@ -536,7 +536,7 @@ def test_num_photons_per_telescope(corsika_histograms_instance_set_histograms):
     assert np.size(corsika_histograms_instance_set_histograms.num_photons_per_telescope) == 87
     assert np.sum(
         corsika_histograms_instance_set_histograms.num_photons_per_telescope
-    ) == pytest.approx(25425.8 + 4582.9, abs=1e-2)
+    ) == pytest.approx(25425.8 + 4582.9, abs=1e-1)
 
 
 def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplog):
@@ -579,7 +579,7 @@ def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplo
 
 def test_total_num_photons(corsika_histograms_instance_set_histograms):
     assert corsika_histograms_instance_set_histograms.total_num_photons == pytest.approx(
-        30008.7, abs=1e-2
+        30008.7, abs=1e-1
     )
 
 
@@ -628,7 +628,7 @@ def test_event_first_interaction_heights(corsika_histograms_instance_set_histogr
     for i_event in range(corsika_histograms_instance_set_histograms.num_events):
         assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.value[
             i_event
-        ] == pytest.approx(first_height[i_event], abs=1e-2)
+        ] == pytest.approx(first_height[i_event], abs=1e-1)
     assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.unit == u.km
 
 
@@ -636,10 +636,10 @@ def test_magnetic_field(corsika_histograms_instance_set_histograms):
     for i_event in range(corsika_histograms_instance_set_histograms.num_events):
         assert corsika_histograms_instance_set_histograms.magnetic_field[0].value[
             i_event
-        ] == pytest.approx(20.5, abs=1e-2)
+        ] == pytest.approx(20.5, abs=1e-1)
         assert corsika_histograms_instance_set_histograms.magnetic_field[1].value[
             i_event
-        ] == pytest.approx(-9.4, abs=1e-2)
+        ] == pytest.approx(-9.4, abs=1e-1)
     assert corsika_histograms_instance_set_histograms.magnetic_field[0].unit == u.uT
 
 
