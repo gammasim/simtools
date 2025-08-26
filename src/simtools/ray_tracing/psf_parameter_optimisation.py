@@ -5,6 +5,9 @@ This module provides functions for loading PSF data, generating random parameter
 running PSF simulations, calculating RMSD, and finding the best-fit parameters for a given
 telescope model.
 
+PSF (Point Spread Function) describes how a point source of light is spread out by the
+optical system, and RMSD (Root Mean Squared Deviation) is used as the optimization metric
+to quantify the difference between measured and simulated PSF curves.
 """
 
 import logging
@@ -27,6 +30,13 @@ logger = logging.getLogger(__name__)
 RADIUS_CM = "Radius [cm]"
 CUMULATIVE_PSF = "Cumulative PSF"
 
+MRRA_RANGE_DEFAULT = 0.004  # Mirror reflection random angle range
+MRF_RANGE_DEFAULT = 0.1  # Mirror reflection fraction range
+MRRA2_RANGE_DEFAULT = 0.03  # Second mirror reflection random angle range
+MAR_RANGE_DEFAULT = 0.005  # Mirror alignment random range
+MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
+OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
+
 
 def load_psf_data(data_file):
     """
@@ -36,16 +46,19 @@ def load_psf_data(data_file):
     ----------
     data_file : str
         Name of the data file with the measured cumulative PSF.
+        Expected format:
+            Column 0: radial distance in mm
+            Column 2: cumulative PSF values
 
     Returns
     -------
     numpy.ndarray
-        Loaded and processed data from the file.
+        Loaded and processed data with radius in cm and normalized cumulative PSF.
     """
     d_type = {"names": (RADIUS_CM, CUMULATIVE_PSF), "formats": ("f8", "f8")}
     data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
-    data[RADIUS_CM] *= 0.1
-    data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))
+    data[RADIUS_CM] *= 0.1  # Convert from mm to cm
+    data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))  # Normalize to max = 1.0
     return data
 
 
@@ -68,13 +81,10 @@ def add_parameters(
     ----------
     mirror_reflection : float
         The random angle of mirror reflection.
-
     mirror_align : float
         The random angle for mirror alignment (both horizontal and vertical).
-
     mirror_reflection_fraction : float, optional
         The fraction of the mirror reflection. Default is 0.15.
-
     mirror_reflection_2 : float, optional
         A secondary random angle for mirror reflection. Default is 0.035.
 
@@ -83,15 +93,6 @@ def add_parameters(
     None
         Updates the all_parameters list in place.
     """
-    # If we want to start from values different than the ones currently in the model:
-    # align = 0.0046
-    # pars_to_change = {
-    #     'mirror_reflection_random_angle': '0.0075 0.125 0.0037',
-    #     'mirror_align_random_horizontal': f'{align} 28 0 0',
-    #     'mirror_align_random_vertical': f'{align} 28 0 0',
-    # }
-    # tel_model.change_multiple_parameters(**pars_to_change)
-
     pars = {
         "mirror_reflection_random_angle": [
             mirror_reflection,
@@ -139,6 +140,8 @@ def generate_random_parameters(
     """
     Generate random parameters for tuning.
 
+    The parameter ranges around the previous values are configurable via module constants.
+
     Parameters
     ----------
     all_parameters : list
@@ -158,12 +161,9 @@ def generate_random_parameters(
     tel_model : TelescopeModel
         Telescope model object to check if it's a dual mirror telescope.
     """
-    # Range around the previous values are hardcoded
-    # Number of runs is hardcoded
     if args_dict["fixed"]:
         logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
 
-    # Check if telescope is dual mirror and set mar to 0 if so
     is_dual_mirror = model_utils.is_two_mirror_telescope(tel_model.name)
     if is_dual_mirror:
         mar_fixed_value = 0.0
@@ -171,11 +171,11 @@ def generate_random_parameters(
         mar_fixed_value = None
 
     for _ in range(n_runs):
-        mrra_range = 0.004 if not args_dict["fixed"] else 0
-        mrf_range = 0.1
-        mrra2_range = 0.03
-        mar_range = 0.005
-        rng = np.random.default_rng(seed=100)  # Fixed seed for reproducibility
+        mrra_range = MRRA_RANGE_DEFAULT if not args_dict["fixed"] else 0
+        mrf_range = MRF_RANGE_DEFAULT
+        mrra2_range = MRRA2_RANGE_DEFAULT
+        mar_range = MAR_RANGE_DEFAULT
+        rng = np.random.default_rng(seed=args_dict.get("random_seed"))
         mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
         mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
         mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
@@ -191,7 +191,7 @@ def generate_random_parameters(
 
 def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     """
-    Run the core ray tracing simulation for a given set of parameters.
+    Run a ray tracing simulation with the given telescope parameters.
 
     Parameters
     ----------
@@ -222,7 +222,7 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
         source_distance=args_dict["src_distance"] * u.km,
         off_axis_angle=[0.0] * u.deg,
     )
-    ray.simulate(test=args_dict["test"], force=True)
+    ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True, use_rx=False)
     im = ray.images()[0]
     d80 = im.get_psf()
@@ -258,7 +258,6 @@ def _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_page
     ax.set_ylim(0, 1.05)
     ax.set_ylabel(CUMULATIVE_PSF)
 
-    # Create title with asterisk for best parameters
     title_prefix = "* " if is_best else ""
     ax.set_title(
         f"{title_prefix}refl_rnd = "
@@ -271,7 +270,6 @@ def _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_page
         f"{pars['mirror_align_random_vertical'][3]:.5f}"
     )
 
-    # Highlight D80 text for best parameters
     d80_color = "red" if is_best else "black"
     d80_weight = "bold" if is_best else "normal"
     d80_text = f"D80 = {d80:.5f} cm"
@@ -290,7 +288,6 @@ def _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_page
         else None,
     )
 
-    # Add footnote for best parameters
     if is_best:
         fig.text(
             0.02,
@@ -431,7 +428,6 @@ def _create_plot_for_parameters(pars, rmsd, d80, simulated_data, data_to_plot, i
         f"{pars['mirror_align_random_horizontal'][3]:.5f}"
     )
 
-    # Highlight D80 text for best parameters
     d80_color = "red" if is_best else "black"
     d80_weight = "bold" if is_best else "normal"
 
@@ -449,7 +445,6 @@ def _create_plot_for_parameters(pars, rmsd, d80, simulated_data, data_to_plot, i
         else None,
     )
 
-    # Add footnote for best parameters
     if is_best:
         fig.text(
             0.02,
@@ -564,15 +559,14 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     tel_model.change_multiple_parameters(**best_pars)
 
     # Create off-axis angle array
-    max_offset = args_dict.get("max_offset", 4.5)
-    offset_steps = args_dict.get("offset_steps", 0.1)
+    max_offset = args_dict.get("max_offset", MAX_OFFSET_DEFAULT)
+    offset_steps = args_dict.get("offset_steps", OFFSET_STEPS_DEFAULT)
     off_axis_angles = np.linspace(
         0,
         max_offset,
         int(max_offset / offset_steps) + 1,
     )
 
-    # Run ray tracing simulation for multiple off-axis angles
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
@@ -583,10 +577,9 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     )
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
-    ray.simulate(test=args_dict["test"], force=True)
+    ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True)
 
-    # Create D80 plots
     for key in ["d80_cm", "d80_deg"]:
         plt.figure(figsize=(10, 6), tight_layout=True)
 
@@ -594,14 +587,16 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
         plt.title(
             f"PSF D80 vs Off-axis Angle - {tel_model.name}\n"
-            f"Best Parameters: "
-            f"refl=[{best_pars['mirror_reflection_random_angle'][0]:.4f}, "
-            f"{best_pars['mirror_reflection_random_angle'][1]:.4f}, "
-            f"{best_pars['mirror_reflection_random_angle'][2]:.4f}], "
-            f"align={best_pars['mirror_align_random_horizontal'][0]:.4f}"
+            f"Best Parameters: \n"
+            f"reflection=[{best_pars['mirror_reflection_random_angle'][0]:.4f},"
+            f"{best_pars['mirror_reflection_random_angle'][1]:.4f},"
+            f"{best_pars['mirror_reflection_random_angle'][2]:.4f}],\n"
+            f"align_horizontal={best_pars['mirror_align_random_horizontal'][0]:.4f}\n"
+            f"align_vertical={best_pars['mirror_align_random_vertical'][0]:.4f}\n"
         )
         plt.xlabel("Off-axis Angle (degrees)")
         plt.ylabel("D80 (cm)" if key == "d80_cm" else "D80 (degrees)")
+        plt.ylim(bottom=0)
         plt.xticks(rotation=45)
         plt.xlim(0, max_offset)
         plt.grid(True, alpha=0.3)
@@ -613,7 +608,7 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     plt.close("all")
 
 
-def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir):
+def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, tel_model):
     """
     Write all tested parameters and their metrics to a text file.
 
@@ -627,22 +622,31 @@ def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir):
         Best D80 value
     output_dir : Path
         Output directory path
+    tel_model : TelescopeModel
+        Telescope model object for filename generation
     """
-    param_file = output_dir.joinpath("tested_psf_parameters.txt")
+    param_file = output_dir.joinpath(f"psf_optimization_{tel_model.name}.log")
     with open(param_file, "w", encoding="utf-8") as f:
-        f.write("Tested parameter sets:\n")
+        f.write("# PSF Parameter Optimization Log\n")
+        f.write(f"# Telescope: {tel_model.name}\n")
+        f.write(f"# Total parameter sets tested: {len(results)}\n")
+        f.write("#" + "=" * 60 + "\n\n")
+
+        f.write("PARAMETER TESTING RESULTS:\n")
         for i, (pars, rmsd, d80, _) in enumerate(results):
             is_best = pars is best_pars
-            prefix = "*" if is_best else " "
-            f.write(f"{prefix} Set {i + 1}: RMSD={rmsd:.5f}, D80={d80:.5f} cm\n")
+            status = "BEST" if is_best else "TESTED"
+            f.write(f"[{status}] Set {i + 1:03d}: RMSD={rmsd:.5f}, D80={d80:.5f} cm\n")
             for par, value in pars.items():
-                f.write(f"    {par} = {value}\n")
-            if is_best:
-                f.write("    <-- BEST\n")
-        f.write("\nBest parameters:\n")
-        for par, value in best_pars.items():
-            f.write(f"{par} = {value}\n")
+                f.write(f"    {par}: {value}\n")
+            f.write("\n")
+
+        f.write("OPTIMIZATION SUMMARY:\n")
+        f.write(f"Best RMSD: {min(result[1] for result in results):.5f}\n")
         f.write(f"Best D80: {best_d80:.5f} cm\n")
+        f.write("\nOPTIMIZED PARAMETERS:\n")
+        for par, value in best_pars.items():
+            f.write(f"{par}: {value}\n")
     return param_file
 
 
@@ -664,14 +668,12 @@ def _add_units_to_psf_parameters(best_pars):
 
     for param_name, param_values in best_pars.items():
         if param_name == "mirror_reflection_random_angle":
-            # [deg, dimensionless, deg]
             psf_pars_with_units[param_name] = [
                 param_values[0] * u.deg,
                 param_values[1] * u.dimensionless_unscaled,
                 param_values[2] * u.deg,
             ]
         elif param_name in ["mirror_align_random_horizontal", "mirror_align_random_vertical"]:
-            # [deg, deg, dimensionless, dimensionless]
             psf_pars_with_units[param_name] = [
                 param_values[0] * u.deg,
                 param_values[1] * u.deg,
@@ -679,15 +681,14 @@ def _add_units_to_psf_parameters(best_pars):
                 param_values[3] * u.dimensionless_unscaled,
             ]
         else:
-            # For any other parameters, keep as-is
             psf_pars_with_units[param_name] = param_values
 
     return psf_pars_with_units
 
 
-def export_psf_parameters_as_json(best_pars, tel_model, parameter_version, output_dir, func_logger):
+def export_psf_parameters(best_pars, tel_model, parameter_version, output_dir):
     """
-    Export PSF parameters as JSON model parameter files.
+    Export PSF parameters as simulation model parameter files.
 
     Parameters
     ----------
@@ -699,11 +700,9 @@ def export_psf_parameters_as_json(best_pars, tel_model, parameter_version, outpu
         Parameter version string
     output_dir : Path
         Output directory path
-    func_logger : Logger
-        Logger object
     """
     try:
-        func_logger.info("Exporting best PSF parameters as JSON model parameter files")
+        logger.info("Exporting best PSF parameters as simulation model parameter files")
         psf_pars_with_units = _add_units_to_psf_parameters(best_pars)
         parameter_output_path = output_dir / tel_model.name
         for parameter_name, parameter_value in psf_pars_with_units.items():
@@ -716,14 +715,14 @@ def export_psf_parameters_as_json(best_pars, tel_model, parameter_version, outpu
                 output_path=parameter_output_path,
                 use_plain_output_path=True,
             )
-        func_logger.info(f"JSON model parameter files exported to {output_dir}")
+        logger.info(f"simulation model parameter files exported to {output_dir}")
     except ImportError as e:
-        func_logger.warning(f"Could not export JSON parameters: {e}")
+        logger.warning(f"Could not export simulation parameters: {e}")
     except (ValueError, KeyError, OSError) as e:
-        func_logger.error(f"Error exporting JSON parameters: {e}")
+        logger.error(f"Error exporting simulation parameters: {e}")
 
 
-def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, func_logger):
+def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     """
     Run the complete PSF parameter optimization workflow.
 
@@ -739,8 +738,6 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
         Dictionary containing parsed command-line arguments
     output_dir : Path
         Output directory path
-    func_logger : Logger
-        Logger object
 
     Returns
     -------
@@ -751,7 +748,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
     all_parameters = []
     mrra_0, mfr_0, mrra2_0, mar_0 = get_previous_values(tel_model)
 
-    n_runs = 5 if args_dict["test"] else 50
+    n_runs = args_dict.get("n_runs")
     generate_random_parameters(
         all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, tel_model
     )
@@ -772,7 +769,9 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
     pdf_pages.close()
 
     # Write all tested parameters and their metrics to a file
-    param_file = write_tested_parameters_to_file(results, best_pars, best_d80, output_dir)
+    param_file = write_tested_parameters_to_file(
+        results, best_pars, best_d80, output_dir, tel_model
+    )
     print(f"\nParameter results written to {param_file}")
 
     # Automatically create D80 vs off-axis angle plot for best parameters
@@ -783,12 +782,11 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
     for par, value in best_pars.items():
         print(f"{par} = {value}")
 
-    # Export best parameters as JSON model parameter files (if flag is provided)
+    # Export best parameters as simulation model parameter files (if flag is provided)
     if args_dict.get("write_psf_parameters", False):
-        export_psf_parameters_as_json(
+        export_psf_parameters(
             best_pars,
             tel_model,
             args_dict.get("parameter_version", "0.0.0"),
             output_dir.parent,
-            func_logger,
         )

@@ -25,7 +25,7 @@ r"""
     * Calculating RMSD between measured and simulated PSF curves
     * Identifying the best-fit parameters with minimum RMSD
     * Creating comprehensive plots and D80 vs off-axis angle analysis
-    * Optionally exporting optimized parameters as JSON model files
+    * Optionally exporting optimized parameters as simulation model files
 
     The assumption are:
 
@@ -48,7 +48,7 @@ r"""
     model_version (str, optional)
         Model version.
     parameter_version (str, optional)
-        Parameter version for JSON export.
+        Parameter version for model parameter file export.
     src_distance (float, optional)
         Source distance in km.
     zenith (float, optional)
@@ -62,7 +62,11 @@ r"""
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
     write_psf_parameters (activation mode, optional)
-        Write the best PSF parameters as JSON model parameter files.
+        Write the optimized PSF parameters as simulation model parameter files.
+    random_seed (int, optional)
+        Random seed for parameter generation.
+    n_runs (int, optional)
+        Number of parameter combinations to test.
 
     Example
     -------
@@ -83,7 +87,7 @@ r"""
         simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
             --model_version 6.0.0 --data tests/resources/PSFcurve_data_v2.txt --plot_all --test
 
-    Run with JSON parameter export:
+    Run with parameter export:
 
     .. code-block:: console
 
@@ -98,12 +102,13 @@ r"""
     * Parameter optimization results in tested_psf_parameters.txt
     * PSF comparison plots in tune_psf_[telescope].pdf
     * D80 vs off-axis angle plots (d80_vs_offaxis_cm.png, d80_vs_offaxis_deg.png)
-    * JSON model parameter files (if --write_psf_parameters is specified)
+    * Optimized simulation model parameter files (if --write_psf_parameters is specified)
     * Cumulative PSF plots for all tested combinations (if --plot_all is specified)
 
 """
 
 import logging
+from pathlib import Path
 
 from simtools.configuration import configurator
 from simtools.io import io_handler
@@ -144,9 +149,21 @@ def _parse():
     )
     config.parser.add_argument(
         "--write_psf_parameters",
-        help=("Write the best PSF parameters as JSON model parameter files"),
+        help=("Write the optimized PSF parameters as simulation model parameter files"),
         action="store_true",
         required=False,
+    )
+    config.parser.add_argument(
+        "--random_seed",
+        help="Random seed for parameter generation.",
+        type=int,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--n_runs",
+        help="Number of parameter combinations to test.",
+        type=int,
+        default=5,
     )
     return config.initialize(
         db_config=True,
@@ -157,11 +174,10 @@ def _parse():
 def main():  # noqa: D103
     args_dict, db_config = _parse()
 
-    label = "tune_psf"
+    label = label = Path(__file__).stem
     logger = logging.getLogger()
     logger.setLevel(get_log_level_from_user(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
     tel_model, site_model = initialize_simulation_models(
@@ -172,8 +188,7 @@ def main():  # noqa: D103
         model_version=args_dict["model_version"],
     )
 
-    # Run the complete PSF optimization workflow
-    psf_opt.run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, logger)
+    psf_opt.run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir)
 
 
 if __name__ == "__main__":
