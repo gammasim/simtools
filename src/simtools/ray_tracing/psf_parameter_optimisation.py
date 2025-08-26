@@ -47,8 +47,8 @@ def load_psf_data(data_file):
     data_file : str
         Name of the data file with the measured cumulative PSF.
         Expected format:
-            Column 0: radial distance in mm
-            Column 2: cumulative PSF values
+        Column 0: radial distance in mm
+        Column 2: cumulative PSF values
 
     Returns
     -------
