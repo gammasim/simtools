@@ -1304,3 +1304,16 @@ def test_plot_camera_config(tmp_path, db_config, mocker):
     )
     assert result == [plot_name]
     mock_plot.assert_not_called()
+
+
+def test_is_markdown_link():
+    read_parameters = ReadParameters(db_config=None, args={}, output_path=Path())
+
+    assert read_parameters.is_markdown_link("[example](http://example.com)") is True
+    assert read_parameters.is_markdown_link("[text](target)") is True
+    assert read_parameters.is_markdown_link("not a link") is False
+    assert read_parameters.is_markdown_link("[missing target]") is False
+    assert read_parameters.is_markdown_link("(missing text)") is False
+    assert read_parameters.is_markdown_link("[text](target") is False
+    assert read_parameters.is_markdown_link("[text]target)") is False
+    assert read_parameters.is_markdown_link("") is False

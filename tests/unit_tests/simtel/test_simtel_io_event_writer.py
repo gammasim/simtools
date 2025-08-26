@@ -49,7 +49,8 @@ def mock_corsika_run_header(mocker):
 def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
     """Mock the get_sim_telarray_telescope_id_to_telescope_name_mapping."""
     mock_get_mapping = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer.get_sim_telarray_telescope_id_to_telescope_name_mapping"
+        "simtools.simtel.simtel_io_event_writer."
+        "get_sim_telarray_telescope_id_to_telescope_name_mapping"
     )
     mock_get_mapping.return_value = {
         1: "LSTN-01",
@@ -267,17 +268,25 @@ def test_process_array_event_with_trigger_data(lookup_table_generator):
 
 def test_get_preliminary_nsb_level(lookup_table_generator):
     """Test parsing NSB levels from filenames."""
-    assert lookup_table_generator._get_preliminary_nsb_level("dark_file.simtel.zst") == 1.0
+    assert lookup_table_generator._get_preliminary_nsb_level(
+        "dark_file.simtel.zst"
+    ) == pytest.approx(1.0)
 
-    assert lookup_table_generator._get_preliminary_nsb_level("half_nsb_file.simtel.zst") == 2.0
+    assert lookup_table_generator._get_preliminary_nsb_level(
+        "half_nsb_file.simtel.zst"
+    ) == pytest.approx(2.0)
 
-    assert (
-        lookup_table_generator._get_preliminary_nsb_level("gamma_full_moon_file.simtel.zst") == 5.0
+    assert lookup_table_generator._get_preliminary_nsb_level(
+        "gamma_full_moon_file.simtel.zst"
+    ) == pytest.approx(5.0)
+
+    assert lookup_table_generator._get_preliminary_nsb_level("file.simtel.zst") == pytest.approx(
+        1.0
     )
 
-    assert lookup_table_generator._get_preliminary_nsb_level("file.simtel.zst") == 1.0
-
-    assert lookup_table_generator._get_preliminary_nsb_level("DARK_FILE.simtel.zst") == 1.0
+    assert lookup_table_generator._get_preliminary_nsb_level(
+        "DARK_FILE.simtel.zst"
+    ) == pytest.approx(1.0)
 
 
 def test_get_preliminary_nsb_level_invalid_input(lookup_table_generator):
@@ -307,9 +316,9 @@ def test_process_mc_event(lookup_table_generator):
 
     updated_event = lookup_table_generator.shower_data[1]  # event_id is 10001
     assert updated_event["event_id"] == 1001
-    assert updated_event["x_core"] == 100.0
-    assert updated_event["y_core"] == 200.0
-    assert updated_event["area_weight"] == 1.5
+    assert updated_event["x_core"] == pytest.approx(100.0)
+    assert updated_event["y_core"] == pytest.approx(200.0)
+    assert updated_event["area_weight"] == pytest.approx(1.5)
 
 
 def test_process_mc_event_inconsistent_shower(lookup_table_generator):

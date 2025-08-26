@@ -70,7 +70,7 @@ def test_merge_tables(mock_read_table, tmp_path):
 
     # Check loss_fraction is properly moved from metadata to columns
     assert "loss_fraction" in merged_table.colnames
-    assert merged_table["loss_fraction"][0] == 1e-6
+    assert merged_table["loss_fraction"][0] == pytest.approx(1e-6)
     assert "loss_fraction" not in merged_table.meta
 
 
@@ -104,7 +104,7 @@ def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
     assert len(duplicate_rows) == 1
 
     # Check that the value is correct
-    assert duplicate_rows["lower_energy_limit"][0] == 0.01
+    assert duplicate_rows["lower_energy_limit"][0] == pytest.approx(0.01)
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
@@ -121,8 +121,8 @@ def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
 
     # Check that both loss_fraction values are preserved in the columns after moving from meta
     assert "loss_fraction" in merged_table.colnames
-    assert merged_table["loss_fraction"][0] == 1e-6
-    assert merged_table["loss_fraction"][1] == 2e-6
+    assert merged_table["loss_fraction"][0] == pytest.approx(1e-6)
+    assert merged_table["loss_fraction"][1] == pytest.approx(2e-6)
     assert "loss_fraction" not in merged_table.meta
 
 

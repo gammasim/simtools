@@ -174,7 +174,7 @@ def test_get_curvature_radius_mirror_class_2(simulator_camera_efficiency, mocker
         mock_telescope_model, "get_parameter_value_with_unit", return_value=1.5 * u.m
     )
     radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=2)
-    assert radius == 1.5
+    assert radius == pytest.approx(1.5)
 
 
 def test_get_curvature_radius_parabolic_dish_true(simulator_camera_efficiency, mocker):

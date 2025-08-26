@@ -7,6 +7,7 @@ the visualization module.
 
 - {ref}`visualize <visualizationvisualize>`
 - {ref}`legend_handlers <visualizationlegendhandlers>`
+- {ref}`simtel_event_plots <visualizationsimtel_event_plots>`
 
 (visualizationvisualize)=
 
@@ -62,7 +63,15 @@ the visualization module.
 
 ## plot_simtel_event_histograms
 
-
 ```{eval-rst}
 .. automodule:: visualization.plot_simtel_event_histograms
    :members:
+
+(visualizationsimtel_event_plots)=
+
+## simtel_event_plots
+
+```{eval-rst}
+.. automodule:: visualization.simtel_event_plots
+   :members:
+```
