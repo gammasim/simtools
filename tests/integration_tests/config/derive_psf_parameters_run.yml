@@ -4,13 +4,13 @@ applications:
   configuration:
     data: ./tests/resources/PSFcurve_data_v2.txt
     model_version: 6.0.0
-    output_path: simtools-output/derive_psf_parameters
+    output_path: simtools-output/derive_psf_parameters/ray_tracing/
     site: North
     telescope: LSTN-01
     test: true
     zenith: 20
   integration_tests:
-  - output_file: ray_tracing/results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_tune_psf.ecsv
+  - output_file: results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_tune_psf.ecsv
   test_name: run
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
