@@ -10,7 +10,7 @@ applications:
     test: true
     zenith: 20
   integration_tests:
-  - output_file: results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_tune_psf.ecsv
+  - output_file: ray_tracing/results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_tune_psf.ecsv
   test_name: run
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
