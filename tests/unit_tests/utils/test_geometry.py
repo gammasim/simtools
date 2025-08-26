@@ -147,30 +147,33 @@ def test_transform_ground_to_shower_coordinates():
     # The third and fourth columns are the results of transforming the ground coordinates
     # (x_ground, y_ground, z_ground) to the shower frame for the given azimuth and altitude.
     # These values are hardcoded here for regression testing.
-    expected_x = np.array([
-        x_ground[0],           # Case 1: zenith pointing, zero azimuth
-        y_ground[0],           # Case 2: zenith pointing, azimuth 90 deg
-        0.0,                   # Case 3: random values
-        0.0                    # Case 4: pointing towards horizon
-    ])
-    expected_y = np.array([
-        -1.0 * y_ground[0],    # Case 1
-        x_ground[0],           # Case 2
-        0.0,                   # Case 3
-        0.0                    # Case 4
-    ])
-    # The following values were obtained by running the ctapipe code in the docstring.
-    expected_z = np.array([
-        651.6379522993169,     # Case 1: ctapipe result
-        -780.4105314700417,    # Case 2: ctapipe result
-        -132.01070589573638,   # Case 3: ctapipe result
-        -1.0 * x_ground[0]     # Case 4: for horizon, z = -x_ground
-    ])
-    expected = np.array([
-        expected_x,
-        expected_y,
-        expected_z
-    ])
+    expected_x = np.array(
+        [
+            x_ground[0],  # Case 1: zenith pointing, zero azimuth
+            -1.0 * y_ground[0],  # Case 2: zenith pointing, azimuth 90 deg
+            651.6379522993169,  # Case 3: expected result from Eventdisplay/ctapipe
+            0.0,  # Case 4: pointing towards horizon
+        ]
+    )
+    expected_y = np.array(
+        [
+            y_ground[0],  # Case 1
+            x_ground[0],  # Case 2
+            -780.4105314700417,  # Case 3 expected result from Eventdisplay/ctapipe
+            y_ground[0],  # Case 4
+        ]
+    )
+    # The following values were obtained by running the Eventdisplay code.
+    # Cross-checked with the ctapipe code in the docstring.
+    expected_z = np.array(
+        [
+            0.0,  # Case 1
+            0.0,  # Case 2
+            -132.01070589573638,  # Case 3: expected result from Eventdisplay/ctapipe
+            -1.0 * x_ground[0],  # Case 4: for horizon, z = -x_ground
+        ]
+    )
+    expected = np.array([expected_x, expected_y, expected_z])
 
     result = transf.transform_ground_to_shower_coordinates(
         x_ground, y_ground, z_ground, shower_azimuth, shower_altitude
