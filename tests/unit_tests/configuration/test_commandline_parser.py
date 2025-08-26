@@ -25,10 +25,10 @@ def test_telescope():
     assert parser.CommandLineParser.telescope("MSTx-NectarCam") == "MSTx-NectarCam"
 
     with pytest.raises(ValueError, match=r"Invalid name Whipple"):
-        assert parser.CommandLineParser.telescope("Whipple")
+        parser.CommandLineParser.telescope("Whipple")
 
     with pytest.raises(ValueError, match=r"Invalid name LST"):
-        assert parser.CommandLineParser.telescope("LST")
+        parser.CommandLineParser.telescope("LST")
 
 
 def test_efficiency_interval():
@@ -75,9 +75,9 @@ def test_zenith_angle(caplog):
 def test_parse_quantity_pair():
     for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100GeV 5 TeV"]:
         e_pair = parser.CommandLineParser.parse_quantity_pair(test_string)
-        assert pytest.approx(e_pair[0].value) == 100.0
+        assert e_pair[0].value == pytest.approx(100.0)
         assert e_pair[0].unit == u.GeV
-        assert pytest.approx(e_pair[1].value) == 5.0
+        assert e_pair[1].value == pytest.approx(5.0)
         assert e_pair[1].unit == u.TeV
 
     with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
@@ -94,7 +94,7 @@ def test_parse_integer_and_quantity():
     for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m", "(5, <Quantity 1500 m>)"]:
         c_pair = parser.CommandLineParser.parse_integer_and_quantity(test_string)
         assert c_pair[0] == 5
-        assert pytest.approx(c_pair[1].value) == 1500.0
+        assert c_pair[1].value == pytest.approx(1500.0)
         assert c_pair[1].unit == u.m
 
     with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):

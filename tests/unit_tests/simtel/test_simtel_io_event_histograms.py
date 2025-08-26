@@ -109,7 +109,8 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     mock_create_plot.reset_mock()
     histograms.array_name = "test_array"
     histograms.plot_data(output_path=tmp_path, limits=limits)
-    # 11 regular plots + 2 rebinned plots (core_vs_energy_cumulative and angular_distance_vs_energy_cumulative)
+    # 11 regular plots + 2 rebinned plots (core_vs_energy_cumulative and
+    # angular_distance_vs_energy_cumulative)
     assert mock_create_plot.call_count == 13
 
     for call in mock_create_plot.call_args_list:
@@ -672,8 +673,8 @@ def test_core_distance_bins_default(mock_reader, hdf5_file_name):
 
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
-    assert bins[0] == 0.0
-    assert bins[-1] == 1.0e5
+    assert bins[0] == pytest.approx(0.0)
+    assert bins[-1] == pytest.approx(1.0e5)
 
 
 def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
@@ -688,8 +689,8 @@ def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
 
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
-    assert bins[0] == 10.0
-    assert bins[-1] == 500.0
+    assert bins[0] == pytest.approx(10.0)
+    assert bins[-1] == pytest.approx(500.0)
 
 
 def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
@@ -715,8 +716,8 @@ def test_view_cone_bins_default(mock_reader, hdf5_file_name):
     bins = histograms.view_cone_bins
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
-    assert bins[0] == 0.0
-    assert bins[-1] == 10.0
+    assert bins[0] == pytest.approx(0.0)
+    assert bins[-1] == pytest.approx(10.0)
 
 
 def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
@@ -736,5 +737,5 @@ def test_view_cone_bins_no_file_info(mock_reader, hdf5_file_name):
     bins = histograms.view_cone_bins
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
-    assert bins[0] == 0.0
-    assert bins[-1] == 20.0
+    assert bins[0] == pytest.approx(0.0)
+    assert bins[-1] == pytest.approx(20.0)
