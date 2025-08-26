@@ -16,18 +16,17 @@ Example Usage
 
     .. code-block:: console
 
-        simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        simtools-simulate-illuminator --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup variable \
-        --model_version 6.0.0 --light_source_type led
+        --model_version 6.0.0
 
 2. Simulate light emission with telescopes at fixed positions according to the layout:
 
     .. code-block:: console
 
-        simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        simtools-simulate-illuminator --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup layout \
-        --model_version 6.0.0 \
-        --light_source_type led
+        --model_version 6.0.0
 
 Command Line Arguments
 ----------------------
@@ -43,15 +42,10 @@ light_source_setup (str, optional)
     - "layout" for actual telescope positions.
 model_version (str, optional)
     Version of the simulation model.
-light_source_type (str, optional)
-    Select calibration light source type: led (default) or laser.
-    This changes the pre-compiled (sim_telarray) application that is used to run the
-    light emission package with. Currently we use xyzls (laser), and ls-beam can be
-    accessed by using the laser option.
 off_axis_angle (float, optional)
     Off axis angle for light source direction.
-plot (flag, optional)
-    Produce a multiple pages pdf file with the image plots.
+number_events (int, optional)
+    Number of events to simulate.
 
 
 Example
@@ -61,9 +55,9 @@ Simulate isotropic light source at different distances for the MSTN-04:
 
 .. code-block:: console
 
-    simtools-simulate-light-emission --telescope MSTN-04 --site North \
+    simtools-simulate-illuminator --telescope MSTN-04 --site North \
     --illuminator ILLN-01 --light_source_setup variable \
-    --model_version 6.0.0 --light_source_type led    ```
+    --model_version 6.0.0    ```
 
 Expected Output:
 
@@ -135,19 +129,7 @@ def _parse(label):
         default=0.0,
         required=False,
     )
-    config.parser.add_argument(
-        "--plot",
-        help="Produce a multiple pages pdf file with the image plots.",
-        action="store_true",
-    )
-    config.parser.add_argument(
-        "--light_source_type",
-        help="Select calibration light source type: led or laser",
-        type=str,
-        default="led",
-        choices=["led", "laser"],
-        required=False,
-    )
+
     config.parser.add_argument(
         "--light_source_setup",
         help="Select calibration light source positioning/setup: \
@@ -171,48 +153,17 @@ def _parse(label):
         required=True,
     )
     config.parser.add_argument(
-        "--return_cleaned",
-        help="ctapipe, if image should be cleaned, \
-              notice as well image cleaning parameters",
+        "--number_events",
+        help="Number of events to simulate",
+        type=int,
+        default=1,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--output_prefix",
+        help="Prefix for output files (default: empty)",
         type=str,
-        default=False,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--picture_thresh",
-        help="ctapipe, threshold above which all pixels are retained",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--boundary_thresh",
-        help="ctapipe, threshold above which pixels are retained if\
-              they have a neighbor already above the picture_thresh",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--min_neighbors",
-        help="ctapipe, A picture pixel survives cleaning only if it has at\
-              least this number of picture neighbors. This has no effect in\
-              case keep_isolated_pixels is True",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--level",
-        help="read 5",
-        type=int,
-        default=5,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--integration_window",
-        help="ctapipe, A picture pixel survives cleaning only if it has at\
-              least this number of picture neighbors. This has no effect in\
-              case keep_isolated_pixels is True",
-        nargs="*",
-        default=["7", "3"],
+        default=None,
         required=False,
     )
     return config.initialize(
@@ -222,7 +173,7 @@ def _parse(label):
     )
 
 
-def light_emission_configs(le_application, args_dict):
+def light_emission_configs(args_dict):
     """
     Define default light emission configurations.
 
@@ -235,8 +186,8 @@ def light_emission_configs(le_application, args_dict):
 
     Parameters
     ----------
-    le_application: str
-        Light emission application.
+    args_dict: dict
+        Dictionary with command line arguments.
 
     args_dict: dict
         Dictionary with command line arguments.
@@ -246,8 +197,8 @@ def light_emission_configs(le_application, args_dict):
     default_config: dict
         Default light emission configuration.
     """
-    if le_application in ("xyzls", "ls-beam") and args_dict["light_source_setup"] == "variable":
-        return {
+    if args_dict["light_source_setup"] == "variable":
+        cfg = {
             "x_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["x_position"]},
             "y_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["y_position"]},
             "z_pos": {
@@ -263,37 +214,17 @@ def light_emission_configs(le_application, args_dict):
                 "names": ["direction", "cx,cy,cz"],
             },
         }
-    return {}
-
-
-def select_application(args_dict):
-    """
-    Select sim_telarray application for light emission simulations.
-
-    Parameters
-    ----------
-    args_dict: dict
-        Dictionary with command line arguments.
-
-    Returns
-    -------
-    le_application: str
-        Light emission application.
-    """
-    if args_dict["light_source_type"] == "led":
-        return "xyzls", args_dict["light_source_setup"]
-    if args_dict["light_source_type"] == "laser":
-        return "ls-beam", args_dict["light_source_setup"]
-    return None, args_dict["light_source_setup"]
+        args_dict.update(cfg)
+        return args_dict
+    return args_dict
 
 
 def main():
     """Simulate light emission."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
-    le_application = select_application(args_dict)
-    light_emission_config = light_emission_configs(le_application[0], args_dict)
-
+    light_emission_config = light_emission_configs(args_dict)
+    print(light_emission_config)
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
@@ -318,17 +249,22 @@ def main():
         calibration_model=calibration_model,
         site_model=site_model,
         light_emission_config=light_emission_config,
-        le_application=le_application,
+        light_source_setup=args_dict["light_source_setup"],
         simtel_path=args_dict["simtel_path"],
-        light_source_type=args_dict["light_source_type"],
+        light_source_type="illuminator",
         label=label,
         test=args_dict["test"],
     )
 
     if args_dict["light_source_setup"] == "variable":
-        light_source.simulate_variable_distances(args_dict)
+        outputs = light_source.simulate_variable_distances(args_dict)
     elif args_dict["light_source_setup"] == "layout":
-        light_source.simulate_layout_positions(args_dict)
+        outputs = light_source.simulate_layout_positions(args_dict)
+    else:
+        outputs = []
+
+    if outputs:
+        logger.info("Simulation outputs:\n%s", "\n".join(str(p) for p in outputs))
 
 
 if __name__ == "__main__":

@@ -16,15 +16,15 @@ def test_is_two_mirror_telescope():
 def test_compute_telescope_transmission():
     pars = [0.8, 0, 0.0, 0.0, 0.0]
     off_axis = 0.0
-    assert pytest.approx(model_utils.compute_telescope_transmission(pars, off_axis)) == pars[0]
+    assert model_utils.compute_telescope_transmission(pars, off_axis) == pytest.approx(pars[0])
 
     pars = [0.898, 1, 0.016, 4.136, 1.705, 0.0]
     off_axis = 0.0
-    assert pytest.approx(model_utils.compute_telescope_transmission(pars, off_axis)) == pars[0]
+    assert model_utils.compute_telescope_transmission(pars, off_axis) == pytest.approx(pars[0])
 
     pars = [0.898, 1, 0.016, 4.136, 1.705, 0.0]
     off_axis = 2.0
-    assert pytest.approx(model_utils.compute_telescope_transmission(pars, off_axis)) == 0.8938578
+    assert model_utils.compute_telescope_transmission(pars, off_axis) == pytest.approx(0.8938578)
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_initialize_simulation_models(mocker, mock_db_config, site, telescope_na
     label = "test_label"
     model_version = "test_version"
 
-    tel_model, site_model = model_utils.initialize_simulation_models(
+    model_utils.initialize_simulation_models(
         label=label,
         db_config=mock_db_config,
         site=site,

@@ -174,7 +174,9 @@ class TelescopeModel(ModelParameter):
             eff_focal_length = eff_focal_length.to(unit).value
         except AttributeError:
             eff_focal_length = 0.0
-        if return_focal_length_if_zero and (eff_focal_length is None or eff_focal_length == 0.0):
+        if return_focal_length_if_zero and (
+            eff_focal_length is None or np.isclose(eff_focal_length, 0.0)
+        ):
             self._logger.warning("Using focal_length because effective_focal_length is 0")
             return self.get_parameter_value_with_unit("focal_length").to(unit).value
         return eff_focal_length

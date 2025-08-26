@@ -151,7 +151,7 @@ def test_create_results_table(mock_results):
     assert len(table) == 1
     assert "zenith" in table.colnames
     assert table["zenith"].unit == u.deg
-    assert table.meta["loss_fraction"] == 0.2
+    assert table.meta["loss_fraction"] == pytest.approx(0.2)
     assert isinstance(table.meta["created"], str)
     assert "description" in table.meta
 
@@ -160,9 +160,9 @@ def test_round_value():
     """Test _round_value function for different key types."""
 
     # Test lower_energy_limit rounding
-    assert _round_value("lower_energy_limit", 1.2345) == 1.234
-    assert _round_value("lower_energy_limit", 0.9876) == 0.987
-    assert _round_value("lower_energy_limit", 2.0) == 2.0
+    assert _round_value("lower_energy_limit", 1.2345) == pytest.approx(1.234)
+    assert _round_value("lower_energy_limit", 0.9876) == pytest.approx(0.987)
+    assert _round_value("lower_energy_limit", 2.0) == pytest.approx(2.0)
 
     # Test upper_radius_limit rounding
     assert _round_value("upper_radius_limit", 123.4) == 125
@@ -171,14 +171,14 @@ def test_round_value():
     assert _round_value("upper_radius_limit", 75.0) == 75
 
     # Test viewcone_radius rounding
-    assert _round_value("viewcone_radius", 1.1) == 1.25
-    assert _round_value("viewcone_radius", 2.0) == 2.0
-    assert _round_value("viewcone_radius", 2.1) == 2.25
-    assert _round_value("viewcone_radius", 0.3) == 0.5
+    assert _round_value("viewcone_radius", 1.1) == pytest.approx(1.25)
+    assert _round_value("viewcone_radius", 2.0) == pytest.approx(2.0)
+    assert _round_value("viewcone_radius", 2.1) == pytest.approx(2.25)
+    assert _round_value("viewcone_radius", 0.3) == pytest.approx(0.5)
 
     # Test other keys (no rounding)
-    assert _round_value("other_key", 1.2345) == 1.2345
-    assert _round_value("zenith", 45.678) == 45.678
+    assert _round_value("other_key", 1.2345) == pytest.approx(1.2345)
+    assert _round_value("zenith", 45.678) == pytest.approx(45.678)
     assert _round_value("unknown", "string_value") == "string_value"
 
 

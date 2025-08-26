@@ -372,12 +372,34 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
 
-    corsika_config = CorsikaConfig(
-        array_model=array_model,
-        label="test-corsika-config",
-        args_dict=corsika_config_data,
-        db_config=db_config,
-    )
+    # Avoid DB access by mocking ModelParameter inside CorsikaConfig for fixture creation
+    with mock.patch("simtools.corsika.corsika_config.ModelParameter") as mp:
+        mp_instance = mp.return_value
+        mp_instance.get_simulation_software_parameters.return_value = {
+            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+            "corsika_cherenkov_photon_wavelength_range": {
+                "value": [240.0, 1000.0],
+                "unit": "nm",
+            },
+            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+            "corsika_particle_kinetic_energy_cutoff": {
+                "value": [0.3, 0.1, 0.020, 0.020],
+                "unit": "GeV",
+            },
+            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
+            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+            "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
+            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+        }
+
+        corsika_config = CorsikaConfig(
+            array_model=array_model,
+            label="test-corsika-config",
+            args_dict=corsika_config_data,
+            db_config=db_config,
+        )
+
     corsika_config.run_number = 1
     corsika_config.array_model.site = "South"
     return corsika_config

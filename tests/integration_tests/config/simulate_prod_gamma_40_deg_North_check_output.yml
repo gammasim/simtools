@@ -4,10 +4,10 @@ applications:
   configuration:
     array_layout_name: alpha
     azimuth_angle: South
-    core_scatter: 10 600 m
+    core_scatter: 2 600 m
     corsika_test_seeds: true
     data_directory: simtools-data
-    energy_range: 150 GeV 600 GeV
+    energy_range: 150 GeV 400 GeV
     label: check_output
     log_level: DEBUG
     model_version: 6.0.0
