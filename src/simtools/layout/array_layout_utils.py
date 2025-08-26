@@ -282,7 +282,7 @@ def get_array_layouts_from_db(
     """
     layout_names = []
     if layout_name:
-        layout_names = gen.enforce_list_type(layout_name)
+        layout_names = gen.ensure_iterable(layout_name)
     else:
         site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
         layout_names = site_model.get_list_of_array_layouts()
