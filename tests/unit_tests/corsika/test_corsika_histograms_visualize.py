@@ -1,10 +1,18 @@
 import logging
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 from simtools.corsika import corsika_histograms_visualize
+
+# Ignore UserWarning (e.g., SciPy NumPy-version warning) at module level so pytest
+# does not treat it as an error during collection.
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
+
+# Prevent RuntimeWarning from matplotlib about too many open figures during tests
+mpl.rcParams["figure.max_open_warning"] = 0
 
 
 def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, caplog):
