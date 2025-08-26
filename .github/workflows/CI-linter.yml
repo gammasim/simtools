@@ -87,6 +87,14 @@ jobs:
         run: |
           git ls-files 'src/simtools/*.py' | xargs pylint -v
 
+      - name: Cache pre-commit to avoid rate limits of npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pre-commit-
+
       - name: Pre-commit
         run: |
           pre-commit run --all-files
