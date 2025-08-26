@@ -5,10 +5,6 @@
 In this section you find the reference documentation of the modules contained in
 the visualization module.
 
-- {ref}`visualize <visualizationvisualize>`
-- {ref}`legend_handlers <visualizationlegendhandlers>`
-- {ref}`simtel_event_plots <visualizationsimtel_event_plots>`
-
 (visualizationvisualize)=
 
 ## visualize
@@ -66,8 +62,9 @@ the visualization module.
 ```{eval-rst}
 .. automodule:: visualization.plot_simtel_event_histograms
    :members:
+```
 
-(visualizationsimtel_event_plots)=
+(visualizationsimtel-event-plots)=
 
 ## simtel_event_plots
 
