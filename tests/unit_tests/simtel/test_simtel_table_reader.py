@@ -5,6 +5,7 @@ from unittest import mock
 
 import astropy.units as u
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
 
@@ -193,10 +194,10 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     assert table.meta["File"] == "dummy_path"
     assert "MODTRAN options as follows:" in table.meta["Context_from_sim_telarray"]
     assert table["wavelength"][0] == 200
-    assert table["altitude"][0] == 2.206
-    assert table["extinction"][0] == 0.264958
+    assert table["altitude"][0] == pytest.approx(2.206)
+    assert table["extinction"][0] == pytest.approx(0.264958)
     assert isinstance(table.meta["observatory_level"], u.Quantity)
-    assert table.meta["observatory_level"] == 2.156 * u.km
+    assert_quantity_allclose(table.meta["observatory_level"], 2.156 * u.km)
 
     test_data += "\n   # not a comment"  # invalid, as comment not at beginning of line
     with mock.patch(mock_string, return_value=test_data.splitlines()):
@@ -234,9 +235,9 @@ def test_read_simtel_data_for_lightguide_efficiency(caplog):
     assert table.meta["File"] == "dummy_path"
     assert "Angular efficiency table" in table.meta["Context_from_sim_telarray"]
 
-    assert table["angle"][0] == 0.0
-    assert table["wavelength"][0] == 325.0
-    assert table["efficiency"][0] == 0.821641
+    assert table["angle"][0] == pytest.approx(0.0)
+    assert table["wavelength"][0] == pytest.approx(325.0)
+    assert table["efficiency"][0] == pytest.approx(0.821641)
 
     # Test: skipping malformed line
     malformed_data = test_data + "\n this is a bad line"

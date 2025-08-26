@@ -40,7 +40,7 @@ def test_extract_type_of_value() -> None:
 
     # Test that astropy types are not implemented
     with pytest.raises(NotImplementedError):
-        assert value_conversion.extract_type_of_value(1 * u.m)
+        value_conversion.extract_type_of_value(1 * u.m)
 
 
 def test_get_value_unit_type() -> None:

@@ -138,7 +138,7 @@ def test_verify_model_parameters_for_production_non_dict_parameters(mock_collect
         mock_file.exists.return_value = True
         mock_get_path.return_value = mock_file
 
-        missing_files, total_checked = model_repository._verify_model_parameters_for_production(
+        _, total_checked = model_repository._verify_model_parameters_for_production(
             str(tmp_path), production_file
         )
 
@@ -342,7 +342,7 @@ def test_create_new_parameter_entry_success(mock_collect_data, mock_get_latest, 
     with new_file.open("r", encoding="utf-8") as f:
         data = json.load(f)
         assert data["parameter_version"] == "4.0.0"
-        assert data["value"] == 62.5
+        assert data["value"] == pytest.approx(62.5)
 
 
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")

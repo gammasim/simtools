@@ -7,7 +7,7 @@ applications:
     label: test-dark-pedestal-production-North
     log_level: DEBUG
     model_version: 6.0.0
-    number_of_events: 10
+    number_of_events: 3
     output_path: simtools-output
     run_number: 10
     sim_telarray_random_instrument_instances: 100

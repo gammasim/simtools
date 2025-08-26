@@ -61,8 +61,8 @@ def test_configuration_from_args_dict(camera_efficiency_lst):
         }
     )
     assert isinstance(_config, dict)
-    assert pytest.approx(_config["zenith_angle"]) == 30.0
-    assert pytest.approx(_config["azimuth_angle"]) == 90.0
+    assert _config["zenith_angle"] == pytest.approx(30.0)
+    assert _config["azimuth_angle"] == pytest.approx(90.0)
     assert _config["nsb_spectrum"] == "dark"
 
 
