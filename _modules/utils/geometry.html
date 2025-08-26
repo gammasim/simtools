@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=671e79a1"></script>
+    <script src="../../_static/documentation_options.js?v=6aec00b4"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7676c86a3" />
+  <meta name="docsearch:version" content="0.1.dev1+g374ae511a" />
   </head>
   
   
@@ -621,6 +621,42 @@
     <span class="n">sin_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angles</span><span class="p">))</span>
     <span class="n">cos_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angles</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">sin_sum</span><span class="p">,</span> <span class="n">cos_sum</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_ground_to_shower_coordinates</span><span class="p">(</span><span class="n">x_ground</span><span class="p">,</span> <span class="n">y_ground</span><span class="p">,</span> <span class="n">z_ground</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">,</span> <span class="n">altitude</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform ground to shower coordinates.</span>
+
+<span class="sd">    Assume ground to be of type &#39;North-West-Up&#39; (NWU) coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x_ground: numpy.array</span>
+<span class="sd">        Ground x coordinate.</span>
+<span class="sd">    y_ground: numpy.array</span>
+<span class="sd">        Ground y coordinate.</span>
+<span class="sd">    z_ground: numpy.array</span>
+<span class="sd">        Ground z coordinate.</span>
+<span class="sd">    azimuth: numpy.array</span>
+<span class="sd">        Azimuth angle of the shower (in radians).</span>
+<span class="sd">    altitude: numpy.array</span>
+<span class="sd">        Altitude angle of the shower (in radians).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Transformed shower coordinates (x&#39;, y&#39;, z&#39;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">az</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">x_ground</span><span class="p">,</span> <span class="n">y_ground</span><span class="p">,</span> <span class="n">z_ground</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">,</span> <span class="n">altitude</span><span class="p">)</span>
+
+    <span class="n">ca</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">az</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">az</span><span class="p">)</span>
+    <span class="n">cz</span><span class="p">,</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span>
+
+    <span class="n">x_s</span> <span class="o">=</span> <span class="n">ca</span> <span class="o">*</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">sa</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">ca</span> <span class="o">*</span> <span class="n">sz</span> <span class="o">*</span> <span class="n">z</span>
+    <span class="n">y_s</span> <span class="o">=</span> <span class="n">sa</span> <span class="o">*</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ca</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">sa</span> <span class="o">*</span> <span class="n">sz</span> <span class="o">*</span> <span class="n">z</span>
+    <span class="n">z_s</span> <span class="o">=</span> <span class="o">-</span><span class="n">sz</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">z</span>
+
+    <span class="k">return</span> <span class="n">x_s</span><span class="p">,</span> <span class="n">y_s</span><span class="p">,</span> <span class="n">z_s</span>
 </pre></div>
 
                 </article>

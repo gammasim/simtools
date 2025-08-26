@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=671e79a1"></script>
+    <script src="../../_static/documentation_options.js?v=6aec00b4"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g7676c86a3" />
+  <meta name="docsearch:version" content="0.1.dev1+g374ae511a" />
   </head>
   
   
@@ -440,11 +440,11 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">AltAz</span><span class="p">,</span> <span class="n">angular_separation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroundFrame</span><span class="p">,</span> <span class="n">TiltedGroundFrame</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">angular_separation</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">table_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform_ground_to_shower_coordinates</span>
 
 
 <div class="viewcode-block" id="ShowerEventData">
@@ -556,16 +556,17 @@
             <span class="k">if</span> <span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">:</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="n">shower_data</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">_unit&quot;</span><span class="p">,</span> <span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
 
-        <span class="n">shower_data</span><span class="o">.</span><span class="n">x_core_shower</span><span class="p">,</span> <span class="n">shower_data</span><span class="o">.</span><span class="n">y_core_shower</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_transform_to_shower_coordinates</span><span class="p">(</span>
+        <span class="n">shower_data</span><span class="o">.</span><span class="n">x_core_shower</span><span class="p">,</span> <span class="n">shower_data</span><span class="o">.</span><span class="n">y_core_shower</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">transform_ground_to_shower_coordinates</span><span class="p">(</span>
                 <span class="n">shower_data</span><span class="o">.</span><span class="n">x_core</span><span class="p">,</span>
                 <span class="n">shower_data</span><span class="o">.</span><span class="n">y_core</span><span class="p">,</span>
+                <span class="mf">0.0</span><span class="p">,</span>
                 <span class="n">shower_data</span><span class="o">.</span><span class="n">shower_azimuth</span><span class="p">,</span>
                 <span class="n">shower_data</span><span class="o">.</span><span class="n">shower_altitude</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">shower_data</span><span class="o">.</span><span class="n">core_distance_shower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
-            <span class="n">shower_data</span><span class="o">.</span><span class="n">x_core_shower</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">shower_data</span><span class="o">.</span><span class="n">y_core_shower</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">shower_data</span><span class="o">.</span><span class="n">core_distance_shower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span>
+            <span class="n">shower_data</span><span class="o">.</span><span class="n">x_core_shower</span><span class="p">,</span> <span class="n">shower_data</span><span class="o">.</span><span class="n">y_core_shower</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">shower_data</span>
@@ -746,36 +747,6 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">filtered_triggered_data</span><span class="p">,</span> <span class="n">filtered_triggered_shower_data</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_transform_to_shower_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_core</span><span class="p">,</span> <span class="n">y_core</span><span class="p">,</span> <span class="n">shower_azimuth</span><span class="p">,</span> <span class="n">shower_altitude</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Transform core positions from ground coordinates to shower coordinates.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x_core : np.ndarray</span>
-<span class="sd">            Core x positions in ground coordinates.</span>
-<span class="sd">        y_core : np.ndarray</span>
-<span class="sd">            Core y positions in ground coordinates.</span>
-<span class="sd">        shower_azimuth : np.ndarray</span>
-<span class="sd">            Shower azimuth angles in deg.</span>
-<span class="sd">        shower_altitude : np.ndarray</span>
-<span class="sd">            Shower altitude angles in deg.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            Core positions in shower coordinates (x, y).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ground</span> <span class="o">=</span> <span class="n">GroundFrame</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x_core</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_core</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x_core</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
-        <span class="n">shower_frame</span> <span class="o">=</span> <span class="n">ground</span><span class="o">.</span><span class="n">transform_to</span><span class="p">(</span>
-            <span class="n">TiltedGroundFrame</span><span class="p">(</span>
-                <span class="n">pointing_direction</span><span class="o">=</span><span class="n">AltAz</span><span class="p">(</span>
-                    <span class="n">az</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">shower_azimuth</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">shower_altitude</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">shower_frame</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">shower_frame</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">value</span>
 
 <div class="viewcode-block" id="SimtelIOEventDataReader.get_reduced_simulation_file_info">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.get_reduced_simulation_file_info">[docs]</a>
