@@ -790,8 +790,9 @@ class CommandLineParser(argparse.ArgumentParser):
             match = re.match(pattern, input_string)
         # string with integer and quantity: "5 1500 m"
         else:
-            pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
-            match = re.match(pattern, input_string.strip())
+            match = re.fullmatch(
+                r"\((\d+), <Quantity (\d+(?:\.\d+)?) ([A-Za-z]+)>\)", input_string
+            ) or re.fullmatch(r"(\d+)\s+(\d+(?:\.\d+)?)\s*([A-Za-z]+)", input_string.strip())
 
         if not match:
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
