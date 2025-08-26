@@ -200,3 +200,39 @@ def solid_angle(angle_max, angle_min=0 * u.rad):
         The solid angle subtended by the given range of angles (in steradians).
     """
     return 2 * np.pi * (np.cos(angle_min.to("rad")) - np.cos(angle_max.to("rad"))) * u.sr
+
+
+def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth, altitude):
+    """
+    Transform ground to shower coordinates.
+
+    Assume ground to be of type 'North-West-Up' (NWU) coordinates.
+
+    Parameters
+    ----------
+    x_ground: numpy.array
+        Ground x coordinate.
+    y_ground: numpy.array
+        Ground y coordinate.
+    z_ground: numpy.array
+        Ground z coordinate.
+    azimuth: numpy.array
+        Azimuth angle of the shower (in radians).
+    altitude: numpy.array
+        Altitude angle of the shower (in radians).
+
+    Returns
+    -------
+    tuple
+        Transformed shower coordinates (x', y', z').
+    """
+    x, y, z, az, alt = np.broadcast_arrays(x_ground, y_ground, z_ground, azimuth, altitude)
+
+    ca, sa = np.cos(az), np.sin(az)
+    cz, sz = np.sin(alt), np.cos(alt)
+
+    x_s = ca * cz * x - sa * y + ca * sz * z
+    y_s = sa * cz * x + ca * y + sa * sz * z
+    z_s = -sz * x + cz * z
+
+    return x_s, y_s, z_s
