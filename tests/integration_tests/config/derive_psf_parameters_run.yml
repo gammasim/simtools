@@ -4,7 +4,7 @@ applications:
   configuration:
     data: ./tests/resources/PSFcurve_data_v2.txt
     model_version: 6.0.0
-    output_path: simtools-output
+    output_path: simtools-output/derive_psf_parameters
     site: North
     telescope: LSTN-01
     test: true
