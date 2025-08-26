@@ -295,8 +295,12 @@ addopts = [
   "pytest_requirements",
 ]
 testpaths = "tests/unit_tests/"
-# Ignore the warning about fontTools.misc.py23
-filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
+filterwarnings = [
+  # treat warnings as errors
+  "error",
+  # Ignore the warning about fontTools.misc.py23
+  "ignore:The py23 module has been deprecated:DeprecationWarning",
+]
 
 [tool.coverage.report]
 exclude_also = [

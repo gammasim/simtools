@@ -140,7 +140,7 @@ def test_read_application_configuration_selected_steps(
         lambda config, output_path, setting_workflow: {**config, "output_path": str(output_path)},
     )
 
-    configs, runtime_env, log_file = simtools_runner._read_application_configuration(
+    configs, _, _ = simtools_runner._read_application_configuration(
         DUMMY_CONFIG_FILE, [2], mock_logger
     )
     assert configs[0]["run_application"] is False
@@ -170,7 +170,7 @@ def test_read_application_configuration_empty_applications(
         lambda config, output_path, setting_workflow: config,
     )
 
-    configs, runtime_env, log_file = simtools_runner._read_application_configuration(
+    configs, _, log_file = simtools_runner._read_application_configuration(
         DUMMY_CONFIG_FILE, None, mock_logger
     )
     assert configs == []

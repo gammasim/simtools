@@ -98,7 +98,7 @@ def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, site_model_nort
             off_axis_angle=[0, 2] * u.deg,
         )
 
-    assert pytest.approx(ray.zenith_angle) == 30
+    assert ray.zenith_angle == pytest.approx(30)
     assert len(ray.off_axis_angle) == 2
     assert "Initializing RayTracing class" in caplog.text
     assert ray.simtel_path == simtel_path
@@ -122,7 +122,7 @@ def test_ray_tracing_single_mirror_mode(
             mirror_numbers="all",
         )
 
-    assert pytest.approx(ray.zenith_angle) == 30
+    assert ray.zenith_angle == pytest.approx(30)
     assert len(ray.off_axis_angle) == 2
     assert ray.single_mirror_mode
     assert "Single mirror mode is activated" in caplog.text

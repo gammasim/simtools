@@ -33,7 +33,7 @@ def test_pixel_solid_angle(telescope_model_lst):
     pix_solid_angle = tel_model.camera.get_pixel_active_solid_angle()
     logger.debug(f"Pixel solid angle is {pix_solid_angle}")
 
-    assert pix_solid_angle * 1e6 == pytest.approx(2.43, 0.01)  # Value for LST
+    assert pix_solid_angle == pytest.approx(2.43 / 1.0e6, 0.01)  # Value for LST
 
 
 def test_find_neighbors_square():

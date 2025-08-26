@@ -81,7 +81,7 @@ def test_make_run_command_divergent(simtel_runner):
 def test_check_run_result(simtel_runner):
     expected_pattern = r"sim_telarray output file .+ does not exist\."
     with pytest.raises(InvalidOutputFileError, match=expected_pattern):
-        assert simtel_runner._check_run_result(run_number=3)
+        simtel_runner._check_run_result(run_number=3)
 
 
 def test_get_power_law_for_sim_telarray_histograms():

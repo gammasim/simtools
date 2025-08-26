@@ -1,18 +1,15 @@
 #!/usr/bin/python3
 
 r"""
-    Derive the simulation model parameter mirror_reflection_random_angle.
-
-    This parameter, often referred to as "mirror roughness," is used to align the simulation
-    with the measured containment diameter of the optical point-spread function (PSF) for
-    individual mirror panels.
+    Derive mirror random reflection angle (mirror roughness) of a single mirror panel.
 
     Description
     -----------
 
     This application derives the value of the simulation model parameter
     *mirror_reflection_random_angle* using measurements of the focal length
-    and PSF of individual mirror panels.
+    and point-spread function (PSF) of individual mirror panels.
+    This parameter is sometimes referred to as the "mirror roughness".
 
     PSF measurements are provided by one of the following options:
 
@@ -22,7 +19,7 @@ r"""
         * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
 
     The containment fraction used for the PSF diameter calculation is set through
-    the argument ``--containment_fraction`` (typically 0.8 = 80%).
+    the argument ``--containment_fraction`` (typically 0.8 = 80%; called below D80).
 
     Mirror panels are simulated individually, using one of the following options to set the
     mirror panel focal length:
@@ -37,7 +34,7 @@ r"""
     taken from the Model Parameters DB (default) or can be set using the argument ``--rnda``.
 
     Ray-tracing simulations are performed for single mirror configurations for each
-    mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
+    mirror given in the mirror list. The mean simulated containment diameter for all the mirrors
     is compared with the mean measured containment diameter. The algorithm defines a new value for
     the random reflection angle based on the sign of the difference between measured and simulated
     containment diameters and a new set of simulations is performed. This process is repeated
@@ -67,7 +64,7 @@ r"""
     Command line arguments
     ----------------------
     telescope (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...)
+        Telescope name (e.g. LSTN-01, SSTS-25)
     model_version (str, optional)
         Model version
     psf_measurement (str, optional)
@@ -89,6 +86,8 @@ r"""
     random_focal_length (float, optional)
         Value of the random focal lengths to replace the default random_focal_length. Only used if
         'use_random_focal_length' is activated.
+    random_focal_length_seed (int, optional)
+        Seed for the random number generator used for focal length variation.
     no_tuning (activation mode, optional)
         Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
@@ -96,8 +95,8 @@ r"""
 
     Example
     -------
-    Derive mirror random reflection angle for a mid-sized telescope (MST),
-    simulation production 5.0.0
+    Derive mirror random reflection angle for a large-sized telescope (LSTS),
+    simulation production 6.0.0
 
     .. code-block:: console
 
@@ -199,6 +198,13 @@ def _parse(label):
         default=None,
         type=float,
         required=False,
+    )
+    config.parser.add_argument(
+        "--random_focal_length_seed",
+        help="Seed for the random number generator used for focal length variation.",
+        type=int,
+        required=False,
+        default=None,
     )
     config.parser.add_argument(
         "--no_tuning",

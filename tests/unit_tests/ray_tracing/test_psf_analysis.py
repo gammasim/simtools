@@ -104,7 +104,7 @@ def test_get_cumulative_data(psf_image):
     radius = np.array([50.0] * u.cm)
     cumulative_data_radius = image.get_cumulative_data(radius=radius)
     assert len(cumulative_data_radius) == 1
-    assert pytest.approx(cumulative_data_radius["Radius [cm]"][0]) == 50.0
+    assert cumulative_data_radius["Radius [cm]"][0] == pytest.approx(50.0)
 
 
 def test_get_image_data(psf_image):
