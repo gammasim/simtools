@@ -833,7 +833,9 @@ def test_create_d80_vs_offaxis_plot(
         mock_ray.analyze.assert_called_once_with(force=True)
 
         # Check plotting was called for both d80_cm and d80_deg
-        assert mock_figure.call_count == 2
+        assert (
+            mock_figure.call_count == 4
+        )  # one pdf and one png plot for each of d80_cm and d80_deg
         assert mock_title.call_count == 2
         assert mock_xlabel.call_count == 2
         assert mock_ylabel.call_count == 2
@@ -844,7 +846,7 @@ def test_create_d80_vs_offaxis_plot(
         mock_close.assert_called_once_with("all")
 
 
-def test_write_tested_parameters_to_file(tmp_path):
+def test_write_tested_parameters_to_file(tmp_path, mock_telescope_model):
     """Test writing tested parameters to file."""
     pars1 = {
         "mirror_reflection_random_angle": [0.005, 0.15, 0.035],
@@ -861,19 +863,20 @@ def test_write_tested_parameters_to_file(tmp_path):
     best_pars = pars2  # Same object as used in results
     best_d80 = 3.2
 
-    param_file = psf_opt.write_tested_parameters_to_file(results, best_pars, best_d80, tmp_path)
+    param_file = psf_opt.write_tested_parameters_to_file(
+        results, best_pars, best_d80, tmp_path, mock_telescope_model
+    )
 
     # Check that file was created
     assert param_file.exists()
-    assert param_file == tmp_path / "tested_psf_parameters.txt"
+    assert param_file == tmp_path / f"psf_optimization_{mock_telescope_model.name}.log"
 
     # Check file contents
     content = param_file.read_text()
-    assert "Tested parameter sets:" in content
-    assert "Set 1: RMSD=0.20000, D80=3.50000 cm" in content
-    assert "* Set 2: RMSD=0.10000, D80=3.20000 cm" in content
-    assert "<-- BEST" in content
-    assert "Best parameters:" in content
+    assert "PARAMETER TESTING RESULTS:" in content
+    assert "[TESTED] Set 001: RMSD=0.20000, D80=3.50000 cm" in content
+    assert "[BEST] Set 002: RMSD=0.10000, D80=3.20000 cm" in content
+    assert "OPTIMIZATION SUMMARY:" in content
     assert "Best D80: 3.20000 cm" in content
 
 
@@ -923,24 +926,30 @@ def test__add_units_to_psf_parameters(sample_parameters):
         "description",
     ),
     [
-        (None, logging.INFO, "JSON model parameter files exported to", 2, "successful export"),
+        (
+            None,
+            logging.INFO,
+            "simulation model parameter files exported to",
+            2,
+            "successful export",
+        ),
         (
             ImportError("Module not found"),
             logging.WARNING,
-            "Could not export JSON parameters: Module not found",
+            "Could not export simulation parameters: Module not found",
             1,
             "import error",
         ),
         (
             ValueError("Invalid parameter"),
             logging.ERROR,
-            "Error exporting JSON parameters: Invalid parameter",
+            "Error exporting simulation parameters: Invalid parameter",
             1,
             "value error",
         ),
     ],
 )
-def test_export_psf_parameters_as_json(
+def test_export_psf_parameters(
     mock_telescope_model,
     tmp_path,
     caplog,
@@ -950,13 +959,12 @@ def test_export_psf_parameters_as_json(
     expected_call_count,
     description,
 ):
-    """Test export of PSF parameters as JSON under different scenarios."""
+    """Test export of PSF parameters as simulation model parameter files under different scenarios."""
     best_pars = {
         "mirror_reflection_random_angle": [0.006, 0.15, 0.035],
         "mirror_align_random_horizontal": [0.005, 28.0, 0.0, 0.0],
     }
     parameter_version = "1.0.0"
-    func_logger = logging.getLogger("test_logger")
 
     with (
         patch(
@@ -967,9 +975,7 @@ def test_export_psf_parameters_as_json(
         if side_effect is not None:
             mock_dump.side_effect = side_effect
 
-        psf_opt.export_psf_parameters_as_json(
-            best_pars, mock_telescope_model, parameter_version, tmp_path, func_logger
-        )
+        psf_opt.export_psf_parameters(best_pars, mock_telescope_model, parameter_version, tmp_path)
 
         # Check function call count
         assert mock_dump.call_count == expected_call_count, (
@@ -983,14 +989,16 @@ def test_export_psf_parameters_as_json(
 
         # Check for successful export
         if side_effect is None:
-            assert "Exporting best PSF parameters as JSON model parameter files" in caplog.text
+            assert (
+                "Exporting best PSF parameters as simulation model parameter files" in caplog.text
+            )
 
 
 @pytest.mark.parametrize(
-    ("test_mode", "data_file", "write_json", "expected_n_runs", "description"),
+    ("test_mode", "data_file", "write_parameters", "expected_n_runs", "description"),
     [
-        (True, "test_data.txt", True, 5, "with JSON export in test mode"),
-        (False, None, False, 50, "without JSON export in production mode"),
+        (True, "test_data.txt", True, 5, "with parameter export in test mode"),
+        (False, None, False, 50, "without parameter export in production mode"),
     ],
 )
 def test_run_psf_optimization_workflow(
@@ -999,7 +1007,7 @@ def test_run_psf_optimization_workflow(
     tmp_path,
     test_mode,
     data_file,
-    write_json,
+    write_parameters,
     expected_n_runs,
     description,
 ):
@@ -1008,11 +1016,11 @@ def test_run_psf_optimization_workflow(
         "test": test_mode,
         "data": data_file,
         "model_path": MOCK_MODEL_PATH,
-        "write_psf_parameters": write_json,
+        "write_psf_parameters": write_parameters,
         "output_path": str(tmp_path),
         "parameter_version": "1.0.0",
+        "n_runs": expected_n_runs,  # Add the expected n_runs to args_dict
     }
-    func_logger = logging.getLogger("test_logger")
 
     # Mock sample results
     sample_results = [
@@ -1052,8 +1060,8 @@ def test_run_psf_optimization_workflow(
             "simtools.ray_tracing.psf_parameter_optimisation.create_d80_vs_offaxis_plot"
         ) as mock_create_plot,
         patch(
-            "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters_as_json"
-        ) as mock_export_json,
+            "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters"
+        ) as mock_export_parameters,
         patch("builtins.print") as mock_print,
     ):
         # Set up mocks
@@ -1064,7 +1072,7 @@ def test_run_psf_optimization_workflow(
 
         # Run the workflow
         psf_opt.run_psf_optimization_workflow(
-            mock_telescope_model, mock_site_model, args_dict, tmp_path, func_logger
+            mock_telescope_model, mock_site_model, args_dict, tmp_path
         )
 
         # Common assertions for both scenarios
@@ -1072,7 +1080,9 @@ def test_run_psf_optimization_workflow(
         mock_gen_params.assert_called_once()
         mock_load_data.assert_called_once_with(args_dict)
         mock_find_best.assert_called_once()
-        mock_write_params.assert_called_once_with(sample_results, best_pars, 3.2, tmp_path)
+        mock_write_params.assert_called_once_with(
+            sample_results, best_pars, 3.2, tmp_path, mock_telescope_model
+        )
         mock_create_plot.assert_called_once_with(
             mock_telescope_model, mock_site_model, args_dict, best_pars, tmp_path
         )
@@ -1082,10 +1092,9 @@ def test_run_psf_optimization_workflow(
         n_runs = call_args[1]
         assert n_runs == expected_n_runs, f"Expected n_runs={expected_n_runs} for {description}"
 
-        if write_json:
-            # JSON export should be called with output_dir.parent (tmp_path.parent in this test)
-            mock_export_json.assert_called_once_with(
-                best_pars, mock_telescope_model, "1.0.0", tmp_path.parent, func_logger
+        if write_parameters:
+            mock_export_parameters.assert_called_once_with(
+                best_pars, mock_telescope_model, "1.0.0", tmp_path.parent
             )
             # Check output messages for test mode
             mock_print.assert_any_call(
@@ -1094,5 +1103,5 @@ def test_run_psf_optimization_workflow(
             mock_print.assert_any_call("D80 vs off-axis angle plots created successfully")
             mock_print.assert_any_call("\nBest parameters:")
         else:
-            # JSON export should NOT be called
-            mock_export_json.assert_not_called()
+            # parameter export should NOT be called
+            mock_export_parameters.assert_not_called()
