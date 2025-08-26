@@ -87,11 +87,11 @@ jobs:
         run: |
           git ls-files 'src/simtools/*.py' | xargs pylint -v
 
-      - name: Cache pre-commit to avoid rate limits of npm
+      - name: Restore pre-commit cache
         uses: actions/cache@v4
+        id: precommit-cache
         with:
           path: ~/.cache/pre-commit
-          save-always: true
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-
@@ -99,6 +99,13 @@ jobs:
       - name: Pre-commit
         run: |
           pre-commit run --all-files
+
+      - name: Save pre-commit cache
+        if: success()  # only save if previous steps succeeded
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v8
