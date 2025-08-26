@@ -206,12 +206,13 @@ def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth
     tuple
         Transformed shower coordinates (x', y', z').
     """
+    x, y, z, az, alt = np.broadcast_arrays(x_ground, y_ground, z_ground, azimuth, altitude)
 
-    def _scalar_transformation(x_ground, y_ground, z_ground, azimuth, altitude):
-        ca, sa = np.cos(azimuth), np.sin(azimuth)
-        cz, sz = np.sin(altitude), np.cos(altitude)
-        rot_matrix = np.array([[ca * cz, -sa, ca * sz], [sa * cz, ca, sa * sz], [-sz, 0, cz]])
-        return tuple(rot_matrix @ np.array([x_ground, y_ground, z_ground], dtype=float))
+    ca, sa = np.cos(az), np.sin(az)
+    cz, sz = np.sin(alt), np.cos(alt)
 
-    vec_func = np.vectorize(_scalar_transformation, otypes=[float, float, float])
-    return vec_func(x_ground, y_ground, z_ground, azimuth, altitude)
+    x_s = ca * cz * x - sa * y + ca * sz * z
+    y_s = sa * cz * x + ca * y + sa * sz * z
+    z_s = -sz * x + cz * z
+
+    return x_s, y_s, z_s
