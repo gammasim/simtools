@@ -91,6 +91,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
+          save-always: true
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-
