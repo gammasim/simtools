@@ -49,6 +49,8 @@ class RayTracing:
         Single mirror mode flag.
     use_random_focal_length: bool
         Use random focal length flag.
+    random_focal_length_seed: int
+        Seed for the random number generator used for focal length variation.
     mirror_numbers: list, str
         List of mirror numbers (or 'all').
     """
@@ -71,6 +73,7 @@ class RayTracing:
         source_distance=10.0 * u.km,
         single_mirror_mode=False,
         use_random_focal_length=False,
+        random_focal_length_seed=None,
         mirror_numbers="all",
     ):
         """Initialize RayTracing class."""
@@ -87,6 +90,7 @@ class RayTracing:
         self.off_axis_angle = np.around(off_axis_angle.to("deg").value, 5)
         self.single_mirror_mode = single_mirror_mode
         self.use_random_focal_length = use_random_focal_length
+        self.random_focal_length_seed = random_focal_length_seed
         self.mirrors = self._initialize_mirror_configuration(source_distance, mirror_numbers)
         self.output_directory = self._io_handler.get_output_directory(
             label=self.label, sub_dir="ray_tracing"
@@ -185,7 +189,7 @@ class RayTracing:
         """
         _focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
         if self.use_random_focal_length:
-            rng = np.random.default_rng()
+            rng = np.random.default_rng(self.random_focal_length_seed)
             _random_focal_length = self.telescope_model.get_parameter_value("random_focal_length")
             if _random_focal_length[0] > 0.0:
                 _focal_length += rng.normal(loc=0, scale=_random_focal_length[0])

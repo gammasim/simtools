@@ -146,8 +146,8 @@ def test_compute_scaling_factor_with_zero_uncertainties(mock_evaluator, mock_met
     np.testing.assert_almost_equal(scaling_factors, expected_scaling)
 
     # Zero uncertainties should have zero scaling factors
-    assert scaling_factors[0] == 0.0
-    assert scaling_factors[2] == 0.0
+    assert scaling_factors[0] == pytest.approx(0.0)
+    assert scaling_factors[2] == pytest.approx(0.0)
 
 
 def test_derive_statistics(derivator):
