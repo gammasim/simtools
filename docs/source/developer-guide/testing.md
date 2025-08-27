@@ -32,8 +32,7 @@ Write tests in parallel with code development to ensure modules are testable fro
 
 ```{note}
 The `simtools` project aims for **very high test coverage**.
-Uncovered lines must be the rare exception. The goal is coverage close to 100%.
-(simtools quality requirements mandate at least 90% coverage.)
+Uncovered lines must be the rare exception. The project mandates at least 90% coverage as a minimum threshold, but developers are encouraged to aim for coverage as close to 100% as possible.
 ```
 
 Check the test coverage with `pytest -n auto --cov-report-html  tests/unit_tests/ tests/integration_tests/`.
