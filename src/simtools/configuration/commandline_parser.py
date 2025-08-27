@@ -753,7 +753,7 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
             ValueError: If the string is not formatted correctly (e.g., missing space).
         """
-        pattern = re.compile(r"(\d+(?:\.\d+)?)\s*([A-Za-z]+)")
+        pattern = r"(\d+\.?\d*)\s*([a-zA-Z]+)"
         matches = re.findall(pattern, string)
         if len(matches) != 2:
             raise ValueError("Input string does not contain exactly two quantities.")
@@ -784,17 +784,13 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         ValueError: If the input string does not match the required format.
         """
-        # tuple converted to string: "(5, <Quantity 1500 m>)"
-        if all(char in input_string for char in ["(", ")", ","]):
-            pattern = r"\((\d+), <Quantity ([\d.]+) (.+)>\)"
-            match = re.match(pattern, input_string)
-        # string with integer and quantity: "5 1500 m"
+        tokens = input_string.strip().split()
+        if len(tokens) == 2:  # case "100GeV 5TeV"
+            q1, q2 = [u.Quantity(tok) for tok in tokens]
+        elif len(tokens) == 4:  # case #100 GeV 5 TeV"
+            q1 = u.Quantity(float(tokens[0]), tokens[1])
+            q2 = u.Quantity(float(tokens[2]), tokens[3])
         else:
-            match = re.fullmatch(
-                r"\((\d+), <Quantity (\d+(?:\.\d+)?) ([A-Za-z]+)>\)", input_string
-            ) or re.fullmatch(r"(\d+)\s+(\d+(?:\.\d+)?)\s*([A-Za-z]+)", input_string.strip())
+            raise ValueError("Input string does not contain exactly two quantities.")
 
-        if not match:
-            raise ValueError("Input string does not contain an integer and a astropy quantity.")
-
-        return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+        return q1, q2
