@@ -89,8 +89,7 @@ def test_floating_point_comparison():
     assert 0.1 + 0.2 == pytest.approx(0.3)
 ```
 
-Add appropriate tolerances, if necessary:
-`pytest.approx(expected, rel=None, abs=None, nan_ok=False)[source]`.
+`pytest.approx(expected, rel=None, abs=None, nan_ok=False)`.
 
 Use `astropy.tests.helper` for testing astropy quantities:
 
