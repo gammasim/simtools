@@ -15,6 +15,8 @@ ERROR_PATTERNS = [
     re.compile(r"segmentation fault", re.IGNORECASE),
 ]
 
+IGNORE_PATTERNS = [re.compile(r"Falling back to 'utf-8' with errors='ignore'", re.IGNORECASE)]
+
 
 def inspect(log_text):
     """
@@ -41,7 +43,7 @@ def inspect(log_text):
             if "INFO::" in line:
                 continue
             for pattern in ERROR_PATTERNS:
-                if pattern.search(line):
+                if pattern.search(line) and not any(p.search(line) for p in IGNORE_PATTERNS):
                     issues.append((lineno, line))
                     break
 
