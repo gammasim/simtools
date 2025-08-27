@@ -752,7 +752,8 @@ class CommandLineParser(argparse.ArgumentParser):
         ValueError
             If the string cannot be parsed into exactly two quantities.
         """
-        matches = re.findall(r"[\d\.eE+-]+\s*[A-Za-z]+", string)
+        pattern = r"(?>[\d\.eE+-]+)\s*(?>[A-Za-z]+)"
+        matches = re.findall(pattern, string)
         if len(matches) != 2:
             tokens = string.strip().split()
             if len(tokens) == 2:
