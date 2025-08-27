@@ -755,15 +755,7 @@ class CommandLineParser(argparse.ArgumentParser):
         pattern = r"(?>[\d\.eE+-]+)\s*(?>[A-Za-z]+)"
         matches = re.findall(pattern, string)
         if len(matches) != 2:
-            tokens = string.strip().split()
-            if len(tokens) == 2:
-                matches = tokens
-            elif len(tokens) == 3:
-                matches = [tokens[0], " ".join(tokens[1:])]
-            elif len(tokens) == 4:
-                matches = [" ".join(tokens[:2]), " ".join(tokens[2:])]
-            else:
-                raise ValueError("Input string does not contain exactly two quantities.")
+            raise ValueError("Input string does not contain exactly two quantities.")
 
         try:
             return tuple(u.Quantity(m) for m in matches)
