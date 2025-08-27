@@ -1,0 +1,1119 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CHANGELOG &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=cbfb3150"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'changelog';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Visualization" href="api-reference/visualization.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.19.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">CHANGELOG</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="changelog">
+<h1>CHANGELOG<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h1>
+<p>All notable changes to the simtools project will be documented in this file.
+Changes for upcoming releases can be found in the <a class="reference internal" href="#docs/changes"><span class="xref myst">docs/changes</span></a> directory.</p>
+<p>This changelog is generated using <a class="reference external" href="https://towncrier.readthedocs.io/">Towncrier</a>, see the developer documentation for more information.</p>
+<!-- towncrier release notes start -->
+<section id="v0-19-0-2025-08-27">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/releases/tag/v0.19.0">v0.19.0</a> - 2025-08-27<a class="headerlink" href="#v0-19-0-2025-08-27" title="Link to this heading">#</a></h2>
+<section id="bugfixes">
+<h3>Bugfixes<a class="headerlink" href="#bugfixes" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix bug in reading list of array elements from file. Only layout names were used and the list was read not from file but from the model parameters DB. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1658">#1658</a>)</p></li>
+<li><p>Ensure that run numbers start at 1 for cases no offset if given (HT Condor job submission). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1686">#1686</a>)</p></li>
+<li><p>Fix array trigger writing for single telescope simulations. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1690">#1690</a>)</p></li>
+<li><p>Bugfix in shower core calculation in shower coordinates for reduced event data. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1703">#1703</a>)</p></li>
+</ul>
+</section>
+<section id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add additional plots for the derivation of CORSIKA limits. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1632">#1632</a>)</p></li>
+<li><p>Add a warning to derived corsika limit if they are close to the limits of the simulations. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1643">#1643</a>)</p></li>
+<li><p>Add an application that merges derived corsika simulation limits for each available grid point. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1649">#1649</a>)</p></li>
+<li><p>Add curvature radius to testeff command. User for calculation of NSB rates per pixel. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1651">#1651</a>)</p></li>
+<li><p>Allow to run applications in container environments using simtools-run-application. Introduce separate module (simtools-runner) and improve support for workflow running. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1657">#1657</a>)</p></li>
+<li><p>Add application to update, modify, and compare production tables.
+Improve documentation for simulation repository maintenance. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1660">#1660</a>)</p></li>
+<li><p>Add application to simulate calibration events (pedestals, dark pedestals, flasher). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1663">#1663</a>)</p></li>
+<li><p>Add functionality to simtools-validate-camera-efficiency to write out model parameter JSON with nsb_pixel_rate. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1665">#1665</a>)</p></li>
+<li><p>Add functionality to compare derived model parameters with DB values to integration tests (examples for simtools-validate-camera-efficiency). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1666">#1666</a>)</p></li>
+<li><p>Add log file inspector for integration tests to fail tests when errors or runtime warnings are reported. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1674">#1674</a>)</p></li>
+<li><p>Add application to simulate flasher with the light emission package. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1676">#1676</a>)</p></li>
+<li><p>Add sim_telarray model files to output of each production run. This asserts reproducibility and simplifies debugging. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1689">#1689</a>)</p></li>
+<li><p>Add MongoDB compound indices to improve query efficiency. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1691">#1691</a>)</p></li>
+<li><p>Add possibility to set random seed for random focal length settings in simtools-derive-mirror-rnda. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1702">#1702</a>)</p></li>
+</ul>
+</section>
+<section id="maintenance">
+<h3>Maintenance<a class="headerlink" href="#maintenance" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Apply more consistent key-name convention with lower-case snake_make to application workflow configurations. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1636">#1636</a>)</p></li>
+<li><p>Clarify input data to derivation of CORSIKA limits with <code class="docutils literal notranslate"><span class="pre">simtools-production-derive-corsika-limit</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1641">#1641</a>)</p></li>
+<li><p>Change metadata to lower-case snake make. More consistent usage of schema versions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1645">#1645</a>)</p></li>
+<li><p>Add missing plotting configurations for tabular data. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1647">#1647</a>)</p></li>
+<li><p>Plots are now auto-generated alongside reports. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1653">#1653</a>)</p></li>
+<li><p>Refactoring of ASCII input io operations. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1667">#1667</a>)</p></li>
+<li><p>Add a generic writer for structured data for JSON and YAML format. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1668">#1668</a>)</p></li>
+<li><p>Simplification of legend_handlers class. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1670">#1670</a>)</p></li>
+<li><p>Change units of shower- and pointing directions in reduced event data from radians to degrees. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1672">#1672</a>)</p></li>
+<li><p>Generalization of reduced event-data histogram filling (moved from CORSIKA limits derivation modules to generic module). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1675">#1675</a>)</p></li>
+<li><p>Fix hadolint issue and using parameter expansion for replacement in Dockerfile. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1680">#1680</a>)</p></li>
+<li><p>Refactor PSF parameter optimization workflow and improve output. Added a flag to export best parameters as JSON files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1681">#1681</a>)</p></li>
+<li><p>Revision of main repository readme file and removed duplications. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1684">#1684</a>)</p></li>
+<li><p>Remove DB access of unit test for the <code class="docutils literal notranslate"><span class="pre">docs_read_parameters</span></code> module. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1688">#1688</a>)</p></li>
+<li><p>Maintenance pass through integration test to remove duplicated tests and improve test efficiency. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1694">#1694</a>)</p></li>
+<li><p>Add new sonar configuration (<a class="reference external" href="https://sonar-ctao.zeuthen.desy.de/tutorials?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14">URL</a>) (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1695">#1695</a>)</p></li>
+<li><p>Improve code quality by addressing SonarQube reliability issues. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1697">#1697</a>)</p></li>
+<li><p>Unit tests will now fail in the CI for warnings. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1699">#1699</a>)</p></li>
+<li><p>Fix some security hotspots reported by SonarQube. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1700">#1700</a>)</p></li>
+<li><p>Improve robustness of Linter CI by caching pre-commit installation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1704">#1704</a>)</p></li>
+</ul>
+</section>
+<section id="simulation-model">
+<h3>Simulation model<a class="headerlink" href="#simulation-model" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Addition of FADC long-sum model parameters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1659">#1659</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-18-0-2025-07-08">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/v0.18.0">v0.18.0</a> - 2025-07-08<a class="headerlink" href="#v0-18-0-2025-07-08" title="Link to this heading">#</a></h2>
+<section id="id1">
+<h3>Bugfixes<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Run documentation generation CI on release to obtain current version of docs. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1607">#1607</a>)</p></li>
+<li><p>Fix authentication errors in script to setup a local MongoDB. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1610">#1610</a>)</p></li>
+</ul>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Reorganisation and improvement of the documentation in the GitHub pages. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1611">#1611</a>)</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>New Features<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Use CTAO telescope names when writing out telescope list in reduced event data tables. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1616">#1616</a>)</p></li>
+<li><p>Allow CORSIKA limits to use layouts defined in simulation models database. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1619">#1619</a>)</p></li>
+<li><p>Add application / API to plot tabulated model parameters using default plotting configurations defined in model parameters schemas. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1628">#1628</a>)</p></li>
+<li><p>Allow to use current prod6 simulations for reduced event data generation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1631">#1631</a>)</p></li>
+<li><p>Add common array elements ID. Add list with triggered common telescope IDs to reduced event data tables. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1637">#1637</a>)</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Maintenance<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Removed unused ‘critical’ log level. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1604">#1604</a>)</p></li>
+<li><p>Add JSON checker to pre-commit linter. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1615">#1615</a>)</p></li>
+<li><p>Update test files with proton simulations (simtel output) and add provenance information. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1617">#1617</a>)</p></li>
+<li><p>Improve linter CI to print file containing non-ascii characters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1620">#1620</a>)</p></li>
+<li><p>Replace file lists <code class="docutils literal notranslate"><span class="pre">tests/resources/simtel_output_files.txt</span></code> used for testing by explicitly listing of files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1629">#1629</a>)</p></li>
+<li><p>Add default plotting configuration for tabular data. Introduce consistent lower-cases for keys in plotting configuration schema. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1635">#1635</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id4">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.17.0">0.17.0</a> - 2025-06-10<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<section id="id5">
+<h3>Bugfixes<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix data type of ‘dsum_threshold’ parameter. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1557">#1557</a>)</p></li>
+<li><p>Add missing neutrons to eventio particle IDs. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1584">#1584</a>)</p></li>
+<li><p>Fix suffix for sim_telarray output files: no correctly <code class="docutils literal notranslate"><span class="pre">simtel.zst</span></code> (was <code class="docutils literal notranslate"><span class="pre">.zst</span></code> only) (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1588">#1588</a>)</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Documentation<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Change documentation theme to pydata and add version switcher. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1560">#1560</a>)</p></li>
+<li><p>Update documentation on how to run jobs using HT Condor. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1563">#1563</a>)</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>New Features<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add pixel layout plotting. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1541">#1541</a>)</p></li>
+<li><p>Enable docker-image generation for vector-optimized CORSIKA 7.8. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1550">#1550</a>)</p></li>
+<li><p>Add the sequential option to simulations using multipipe. With this option the CORSIKA and sim_telarray instances run in sequential order as far as possible. This mode is useful particularly on the grid, where typically we request a single core per job. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1561">#1561</a>)</p></li>
+<li><p>Add reading and conversion of primary_id from sim_telarray output. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1570">#1570</a>)</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">simtools-generate-simtel-event-data</span></code> to use astropy tables. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1573">#1573</a>)</p></li>
+<li><p>Generalize table reading and writing. Add application to merge tables. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1580">#1580</a>)</p></li>
+<li><p>Write reduced event data file as part of the cleanup stage of the simtools-simulate-prod application. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1588">#1588</a>)</p></li>
+<li><p>Use patches for optimized CORSIKA from GitLab repository instead of cloud download. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1589">#1589</a>)</p></li>
+<li><p>New utility simtools-verify-simulation-model-production-tables to verify completeness of model parameter repository. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1592">#1592</a>)</p></li>
+<li><p>Add custom copilot instructions to support AI used by developers. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1594">#1594</a>)</p></li>
+<li><p>Add new application <code class="docutils literal notranslate"><span class="pre">simtools-submit-array-layouts</span></code> to submit new array-layouts definition and validate the telescopes listed. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1596">#1596</a>)</p></li>
+<li><p>Improve layout plotting; adding plotting of background layout. Add plotting of all layouts. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1597">#1597</a>)</p></li>
+<li><p>Improve printout for assertion error for testing. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1598">#1598</a>)</p></li>
+<li><p>Add production version and build options to sim_telarrary metadata. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1601">#1601</a>)</p></li>
+</ul>
+</section>
+<section id="id8">
+<h3>Maintenance<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add unit tests to increase coverage in interpolation handler. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1504">#1504</a>)</p></li>
+<li><p>Docker file improvements: linter application; bugfix in extra flags for optimized CORSIKA compilation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1544">#1544</a>)</p></li>
+<li><p>Include stdout and stderr in error message of integration test. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1555">#1555</a>)</p></li>
+<li><p>Add pytest-retry package for ‘flaky test’. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1558">#1558</a>)</p></li>
+<li><p>Reduce number of log-messages (INFO) for uploaded model parameters to DB. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1559">#1559</a>)</p></li>
+<li><p>Replace the “run_number_start” argument with “run_number_offset” (clearer) and re-introduce the “run_number” argument to allow specifying a run number (to which the offset is added). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1562">#1562</a>)</p></li>
+<li><p>Use telescope position files for setup in illuminator application and set correct obs level. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1566">#1566</a>)</p></li>
+<li><p>Improve the names of the various simulation output files. They now follow the current convention in current productions, they contain a bit more information (e.g., the model version where it wasn’t there before), and they are more consistent with each other. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1568">#1568</a>)</p></li>
+<li><p>Improved interface and interpolation routines to derive production configuration. This creates a pipeline for lookup table generation, production grid generation, creating a grid with limits, which is then further complemented by the production statistics per grid point. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1569">#1569</a>)</p></li>
+<li><p>Fix unit test to run with astropy 7.1 (and earlier versions) (see #1574). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1575">#1575</a>)</p></li>
+<li><p>Simplified Sonar setup by moving properties into GitHub workflow. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1578">#1578</a>)</p></li>
+<li><p>Introduce simplified Codecov configuration. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1579">#1579</a>)</p></li>
+<li><p>Copy the CORSIKA log in binary mode instead of text mode. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1582">#1582</a>)</p></li>
+<li><p>Protect against non-unicode characters in CORSIKA log file. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1583">#1583</a>)</p></li>
+<li><p>Remove obsolete code on submission systems in JobManager. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1586">#1586</a>)</p></li>
+<li><p>Change dummy trigger thresholds to easier-to-spot values. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1591">#1591</a>)</p></li>
+<li><p>Fix duplication of some sim_telarray test files in ‘./tests/resources’ and corresponding test fixtures. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1593">#1593</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-16-0-2025-05-05">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/v0.16.0">v0.16.0</a> - 2025-05-05<a class="headerlink" href="#v0-16-0-2025-05-05" title="Link to this heading">#</a></h2>
+<section id="id9">
+<h3>Documentation<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add a section on mocking to the developer documentation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1516">#1516</a>)</p></li>
+<li><p>Improve model parameter description (schemas, versions) in documentation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1524">#1524</a>)</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>New Features<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add grid generation production application to generate the grid points for Corsika simulations, with energy thresholds, viewcone and radius interpolation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1482">#1482</a>)</p></li>
+<li><p>Add support for multiple versions and the multipipe functionality of sim_telarray (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1496">#1496</a>)</p></li>
+<li><p>Add validation metadata written by sim_telarray with array model parameters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1505">#1505</a>)</p></li>
+<li><p>Improve robustness of sim_telarray configuration by adding an invalid (dummy) telescope configuration. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1509">#1509</a>)</p></li>
+<li><p>Adding functionality for producing simulation configuration reports. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1510">#1510</a>)</p></li>
+<li><p>Add random seeds from file for instrument configuration. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1511">#1511</a>)</p></li>
+<li><p>Adapt Docker files and building workflows to CORSIKA 7.8000. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1512">#1512</a>)</p></li>
+<li><p>Add sim_telarray random seed for instrument configuration to metadata (and metadata tests). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1515">#1515</a>)</p></li>
+<li><p>Integration test with multipipe and support for packing all output files in grid productions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1520">#1520</a>)</p></li>
+<li><p>Add versioning to model parameter schema files. Implement example for <code class="docutils literal notranslate"><span class="pre">corsika_starting_grammage</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1523">#1523</a>)</p></li>
+<li><p>Added an application to produce calibration device reports. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1530">#1530</a>)</p></li>
+<li><p>Allow <code class="docutils literal notranslate"><span class="pre">corsika_starting_grammage</span></code> to be telescope-type dependent. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1539">#1539</a>)</p></li>
+</ul>
+</section>
+<section id="id11">
+<h3>Maintenance<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Separate TelescopeModel and SiteModel for improved readability in <code class="docutils literal notranslate"><span class="pre">sim_telarray</span></code> configuration writer. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1489">#1489</a>)</p></li>
+<li><p>Fix licence definition in pyproject.toml to follow PEP 639. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1493">#1493</a>)</p></li>
+<li><p>Improve consistency of spelling of <code class="docutils literal notranslate"><span class="pre">sim_telarray</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1494">#1494</a>)</p></li>
+<li><p>Remove test condition in simulator light emission and mock configuration file access. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1495">#1495</a>)</p></li>
+<li><p>Refactoring of event scaling application and moving most of the functionality into a new module. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1498">#1498</a>)</p></li>
+<li><p>Renaming of event scaling methods to production statistics derivation methods. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1502">#1502</a>)</p></li>
+<li><p>Improved naming and docstrings in simulation runners. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1519">#1519</a>)</p></li>
+<li><p>Remove duplication of reading yaml/JSON files in simtools.utils.general. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1522">#1522</a>)</p></li>
+<li><p>Remove duplication in <code class="docutils literal notranslate"><span class="pre">make_run_command</span></code> in <code class="docutils literal notranslate"><span class="pre">corsika_simtel_runner</span></code> and <code class="docutils literal notranslate"><span class="pre">simulator_array</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1525">#1525</a>)</p></li>
+<li><p>Collect pyeventio related functions in new module <code class="docutils literal notranslate"><span class="pre">simtel_io_file_info</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1531">#1531</a>)</p></li>
+<li><p>Add new field model_parameter_schema_version to model parameter test files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1535">#1535</a>)</p></li>
+</ul>
+</section>
+<section id="id12">
+<h3>Simulation model<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Change list of applicable array elements and class for <code class="docutils literal notranslate"><span class="pre">pedestal_events</span></code> model parameter. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1490">#1490</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-15-0-2025-04-04">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/v0.15.0">v0.15.0</a> - 2025-04-04<a class="headerlink" href="#v0-15-0-2025-04-04" title="Link to this heading">#</a></h2>
+<section id="id13">
+<h3>Maintenance<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Skip testing of DB upload for simpipe integration tests. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1488">#1488</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id14">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.14.0">0.14.0</a> - 2025-04-03<a class="headerlink" href="#id14" title="Link to this heading">#</a></h2>
+<section id="id15">
+<h3>Bugfixes<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix integration tests uploading values / files to sandbox DB. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1453">#1453</a>)</p></li>
+<li><p>Fix building of production images from branches other than <code class="docutils literal notranslate"><span class="pre">main</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1467">#1467</a>)</p></li>
+<li><p>Add missing <code class="docutils literal notranslate"><span class="pre">parameter</span></code> definition in model parameter schema. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1470">#1470</a>)</p></li>
+<li><p>Primary degraded map is a parameter applied for all telescope types. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1475">#1475</a>)</p></li>
+<li><p>Fixes a bug in the selection of the triggered events by telescope IDs for the limits calculation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1483">#1483</a>)</p></li>
+<li><p>Fix how integration tests are marked for use cases (used in SimPipe AIV). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1484">#1484</a>)</p></li>
+</ul>
+</section>
+<section id="id16">
+<h3>New Features<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added functionality to automate report generation for array elements and parameters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1436">#1436</a>)</p></li>
+<li><p>Add full set of array pointings to reduced mc event data file if available in the mc header. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1439">#1439</a>)</p></li>
+<li><p>Add fitting of afterpulse spectrum to derive single pe application. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1446">#1446</a>)</p></li>
+<li><p>Run scheduled nightly integration and unit tests on production DB. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1454">#1454</a>)</p></li>
+<li><p>Generalize extraction of MC event tree from sim_telarrary files; generic writer and reader. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1458">#1458</a>)</p></li>
+<li><p>Add functionality to generate reports for site-specific parameters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1459">#1459</a>)</p></li>
+<li><p>Allow to skip integration tests for production DB. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1460">#1460</a>)</p></li>
+<li><p>Add an application to print the versions of simtools, the DB, sim_telarray, and CORSIKA (<code class="docutils literal notranslate"><span class="pre">simtools-print-version</span></code>). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1461">#1461</a>)</p></li>
+<li><p>Use files to pass filepaths for simtel event data files and telescope IDs in corsika limits derivation tool. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1464">#1464</a>)</p></li>
+<li><p>Retrieve CTAO layout definitions. Merge with model parameter value and write to disk. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1465">#1465</a>)</p></li>
+<li><p>Add tests to ensure that model table files uploaded to DB follow Unicode. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1473">#1473</a>)</p></li>
+<li><p>Add writing of metadata into sim_telarray configuration files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1474">#1474</a>)</p></li>
+<li><p>Update model parameter definitions to reflect those from most recent sim_telarray release. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1476">#1476</a>)</p></li>
+</ul>
+</section>
+<section id="id17">
+<h3>Maintenance<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Remove Docker prod image generation; documentation update and improved workflow naming. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1447">#1447</a>)</p></li>
+<li><p>Change requirement of arguments in event scaling application and improve documentation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1449">#1449</a>)</p></li>
+<li><p>Refactor light emission application and move logic to helper functions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1450">#1450</a>)</p></li>
+<li><p>Use consistently numpy dtypes for model parameters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1451">#1451</a>)</p></li>
+<li><p>Remove h5py dependency. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1456">#1456</a>)</p></li>
+<li><p>Store arrays in model parameters as arrays and not as strings. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1466">#1466</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id18">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.13.0">0.13.0</a> - 2025-03-19<a class="headerlink" href="#id18" title="Link to this heading">#</a></h2>
+<section id="id19">
+<h3>Bugfixes<a class="headerlink" href="#id19" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix <code class="docutils literal notranslate"><span class="pre">null</span></code> values in YAML-style model parameter schema files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1437">#1437</a>)</p></li>
+</ul>
+</section>
+<section id="id20">
+<h3>New Features<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Improvements for single pe setting workflow including plotting and metadata handling. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1398">#1398</a>)</p></li>
+<li><p>Add an application that allows to extract array and shower data and to save them in hdf5 format for the later calculation of production configuration limits. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1402">#1402</a>)</p></li>
+<li><p>Add integration tests to production image generation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1420">#1420</a>)</p></li>
+<li><p>Improve reading of single parameter and files from database. Add plotting of tabular data using <code class="docutils literal notranslate"><span class="pre">parameter_version</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1426">#1426</a>)</p></li>
+<li><p>Improved plotting of tabular data; adding error bars and schema validation for plotting configuration. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1429">#1429</a>)</p></li>
+<li><p>Add function to get all model parameter data for all model versions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1432">#1432</a>)</p></li>
+</ul>
+</section>
+<section id="id21">
+<h3>Maintenance<a class="headerlink" href="#id21" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Run unit and integration test on database setup in local test environment. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1424">#1424</a>)</p></li>
+<li><p>Remove tests from pypi package. Remove obsolete <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1430">#1430</a>)</p></li>
+<li><p>Change base python version from 3.11 to 3.12. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1433">#1433</a>)</p></li>
+<li><p>Update exporting of sim_telarray model to simtools taking into account the updated file naming (included parameter versions). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1438">#1438</a>)</p></li>
+<li><p>Robust getting of username in metadata collector in case no user is defined on system level. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1442">#1442</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id22">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.12.0">0.12.0</a> - 2025-03-11<a class="headerlink" href="#id22" title="Link to this heading">#</a></h2>
+<section id="id23">
+<h3>Bugfixes<a class="headerlink" href="#id23" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Bugfix in database-upload related string to list conversion. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1423">#1423</a>)</p></li>
+<li><p>Fix setting of <code class="docutils literal notranslate"><span class="pre">db_api_authentication_database</span></code> through env variable. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1425">#1425</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id24">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.11.0">0.11.0</a> - 2025-03-05<a class="headerlink" href="#id24" title="Link to this heading">#</a></h2>
+<section id="id25">
+<h3>Bugfixes<a class="headerlink" href="#id25" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix yamllint options in pre-commit (was essentially switched off). Fix syntax in many YAML files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1404">#1404</a>)</p></li>
+<li><p>Fix date writing to ensure  RFC 3339-conform date format. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1411">#1411</a>)</p></li>
+<li><p>Fix reading of combined units from model parameter unit string. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1415">#1415</a>)</p></li>
+</ul>
+</section>
+<section id="id26">
+<h3>New Features<a class="headerlink" href="#id26" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adding two new applications for generating model parameter documentation reports for a given array element either for a given production, or across multiple productions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1185">#1185</a>)</p></li>
+<li><p>Add building of optimized corsika binaries (e.g., avx2, avx512) and building of images for different corsika versions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1355">#1355</a>)</p></li>
+<li><p>Add a simtool to derive limits for energy, viewcone and radius for a simulation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1356">#1356</a>)</p></li>
+<li><p>Add generic <code class="docutils literal notranslate"><span class="pre">simtools-run-application</span></code> to run one or several simtools using a single configuration file. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1379">#1379</a>)</p></li>
+<li><p>Add reading of database collections from model parameter schemas. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1380">#1380</a>)</p></li>
+<li><p>Add module for simtools dependency management. Allows to retrieve e.g. sim_telarray and CORSIKA versions. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1383">#1383</a>)</p></li>
+<li><p>Expanded functionality of application configuration workflows based on the integration test configurations. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1389">#1389</a>)</p></li>
+<li><p>Set user in Docker images and add possibility to add user information from env/command line. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1400">#1400</a>)</p></li>
+<li><p>Allow to mark integration tests in their use case config with a corresponding CTAO use case or requirement ID. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1405">#1405</a>)</p></li>
+<li><p>Run check for changelog entry only on PRs ready for review. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1416">#1416</a>)</p></li>
+</ul>
+</section>
+<section id="id27">
+<h3>Maintenance<a class="headerlink" href="#id27" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Maintenance in production configuration removing not needed flags and only use metric files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1376">#1376</a>)</p></li>
+<li><p>Rename derive-limits application to production-derive-limits. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1378">#1378</a>)</p></li>
+<li><p>Add YAML file with build opts into CORSIKA/sim_telarray images. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1382">#1382</a>)</p></li>
+<li><p>Add unit tests for version.py. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1384">#1384</a>)</p></li>
+<li><p>Improve function naming and unit test coverage in <code class="docutils literal notranslate"><span class="pre">simtools.utils.names</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1390">#1390</a>)</p></li>
+<li><p>Change checks for software updates from weekly to monthly. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1394">#1394</a>)</p></li>
+<li><p>Remove duplication in converting sim_telarray string-lists (values, units) to python lists. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1395">#1395</a>)</p></li>
+<li><p>Improve reading of design models; refactoring and improved docstrings for <code class="docutils literal notranslate"><span class="pre">simtools.utils.names</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1396">#1396</a>)</p></li>
+</ul>
+</section>
+<section id="id28">
+<h3>Simulation model<a class="headerlink" href="#id28" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Introduce MSTx-NectarCam and MSTx-FlashCam design models for MSTs (allow both sites). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1362">#1362</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id29">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.10.0">0.10.0</a> - 2025-02-17<a class="headerlink" href="#id29" title="Link to this heading">#</a></h2>
+<section id="id30">
+<h3>Bugfixes<a class="headerlink" href="#id30" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Schema validation bugfixes. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1330">#1330</a>)</p></li>
+</ul>
+</section>
+<section id="id31">
+<h3>New Features<a class="headerlink" href="#id31" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add a simtool to derive (normalize) the single p.e. amplitude spectrum using the <code class="docutils literal notranslate"><span class="pre">sim_telarray</span></code> tool <code class="docutils literal notranslate"><span class="pre">norm_spe</span></code>. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1299">#1299</a>)</p></li>
+<li><p>Add validation of simtools-generated configuration files for sim_telarray with reference files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1322">#1322</a>)</p></li>
+<li><p>Add schema for fake mirror list. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1338">#1338</a>)</p></li>
+<li><p>Add additional queries to db handler to retrieve model versions etc. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1349">#1349</a>)</p></li>
+<li><p>Add fixed database version for testing (instead of <code class="docutils literal notranslate"><span class="pre">LATEST</span></code>). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1365">#1365</a>)</p></li>
+</ul>
+</section>
+<section id="id32">
+<h3>Maintenance<a class="headerlink" href="#id32" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Major restructering of database routines plus introduction of new simulation model. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1316">#1316</a>)</p></li>
+<li><p>Improve testing of results and allow comparison of lists of floats in json/YAML files. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1319">#1319</a>)</p></li>
+<li><p>Remove database sandboxes . (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1336">#1336</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id33">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.9.0">0.9.0</a> - 2025-01-22<a class="headerlink" href="#id33" title="Link to this heading">#</a></h2>
+<section id="id34">
+<h3>Bugfixes<a class="headerlink" href="#id34" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add correct handling of return codes from simulation software to prevent reports of success even though a job failed (<code class="docutils literal notranslate"><span class="pre">simulate_prod</span></code>) (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1289">#1289</a>)</p></li>
+<li><p>Fix setting of activity:end time in the metadata collector. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1291">#1291</a>)</p></li>
+</ul>
+</section>
+<section id="id35">
+<h3>New Features<a class="headerlink" href="#id35" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add an application to plot tables from a file (from file system or for a model parameter file downloaded from the DB). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1267">#1267</a>)</p></li>
+<li><p>Enhancements to file testing within integration tests. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1279">#1279</a>)</p></li>
+<li><p>Add a tool to prepare job submission with <code class="docutils literal notranslate"><span class="pre">simulate_prod</span></code> for a HTCondor system. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1290">#1290</a>)</p></li>
+<li><p>Remove functionality in <code class="docutils literal notranslate"><span class="pre">db_handler</span></code> to read from simulation model repository. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1306">#1306</a>)</p></li>
+</ul>
+</section>
+<section id="id36">
+<h3>Maintenance<a class="headerlink" href="#id36" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Change dependency from ctapipe to ctapipe-base for ctapipe v0.23 (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1247">#1247</a>)</p></li>
+<li><p>Remove pytest dependent from user installation. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1286">#1286</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id37">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.8.2">0.8.2</a> - 2024-12-03<a class="headerlink" href="#id37" title="Link to this heading">#</a></h2>
+<section id="id38">
+<h3>Maintenance<a class="headerlink" href="#id38" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Move simtools package layout to src-layout. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1264">#1264</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-8-1-2024-11-26">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/v0.8.1">v0.8.1</a> - 2024-11-26<a class="headerlink" href="#v0-8-1-2024-11-26" title="Link to this heading">#</a></h2>
+<section id="id39">
+<h3>Bugfixes<a class="headerlink" href="#id39" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix authentication and writing permits for deployment of simtools to pypi. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1256">#1256</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-8-0-2024-11-26">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/v0.8.0">v0.8.0</a> - 2024-11-26<a class="headerlink" href="#v0-8-0-2024-11-26" title="Link to this heading">#</a></h2>
+<section id="api-changes">
+<h3>API Changes<a class="headerlink" href="#api-changes" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Improve primary particle API and validate consistency of user input. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1127">#1127</a>)</p></li>
+<li><p>Refactor old style configuration of ray-tracing tools. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1142">#1142</a>)</p></li>
+</ul>
+</section>
+<section id="id40">
+<h3>Bugfixes<a class="headerlink" href="#id40" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fix triggering of telescopes in light emission package. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1128">#1128</a>)</p></li>
+</ul>
+</section>
+<section id="id41">
+<h3>Documentation<a class="headerlink" href="#id41" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Add missing API documentation for several applications. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1194">#1194</a>)</p></li>
+<li><p>Add Towncrier for CHANGELOG generation for each release. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1236">#1236</a>)</p></li>
+</ul>
+</section>
+<section id="id42">
+<h3>New Features<a class="headerlink" href="#id42" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added application `submit_model_parameter_from_external.py to submit and validate a new model parameter to SimPipe. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1224">#1224</a>)</p></li>
+<li><p>Add simulation production configuration tool. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1244">#1244</a>)</p></li>
+</ul>
+</section>
+<section id="id43">
+<h3>Maintenance<a class="headerlink" href="#id43" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Update build command for CORSIKA/sim_telarray to prod6-sc. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1235">#1235</a>)</p></li>
+<li><p>Refactoring of integration test routines into <code class="docutils literal notranslate"><span class="pre">simtools.testing</span></code> modules. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1238">#1238</a>)</p></li>
+</ul>
+</section>
+<section id="id44">
+<h3>Simulation model<a class="headerlink" href="#id44" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Move to strictly using semantic versions for models (remove e.g., ‘prod5’, ‘prod6’, ‘Latest’, ‘Released’). (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1123">#1123</a>)</p></li>
+<li><p>Add schema for correction of NSB spectrum to the telescope altitude. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1171">#1171</a>)</p></li>
+<li><p>Allow for class Telescope in model parameters. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/1173">#1173</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="id45">
+<h2><a class="reference external" href="https://github.com/gammasim/simtools/tree/0.7.0">0.7.0</a> - 2024-11-12<a class="headerlink" href="#id45" title="Link to this heading">#</a></h2>
+<section id="id46">
+<h3>New Features<a class="headerlink" href="#id46" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added application <code class="docutils literal notranslate"><span class="pre">calculate_trigger_rate</span></code> to derive the trigger rate for a given telescope type. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/801">#801</a>)</p></li>
+<li><p>Added application <code class="docutils literal notranslate"><span class="pre">simulate_light_emission</span></code> to simulate the light emission from an artificial light source. (<a class="reference external" href="https://github.com/gammasim/simtools/pull/802">#802</a>)</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="api-reference/visualization.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Visualization</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-19-0-2025-08-27">v0.19.0 - 2025-08-27</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bugfixes">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-features">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance">Maintenance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-model">Simulation model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-18-0-2025-07-08">v0.18.0 - 2025-07-08</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.17.0 - 2025-06-10</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-16-0-2025-05-05">v0.16.0 - 2025-05-05</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Maintenance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Simulation model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-15-0-2025-04-04">v0.15.0 - 2025-04-04</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">0.14.0 - 2025-04-03</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">0.13.0 - 2025-03-19</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">0.12.0 - 2025-03-11</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">0.11.0 - 2025-03-05</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Maintenance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Simulation model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">0.10.0 - 2025-02-17</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">0.9.0 - 2025-01-22</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">0.8.2 - 2024-12-03</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Maintenance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-8-1-2024-11-26">v0.8.1 - 2024-11-26</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-8-0-2024-11-26">v0.8.0 - 2024-11-26</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-changes">API Changes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Bugfixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">New Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Maintenance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Simulation model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">0.7.0 - 2024-11-12</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">New Features</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/changelog.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1195 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visualization.plot_pixels &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=cbfb3150"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/visualization/plot_pixels';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.19.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">visualization.plot_pixels</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for visualization.plot_pixels</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Functions for plotting pixel layout information.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">PatchCollection</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_two_mirror_telescope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">legend_handlers</span> <span class="k">as</span> <span class="n">leg_h</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_pixels.plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot pixel layout based on configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : dict</span>
+<span class="sd">        Configuration dictionary containing:</span>
+<span class="sd">        - file_name : str, name of camera config file</span>
+<span class="sd">        - column_x : str, x-axis label</span>
+<span class="sd">        - column_y : str, y-axis label</span>
+<span class="sd">        - parameter_version: str, version of the parameter</span>
+<span class="sd">        - telescope : str, name of the telescope</span>
+<span class="sd">    output_file : str</span>
+<span class="sd">        Path where to save the plot</span>
+<span class="sd">    db_config : dict, optional</span>
+<span class="sd">        Database configuration.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        The function saves the plot to the specified output file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">export_model_file</span><span class="p">(</span>
+        <span class="n">parameter</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">],</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+        <span class="n">array_element_name</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">),</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">),</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+        <span class="n">export_file_as_table</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">data_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_pixel_layout_from_file</span><span class="p">(</span>
+        <span class="n">data_file_path</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+        <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_pixel_layout_from_file">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_pixels.plot_pixel_layout_from_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_pixel_layout_from_file</span><span class="p">(</span><span class="n">dat_file_path</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the pixel layout from a camera config file.</span>
+
+<span class="sd">    This function reads the pixel configuration from the specified camera config file and</span>
+<span class="sd">    generates a plot of the pixel layout for the given telescope model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dat_file_path : str or Path</span>
+<span class="sd">        Path to the camera config file containing pixel configuration</span>
+<span class="sd">    telescope_model_name : str</span>
+<span class="sd">        Name/model of the telescope</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        pixels_id_to_print : int</span>
+<span class="sd">            Number of pixel IDs to print in the plot</span>
+<span class="sd">        title : str</span>
+<span class="sd">            Plot title</span>
+<span class="sd">        xtitle : str</span>
+<span class="sd">            X-axis label</span>
+<span class="sd">        ytitle : str</span>
+<span class="sd">            Y-axis label</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The generated figure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting pixel layout for </span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">dat_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">pixel_data</span> <span class="o">=</span> <span class="n">_prepare_pixel_data</span><span class="p">(</span>
+        <span class="n">dat_file_path</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_create_pixel_plot</span><span class="p">(</span>
+        <span class="n">pixel_data</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="p">,</span>
+        <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pixels_id_to_print&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">),</span>
+        <span class="n">xtitle</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xtitle&quot;</span><span class="p">),</span>
+        <span class="n">ytitle</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ytitle&quot;</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_pixel_data</span><span class="p">(</span><span class="n">dat_file_path</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare pixel data from sim_telarray camera configuration file.</span>
+
+<span class="sd">    This function reads the pixel configuration from the specified camera config file and</span>
+<span class="sd">    prepares the data for plotting, including applying any necessary rotations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dat_file_path : str or Path</span>
+<span class="sd">        Path to the camera config file containing pixel configuration</span>
+<span class="sd">    telescope_model_name : str</span>
+<span class="sd">        Name/model of the telescope</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing pixel data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">_read_pixel_config</span><span class="p">(</span><span class="n">dat_file_path</span><span class="p">)</span>
+    <span class="n">x_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
+    <span class="n">y_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">):</span>
+        <span class="n">y_pos</span> <span class="o">=</span> <span class="o">-</span><span class="n">y_pos</span>
+
+    <span class="n">rotate_angle</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Apply telescope-specific adjustments</span>
+    <span class="k">if</span> <span class="s2">&quot;SST&quot;</span> <span class="ow">in</span> <span class="n">telescope_model_name</span> <span class="ow">or</span> <span class="s2">&quot;SCT&quot;</span> <span class="ow">in</span> <span class="n">telescope_model_name</span><span class="p">:</span>
+        <span class="n">total_rotation</span> <span class="o">=</span> <span class="p">(</span><span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">rotate_angle</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">total_rotation</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">rotate_angle</span><span class="p">)</span>
+
+    <span class="c1"># Apply rotation</span>
+    <span class="n">rot_angle</span> <span class="o">=</span> <span class="n">total_rotation</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">x_rot</span> <span class="o">=</span> <span class="n">x_pos</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span> <span class="o">-</span> <span class="n">y_pos</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span>
+    <span class="n">y_rot</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span> <span class="o">+</span> <span class="n">x_pos</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span>
+    <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="n">x_rot</span><span class="p">,</span> <span class="n">y_rot</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
+        <span class="s2">&quot;pixel_ids&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_ids&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;pixels_on&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixels_on&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;pixel_shape&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;pixel_diameter&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;pixel_spacing&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;module_number&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_number&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;module_gap&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_gap&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="n">total_rotation</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_pixel_plot</span><span class="p">(</span>
+    <span class="n">pixel_data</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xtitle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ytitle</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create and configure the pixel layout plot.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pixel_data : dict</span>
+<span class="sd">        Dictionary containing pixel configuration data</span>
+<span class="sd">    telescope_model_name : str</span>
+<span class="sd">        Name of telescope model</span>
+<span class="sd">    pixels_id_to_print : int, optional</span>
+<span class="sd">        Number of pixel IDs to print, default 50</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        Plot title</span>
+<span class="sd">    xtitle : str, optional</span>
+<span class="sd">        X-axis label</span>
+<span class="sd">    ytitle : str, optional</span>
+<span class="sd">        Y-axis label</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The generated figure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+    <span class="c1"># Create patches</span>
+    <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span> <span class="o">=</span> <span class="n">_create_pixel_patches</span><span class="p">(</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;module_number&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;module_gap&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;pixels_on&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;pixel_ids&quot;</span><span class="p">],</span>
+        <span class="n">pixels_id_to_print</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Combine all patches into a single collection</span>
+    <span class="n">all_patches</span> <span class="o">=</span> <span class="n">on_pixels</span> <span class="o">+</span> <span class="n">edge_pixels</span> <span class="o">+</span> <span class="n">off_pixels</span>
+    <span class="n">facecolors</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;none&quot;</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">)</span>
+        <span class="k">else</span> <span class="p">(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;brown&quot;</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pixels</span><span class="p">)</span>
+        <span class="k">else</span> <span class="s2">&quot;black&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pixels</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">off_pixels</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">edgecolors</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;black&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">[(</span><span class="o">*</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pixels</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;black&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">off_pixels</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">linewidths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_patches</span><span class="p">)</span>
+
+    <span class="c1"># Add the combined collection</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+        <span class="n">PatchCollection</span><span class="p">(</span>
+            <span class="n">all_patches</span><span class="p">,</span>
+            <span class="n">facecolor</span><span class="o">=</span><span class="n">facecolors</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="n">edgecolors</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidths</span><span class="p">,</span>
+            <span class="n">match_original</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Configure plot with titles</span>
+    <span class="n">_configure_plot</span><span class="p">(</span>
+        <span class="n">ax</span><span class="p">,</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
+        <span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
+        <span class="n">rotation</span><span class="o">=</span><span class="n">pixel_data</span><span class="p">[</span><span class="s2">&quot;rotation&quot;</span><span class="p">],</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">xtitle</span><span class="o">=</span><span class="n">xtitle</span><span class="p">,</span>
+        <span class="n">ytitle</span><span class="o">=</span><span class="n">ytitle</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">_add_legend</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">on_pixels</span><span class="p">,</span> <span class="n">off_pixels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_pixel_config</span><span class="p">(</span><span class="n">dat_file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read pixel configuration from a camera configuration file.</span>
+
+<span class="sd">    This function reads the pixel configuration from the specified camera config file and</span>
+<span class="sd">    returns it as a dictionary. It parses information such as pixel positions,</span>
+<span class="sd">    module numbers, and other relevant parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dat_file_path : str or Path</span>
+<span class="sd">        Path to the camera config file containing pixel configuration</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        config containing pixel data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;pixel_ids&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;pixels_on&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;pixel_shape&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;pixel_diameter&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;pixel_spacing&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;module_gap&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;trigger_groups&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;module_number&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dat_file_path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Parse specific information from the file</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Rotate&quot;</span><span class="p">):</span>
+                <span class="c1"># Parse rotation angle from line like &quot;Rotate 10.893&quot; (u.deg)</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+
+            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;PixType&quot;</span><span class="p">):</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+            <span class="k">elif</span> <span class="s2">&quot;Pixel spacing is&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;spacing is&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">elif</span> <span class="s2">&quot;Between modules is an additional gap of&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_gap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;gap of&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Pixel&quot;</span><span class="p">):</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_number&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_ids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixels_on&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_gap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_gap&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;module_gap&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_patch</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a single matplotlib patch for a pixel.</span>
+
+<span class="sd">    This function creates a matplotlib patch (shape) for a single pixel based on</span>
+<span class="sd">    its position, diameter, and shape type. Supported shapes are circles, squares,</span>
+<span class="sd">    and hexagons.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y : float</span>
+<span class="sd">        Center coordinates of the pixel</span>
+<span class="sd">    diameter : float</span>
+<span class="sd">        Diameter of the pixel</span>
+<span class="sd">    shape : int</span>
+<span class="sd">        Pixel shape type:</span>
+<span class="sd">        0: circular</span>
+<span class="sd">        1: hexagonal (flat x)</span>
+<span class="sd">        2: square</span>
+<span class="sd">        3: hexagonal (flat y)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.patches.Patch</span>
+<span class="sd">        The created patch object for the pixel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Circular</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">diameter</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>  <span class="c1"># Hexagonal</span>
+        <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+            <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">diameter</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span> <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="c1"># Square</span>
+    <span class="k">return</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">diameter</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">diameter</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="n">diameter</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">diameter</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_edge_pixel</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">module_ids</span><span class="p">,</span> <span class="n">pixel_spacing</span><span class="p">,</span> <span class="n">module_gap</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">current_module_id</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine if a pixel is on the edge based on neighbor count.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y : float</span>
+<span class="sd">        Coordinates of the pixel being checked.</span>
+<span class="sd">    x_pos, y_pos : array-like</span>
+<span class="sd">        Arrays of x and y positions of all pixels.</span>
+<span class="sd">    module_ids : array-like</span>
+<span class="sd">        Array of module IDs corresponding to each pixel.</span>
+<span class="sd">    pixel_spacing : float</span>
+<span class="sd">        Center-to-center spacing between pixels.</span>
+<span class="sd">    module_gap : float</span>
+<span class="sd">        Additional gap between modules.</span>
+<span class="sd">    shape : int</span>
+<span class="sd">        Pixel shape type (0: circular, 1/3: hexagonal, 2: square).</span>
+<span class="sd">    current_module_id : int</span>
+<span class="sd">        Module ID of the current pixel.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the pixel is an edge pixel, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Determine the maximum number of neighbors based on the pixel shape</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Circular</span>
+        <span class="n">max_neighbors</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="k">elif</span> <span class="n">shape</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>  <span class="c1"># Hexagonal</span>
+        <span class="n">max_neighbors</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="k">elif</span> <span class="n">shape</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Square</span>
+        <span class="n">max_neighbors</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported pixel shape: </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">neighbor_count</span> <span class="o">=</span> <span class="n">_count_neighbors</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">module_ids</span><span class="p">,</span> <span class="n">pixel_spacing</span><span class="p">,</span> <span class="n">module_gap</span><span class="p">,</span> <span class="n">current_module_id</span>
+    <span class="p">)</span>
+
+    <span class="c1"># A pixel is an edge pixel if it has fewer neighbors than the maximum</span>
+    <span class="k">return</span> <span class="n">neighbor_count</span> <span class="o">&lt;</span> <span class="n">max_neighbors</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_pixel_patches</span><span class="p">(</span>
+    <span class="n">x_pos</span><span class="p">,</span>
+    <span class="n">y_pos</span><span class="p">,</span>
+    <span class="n">diameter</span><span class="p">,</span>
+    <span class="n">module_number</span><span class="p">,</span>
+    <span class="n">module_gap</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="p">,</span>
+    <span class="n">shape</span><span class="p">,</span>
+    <span class="n">pixels_on</span><span class="p">,</span>
+    <span class="n">pixel_ids</span><span class="p">,</span>
+    <span class="n">pixels_id_to_print</span><span class="p">,</span>
+    <span class="n">telescope_model_name</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create matplotlib patches for different pixel types.</span>
+
+<span class="sd">    This function creates the matplotlib patches (shapes) for all pixels in the</span>
+<span class="sd">    layout, categorizing them into &quot;on&quot;, &quot;edge&quot;, and &quot;off&quot; pixels based on their</span>
+<span class="sd">    status and position.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x_pos, y_pos : array-like</span>
+<span class="sd">        X and Y coordinates of the pixel centers</span>
+<span class="sd">    diameter : float</span>
+<span class="sd">        Diameter of the pixels</span>
+<span class="sd">    module_number : array-like</span>
+<span class="sd">        Module numbers for each pixel</span>
+<span class="sd">    module_gap : float</span>
+<span class="sd">        Gap between modules</span>
+<span class="sd">    spacing : float</span>
+<span class="sd">        Pixel spacing</span>
+<span class="sd">    shape : array-like</span>
+<span class="sd">        Shape types for each pixel</span>
+<span class="sd">    pixels_on : array-like</span>
+<span class="sd">        Status indicating if each pixel is &quot;on&quot;</span>
+<span class="sd">    pixel_ids : array-like</span>
+<span class="sd">        Unique IDs for each pixel</span>
+<span class="sd">    pixels_id_to_print : int</span>
+<span class="sd">        Number of pixel IDs to print on the plot</span>
+<span class="sd">    telescope_model_name : str</span>
+<span class="sd">        Name of the telescope model</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Three lists of patches for &quot;on&quot;, &quot;edge&quot;, and &quot;off&quot; pixels</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="n">array_element_type</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span>
+    <span class="n">font_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="s2">&quot;SCT&quot;</span> <span class="ow">in</span> <span class="n">array_element_type</span> <span class="k">else</span> <span class="mi">4</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">)):</span>
+        <span class="n">patch</span> <span class="o">=</span> <span class="n">_create_patch</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pixels_on</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">_is_edge_pixel</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">module_number</span><span class="p">,</span> <span class="n">spacing</span><span class="p">,</span> <span class="n">module_gap</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">module_number</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">edge_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">on_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">off_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pixel_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pixels_id_to_print</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pixel_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">font_size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_count_neighbors</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">module_ids</span><span class="p">,</span> <span class="n">pixel_spacing</span><span class="p">,</span> <span class="n">module_gap</span><span class="p">,</span> <span class="n">current_module_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Count the number of neighboring pixels within the appropriate distance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y : float</span>
+<span class="sd">        Coordinates of the pixel being checked.</span>
+<span class="sd">    x_pos, y_pos : array-like</span>
+<span class="sd">        Arrays of x and y positions of all pixels.</span>
+<span class="sd">    module_ids : array-like</span>
+<span class="sd">        Array of module IDs corresponding to each pixel.</span>
+<span class="sd">    pixel_spacing : float</span>
+<span class="sd">        Center-to-center spacing between pixels.</span>
+<span class="sd">    module_gap : float</span>
+<span class="sd">        Additional gap between modules.</span>
+<span class="sd">    current_module_id : int</span>
+<span class="sd">        Module ID of the current pixel.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of neighboring pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="mf">1e-6</span>
+
+    <span class="k">for</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">module_id2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">module_ids</span><span class="p">):</span>
+        <span class="c1"># Skip the pixel itself</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">x2</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">==</span> <span class="n">y2</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Calculate the distance between the current pixel and the potential neighbor</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Determine max distance based on whether pixels are in same module</span>
+        <span class="n">max_distance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">pixel_spacing</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">current_module_id</span> <span class="o">==</span> <span class="n">module_id2</span> <span class="k">else</span> <span class="n">module_gap</span><span class="p">)</span> <span class="o">+</span> <span class="n">tolerance</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="mf">1.2</span>
+
+        <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">max_distance</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_configure_plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">,</span>
+    <span class="n">x_pos</span><span class="p">,</span>
+    <span class="n">y_pos</span><span class="p">,</span>
+    <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">xtitle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ytitle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configure the plot with titles, labels, and limits.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ax : matplotlib.axes.Axes</span>
+<span class="sd">        The axes to configure</span>
+<span class="sd">    x_pos, y_pos : array-like</span>
+<span class="sd">        Arrays of x and y positions of pixels</span>
+<span class="sd">    rotation : Astropy quantity in degrees, optional</span>
+<span class="sd">        Rotation angle in degrees, default 0</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        Plot title</span>
+<span class="sd">    xtitle : str, optional</span>
+<span class="sd">        X-axis label</span>
+<span class="sd">    ytitle : str, optional</span>
+<span class="sd">        Y-axis label</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        The function modifies the plot axes in place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First set the aspect ratio</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the axis limits</span>
+    <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_pos</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span>
+    <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_pos</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span>
+
+    <span class="c1"># Add some padding</span>
+    <span class="n">x_padding</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_max</span> <span class="o">-</span> <span class="n">x_min</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="n">y_padding</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+
+    <span class="c1"># Set limits with padding</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">x_min</span> <span class="o">-</span> <span class="n">x_padding</span><span class="p">,</span> <span class="n">x_max</span> <span class="o">+</span> <span class="n">x_padding</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_min</span> <span class="o">-</span> <span class="n">y_padding</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">+</span> <span class="n">y_padding</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xtitle</span> <span class="ow">or</span> <span class="s2">&quot;Horizontal scale [cm]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">ytitle</span> <span class="ow">or</span> <span class="s2">&quot;Vertical scale [cm]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;Pixel layout&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+
+    <span class="n">_add_coordinate_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">rotation</span><span class="p">)</span>
+    <span class="n">x_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_pos</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.05</span>
+    <span class="n">y_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_pos</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.05</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="s2">&quot;For an observer facing the camera&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_coordinate_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add coordinate system axes to the plot.&quot;&quot;&quot;</span>
+    <span class="c1"># Setup dimensions and positions</span>
+    <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+    <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+    <span class="n">plot_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_max</span> <span class="o">-</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">)</span>
+    <span class="n">axis_length</span> <span class="o">=</span> <span class="n">plot_size</span> <span class="o">*</span> <span class="mf">0.08</span>
+
+    <span class="n">x_origin</span> <span class="o">=</span> <span class="n">x_max</span> <span class="o">-</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="mf">1.0</span>
+    <span class="n">y_origin_az</span> <span class="o">=</span> <span class="n">y_min</span> <span class="o">+</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="mf">2.5</span>
+    <span class="n">y_origin_pix</span> <span class="o">=</span> <span class="n">y_min</span> <span class="o">+</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="mf">1.2</span>
+
+    <span class="n">arrow_style</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;head_width&quot;</span><span class="p">:</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="mf">0.15</span><span class="p">,</span>
+        <span class="s2">&quot;head_length&quot;</span><span class="p">:</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="mf">0.15</span><span class="p">,</span>
+        <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="mf">0.02</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">arrow_length</span> <span class="o">=</span> <span class="mf">0.6</span>
+    <span class="n">is_sst</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">rotation</span> <span class="o">-</span> <span class="p">(</span><span class="mf">90.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mf">1.0</span>
+    <span class="n">az_direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">is_sst</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_arrow_label</span><span class="p">(</span><span class="n">ox</span><span class="p">,</span> <span class="n">oy</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adding arrows with label.&quot;&quot;&quot;</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">ox</span><span class="p">,</span> <span class="n">oy</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="o">**</span><span class="n">arrow_style</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If not zero vector</span>
+            <span class="n">dir_unit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">ox</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="n">dir_unit</span> <span class="o">*</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="n">offset</span><span class="p">,</span>
+                <span class="n">oy</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">/</span> <span class="n">dir_unit</span> <span class="o">*</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="n">offset</span><span class="p">,</span>
+                <span class="n">label</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="n">ha</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="n">va</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Az-Alt axes</span>
+    <span class="n">az_dx</span> <span class="o">=</span> <span class="n">az_direction</span> <span class="o">*</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="n">arrow_length</span>
+    <span class="n">add_arrow_label</span><span class="p">(</span>
+        <span class="n">x_origin</span><span class="p">,</span>
+        <span class="n">y_origin_az</span><span class="p">,</span>
+        <span class="n">az_dx</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;Az&quot;</span><span class="p">,</span>
+        <span class="mf">0.25</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span> <span class="k">if</span> <span class="n">az_direction</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;right&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_arrow_label</span><span class="p">(</span>
+        <span class="n">x_origin</span><span class="p">,</span> <span class="n">y_origin_az</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">axis_length</span> <span class="o">*</span> <span class="n">arrow_length</span><span class="p">,</span> <span class="s2">&quot;Alt&quot;</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Pixel coordinate axes</span>
+    <span class="n">rot_angle</span> <span class="o">=</span> <span class="n">rotation</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">x_direction</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">is_sst</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="n">x_dir</span> <span class="o">=</span> <span class="n">x_direction</span> <span class="o">*</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="n">arrow_length</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span>
+    <span class="n">y_dir</span> <span class="o">=</span> <span class="n">x_direction</span> <span class="o">*</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="n">arrow_length</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span>
+    <span class="n">add_arrow_label</span><span class="p">(</span><span class="n">x_origin</span><span class="p">,</span> <span class="n">y_origin_pix</span><span class="p">,</span> <span class="n">x_dir</span><span class="p">,</span> <span class="n">y_dir</span><span class="p">,</span> <span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">mathrm</span><span class="si">{x}</span><span class="s2">_</span><span class="se">\\</span><span class="s2">mathrm</span><span class="si">{pix}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">)</span>
+
+    <span class="n">y_dx</span> <span class="o">=</span> <span class="n">axis_length</span> <span class="o">*</span> <span class="n">arrow_length</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span>
+    <span class="n">y_dy</span> <span class="o">=</span> <span class="o">-</span><span class="n">axis_length</span> <span class="o">*</span> <span class="n">arrow_length</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot_angle</span><span class="p">)</span>
+    <span class="n">add_arrow_label</span><span class="p">(</span><span class="n">x_origin</span><span class="p">,</span> <span class="n">y_origin_pix</span><span class="p">,</span> <span class="n">y_dx</span><span class="p">,</span> <span class="n">y_dy</span><span class="p">,</span> <span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">mathrm</span><span class="si">{y}</span><span class="s2">_</span><span class="se">\\</span><span class="s2">mathrm</span><span class="si">{pix}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_legend</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">on_pixels</span><span class="p">,</span> <span class="n">off_pixels</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add legend to the plot.&quot;&quot;&quot;</span>
+    <span class="n">legend_objects</span> <span class="o">=</span> <span class="p">[</span><span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">(),</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">()]</span>
+    <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Pixel&quot;</span><span class="p">,</span> <span class="s2">&quot;Edge pixel&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Choose handler based on pixel shape</span>
+    <span class="n">is_hex</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">)</span>
+    <span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">HexPixelHandler</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_hex</span> <span class="k">else</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquarePixelHandler</span><span class="p">(),</span>
+        <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">HexEdgePixelHandler</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">is_hex</span>
+        <span class="k">else</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquareEdgePixelHandler</span><span class="p">(),</span>
+        <span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">HexOffPixelHandler</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">is_hex</span>
+        <span class="k">else</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquareOffPixelHandler</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">off_pixels</span><span class="p">:</span>
+        <span class="n">legend_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">())</span>
+        <span class="n">legend_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Disabled pixel&quot;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+        <span class="n">legend_objects</span><span class="p">,</span>
+        <span class="n">legend_labels</span><span class="p">,</span>
+        <span class="n">handler_map</span><span class="o">=</span><span class="n">legend_handler_map</span><span class="p">,</span>
+        <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">},</span>
+        <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

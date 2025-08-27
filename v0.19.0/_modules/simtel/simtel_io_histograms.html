@@ -1,0 +1,1080 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtel.simtel_io_histograms &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=cbfb3150"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_io_histograms';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.19.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtel.simtel_io_histograms</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtel.simtel_io_histograms</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Reads the content of multiples files from sim_telarray.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span><span class="p">,</span> <span class="n">Histograms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.search_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">yield_toplevel_of_type</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io.hdf5_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">fill_hdf5_table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_histogram</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">HistogramIdNotFoundError</span><span class="p">,</span>
+    <span class="n">InconsistentHistogramFormatError</span><span class="p">,</span>
+    <span class="n">SimtelIOHistogram</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.names</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize_name</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;SimtelIOHistograms&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="SimtelIOHistograms">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimtelIOHistograms</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read the content of either multiple histogram (.hdata, or .hdata.zst) or sim_telarray files.</span>
+
+<span class="sd">    Allow both the .hdata.zst histogram and the .simtel.zst output file type.</span>
+<span class="sd">    It uses the SimtelIOHistogram class to deal with individual files.</span>
+<span class="sd">    Histogram files are ultimately handled by using eventio library.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histogram_files: list</span>
+<span class="sd">        List of sim_telarray histogram files (str of Path).</span>
+<span class="sd">    test: bool</span>
+<span class="sd">        If True, only a fraction of the histograms will be processed, leading to a much shorter\</span>
+<span class="sd">         runtime.</span>
+<span class="sd">    area_from_distribution: bool</span>
+<span class="sd">        If true, the area thrown (the area in which the simulated events are distributed)</span>
+<span class="sd">        in the trigger rate calculation is estimated based on the event distribution.</span>
+<span class="sd">        The expected shape of the distribution of events as function of the core distance is</span>
+<span class="sd">        triangular up to the maximum distance. The weighted mean radius of the triangular</span>
+<span class="sd">        distribution is 2/3 times the upper edge. Therefore, when using the</span>
+<span class="sd">        ``area_from_distribution`` flag, the mean distance times 3/2, returns just the position of</span>
+<span class="sd">        the upper edge in the triangle distribution with little impact of the binning and little</span>
+<span class="sd">        dependence on the scatter area defined in the simulation. This is special useful when</span>
+<span class="sd">        calculating trigger rate for individual telescopes.</span>
+<span class="sd">        If false, the area thrown is estimated based on the maximum distance as given in</span>
+<span class="sd">        the simulation configuration.</span>
+<span class="sd">    energy_range: list</span>
+<span class="sd">        The energy range used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        energy must be in TeV (as in the CORSIKA configuration).</span>
+<span class="sd">        This argument is only needed and used if histogram_file is a .hdata file, in which case the</span>
+<span class="sd">        energy range cannot be retrieved directly from the file.</span>
+<span class="sd">    view_cone: list</span>
+<span class="sd">        The view cone used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        view cone must be in deg (as in the CORSIKA configuration).</span>
+<span class="sd">        This argument is only needed and used if histogram_file is a .hdata file, in which case the</span>
+<span class="sd">        view cone cannot be retrieved directly from the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">histogram_files</span><span class="p">,</span>
+        <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">energy_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">view_cone</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelIOHistograms.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">histogram_files</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">histogram_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">histogram_files</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span> <span class="o">=</span> <span class="n">histogram_files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="n">view_cone</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="n">energy_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span> <span class="o">=</span> <span class="n">test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__meta_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span> <span class="o">=</span> <span class="n">area_from_distribution</span>
+
+<div class="viewcode-block" id="SimtelIOHistograms.calculate_trigger_rates">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.calculate_trigger_rates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_trigger_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_info</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stack_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the triggered and simulated event rate considering the histograms in each file.</span>
+
+<span class="sd">        It returns also a list with the tables where the energy dependent trigger rate for each</span>
+<span class="sd">        file can be found.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        print_info: bool</span>
+<span class="sd">            if True, prints out the information about the histograms such as energy range, area,</span>
+<span class="sd">            etc.</span>
+<span class="sd">        stack_files: bool</span>
+<span class="sd">            if True, stack the histograms from the different files into single histograms.</span>
+<span class="sd">            Useful to increase event statistics when calculating the trigger rate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sim_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The simulated event rates.</span>
+<span class="sd">        triggered_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The triggered event rates.</span>
+<span class="sd">        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The uncertainties in the triggered event rates.</span>
+<span class="sd">        trigger_rate_in_tables: list of astropy.QTable</span>
+<span class="sd">            The energy dependent trigger rates.</span>
+<span class="sd">            Only filled if stack_files is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">stack_files</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">sim_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rates_for_stacked_files</span><span class="p">()</span>
+            <span class="n">trigger_rate_in_tables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">sim_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+                <span class="n">trigger_rate_in_tables</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rates_for_each_file</span><span class="p">(</span><span class="n">print_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">sim_event_rates</span><span class="p">,</span>
+            <span class="n">triggered_event_rates</span><span class="p">,</span>
+            <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+            <span class="n">trigger_rate_in_tables</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_stacked_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve the simulated and triggered event histograms from the stacked histograms instead.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        first_hist_file: dict</span>
+<span class="sd">            The simulated 2D event histogram.</span>
+<span class="sd">        second_hist_file: dict</span>
+<span class="sd">            The triggered 2D event histogram.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        HistogramIdNotFoundError:</span>
+<span class="sd">            if histogram ids not found. Problem with the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sim_hist</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">trig_hist</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">one_hist</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">one_hist</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">sim_hist</span> <span class="o">=</span> <span class="n">one_hist</span>
+            <span class="k">elif</span> <span class="n">one_hist</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">trig_hist</span> <span class="o">=</span> <span class="n">one_hist</span>
+
+        <span class="k">if</span> <span class="n">sim_hist</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">trig_hist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Simulated and triggered histograms were not found in the stacked histograms.&quot;</span>
+                <span class="s2">&quot; Please check sim_telarray files!&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HistogramIdNotFoundError</span>
+
+        <span class="k">return</span> <span class="n">sim_hist</span><span class="p">,</span> <span class="n">trig_hist</span>
+
+<div class="viewcode-block" id="SimtelIOHistograms.get_stacked_num_events">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.get_stacked_num_events">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_stacked_num_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return stacked number of simulated events and triggered events.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int:</span>
+<span class="sd">            total number of simulated events for the stacked dataset.</span>
+<span class="sd">        int:</span>
+<span class="sd">            total number of triggered events for the stacked dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stacked_num_simulated_events</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stacked_num_triggered_events</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">):</span>
+            <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelIOHistogram</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span><span class="p">,</span>
+                <span class="n">energy_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">,</span>
+                <span class="n">view_cone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">_simulated</span><span class="p">,</span> <span class="n">_triggered</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_number_of_events</span>
+            <span class="n">stacked_num_simulated_events</span> <span class="o">+=</span> <span class="n">_simulated</span>
+            <span class="n">stacked_num_triggered_events</span> <span class="o">+=</span> <span class="n">_triggered</span>
+        <span class="k">return</span> <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rates_for_stacked_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate trigger rate for the stacked case.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sim_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The simulated event rates.</span>
+<span class="sd">        triggered_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The triggered event rates.</span>
+<span class="sd">        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The uncertainties in the triggered event rates.</span>
+<span class="sd">        trigger_rate_in_tables: list of astropy.QTable</span>
+<span class="sd">            The energy dependent trigger rates.</span>
+<span class="sd">            Only filled if stack_files is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Estimates for the stacked histograms:&quot;</span><span class="p">)</span>
+        <span class="n">sim_hist</span><span class="p">,</span> <span class="n">trig_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_stacked_events</span><span class="p">()</span>
+        <span class="c1"># Using a dummy instance of SimtelIOHistogram to calculate the trigger rate for the</span>
+        <span class="c1"># stacked files</span>
+        <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelIOHistogram</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span><span class="p">,</span>
+            <span class="n">energy_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">,</span>
+            <span class="n">view_cone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stacked_num_events</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total number of simulated events: </span><span class="si">{</span><span class="n">stacked_num_simulated_events</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total number of triggered events: </span><span class="si">{</span><span class="n">stacked_num_triggered_events</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+        <span class="n">obs_time</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_observation_time</span><span class="p">(</span><span class="n">stacked_num_simulated_events</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Estimated equivalent observation time corresponding to the number of&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;events simulated: </span><span class="si">{</span><span class="n">obs_time</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> s&quot;</span>
+        <span class="p">)</span>
+        <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="n">stacked_num_simulated_events</span> <span class="o">/</span> <span class="n">obs_time</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulated event rate: </span><span class="si">{</span><span class="n">sim_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span><span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">triggered_event_rate</span><span class="p">,</span>
+            <span class="n">_</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">compute_system_trigger_rate</span><span class="p">(</span>
+            <span class="n">events_histogram</span><span class="o">=</span><span class="n">sim_hist</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="o">=</span><span class="n">trig_hist</span>
+        <span class="p">)</span>
+        <span class="n">triggered_event_rate_uncertainty</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
+            <span class="n">triggered_event_rate</span><span class="p">,</span> <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span>
+        <span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;System trigger event rate for stacked files: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">triggered_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> </span><span class="se">\u00b1</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">triggered_event_rate_uncertainty</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">sim_event_rate</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">triggered_event_rate</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">triggered_event_rate_uncertainty</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rates_for_each_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate trigger rate for each file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sim_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The simulated event rates.</span>
+<span class="sd">        triggered_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The triggered event rates.</span>
+<span class="sd">        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The uncertainties in the triggered event rates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">triggered_event_rates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sim_event_rates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">trigger_rate_in_tables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">triggered_event_rate_uncertainties</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i_file</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">):</span>
+            <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelIOHistogram</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span><span class="p">,</span>
+                <span class="n">energy_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">,</span>
+                <span class="n">view_cone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">print_info</span><span class="p">:</span>
+                <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+
+            <span class="n">_simulated_events</span><span class="p">,</span> <span class="n">_triggered_events</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_number_of_events</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Histogram </span><span class="si">{</span><span class="n">i_file</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total number of simulated events: </span><span class="si">{</span><span class="n">_simulated_events</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total number of triggered events: </span><span class="si">{</span><span class="n">_triggered_events</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+
+            <span class="n">obs_time</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_observation_time</span><span class="p">(</span><span class="n">_simulated_events</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Estimated equivalent observation time corresponding to the number of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;events simulated: </span><span class="si">{</span><span class="n">obs_time</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> s&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">obs_time</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="n">_simulated_events</span> <span class="o">/</span> <span class="n">obs_time</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">obs_time</span><span class="o">.</span><span class="n">unit</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Observation time is zero, cannot calculate event rate.&quot;</span><span class="p">)</span>
+            <span class="n">sim_event_rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_event_rate</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulated event rate: </span><span class="si">{</span><span class="n">sim_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span><span class="p">)</span>
+
+            <span class="p">(</span>
+                <span class="n">triggered_event_rate</span><span class="p">,</span>
+                <span class="n">triggered_event_rate_uncertainty</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">compute_system_trigger_rate</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;System trigger event rate: &quot;</span>
+                <span class="c1"># pylint: disable=E1101</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">triggered_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> </span><span class="se">\u00b1</span><span class="s2"> &quot;</span>
+                <span class="c1"># pylint: disable=E1101</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">triggered_event_rate_uncertainty</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span>
+            <span class="p">)</span>
+            <span class="n">triggered_event_rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">triggered_event_rate</span><span class="p">)</span>
+            <span class="n">triggered_event_rate_uncertainties</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">triggered_event_rate_uncertainty</span><span class="p">)</span>
+            <span class="n">trigger_rate_in_tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">trigger_info_in_table</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">sim_event_rates</span><span class="p">,</span>
+            <span class="n">triggered_event_rates</span><span class="p">,</span>
+            <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+            <span class="n">trigger_rate_in_tables</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">number_of_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns number of histograms.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">first_hist_file</span><span class="p">,</span> <span class="n">second_hist_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether two histograms have the same format.</span>
+
+<span class="sd">        Raises an error in case they are not consistent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        first_hist_file: dict</span>
+<span class="sd">            One histogram from a single file.</span>
+<span class="sd">        second_hist_file: dict</span>
+<span class="sd">            One histogram from a single file.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InconsistentHistogramFormatError:</span>
+<span class="sd">            if the format of the histograms have inconsistent dimensions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key_to_test</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;lower_x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;upper_x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_bins_x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="k">if</span> <span class="n">first_hist_file</span><span class="p">[</span><span class="n">key_to_test</span><span class="p">]</span> <span class="o">!=</span> <span class="n">second_hist_file</span><span class="p">[</span><span class="n">key_to_test</span><span class="p">]:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Trying to add histograms with inconsistent dimensions&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InconsistentHistogramFormatError</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_of_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list with the histograms for each file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list:</span>
+<span class="sd">            List of histograms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">yield_toplevel_of_type</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Histograms</span><span class="p">):</span>
+                        <span class="n">hists</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hists</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">combined_hists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine histograms of same type of histogram.</span>
+
+<span class="sd">        Histograms are read from various lists into a single histogram list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Processing and combining histograms from multiple files</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">histogram_index</span><span class="p">,</span> <span class="n">hists_one_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_of_histograms</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">histogram_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># First file</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hists_one_file</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">hist</span><span class="p">,</span> <span class="n">this_combined_hist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hists_one_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_check_consistency</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">this_combined_hist</span><span class="p">)</span>
+
+                        <span class="n">this_combined_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                            <span class="n">this_combined_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End of reading </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span>
+
+    <span class="nd">@combined_hists</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">combined_hists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_combined_hists</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setter for combined_hists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_combined_hists:</span>
+<span class="sd">            Combined histograms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="n">new_combined_hists</span>
+
+<div class="viewcode-block" id="SimtelIOHistograms.plot_one_histogram">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.plot_one_histogram">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_one_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_index</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot a single histogram referent to the index histogram_index.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        histogram_index: int</span>
+<span class="sd">            Index of the histogram to be plotted.</span>
+<span class="sd">        ax: matplotlib.axes.Axes</span>
+<span class="sd">            Instance of matplotlib.axes.Axes in which to plot the histogram.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">[</span><span class="n">histogram_index</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">])</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_get_bins</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">ax_str</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;y&quot;</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;lower_&quot;</span> <span class="o">+</span> <span class="n">ax_str</span><span class="p">],</span>
+                <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;upper_&quot;</span> <span class="o">+</span> <span class="n">ax_str</span><span class="p">],</span>
+                <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;n_bins_&quot;</span> <span class="o">+</span> <span class="n">ax_str</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_get_ax_lim</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+
+            <span class="n">bins</span> <span class="o">=</span> <span class="n">_get_bins</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">non_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">marginal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+                <span class="n">non_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">marginal</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">bins</span><span class="p">[</span><span class="n">non_zero</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">bins</span><span class="p">[</span><span class="n">non_zero</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;n_bins_y&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># 2D histogram</span>
+
+            <span class="n">xlim</span> <span class="o">=</span> <span class="n">_get_ax_lim</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">ylim</span> <span class="o">=</span> <span class="n">_get_ax_lim</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                    <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="s2">&quot;EMPTY&quot;</span><span class="p">,</span>
+                    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="n">x_bins</span> <span class="o">=</span> <span class="n">_get_bins</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">y_bins</span> <span class="o">=</span> <span class="n">_get_bins</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span><span class="p">,</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlim</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylim</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># 1D histogram</span>
+
+            <span class="n">xlim</span> <span class="o">=</span> <span class="n">_get_ax_lim</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                    <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="s2">&quot;EMPTY&quot;</span><span class="p">,</span>
+                    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="n">x_bins</span> <span class="o">=</span> <span class="n">_get_bins</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">centers</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">x_bins</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlim</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_meta_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the meta dictionary for exporting the histograms.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Meta dictionary for the hdf5 files with the histograms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__meta_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__meta_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;simtools_version&quot;</span><span class="p">:</span> <span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+                <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;Only lower bin edges are given.&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__meta_dict</span>
+
+<div class="viewcode-block" id="SimtelIOHistograms.export_histograms">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.export_histograms">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export sim_telarray histograms to hdf5 files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hdf5_file_name: str</span>
+<span class="sd">            Name of the file to be saved with the hdf5 tables.</span>
+<span class="sd">        overwrite: bool</span>
+<span class="sd">            If True overwrites histograms already saved in the hdf5 file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting histograms to </span><span class="si">{</span><span class="n">hdf5_file_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">histogram</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">:</span>
+            <span class="n">x_bin_edges_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;lower_x&quot;</span><span class="p">],</span>
+                <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;upper_x&quot;</span><span class="p">],</span>
+                <span class="n">num</span><span class="o">=</span><span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;n_bins_x&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;n_bins_y&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">y_bin_edges_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                    <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;lower_y&quot;</span><span class="p">],</span>
+                    <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;upper_y&quot;</span><span class="p">],</span>
+                    <span class="n">num</span><span class="o">=</span><span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;n_bins_y&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y_bin_edges_list</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">])</span>
+
+            <span class="n">table</span> <span class="o">=</span> <span class="n">fill_hdf5_table</span><span class="p">(</span>
+                <span class="n">hist</span><span class="o">=</span><span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
+                <span class="n">x_bin_edges</span><span class="o">=</span><span class="n">x_bin_edges_list</span><span class="p">,</span>
+                <span class="n">y_bin_edges</span><span class="o">=</span><span class="n">y_bin_edges_list</span><span class="p">,</span>
+                <span class="n">x_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">y_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">meta_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Writing histogram with name </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">hdf5_file_name</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># overwrite takes precedence over append</span>
+            <span class="n">write_table</span><span class="p">(</span>
+                <span class="n">table</span><span class="p">,</span>
+                <span class="n">hdf5_file_name</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">append</span><span class="o">=</span><span class="ow">not</span> <span class="n">overwrite</span><span class="p">,</span>
+                <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
