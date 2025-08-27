@@ -17,7 +17,7 @@ The main directories of simtools are:
 - applications (simtools:) [src/simtools/applications](https://github.com/gammasim/simtools/tree/main/src/simtools/applications)
 - unit and integration tests: [tests](https://github.com/gammasim/simtools/tree/main/tests)
 - documentation: [docs](https://github.com/gammasim/simtools/tree/main/docs)
-- docker files: [docker](https://github.com/gammasim/simtools/tree/main/docker)
+- Docker files: [docker](https://github.com/gammasim/simtools/tree/main/docker)
 
 ## Python version
 
