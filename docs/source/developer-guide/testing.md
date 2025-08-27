@@ -23,8 +23,8 @@ The rule should be that any discovered bug or issue should trigger the implement
 ## Unit tests
 
 ```{important}
-**Every function and module in `simtools` must have at least one test.**
-No function should be left untested — **tests are mandatory, not optional.**
+**Every function and module in the `simtools` library code must have at least one test.**
+No library function should be left untested — **tests are mandatory, not optional.** (Application code is excluded from this requirement; see the developer guidelines for details.)
 ```
 
 Unit tests should verify the behavior of individual functions ("units").
