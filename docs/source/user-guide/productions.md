@@ -119,7 +119,7 @@ Executed for major releases or significant configuration changes (e.g., changes 
 - [simtools-merge-tables](merge_tables) merges sufficient reduced event data files into larger files (HDF5 format)
 - [simtools-production-derive-corsika-limits](production_derive_corsika_limits) derives CORSIKA configuration limits for each zenith angle, NSB level, and array layout and generates lookup tables
 
-Lookup tables are stored in the SimPipe Production Configuration gitlab repository.
+Lookup tables are stored in the SimPipe Production Configuration GitLab repository.
 
 ```{warning}
 Incomplete documentation and unclear:
