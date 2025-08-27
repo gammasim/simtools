@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=68e49e4a"></script>
+    <script src="../_static/documentation_options.js?v=6f8b1f24"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Camera" href="camera.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge6a3c163f" />
+  <meta name="docsearch:version" content="0.1.dev1+g98317702d" />
   </head>
   
   
@@ -757,20 +757,18 @@ a tuple converted to string (e.g., “(5, &lt;Quantity 1500 m&gt;)”).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.parse_quantity_pair">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_quantity_pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/configuration/commandline_parser.html#CommandLineParser.parse_quantity_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.parse_quantity_pair" title="Link to this definition">#</a></dt>
-<dd><p>Parse a string representing a pair of astropy quantities separated by a space.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>string: The input string (e.g., “0 deg 1.5 deg”).</p>
-</dd>
-</dl>
+<dd><p>Parse a string representing a pair of astropy quantities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tuple: A tuple containing two astropy.units.Quantity objects.</dt><dd></dd>
+<dt>tuple</dt><dd><p>A tuple of two astropy.units.Quantity objects.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>ValueError: If the string is not formatted correctly (e.g., missing space).</dt><dd></dd>
+<dt>ValueError</dt><dd><p>If the string cannot be parsed into exactly two quantities.</p>
+</dd>
 </dl>
 </dd>
 </dl>
