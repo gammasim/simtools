@@ -84,7 +84,7 @@ Adding an applications requires the following changes:
 - add application code to the [simtools/applications](https://github.com/gammasim/simtools/tree/main/simtools/applications)
 - add integration tests to [tests/integration_tests](https://github.com/gammasim/simtools/tree/main/tests/integration_tests)
 - modify [pyproject.toml file for pip](https://github.com/gammasim/simtools/blob/main/pyproject.toml) (replace "\_" by "-" and add "simtools-" to the application name)
-- add application to documentation in [docs/sources/applications.rst](https://github.com/gammasim/simtools/blob/main/docs/source/applications.rst)
+- add application to documentation in [docs/source/user-guide/applications.md](https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications.md)
 
 ## Dependencies
 

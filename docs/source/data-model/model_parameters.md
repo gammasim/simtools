@@ -73,7 +73,7 @@ simulation_software:
   - name: sim_telarray
 ```
 
-Model parameter schema files follow the fixed meta schema (see `meta_schema`, `meta_schema_url`, and `meta_schema_version` fields in above example and [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml)).
+Model parameter schema files follow the fixed meta schema (see `meta_schema`, `meta_schema_url`, and `meta_schema_version` fields in above example and [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml)).
 
 ## Valid Keys
 
