@@ -740,28 +740,27 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def parse_quantity_pair(string):
         """
-        Parse a string representing a pair of astropy quantities separated by a space.
-
-        Args:
-            string: The input string (e.g., "0 deg 1.5 deg").
+        Parse a string representing a pair of astropy quantities.
 
         Returns
         -------
-            tuple: A tuple containing two astropy.units.Quantity objects.
+        tuple
+            A tuple of two astropy.units.Quantity objects.
 
         Raises
         ------
-            ValueError: If the string is not formatted correctly (e.g., missing space).
+        ValueError
+            If the string cannot be parsed into exactly two quantities.
         """
-        pattern = r"(\d+\.?\d*)\s*([a-zA-Z]+)"
+        pattern = r"(?>[\d\.eE+-]+)\s*(?>[A-Za-z]+)"
         matches = re.findall(pattern, string)
         if len(matches) != 2:
             raise ValueError("Input string does not contain exactly two quantities.")
 
-        return (
-            u.Quantity(float(matches[0][0]), matches[0][1]),
-            u.Quantity(float(matches[1][0]), matches[1][1]),
-        )
+        try:
+            return tuple(u.Quantity(m) for m in matches)
+        except Exception as exc:
+            raise ValueError(f"Could not parse quantities: {exc}") from exc
 
     @staticmethod
     def parse_integer_and_quantity(input_string):
