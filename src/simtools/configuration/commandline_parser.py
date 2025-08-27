@@ -753,7 +753,7 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
             ValueError: If the string is not formatted correctly (e.g., missing space).
         """
-        pattern = r"(\d+(?:\.\d+)?)\s*([A-Za-z]+)"
+        pattern = re.compile(r"(\d+(?:\.\d+)?)\s*([A-Za-z]+)")
         matches = re.findall(pattern, string)
         if len(matches) != 2:
             raise ValueError("Input string does not contain exactly two quantities.")
