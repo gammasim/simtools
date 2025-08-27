@@ -14,7 +14,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Fix bug in reading list of array elements from file. Only layout names were used and the list was read not from file but from the model parameters DB. ([#1658](https://github.com/gammasim/simtools/pull/1658))
 - Ensure that run numbers start at 1 for cases no offset if given (HT Condor job submission). ([#1686](https://github.com/gammasim/simtools/pull/1686))
 - Fix array trigger writing for single telescope simulations. ([#1690](https://github.com/gammasim/simtools/pull/1690))
-- Bugfix shower core calculation in shower coordinates for reduced event data. ([#1703](https://github.com/gammasim/simtools/pull/1703))
+- Bugfix in shower core calculation in shower coordinates for reduced event data. ([#1703](https://github.com/gammasim/simtools/pull/1703))
 
 ### New Features
 
