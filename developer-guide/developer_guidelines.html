@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=9c640345"></script>
+    <script src="../_static/documentation_options.js?v=68e49e4a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Getting Started as Developer" href="getting_started_as_developer.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g42855bae3" />
+  <meta name="docsearch:version" content="0.1.dev1+ge6a3c163f" />
   </head>
   
   
@@ -469,11 +469,11 @@ ctapipe (see <a class="reference external" href="http://cta-computing.gitlab-pag
 <p>The main code repository for simtools is on GitHub: <a class="github reference external" href="https://github.com/gammasim/simtools">gammasim/simtools</a></p>
 <p>The main directories of simtools are:</p>
 <ul class="simple">
-<li><p>root directory: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools">simtools</a></p></li>
-<li><p>applications (simtools:) <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/applications">simtools/applications</a></p></li>
-<li><p>unit and integration tests: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">./tests</a></p></li>
-<li><p>documentation: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">./docs</a></p></li>
-<li><p>docker files: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">./docker</a></p></li>
+<li><p>main code: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/src/simtools">src/simtools</a></p></li>
+<li><p>applications (simtools:) <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/src/simtools/applications">src/simtools/applications</a></p></li>
+<li><p>unit and integration tests: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">tests</a></p></li>
+<li><p>documentation: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">docs</a></p></li>
+<li><p>Docker files: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">docker</a></p></li>
 </ul>
 </section>
 <section id="python-version">
@@ -529,6 +529,11 @@ Application should not include complex algorithm, this should be done at the mod
 <p>Application handling should be done using the <a class="reference internal" href="#configuration_module.md#configurationconfigurator"><span class="xref myst">Configurator</span></a> class, which allows to set
 configurations from the command-line options, configuration files, or environmental variables.
 Check the <a class="reference internal" href="#configuration_module.md#configurationcommandline_parser"><span class="xref myst">commandline_parser</span></a> module for generic command-line arguments before introducing new ones in applications</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Application code is excluded from unit tests.
+Applications should therefore kept to a minimum and consist of simple, high-level logic that coordinates the use of the simtools library.</p>
+</div>
 <p>The documentation of application uses the in-line doc string.</p>
 <p>Adding an applications requires the following changes:</p>
 <ul class="simple">
@@ -557,7 +562,7 @@ minimally coupled with the rest of the package. The modules that depend directly
 tools should be connected to the rest of the package through interfaces. This way, it
 will be easier to replace these tools in the future.</p>
 <p>One example of this approach is
-<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/simulator.py">simulator module</a>,
+<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/simulator.py">simulator module</a>,
 which connects to the tools used to manage and run simulations.</p>
 </section>
 <section id="data-files">
