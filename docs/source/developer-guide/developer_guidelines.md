@@ -13,11 +13,11 @@ The main code repository for simtools is on GitHub: [https://github.com/gammasim
 
 The main directories of simtools are:
 
-- root directory: [simtools](https://github.com/gammasim/simtools/tree/main/simtools)
-- applications (simtools:) [simtools/applications](https://github.com/gammasim/simtools/tree/main/simtools/applications)
-- unit and integration tests: [./tests](https://github.com/gammasim/simtools/tree/main/tests)
-- documentation: [./docs](https://github.com/gammasim/simtools/tree/main/docs)
-- Docker files: [./docker](https://github.com/gammasim/simtools/tree/main/docker)
+- main code: [src/simtools](https://github.com/gammasim/simtools/tree/main/src/simtools)
+- applications (simtools:) [src/simtools/applications](https://github.com/gammasim/simtools/tree/main/src/simtools/applications)
+- unit and integration tests: [tests](https://github.com/gammasim/simtools/tree/main/tests)
+- documentation: [docs](https://github.com/gammasim/simtools/tree/main/docs)
+- Docker files: [docker](https://github.com/gammasim/simtools/tree/main/docker)
 
 ## Python version
 
@@ -77,6 +77,11 @@ Application handling should be done using the [Configurator](configuration_modul
 configurations from the command-line options, configuration files, or environmental variables.
 Check the [commandline_parser](configuration_module.md#configurationcommandline_parser) module for generic command-line arguments before introducing new ones in applications
 
+```{important}
+Application code is excluded from unit tests.
+Applications should therefore kept to a minimum and consist of simple, high-level logic that coordinates the use of the simtools library.
+```
+
 The documentation of application uses the in-line doc string.
 
 Adding an applications requires the following changes:
@@ -106,7 +111,7 @@ tools should be connected to the rest of the package through interfaces. This wa
 will be easier to replace these tools in the future.
 
 One example of this approach is
-[simulator module](https://github.com/gammasim/simtools/blob/main/simtools/simulator.py),
+[simulator module](https://github.com/gammasim/simtools/blob/main/src/simtools/simulator.py),
 which connects to the tools used to manage and run simulations.
 
 ## Data files

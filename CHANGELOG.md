@@ -7,12 +7,67 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
-## [v0.18.0](https://github.com/gammasim/simtools/releases/tag/v0.18.0) - 2025-07-08
+## [v0.19.0](https://github.com/gammasim/simtools/releases/tag/v0.19.0) - 2025-08-27
+
+### Bugfixes
+
+- Fix bug in reading list of array elements from file. Only layout names were used and the list was read not from file but from the model parameters DB. ([#1658](https://github.com/gammasim/simtools/pull/1658))
+- Ensure that run numbers start at 1 for cases no offset if given (HT Condor job submission). ([#1686](https://github.com/gammasim/simtools/pull/1686))
+- Fix array trigger writing for single telescope simulations. ([#1690](https://github.com/gammasim/simtools/pull/1690))
+- Bugfix in shower core calculation in shower coordinates for reduced event data. ([#1703](https://github.com/gammasim/simtools/pull/1703))
+
+### New Features
+
+- Add additional plots for the derivation of CORSIKA limits. ([#1632](https://github.com/gammasim/simtools/pull/1632))
+- Add a warning to derived corsika limit if they are close to the limits of the simulations. ([#1643](https://github.com/gammasim/simtools/pull/1643))
+- Add an application that merges derived corsika simulation limits for each available grid point. ([#1649](https://github.com/gammasim/simtools/pull/1649))
+- Add curvature radius to testeff command. User for calculation of NSB rates per pixel. ([#1651](https://github.com/gammasim/simtools/pull/1651))
+- Allow to run applications in container environments using simtools-run-application. Introduce separate module (simtools-runner) and improve support for workflow running. ([#1657](https://github.com/gammasim/simtools/pull/1657))
+- Add application to update, modify, and compare production tables.
+  Improve documentation for simulation repository maintenance. ([#1660](https://github.com/gammasim/simtools/pull/1660))
+- Add application to simulate calibration events (pedestals, dark pedestals, flasher). ([#1663](https://github.com/gammasim/simtools/pull/1663))
+- Add functionality to simtools-validate-camera-efficiency to write out model parameter JSON with nsb_pixel_rate. ([#1665](https://github.com/gammasim/simtools/pull/1665))
+- Add functionality to compare derived model parameters with DB values to integration tests (examples for simtools-validate-camera-efficiency). ([#1666](https://github.com/gammasim/simtools/pull/1666))
+- Add log file inspector for integration tests to fail tests when errors or runtime warnings are reported. ([#1674](https://github.com/gammasim/simtools/pull/1674))
+- Add application to simulate flasher with the light emission package. ([#1676](https://github.com/gammasim/simtools/pull/1676))
+- Add sim_telarray model files to output of each production run. This asserts reproducibility and simplifies debugging. ([#1689](https://github.com/gammasim/simtools/pull/1689))
+- Add MongoDB compound indices to improve query efficiency. ([#1691](https://github.com/gammasim/simtools/pull/1691))
+- Add possibility to set random seed for random focal length settings in simtools-derive-mirror-rnda. ([#1702](https://github.com/gammasim/simtools/pull/1702))
+
+### Maintenance
+
+- Apply more consistent key-name convention with lower-case snake_make to application workflow configurations. ([#1636](https://github.com/gammasim/simtools/pull/1636))
+- Clarify input data to derivation of CORSIKA limits with `simtools-production-derive-corsika-limit`. ([#1641](https://github.com/gammasim/simtools/pull/1641))
+- Change metadata to lower-case snake make. More consistent usage of schema versions. ([#1645](https://github.com/gammasim/simtools/pull/1645))
+- Add missing plotting configurations for tabular data. ([#1647](https://github.com/gammasim/simtools/pull/1647))
+- Plots are now auto-generated alongside reports. ([#1653](https://github.com/gammasim/simtools/pull/1653))
+- Refactoring of ASCII input io operations. ([#1667](https://github.com/gammasim/simtools/pull/1667))
+- Add a generic writer for structured data for JSON and YAML format. ([#1668](https://github.com/gammasim/simtools/pull/1668))
+- Simplification of legend_handlers class. ([#1670](https://github.com/gammasim/simtools/pull/1670))
+- Change units of shower- and pointing directions in reduced event data from radians to degrees. ([#1672](https://github.com/gammasim/simtools/pull/1672))
+- Generalization of reduced event-data histogram filling (moved from CORSIKA limits derivation modules to generic module). ([#1675](https://github.com/gammasim/simtools/pull/1675))
+- Fix hadolint issue and using parameter expansion for replacement in Dockerfile. ([#1680](https://github.com/gammasim/simtools/pull/1680))
+- Refactor PSF parameter optimization workflow and improve output. Added a flag to export best parameters as JSON files. ([#1681](https://github.com/gammasim/simtools/pull/1681))
+- Revision of main repository readme file and removed duplications. ([#1684](https://github.com/gammasim/simtools/pull/1684))
+- Remove DB access of unit test for the `docs_read_parameters` module. ([#1688](https://github.com/gammasim/simtools/pull/1688))
+- Maintenance pass through integration test to remove duplicated tests and improve test efficiency. ([#1694](https://github.com/gammasim/simtools/pull/1694))
+- Add new sonar configuration ([URL](https://sonar-ctao.zeuthen.desy.de/tutorials?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14)) ([#1695](https://github.com/gammasim/simtools/pull/1695))
+- Improve code quality by addressing SonarQube reliability issues. ([#1697](https://github.com/gammasim/simtools/pull/1697))
+- Unit tests will now fail in the CI for warnings. ([#1699](https://github.com/gammasim/simtools/pull/1699))
+- Fix some security hotspots reported by SonarQube. ([#1700](https://github.com/gammasim/simtools/pull/1700))
+- Improve robustness of Linter CI by caching pre-commit installation. ([#1704](https://github.com/gammasim/simtools/pull/1704))
+
+### Simulation model
+
+- Addition of FADC long-sum model parameters. ([#1659](https://github.com/gammasim/simtools/pull/1659))
+
+
+## [v0.18.0](https://github.com/gammasim/simtools/tree/v0.18.0) - 2025-07-08
 
 ### Bugfixes
 
 - Run documentation generation CI on release to obtain current version of docs. ([#1607](https://github.com/gammasim/simtools/pull/1607))
-- Fix authentication errors in script to setup a local MongoDB . ([#1610](https://github.com/gammasim/simtools/pull/1610))
+- Fix authentication errors in script to setup a local MongoDB. ([#1610](https://github.com/gammasim/simtools/pull/1610))
 
 ### Documentation
 
