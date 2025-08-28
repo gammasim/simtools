@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from simtools.visualization import simtel_event_plots as sep
+from simtools.visualization import plot_simtel_events as sep
 
 logger = logging.getLogger(__name__)
 DUMMY_SIMTEL = "DUMMY_SIMTEL"
