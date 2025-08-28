@@ -182,6 +182,26 @@ def calculate_circular_mean(angles):
     return np.arctan2(sin_sum, cos_sum)
 
 
+@u.quantity_input(angle_max=u.rad, angle_min=u.rad)
+def solid_angle(angle_max, angle_min=0 * u.rad):
+    """
+    Calculate the solid angle subtended by a given range of angles.
+
+    Parameters
+    ----------
+    angle_max: astropy.units.Quantity
+        The maximum angle for which to calculate the solid angle.
+    angle_min: astropy.units.Quantity
+        The minimum angle for which to calculate the solid angle (default is 0 rad).
+
+    Returns
+    -------
+    astropy.units.Quantity
+        The solid angle subtended by the given range of angles (in steradians).
+    """
+    return 2 * np.pi * (np.cos(angle_min.to("rad")) - np.cos(angle_max.to("rad"))) * u.sr
+
+
 def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth, altitude):
     """
     Transform ground to shower coordinates.

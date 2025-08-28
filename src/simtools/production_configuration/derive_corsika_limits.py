@@ -9,8 +9,9 @@ from astropy.table import Column, Table
 
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
-from simtools.model.site_model import SiteModel
+from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
         Database configuration dictionary.
     """
     if args_dict.get("array_layout_name"):
-        telescope_configs = _read_array_layouts_from_db(
+        telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
             args_dict.get("site"),
             args_dict.get("model_version"),
@@ -92,9 +93,11 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     }
 
     if plot_histograms:
-        histograms.plot_data(
+        plot_simtel_event_histograms.plot(
+            histograms.histograms,
             output_path=io_handler.IOHandler().get_output_directory(),
             limits=limits,
+            array_name=array_name,
         )
 
     return limits
@@ -213,34 +216,6 @@ def _create_table_columns(cols, columns, units):
     return table_cols
 
 
-def _read_array_layouts_from_db(layouts, site, model_version, db_config):
-    """
-    Read array layouts from the database.
-
-    Parameters
-    ----------
-    layouts : list[str]
-        List of layout names to read. If "all", read all available layouts.
-    site : str
-        Site name for the array layouts.
-    model_version : str
-        Model version for the array layouts.
-    db_config : dict
-        Database configuration dictionary.
-
-    Returns
-    -------
-    dict
-        Dictionary mapping layout names to telescope IDs.
-    """
-    site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
-    layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
-    layout_dict = {}
-    for layout_name in layout_names:
-        layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
-    return layout_dict
-
-
 def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
     """
     Compute the limits based on the loss fraction.
@@ -294,7 +269,7 @@ def compute_lower_energy_limit(histograms, loss_fraction):
     """
     energy_min = (
         _compute_limits(
-            histograms.histograms.get("energy"),
+            histograms.histograms["energy"]["histogram"],
             histograms.energy_bins,
             loss_fraction,
             limit_type="lower",
@@ -336,7 +311,7 @@ def compute_upper_radius_limit(histograms, loss_fraction):
     """
     radius_limit = (
         _compute_limits(
-            histograms.histograms.get("core_distance"),
+            histograms.histograms["core_distance"]["histogram"],
             histograms.core_distance_bins,
             loss_fraction,
             limit_type="upper",
@@ -374,7 +349,7 @@ def compute_viewcone(histograms, loss_fraction):
     """
     viewcone_limit = (
         _compute_limits(
-            histograms.histograms.get("angular_distance"),
+            histograms.histograms["angular_distance"]["histogram"],
             histograms.view_cone_bins,
             loss_fraction,
             limit_type="upper",

@@ -9,7 +9,7 @@ from astropy.coordinates import angular_separation
 
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import table_handler
-from simtools.utils.geometry import transform_ground_to_shower_coordinates
+from simtools.utils.geometry import solid_angle, transform_ground_to_shower_coordinates
 
 
 @dataclass
@@ -28,6 +28,7 @@ class ShowerEventData:
     x_core_shower: list[np.float64] = field(default_factory=list)
     y_core_shower: list[np.float64] = field(default_factory=list)
     core_distance_shower: list[np.float64] = field(default_factory=list)
+    angular_distance: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -52,6 +53,7 @@ class SimtelIOEventDataReader:
         self.telescope_list = telescope_list
 
         self.data_sets = self.read_table_list(event_data_file)
+        self.reduced_file_info = None
 
     def read_table_list(self, event_data_file):
         """
@@ -78,7 +80,14 @@ class SimtelIOEventDataReader:
         )
 
         data_sets = []
-        for i in range(len(dataset_dict["SHOWERS"])):
+        try:
+            sorted_indices = sorted(
+                range(len(dataset_dict["SHOWERS"])),
+                key=lambda i: int(dataset_dict["SHOWERS"][i].split("_")[-1]),
+            )
+        except (ValueError, AttributeError):
+            sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
+        for i in sorted_indices:
             data_sets.append(
                 {
                     "SHOWERS": dataset_dict["SHOWERS"][i],
@@ -121,6 +130,16 @@ class SimtelIOEventDataReader:
         )
         shower_data.core_distance_shower = np.hypot(
             shower_data.x_core_shower, shower_data.y_core_shower
+        )
+        shower_data.angular_distance = (
+            angular_separation(
+                shower_data.shower_azimuth * u.deg,
+                shower_data.shower_altitude * u.deg,
+                self.reduced_file_info["azimuth"],
+                (90.0 * u.deg - self.reduced_file_info["zenith"]),
+            )
+            .to(u.deg)
+            .value
         )
 
         return shower_data
@@ -237,6 +256,9 @@ class SimtelIOEventDataReader:
         tables = table_handler.read_tables(
             event_data_file,
             table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
+        )
+        self.reduced_file_info = self.get_reduced_simulation_file_info(
+            tables[get_name("FILE_INFO")]
         )
 
         shower_data = self._table_to_shower_data(tables[get_name("SHOWERS")])
@@ -355,4 +377,31 @@ class SimtelIOEventDataReader:
                 value = value * simulation_file_info[key].unit
             reduced_info[key] = value
 
+        reduced_info["solid_angle"] = solid_angle(
+            angle_min=reduced_info.get("viewcone_min", 0.0 * u.rad),
+            angle_max=reduced_info.get("viewcone_max", 0.0 * u.rad),
+        )
+        reduced_info["scatter_area"] = self.scatter_area(
+            core_scatter_min=reduced_info.get("core_scatter_min", 0.0 * u.m),
+            core_scatter_max=reduced_info.get("core_scatter_max", 0.0 * u.m),
+        )
+
         return reduced_info
+
+    def scatter_area(self, core_scatter_min, core_scatter_max):
+        """
+        Calculate the scatter area of the core.
+
+        Parameters
+        ----------
+        core_scatter_min : astropy.units.Quantity
+            Minimum core scatter radius.
+        core_scatter_max : astropy.units.Quantity
+            Maximum core scatter radius.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Scatter area.
+        """
+        return np.pi * (core_scatter_max**2 - core_scatter_min**2)

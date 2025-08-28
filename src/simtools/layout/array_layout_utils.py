@@ -282,11 +282,7 @@ def get_array_layouts_from_db(
     """
     layout_names = []
     if layout_name:
-        layout_names.append(
-            layout_name[0]
-            if isinstance(layout_name, list) and len(layout_name) == 1
-            else layout_name
-        )
+        layout_names = gen.ensure_iterable(layout_name)
     else:
         site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
         layout_names = site_model.get_list_of_array_layouts()
@@ -394,3 +390,39 @@ def _get_array_layout_dict(
             coordinate_system=coordinate_system
         ),
     }
+
+
+def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config):
+    """
+    Get list of array elements from the database for given list of layout names.
+
+    Structure of the returned dictionary::
+
+        {
+            "layout_name_1": [telescope_id_1, telescope_id_2, ...],
+            "layout_name_2": [telescope_id_3, telescope_id_4, ...],
+            ...
+        }
+
+    Parameters
+    ----------
+    layouts : list[str]
+        List of layout names to read. If "all", read all available layouts.
+    site : str
+        Site name for the array layouts.
+    model_version : str
+        Model version for the array layouts.
+    db_config : dict
+        Database configuration dictionary.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping layout names to telescope IDs.
+    """
+    site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
+    layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
+    layout_dict = {}
+    for layout_name in layout_names:
+        layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
+    return layout_dict
