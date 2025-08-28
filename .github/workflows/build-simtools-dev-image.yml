@@ -4,14 +4,14 @@ name: docker-simtools-dev
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - './docker/Dockerfile-dev'
   push:
     branches:
       - main
     tags:
       - 'v*'
-  pull_request:
-    branches: ["main"]
-    types: [review_requested, ready_for_review]
   release:
     types: [published]
   schedule:
