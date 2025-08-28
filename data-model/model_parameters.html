@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=33553b36"></script>
+    <script src="../_static/documentation_options.js?v=9f4f57c9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Data Model" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfa0ac4708" />
+  <meta name="docsearch:version" content="0.1.dev1+g8abc69105" />
   </head>
   
   
@@ -478,7 +478,7 @@ A typical model parameter file looks like:</p>
 <li><p><strong>Meta schema:</strong> The meta schema defines the structure of the model parameter file. It is a multi-document YAML file including several schema versions. The meta schema is used to validate the model parameter files. The <code class="docutils literal notranslate"><span class="pre">schema_version</span></code> field is used to identify the correct meta schema.</p></li>
 <li><p><strong>Model parameter schema:</strong> The model parameter schema defines the properties of the model parameter. It is a human-readable YAML file that describes the model parameter in detail. The <code class="docutils literal notranslate"><span class="pre">model_parameter_schema_version</span></code> field is used to identify the correct model parameter schema (optional field; default value is <code class="docutils literal notranslate"><span class="pre">0.1.0</span></code>).</p></li>
 </ol>
-<p>The metaschema <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml">model_parameter.metaschema.yml</a> defines the json data structure used for model parameters. This meta schema defines e.g., that <code class="docutils literal notranslate"><span class="pre">parameter</span></code> must be a string or <code class="docutils literal notranslate"><span class="pre">file</span></code> a boolean. No additional properties are allowed.</p>
+<p>The metaschema <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml">model_parameter.metaschema.yml</a> defines the JSON data structure used for model parameters. This meta schema defines e.g., that <code class="docutils literal notranslate"><span class="pre">parameter</span></code> must be a string or <code class="docutils literal notranslate"><span class="pre">file</span></code> a boolean. No additional properties are allowed.</p>
 <p>Model parameter schemas are defined in YAML format and located in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/src/simtools/schemas/model_parameters">src/simtools/schemas/model_parameters</a> directory. Each schema file specifies fields such as <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, and applicable telescopes.  Schemas also include metadata on default values, validation rules, data sources, and links to relevant simulation software.  Model parameter descriptions are primarily derived from the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray manual</a>, ensuring alignment with its definitions and conventions.</p>
 <p>For above example the schema file <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameters/num_gains.schema.yml">num_gains.schema.yml</a> is:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">%YAML</span><span class="w"> </span><span class="m">1.2</span>
@@ -517,7 +517,7 @@ A typical model parameter file looks like:</p>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sim_telarray</span>
 </pre></div>
 </div>
-<p>Model parameter schema files follow the fixed meta schema (see <code class="docutils literal notranslate"><span class="pre">meta_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">meta_schema_url</span></code>, and <code class="docutils literal notranslate"><span class="pre">meta_schema_version</span></code> fields in above example and <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>).</p>
+<p>Model parameter schema files follow the fixed meta schema (see <code class="docutils literal notranslate"><span class="pre">meta_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">meta_schema_url</span></code>, and <code class="docutils literal notranslate"><span class="pre">meta_schema_version</span></code> fields in above example and <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>).</p>
 </section>
 <section id="valid-keys">
 <h2>Valid Keys<a class="headerlink" href="#valid-keys" title="Link to this heading">#</a></h2>
