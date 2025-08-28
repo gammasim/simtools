@@ -98,7 +98,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ env.LABELS }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-${{ env.LABELS }}
           flavor: latest=true
 
       - name: Build and push image
