@@ -15,6 +15,8 @@ ERROR_PATTERNS = [
     re.compile(r"segmentation fault", re.IGNORECASE),
 ]
 
+IGNORE_PATTERNS = [re.compile(r"Falling back to 'utf-8' with errors='ignore'", re.IGNORECASE)]
+
 
 def inspect(log_text):
     """
@@ -34,17 +36,17 @@ def inspect(log_text):
         True if no errors or warnings are found, False otherwise.
     """
     log_text = log_text if isinstance(log_text, list) else [log_text]
-    issues = []
-    for txt in log_text:
-        for lineno, line in enumerate(txt.splitlines(), 1):
-            # Skip lines containing "INFO::"
-            if "INFO::" in line:
-                continue
-            for pattern in ERROR_PATTERNS:
-                if pattern.search(line):
-                    issues.append((lineno, line))
-                    break
+
+    issues = [
+        (lineno, line)
+        for txt in log_text
+        for lineno, line in enumerate(txt.splitlines(), 1)
+        if "INFO::" not in line
+        and any(p.search(line) for p in ERROR_PATTERNS)
+        and not any(p.search(line) for p in IGNORE_PATTERNS)
+    ]
 
     for lineno, line in issues:
         _logger.error(f"Error or warning found in log at line {lineno}: {line.strip()}")
-    return len(issues) == 0
+
+    return not issues
