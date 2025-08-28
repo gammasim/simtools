@@ -104,10 +104,9 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
+          no-cache: true
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
            BUILD_OPT=${{ matrix.production.build_opt }}
            EXTRA_DEF=${{ matrix.production.extra_def }}
