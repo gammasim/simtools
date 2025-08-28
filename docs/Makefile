@@ -1,8 +1,9 @@
 # Minimal makefile for Sphinx documentation
 #
 
-# You can set these variables from the command line.
-SPHINXOPTS    = -W -v --keep-going -n --color
+# Check all https links
+# SPHINXOPTS    = -W -v --keep-going -n --color -b linkcheck
+ SPHINXOPTS    = -W -v --keep-going -n --color
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = simtools
 SOURCEDIR     = source
