@@ -30,7 +30,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Download artifact test
+        id: download
+        uses: actions/download-artifact@v5
+        with:
+          name: corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
+          path: ./downloaded-artifacts
+        continue-on-error: true
+
       - name: Download corsika-simtel-package
+        if: steps.download.outcome == 'failure'
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
 
@@ -40,7 +49,7 @@ jobs:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-          retention-days: 1
+          retention-days: 7
 
   build-corsika-simtelarray:
     runs-on: ubuntu-latest
