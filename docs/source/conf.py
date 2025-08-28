@@ -182,3 +182,12 @@ myst_enable_extensions = [
 
 
 suppress_warnings = ["myst.*", "myst.duplicate_def"]
+
+# Links to be ignored by linkcheck
+linkcheck_ignore = [
+    r"https://www\.mpi-hd\.mpg\.de/hfm/~bernlohr/sim_telarray",
+    r"https://www\.mpi-hd\.mpg\.de/hfm/CTA/MC/Software/Testing/",
+    r"https://jama\.cta-observatory\.org/perspective\.req.*",
+    r"https://gitlab\.cta-observatory\.org/cta-computing/dpps/simpipe/corsika-opt-patches",
+    r"https://gitlab\.cta-observatory\.org/Konrad\.Bernloehr/sim_telarray",
+]
