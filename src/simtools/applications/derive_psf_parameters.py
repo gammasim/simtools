@@ -62,10 +62,6 @@ r"""
         If activated, application will be faster by simulating fewer photons.
     write_psf_parameters (activation mode, optional)
         Write the optimized PSF parameters as simulation model parameter files.
-    random_seed (int, optional)
-        Random seed for parameter generation.
-    n_runs (int, optional)
-        Number of parameter combinations to test.
 
     Example
     -------
@@ -153,18 +149,6 @@ def _parse():
         help=("Write the optimized PSF parameters as simulation model parameter files"),
         action="store_true",
         required=False,
-    )
-    config.parser.add_argument(
-        "--random_seed",
-        help="Random seed for parameter generation.",
-        type=int,
-        default=None,
-    )
-    config.parser.add_argument(
-        "--n_runs",
-        help="Number of parameter combinations to test (deprecated - use gradient descent).",
-        type=int,
-        default=5,
     )
     config.parser.add_argument(
         "--rmsd_threshold",
