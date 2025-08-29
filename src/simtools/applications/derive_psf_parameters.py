@@ -12,19 +12,18 @@ r"""
     A file name is expected, in which the file should contain 3 columns: radial distance in mm, \
     differential value of photon intensity and its integral value.
 
-    The derivation is performed through a random search. A number of random combination of the \
-    parameters are tested and the best ones are selected based on the minimum value of \
-    the Root Mean Squared Deviation between data and simulations. The range in which the \
-    parameter are drawn uniformly are defined based on the previous value on the telescope model.
+    The derivation is performed through gradient descent optimization. The algorithm iteratively \
+    adjusts the parameters to minimize the Root Mean Squared Deviation between measured and \
+    simulated PSF curves. The optimization continues until the RMSD threshold is reached.
 
     The optimization workflow includes:
 
     * Loading and preprocessing PSF data from measurement files
-    * Generating random parameter combinations for optimization
-    * Running ray-tracing simulations for each parameter set
-    * Calculating RMSD between measured and simulated PSF curves
-    * Identifying the best-fit parameters with minimum RMSD
-    * Creating comprehensive plots and D80 vs off-axis angle analysis
+    * Running gradient descent optimization to minimize RMSD
+    * Generating cumulative PSF plots for each iteration showing optimization progression
+    * Logging parameter evolution through gradient descent steps
+    * Creating convergence plots showing RMSD and D80 evolution
+    * Automatically generating D80 vs off-axis angle analysis for best parameters
     * Optionally exporting optimized parameters as simulation model files
 
     The assumption are:
@@ -91,19 +90,21 @@ r"""
 
     .. code-block:: console
 
-        simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
-            --model_version 6.0.0 \\
-            --data tests/resources/PSFcurve_data_v2.txt --write_psf_parameters
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\
+            --plot_all --test --rmsd_threshold 0.008 --learning_rate 0.001 \\
+            --data tests/resources/PSFcurve_data_v2.txt \\
+            --write_psf_parameters 2>&1 | grep -E \
+                "(Initial RMSD|Accepted step|Rejected step|iteration)
 
     The output is saved in simtools-output/tune_psf.
 
     Output files include:
 
-    * Parameter optimization results in tested_psf_parameters.txt
-    * PSF comparison plots in tune_psf_[telescope].pdf
+    * Gradient descent progression log in psf_gradient_descent_[telescope].log
+    * Gradient descent convergence plots in gradient_descent_convergence_[telescope].pdf
+    * PSF progression plots showing evolution through iterations (if --plot_all is specified)
     * D80 vs off-axis angle plots (d80_vs_offaxis_cm.png, d80_vs_offaxis_deg.png)
     * Optimized simulation model parameter files (if --write_psf_parameters is specified)
-    * Cumulative PSF plots for all tested combinations (if --plot_all is specified)
 
 """
 
@@ -161,9 +162,21 @@ def _parse():
     )
     config.parser.add_argument(
         "--n_runs",
-        help="Number of parameter combinations to test.",
+        help="Number of parameter combinations to test (deprecated - use gradient descent).",
         type=int,
         default=5,
+    )
+    config.parser.add_argument(
+        "--rmsd_threshold",
+        help="RMSD threshold for gradient descent convergence.",
+        type=float,
+        default=0.007,
+    )
+    config.parser.add_argument(
+        "--learning_rate",
+        help="Learning rate for gradient descent optimization.",
+        type=float,
+        default=0.01,
     )
     return config.initialize(
         db_config=True,
