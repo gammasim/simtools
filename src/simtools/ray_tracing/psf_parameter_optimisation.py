@@ -499,7 +499,7 @@ def run_gradient_descent_optimization(
     logger.info(f"Initial RMSD: {current_rmsd:.6f}, D80: {current_d80:.6f} cm")
 
     iteration = 0
-    max_total_iterations = 100  # Safety limit to prevent infinite loops
+    max_total_iterations = 100 if not args_dict.get("monte_carlo_analysis", False) else 1
 
     while iteration < max_total_iterations:
         iteration += 1
@@ -569,7 +569,7 @@ def run_gradient_descent_optimization(
                     logger.info(f"  Accepted step: RMSD improved to {new_rmsd:.6f}")
                     step_accepted = True
                 else:
-                    learning_rate *= 0.8
+                    learning_rate *= 0.9
                     retries += 1
                     logger.info(
                         f"  Rejected step: RMSD would increase from {current_rmsd:.6f} to "
@@ -599,7 +599,7 @@ def run_gradient_descent_optimization(
 
         # Increase when no step accepted after multiple attempts (escape local minimum)
         if not step_accepted:
-            learning_rate *= 1.2
+            learning_rate *= 1.5
 
             if learning_rate > 0.5:  # Prevent runaway learning rate
                 logger.warning("Learning rate getting very large - optimization may be stuck")
@@ -670,6 +670,124 @@ def write_gradient_descent_log(gd_results, best_pars, best_d80, output_dir, tel_
     return param_file
 
 
+def analyze_monte_carlo_rmsd_error(
+    tel_model, site_model, args_dict, data_to_plot, radius, n_simulations=500
+):
+    """
+    Analyze Monte Carlo error on RMSD by running multiple simulations with same parameters.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object
+    site_model : SiteModel
+        Site model object
+    args_dict : dict
+        Arguments dictionary
+    data_to_plot : array
+        Measured PSF data
+    radius : array
+        Radius array
+    n_simulations : int
+        Number of Monte Carlo simulations to run
+
+    Returns
+    -------
+    tuple
+        (mean_rmsd, std_rmsd, rmsd_values) - Mean RMSD, standard deviation, and all RMSD values
+    """
+    if data_to_plot is None or radius is None:
+        logger.error("No PSF measurement data provided. Cannot analyze Monte Carlo error.")
+        return None, None, []
+
+    # Get initial parameters from the database
+    initial_params = get_previous_values(tel_model)
+    for param_name, param_values in initial_params.items():
+        logger.info(f"  {param_name}: {param_values}")
+
+    rmsd_values = []
+    d80_values = []
+
+    for i in range(n_simulations):
+        try:
+            d80, rmsd = run_psf_simulation(
+                tel_model,
+                site_model,
+                args_dict,
+                initial_params,
+                data_to_plot,
+                radius,
+                return_simulated_data=False,
+            )
+            rmsd_values.append(rmsd)
+            d80_values.append(d80)
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"WARNING: Simulation {i + 1} failed: {e}")
+            continue
+
+    if not rmsd_values:
+        logger.error("All Monte Carlo simulations failed.")
+        return None, None, []
+
+    mean_rmsd = np.mean(rmsd_values)
+    std_rmsd = np.std(rmsd_values, ddof=1)
+    mean_d80 = np.mean(d80_values)
+    std_d80 = np.std(d80_values, ddof=1)
+
+    return mean_rmsd, std_rmsd, rmsd_values, mean_d80, std_d80, d80_values
+
+
+def write_monte_carlo_analysis(mc_results, output_dir, tel_model):
+    """
+    Write Monte Carlo analysis results to a log file.
+
+    Parameters
+    ----------
+    mc_results : tuple
+        Results from analyze_monte_carlo_rmsd_error
+    output_dir : Path
+        Output directory path
+    tel_model : TelescopeModel
+        Telescope model object for filename generation
+
+    Returns
+    -------
+    Path
+        Path to the created log file
+    """
+    mean_rmsd, std_rmsd, rmsd_values, mean_d80, std_d80, d80_values = mc_results
+
+    mc_file = output_dir.joinpath(f"monte_carlo_rmsd_analysis_{tel_model.name}.log")
+    with open(mc_file, "w", encoding="utf-8") as f:
+        f.write("# Monte Carlo RMSD Error Analysis\n")
+        f.write(f"# Telescope: {tel_model.name}\n")
+        f.write(f"# Number of simulations: {len(rmsd_values)}\n")
+        f.write("#" + "=" * 60 + "\n\n")
+
+        f.write("MONTE CARLO SIMULATION RESULTS:\n")
+        f.write(f"Number of successful simulations: {len(rmsd_values)}\n\n")
+
+        f.write("RMSD STATISTICS:\n")
+        f.write(f"Mean RMSD: {mean_rmsd:.6f}\n")
+        f.write(f"Standard deviation: {std_rmsd:.6f}\n")
+        f.write(f"Minimum RMSD: {min(rmsd_values):.6f}\n")
+        f.write(f"Maximum RMSD: {max(rmsd_values):.6f}\n")
+        f.write(f"Relative error: {(std_rmsd / mean_rmsd) * 100:.2f}%\n\n")
+
+        f.write("D80 STATISTICS:\n")
+        f.write(f"Mean D80: {mean_d80:.6f} cm\n")
+        f.write(f"Standard deviation: {std_d80:.6f} cm\n")
+        f.write(f"Minimum D80: {min(d80_values):.6f} cm\n")
+        f.write(f"Maximum D80: {max(d80_values):.6f} cm\n")
+        f.write(f"Relative error: {(std_d80 / mean_d80) * 100:.2f}%\n\n")
+
+        f.write("INDIVIDUAL SIMULATION RESULTS:\n")
+        for i, (rmsd, d80) in enumerate(zip(rmsd_values, d80_values)):
+            f.write(f"Simulation {i + 1:2d}: RMSD={rmsd:.6f}, D80={d80:.6f} cm\n")
+
+    return mc_file
+
+
 def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     """
     Run the complete PSF parameter optimization workflow using gradient descent.
@@ -693,6 +811,23 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         All results are saved to files and printed to console
     """
     data_to_plot, radius = load_and_process_data(args_dict)
+
+    if args_dict.get("monte_carlo_analysis", False):
+        logger.info("=" * 60)
+        logger.info("MONTE CARLO RMSD ERROR ANALYSIS")
+        logger.info("=" * 60)
+
+        mc_results = analyze_monte_carlo_rmsd_error(
+            tel_model, site_model, args_dict, data_to_plot, radius
+        )
+
+        if mc_results[0] is not None:  # If Monte Carlo analysis was successful
+            mc_file = write_monte_carlo_analysis(mc_results, output_dir, tel_model)
+            logger.info(f"Monte Carlo analysis results written to {mc_file}")
+
+        logger.info("=" * 60)
+        logger.info("PSF PARAMETER OPTIMIZATION")
+        logger.info("=" * 60)
 
     logger.info("Running PSF optimization using gradient descent")
 
