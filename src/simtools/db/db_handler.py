@@ -1,5 +1,6 @@
 """Module to handle interaction with DB."""
 
+import io
 import logging
 import re
 from collections import defaultdict
@@ -8,6 +9,7 @@ from threading import Lock
 
 import gridfs
 import jsonschema
+from astropy.table import Table
 from bson.objectid import ObjectId
 from packaging.version import Version
 from pymongo import MongoClient
@@ -773,6 +775,35 @@ class DatabaseHandler:
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
+
+    def get_ecsv_file_as_astropy_table(self, file_name, db_name=None):
+        """
+        Read contents of an ECSV file from the database and return it as an Astropy Table.
+
+        Files are not written to disk.
+
+        Parameters
+        ----------
+        db_name: str
+            The name of the database.
+        file_name: str
+            The name of the ECSV file.
+
+        Returns
+        -------
+        astropy.table.Table
+            The contents of the ECSV file as an Astropy Table.
+        """
+        db = DatabaseHandler.db_client[db_name or self.db_name]
+        fs = gridfs.GridFSBucket(db)
+
+        buf = io.BytesIO()
+        try:
+            fs.download_to_stream_by_name(file_name, buf)
+        except gridfs.errors.NoFile as exc:
+            raise FileNotFoundError(f"ECSV file '{file_name}' not found in DB.") from exc
+        buf.seek(0)
+        return Table.read(buf.getvalue().decode("utf-8"), format="ascii.ecsv")
 
     def add_production_table(self, db_name, production_table):
         """

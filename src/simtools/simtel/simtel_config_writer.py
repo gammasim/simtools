@@ -142,7 +142,7 @@ class SimtelConfigWriter:
         return value
 
     def _get_sim_telarray_metadata(
-        self, config_type, model_parameters, telescope_model_name, sim_telarray_seeds=None
+        self, config_type, model_parameters, telescope_model_name, additional_metadata=None
     ):
         """
         Return sim_telarray metadata.
@@ -155,8 +155,8 @@ class SimtelConfigWriter:
             Model parameters dictionary.
         telescope_model_name: str
             Name of the telescope model
-        sim_telarray_seeds: dict
-            Dictionary with configuration for sim_telarray random instrument setup.
+        additional_metadata: dict
+            Dictionary with additional metadata to include using 'set'.
 
         Returns
         -------
@@ -197,12 +197,10 @@ class SimtelConfigWriter:
 
         self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
 
-        if sim_telarray_seeds and sim_telarray_seeds.get("random_instrument_instances"):
-            meta_parameters.append(f"{prefix} set instrument_seed={sim_telarray_seeds['seed']}")
-            meta_parameters.append(
-                f"{prefix} set instrument_instances="
-                f"{sim_telarray_seeds['random_instrument_instances']}"
-            )
+        if additional_metadata:
+            for key, value in additional_metadata.items():
+                if value:
+                    meta_parameters.append(f"{prefix} set {key}={value}")
 
         return meta_parameters
 
@@ -224,7 +222,7 @@ class SimtelConfigWriter:
                 meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
     def write_array_config_file(
-        self, config_file_path, telescope_model, site_model, sim_telarray_seeds=None
+        self, config_file_path, telescope_model, site_model, additional_metadata=None
     ):
         """
         Write the sim_telarray config file for an array of telescopes.
@@ -237,8 +235,8 @@ class SimtelConfigWriter:
             Dictionary of TelescopeModel's instances as used by the ArrayModel instance.
         site_model: Site model
             Site model.
-        sim_telarray_seeds: dict
-            Dictionary with configuration for sim_telarray random instrument setup.
+        additional_metadata: dict
+            Dictionary with additional metadata to include.
         """
         config_file_directory = Path(config_file_path).parent
         with open(config_file_path, "w", encoding="utf-8") as file:
@@ -263,7 +261,7 @@ class SimtelConfigWriter:
                 site_model.parameters,
                 config_file_directory,
                 telescope_model,
-                sim_telarray_seeds,
+                additional_metadata,
             )
 
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -285,8 +283,8 @@ class SimtelConfigWriter:
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
 
-        if sim_telarray_seeds and sim_telarray_seeds.get("random_instrument_instances"):
-            self._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
+        if additional_metadata and additional_metadata.get("random_instrument_instances"):
+            self._write_random_seeds_file(additional_metadata, config_file_directory)
 
     def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
         """
@@ -418,7 +416,7 @@ class SimtelConfigWriter:
             file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
-        self, file, site_parameters, model_path, telescope_model, sim_telarray_seeds=None
+        self, file, site_parameters, model_path, telescope_model, additional_metadata=None
     ):
         """
         Write site parameters.
@@ -433,8 +431,8 @@ class SimtelConfigWriter:
             Path to the model for writing of additional files.
         telescope_model: dict of TelescopeModel
             Telescope models.
-        sim_telarray_seeds: dict
-            Dictionary with configuration for sim_telarray random instrument setup.
+        additional_metadata: dict
+            Dictionary with additional metadata to include.
         """
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
@@ -449,7 +447,7 @@ class SimtelConfigWriter:
             if simtel_name is not None:
                 file.write(f"{self.TAB}{simtel_name} = {value}\n")
         for meta in self._get_sim_telarray_metadata(
-            "site", site_parameters, self._telescope_model_name, sim_telarray_seeds
+            "site", site_parameters, self._telescope_model_name, additional_metadata
         ):
             file.write(f"{self.TAB}{meta}\n")
         file.write("\n")

@@ -107,7 +107,7 @@ def test_data_simple_columns():
         "camera_filter",
         "secondary_mirror_reflectivity",
         "lightguide_efficiency_vs_incidence_angle",
-        "nsb_reference_spectrum",
+        "nsb_spectrum",
         "atmospheric_profile",
     ]
     for column in columns:

@@ -229,8 +229,8 @@ def _data_columns_pulse_shape(n_columns):
     return _columns, "Pulse shape"
 
 
-def _data_columns_nsb_reference_spectrum():
-    """Column description for parameter nsb_reference_spectrum."""
+def _data_columns_nsb_spectrum():
+    """Column description for parameters describing the nsb spectrum."""
     return (
         [
             {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
@@ -240,7 +240,7 @@ def _data_columns_nsb_reference_spectrum():
                 "unit": "1.e9 / (nm s m^2 sr)",
             },
         ],
-        "NSB reference spectrum",
+        "NSB spectrum",
     )
 
 
