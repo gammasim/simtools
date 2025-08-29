@@ -90,7 +90,7 @@ r"""
             --plot_all --test --rmsd_threshold 0.008 --learning_rate 0.001 \\
             --data tests/resources/PSFcurve_data_v2.txt \\
             --write_psf_parameters 2>&1 | grep -E \
-                "(Initial RMSD|Accepted step|Rejected step|iteration)
+                "(Initial RMSD|Accepted step|Rejected step|iteration)"
 
     The output is saved in simtools-output/tune_psf.
 
@@ -161,6 +161,11 @@ def _parse():
         help="Learning rate for gradient descent optimization.",
         type=float,
         default=0.01,
+    )
+    config.parser.add_argument(
+        "--monte_carlo_analysis",
+        help="Run analysis to find monte carlo uncertainties.",
+        action="store_true",
     )
     return config.initialize(
         db_config=True,
