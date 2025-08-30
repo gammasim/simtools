@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -229,3 +230,11 @@ def test_pack_model_files(array_model, io_handler, tmp_path):
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
     ):
         assert array_model.pack_model_files() is None
+
+
+def test_get_additional_simtel_metadata(array_model):
+    assert "nsb_integrated_flux" in array_model._get_additional_simtel_metadata()
+
+    array_model_cp = copy.deepcopy(array_model)
+    array_model_cp.sim_telarray_seeds = {"seeds": 1234}
+    assert "seeds" in array_model_cp._get_additional_simtel_metadata()

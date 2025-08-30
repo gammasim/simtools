@@ -61,6 +61,16 @@ def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
     return mock_get_mapping
 
 
+@pytest.fixture
+def mock_read_sim_telarray_metadata(mocker):
+    """Mock the read_sim_telarray_metadata function."""
+    mock_metadata = mocker.patch(
+        "simtools.simtel.simtel_io_event_writer.read_sim_telarray_metadata"
+    )
+    mock_metadata.return_value = {"nsb_integrated_flux": 22.24}, {}
+    return mock_metadata
+
+
 def create_mc_run_header():
     """Create mock MC run header."""
     mock_header = MagicMock(spec=MCRunHeader)
@@ -130,6 +140,7 @@ def test_process_files(
     lookup_table_generator,
     mock_corsika_run_header,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
+    mock_read_sim_telarray_metadata,
 ):
     """Test processing of files and creation of tables."""
     # Create sequence that matches SimtelIOEventDataWriter expectations
@@ -173,6 +184,7 @@ def test_multiple_files(
     tmp_path,
     mock_corsika_run_header,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
+    mock_read_sim_telarray_metadata,
 ):
     """Test processing multiple input files."""
     # Create mock events for each file
@@ -266,33 +278,31 @@ def test_process_array_event_with_trigger_data(lookup_table_generator):
     assert trigger_event["telescope_list"] == one_two_three
 
 
-def test_get_preliminary_nsb_level(lookup_table_generator):
+def test_get_nsb_level_from_file_name(lookup_table_generator):
     """Test parsing NSB levels from filenames."""
-    assert lookup_table_generator._get_preliminary_nsb_level(
+    assert lookup_table_generator._get_nsb_level_from_file_name(
         "dark_file.simtel.zst"
-    ) == pytest.approx(1.0)
+    ) == pytest.approx(0.24)
 
-    assert lookup_table_generator._get_preliminary_nsb_level(
+    assert lookup_table_generator._get_nsb_level_from_file_name(
         "half_nsb_file.simtel.zst"
-    ) == pytest.approx(2.0)
+    ) == pytest.approx(0.835)
 
-    assert lookup_table_generator._get_preliminary_nsb_level(
+    assert lookup_table_generator._get_nsb_level_from_file_name(
         "gamma_full_moon_file.simtel.zst"
-    ) == pytest.approx(5.0)
+    ) == pytest.approx(1.2)
 
-    assert lookup_table_generator._get_preliminary_nsb_level("file.simtel.zst") == pytest.approx(
-        1.0
-    )
+    assert lookup_table_generator._get_nsb_level_from_file_name("file.simtel.zst") is None
 
-    assert lookup_table_generator._get_preliminary_nsb_level(
+    assert lookup_table_generator._get_nsb_level_from_file_name(
         "DARK_FILE.simtel.zst"
-    ) == pytest.approx(1.0)
+    ) == pytest.approx(0.24)
 
 
-def test_get_preliminary_nsb_level_invalid_input(lookup_table_generator):
+def test_get_nsb_level_from_file_name_invalid_input(lookup_table_generator):
     """Test NSB level parsing with invalid input."""
     with pytest.raises(AttributeError, match="Invalid file name."):
-        lookup_table_generator._get_preliminary_nsb_level(None)
+        lookup_table_generator._get_nsb_level_from_file_name(None)
 
 
 def test_process_mc_event(lookup_table_generator):
