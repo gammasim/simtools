@@ -1,22 +1,20 @@
 INFO::generate_simtel_event_data(l179)::main::Loading input files from: tests/resources/*proton*North_alpha_*.simtel.zst
-INFO::simtel_io_event_writer(l113)::process_files::Processing file 1/2: tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::simtel_io_event_writer(l114)::process_files::Processing file 1/2: tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l96)::__init__::Found zstd compressed file
 INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l96)::__init__::Found zstd compressed file
-WARNING::simtel_io_event_writer(l332)::_get_preliminary_nsb_level::No NSB level found in file name, defaulting to 1.0
 INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l96)::__init__::Found zstd compressed file
-INFO::simtel_io_event_writer(l156)::_process_mc_run_header::Shower reuse factor: 20 (viewcone: [ 0. 10.])
-INFO::simtel_io_event_writer(l113)::process_files::Processing file 2/2: tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::simtel_io_event_writer(l157)::_process_mc_run_header::Shower reuse factor: 20 (viewcone: [ 0. 10.])
+INFO::simtel_io_event_writer(l114)::process_files::Processing file 2/2: tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l96)::__init__::Found zstd compressed file
 INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l96)::__init__::Found zstd compressed file
-WARNING::simtel_io_event_writer(l332)::_get_preliminary_nsb_level::No NSB level found in file name, defaulting to 1.0
 INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
 INFO::base(l96)::__init__::Found zstd compressed file
-INFO::simtel_io_event_writer(l156)::_process_mc_run_header::Shower reuse factor: 20 (viewcone: [ 0. 10.])
+INFO::simtel_io_event_writer(l157)::_process_mc_run_header::Shower reuse factor: 20 (viewcone: [ 0. 10.])
 INFO::table_handler(l268)::write_tables::Writing table SHOWERS of length 2000 to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
 INFO::table_handler(l268)::write_tables::Writing table TRIGGERS of length 4 to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
 INFO::table_handler(l268)::write_tables::Writing table FILE_INFO of length 2 to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
@@ -39,8 +37,8 @@ shower_id event_id file_id   array_altitude  array_azimuth      telescope_list  
        46     4606       0 69.99999237060547           0.0         MSTN-01,MSTN-02                      5,6
        36     3606       1 69.99999237060547           0.0 LSTN-01,LSTN-02,MSTN-01                    1,2,5
        46     4606       1 69.99999237060547           0.0         MSTN-01,MSTN-02                      5,6
-                                        file_name                                         file_id particle_id energy_min energy_max viewcone_min viewcone_max core_scatter_min core_scatter_max   zenith  azimuth nsb_level
+                                        file_name                                         file_id particle_id energy_min energy_max viewcone_min viewcone_max core_scatter_min core_scatter_max   zenith  azimuth      nsb_level
                                                                                                                  TeV        TeV         deg          deg             m                m            deg      deg
------------------------------------------------------------------------------------------ ------- ----------- ---------- ---------- ------------ ------------ ---------------- ---------------- --------- ------- ---------
-tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       0          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0       1.0
-tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       1          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0       1.0
+----------------------------------------------------------------------------------------- ------- ----------- ---------- ---------- ------------ ------------ ---------------- ---------------- --------- ------- -------------------
+tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       0          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0 0.24053832149999996
+tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       1          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0 0.24053832149999996
