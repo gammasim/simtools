@@ -8,6 +8,7 @@ on:
     types: [opened, synchronize]
     paths-ignore:
       - 'docs/**'
+      - 'tests/unit_tests/**'
   schedule:
     - cron: "0 0 * * *"
   release:

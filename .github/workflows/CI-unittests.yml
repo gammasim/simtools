@@ -1,7 +1,7 @@
 ---
 name: CI-unittests
 # Execute unit tests
-# (includes CTAO-DPPS-SonarQube)
+# (includes CTAO-SonarQube)
 
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
     types: [opened, synchronize]
     paths-ignore:
       - 'docs/**'
+      - 'tests/integration_tests/**'
   schedule:
     - cron: "0 0 * * *"
   release:
