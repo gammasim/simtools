@@ -307,6 +307,12 @@ class CommandLineParser(argparse.ArgumentParser):
                 selected_parameters=simulation_configuration["corsika_configuration"],
                 available_parameters=self._get_dictionary_with_shower_configuration(),
             )
+        if "sim_telarray_configuration" in simulation_configuration:
+            self._initialize_simulation_configuration(
+                group_name="sim_telarray configuration",
+                selected_parameters=simulation_configuration["sim_telarray_configuration"],
+                available_parameters=self._get_dictionary_with_sim_telarray_configuration(),
+            )
 
     def _initialize_simulation_software(self):
         """Initialize simulation software arguments."""
@@ -351,11 +357,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 ),
                 "type": CommandLineParser.azimuth_angle,
                 "required": True,
+                "default": 0 * u.deg,
             },
             "zenith_angle": {
                 "help": "Zenith angle in degrees (between 0 and 180).",
                 "type": CommandLineParser.zenith_angle,
                 "required": True,
+                "default": 20 * u.deg,
             },
             "nshow": {
                 "help": "Number of showers per run to simulate.",
@@ -426,6 +434,27 @@ class CommandLineParser(argparse.ArgumentParser):
                 "type": CommandLineParser.parse_integer_and_quantity,
                 "required": False,
                 "default": ["10 1400 m"],
+            },
+        }
+
+    @staticmethod
+    def _get_dictionary_with_sim_telarray_configuration():
+        """Return dictionary with sim_telarray configuration parameters."""
+        return {
+            "sim_telarray_instrument_seeds": {
+                "help": (
+                    "Random seed used for sim_telarray instrument setup. "
+                    "If '--sim_telarray_random_instrument_instances' is not set: "
+                    "use as sim_telarray seed ('random_seed' parameter). Otherwise: "
+                    "use as base seed to generate the random instrument instance seeds."
+                ),
+                "type": str,
+                "required": False,
+            },
+            "sim_telarray_random_instrument_instances": {
+                "help": "Number of random instrument instances initialized in sim_telarray.",
+                "type": int,
+                "required": False,
             },
         }
 
@@ -711,28 +740,27 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def parse_quantity_pair(string):
         """
-        Parse a string representing a pair of astropy quantities separated by a space.
-
-        Args:
-            string: The input string (e.g., "0 deg 1.5 deg").
+        Parse a string representing a pair of astropy quantities.
 
         Returns
         -------
-            tuple: A tuple containing two astropy.units.Quantity objects.
+        tuple
+            A tuple of two astropy.units.Quantity objects.
 
         Raises
         ------
-            ValueError: If the string is not formatted correctly (e.g., missing space).
+        ValueError
+            If the string cannot be parsed into exactly two quantities.
         """
-        pattern = r"(\d+\.?\d*)\s*([a-zA-Z]+)"
+        pattern = r"(?>[\d\.eE+-]+)\s*(?>[A-Za-z]+)"
         matches = re.findall(pattern, string)
         if len(matches) != 2:
             raise ValueError("Input string does not contain exactly two quantities.")
 
-        return (
-            u.Quantity(float(matches[0][0]), matches[0][1]),
-            u.Quantity(float(matches[1][0]), matches[1][1]),
-        )
+        try:
+            return tuple(u.Quantity(m) for m in matches)
+        except Exception as exc:
+            raise ValueError(f"Could not parse quantities: {exc}") from exc
 
     @staticmethod
     def parse_integer_and_quantity(input_string):

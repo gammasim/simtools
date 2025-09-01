@@ -5,17 +5,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 import astropy.units as u
-import numpy as np
 import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
-from simtools.data_model.model_data_writer import JsonNumpyEncoder
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -32,7 +30,7 @@ def num_gains_schema_file():
 
 @pytest.fixture
 def num_gains_schema(num_gains_schema_file):
-    return gen.collect_data_from_file(file_name=num_gains_schema_file)
+    return ascii_handler.collect_data_from_file(file_name=num_gains_schema_file)
 
 
 def test_write(tmp_test_directory, args_dict_site):
@@ -86,12 +84,6 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
     data_file = tmp_test_directory.join("test_file.json")
     w1.write_dict_to_model_parameter_json(file_name=data_file, data_dict=data_dict)
     assert Path(data_file).is_file()
-
-    this_directory_is_not_there = "./this_directory_is_not_there/test_file.json"
-    with pytest.raises(FileNotFoundError, match=r"^Error writing model data to"):
-        w1.write_dict_to_model_parameter_json(
-            file_name=this_directory_is_not_there, data_dict=data_dict
-        )
 
 
 def test_dump(args_dict, io_handler):
@@ -175,20 +167,6 @@ def test_astropy_data_format():
     assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format
 
 
-def test_json_numpy_encoder():
-    encoder = JsonNumpyEncoder()
-    assert isinstance(encoder.default(np.float64(3.14)), float)
-    assert isinstance(encoder.default(np.int64(3.14)), int)
-    assert isinstance(encoder.default(np.array([])), list)
-    assert isinstance(encoder.default(u.Unit("m")), str)
-    assert encoder.default(u.Unit("")) is None
-    assert isinstance(encoder.default(u.Unit("m/s")), str)
-    assert isinstance(encoder.default(np.bool_(True)), bool)
-
-    with pytest.raises(TypeError):
-        encoder.default("abc")
-
-
 def test_dump_model_parameter(tmp_test_directory, db_config):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
@@ -203,7 +181,7 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         output_path=tmp_test_directory,
         use_plain_output_path=True,
     )
-    assert Path(tmp_test_directory / "num_gains.json").is_file()
+    assert (Path(tmp_test_directory) / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
     assert num_gains_dict["value"] == 2
     assert num_gains_dict["unit"] == u.dimensionless_unscaled
@@ -219,11 +197,11 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         use_plain_output_path=True,
         metadata_input_dict={"name": "test_metadata"},
     )
-    assert Path(tmp_test_directory / "array_element_position_utm.json").is_file()
+    assert (Path(tmp_test_directory) / "array_element_position_utm.json").is_file()
     assert isinstance(position_dict, dict)
-    assert pytest.approx(position_dict["value"][0]) == 217659.6
-    assert pytest.approx(position_dict["value"][1]) == 3184995.1
-    assert pytest.approx(position_dict["value"][2]) == 2185.0
+    assert position_dict["value"][0] == pytest.approx(217659.6)
+    assert position_dict["value"][1] == pytest.approx(3184995.1)
+    assert position_dict["value"][2] == pytest.approx(2185.0)
     assert Path(tmp_test_directory / "array_element_position_utm.meta.yml").is_file()
 
     position_dict = writer.ModelDataWriter.dump_model_parameter(
@@ -235,10 +213,10 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         output_path=tmp_test_directory,
         use_plain_output_path=True,
     )
-    assert pytest.approx(position_dict["value"][0]) == 6.55
-    assert pytest.approx(position_dict["value"][1]) == 0.0
-    assert pytest.approx(position_dict["value"][2]) == 0.0
-    assert pytest.approx(position_dict["value"][3]) == 0.0
+    assert position_dict["value"][0] == pytest.approx(6.55)
+    assert position_dict["value"][1] == pytest.approx(0.0)
+    assert position_dict["value"][2] == pytest.approx(0.0)
+    assert position_dict["value"][3] == pytest.approx(0.0)
 
     with patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
@@ -326,7 +304,17 @@ def test_prepare_data_dict_for_writing():
     }
     assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_5) == {
         "value": [5.5, 6.6],
-        "unit": ["null", "null"],
+        "unit": "null",
+        "type": "float64",
+    }
+    data_dict_6 = {
+        "value": 5.0,
+        "unit": "None",
+        "type": "float64",
+    }
+    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_6) == {
+        "value": 5.0,
+        "unit": "null",
         "type": "float64",
     }
 

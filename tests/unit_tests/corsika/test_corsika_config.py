@@ -118,7 +118,7 @@ def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model)
     assert corsika_config_mock_array_model.get_config_parameter("CSCAT") == [10, 140000.0, 0]
 
     # db_config is not None
-    assert pytest.approx(corsika_config_mock_array_model.get_config_parameter("CERSIZ")) == 5.0
+    assert corsika_config_mock_array_model.get_config_parameter("CERSIZ") == pytest.approx(5.0)
     assert corsika_config_mock_array_model.get_config_parameter("MAX_BUNCHES") == 1000000
     assert corsika_config_mock_array_model.get_config_parameter("ECUTS") == "0.3 0.1 0.02 0.02"
 
@@ -379,89 +379,39 @@ def test_corsika_configuration_debugging_parameters(corsika_config_mock_array_mo
 def test_rotate_azimuth_by_180deg_no_correct_for_geomagnetic_field_alignment(
     corsika_config_mock_array_model,
 ):
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                0.0, correct_for_geomagnetic_field_alignment=False
-            )
-        )
-        == 180.0
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                360.0, correct_for_geomagnetic_field_alignment=False
-            )
-        )
-        == 180.0
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                450.0, correct_for_geomagnetic_field_alignment=False
-            )
-        )
-        == 270.0
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                180.0, correct_for_geomagnetic_field_alignment=False
-            )
-        )
-        == 0.0
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                -180.0, correct_for_geomagnetic_field_alignment=False
-            )
-        )
-        == 0.0
-    )
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        0.0, correct_for_geomagnetic_field_alignment=False
+    ) == pytest.approx(180.0)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        360.0, correct_for_geomagnetic_field_alignment=False
+    ) == pytest.approx(180.0)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        450.0, correct_for_geomagnetic_field_alignment=False
+    ) == pytest.approx(270.0)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        180.0, correct_for_geomagnetic_field_alignment=False
+    ) == pytest.approx(0.0)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        -180.0, correct_for_geomagnetic_field_alignment=False
+    ) == pytest.approx(0.0)
 
 
 def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                0.0, correct_for_geomagnetic_field_alignment=True
-            )
-        )
-        == 175.467
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                360.0, correct_for_geomagnetic_field_alignment=True
-            )
-        )
-        == 175.467
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                450.0, correct_for_geomagnetic_field_alignment=True
-            )
-        )
-        == 265.467
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                180.0, correct_for_geomagnetic_field_alignment=True
-            )
-        )
-        == 355.467
-    )
-    assert (
-        pytest.approx(
-            corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-                -180.0, correct_for_geomagnetic_field_alignment=True
-            )
-        )
-        == 355.467
-    )
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        0.0, correct_for_geomagnetic_field_alignment=True
+    ) == pytest.approx(175.467)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        360.0, correct_for_geomagnetic_field_alignment=True
+    ) == pytest.approx(175.467)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        450.0, correct_for_geomagnetic_field_alignment=True
+    ) == pytest.approx(265.467)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        180.0, correct_for_geomagnetic_field_alignment=True
+    ) == pytest.approx(355.467)
+    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        -180.0, correct_for_geomagnetic_field_alignment=True
+    ) == pytest.approx(355.467)
 
 
 def test_set_primary_particle(corsika_config_mock_array_model):
@@ -487,20 +437,14 @@ def test_set_primary_particle(corsika_config_mock_array_model):
     assert p_pdg_id.name == PROTON_PARTICLE
 
 
-def test_get_config_parameter(corsika_config_mock_array_model, caplog):
+def test_get_config_parameter(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
     assert isinstance(cc.get_config_parameter("THETAP"), list)
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            cc.get_config_parameter("not_really_a_parameter")
-    assert "Parameter not_really_a_parameter" in caplog.text
-
-
-def test_print_config_parameter(corsika_config_mock_array_model, capsys):
-    logger.info("test_print_config_parameter")
-    corsika_config_mock_array_model.print_config_parameter()
-    assert "NSHOW" in capsys.readouterr().out
+    with pytest.raises(
+        KeyError, match="Parameter not_really_a_parameter is not a CORSIKA config parameter"
+    ):
+        cc.get_config_parameter("not_really_a_parameter")
 
 
 def test_get_text_single_line(corsika_config_mock_array_model):
@@ -523,7 +467,7 @@ def test_generate_corsika_input_file(corsika_config_mock_array_model):
     with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
-    assert corsika_config_mock_array_model._is_file_updated
+    assert corsika_config_mock_array_model.is_file_updated
     assert input_file == corsika_config_mock_array_model.generate_corsika_input_file()
 
 
@@ -559,10 +503,7 @@ def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handle
     with pytest.raises(
         ValueError, match="Must provide a run number for a temporary CORSIKA config file"
     ):
-        assert (
-            corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp")
-            == f"corsika_config_{file_name}.txt"
-        )
+        corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp")
 
     config_file_name = file_name.replace("run000001_", "")
     assert (
@@ -651,7 +592,8 @@ def test_validate_run_number(corsika_config_no_array_model):
 
 
 def test_assert_corsika_configurations_match_success(corsika_config_mock_array_model):
-    """Test that assert_corsika_configurations_match does not raise an error when parameters match."""
+    """Test that assert_corsika_configurations_match does not raise an error
+    when parameters match."""
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
         mock_params.get_simulation_software_parameters.return_value = {
@@ -672,7 +614,8 @@ def test_assert_corsika_configurations_match_success(corsika_config_mock_array_m
 
 
 def test_assert_corsika_configurations_match_failure(corsika_config_mock_array_model):
-    """Test that assert_corsika_configurations_match raises an error when parameters do not match."""
+    """Test that assert_corsika_configurations_match raises an error when parameters
+    do not match."""
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params_1 = Mock()
         mock_params_1.get_simulation_software_parameters.return_value = {

@@ -9,7 +9,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
@@ -307,8 +307,8 @@ class ModelParameter:
         if self.name is None and self.site is None:
             return
 
-        self._config_file_directory = self.io_handler.get_output_directory(
-            label=self.label, sub_dir=f"model/{self.model_version}"
+        self._config_file_directory = self.io_handler.get_model_configuration_directory(
+            label=self.label, model_version=self.model_version
         )
 
         # Setting file name and the location
@@ -431,7 +431,7 @@ class ModelParameter:
             "Insufficient validation of parameters."
         )
         self._logger.debug(f"Changing parameters from file {file_name}")
-        self.change_multiple_parameters(**gen.collect_data_from_file(file_name=file_name))
+        self.change_multiple_parameters(**ascii_handler.collect_data_from_file(file_name=file_name))
 
     def change_multiple_parameters(self, **kwargs):
         """

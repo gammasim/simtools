@@ -1,0 +1,18 @@
+---
+applications:
+- application: simtools-simulate-illuminator
+  configuration:
+    illuminator: ILLN-01
+    light_source_setup: layout
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+    telescope: MSTN-04
+    test: true
+  integration_tests:
+  - output_file: logfile.log
+  - output_file: xyzls_layout.simtel.zst
+  model_version_use_current: true
+  test_name: run-layout
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

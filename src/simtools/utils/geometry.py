@@ -180,3 +180,39 @@ def calculate_circular_mean(angles):
     sin_sum = np.sum(np.sin(angles))
     cos_sum = np.sum(np.cos(angles))
     return np.arctan2(sin_sum, cos_sum)
+
+
+def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth, altitude):
+    """
+    Transform ground to shower coordinates.
+
+    Assume ground to be of type 'North-West-Up' (NWU) coordinates.
+
+    Parameters
+    ----------
+    x_ground: numpy.array
+        Ground x coordinate.
+    y_ground: numpy.array
+        Ground y coordinate.
+    z_ground: numpy.array
+        Ground z coordinate.
+    azimuth: numpy.array
+        Azimuth angle of the shower (in radians).
+    altitude: numpy.array
+        Altitude angle of the shower (in radians).
+
+    Returns
+    -------
+    tuple
+        Transformed shower coordinates (x', y', z').
+    """
+    x, y, z, az, alt = np.broadcast_arrays(x_ground, y_ground, z_ground, azimuth, altitude)
+
+    ca, sa = np.cos(az), np.sin(az)
+    cz, sz = np.sin(alt), np.cos(alt)
+
+    x_s = ca * cz * x - sa * y + ca * sz * z
+    y_s = sa * cz * x + ca * y + sa * sz * z
+    z_s = -sz * x + cz * z
+
+    return x_s, y_s, z_s

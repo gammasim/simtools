@@ -17,9 +17,9 @@ from ctapipe.io import write_table
 from eventio import IACTFile
 
 from simtools import version
-from simtools.io_operations import io_handler
-from simtools.io_operations.hdf5_handler import fill_hdf5_table
-from simtools.utils.general import collect_data_from_file
+from simtools.io import io_handler
+from simtools.io.ascii_handler import collect_data_from_file
+from simtools.io.hdf5_handler import fill_hdf5_table
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
 
@@ -752,8 +752,9 @@ class CorsikaHistograms:
             elif label == "time_altitude":
                 mini_hist = self.hist_time_altitude[i_telescope]
                 hist_values.append(self.hist_time_altitude[i_telescope].view().T)
-            x_bin_edges.append(mini_hist.axes.edges[0].flatten())
-            y_bin_edges.append(mini_hist.axes.edges[1].flatten())
+            if mini_hist is not None:
+                x_bin_edges.append(mini_hist.axes.edges[0].flatten())
+                y_bin_edges.append(mini_hist.axes.edges[1].flatten())
 
         return np.array(hist_values), np.array(x_bin_edges), np.array(y_bin_edges)
 

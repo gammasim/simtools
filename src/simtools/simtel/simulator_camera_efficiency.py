@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.io import ascii_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import general
 
@@ -82,41 +82,27 @@ class SimulatorCameraEfficiency(SimtelRunner):
         """Prepare the command used to run testeff."""
         self._logger.debug("Preparing the command to run testeff")
 
-        # Processing camera pixel features
         pixel_shape = self._telescope_model.camera.get_pixel_shape()
         pixel_shape_cmd = "-hpix" if pixel_shape in [1, 3] else "-spix"
         pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
-        # Processing focal length
         focal_length = self._telescope_model.get_telescope_effective_focal_length("m", True)
 
-        # Processing mirror class
-        mirror_class = 1
-        try:
-            mirror_class = self._telescope_model.get_parameter_value("mirror_class")
-        except InvalidModelParameterError:
-            pass
+        mirror_class = self._telescope_model.get_parameter_value("mirror_class")
+        curvature_radius = self._get_curvature_radius(mirror_class)
+        camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
 
-        # Processing camera transmission
-        camera_transmission = 1
-        try:
-            camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
-        except KeyError:
-            pass
-
-        # Processing camera filter
-        # A special case is testeff does not support 2D distributions
         camera_filter_file = self._telescope_model.get_parameter_value("camera_filter")
+        # testeff does not support 2D distributions
         if self._telescope_model.is_file_2d("camera_filter"):
             camera_filter_file = self._get_one_dim_distribution(
                 "camera_filter", "camera_filter_incidence_angle"
             )
 
-        # Processing mirror reflectivity
-        # A special case is testeff does not support 2D distributions
         mirror_reflectivity = self._telescope_model.get_parameter_value("mirror_reflectivity")
         if mirror_class == 2:
             mirror_reflectivity_secondary = mirror_reflectivity
+        # testeff does not support 2D distributions
         if self._telescope_model.is_file_2d("mirror_reflectivity"):
             mirror_reflectivity = self._get_one_dim_distribution(
                 "mirror_reflectivity", "primary_mirror_incidence_angle"
@@ -136,6 +122,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" -alt {self._site_model.get_parameter_value('corsika_observation_level')}"
         command += f" -fatm {self._site_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length}"
+        command += f" -fcur {curvature_radius:.3f}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 0:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
@@ -227,7 +214,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
             two_dim_distribution, incidence_angle_distribution
         )
         new_file_name = (
-            f"weighted_average_1D_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
+            f"weighted_average_1D_{weighting_distribution_parameter}"
+            f"_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
         )
         return self._telescope_model.export_table_to_model_directory(
             new_file_name, distribution_to_export
@@ -257,7 +245,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
             self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )
 
-        lines = general.read_file_encoded_in_utf_or_latin(nsb_spectrum_file)
+        lines = ascii_handler.read_file_encoded_in_utf_or_latin(nsb_spectrum_file)
 
         with open(validated_nsb_spectrum_file, "w", encoding="utf-8") as file:
             for line in lines:
@@ -271,3 +259,24 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 else:
                     file.write(line)
         return validated_nsb_spectrum_file
+
+    def _get_curvature_radius(self, mirror_class=1):
+        """Get radius of curvature of dish."""
+        if mirror_class == 2:
+            return (
+                self._telescope_model.get_parameter_value_with_unit("primary_mirror_diameter")
+                .to("m")
+                .value
+            )
+
+        if self._telescope_model.get_parameter_value("parabolic_dish"):
+            return (
+                2.0
+                * self._telescope_model.get_parameter_value_with_unit("dish_shape_length")
+                .to("m")
+                .value
+            )
+
+        return (
+            self._telescope_model.get_parameter_value_with_unit("dish_shape_length").to("m").value
+        )

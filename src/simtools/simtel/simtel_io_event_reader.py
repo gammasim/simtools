@@ -5,11 +5,11 @@ from dataclasses import dataclass, field
 
 import astropy.units as u
 import numpy as np
-from astropy.coordinates import AltAz, angular_separation
-from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
+from astropy.coordinates import angular_separation
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io_operations import io_table_handler
+from simtools.io import table_handler
+from simtools.utils.geometry import transform_ground_to_shower_coordinates
 
 
 @dataclass
@@ -71,7 +71,7 @@ class SimtelIOEventDataReader:
         list
             List of dictionaries containing the data from the tables.
         """
-        dataset_dict = io_table_handler.read_table_list(
+        dataset_dict = table_handler.read_table_list(
             event_data_file,
             ["SHOWERS", "TRIGGERS", "FILE_INFO"],
             include_indexed_tables=True,
@@ -110,16 +110,17 @@ class SimtelIOEventDataReader:
             if table[col].unit:
                 setattr(shower_data, f"{col}_unit", table[col].unit)
 
-        shower_data.x_core_shower, shower_data.y_core_shower = (
-            self._transform_to_shower_coordinates(
+        shower_data.x_core_shower, shower_data.y_core_shower, _ = (
+            transform_ground_to_shower_coordinates(
                 shower_data.x_core,
                 shower_data.y_core,
+                0.0,
                 shower_data.shower_azimuth,
                 shower_data.shower_altitude,
             )
         )
-        shower_data.core_distance_shower = np.sqrt(
-            shower_data.x_core_shower**2 + shower_data.y_core_shower**2
+        shower_data.core_distance_shower = np.hypot(
+            shower_data.x_core_shower, shower_data.y_core_shower
         )
 
         return shower_data
@@ -191,7 +192,7 @@ class SimtelIOEventDataReader:
                 & (shower_data.event_id == tr_event_id)
                 & (shower_data.file_id == tr_file_id)
             )
-            matched_idx = np.where(mask)[0]
+            matched_idx = np.nonzero(mask)[0]
             if len(matched_idx) == 1:
                 matched_indices.append(matched_idx[0])
             else:
@@ -233,7 +234,7 @@ class SimtelIOEventDataReader:
         def get_name(key):
             return table_name_map.get(key, key)
 
-        tables = io_table_handler.read_tables(
+        tables = table_handler.read_tables(
             event_data_file,
             table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
         )
@@ -249,10 +250,10 @@ class SimtelIOEventDataReader:
 
         triggered_data.angular_distance = (
             angular_separation(
-                triggered_shower.shower_azimuth * u.rad,
-                triggered_shower.shower_altitude * u.rad,
-                triggered_data.array_azimuth * u.rad,
-                triggered_data.array_altitude * u.rad,
+                triggered_shower.shower_azimuth * u.deg,
+                triggered_shower.shower_altitude * u.deg,
+                triggered_data.array_azimuth * u.deg,
+                triggered_data.array_altitude * u.deg,
             )
             .to(u.deg)
             .value
@@ -297,34 +298,6 @@ class SimtelIOEventDataReader:
         )
 
         return filtered_triggered_data, filtered_triggered_shower_data
-
-    def _transform_to_shower_coordinates(self, x_core, y_core, shower_azimuth, shower_altitude):
-        """
-        Transform core positions from ground coordinates to shower coordinates.
-
-        Parameters
-        ----------
-        x_core : np.ndarray
-            Core x positions in ground coordinates.
-        y_core : np.ndarray
-            Core y positions in ground coordinates.
-        shower_azimuth : np.ndarray
-            Shower azimuth angles.
-        shower_altitude : np.ndarray
-            Shower altitude angles.
-
-        Returns
-        -------
-        tuple
-            Core positions in shower coordinates (x, y).
-        """
-        ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=np.zeros_like(x_core) * u.m)
-        shower_frame = ground.transform_to(
-            TiltedGroundFrame(
-                pointing_direction=AltAz(az=shower_azimuth * u.rad, alt=shower_altitude * u.rad)
-            )
-        )
-        return shower_frame.x.value, shower_frame.y.value
 
     def get_reduced_simulation_file_info(self, simulation_file_info):
         """

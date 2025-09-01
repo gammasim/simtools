@@ -1,0 +1,18 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    flasher: FLSN-01
+    model_version: 6.0.0
+    output_path: simtools-output
+    site: North
+    telescope: MSTN-04
+    test: true
+  integration_tests:
+  - output_file: logfile.log
+  - output_file: ff-1m_flasher.simtel.zst
+  - output_file: ff-1m_flasher.ctsim.hdata
+  model_version_use_current: true
+  test_name: run-flasher
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

@@ -14,7 +14,7 @@ BASE_PATH = "tests/resources/production_dl2_fits/"
 FILE_NAME_TEMPLATE = "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 MOCK_OPEN_PATH = "builtins.open"
 OUTPUT_FILE = "output.json"
-COLLECT_DATA_PATH = "simtools.utils.general.collect_data_from_file"
+COLLECT_DATA_PATH = "simtools.io.ascii_handler.collect_data_from_file"
 
 
 @pytest.fixture
@@ -75,7 +75,8 @@ def args_dict(tmp_path, metrics_file, grid_points_file):
 def mock_handler(args_dict, tmp_path):
     """Fixture to provide a mocked ProductionStatisticsHandler."""
     with patch(
-        "simtools.production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler._load_grid_points_production",
+        "simtools.production_configuration.derive_production_statistics_handler."
+        "ProductionStatisticsHandler._load_grid_points_production",
         return_value=[],
     ):
         return ProductionStatisticsHandler(args_dict, output_path=tmp_path)
@@ -106,7 +107,8 @@ def test_missing_required_args(args_dict, tmp_path):
     args_missing.pop("zeniths", None)
 
     with patch(
-        "simtools.production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler._load_grid_points_production",
+        "simtools.production_configuration.derive_production_statistics_handler."
+        "ProductionStatisticsHandler._load_grid_points_production",
         return_value=[],
     ):
         handler = ProductionStatisticsHandler(args_missing, output_path=tmp_path)
@@ -279,7 +281,7 @@ def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"grid_points": ["test1", "test2"]}):
         with patch(
             MOCK_OPEN_PATH, mock_open(read_data=json.dumps({"grid_points": ["test1", "test2"]}))
         ):
@@ -318,7 +320,7 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"grid_points": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with an empty grid_points list
@@ -344,7 +346,7 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH):
+    with patch(COLLECT_DATA_PATH, return_value={"wrong_key": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
         # It should load the dict with the wrong key
@@ -371,7 +373,8 @@ def test_initialize_evaluators_with_valid_files(mock_handler):
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.glob", return_value=["dummy_path"]),
         patch(
-            "simtools.production_configuration.derive_production_statistics_handler.StatisticalUncertaintyEvaluator",
+            "simtools.production_configuration.derive_production_statistics_handler."
+            "StatisticalUncertaintyEvaluator",
             return_value=mock_evaluator_instance,
         ),
     ):
@@ -408,7 +411,8 @@ def test_perform_interpolation_with_grid_points(mock_handler):
     mock_interp.interpolate.return_value = np.array([100])
 
     with patch(
-        "simtools.production_configuration.derive_production_statistics_handler.InterpolationHandler",
+        "simtools.production_configuration.derive_production_statistics_handler."
+        "InterpolationHandler",
         return_value=mock_interp,
     ):
         result = mock_handler.perform_interpolation()

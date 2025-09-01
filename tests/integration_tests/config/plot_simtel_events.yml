@@ -1,0 +1,16 @@
+---
+applications:
+- application: simtools-plot-simtel-events
+  configuration:
+    simtel_files: tests/resources/ff-1m_flasher.simtel.zst
+    plots: all
+    tel_id: 1
+    output_file: event_plots
+    test: true
+    output_path: simtools-output
+  integration_tests:
+  - output_file: event_plots_ff-1m_flasher.simtel.pdf
+  - output_file: event_plots_ff-1m_flasher.simtel.plot_simtel_events.meta.yml
+  test_name: flasher_event_plots
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

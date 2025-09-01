@@ -13,9 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import general as gen
 from simtools.utils import names
 from simtools.visualization import plot_pixels, plot_tables
 
@@ -175,7 +174,7 @@ class ReadParameters:
                 parameter, parameter_version, input_file, outpath, design_type
             )
             # Write markdown file using the stored path
-            file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+            file_contents = ascii_handler.read_file_encoded_in_utf_or_latin(input_file)
 
             with markdown_output_file.open("w", encoding="utf-8") as outfile:
                 outfile.write(f"# {input_file.stem}\n")
@@ -414,7 +413,7 @@ class ReadParameters:
             if not design_type and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
-                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                if not self.is_markdown_link(value):
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
@@ -796,7 +795,7 @@ class ReadParameters:
             if not names.is_design_type(array_element) and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
-                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                if not self.is_markdown_link(value):
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
@@ -822,6 +821,22 @@ class ReadParameters:
             data.extend(sorted_class_data)
 
         return data
+
+    def is_markdown_link(self, value):
+        """
+        Return True if the string is a Markdown-style link: [text](target).
+
+        Parameters
+        ----------
+        value : str
+            The string to check.
+
+        Returns
+        -------
+        bool
+            True if the string is a Markdown link, False otherwise.
+        """
+        return bool(re.fullmatch(r"\[[^\]]*\]\([^)]+\)", value.strip()))
 
     def produce_calibration_reports(self):
         """Write calibration reports."""

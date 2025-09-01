@@ -4,14 +4,14 @@ applications:
   configuration:
     array_layout_name: beta
     azimuth_angle: South
-    core_scatter: 10 840 m
+    core_scatter: 1 840 m
     corsika_test_seeds: true
     data_directory: simtools-data
-    energy_range: 150 GeV 600 GeV
+    energy_range: 150 GeV 400 GeV
     label: check_output
     log_level: DEBUG
     model_version: 6.0.0
-    nshow: 5
+    nshow: 10
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output
     primary: gamma

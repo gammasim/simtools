@@ -30,8 +30,8 @@ def expected_command():
         "testeff",
         "-fnsb",
         "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat",
-        "-flen 2.15191 -spix 0.6",
-        "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2",
+        "-flen 2.15191 -fcur 4.241 -spix 0.6",
+        "weighted_average_1D_primary_mirror_incidence_angle_ref_astri-2d_2018-01-17.dat -m2",
         "-teltrans 0.921",
         "transmission_sstcam_weighted_220512.dat",
         "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat",
@@ -109,9 +109,9 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_vers
             "model_version": model_version_prod5,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
+            "simtel_path": simtel_path,
         },
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
     )
@@ -119,7 +119,6 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_vers
     # 2D transmission window not defined in prod6; required prod5 runner
     camera_efficiency_sst_prod5.export_model_files()
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
-        simtel_path=simtel_path,
         telescope_model=camera_efficiency_sst_prod5.telescope_model,
         file_simtel=camera_efficiency_sst_prod5._file["sim_telarray"],
         label="test-simtel-runner-camera-efficiency",
@@ -167,3 +166,41 @@ def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
         )
     )
     produced_file_has_expected_values(second_validated_nsb_spectrum_file)
+
+
+def test_get_curvature_radius_mirror_class_2(simulator_camera_efficiency, mocker):
+    mock_telescope_model = simulator_camera_efficiency._telescope_model
+    mocker.patch.object(
+        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.5 * u.m
+    )
+    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=2)
+    assert radius == pytest.approx(1.5)
+
+
+def test_get_curvature_radius_parabolic_dish_true(simulator_camera_efficiency, mocker):
+    mock_telescope_model = simulator_camera_efficiency._telescope_model
+    mocker.patch.object(mock_telescope_model, "get_parameter_value", return_value=True)
+    mocker.patch.object(
+        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.2 * u.m
+    )
+    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=1)
+    assert radius == pytest.approx(2.4)
+
+
+def test_get_curvature_radius_parabolic_dish_false(simulator_camera_efficiency, mocker):
+    mock_telescope_model = simulator_camera_efficiency._telescope_model
+    mocker.patch.object(mock_telescope_model, "get_parameter_value", return_value=False)
+    mocker.patch.object(
+        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.7 * u.m
+    )
+    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=1)
+    assert radius == pytest.approx(1.7)
+
+
+def test_check_run_result_success(simulator_camera_efficiency, mocker):
+    mocker.patch.object(Path, "exists", return_value=True)
+    mock_logger = mocker.patch.object(simulator_camera_efficiency._logger, "debug")
+
+    simulator_camera_efficiency._check_run_result()
+
+    mock_logger.assert_called_once_with("Everything looks fine with output file.")

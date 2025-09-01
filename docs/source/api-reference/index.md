@@ -14,7 +14,7 @@ corsika
 data_model
 dependencies
 db_handler
-io_operations
+io
 job_execution
 array_layout
 mc_model

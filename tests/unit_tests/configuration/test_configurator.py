@@ -14,7 +14,7 @@ from simtools.configuration.configurator import (
     Configurator,
     InvalidConfigurationParameterError,
 )
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 logger = logging.getLogger()
 
@@ -227,7 +227,7 @@ def test_initialize_output(configurator):
     configurator.parser.initialize_output_arguments()
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
-    # outputfile for testing
+    # output file for testing
     configurator.config["test"] = True
     configurator._initialize_output()
     assert configurator.config["output_file"] == "TEST.ecsv"

@@ -396,10 +396,10 @@ def test_check_and_convert_units(reference_columns):
 
     # check unit conversion for "position_x" (column type Quantity)
     assert table_1["position_x"].unit == u.m
-    assert 100.0 == pytest.approx(table_1["position_x"].value[0])
+    assert table_1["position_x"].value[0] == pytest.approx(100.0)
     # check unit conversion for "position_y" (column type Column)
     assert table_1["position_y"].unit == u.m
-    assert 7000.0 == pytest.approx(table_1["position_y"].value[1])
+    assert table_1["position_y"].value[1] == pytest.approx(7000.0)
 
 
 def test_check_and_convert_units_with_errors(reference_columns):
@@ -550,11 +550,11 @@ def test_check_data_type(reference_columns, caplog):
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(TypeError):
-            assert data_validator._check_data_type(np.dtype("float32"), "wavelength")
-    assert (
-        "Invalid data type in column 'wavelength'. Expected type 'double', found 'float32'"
-        in caplog.text
-    )
+            data_validator._check_data_type(np.dtype("float32"), "wavelength")
+        assert (
+            "Invalid data type in column 'wavelength'. Expected type 'double', found 'float32'"
+            in caplog.text
+        )
 
     # sub types only
     data_validator.check_exact_data_type = False
@@ -749,13 +749,13 @@ def test_prepare_model_parameter():
         "unit": "km",
     }
     data_validator._prepare_model_parameter()
-    assert pytest.approx(data_validator.data_dict["value"]) == 1000.0
+    assert data_validator.data_dict["value"] == pytest.approx(1000.0)
     assert data_validator.data_dict["unit"] == "km"
 
     data_validator.data_dict["value"] = "1000. 2000. 3000."
     data_validator._prepare_model_parameter()
-    assert pytest.approx(data_validator.data_dict["value"][0]) == 1000.0
-    assert pytest.approx(data_validator.data_dict["value"][2]) == 3000.0
+    assert data_validator.data_dict["value"][0] == pytest.approx(1000.0)
+    assert data_validator.data_dict["value"][2] == pytest.approx(3000.0)
     assert data_validator.data_dict["unit"] == "km"
 
     data_validator.data_dict["value"] = "1000. 2000. 3000."
@@ -808,7 +808,7 @@ def test_check_version_string(caplog):
 
     invalid_versions = [
         "1.0",
-        "1.0.0.0",
+        f"{1}.{0}.{0}.{0}",  # SonarQube will otherwise think this is an IP address
         "1.0.a",
         "1.0.0-",
         "1.0.0+",
@@ -915,7 +915,7 @@ def test_validate_model_parameter(mocker):
     par_dict = {"parameter": "reference_point_altitude", "value": 1000.0, "unit": "km"}
 
     validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
-    assert validated_data["value"] == 1000.0
+    assert validated_data["value"] == pytest.approx(1000.0)
     assert validated_data["unit"] == "km"
 
 
@@ -937,3 +937,38 @@ def test__check_site_and_array_element_consistency():
     expected_message = "Site '['South']' and instrument site '['North']' are inconsistent."
     with pytest.raises(ValueError, match=re.escape(expected_message)):
         data_validator._check_site_and_array_element_consistency("LSTN-03", "South")
+
+
+def test_rate_limited_logger(caplog):
+    """Test the _rate_limited_logger method with different input types."""
+    data_validator = validate_data.DataValidator()
+
+    with caplog.at_level(logging.DEBUG):
+        # Test with integer column name - should log for values < max_logs
+        data_validator._rate_limited_logger(5, "Test message 1", max_logs=10)
+        assert "Test message 1" in caplog.text
+
+        # Test with integer column name - should not log for values >= max_logs
+        caplog.clear()
+        data_validator._rate_limited_logger(15, "Test message 2", max_logs=10)
+        assert "Test message 2" not in caplog.text
+
+        # Test with string numeric column name - should log for numeric < max_logs
+        caplog.clear()
+        data_validator._rate_limited_logger("3", "Test message 3", max_logs=10)
+        assert "Test message 3" in caplog.text
+
+        # Test with string numeric column name - should not log for numeric >= max_logs
+        caplog.clear()
+        data_validator._rate_limited_logger("12", "Test message 4", max_logs=10)
+        assert "Test message 4" not in caplog.text
+
+        # Test with non-numeric string column name - should log once
+        caplog.clear()
+        data_validator._rate_limited_logger("wavelength", "Test message 5", max_logs=10)
+        assert "Test message 5" in caplog.text
+
+        # Test with complex string that contains numbers but is not purely numeric
+        caplog.clear()
+        data_validator._rate_limited_logger("col1_name", "Test message 6", max_logs=10)
+        assert "Test message 6" in caplog.text

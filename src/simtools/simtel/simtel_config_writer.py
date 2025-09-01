@@ -10,6 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
@@ -404,7 +405,9 @@ class SimtelConfigWriter:
             "simtools_model_production_version": self._model_version,
         }
         try:
-            build_opts = gen.collect_data_from_file(Path(self._simtel_path) / "build_opts.yml")
+            build_opts = ascii_handler.collect_data_from_file(
+                Path(self._simtel_path) / "build_opts.yml"
+            )
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
         except (FileNotFoundError, TypeError):
@@ -506,7 +509,9 @@ class SimtelConfigWriter:
 
         trigger_lines = {}
         for tel_type, tel_list in trigger_per_telescope_type.items():
-            trigger_dict = self._get_array_triggers_for_telescope_type(array_triggers, tel_type)
+            trigger_dict = self._get_array_triggers_for_telescope_type(
+                array_triggers, tel_type, len(tel_list)
+            )
             trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
             trigger_lines[tel_type] += ", ".join(map(str, tel_list))
             width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
@@ -526,7 +531,9 @@ class SimtelConfigWriter:
 
         return array_triggers_file
 
-    def _get_array_triggers_for_telescope_type(self, array_triggers, telescope_type):
+    def _get_array_triggers_for_telescope_type(
+        self, array_triggers, telescope_type, num_telescopes_of_type
+    ):
         """
         Get array trigger for a specific telescope type.
 
@@ -536,14 +543,19 @@ class SimtelConfigWriter:
             Array trigger definitions.
         telescope_type: str
             Telescope type.
+        num_telescopes_of_type: int
+            Number of telescopes of the specified type.
 
         Returns
         -------
         dict
             Array trigger for the telescope type.
         """
+        suffix = "_array"
+        if num_telescopes_of_type == 1:
+            suffix = "_single_telescope"
         for trigger_dict in array_triggers:
-            if trigger_dict["name"] == telescope_type + "_array":
+            if trigger_dict["name"] == telescope_type + suffix:
                 return trigger_dict
         return None
 

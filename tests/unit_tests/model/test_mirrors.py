@@ -56,7 +56,7 @@ def write_tmp_mirror_list(io_handler, tmp_test_directory, incomplete_mirror_tabl
 def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel, tmp_test_directory):
     mirrors = mirror_template_simtel
     assert 198 == mirrors.number_of_mirrors
-    assert 151.0 == pytest.approx(mirrors.mirror_diameter.value)
+    assert mirrors.mirror_diameter.value == pytest.approx(151.0)
     assert 3 == mirrors.shape_type
 
     # reduced table with less columns
@@ -74,7 +74,7 @@ def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel, 
 def test_read_mirror_list_from_ecsv(io_handler, mirror_template_ecsv):
     mirrors = mirror_template_ecsv
     assert 198 == mirrors.number_of_mirrors
-    assert 151.0 == pytest.approx(mirrors.mirror_diameter.value)
+    assert mirrors.mirror_diameter.value == pytest.approx(151.0)
     assert 3 == mirrors.shape_type
 
 
@@ -147,11 +147,11 @@ def test_read_mirror_list_from_ecsv_no_db(io_handler):
 
 
 def assert_mirror_parameters(mirror_x, mirror_y, mirror_diameter, focal_length, shape_type):
-    assert 1022.49 == mirror_x.value
-    assert -462.0 == mirror_y.value
-    assert 151.0 == mirror_diameter.value
-    assert 2920.0 == focal_length.value
-    assert 3 == shape_type.value
+    assert mirror_x.value == pytest.approx(1022.49)
+    assert mirror_y.value == pytest.approx(-462.0)
+    assert mirror_diameter.value == pytest.approx(151.0)
+    assert focal_length.value == pytest.approx(2920.0)
+    assert shape_type.value == 3
 
 
 def test_get_single_mirror_parameters_ecsv(io_handler, mirror_template_ecsv):
@@ -182,4 +182,4 @@ def test_get_single_mirror_parameters_simtel_missing_column(io_handler, mirror_t
         shape_type,
     ) = mirrors.get_single_mirror_parameters(198)
     assert 0 == mirror_x
-    assert 2920.0 == focal_length.value
+    assert focal_length.value == pytest.approx(2920.0)

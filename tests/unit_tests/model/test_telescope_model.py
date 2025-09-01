@@ -102,13 +102,13 @@ def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_mod
 def test_position(telescope_model_lst, caplog):
     tel_model = telescope_model_lst
     xyz = tel_model.position(coordinate_system="ground")
-    assert pytest.approx(xyz[0].value) == -70.91
-    assert pytest.approx(xyz[1].value) == -52.35
-    assert pytest.approx(xyz[2].value) == 45.0
+    assert xyz[0].value == pytest.approx(-70.91)
+    assert xyz[1].value == pytest.approx(-52.35)
+    assert xyz[2].value == pytest.approx(45.0)
     utm_xyz = tel_model.position(coordinate_system="utm")
-    assert pytest.approx(utm_xyz[0].value) == 217659.6
-    assert pytest.approx(utm_xyz[1].value) == 3184995.1
-    assert pytest.approx(utm_xyz[2].value) == 2185.0
+    assert utm_xyz[0].value == pytest.approx(217659.6)
+    assert utm_xyz[1].value == pytest.approx(3184995.1)
+    assert utm_xyz[2].value == pytest.approx(2185.0)
     with caplog.at_level("ERROR"):
         with pytest.raises(InvalidModelParameterError):
             tel_model.position(coordinate_system="invalid")
@@ -306,7 +306,7 @@ def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
 
     with patch("astropy.io.ascii.read", return_value=fake_table):
         result = telescope_model_lst.get_on_axis_eff_optical_area()
-        assert result == 123.4
+        assert result == pytest.approx(123.4)
 
 
 def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):

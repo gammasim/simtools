@@ -63,7 +63,7 @@ def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, 
     image.read_photon_list_from_simtel_file(test_file)
     image.get_psf(0.8, "cm")
 
-    assert 3.343415291615846 == pytest.approx(image.get_psf(0.8, "cm"))
+    assert image.get_psf(0.8, "cm") == pytest.approx(3.343415291615846)
 
     # Copy the file to the temporary test directory
     shutil.copy(test_file, tmp_test_directory)
@@ -81,7 +81,7 @@ def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, 
     image_unzipped.read_photon_list_from_simtel_file(unzipped_file_path)
     image_unzipped.get_psf(0.8, "cm")
 
-    assert 3.343415291615846 == pytest.approx(image_unzipped.get_psf(0.8, "cm"))
+    assert image_unzipped.get_psf(0.8, "cm") == pytest.approx(3.343415291615846)
 
     image_not_ok = PSFImage(focal_length=2800.0)
     mocker.patch.object(image_not_ok, "_is_photon_positions_ok", return_value=False)
@@ -104,7 +104,7 @@ def test_get_cumulative_data(psf_image):
     radius = np.array([50.0] * u.cm)
     cumulative_data_radius = image.get_cumulative_data(radius=radius)
     assert len(cumulative_data_radius) == 1
-    assert pytest.approx(cumulative_data_radius["Radius [cm]"][0]) == 50.0
+    assert cumulative_data_radius["Radius [cm]"][0] == pytest.approx(50.0)
 
 
 def test_get_image_data(psf_image):
@@ -126,7 +126,7 @@ def test_set_psf(caplog):
 
     # Test setting PSF in cm
     image.set_psf(1.5, fraction=0.8, unit="cm")
-    assert image._stored_psf[0.8] == 1.5
+    assert image._stored_psf[0.8] == pytest.approx(1.5)
 
     # Test setting PSF in deg
     image.set_psf(0.05, fraction=0.8, unit="deg")
@@ -142,7 +142,7 @@ def test_set_psf(caplog):
 
     # Test setting PSF with different fractions
     image.set_psf(2.0, fraction=0.5, unit="cm")
-    assert image._stored_psf[0.5] == 2.0
+    assert image._stored_psf[0.5] == pytest.approx(2.0)
     image.set_psf(0.1, fraction=0.5, unit="deg")
     expected_value_fraction_0_5 = 0.1 / image._cm_to_deg
     assert image._stored_psf[0.5] == pytest.approx(expected_value_fraction_0_5)
@@ -194,7 +194,7 @@ def test_get_effective_area(psf_image, caplog):
 
     # Test when effective area is set
     image.set_effective_area(100.0)
-    assert image.get_effective_area() == 100.0
+    assert image.get_effective_area() == pytest.approx(100.0)
 
     # Test when effective area is not set
     image_no_effective_area = PSFImage()
@@ -272,10 +272,10 @@ def test_process_simtel_file_using_rx_success(
     mock_gzip_open.assert_called_once_with(dummy_photon_file, "rb")
     mock_shutil_copyfileobj.assert_called_once()
 
-    assert image._stored_psf[image._containment_fraction] == 1.0  # 2 * 0.5
-    assert image.centroid_x == 0.1
-    assert image.centroid_y == 0.2
-    assert image._effective_area == 100.0
+    assert image._stored_psf[image._containment_fraction] == pytest.approx(1.0)  # 2 * 0.5
+    assert image.centroid_x == pytest.approx(0.1)
+    assert image.centroid_y == pytest.approx(0.2)
+    assert image._effective_area == pytest.approx(100.0)
 
 
 def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_gzip_open):
@@ -357,7 +357,7 @@ def test_process_simtel_line_total_photons(psf_image, caplog):
     line = b"# Telescope 1 with 100 photons from 1 star(s) falling on an area of 683. m^2"
     image._process_simtel_line(line)
     assert image._total_photons == 100
-    assert image._total_area == 100.0
+    assert image._total_area == pytest.approx(100.0)
 
     # Test conflicting total area
     line_conflict = b"# Telescope 1 with 100 photons from 1 star(s) falling on an area of 683. m^2"
@@ -365,20 +365,20 @@ def test_process_simtel_line_total_photons(psf_image, caplog):
         image._process_simtel_line(line_conflict)
     assert "Conflicting value of the total area found" in caplog.text
     assert image._total_photons == 200
-    assert image._total_area == 100.0
+    assert image._total_area == pytest.approx(100.0)
 
 
 def test_process_simtel_line_photon_positions(psf_image):
     image = psf_image
     line = b"0 0 1.0 2.0"
     image._process_simtel_line(line)
-    assert image.photon_pos_x[-1] == 1.0
-    assert image.photon_pos_y[-1] == 2.0
+    assert image.photon_pos_x[-1] == pytest.approx(1.0)
+    assert image.photon_pos_y[-1] == pytest.approx(2.0)
 
     line = b"0 0 3.0 4.0"
     image._process_simtel_line(line)
-    assert image.photon_pos_x[-1] == 3.0
-    assert image.photon_pos_y[-1] == 4.0
+    assert image.photon_pos_x[-1] == pytest.approx(3.0)
+    assert image.photon_pos_y[-1] == pytest.approx(4.0)
 
 
 def test_process_simtel_line_comments(psf_image):
@@ -405,12 +405,12 @@ def test_find_psf_brute_force(psf_image, mocker, caplog):
     with caplog.at_level(logging.WARNING):
         psf = image._find_psf(fraction)
     assert "Could not find PSF " in caplog.text
-    assert psf == 2 * radius_sig
+    assert psf == pytest.approx(2 * radius_sig)
 
     # enforce negative dr
     mocker.patch.object(image, "_sum_photons_in_radius", return_value=1000)
     psf = image._find_psf(fraction)
-    assert psf == 2 * radius_sig
+    assert psf == pytest.approx(2 * radius_sig)
 
 
 def test_plot_cumulative(psf_image, mocker):

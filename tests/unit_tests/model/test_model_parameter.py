@@ -68,13 +68,13 @@ def test_get_parameter_value(telescope_model_lst):
         "type": "float64",
     }
     t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
-    assert pytest.approx(t_2) == 0.8
+    assert t_2 == pytest.approx(0.8)
     # string-type lists
     _tmp_dict["value"] = "0.8 0.9"
     t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
     assert len(t_2) == 2
-    assert pytest.approx(t_2[0]) == 0.8
-    assert pytest.approx(t_2[1]) == 0.9
+    assert t_2[0] == pytest.approx(0.8)
+    assert t_2[1] == pytest.approx(0.9)
     # mixed strings should become list of strings
     _tmp_dict["value"] = "0.8 abc"
     t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
@@ -114,15 +114,15 @@ def test_handling_parameters(telescope_model_lst):
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
     tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
-    assert (
-        pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
+    assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
+        0.0080
     )
 
     tel_model.change_parameter(
         "mirror_reflection_random_angle", gen.convert_string_to_list(new_mrra)
     )
-    assert (
-        pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
+    assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
+        0.0080
     )
 
     with pytest.raises(InvalidModelParameterError):
@@ -202,7 +202,7 @@ def test_change_parameter(telescope_model_lst):
 
 def test_change_multiple_parameters_from_file(telescope_model_lst, caplog, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mocker_gen = mocker.patch("simtools.utils.general.collect_data_from_file", return_value={})
+    mocker_gen = mocker.patch("simtools.io.ascii_handler.collect_data_from_file", return_value={})
     with caplog.at_level(logging.WARNING):
         telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
     assert "Changing multiple parameters from file is a feature for developers." in caplog.text

@@ -5,6 +5,7 @@ from unittest import mock
 
 import astropy.units as u
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
 
@@ -54,7 +55,7 @@ def test_process_line_parts(caplog):
         assert "Skipping non-float part: +-" in caplog.text
 
 
-@mock.patch("simtools.utils.general.read_file_encoded_in_utf_or_latin")
+@mock.patch("simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin")
 def test_read_simtel_data_rpol(mock_read_file_encoded_in_utf_or_latin):
     mock_read_file_encoded_in_utf_or_latin.return_value = [
         "#@RPOL@[ANGLE=] 2",
@@ -180,7 +181,7 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     204       0.264762  0.527657  1.047906  1.560804  2.564867  3.539938  4.956099  7.197119  9.210340  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00
     """
 
-    mock_string = "simtools.utils.general.read_file_encoded_in_utf_or_latin"
+    mock_string = "simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin"
 
     with mock.patch(mock_string, return_value=test_data.splitlines()):
         table = simtel_table_reader._read_simtel_data_for_atmospheric_transmission("dummy_path")
@@ -193,10 +194,10 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     assert table.meta["File"] == "dummy_path"
     assert "MODTRAN options as follows:" in table.meta["Context_from_sim_telarray"]
     assert table["wavelength"][0] == 200
-    assert table["altitude"][0] == 2.206
-    assert table["extinction"][0] == 0.264958
+    assert table["altitude"][0] == pytest.approx(2.206)
+    assert table["extinction"][0] == pytest.approx(0.264958)
     assert isinstance(table.meta["observatory_level"], u.Quantity)
-    assert table.meta["observatory_level"] == 2.156 * u.km
+    assert_quantity_allclose(table.meta["observatory_level"], 2.156 * u.km)
 
     test_data += "\n   # not a comment"  # invalid, as comment not at beginning of line
     with mock.patch(mock_string, return_value=test_data.splitlines()):
@@ -219,7 +220,7 @@ def test_read_simtel_data_for_lightguide_efficiency(caplog):
     2.0     0.840082     # (1.0 * ...)    0.822859    0.814194    0.846625
     """
 
-    mock_string = "simtools.utils.general.read_file_encoded_in_utf_or_latin"
+    mock_string = "simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin"
     mock_file = mock.mock_open(read_data=test_data)
 
     with mock.patch(mock_string, mock_file):
@@ -234,9 +235,9 @@ def test_read_simtel_data_for_lightguide_efficiency(caplog):
     assert table.meta["File"] == "dummy_path"
     assert "Angular efficiency table" in table.meta["Context_from_sim_telarray"]
 
-    assert table["angle"][0] == 0.0
-    assert table["wavelength"][0] == 325.0
-    assert table["efficiency"][0] == 0.821641
+    assert table["angle"][0] == pytest.approx(0.0)
+    assert table["wavelength"][0] == pytest.approx(325.0)
+    assert table["efficiency"][0] == pytest.approx(0.821641)
 
     # Test: skipping malformed line
     malformed_data = test_data + "\n this is a bad line"

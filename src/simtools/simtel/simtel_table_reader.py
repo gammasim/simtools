@@ -6,9 +6,10 @@ import re
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 from astropy.table import Table
 
-from simtools.utils import general as gen
+from simtools.io import ascii_handler
 
 logger = logging.getLogger(__name__)
 
@@ -329,7 +330,7 @@ def _read_simtel_data(file_path):
     n_dim_axis = None
     r_pol_axis = None
 
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
 
     for line in lines:
         stripped = line.strip()
@@ -366,7 +367,7 @@ def _read_simtel_data_for_lightguide_efficiency(file_path):
     data = []
     meta_lines = []
 
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
 
     def extract_wavelengths_from_header(line):
         match = re.search(r"orig\.:\s*(.*)", line)
@@ -427,7 +428,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     astropy table
         Table with atmospheric transmission.
     """
-    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
 
     observatory_level, height_bins = _read_header_line_for_atmospheric_transmission(
         lines, file_path
@@ -447,7 +448,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
             wl = float(parts[0])
             for i, height in enumerate(height_bins):
                 extinction_value = float(parts[i + 1])
-                if extinction_value == 99999.0:
+                if np.isclose(extinction_value, 99999.0):
                     continue
                 wavelengths.append(wl)
                 heights.append(height)
