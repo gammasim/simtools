@@ -699,7 +699,7 @@ def plot_incident_angles_multi(
     results_by_offset: dict[float, QTable],
     output_dir: Path,
     label: str,
-    bin_width_deg: float = 0.5,
+    bin_width_deg: float = 0.25,
     logger: logging.Logger | None = None,
 ) -> None:
     """Plot overlaid histograms of focal-surface incidence angles for multiple offsets.
@@ -714,7 +714,7 @@ def plot_incident_angles_multi(
     label : str
         Label used to compose the output filename.
     bin_width_deg : float, optional
-        Histogram bin width in degrees (default: 0.5 deg).
+        Histogram bin width in degrees (default: 0.25 deg).
     logger : logging.Logger, optional
         Logger to emit warnings; if not provided, a module-level logger is used.
     """
@@ -760,10 +760,10 @@ def plot_incident_angles_multi(
             data,
             bins=bins,
             histtype="stepfilled",
-            alpha=0.2,
+            alpha=0.15,
             color=color,
             edgecolor="none",
-            label=f"off-axis {off:g} deg",
+            label="_nolegend_",
             zorder=1,
         )
 
@@ -778,7 +778,7 @@ def plot_incident_angles_multi(
         )
 
     ax.set_xlabel("Angle of incidence at focal surface (deg)")
-    ax.set_ylabel("Count / bin")
+    ax.set_ylabel("Count / Bin")
     ax.set_title("Incident angle distribution vs off-axis angle")
     ax.grid(True, alpha=0.3)
     ax.legend()
