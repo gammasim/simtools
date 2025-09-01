@@ -11,10 +11,10 @@ import subprocess
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 from astropy.table import QTable
 
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.visualization.visualize import plot_incident_angles as _plot_incident_angles
 
 
 class IncidentAnglesCalculator:
@@ -101,7 +101,7 @@ class IncidentAnglesCalculator:
         self.results["angle_incidence_focal"] = data["angle_incidence_focal_deg"] * u.deg
 
         self._save_results()
-        self.plot_incident_angles()
+        _plot_incident_angles(self.results, self.output_dir, self.label, self.logger)
         return self.results
 
     def _prepare_psf_io_files(self):
@@ -228,22 +228,6 @@ class IncidentAnglesCalculator:
             return
         output_file = self.output_dir / f"incident_angles_{self.label}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
-
-    def plot_incident_angles(self) -> None:
-        """Plot and save a histogram of the focal-surface incidence angles."""
-        if self.results is None or len(self.results) == 0:
-            self.logger.warning("No results to plot")
-            return
-        fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-        ax.hist(self.results["angle_incidence_focal"].value, bins=50, alpha=0.8, color="royalblue")
-        ax.set_xlabel("Angle of incidence at focal surface (deg)")
-        ax.set_ylabel("Count")
-        ax.set_title("Incident angle distribution (focal surface)")
-        ax.grid(True, alpha=0.3)
-        plt.tight_layout()
-        out_png = self.output_dir / f"incident_angles_{self.label}.png"
-        plt.savefig(out_png, dpi=200)
-        plt.close(fig)
 
     def export_results(self) -> None:
         """Export the results ECSV and a short text summary file."""

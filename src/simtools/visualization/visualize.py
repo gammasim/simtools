@@ -4,6 +4,7 @@
 import logging
 import re
 from collections import OrderedDict
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -641,9 +642,6 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     title: str
         Title of the figure to be added to the log message.
     """
-    # pylint: disable=import-outside-toplevel
-    from pathlib import Path
-
     figure_format = figure_format or ["pdf", "png"]
     for fmt in figure_format:
         _file = Path(output_file).with_suffix(f".{fmt}")
@@ -651,3 +649,39 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
+
+
+def plot_incident_angles(
+    results: QTable | None,
+    output_dir: Path,
+    label: str,
+    logger: logging.Logger | None = None,
+) -> None:
+    """Plot and save a histogram of the focal-surface incidence angles.
+
+    Parameters
+    ----------
+    results : QTable or None
+        Table containing column ``angle_incidence_focal`` with ``astropy.units``.
+    output_dir : Path
+        Directory to write the PNG plot into.
+    label : str
+        Label used to compose the output filename.
+    logger : logging.Logger, optional
+        Logger to emit warnings; if not provided, a module-level logger is used.
+    """
+    log = logger or logging.getLogger(__name__)
+    if results is None or len(results) == 0:
+        log.warning("No results to plot")
+        return
+
+    fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+    ax.hist(results["angle_incidence_focal"].value, bins=50, alpha=0.8, color="royalblue")
+    ax.set_xlabel("Angle of incidence at focal surface (deg)")
+    ax.set_ylabel("Count")
+    ax.set_title("Incident angle distribution (focal surface)")
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    out_png = Path(output_dir) / f"incident_angles_{label}.png"
+    plt.savefig(out_png, dpi=200)
+    plt.close(fig)
