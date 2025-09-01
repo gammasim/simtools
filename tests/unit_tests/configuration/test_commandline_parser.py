@@ -73,20 +73,30 @@ def test_zenith_angle(caplog):
 
 
 def test_parse_quantity_pair():
-    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100GeV 5 TeV"]:
+    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100 GeV 5 TeV", "100GeV 5 TeV"]:
         e_pair = parser.CommandLineParser.parse_quantity_pair(test_string)
         assert e_pair[0].value == pytest.approx(100.0)
         assert e_pair[0].unit == u.GeV
         assert e_pair[1].value == pytest.approx(5.0)
         assert e_pair[1].unit == u.TeV
 
+    q1, q2 = parser.CommandLineParser.parse_quantity_pair(
+        "(<Quantity 200. GeV>, <Quantity 500. GeV>)"
+    )
+    assert q1 == 200 * u.GeV
+    assert q2 == 500 * u.GeV
+
     with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
         parser.CommandLineParser.parse_quantity_pair("100 GeV 5 TeV 20 PeV")
 
-    with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):
+    with pytest.raises(
+        ValueError, match=r"^Could not parse quantities: 'abc' did not parse as unit"
+    ):
         parser.CommandLineParser.parse_quantity_pair("100 GeV 5 abc")
 
-    with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
+    with pytest.raises(
+        ValueError, match=r'^Could not parse quantities: Cannot parse "eV" as a Quantity.'
+    ):
         parser.CommandLineParser.parse_quantity_pair("a GeV 5 TeV")
 
 
