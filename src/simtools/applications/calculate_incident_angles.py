@@ -11,7 +11,7 @@ Example usage
 
     simtools-calculate-incident-angles \
         --zenith 20 \
-        --off_axis_angle 0 \
+    --off_axis_angles 0 1 2 3 4 \
         --source_distance 10 \
         --number_of_rays 10000 \
         --model_version 6.0.0 \
@@ -22,8 +22,8 @@ Command line arguments
 ----------------------
 zenith (float, optional)
     Zenith angle in degrees (default: 20.0).
-off_axis_angle (float, optional)
-    Off-axis angle in degrees (default: 0.0).
+off_axis_angles (float, optional)
+    One or more off-axis angles in degrees (space-separated).
 source_distance (float, optional)
     Source distance in kilometers (default: 10.0).
 number_of_rays (int, optional)
@@ -51,6 +51,7 @@ import astropy.units as u
 
 from simtools.configuration import configurator
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
+from simtools.visualization.visualize import plot_incident_angles_multi
 
 
 def _parse(label):
@@ -69,10 +70,10 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--off_axis_angle",
-        help="Off axis angle in degrees",
+        "--off_axis_angles",
+        help="One or more off-axis angles in degrees (space-separated)",
         type=float,
-        default=0.0,
+        nargs="+",
         required=False,
     )
     config.parser.add_argument(
@@ -168,7 +169,11 @@ def main():
             "site": args_dict["site"],
             "model_version": args_dict["model_version"],
             "zenith_angle": args_dict["zenith"] * u.deg,
-            "off_axis_angle": args_dict["off_axis_angle"] * u.deg,
+            "off_axis_angle": (
+                (args_dict.get("off_axis_angles")[0] * u.deg)
+                if args_dict.get("off_axis_angles")
+                else 0.0 * u.deg
+            ),
             "source_distance": args_dict["source_distance"] * u.km,
             "number_of_rays": int(args_dict.get("number_of_rays", 10000)),
         },
@@ -180,9 +185,14 @@ def main():
         algn=args_dict.get("algn", None),
         test=args_dict.get("test", False),
     )
-    # Run the calculation
-    results = calculator.run()
-    logger.info(f"Calculated incident angles for {len(results)} points")
+    offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
+
+    results_by_offset = calculator.run_for_offsets(offsets)
+    plot_incident_angles_multi(results_by_offset, output_dir, args_dict.get("label", label))
+    total = sum(len(t) for t in results_by_offset.values())
+    logger.info(
+        f"Calculated incident angles for {len(results_by_offset)} offsets, total {total} points"
+    )
 
 
 if __name__ == "__main__":
