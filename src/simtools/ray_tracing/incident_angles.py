@@ -14,7 +14,6 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.visualization.visualize import plot_incident_angles as _plot_incident_angles
 
 
 class IncidentAnglesCalculator:
@@ -99,8 +98,29 @@ class IncidentAnglesCalculator:
         self.results["angle_incidence_focal"] = data["angle_incidence_focal_deg"] * u.deg
 
         self._save_results()
-        _plot_incident_angles(self.results, self.output_dir, self.label, self.logger)
         return self.results
+
+    def run_for_offsets(self, offsets: list[float]) -> dict[float, QTable]:
+        """Run the simulation for multiple off-axis angles.
+
+        For each off-axis angle provided, run a full simulation, labeling output files
+        accordingly. Returns a mapping from off-axis angle (deg) to the resulting QTable.
+        """
+        results_by_offset: dict[float, QTable] = {}
+        base_label = self.label
+        base_off = self.rt_params.get("off_axis_angle", 0.0 * u.deg)
+
+        for off in offsets:
+            self.rt_params["off_axis_angle"] = float(off) * u.deg
+            self.label = f"{base_label}_off{off:g}"
+            self.logger.info(f"Running for off-axis angle {off:g} deg with label {self.label}")
+
+            tbl = self.run()
+            results_by_offset[float(off)] = tbl.copy()
+
+        self.label = base_label
+        self.rt_params["off_axis_angle"] = base_off
+        return results_by_offset
 
     def _prepare_psf_io_files(self):
         photons_file = self.output_dir / f"incident_angles_photons_{self.label}.lis"
@@ -209,18 +229,23 @@ class IncidentAnglesCalculator:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
 
     def _compute_incidence_angles_from_imaging_list(self, photons_file: Path) -> dict:
-        """Parse imaging list ``.lis`` and extract column 24: angle at focal surface [deg]."""
+        """
+        Compute incidence angles from imaging list.
+
+        Parse imaging list ``.lis`` and extract column 26:
+        Angle of incidence at focal surface, w.r.t. optical axis.
+        """
         angles: list[float] = []
         with photons_file.open("r", encoding="utf-8") as f:
             for line in f:
                 if not line.strip() or line.lstrip().startswith("#"):
                     continue
                 parts = line.split()
-                if len(parts) < 24:
+                if len(parts) < 26:
                     continue
                 try:
-                    # Column 24
-                    angles.append(float(parts[23]))
+                    # Column 26
+                    angles.append(float(parts[25]))
                 except ValueError:
                     continue
         return {"angle_incidence_focal_deg": angles}

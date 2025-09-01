@@ -8,6 +8,7 @@ from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
+import numpy as np
 from astropy.table import QTable
 from cycler import cycler
 from matplotlib import gridspec
@@ -690,5 +691,75 @@ def plot_incident_angles(
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     out_png = Path(output_dir) / f"incident_angles_{label}.png"
+    plt.savefig(out_png, dpi=200)
+    plt.close(fig)
+
+
+def plot_incident_angles_multi(
+    results_by_offset: dict[float, QTable],
+    output_dir: Path,
+    label: str,
+    bin_width_deg: float = 0.5,
+    logger: logging.Logger | None = None,
+) -> None:
+    """Plot overlaid histograms of focal-surface incidence angles for multiple offsets.
+
+    Parameters
+    ----------
+    results_by_offset : dict(float -> QTable)
+        Mapping from off-axis angle in degrees to result table containing column
+        ``angle_incidence_focal`` with ``astropy.units``.
+    output_dir : Path
+        Directory to write the PNG plot into.
+    label : str
+        Label used to compose the output filename.
+    bin_width_deg : float, optional
+        Histogram bin width in degrees (default: 0.5 deg).
+    logger : logging.Logger, optional
+        Logger to emit warnings; if not provided, a module-level logger is used.
+    """
+    log = logger or logging.getLogger(__name__)
+    if not results_by_offset:
+        log.warning("No results provided for multi-offset plot")
+        return
+
+    arrays = []
+    for off, tab in results_by_offset.items():
+        if tab is None or len(tab) == 0:
+            log.warning(f"Empty results for off-axis={off}")
+            continue
+        arrays.append(tab["angle_incidence_focal"].to(u.deg).value)
+    if not arrays:
+        log.warning("No non-empty results to plot")
+        return
+
+    all_vals = np.concatenate(arrays)
+    vmin = float(np.floor(all_vals.min() / bin_width_deg) * bin_width_deg)
+    vmax = float(np.ceil(all_vals.max() / bin_width_deg) * bin_width_deg)
+    bins = np.arange(vmin, vmax + bin_width_deg * 0.5, bin_width_deg)
+
+    fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+
+    for off in sorted(results_by_offset.keys()):
+        tab = results_by_offset[off]
+        if tab is None or len(tab) == 0:
+            continue
+        data = tab["angle_incidence_focal"].to(u.deg).value
+        ax.hist(
+            data,
+            bins=bins,
+            alpha=0.3,
+            histtype="stepfilled",
+            # edgecolor="none",
+            label=f"off-axis {off:g} deg",
+        )
+
+    ax.set_xlabel("Angle of incidence at focal surface (deg)")
+    ax.set_ylabel("Count")
+    ax.set_title("Incident angle distribution vs off-axis angle")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    plt.tight_layout()
+    out_png = Path(output_dir) / f"incident_angles_multi_{label}.png"
     plt.savefig(out_png, dpi=200)
     plt.close(fig)
