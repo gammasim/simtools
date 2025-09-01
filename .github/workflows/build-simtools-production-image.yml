@@ -184,6 +184,10 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-prod-${{ env.LABELS }}
           flavor: latest=true
 
+      - name: Write GitLab token to file
+        run: echo "${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}" > .github/gitlab_token
+        shell: bash
+
       - name: Build and push optimized image
         uses: docker/build-push-action@v6
         with:
@@ -197,9 +201,9 @@ jobs:
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-            GITLAB_TOKEN_CORSIKA_OPT_PATCHES=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
-          push:
-            ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+          secrets: |
+            id=gitlab_token,src=${{ github.workspace }}/.github/gitlab_token
+          push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-prod-opt
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-prod
