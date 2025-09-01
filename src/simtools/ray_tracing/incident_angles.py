@@ -107,7 +107,6 @@ class IncidentAnglesCalculator:
         stars_file = self.output_dir / f"incident_angles_stars_{self.label}.lis"
         log_file = self.output_dir / f"incident_angles_{self.label}.log"
 
-        # Always start with a fresh photons file to avoid appending across runs
         if photons_file.exists():
             try:
                 photons_file.unlink()
@@ -125,7 +124,6 @@ class IncidentAnglesCalculator:
             )
             pf.write(f"# source_distance [km] = {self.rt_params['source_distance'].value}\n")
 
-        # Ensure stars file reflects current parameters
         with stars_file.open("w", encoding="utf-8") as sf:
             zen = float(self.rt_params["zenith_angle"].to_value(u.deg))
             dist = float(self.rt_params["source_distance"].to_value(u.km))
