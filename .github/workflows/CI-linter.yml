@@ -52,7 +52,7 @@ jobs:
             docker run --rm -i ghcr.io/hadolint/hadolint < "$dockerfile"
           done
 
-      - name: validate pyproject.toml
+      - name: Install and validate pyproject.toml
         run: |
           pip install validate-pyproject
           validate-pyproject pyproject.toml
