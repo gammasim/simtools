@@ -33,7 +33,7 @@ RUN yum update -y && yum install -y git && \
 
 RUN --mount=type=secret,id=gitlab_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch ${CORSIKA_OPT_PATCH_VERSION} https://oauth2:$(cat /run/secrets/gitlab_token)@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://oauth2:$(cat /run/secrets/gitlab_token)@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git" && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-patches/ && \
     rm -rf corsika-opt-patches
 
