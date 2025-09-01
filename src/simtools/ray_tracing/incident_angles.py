@@ -46,8 +46,14 @@ class IncidentAnglesCalculator:
         self.test = test
         self.results: QTable | None = None
 
-        # Create output directory
+        # Create output directory tree
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.logs_dir = self.output_dir / "logs"
+        self.scripts_dir = self.output_dir / "scripts"
+        self.photons_dir = self.output_dir / "photons_files"
+        self.results_dir = self.output_dir / "incident_angles"
+        for d in (self.logs_dir, self.scripts_dir, self.photons_dir, self.results_dir):
+            d.mkdir(parents=True, exist_ok=True)
 
         # Load models from database
         self.logger.info(
@@ -123,9 +129,9 @@ class IncidentAnglesCalculator:
         return results_by_offset
 
     def _prepare_psf_io_files(self):
-        photons_file = self.output_dir / f"incident_angles_photons_{self.label}.lis"
-        stars_file = self.output_dir / f"incident_angles_stars_{self.label}.lis"
-        log_file = self.output_dir / f"incident_angles_{self.label}.log"
+        photons_file = self.photons_dir / f"incident_angles_photons_{self.label}.lis"
+        stars_file = self.photons_dir / f"incident_angles_stars_{self.label}.lis"
+        log_file = self.logs_dir / f"incident_angles_{self.label}.log"
 
         if photons_file.exists():
             try:
@@ -152,7 +158,7 @@ class IncidentAnglesCalculator:
         return photons_file, stars_file, log_file
 
     def _write_run_script(self, photons_file: Path, stars_file: Path, log_file: Path) -> Path:
-        script_path = self.output_dir / f"run_incident_angles_{self.label}.sh"
+        script_path = self.scripts_dir / f"run_incident_angles_{self.label}.sh"
         simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
@@ -254,7 +260,7 @@ class IncidentAnglesCalculator:
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to save")
             return
-        output_file = self.output_dir / f"incident_angles_{self.label}.ecsv"
+        output_file = self.results_dir / f"incident_angles_{self.label}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
 
     def export_results(self) -> None:
@@ -262,9 +268,9 @@ class IncidentAnglesCalculator:
         if self.results is None or len(self.results) == 0:
             self.logger.error("Cannot export results because they do not exist")
             return
-        table_file = self.output_dir / f"incident_angles_{self.label}.ecsv"
+        table_file = self.results_dir / f"incident_angles_{self.label}.ecsv"
         self.results.write(table_file, format="ascii.ecsv", overwrite=True)
-        summary_file = self.output_dir / f"incident_angles_summary_{self.label}.txt"
+        summary_file = self.results_dir / f"incident_angles_summary_{self.label}.txt"
         with summary_file.open("w", encoding="utf-8") as f:
             f.write(f"Incident angle results for {self.telescope_model.name}\n")
             f.write(f"Site: {self.telescope_model.site}\n")

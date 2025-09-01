@@ -653,49 +653,6 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
 
 
 def plot_incident_angles(
-    results: QTable | None,
-    output_dir: Path,
-    label: str,
-    logger: logging.Logger | None = None,
-) -> None:
-    """Plot and save a histogram of the focal-surface incidence angles.
-
-    Parameters
-    ----------
-    results : QTable or None
-        Table containing column ``angle_incidence_focal`` with ``astropy.units``.
-    output_dir : Path
-        Directory to write the PNG plot into.
-    label : str
-        Label used to compose the output filename.
-    logger : logging.Logger, optional
-        Logger to emit warnings; if not provided, a module-level logger is used.
-    """
-    log = logger or logging.getLogger(__name__)
-    if results is None or len(results) == 0:
-        log.warning("No results to plot")
-        return
-
-    fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-    ax.hist(
-        results["angle_incidence_focal"].value,
-        bins=50,
-        alpha=0.9,
-        color="royalblue",
-        histtype="stepfilled",
-        edgecolor="none",
-    )
-    ax.set_xlabel("Angle of incidence at focal surface (deg)")
-    ax.set_ylabel("Count")
-    ax.set_title("Incident angle distribution (focal surface)")
-    ax.grid(True, alpha=0.3)
-    plt.tight_layout()
-    out_png = Path(output_dir) / f"incident_angles_{label}.png"
-    plt.savefig(out_png, dpi=200)
-    plt.close(fig)
-
-
-def plot_incident_angles_multi(
     results_by_offset: dict[float, QTable],
     output_dir: Path,
     label: str,
@@ -783,6 +740,8 @@ def plot_incident_angles_multi(
     ax.grid(True, alpha=0.3)
     ax.legend()
     plt.tight_layout()
-    out_png = Path(output_dir) / f"incident_angles_multi_{label}.png"
+    out_dir = Path(output_dir) / "plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_png = out_dir / f"incident_angles_multi_{label}.png"
     plt.savefig(out_png, dpi=300)
     plt.close(fig)
