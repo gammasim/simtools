@@ -106,9 +106,12 @@ jobs:
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
+          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Print DB connection variables
         run: |
@@ -117,17 +120,19 @@ jobs:
           echo "DB API User: $SIMTOOLS_DB_API_USER"
           echo "DB API Port: $SIMTOOLS_DB_API_PORT"
           echo "DB Simulation Model: $SIMTOOLS_DB_SIMULATION_MODEL"
+          echo "DB Simulation Model Version: $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Upload data to MongoDB
         if: github.event_name != 'schedule'
         run: |
           cd database_scripts/
-          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
 
       - name: Unit tests
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
         run: |
           pytest --durations=10 --color=yes -n 4 --dist loadscope \
             --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
@@ -152,6 +157,7 @@ jobs:
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
         run: |
           pytest --color=yes -n 4 --dist loadscope --count 5 --random-order \
            --retries 2 --retry-delay 5
