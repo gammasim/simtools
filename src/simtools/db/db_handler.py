@@ -161,8 +161,7 @@ class DatabaseHandler:
         """
         Find the latest released version of the simulation model and update the DB config.
 
-        This is indicated by adding "LATEST" to the name of the simulation model database
-        (field "db_simulation_model" in the database configuration dictionary).
+        This is indicated by "LATEST" to the simulation model data base version.
         Only released versions are considered, pre-releases are ignored.
 
         Raises
@@ -172,27 +171,27 @@ class DatabaseHandler:
 
         """
         try:
+            db_simulation_model_version = self.mongo_db_config["db_simulation_model_version"]
             db_simulation_model = self.mongo_db_config["db_simulation_model"]
-            if not db_simulation_model.endswith("LATEST"):
+            if db_simulation_model_version != "LATEST":
                 return
-        except TypeError:  # db_simulation_model is None
+        except TypeError:  # db_simulation_model_version is None
             return
 
-        prefix = db_simulation_model.replace("LATEST", "")
         list_of_db_names = self.db_client.list_database_names()
-        filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
-        versioned_strings = []
-        version_pattern = re.compile(
-            rf"{re.escape(prefix)}v?(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
-        )
+        filtered_list_of_db_names = [
+            s for s in list_of_db_names if s.startswith(db_simulation_model)
+        ]
+        pattern = re.compile(rf"{re.escape(db_simulation_model)}-v(\d+)-(\d+)-(\d+)(?:-(.+))?$")
 
+        versioned_strings = []
         for s in filtered_list_of_db_names:
-            match = version_pattern.search(s)
-            # A version is considered a pre-release if it contains a '-' character (re group 4)
-            if match and match.group(4) is None:
-                version_str = match.group(1) + "." + match.group(2) + "." + match.group(3)
-                version = Version(version_str)
-                versioned_strings.append((s, version))
+            m = pattern.match(s)
+            if m:
+                # skip pre-releases (have suffix)
+                if m.group(4) is None:
+                    version_str = f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+                    versioned_strings.append((s, Version(version_str)))
 
         if versioned_strings:
             latest_string, _ = max(versioned_strings, key=lambda x: x[1])
@@ -201,7 +200,7 @@ class DatabaseHandler:
                 f"Updated the DB simulation model to the latest version {latest_string}"
             )
         else:
-            raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
+            raise ValueError("LATEST requested but no released versions found in DB.")
 
     def generate_compound_indexes(self, db_name=None):
         """
