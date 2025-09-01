@@ -51,7 +51,7 @@ import astropy.units as u
 
 from simtools.configuration import configurator
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
-from simtools.visualization.visualize import plot_incident_angles_multi
+from simtools.visualization.visualize import plot_incident_angles
 
 
 def _parse(label):
@@ -188,7 +188,7 @@ def main():
     offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
 
     results_by_offset = calculator.run_for_offsets(offsets)
-    plot_incident_angles_multi(results_by_offset, output_dir, args_dict.get("label", label))
+    plot_incident_angles(results_by_offset, output_dir, args_dict.get("label", label))
     total = sum(len(t) for t in results_by_offset.values())
     logger.info(
         f"Calculated incident angles for {len(results_by_offset)} offsets, total {total} points"
