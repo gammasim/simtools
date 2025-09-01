@@ -1,5 +1,48 @@
 #!/usr/bin/env python
-"""Module containing the calculate_incident_angles application."""
+r"""
+Calculate incident angles using sim_telarray ray tracing.
+
+Run the application from the command line.
+
+Example usage
+-------------
+
+.. code-block:: console
+
+    simtools-calculate-incident-angles \
+        --zenith 20 \
+        --off_axis_angle 0 \
+        --source_distance 10 \
+        --number_of_rays 10000 \
+        --model_version 6.0.0 \
+        --telescope MSTN-04 \
+        --site North
+
+Command line arguments
+----------------------
+zenith (float, optional)
+    Zenith angle in degrees (default: 20.0).
+off_axis_angle (float, optional)
+    Off-axis angle in degrees (default: 0.0).
+source_distance (float, optional)
+    Source distance in kilometers (default: 10.0).
+number_of_rays (int, optional)
+    Number of star photons to trace per run (default: 10000).
+perfect_mirror (flag, optional)
+    Assume perfect mirror shape/alignment/reflection.
+overwrite_rdna (flag, optional)
+    Overwrite mirror_reflection_random_angle with 0 deg.
+mirror_reflection_random_angle (float, optional)
+    Set mirror_reflection_random_angle in degrees (overrides overwrite_rdna).
+algn (float, optional)
+    Accuracy parameter for mirror alignment distributions.
+
+The application writes:
+- imaging list (photons) file
+- stars list file
+- a histogram of incident angles (PNG)
+- a results table in ECSV format
+"""
 
 import logging
 from pathlib import Path
@@ -145,7 +188,6 @@ def main():
         algn=args_dict.get("algn", None),
         test=args_dict.get("test", False),
     )
-
     # Run the calculation
     results = calculator.run()
     logger.info(f"Calculated incident angles for {len(results)} points")
