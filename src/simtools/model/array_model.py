@@ -9,7 +9,6 @@ from astropy.table import QTable
 from simtools.data_model import data_reader, schema
 from simtools.db import db_handler
 from simtools.io import io_handler
-from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -499,9 +498,6 @@ class ArrayModel:
         if self.sim_telarray_seeds is not None:
             metadata.update(self.sim_telarray_seeds)
 
-        try:
-            metadata["nsb_integrated_flux"] = self.site_model.get_nsb_integrated_flux()
-        except InvalidModelParameterError:
-            self._logger.warning("Could not get NSB integrated flux from site model.")
+        metadata["nsb_integrated_flux"] = self.site_model.get_nsb_integrated_flux()
 
         return metadata
