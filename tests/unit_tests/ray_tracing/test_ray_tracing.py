@@ -372,7 +372,7 @@ def test_get_mirror_panel_focal_length_no_random(ray_tracing_lst, mocker):
 
     focal_length = ray_tracing_lst._get_mirror_panel_focal_length()
 
-    assert focal_length == 10.0
+    assert focal_length == pytest.approx(10.0)
     mock_get_parameter_value.assert_called_once_with("mirror_focal_length")
 
 
@@ -390,7 +390,7 @@ def test_get_mirror_panel_focal_length_with_random_normal(ray_tracing_lst, mocke
 
     focal_length = ray_tracing_lst._get_mirror_panel_focal_length()
 
-    assert focal_length == 12.0
+    assert focal_length == pytest.approx(12.0)
     mock_get_parameter_value.assert_has_calls(
         [call("mirror_focal_length"), call("random_focal_length")]
     )
@@ -411,7 +411,7 @@ def test_get_mirror_panel_focal_length_with_random_uniform(ray_tracing_lst, mock
 
     focal_length = ray_tracing_lst._get_mirror_panel_focal_length()
 
-    assert focal_length == 10.5
+    assert focal_length == pytest.approx(10.5)
     mock_get_parameter_value.assert_has_calls(
         [call("mirror_focal_length"), call("random_focal_length")]
     )
