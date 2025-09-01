@@ -132,7 +132,7 @@ def test_get_nsb_integrated_flux(db_config, model_version, mocker):
     mock_table["differential photon rate"] = Col(rate_q)
 
     mocker.patch.object(_south.db, "get_ecsv_file_as_astropy_table", return_value=mock_table)
-
+    mocker.patch.object(_south, "get_parameter_value", return_value="test_nsb_spectrum.ecsv")
     result = _south.get_nsb_integrated_flux(wavelength_min=300 * u.nm, wavelength_max=650 * u.nm)
 
     assert isinstance(result, float)
