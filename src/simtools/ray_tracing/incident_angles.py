@@ -1,7 +1,7 @@
 """Calculate incident angles using a sim_telarray PSF-style run.
 
-Parses the imaging list (.lis) produced by sim_telarray and uses column 22:
-Angle of incidence at focal surface w.r.t. optical axis [deg].
+Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses column 24:
+Angle of incidence at focal surface, with respect to the optical axis [deg].
 """
 
 from __future__ import annotations
@@ -206,17 +206,18 @@ class IncidentAnglesCalculator:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
 
     def _compute_incidence_angles_from_imaging_list(self, photons_file: Path) -> dict:
-        """Parse imaging list .lis and extract column 22: angle at focal surface [deg]."""
+        """Parse imaging list ``.lis`` and extract column 24: angle at focal surface [deg]."""
         angles: list[float] = []
         with photons_file.open("r", encoding="utf-8") as f:
             for line in f:
                 if not line.strip() or line.lstrip().startswith("#"):
                     continue
                 parts = line.split()
-                if len(parts) < 22:
+                if len(parts) < 24:
                     continue
                 try:
-                    angles.append(float(parts[21]))
+                    # Column 24
+                    angles.append(float(parts[23]))
                 except ValueError:
                     continue
         return {"angle_incidence_focal_deg": angles}
