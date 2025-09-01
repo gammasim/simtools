@@ -62,24 +62,34 @@ def test_initialization(calculator, config_data):
     assert calculator.rt_params["zenith_angle"].unit == u.deg
     assert calculator.rt_params["off_axis_angle"].unit == u.deg
     assert calculator.rt_params["source_distance"].unit == u.km
+    # subdirectories are created
+    assert calculator.logs_dir.is_dir()
+    assert calculator.scripts_dir.is_dir()
+    assert calculator.photons_dir.is_dir()
+    assert calculator.results_dir.is_dir()
 
 
-def test_run_produces_results(monkeypatch, calculator):
-    # Simulate successful sim_telarray run
-    monkeypatch.setattr(ia.subprocess, "check_call", lambda *a, **k: 0)
-    saved = {}
-    monkeypatch.setattr(ia.plt, "savefig", lambda path, **k: saved.setdefault("png", path))
+def test_run_produces_results(monkeypatch, calculator, tmp_output_dir):
+    # Avoid external run
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
 
-    # Pre-create imaging list with three data lines where column 22 holds the angle [deg]
-    photons_file = calculator.output_dir / f"incident_angles_photons_{calculator.label}.lis"
-    photons_file.parent.mkdir(parents=True, exist_ok=True)
-    lines = []
-    lines.append("# header\n")
-    # build lines with 21 placeholders + the angle (index 21 is 22nd column)
-    for ang in (10.0, 20.0, 30.0):
-        parts = ["0"] * 21 + [str(ang)]
-        lines.append(" ".join(parts) + "\n")
-    photons_file.write_text("".join(lines), encoding="utf-8")
+    # Prepare custom file paths returned by _prepare_psf_io_files
+    photons_file = calculator.photons_dir / f"incident_angles_photons_{calculator.label}.lis"
+    stars_file = calculator.photons_dir / f"incident_angles_stars_{calculator.label}.lis"
+    log_file = calculator.logs_dir / f"incident_angles_{calculator.label}.log"
+
+    def _prep_files(self):
+        photons_file.parent.mkdir(parents=True, exist_ok=True)
+        # Make imaging list with angle in column 26 (index 25)
+        rows = ["# header\n"]
+        for ang in (10.0, 20.0, 30.0):
+            parts = ["0"] * 25 + [str(ang)]
+            rows.append(" ".join(parts) + "\n")
+        photons_file.write_text("".join(rows), encoding="utf-8")
+        stars_file.write_text("0 0 1 10\n", encoding="utf-8")
+        return photons_file, stars_file, log_file
+
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_prepare_psf_io_files", _prep_files)
 
     res = calculator.run()
 
@@ -87,25 +97,27 @@ def test_run_produces_results(monkeypatch, calculator):
     assert len(res) == 3
     assert {"angle_incidence_focal"}.issubset(res.colnames)
     assert res["angle_incidence_focal"].unit == u.deg
-    assert (calculator.output_dir / f"incident_angles_{calculator.label}.png").exists() or saved
+    # Results saved under results_dir
+    out = calculator.results_dir / f"incident_angles_{calculator.label}.ecsv"
+    assert out.exists()
 
 
-def test_plot_incident_angles_saves_png(monkeypatch, calculator):
-    calculator.results = QTable()
-    calculator.results["angle_incidence_focal"] = [10, 20, 30] * u.deg
+def test_run_for_offsets_restores_label_and_collects(monkeypatch, calculator):
+    base_label = calculator.label
 
-    called = {}
-    monkeypatch.setattr(ia.plt, "savefig", lambda *a, **k: called.setdefault("ok", True))
+    def _fake_run(self):
+        t = QTable()
+        t["angle_incidence_focal"] = [1.0, 2.0] * u.deg
+        self.results = t
+        return t
 
-    calculator.plot_incident_angles()
-    assert called.get("ok", False)
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "run", _fake_run)
 
-
-def test_plot_no_results_logs_warning(caplog, calculator):
-    calculator.results = QTable()  # empty
-    caplog.set_level(logging.WARNING, logger=ia.__name__)
-    calculator.plot_incident_angles()
-    assert any("No results to plot" in rec.message for rec in caplog.records)
+    offsets = [0.0, 1.5, 3.0]
+    res = calculator.run_for_offsets(offsets)
+    assert set(res.keys()) == {0.0, 1.5, 3.0}
+    assert all(isinstance(v, QTable) for v in res.values())
+    assert calculator.label == base_label  # restored
 
 
 def test_repr_contains_label(calculator):
@@ -170,7 +182,7 @@ def test_save_results_no_data_logs_warning(caplog, calculator, tmp_output_dir):
     calculator._save_results()
     assert any("No results to save" in rec.message for rec in caplog.records)
     # No file should be created
-    out = list(calculator.output_dir.glob("incident_angles_*.ecsv"))
+    out = list(calculator.results_dir.glob("incident_angles_*.ecsv"))
     assert not out
 
 
@@ -187,11 +199,45 @@ def test_export_results_success_and_no_results(caplog, calculator):
     calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
 
     calculator.export_results()
-    table_file = calculator.output_dir / f"incident_angles_{calculator.label}.ecsv"
-    summary_file = calculator.output_dir / f"incident_angles_summary_{calculator.label}.txt"
+    table_file = calculator.results_dir / f"incident_angles_{calculator.label}.ecsv"
+    summary_file = calculator.results_dir / f"incident_angles_summary_{calculator.label}.txt"
     assert table_file.exists()
     assert summary_file.exists()
     content = summary_file.read_text(encoding="utf-8")
     assert "Incident angle results for" in content
     assert "Site:" in content
     assert "Number of data points:" in content
+
+
+def test_compute_incidence_angles_parsing(calculator, tmp_path):
+    # Create a photons file with mixed content
+    pfile = tmp_path / "mixed.lis"
+    lines = [
+        "# comment line\n",
+        "\n",
+        "1 2 3\n",  # too few columns
+        " ".join(["0"] * 25 + ["not_a_number"]) + "\n",  # bad value
+        " ".join(["0"] * 25 + ["42.5"]) + "\n",  # valid
+        " ".join(["0"] * 30 + ["99"]) + "\n",  # valid (more columns ok)
+    ]
+    pfile.write_text("".join(lines), encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    assert "angle_incidence_focal_deg" in out
+    assert out["angle_incidence_focal_deg"] == [42.5, 99.0]
+
+
+def test_prepare_psf_io_files_creates_in_subdirs(calculator):
+    photons, stars, log = calculator._prepare_psf_io_files()
+    assert photons.parent == calculator.photons_dir
+    assert stars.parent == calculator.photons_dir
+    assert log.parent == calculator.logs_dir
+
+
+def test_write_run_script_path_and_content(calculator):
+    photons, stars, log = calculator._prepare_psf_io_files()
+    script = calculator._write_run_script(photons, stars, log)
+    assert script.parent == calculator.scripts_dir
+    txt = script.read_text(encoding="utf-8")
+    assert str(photons) in txt
+    assert str(stars) in txt
