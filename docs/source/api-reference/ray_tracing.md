@@ -31,6 +31,15 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
    :members:
 ```
 
+(psfparameteroptimisationmodule)=
+
+## psf_parameter_optimisation
+
+```{eval-rst}
+.. automodule:: ray_tracing.psf_parameter_optimisation
+   :members:
+```
+
 (mirror_panel_psfmodule)=
 
 ## mirror_panel_psf

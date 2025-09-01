@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from astropy import units as u
@@ -194,3 +195,37 @@ def test_model_version_setter_with_valid_list(array_model):
 
     with pytest.raises(ValueError, match=error_message):
         am.model_version = ["6.0.0", "7.0.0"]
+
+
+def test_pack_model_files(array_model, io_handler, tmp_path):
+    mock_tarfile = MagicMock()
+    mock_tarfile_open = MagicMock()
+    # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
+    mock_cm = MagicMock()
+    mock_cm.__enter__.return_value = mock_tarfile
+    # ensure exiting the context calls close() on the mock tarfile to match real behavior
+    mock_cm.__exit__.side_effect = lambda *args: mock_tarfile.close()
+    mock_tarfile_open.return_value = mock_cm
+    # Return files under the mocked config directory so relative_to(base) works
+    mock_output_dir = tmp_path / "output" / "directory"
+    mock_rglob = MagicMock(return_value=[mock_output_dir / "file1", mock_output_dir / "file2"])
+    mock_get_output_directory = MagicMock(return_value=mock_output_dir)
+
+    with (
+        patch("tarfile.open", mock_tarfile_open),
+        patch("pathlib.Path.rglob", mock_rglob),
+        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
+        patch("pathlib.Path.is_file", return_value=True),
+    ):
+        archive_path = array_model.pack_model_files()
+
+        assert archive_path == mock_output_dir.joinpath("model", "6.0.0", "model_files.tar.gz")
+        assert mock_tarfile.add.call_count == 2
+
+    mock_rglob = MagicMock(return_value=[])
+    with (
+        patch("tarfile.open", mock_tarfile_open),
+        patch("pathlib.Path.rglob", mock_rglob),
+        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
+    ):
+        assert array_model.pack_model_files() is None

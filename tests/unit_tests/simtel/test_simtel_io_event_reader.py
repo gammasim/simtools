@@ -4,6 +4,7 @@ from unittest.mock import patch
 import astropy.units as u
 import pytest
 from astropy.table import Table
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.simtel.simtel_io_event_reader import (
     SimtelIOEventDataReader,
@@ -121,9 +122,9 @@ def test_get_reduced_simulation_info(mock_fits_file):
     info = reader.get_reduced_simulation_file_info(file_info)
 
     assert info["primary_particle"] == "gamma"
-    assert info["zenith"] == 20.0 * u.deg
-    assert info["azimuth"] == 0.0 * u.deg
-    assert info["nsb_level"] == 1.0
+    assert_quantity_allclose(info["zenith"], 20.0 * u.deg)
+    assert_quantity_allclose(info["azimuth"], 0.0 * u.deg)
+    assert info["nsb_level"] == pytest.approx(1.0)
 
 
 @patch("simtools.simtel.simtel_io_event_reader.PrimaryParticle")
@@ -156,7 +157,7 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fi
 
     assert "Simulation file info has non-unique values" in caplog.text
     assert info["primary_particle"] == "gamma"
-    assert info["zenith"] == 20.0  # Should use first value
+    assert info["zenith"] == pytest.approx(20.0)  # Should use first value
 
 
 def test_get_triggered_shower_data_single_match(mock_fits_file):
@@ -174,7 +175,7 @@ def test_get_triggered_shower_data_single_match(mock_fits_file):
 
     assert len(triggered_shower.shower_id) == 1
     assert triggered_shower.shower_id[0] == 1
-    assert triggered_shower.simulated_energy[0] == 1.0
+    assert triggered_shower.simulated_energy[0] == pytest.approx(1.0)
 
 
 def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):

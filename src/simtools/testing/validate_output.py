@@ -337,8 +337,10 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
 
     """
     reference_file = Path(simtel_cfg_file)
-    test_file = Path(config["configuration"]["output_path"]) / reference_file.name.replace(
-        "_test", f"_{config['configuration']['label']}"
+    test_file = (
+        Path(config["configuration"]["output_path"])
+        / f"model/{config['configuration']['model_version']}"
+        / reference_file.name.replace("_test", f"_{config['configuration']['label']}")
     )
     _logger.info(
         f"Comparing simtel cfg files: {reference_file} and {test_file} "

@@ -88,8 +88,8 @@ def test_initialize_coordinate_systems(
         # set center data from database
         instance._initialize_coordinate_systems()
         _x, _y, _z = instance._array_center.get_coordinates("ground")
-        assert _x == 0.0 * u.m
-        assert _y == 0.0 * u.m
+        assert _x.value == pytest.approx(0.0)
+        assert _y.value == pytest.approx(0.0)
         assert _z.value == pytest.approx(
             instance._reference_position_dict["center_altitude"].value, 1.0e-2
         )
@@ -452,7 +452,9 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
         mongo_db_config=db_config,
         site="North",
         model_version=model_version,
-        telescope_list_file="tests/resources/model_parameters/array_element_position_ground-2.0.0.json",
+        telescope_list_file=(
+            "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
+        ),
     )
 
     ground_dict = layout.export_one_telescope_as_json(crs_name="ground")

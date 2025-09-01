@@ -15,7 +15,7 @@ logger = logging.getLogger()
 test_file = "test-file.txt"
 
 
-def test_get_output_directory(args_dict, io_handler, caplog):
+def test_get_output_directory(args_dict, io_handler):
     # default adding label
     assert io_handler.get_output_directory(label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/"
@@ -35,10 +35,8 @@ def test_get_output_directory(args_dict, io_handler, caplog):
 
     # FileNotFoundError
     with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
-        with caplog.at_level("ERROR"):
-            with pytest.raises(FileNotFoundError):
-                io_handler.get_output_directory(label="test-io-handler", sub_dir="model")
-        assert "Error creating directory" in caplog.text
+        with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
+            io_handler.get_output_directory(label="test-io-handler", sub_dir="model")
 
 
 def test_get_output_directory_plain_output_path(args_dict, io_handler):
@@ -100,3 +98,38 @@ def test_get_data_file(args_dict, io_handler):
     io_handler.data_path = None
     with pytest.raises(io_handler_module.IncompleteIOHandlerInitError):
         io_handler.get_input_data_file(file_name=test_file)
+
+
+def test_get_model_configuration_directory(args_dict, io_handler):
+    model_version = "1.0.0"
+    label = "test-io-handler"
+
+    # Test directory creation
+    expected_path = Path(
+        f"{args_dict['output_path']}/output/simtools-output/{label}/model/{model_version}"
+    )
+    assert (
+        io_handler.get_model_configuration_directory(label=label, model_version=model_version)
+        == expected_path
+    )
+
+    # Test FileNotFoundError
+    with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
+            io_handler.get_model_configuration_directory(label=label, model_version=model_version)
+
+
+def test_mkdir(io_handler):
+    # Test successful directory creation
+    test_path = Path("tests/tmp/test-dir")
+    created_path = io_handler._mkdir(test_path)
+    assert created_path == test_path.absolute()
+    assert test_path.exists()
+
+    # Cleanup
+    test_path.rmdir()
+
+    # Test FileNotFoundError
+    with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
+            io_handler._mkdir(test_path)

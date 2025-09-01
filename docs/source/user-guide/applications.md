@@ -60,6 +60,7 @@ simtools-db-add-value-from-json-to-db <applications/simtools-db-add-value-from-j
 simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layouts-from-db>
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
 simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
+simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
@@ -82,6 +83,7 @@ simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
+simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-print-version <applications/simtools-print-version>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
@@ -89,7 +91,8 @@ simtools-production-generate-grid <applications/simtools-production-generate-gri
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-calibration-events <applications/simtools-simulate-calibration-events>
-simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
+simtools-simulate-flasher <applications/simtools-simulate-flasher>
+simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
