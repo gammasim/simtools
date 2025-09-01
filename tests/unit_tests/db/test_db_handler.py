@@ -278,10 +278,10 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
     assert db_name == db.mongo_db_config["db_simulation_model"]
 
     db_copy = copy.deepcopy(db)
-    db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME-LATEST"
-    with pytest.raises(
-        ValueError, match=r"Found LATEST in the DB name but no matching versions found in DB."
-    ):
+    db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME"
+    db_copy.mongo_db_config["db_simulation_model_version"] = "LATEST"
+
+    with pytest.raises(ValueError, match=r"LATEST requested but no released versions found in DB."):
         db_copy._find_latest_simulation_model_db()
 
     db_names = [
@@ -296,7 +296,8 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
         "CTAO-Simulation-ModelParameters-v0-4-19-dev1",
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
-    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-ModelParameters-LATEST"
+    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-ModelParameters"
+    db_copy.mongo_db_config["db_simulation_model_version"] = "LATEST"
     db_copy._find_latest_simulation_model_db()
     assert (
         db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-ModelParameters-v0-3-19"
