@@ -1496,3 +1496,40 @@ def test_generate_compound_indexes(mocker, db):
 
     assert mock_create_index.call_count == len(expected_calls)
     mock_create_index.assert_has_calls(expected_calls, any_order=True)
+
+
+def test_get_db_name_with_valid_config(db):
+    """Test _get_db_name with valid configuration."""
+    db.mongo_db_config = {
+        "db_simulation_model": "SimulationModel",
+        "db_simulation_model_version": "1.0.0",
+    }
+    result = db._get_db_name()
+    assert result == "SimulationModel-1-0-0"
+
+
+def test_get_db_name_with_missing_model_name(db):
+    """Test _get_db_name with missing model name."""
+    db.mongo_db_config = {
+        "db_simulation_model": None,
+        "db_simulation_model_version": "1.0.0",
+    }
+    result = db._get_db_name()
+    assert result is None
+
+
+def test_get_db_name_with_missing_model_version(db):
+    """Test _get_db_name with missing model version."""
+    db.mongo_db_config = {
+        "db_simulation_model": "SimulationModel",
+        "db_simulation_model_version": None,
+    }
+    result = db._get_db_name()
+    assert result is None
+
+
+def test_get_db_name_with_no_config(db):
+    """Test _get_db_name with no configuration."""
+    db.mongo_db_config = None
+    result = db._get_db_name()
+    assert result is None
