@@ -12,7 +12,7 @@ from simtools.io import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils import names
+from simtools.utils import general, names
 
 __all__ = ["ArrayModel"]
 
@@ -297,10 +297,29 @@ class ArrayModel:
             Path of the config directory path for sim_telarray.
         """
         if self._config_file_directory is None:
-            self._config_file_directory = self.io_handler.get_output_directory(
-                self.label, f"model/{self.model_version}"
+            self._config_file_directory = self.io_handler.get_model_configuration_directory(
+                self.label, self.model_version
             )
         return self._config_file_directory
+
+    def pack_model_files(self):
+        """
+        Pack all model files into a tar.gz archive.
+
+        Returns
+        -------
+        Path
+            Path of the packed model files archive.
+        """
+        model_files = list(Path(self.get_config_directory()).rglob("*"))
+        if not model_files:
+            self._logger.warning("No model files found to pack.")
+            return None
+
+        archive_name = self.get_config_directory() / "model_files.tar.gz"
+        general.pack_tar_file(archive_name, model_files)
+        self._logger.info(f"Packed model files into {archive_name}")
+        return archive_name
 
     def _load_array_element_positions_from_file(
         self, array_elements_file: str | Path, site: str

@@ -14,6 +14,7 @@ applications:
     test: true
     use_plain_output_path: true
     use_random_focal_length: true
+    random_focal_length_seed: 100
   integration_tests:
   - output_file: test_derive_mirror_rnda_psf_random_flen.ecsv
   - reference_output_file: tests/resources/derive_mirror_rnda_psf_random_flen.ecsv

@@ -45,7 +45,8 @@ def test_inspect_ignore_info_lines(mock_logger):
 
 def test_inspect_mixed_input(mock_logger):
     log_text = [
-        "INFO:: All systems operational.\nException: A critical failure occurred.\nINFO:: This is fine.\nFailed to connect to the database."
+        "INFO:: All systems operational.\nException: A critical failure occurred.\n"
+        "INFO:: This is fine.\nFailed to connect to the database."
     ]
     result = inspect(log_text)
     assert result is False
@@ -60,3 +61,13 @@ def test_inspect_single_string_input(mock_logger):
     assert result is False
     assert len(mock_logger.records) == 1
     assert "Error or warning found in log at line 2" in mock_logger.text
+
+
+def test_inspect_ignore_patterns(mock_logger):
+    log_text = (
+        "WARNING::simtel_io_metadata(l80)::_decode_dictionary::Unable to decode metadata "
+        "with encoding utf8: 'utf-8' codec can't decode byte 0x80 in position 128: invalid "
+        "start byte. Falling back to 'utf-8' with errors='ignore'."
+    )
+    result = inspect(log_text)
+    assert result is True
