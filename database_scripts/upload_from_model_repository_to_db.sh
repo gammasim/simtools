@@ -23,13 +23,13 @@ fi
 
 DB_SIMULATION_MODEL="$1"
 DB_SIMULATION_MODEL_VERSION="$2"
-DB_SIMULATION_MODEL_BRANCH="${3:-main}"
+DB_SIMULATION_MODEL_BRANCH="${3:-}"
 
 echo "Cloning model parameters from $DB_SIMULATION_MODEL_URL"
 rm -rf ./tmp_model_parameters
 
 CURRENT_DIR=$(pwd)
-if [ -z "$DB_SIMULATION_MODEL_BRANCH" ]; then
+if [ -n "$DB_SIMULATION_MODEL_BRANCH" ]; then
   git clone --depth=1 -b "$DB_SIMULATION_MODEL_BRANCH" $DB_SIMULATION_MODEL_URL ./tmp_model_parameters
 else
   # generates detached head warning - fine for us.
