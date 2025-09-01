@@ -745,21 +745,44 @@ def plot_incident_angles_multi(
         if tab is None or len(tab) == 0:
             continue
         data = tab["angle_incidence_focal"].to(u.deg).value
+
+        _, _, patches = ax.hist(
+            data,
+            bins=bins,
+            histtype="step",
+            linewidth=0.5,
+            label=f"off-axis {off:g} deg",
+            zorder=3,
+        )
+        color = patches[0].get_edgecolor() if patches else None
+
         ax.hist(
             data,
             bins=bins,
-            alpha=0.3,
             histtype="stepfilled",
-            # edgecolor="none",
+            alpha=0.2,
+            color=color,
+            edgecolor="none",
             label=f"off-axis {off:g} deg",
+            zorder=1,
+        )
+
+        ax.hist(
+            data,
+            bins=bins,
+            histtype="step",
+            linewidth=0.5,
+            color=color,
+            label="_nolegend_",
+            zorder=4,
         )
 
     ax.set_xlabel("Angle of incidence at focal surface (deg)")
-    ax.set_ylabel("Count")
+    ax.set_ylabel("Count / bin")
     ax.set_title("Incident angle distribution vs off-axis angle")
     ax.grid(True, alpha=0.3)
     ax.legend()
     plt.tight_layout()
     out_png = Path(output_dir) / f"incident_angles_multi_{label}.png"
-    plt.savefig(out_png, dpi=200)
+    plt.savefig(out_png, dpi=300)
     plt.close(fig)
