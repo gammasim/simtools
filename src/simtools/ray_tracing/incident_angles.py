@@ -107,22 +107,29 @@ class IncidentAnglesCalculator:
         stars_file = self.output_dir / f"incident_angles_stars_{self.label}.lis"
         log_file = self.output_dir / f"incident_angles_{self.label}.log"
 
-        if not photons_file.exists() or self.test:
-            with photons_file.open("w", encoding="utf-8") as pf:
-                pf.write(f"#{'=' * 50}\n")
-                pf.write("# Imaging list for Incident Angle simulations\n")
-                pf.write(f"#{'=' * 50}\n")
-                pf.write(f"# config_file = {self.telescope_model.config_file_path}\n")
-                pf.write(f"# zenith_angle [deg] = {self.rt_params['zenith_angle'].value}\n")
-                pf.write(
-                    f"# off_axis_angle [deg] = {self.rt_params['off_axis_angle'].to_value(u.deg)}\n"
-                )
-                pf.write(f"# source_distance [km] = {self.rt_params['source_distance'].value}\n")
+        # Always start with a fresh photons file to avoid appending across runs
+        if photons_file.exists():
+            try:
+                photons_file.unlink()
+            except OSError as err:
+                self.logger.warning(f"Failed to remove existing photons file {photons_file}: {err}")
 
-            with stars_file.open("w", encoding="utf-8") as sf:
-                zen = float(self.rt_params["zenith_angle"].to_value(u.deg))
-                dist = float(self.rt_params["source_distance"].to_value(u.km))
-                sf.write(f"0. {90.0 - zen} 1.0 {dist}\n")
+        with photons_file.open("w", encoding="utf-8") as pf:
+            pf.write(f"#{'=' * 50}\n")
+            pf.write("# Imaging list for Incident Angle simulations\n")
+            pf.write(f"#{'=' * 50}\n")
+            pf.write(f"# config_file = {self.telescope_model.config_file_path}\n")
+            pf.write(f"# zenith_angle [deg] = {self.rt_params['zenith_angle'].value}\n")
+            pf.write(
+                f"# off_axis_angle [deg] = {self.rt_params['off_axis_angle'].to_value(u.deg)}\n"
+            )
+            pf.write(f"# source_distance [km] = {self.rt_params['source_distance'].value}\n")
+
+        # Ensure stars file reflects current parameters
+        with stars_file.open("w", encoding="utf-8") as sf:
+            zen = float(self.rt_params["zenith_angle"].to_value(u.deg))
+            dist = float(self.rt_params["source_distance"].to_value(u.km))
+            sf.write(f"0. {90.0 - zen} 1.0 {dist}\n")
 
         return photons_file, stars_file, log_file
 
