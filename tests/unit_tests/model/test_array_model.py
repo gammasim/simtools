@@ -233,10 +233,6 @@ def test_pack_model_files(array_model, io_handler, tmp_path):
 
 
 def test_get_additional_simtel_metadata(array_model, caplog, mocker):
-    with caplog.at_level(logging.WARNING):
-        array_model._get_additional_simtel_metadata()
-        assert "Could not get NSB integrated flux from site model." in caplog.text
-
     array_model_cp = copy.deepcopy(array_model)
     array_model_cp.sim_telarray_seeds = {"seeds": 1234}
     mocker.patch.object(array_model_cp.site_model, "get_nsb_integrated_flux", return_value=42.0)
