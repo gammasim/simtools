@@ -316,7 +316,7 @@ package = "simtools"
 directory = "docs/changes"
 filename = "CHANGELOG.md"
 underlines = [ "", "", "" ]
-title_format = "## [{version}](https://github.com/gammasim/simtools/tree/{version}) - {project_date}"
+title_format = "## [{version}](https://github.com/gammasim/simtools/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/gammasim/simtools/pull/{issue})"
 start_string = "<!-- towncrier release notes start -->\n"
 

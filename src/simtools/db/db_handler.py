@@ -859,7 +859,7 @@ class DatabaseHandler:
             the name of the DB
         **kwargs (optional): keyword arguments for file creation.
             The full list of arguments can be found in, \
-            https://docs.mongodb.com/manual/core/gridfs/#the-files-collection
+            https://www.mongodb.com/docs/manual/core/gridfs/
             mostly these are unnecessary though.
 
         Returns

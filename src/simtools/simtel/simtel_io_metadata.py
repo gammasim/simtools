@@ -78,7 +78,7 @@ def _decode_dictionary(meta, encoding="utf8"):
         return {k.decode(encoding, errors="ignore"): v.decode(encoding) for k, v in meta.items()}
     except UnicodeDecodeError as e:
         _logger.warning(
-            f"Failed to decode metadata with encoding {encoding}: {e}. "
+            f"Unable to decode metadata with encoding {encoding}: {e}. "
             "Falling back to 'utf-8' with errors='ignore'."
         )
         return {safe_decode(k, encoding): safe_decode(v, encoding) for k, v in meta.items()}
