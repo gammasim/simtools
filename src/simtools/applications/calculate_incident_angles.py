@@ -139,13 +139,6 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-
-    config.parser.add_argument(
-        "--ray_tracing_config",
-        help="Path to ray tracing configuration file",
-        type=str,
-        required=False,
-    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "site", "model_version"],
@@ -181,7 +174,6 @@ def main():
         },
         output_dir=output_dir,
         label=args_dict.get("label", label),
-        ray_tracing_config=args_dict.get("ray_tracing_config"),
         perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
         overwrite_rdna=bool(args_dict.get("overwrite_rdna", False)),
         mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),

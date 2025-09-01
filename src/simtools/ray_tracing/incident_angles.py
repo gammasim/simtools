@@ -27,7 +27,6 @@ class IncidentAnglesCalculator:
         config_data,
         output_dir,
         label: str | None = None,
-        ray_tracing_config=None,
         perfect_mirror: bool = False,
         overwrite_rdna: bool = False,
         mirror_reflection_random_angle: float | None = None,
@@ -41,7 +40,6 @@ class IncidentAnglesCalculator:
         self.config_data = config_data
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
-        self.ray_tracing_config = ray_tracing_config
         self.perfect_mirror = perfect_mirror
         self.overwrite_rdna = overwrite_rdna
         self.mirror_reflection_random_angle = mirror_reflection_random_angle

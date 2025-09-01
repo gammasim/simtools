@@ -676,7 +676,14 @@ def plot_incident_angles(
         return
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
-    ax.hist(results["angle_incidence_focal"].value, bins=50, alpha=0.8, color="royalblue")
+    ax.hist(
+        results["angle_incidence_focal"].value,
+        bins=50,
+        alpha=0.9,
+        color="royalblue",
+        histtype="stepfilled",
+        edgecolor="none",
+    )
     ax.set_xlabel("Angle of incidence at focal surface (deg)")
     ax.set_ylabel("Count")
     ax.set_title("Incident angle distribution (focal surface)")
