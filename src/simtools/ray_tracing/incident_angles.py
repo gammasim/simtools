@@ -130,7 +130,7 @@ class IncidentAnglesCalculator:
 
     def _write_run_script(self, photons_file: Path, stars_file: Path, log_file: Path) -> Path:
         script_path = self.output_dir / f"run_incident_angles_{self.label}.sh"
-        simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray"
+        simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
         theta = float(self.rt_params["zenith_angle"].to_value(u.deg))
