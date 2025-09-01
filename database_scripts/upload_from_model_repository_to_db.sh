@@ -42,7 +42,6 @@ if [[ -e "$CURRENT_DIR"/../.env ]]; then
     cp -f "$CURRENT_DIR"/../.env .env
 fi
 
-
 # ask for confirmation before uploading to remote DB
 if [[ -e .env ]]; then
     source .env

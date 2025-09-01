@@ -50,8 +50,19 @@ jsonschema_db_dict = {
             "type": "string",
             "description": "Name of simulation model database",
         },
+        "db_simulation_model_version": {
+            "type": "string",
+            "description": "Version of simulation model database",
+        },
     },
-    "required": ["db_server", "db_api_port", "db_api_user", "db_api_pw", "db_simulation_model"],
+    "required": [
+        "db_server",
+        "db_api_port",
+        "db_api_user",
+        "db_api_pw",
+        "db_simulation_model",
+        "db_simulation_model_version",
+    ],
 }
 
 
@@ -81,9 +92,7 @@ class DatabaseHandler:
 
         self._set_up_connection()
         self._find_latest_simulation_model_db()
-        self.db_name = (
-            self.mongo_db_config.get("db_simulation_model", None) if self.mongo_db_config else None
-        )
+        self.db_name = self._get_db_name()
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
@@ -91,6 +100,18 @@ class DatabaseHandler:
             lock = Lock()
             with lock:
                 DatabaseHandler.db_client = self._open_mongo_db()
+
+    def _get_db_name(self):
+        """Build DB name from configuration."""
+        if self.mongo_db_config:
+            model_version = self.mongo_db_config.get("db_simulation_model_version")
+            model_name = self.mongo_db_config.get("db_simulation_model")
+            return (
+                f"{model_name}-{model_version.replace('.', '-')}"
+                if model_version and model_name
+                else None
+            )
+        return None
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""

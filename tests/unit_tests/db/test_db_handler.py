@@ -617,12 +617,13 @@ def test_get_collections(db, db_config, fs_files):
     assert isinstance(collections, list)
     assert "telescopes" in collections
 
-    collections_from_name = db.get_collections(db_config["db_simulation_model"])
+    db_name = f"{db_config['db_simulation_model']}-{db_config['db_simulation_model_version'].replace('.', '-')}"
+    collections_from_name = db.get_collections(db_name)
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
     assert fs_files in collections_from_name
 
-    collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
+    collections_no_model = db.get_collections(db_name, True)
     assert isinstance(collections_no_model, list)
     assert "telescopes" in collections_no_model
     assert fs_files not in collections_no_model
