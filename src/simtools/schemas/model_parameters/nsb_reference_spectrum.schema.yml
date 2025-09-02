@@ -33,7 +33,7 @@ source:
 simulation_software:
   - name: simtools
 plot_configuration:
-  - type: nsb_reference_spectrum
+  - type: nsb_spectrum
     title: 'NSB spectrum'
     xtitle: 'Wavelength [nm]'
     ytitle: 'Differential photon rate [10^9 / (nm s m^2 sr)]'
