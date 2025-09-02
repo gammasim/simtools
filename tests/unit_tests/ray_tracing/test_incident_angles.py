@@ -258,7 +258,7 @@ def test_compute_incidence_angles_parsing(calculator, tmp_path):
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert "angle_incidence_focal_deg" in out
-    assert out["angle_incidence_focal_deg"] == [42.5, 99.0]
+    assert out["angle_incidence_focal_deg"] == pytest.approx([42.5, 99.0])
 
 
 def test_prepare_psf_io_files_creates_in_subdirs(calculator):
@@ -293,7 +293,7 @@ def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
     monkeypatch.setattr(ia.Path, "unlink", _raise_unlink)
     caplog.set_level(logging.WARNING, logger=ia.__name__)
 
-    photons, stars, log = calculator._prepare_psf_io_files()
+    photons, _, _ = calculator._prepare_psf_io_files()
 
     assert photons == photons_path
     # Warning was logged
@@ -316,7 +316,7 @@ def test_primary_valueerror_results_in_nan(calculator, tmp_path):
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert math.isnan(out["angle_incidence_primary_deg"][0])
-    assert out["angle_incidence_secondary_deg"][0] == 2.0
+    assert math.isclose(out["angle_incidence_secondary_deg"][0], 2.0, rel_tol=0.0, abs_tol=1e-12)
 
 
 def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
@@ -331,7 +331,7 @@ def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
     pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
-    assert out["angle_incidence_primary_deg"][0] == 3.0
+    assert math.isclose(out["angle_incidence_primary_deg"][0], 3.0, rel_tol=0.0, abs_tol=1e-12)
     assert math.isnan(out["angle_incidence_secondary_deg"][0])
 
 
@@ -351,6 +351,6 @@ def test_header_driven_column_detection(calculator, tmp_path):
     pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
-    assert out["angle_incidence_focal_deg"] == [11.1]
-    assert out["angle_incidence_primary_deg"] == [22.2]
-    assert out["angle_incidence_secondary_deg"] == [33.3]
+    assert out["angle_incidence_focal_deg"] == pytest.approx([11.1])
+    assert out["angle_incidence_primary_deg"] == pytest.approx([22.2])
+    assert out["angle_incidence_secondary_deg"] == pytest.approx([33.3])

@@ -255,12 +255,44 @@ class IncidentAnglesCalculator:
         Parse header lines ("#   Column N: ...") to discover indices; otherwise
         fall back to legacy positions (1-based): focal=26, primary=32, secondary=36.
         """
-        # Defaults (1-based)
-        focal_idx_1b = 26
-        primary_idx_1b = 32
-        secondary_idx_1b = 36
+        focal_idx, primary_idx, secondary_idx = self._discover_column_indices(photons_file)
 
-        # Scan file for header mapping lines
+        focal: list[float] = []
+        primary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
+        secondary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
+
+        with photons_file.open("r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip() or line.lstrip().startswith("#"):
+                    continue
+                parts = line.split()
+                foc_ok, foc_val = self._parse_float(parts, focal_idx)
+                if not foc_ok:
+                    continue
+                focal.append(foc_val)  # focal row accepted
+
+                if self.calculate_primary_secondary_angles:
+                    if primary is not None:
+                        primary.append(self._parse_float_with_nan(parts, primary_idx))
+                    if secondary is not None:
+                        secondary.append(self._parse_float_with_nan(parts, secondary_idx))
+
+        result = {"angle_incidence_focal_deg": focal}
+        if self.calculate_primary_secondary_angles:
+            result["angle_incidence_primary_deg"] = primary
+            result["angle_incidence_secondary_deg"] = secondary
+        return result
+
+    def _discover_column_indices(self, photons_file: Path) -> tuple[int, int | None, int | None]:
+        """Return 0-based indices for focal, primary, secondary columns based on headers.
+
+        Defaults (1-based) are: focal=26, primary=32, secondary=36.
+        """
+        # Defaults (0-based)
+        focal_idx = 25
+        primary_idx = 31 if self.calculate_primary_secondary_angles else None
+        secondary_idx = 35 if self.calculate_primary_secondary_angles else None
+
         col_pat = re.compile(r"^\s*#\s*Column\s*(\d+)\s*:\s*(.*)$", re.IGNORECASE)
         with photons_file.open("r", encoding="utf-8") as fh:
             for raw in fh:
@@ -273,64 +305,41 @@ class IncidentAnglesCalculator:
                 num = int(m.group(1))
                 desc = m.group(2).strip().lower()
                 if "angle of incidence at focal surface" in desc and "optical axis" in desc:
-                    focal_idx_1b = num
+                    focal_idx = num - 1
                 elif re.search(r"angle of incidence\s+on(to)?\s+primary mirror", desc):
-                    primary_idx_1b = num
+                    if self.calculate_primary_secondary_angles:
+                        primary_idx = num - 1
                 elif re.search(r"angle of incidence\s+on(to)?\s+secondary mirror", desc):
-                    secondary_idx_1b = num
+                    if self.calculate_primary_secondary_angles:
+                        secondary_idx = num - 1
 
         self.logger.info(
             "Imaging list columns (1-based): focal=%s primary=%s secondary=%s",
-            focal_idx_1b,
-            (primary_idx_1b if self.calculate_primary_secondary_angles else "n/a"),
-            (secondary_idx_1b if self.calculate_primary_secondary_angles else "n/a"),
+            (focal_idx + 1 if focal_idx is not None else "n/a"),
+            (primary_idx + 1 if primary_idx is not None else "n/a"),
+            (secondary_idx + 1 if secondary_idx is not None else "n/a"),
         )
+        return focal_idx, primary_idx, secondary_idx
 
-        # Convert to 0-based
-        focal_idx = focal_idx_1b - 1
-        primary_idx = primary_idx_1b - 1 if self.calculate_primary_secondary_angles else None
-        secondary_idx = secondary_idx_1b - 1 if self.calculate_primary_secondary_angles else None
+    @staticmethod
+    def _parse_float(parts: list[str], idx: int | None) -> tuple[bool, float]:
+        """Try parse float from parts[idx]. Returns (ok, value)."""
+        if idx is None or idx < 0 or idx >= len(parts):
+            return False, 0.0
+        try:
+            return True, float(parts[idx])
+        except ValueError:
+            return False, 0.0
 
-        focal: list[float] = []
-        primary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
-        secondary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
-
-        with photons_file.open("r", encoding="utf-8") as f:
-            for line in f:
-                if not line.strip() or line.lstrip().startswith("#"):
-                    continue
-                parts = line.split()
-                if len(parts) <= focal_idx:
-                    continue
-                try:
-                    foc_val = float(parts[focal_idx])
-                except ValueError:
-                    continue
-                focal.append(foc_val)
-
-                if self.calculate_primary_secondary_angles:
-                    if primary is not None:
-                        if primary_idx is not None and len(parts) > primary_idx:
-                            try:
-                                primary.append(float(parts[primary_idx]))
-                            except ValueError:
-                                primary.append(float("nan"))
-                        else:
-                            primary.append(float("nan"))
-                    if secondary is not None:
-                        if secondary_idx is not None and len(parts) > secondary_idx:
-                            try:
-                                secondary.append(float(parts[secondary_idx]))
-                            except ValueError:
-                                secondary.append(float("nan"))
-                        else:
-                            secondary.append(float("nan"))
-
-        result = {"angle_incidence_focal_deg": focal}
-        if self.calculate_primary_secondary_angles:
-            result["angle_incidence_primary_deg"] = primary
-            result["angle_incidence_secondary_deg"] = secondary
-        return result
+    @staticmethod
+    def _parse_float_with_nan(parts: list[str], idx: int | None) -> float:
+        """Parse float or return NaN when missing/invalid."""
+        if idx is None or idx < 0 or idx >= len(parts):
+            return float("nan")
+        try:
+            return float(parts[idx])
+        except ValueError:
+            return float("nan")
 
     def _save_results(self) -> None:
         """Save the results to an ECSV file in the results directory if available."""
