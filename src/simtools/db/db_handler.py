@@ -92,7 +92,14 @@ class DatabaseHandler:
 
         self._set_up_connection()
         self._find_latest_simulation_model_db()
-        self.db_name = self._get_db_name()
+        self.db_name = (
+            self.get_db_name(
+                model_version=self.mongo_db_config.get("db_simulation_model_version"),
+                model_name=self.mongo_db_config.get("db_simulation_model"),
+            )
+            if self.mongo_db_config
+            else None
+        )
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
@@ -101,17 +108,15 @@ class DatabaseHandler:
             with lock:
                 DatabaseHandler.db_client = self._open_mongo_db()
 
-    def _get_db_name(self):
+    def get_db_name(self, db_name=None, model_version=None, model_name=None):
         """Build DB name from configuration."""
-        if self.mongo_db_config:
-            model_version = self.mongo_db_config.get("db_simulation_model_version")
-            model_name = self.mongo_db_config.get("db_simulation_model")
-            return (
-                f"{model_name}-{model_version.replace('.', '-')}"
-                if model_version and model_name
-                else None
-            )
-        return None
+        if db_name:
+            return db_name
+        if model_version and model_name:
+            return f"{model_name}-{model_version.replace('.', '-')}"
+        if model_version or model_name:
+            return None
+        return None if (model_version or model_name) else self.db_name
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
@@ -794,17 +799,18 @@ class DatabaseHandler:
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
 
-    def add_production_table(self, db_name, production_table):
+    def add_production_table(self, production_table, db_name=None):
         """
         Add a production table to the DB.
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB.
         production_table: dict
             The production table to add to the DB.
+        db_name: str
+            the name of the DB.
         """
+        db_name = db_name or self.db_name
         collection = self.get_collection("production_tables", db_name=db_name or self.db_name)
         self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
@@ -812,8 +818,8 @@ class DatabaseHandler:
 
     def add_new_parameter(
         self,
-        db_name,
         par_dict,
+        db_name=None,
         collection_name="telescopes",
         file_prefix=None,
     ):
@@ -825,15 +831,16 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
         par_dict: dict
             dictionary with parameter data
+        db_name: str
+            the name of the DB
         collection_name: str
             The name of the collection to add a parameter to.
         file_prefix: str or Path
             where to find files to upload to the DB
         """
+        db_name = db_name or self.db_name
         par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
 
         db_name = db_name or self.db_name

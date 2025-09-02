@@ -55,32 +55,32 @@ if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
   fi
 fi
 
-# Database name
-DB_SIMULATION_MODEL_NAME="${DB_SIMULATION_MODEL}-${DB_SIMULATION_MODEL_VERSION//./-}"
 
 # Print connection details for debugging
 echo "MongoDB connection details:"
 echo "Server: $SIMTOOLS_DB_SERVER"
 echo "Port: $SIMTOOLS_DB_API_PORT"
-echo "Database: $DB_SIMULATION_MODEL_NAME"
 
 # upload model parameters to DB
 model_directory="./simulation-models/model_parameters/"
 simtools-db-add-simulation-model-from-repository-to-db \
   --input_path "${model_directory}" \
-  --db_name "$DB_SIMULATION_MODEL_NAME" \
+  --db_simulation_model "$DB_SIMULATION_MODEL" \
+  --db_simulation_model_version "$DB_SIMULATION_MODEL_VERSION" \
   --type "model_parameters"
 
 # upload production tables to DB
 production_directory="./simulation-models/productions"
 simtools-db-add-simulation-model-from-repository-to-db \
   --input_path "${production_directory}" \
-  --db_name "$DB_SIMULATION_MODEL_NAME" \
+  --db_simulation_model "$DB_SIMULATION_MODEL" \
+  --db_simulation_model_version "$DB_SIMULATION_MODEL_VERSION" \
   --type "production_tables"
 
 # generate compound indexes
 simtools-db-generate-compound-indexes \
-  --db_name "$DB_SIMULATION_MODEL_NAME"
+  --db_simulation_model "$DB_SIMULATION_MODEL" \
+  --db_simulation_model_version "$DB_SIMULATION_MODEL_VERSION"
 
 cd "$CURRENT_DIR" || exit
 
