@@ -49,7 +49,6 @@ Parameters with the same functionality are named consistently the same among all
 :glob: true
 :maxdepth: 1
 
-simtools-calculate-trigger-rate <applications/simtools-calculate-trigger-rate>
 simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
@@ -74,7 +73,6 @@ simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
-simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-maintain-simulation-model-add-production-table <applications/simtools-maintain-simulation-model-add-production-table>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
