@@ -9,7 +9,7 @@ name: flasher_var_photons
 description: |-
   Relative variation of flasher shots from shot to shot.
 short_description: |-
-  Relative variation of laser shots from shot to shot.
+  Relative variation of flasher shots from shot to shot.
 data:
   - type: float64
     unit: dimensionless
