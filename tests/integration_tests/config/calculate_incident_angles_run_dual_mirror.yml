@@ -4,11 +4,13 @@ applications:
   configuration:
     site: North
     telescope: LSTN-01
+    off_axis_angles: 1.0
+    zenith: 20
+    number_of_rays: 10000
     model_version: 6.0.0
     output_path: simtools-output
     use_plain_output_path: true
     test: true
-    # zenith/off_axis/source_distance use defaults
   integration_tests:
   - output_file: incident_angles_calculate_incident_angles.ecsv
   - output_file: incident_angles_calculate_incident_angles.png
