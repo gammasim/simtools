@@ -106,7 +106,7 @@ def test_instrument_class_key_to_db_collection():
 def test_get_collection_name_from_parameter_name():
     assert "telescopes" == names.get_collection_name_from_parameter_name("num_gains")
     assert "sites" == names.get_collection_name_from_parameter_name("atmospheric_profile")
-    assert "calibration_devices" == names.get_collection_name_from_parameter_name("laser_photons")
+    assert "calibration_devices" == names.get_collection_name_from_parameter_name("flashe_photons")
     assert "configuration_sim_telarray" == names.get_collection_name_from_parameter_name(
         "iobuf_maximum"
     )

@@ -75,27 +75,23 @@ class SimulatorLightEmission(SimtelRunner):
         self.light_source_type = light_source_type or "illuminator"
         self.test = test
 
-        # IO
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
 
         self.number_events = self.light_emission_config["number_events"]
 
-        # photons per run
         if self._calibration_model is not None:
-            self.photons_per_run = (
-                self._calibration_model.get_parameter_value("photons_per_run")
+            self.flasher_photons = (
+                self._calibration_model.get_parameter_value("flasher_photons")
                 if not self.test
                 else 1e8
             )
         elif self._flasher_model is not None:
-            self.photons_per_run = (
-                self._flasher_model.get_parameter_value("photons_per_flasher")
-                if not self.test
-                else 1e8
+            self.flasher_photons = (
+                self._flasher_model.get_parameter_value("flasher_photons") if not self.test else 1e8
             )
         else:
-            self.photons_per_run = 1e8
+            self.flasher_photons = 1e8
 
         # Ensure sim_telarray config exists on disk
         if hasattr(self._telescope_model, "write_sim_telarray_config_file"):
@@ -434,7 +430,7 @@ class SimulatorLightEmission(SimtelRunner):
         spec_nm = int(spectrum.to(u.nm).value)
 
         command += f" --events {self.number_events}"
-        command += f" --photons {self.photons_per_run}"
+        command += f" --photons {self.flasher_photons}"
         command += f" --bunchsize {bunch_size}"
         command += f" --xy {fx},{fy}"
         command += f" --distance {dist_cm}"
@@ -465,7 +461,7 @@ class SimulatorLightEmission(SimtelRunner):
             command += (
                 f" -d {','.join(map(str, self.light_emission_config['direction']['default']))}"
             )
-            command += f" -n {self.photons_per_run}"
+            command += f" -n {self.flasher_photons}"
 
         elif self.light_source_setup == "layout":
             x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
@@ -477,14 +473,15 @@ class SimulatorLightEmission(SimtelRunner):
             pointing_vector = self.calibration_pointing_direction()[0]
             command += f" -d {','.join(map(str, pointing_vector))}"
 
-            command += f" -n {self.photons_per_run}"
-            self._logger.info(f"Photons per run: {self.photons_per_run} ")
+            command += f" -n {self.flasher_photons}"
+            self._logger.info(f"Photons per run: {self.flasher_photons} ")
 
-            laser_wavelength = self._calibration_model.get_parameter_value_with_unit(
-                "laser_wavelength"
+            flasher_wavelength = self._calibration_model.get_parameter_value_with_unit(
+                "flasher_wavelength"
             )
-            command += f" -s {int(laser_wavelength.to(u.nm).value)}"
+            command += f" -s {int(flasher_wavelength.to(u.nm).value)}"
 
+            # TODO read both shape and width
             led_pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
                 "led_pulse_sigtime"
             )

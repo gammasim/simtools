@@ -11,19 +11,30 @@ description: |-
 short_description: |-
   Flasher pulse shape.
 data:
-  - type: string
-    unit: null
-    default: "Gauss"
-    description: |-
-      Flasher pulse shape distribution. Allowed values are 'Gauss' and 'TopHat'
-  - type: float64
-    unit: "ns"
-    default: 0
-    allowed_range:
-      min: 0
-    description: |-
-      Characteristic width of the pulse. For 'TopHat', this is the pulse width,
-      for 'Gauss' the rms.
+  - type: dict
+    json_schema:
+      type: object
+      properties:
+        distribution:
+          type: string
+          enum:
+            - Gauss
+            - TopHat
+          default: Gauss
+          description: |-
+            Flasher pulse shape distribution. Allowed values are 'Gauss' and 'TopHat'
+        width:
+          type: number
+          format: float
+          minimum: 0
+          default: 0
+          description: |-
+            Characteristic width of the pulse. For 'TopHat', this is the pulse width,
+            for 'Gauss' the rms.
+      required:
+        - distribution
+        - width
+      additionalProperties: false
 instrument:
   class: Calibration
   type:
