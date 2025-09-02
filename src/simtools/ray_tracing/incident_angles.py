@@ -36,7 +36,6 @@ class IncidentAnglesCalculator:
     ) -> None:
         self.logger = logging.getLogger(__name__)
 
-        # Store parameters
         self._simtel_path = Path(simtel_path)
         self.config_data = config_data
         self.output_dir = Path(output_dir)
@@ -49,7 +48,6 @@ class IncidentAnglesCalculator:
         self.calculate_primary_secondary_angles = calculate_primary_secondary_angles
         self.results: QTable | None = None
 
-        # Create output directory tree
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir = self.output_dir / "logs"
         self.scripts_dir = self.output_dir / "scripts"
@@ -58,7 +56,6 @@ class IncidentAnglesCalculator:
         for d in (self.logs_dir, self.scripts_dir, self.photons_dir, self.results_dir):
             d.mkdir(parents=True, exist_ok=True)
 
-        # Load models from database
         self.logger.info(
             "Initializing models for %s, %s",
             config_data["site"],
@@ -72,7 +69,6 @@ class IncidentAnglesCalculator:
             config_data["model_version"],
         )
 
-        # Configure run parameters
         self.rt_params = self._setup_rt_params(config_data)
 
     def __repr__(self) -> str:
@@ -101,7 +97,6 @@ class IncidentAnglesCalculator:
         """Run sim_telarray, parse imaging list, and return an angle table."""
         self.logger.info("Running sim_telarray PSF-style simulation for incident angles")
 
-        # Export model configuration files (include site model)
         self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
 
         photons_file, stars_file, log_file = self._prepare_psf_io_files()
