@@ -62,6 +62,19 @@ jobs:
         with:
           fetch-depth: 0
 
+
+      - name: Restore micromamba cache
+        if: matrix.install-method == 'mamba'
+        uses: actions/cache@v4
+        id: micromamba-cache
+        with:
+          path: |
+            ~/.cache/micromamba
+            ~/micromamba/envs
+          key: ${{ runner.os }}-micromamba-${{ hashFiles('environment.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-micromamba-
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -82,6 +95,15 @@ jobs:
           create-args: python=${{ matrix.python-version }}
           init-shell: bash
 
+      - name: Save micromamba cache
+        if: matrix.install-method == 'mamba' && success()
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/micromamba
+            ~/micromamba/envs
+          key: ${{ runner.os }}-micromamba-${{ hashFiles('environment.yml') }}
+
       - name: Python setup
         if: matrix.install-method == 'pip'
         uses: actions/setup-python@v5
@@ -89,15 +111,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           check-latest: true
 
-      - name: Python dependencies (pip)
-        if: matrix.install-method == 'pip'
+      - name: Python dependencies
         run: |
-          pip install '.[tests,dev,doc]'
-
-      - name: Python dependencies (mamba)
-        if: matrix.install-method == 'mamba'
-        run: |
-          pip install -e '.[tests,dev,doc]'
+          pip install -e '.[tests]'
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
