@@ -1,7 +1,9 @@
 """Calculate incident angles using a sim_telarray PSF-style run.
 
-Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses column 24:
-Angle of incidence at focal surface, with respect to the optical axis [deg].
+Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses
+Angle of incidence at focal surface, with respect to the optical axis [deg],
+Angle of incidence on(to) primary mirror [deg], and
+Angle of incidence on(to) secondary mirror [deg] (if available).
 """
 
 import logging
@@ -77,6 +79,12 @@ class IncidentAnglesCalculator:
         """Return a concise representation helpful for logging/debugging."""
         return f"IncidentAnglesCalculator(label={self.label})"
 
+    def _label_suffix(self) -> str:
+        """Build a filename suffix including telescope and off-axis angle."""
+        tel = str(self.config_data.get("telescope", "TEL"))
+        off = float(self.rt_params.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
+        return f"{self.label}_{tel}_off{off:g}"
+
     def _setup_rt_params(self, config_data):
         zenith = config_data.get("zenith_angle", 20.0 * u.deg).to(u.deg)
         off = config_data.get("off_axis_angle", 0.0 * u.deg).to(u.deg)
@@ -123,25 +131,23 @@ class IncidentAnglesCalculator:
         accordingly. Returns a mapping from off-axis angle (deg) to the resulting QTable.
         """
         results_by_offset: dict[float, QTable] = {}
-        base_label = self.label
         base_off = self.rt_params.get("off_axis_angle", 0.0 * u.deg)
 
         for off in offsets:
             self.rt_params["off_axis_angle"] = float(off) * u.deg
-            self.label = f"{base_label}_off{off:g}"
             self.logger.info(f"Running for off-axis angle {off:g} deg with label {self.label}")
-
             tbl = self.run()
             results_by_offset[float(off)] = tbl.copy()
 
-        self.label = base_label
         self.rt_params["off_axis_angle"] = base_off
         return results_by_offset
 
     def _prepare_psf_io_files(self):
-        photons_file = self.photons_dir / f"incident_angles_photons_{self.label}.lis"
-        stars_file = self.photons_dir / f"incident_angles_stars_{self.label}.lis"
-        log_file = self.logs_dir / f"incident_angles_{self.label}.log"
+        """Prepare photons, stars, and log file paths for a PSF-style incident angle simulation."""
+        suffix = self._label_suffix()
+        photons_file = self.photons_dir / f"incident_angles_photons_{suffix}.lis"
+        stars_file = self.photons_dir / f"incident_angles_stars_{suffix}.lis"
+        log_file = self.logs_dir / f"incident_angles_{suffix}.log"
 
         if photons_file.exists():
             try:
@@ -168,7 +174,8 @@ class IncidentAnglesCalculator:
         return photons_file, stars_file, log_file
 
     def _write_run_script(self, photons_file: Path, stars_file: Path, log_file: Path) -> Path:
-        script_path = self.scripts_dir / f"run_incident_angles_{self.label}.sh"
+        """Generate a run script for sim_telarray with the provided configuration and inputs."""
+        script_path = self.scripts_dir / f"run_incident_angles_{self._label_suffix()}.sh"
         simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
@@ -238,6 +245,7 @@ class IncidentAnglesCalculator:
         return script_path
 
     def _run_script(self, script_path: Path, log_file: Path) -> None:
+        """Execute the script and log output; raise an error if execution fails."""
         self.logger.info("Executing %s (logging to %s)", script_path, log_file)
         try:
             subprocess.check_call([str(script_path)])
@@ -330,10 +338,11 @@ class IncidentAnglesCalculator:
         return result
 
     def _save_results(self) -> None:
+        """Save the results to an ECSV file in the results directory if available."""
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to save")
             return
-        output_file = self.results_dir / f"incident_angles_{self.label}.ecsv"
+        output_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
 
     def export_results(self) -> None:
@@ -341,9 +350,9 @@ class IncidentAnglesCalculator:
         if self.results is None or len(self.results) == 0:
             self.logger.error("Cannot export results because they do not exist")
             return
-        table_file = self.results_dir / f"incident_angles_{self.label}.ecsv"
+        table_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
         self.results.write(table_file, format="ascii.ecsv", overwrite=True)
-        summary_file = self.results_dir / f"incident_angles_summary_{self.label}.txt"
+        summary_file = self.results_dir / f"incident_angles_summary_{self._label_suffix()}.txt"
         with summary_file.open("w", encoding="utf-8") as f:
             f.write(f"Incident angle results for {self.telescope_model.name}\n")
             f.write(f"Site: {self.telescope_model.site}\n")
