@@ -62,6 +62,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Prepare mamba installation
+        if: matrix.install-method == 'mamba'
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
 
       - name: Restore micromamba cache
         if: matrix.install-method == 'mamba'
@@ -74,18 +85,6 @@ jobs:
           key: ${{ runner.os }}-micromamba-${{ hashFiles('environment.yml') }}
           restore-keys: |
             ${{ runner.os }}-micromamba-
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Prepare mamba installation
-        if: matrix.install-method == 'mamba'
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
 
       - name: Install mamba dependencies
         if: matrix.install-method == 'mamba'
