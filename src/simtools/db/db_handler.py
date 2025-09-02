@@ -809,10 +809,10 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            The name of the database.
         file_name: str
             The name of the ECSV file.
+        db_name: str
+            The name of the database.
 
         Returns
         -------
