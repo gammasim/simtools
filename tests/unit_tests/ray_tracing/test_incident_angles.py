@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import logging
+import math
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
@@ -229,7 +230,7 @@ def test_compute_incidence_angles_parsing(calculator, tmp_path):
         "1 2 3\n",  # too few columns
         " ".join(["0"] * 25 + ["not_a_number"]) + "\n",  # bad value
         " ".join(["0"] * 25 + ["42.5"]) + "\n",  # valid
-        " ".join(["0"] * 30 + ["99"]) + "\n",  # valid (more columns ok)
+        " ".join(["0"] * 25 + ["99"] + ["0"] * 5) + "\n",
     ]
     pfile.write_text("".join(lines), encoding="utf-8")
 
@@ -252,3 +253,58 @@ def test_write_run_script_path_and_content(calculator):
     txt = script.read_text(encoding="utf-8")
     assert str(photons) in txt
     assert str(stars) in txt
+
+
+def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
+    # Create an existing photons file to trigger the unlink branch
+    photons_path = calculator.photons_dir / f"incident_angles_photons_{calculator.label}.lis"
+    photons_path.parent.mkdir(parents=True, exist_ok=True)
+    photons_path.write_text("dummy", encoding="utf-8")
+
+    # Force unlink to raise OSError to exercise the warning path
+    def _raise_unlink(self):  # self is a Path
+        raise OSError("simulated unlink failure")
+
+    monkeypatch.setattr(ia.Path, "unlink", _raise_unlink)
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+
+    photons, stars, log = calculator._prepare_psf_io_files()
+
+    assert photons == photons_path
+    # Warning was logged
+    assert any("Failed to remove existing photons file" in rec.message for rec in caplog.records)
+    # File should exist and be (re)written despite unlink failure
+    assert photons.exists()
+
+
+def test_primary_valueerror_results_in_nan(calculator, tmp_path):
+    # Build one valid line with focal=1.0, primary=bad (ValueError), secondary=2.0
+    # Ensure we also include X,Y on primary (cols 29,30) to avoid radius parsing errors
+    parts = ["0"] * 25 + ["1.0"]  # focal at col 26
+    parts += ["0", "0", "0", "0", "0"]  # pad cols 27-31
+    parts[28] = "0.0"  # x cm (col 29)
+    parts[29] = "0.0"  # y cm (col 30)
+    parts.append("bad")  # primary at col 32 -> ValueError
+    parts += ["0", "0", "0", "2.0"]  # pad cols 33-35, secondary at col 36
+    pfile = tmp_path / "one.lis"
+    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    assert math.isnan(out["angle_incidence_primary_deg"][0])
+    assert out["angle_incidence_secondary_deg"][0] == 2.0
+
+
+def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
+    # Build one valid line with focal=1.0, primary=3.0, secondary=bad (ValueError)
+    parts = ["0"] * 25 + ["1.0"]  # focal at col 26
+    parts += ["0", "0", "0", "0", "0"]  # pad cols 27-31
+    parts[28] = "0.0"  # x cm (col 29)
+    parts[29] = "0.0"  # y cm (col 30)
+    parts.append("3.0")  # primary at col 32
+    parts += ["0", "0", "0", "bad"]  # pad cols 33-35 and secondary=bad at col 36
+    pfile = tmp_path / "one2.lis"
+    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    assert out["angle_incidence_primary_deg"][0] == 3.0
+    assert math.isnan(out["angle_incidence_secondary_deg"][0])
