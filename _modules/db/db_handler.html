@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=78c516b0"></script>
+    <script src="../../_static/documentation_options.js?v=3f7d6f42"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g63159b4c9" />
+  <meta name="docsearch:version" content="0.1.dev1+g9d73ef46d" />
   </head>
   
   
@@ -485,8 +485,19 @@
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Name of simulation model database&quot;</span><span class="p">,</span>
         <span class="p">},</span>
+        <span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Version of simulation model database&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
     <span class="p">},</span>
-    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_port&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_user&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_pw&quot;</span><span class="p">,</span> <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;db_server&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;db_api_port&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;db_api_user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;db_api_pw&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
 <span class="p">}</span>
 
 
@@ -519,7 +530,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_find_latest_simulation_model_db</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_db_name</span><span class="p">(</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">),</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span>
+            <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_up_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -528,6 +544,19 @@
             <span class="n">lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
             <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
                 <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open_mongo_db</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DatabaseHandler.get_db_name">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_db_name">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_db_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build DB name from configuration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">db_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">db_name</span>
+        <span class="k">if</span> <span class="n">model_version</span> <span class="ow">and</span> <span class="n">model_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">model_version</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">model_version</span> <span class="ow">or</span> <span class="n">model_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="p">(</span><span class="n">model_version</span> <span class="ow">or</span> <span class="n">model_name</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_mongo_db_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the MongoDB configuration.&quot;&quot;&quot;</span>
@@ -577,8 +606,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find the latest released version of the simulation model and update the DB config.</span>
 
-<span class="sd">        This is indicated by adding &quot;LATEST&quot; to the name of the simulation model database</span>
-<span class="sd">        (field &quot;db_simulation_model&quot; in the database configuration dictionary).</span>
+<span class="sd">        This is indicated by &quot;LATEST&quot; to the simulation model data base version.</span>
 <span class="sd">        Only released versions are considered, pre-releases are ignored.</span>
 
 <span class="sd">        Raises</span>
@@ -588,27 +616,27 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="n">db_simulation_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">]</span>
             <span class="n">db_simulation_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">db_simulation_model</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;LATEST&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">db_simulation_model_version</span> <span class="o">!=</span> <span class="s2">&quot;LATEST&quot;</span><span class="p">:</span>
                 <span class="k">return</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># db_simulation_model is None</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># db_simulation_model_version is None</span>
             <span class="k">return</span>
 
-        <span class="n">prefix</span> <span class="o">=</span> <span class="n">db_simulation_model</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;LATEST&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="n">list_of_db_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_client</span><span class="o">.</span><span class="n">list_database_names</span><span class="p">()</span>
-        <span class="n">filtered_list_of_db_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_db_names</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
-        <span class="n">versioned_strings</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">version_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-            <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span><span class="si">}</span><span class="s2">v?(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?&quot;</span>
-        <span class="p">)</span>
+        <span class="n">filtered_list_of_db_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_db_names</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">db_simulation_model</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">db_simulation_model</span><span class="p">)</span><span class="si">}</span><span class="s2">-v(\d+)-(\d+)-(\d+)(?:-(.+))?$&quot;</span><span class="p">)</span>
 
+        <span class="n">versioned_strings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filtered_list_of_db_names</span><span class="p">:</span>
-            <span class="n">match</span> <span class="o">=</span> <span class="n">version_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-            <span class="c1"># A version is considered a pre-release if it contains a &#39;-&#39; character (re group 4)</span>
-            <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">version_str</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-                <span class="n">version</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="n">version_str</span><span class="p">)</span>
-                <span class="n">versioned_strings</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+                <span class="c1"># skip pre-releases (have suffix)</span>
+                <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">version_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">versioned_strings</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">Version</span><span class="p">(</span><span class="n">version_str</span><span class="p">)))</span>
 
         <span class="k">if</span> <span class="n">versioned_strings</span><span class="p">:</span>
             <span class="n">latest_string</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">versioned_strings</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -617,7 +645,7 @@
                 <span class="sa">f</span><span class="s2">&quot;Updated the DB simulation model to the latest version </span><span class="si">{</span><span class="n">latest_string</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Found LATEST in the DB name but no matching versions found in DB.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LATEST requested but no released versions found in DB.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DatabaseHandler.generate_compound_indexes">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.generate_compound_indexes">[docs]</a>
@@ -1255,17 +1283,18 @@
 
 <div class="viewcode-block" id="DatabaseHandler.add_production_table">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.add_production_table">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_production_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">production_table</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_production_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a production table to the DB.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        db_name: str</span>
-<span class="sd">            the name of the DB.</span>
 <span class="sd">        production_table: dict</span>
 <span class="sd">            The production table to add to the DB.</span>
+<span class="sd">        db_name: str</span>
+<span class="sd">            the name of the DB.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
         <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding production for </span><span class="si">{</span><span class="n">production_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collection&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> to to DB&quot;</span><span class="p">)</span>
         <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">production_table</span><span class="p">)</span>
@@ -1276,8 +1305,8 @@
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.add_new_parameter">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_new_parameter</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">db_name</span><span class="p">,</span>
         <span class="n">par_dict</span><span class="p">,</span>
+        <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
         <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1289,10 +1318,10 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        db_name: str</span>
-<span class="sd">            the name of the DB</span>
 <span class="sd">        par_dict: dict</span>
 <span class="sd">            dictionary with parameter data</span>
+<span class="sd">        db_name: str</span>
+<span class="sd">            the name of the DB</span>
 <span class="sd">        collection_name: str</span>
 <span class="sd">            The name of the collection to add a parameter to.</span>
 <span class="sd">        file_prefix: str or Path</span>

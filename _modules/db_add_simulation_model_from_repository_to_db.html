@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=78c516b0"></script>
+    <script src="../_static/documentation_options.js?v=3f7d6f42"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g63159b4c9" />
+  <meta name="docsearch:version" content="0.1.dev1+g9d73ef46d" />
   </head>
   
   
@@ -440,14 +440,16 @@
 <span class="sd">    Generates a new database with all required collections.</span>
 <span class="sd">    Follows the structure of the CTAO gitlab simulation model repository.</span>
 
-<span class="sd">    This is an application for experts and should not be used by the general user.</span>
+<span class="sd">    This is an application for DB maintainers and should not be used by the general user.</span>
 
 <span class="sd">    Command line arguments</span>
 
 <span class="sd">    input_path (str, required)</span>
 <span class="sd">        Path of local copy of model parameter repository.</span>
-<span class="sd">    db_name (str, required)</span>
+<span class="sd">    db_simulation_model (str, required)</span>
 <span class="sd">        Name of new DB to be created.</span>
+<span class="sd">    db_simulation_model_version (str, required)</span>
+<span class="sd">        Version of the new DB to be created.</span>
 <span class="sd">    type (str, optional)</span>
 <span class="sd">        Type of data to be uploaded to the DB. Options are: model_parameters, production_tables.</span>
 
@@ -455,7 +457,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    Upload model data repository to the DB</span>
 <span class="sd">    Loops over all subdirectories in &#39;input_path&#39; and uploads all json files to the</span>
-<span class="sd">    database &#39;new_db_name&#39; (or updates an existing database with the same name):</span>
+<span class="sd">    database (or updates an existing database with the same name):</span>
 
 <span class="sd">    * subdirectories starting with &#39;OBS&#39; are uploaded to the &#39;sites&#39; collection</span>
 <span class="sd">    * json files from the subdirectory &#39;configuration_sim_telarray/configuration_corsika&#39;</span>
@@ -468,7 +470,8 @@
 
 <span class="sd">        simtools-db-simulation-model-from-repository-to-db \</span>
 <span class="sd">            --input_path /path/to/repository \</span>
-<span class="sd">            --db_name new_db_name \</span>
+<span class="sd">            --db_simulation_model database name \</span>
+<span class="sd">            --db_simulation_model_version new database version \</span>
 <span class="sd">            --type model_parameters</span>
 
 <span class="sd">    Upload production tables to the DB:</span>
@@ -477,7 +480,8 @@
 
 <span class="sd">        simtools-db-simulation-model-from-repository-to-db \</span>
 <span class="sd">            --input_path /path/to/repository \</span>
-<span class="sd">            --db_name new_db_name \</span>
+<span class="sd">            --db_simulation_model database name \</span>
+<span class="sd">            --db_simulation_model_version new database version \</span>
 <span class="sd">            --type production_tables</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -514,12 +518,6 @@
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--db_name&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the new simulation model database to be created.&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--type&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of data to be uploaded to the database.&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
@@ -529,7 +527,12 @@
     <span class="p">)</span>
 
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">]</span>  <span class="c1"># overwrite explicitly DB configuration</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">):</span>
+        <span class="c1"># overwrite explicitly DB configuration</span>
+        <span class="n">db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">]</span>
+        <span class="n">db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Both db_simulation_model and db_simulation_model_version are required.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span>
 
 
@@ -547,9 +550,9 @@
     <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;model_parameters&quot;</span><span class="p">:</span>
-        <span class="n">db_model_upload</span><span class="o">.</span><span class="n">add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+        <span class="n">db_model_upload</span><span class="o">.</span><span class="n">add_model_parameters_to_db</span><span class="p">(</span><span class="n">input_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">]),</span> <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">:</span>
-        <span class="n">db_model_upload</span><span class="o">.</span><span class="n">add_production_tables_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span></div>
+        <span class="n">db_model_upload</span><span class="o">.</span><span class="n">add_production_tables_to_db</span><span class="p">(</span><span class="n">input_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">]),</span> <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">)</span></div>
 
 
 

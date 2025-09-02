@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=78c516b0"></script>
+    <script src="../_static/documentation_options.js?v=3f7d6f42"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Dependency and version management." href="dependencies.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g63159b4c9" />
+  <meta name="docsearch:version" content="0.1.dev1+g9d73ef46d" />
   </head>
   
   
@@ -487,16 +487,16 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_new_parameter">
-<span class="sig-name descname"><span class="pre">add_new_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">par_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_new_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_new_parameter" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_new_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_new_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_new_parameter" title="Link to this definition">#</a></dt>
 <dd><p>Add a new parameter dictionary to the DB.</p>
 <p>A new document will be added to the DB, with all fields taken from the input parameters.
 Parameter dictionaries are validated before submission using the corresponding schema.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
-</dd>
 <dt><strong>par_dict: dict</strong></dt><dd><p>dictionary with parameter data</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
 </dd>
 <dt><strong>collection_name: str</strong></dt><dd><p>The name of the collection to add a parameter to.</p>
 </dd>
@@ -509,14 +509,14 @@ Parameter dictionaries are validated before submission using the corresponding s
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_production_table">
-<span class="sig-name descname"><span class="pre">add_production_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">production_table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_production_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_production_table" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_production_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">production_table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_production_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_production_table" title="Link to this definition">#</a></dt>
 <dd><p>Add a production table to the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB.</p>
-</dd>
 <dt><strong>production_table: dict</strong></dt><dd><p>The production table to add to the DB.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB.</p>
 </dd>
 </dl>
 </dd>
@@ -679,6 +679,12 @@ i.e. telescopes, calibration_devices.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_db_name">
+<span class="sig-name descname"><span class="pre">get_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_db_name" title="Link to this definition">#</a></dt>
+<dd><p>Build DB name from configuration.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -891,12 +897,12 @@ mostly these are unnecessary though.</p>
 <p id="module-db.db_model_upload"><span id="db-module-upload"></span>Upload a simulation model (parameters and production tables) to the database.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_model_upload.add_model_parameters_to_db">
-<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_model_parameters_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_model_parameters_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_model_parameters_to_db" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_model_parameters_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_model_parameters_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_model_parameters_to_db" title="Link to this definition">#</a></dt>
 <dd><p>Read model parameters from a directory and upload them to the database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Command line arguments.</p>
+<dt><strong>input_path</strong><span class="classifier">Path, str</span></dt><dd><p>Path to the directory containing the model parameters.</p>
 </dd>
 <dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
 </dd>
@@ -907,14 +913,14 @@ mostly these are unnecessary though.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_model_upload.add_production_tables_to_db">
-<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_production_tables_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_production_tables_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_production_tables_to_db" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_production_tables_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_production_tables_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_production_tables_to_db" title="Link to this definition">#</a></dt>
 <dd><p>Read production tables from a directory and upload them to the database.</p>
 <p>One dictionary per collection is prepared for each model version, containing
 tables of all array elements, sites, and configuration parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Command line arguments.</p>
+<dt><strong>input_path</strong><span class="classifier">Path, str</span></dt><dd><p>Path to the directory containing the production tables.</p>
 </dd>
 <dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
 </dd>
@@ -925,18 +931,16 @@ tables of all array elements, sites, and configuration parameters.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_model_upload.add_values_from_json_to_db">
-<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_values_from_json_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_values_from_json_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_values_from_json_to_db" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_values_from_json_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_values_from_json_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_values_from_json_to_db" title="Link to this definition">#</a></dt>
 <dd><p>Upload new model parameter from json files to db.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>file</strong><span class="classifier">list</span></dt><dd><p>Json file to be uploaded to the DB.</p>
+<dt><strong>file</strong><span class="classifier">list</span></dt><dd><p>JSON file to be uploaded to the DB.</p>
 </dd>
 <dt><strong>collection</strong><span class="classifier">str</span></dt><dd><p>The DB collection to which to add the file.</p>
 </dd>
 <dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
-</dd>
-<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Name of the database to be created.</p>
 </dd>
 <dt><strong>file_prefix</strong><span class="classifier">str</span></dt><dd><p>Path to location of all additional files to be uploaded.</p>
 </dd>
@@ -1006,6 +1010,7 @@ tables of all array elements, sites, and configuration parameters.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collections()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_db_name"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_db_name()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_design_model"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_design_model()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>

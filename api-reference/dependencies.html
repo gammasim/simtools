@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=78c516b0"></script>
+    <script src="../_static/documentation_options.js?v=3f7d6f42"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Data Model" href="data_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g63159b4c9" />
+  <meta name="docsearch:version" content="0.1.dev1+g9d73ef46d" />
   </head>
   
   
@@ -519,19 +519,21 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="dependencies.get_database_version">
-<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_database_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_database_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_database_version" title="Link to this definition">#</a></dt>
-<dd><p>Get the version of the simulation model data base used.</p>
+<dt class="sig sig-object py" id="dependencies.get_database_version_or_name">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_database_version_or_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_database_version_or_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_database_version_or_name" title="Link to this definition">#</a></dt>
+<dd><p>Get the version or name of the simulation model data base used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing the database configuration.</p>
 </dd>
+<dt><strong>version</strong><span class="classifier">bool</span></dt><dd><p>If True, return the version of the database. If False, return the name.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Version of the simulation model data base used.</p>
+<dt>str</dt><dd><p>Version or name of the simulation model data base used.</p>
 </dd>
 </dl>
 </dd>
@@ -637,7 +639,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">dependencies</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_build_options"><code class="docutils literal notranslate"><span class="pre">get_build_options()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_corsika_version"><code class="docutils literal notranslate"><span class="pre">get_corsika_version()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_database_version"><code class="docutils literal notranslate"><span class="pre">get_database_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_database_version_or_name"><code class="docutils literal notranslate"><span class="pre">get_database_version_or_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_sim_telarray_version"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_version()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_version_string"><code class="docutils literal notranslate"><span class="pre">get_version_string()</span></code></a></li>
 </ul>

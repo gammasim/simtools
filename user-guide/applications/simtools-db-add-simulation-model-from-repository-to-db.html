@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=78c516b0"></script>
+    <script src="../../_static/documentation_options.js?v=3f7d6f42"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-db-add-file-to-db" href="simtools-db-add-file-to-db.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g63159b4c9" />
+  <meta name="docsearch:version" content="0.1.dev1+g9d73ef46d" />
   </head>
   
   
@@ -518,12 +518,14 @@
 <p>Add parameters and production tables from a simulation model repository to a new database.</p>
 <p>Generates a new database with all required collections.
 Follows the structure of the CTAO gitlab simulation model repository.</p>
-<p>This is an application for experts and should not be used by the general user.</p>
+<p>This is an application for DB maintainers and should not be used by the general user.</p>
 <p>Command line arguments</p>
 <dl class="simple">
 <dt>input_path (str, required)</dt><dd><p>Path of local copy of model parameter repository.</p>
 </dd>
-<dt>db_name (str, required)</dt><dd><p>Name of new DB to be created.</p>
+<dt>db_simulation_model (str, required)</dt><dd><p>Name of new DB to be created.</p>
+</dd>
+<dt>db_simulation_model_version (str, required)</dt><dd><p>Version of the new DB to be created.</p>
 </dd>
 <dt>type (str, optional)</dt><dd><p>Type of data to be uploaded to the DB. Options are: model_parameters, production_tables.</p>
 </dd>
@@ -532,7 +534,7 @@ Follows the structure of the CTAO gitlab simulation model repository.</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
 <p>Upload model data repository to the DB
 Loops over all subdirectories in ‘input_path’ and uploads all json files to the
-database ‘new_db_name’ (or updates an existing database with the same name):</p>
+database (or updates an existing database with the same name):</p>
 <ul class="simple">
 <li><p>subdirectories starting with ‘OBS’ are uploaded to the ‘sites’ collection</p></li>
 <li><p>json files from the subdirectory ‘configuration_sim_telarray/configuration_corsika’
@@ -543,14 +545,16 @@ in ‘simtools/schemas/array_elements.yml’</p></li>
 </ul>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-simulation-model-from-repository-to-db \</span>
 <span class="go">    --input_path /path/to/repository \</span>
-<span class="go">    --db_name new_db_name \</span>
+<span class="go">    --db_simulation_model database name \</span>
+<span class="go">    --db_simulation_model_version new database version \</span>
 <span class="go">    --type model_parameters</span>
 </pre></div>
 </div>
 <p>Upload production tables to the DB:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-simulation-model-from-repository-to-db \</span>
 <span class="go">    --input_path /path/to/repository \</span>
-<span class="go">    --db_name new_db_name \</span>
+<span class="go">    --db_simulation_model database name \</span>
+<span class="go">    --db_simulation_model_version new database version \</span>
 <span class="go">    --type production_tables</span>
 </pre></div>
 </div>

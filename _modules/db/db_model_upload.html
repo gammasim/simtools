@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=78c516b0"></script>
+    <script src="../../_static/documentation_options.js?v=3f7d6f42"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g63159b4c9" />
+  <meta name="docsearch:version" content="0.1.dev1+g9d73ef46d" />
   </head>
   
   
@@ -446,20 +446,18 @@
 
 <div class="viewcode-block" id="add_values_from_json_to_db">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_model_upload.add_values_from_json_to_db">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_values_from_json_to_db</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">file_prefix</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_values_from_json_to_db</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">file_prefix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Upload new model parameter from json files to db.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    file : list</span>
-<span class="sd">        Json file to be uploaded to the DB.</span>
+<span class="sd">        JSON file to be uploaded to the DB.</span>
 <span class="sd">    collection : str</span>
 <span class="sd">        The DB collection to which to add the file.</span>
 <span class="sd">    db : DatabaseHandler</span>
 <span class="sd">        Database handler object.</span>
-<span class="sd">    db_name : str</span>
-<span class="sd">        Name of the database to be created.</span>
 <span class="sd">    file_prefix : str</span>
 <span class="sd">        Path to location of all additional files to be uploaded.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -467,11 +465,10 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Adding the following parameter to the DB: </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;version </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;(collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> in database </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;(collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> in database </span><span class="si">{</span><span class="n">db</span><span class="o">.</span><span class="n">get_db_name</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span>
     <span class="p">)</span>
 
     <span class="n">db</span><span class="o">.</span><span class="n">add_new_parameter</span><span class="p">(</span>
-        <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">,</span>
         <span class="n">par_dict</span><span class="o">=</span><span class="n">par_dict</span><span class="p">,</span>
         <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
         <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">,</span>
@@ -481,18 +478,18 @@
 
 <div class="viewcode-block" id="add_model_parameters_to_db">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_model_upload.add_model_parameters_to_db">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_model_parameters_to_db</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read model parameters from a directory and upload them to the database.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Command line arguments.</span>
+<span class="sd">    input_path : Path, str</span>
+<span class="sd">        Path to the directory containing the model parameters.</span>
 <span class="sd">    db : DatabaseHandler</span>
 <span class="sd">        Database handler object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
+    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading model parameters from repository path </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">array_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">input_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
@@ -507,7 +504,6 @@
                 <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
                 <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
                 <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
-                <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
                 <span class="n">file_prefix</span><span class="o">=</span><span class="n">input_path</span> <span class="o">/</span> <span class="s2">&quot;Files&quot;</span><span class="p">,</span>
             <span class="p">)</span></div>
 
@@ -515,7 +511,7 @@
 
 <div class="viewcode-block" id="add_production_tables_to_db">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_model_upload.add_production_tables_to_db">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_production_tables_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_production_tables_to_db</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read production tables from a directory and upload them to the database.</span>
 
@@ -524,12 +520,12 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Command line arguments.</span>
+<span class="sd">    input_path : Path, str</span>
+<span class="sd">        Path to the directory containing the production tables.</span>
 <span class="sd">    db : DatabaseHandler</span>
 <span class="sd">        Database handler object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
+    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading production tables from repository path </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">,</span> <span class="n">input_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
@@ -544,7 +540,6 @@
                 <span class="k">continue</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding production table for </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> to the database&quot;</span><span class="p">)</span>
             <span class="n">db</span><span class="o">.</span><span class="n">add_production_table</span><span class="p">(</span>
-                <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
                 <span class="n">production_table</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
             <span class="p">)</span></div>
 
