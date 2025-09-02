@@ -51,7 +51,7 @@ def get_version_string(db_config=None, run_time=None):
 
 def get_database_version_or_name(db_config, version=True):
     """
-    Get the version of the simulation model data base used.
+    Get the version or name of the simulation model data base used.
 
     Parameters
     ----------
