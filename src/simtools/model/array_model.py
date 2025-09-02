@@ -272,7 +272,7 @@ class ArrayModel:
             config_file_path=self.config_file_path,
             telescope_model=self.telescope_model,
             site_model=self.site_model,
-            sim_telarray_seeds=self.sim_telarray_seeds,
+            additional_metadata=self._get_additional_simtel_metadata(),
         )
         self._array_model_file_exported = True
 
@@ -484,3 +484,20 @@ class ArrayModel:
 
         table.sort("telescope_name")
         return table
+
+    def _get_additional_simtel_metadata(self):
+        """
+        Collect additional metadata to be included in sim_telarray output.
+
+        Returns
+        -------
+        dict
+            Dictionary with additional metadata.
+        """
+        metadata = {}
+        if self.sim_telarray_seeds is not None:
+            metadata.update(self.sim_telarray_seeds)
+
+        metadata["nsb_integrated_flux"] = self.site_model.get_nsb_integrated_flux()
+
+        return metadata
