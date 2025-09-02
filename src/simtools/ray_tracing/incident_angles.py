@@ -4,9 +4,8 @@ Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses
 Angle of incidence at focal surface, with respect to the optical axis [deg].
 """
 
-from __future__ import annotations
-
 import logging
+import re
 import subprocess
 from pathlib import Path
 
@@ -249,45 +248,80 @@ class IncidentAnglesCalculator:
         """
         Compute incidence angles from imaging list.
 
-        Extract columns (1-based):
-        - 26: Angle of incidence at focal surface [deg]
-        - 32: Angle of incidence on primary mirror, w.r.t. normal [deg]
-        - 36: Angle of incidence on secondary mirror, w.r.t. normal [deg]
+        Column positions may differ between telescope types and sim_telarray builds.
+        Parse header lines ("#   Column N: ...") to discover indices; otherwise
+        fall back to legacy positions (1-based): focal=26, primary=32, secondary=36.
         """
+        # Defaults (1-based)
+        focal_idx_1b = 26
+        primary_idx_1b = 32
+        secondary_idx_1b = 36
+
+        # Scan file for header mapping lines
+        col_pat = re.compile(r"^\s*#\s*Column\s*(\d+)\s*:\s*(.*)$", re.IGNORECASE)
+        with photons_file.open("r", encoding="utf-8") as fh:
+            for raw in fh:
+                s = raw.strip()
+                if not s:
+                    continue
+                m = col_pat.match(s)
+                if not m:
+                    continue
+                num = int(m.group(1))
+                desc = m.group(2).strip().lower()
+                if "angle of incidence at focal surface" in desc and "optical axis" in desc:
+                    focal_idx_1b = num
+                elif re.search(r"angle of incidence\s+on(to)?\s+primary mirror", desc):
+                    primary_idx_1b = num
+                elif re.search(r"angle of incidence\s+on(to)?\s+secondary mirror", desc):
+                    secondary_idx_1b = num
+
+        self.logger.info(
+            "Imaging list columns (1-based): focal=%s primary=%s secondary=%s",
+            focal_idx_1b,
+            (primary_idx_1b if self.calculate_primary_secondary_angles else "n/a"),
+            (secondary_idx_1b if self.calculate_primary_secondary_angles else "n/a"),
+        )
+
+        # Convert to 0-based
+        focal_idx = focal_idx_1b - 1
+        primary_idx = primary_idx_1b - 1 if self.calculate_primary_secondary_angles else None
+        secondary_idx = secondary_idx_1b - 1 if self.calculate_primary_secondary_angles else None
+
         focal: list[float] = []
-        primary: list[float] = [] if self.calculate_primary_secondary_angles else None
-        secondary: list[float] = [] if self.calculate_primary_secondary_angles else None
+        primary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
+        secondary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
+
         with photons_file.open("r", encoding="utf-8") as f:
             for line in f:
                 if not line.strip() or line.lstrip().startswith("#"):
                     continue
                 parts = line.split()
-                if len(parts) < 26:
+                if len(parts) <= focal_idx:
                     continue
                 try:
-                    foc_val = float(parts[25])  # 26th column
+                    foc_val = float(parts[focal_idx])
                 except ValueError:
                     continue
                 focal.append(foc_val)
 
                 if self.calculate_primary_secondary_angles:
-                    # Primary (32nd column)
-                    if len(parts) >= 32:
-                        try:
-                            primary.append(float(parts[31]))
-                        except ValueError:
+                    if primary is not None:
+                        if primary_idx is not None and len(parts) > primary_idx:
+                            try:
+                                primary.append(float(parts[primary_idx]))
+                            except ValueError:
+                                primary.append(float("nan"))
+                        else:
                             primary.append(float("nan"))
-                    else:
-                        primary.append(float("nan"))
-
-                    # Secondary (36th column)
-                    if len(parts) >= 36:
-                        try:
-                            secondary.append(float(parts[35]))
-                        except ValueError:
+                    if secondary is not None:
+                        if secondary_idx is not None and len(parts) > secondary_idx:
+                            try:
+                                secondary.append(float(parts[secondary_idx]))
+                            except ValueError:
+                                secondary.append(float("nan"))
+                        else:
                             secondary.append(float("nan"))
-                    else:
-                        secondary.append(float("nan"))
 
         result = {"angle_incidence_focal_deg": focal}
         if self.calculate_primary_secondary_angles:
