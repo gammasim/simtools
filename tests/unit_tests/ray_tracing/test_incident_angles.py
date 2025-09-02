@@ -320,3 +320,24 @@ def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert out["angle_incidence_primary_deg"][0] == 3.0
     assert math.isnan(out["angle_incidence_secondary_deg"][0])
+
+
+def test_header_driven_column_detection(calculator, tmp_path):
+    # Provide header lines that define custom column positions (1-based):
+    # focal=30, primary=34, secondary=38
+    pfile = tmp_path / "header.lis"
+    header_lines = [
+        "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]\n",
+        "# Column 34: Angle of incidence onto primary mirror [deg]\n",
+        "# Column 38: Angle of incidence onto secondary mirror [deg]\n",
+    ]
+    data = ["0"] * 40
+    data[29] = "11.1"  # focal at col 30
+    data[33] = "22.2"  # primary at col 34
+    data[37] = "33.3"  # secondary at col 38
+    pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    assert out["angle_incidence_focal_deg"] == [11.1]
+    assert out["angle_incidence_primary_deg"] == [22.2]
+    assert out["angle_incidence_secondary_deg"] == [33.3]
