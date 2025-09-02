@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   Number of flasher photons simulated.
 data:
-  - type: float64
+  - type: int64
     unit: dimensionless
     default: 500
     allowed_range:
