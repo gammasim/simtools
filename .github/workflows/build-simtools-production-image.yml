@@ -214,7 +214,7 @@ jobs:
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           secrets: |
-            id=gitlab_token,src=${{ github.workspace }}/.github/gitlab_token
+            gitlab_token=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
           push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-prod-opt
           tags: ${{ steps.meta.outputs.tags }}
