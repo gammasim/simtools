@@ -31,6 +31,7 @@ class IncidentAnglesCalculator:
         mirror_reflection_random_angle: float | None = None,
         algn: float | None = None,
         test: bool = False,
+        calculate_primary_secondary_angles: bool = True,
     ) -> None:
         self.logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class IncidentAnglesCalculator:
         self.mirror_reflection_random_angle = mirror_reflection_random_angle
         self.algn = algn
         self.test = test
+        self.calculate_primary_secondary_angles = calculate_primary_secondary_angles
         self.results: QTable | None = None
 
         # Create output directory tree
@@ -102,6 +104,15 @@ class IncidentAnglesCalculator:
         data = self._compute_incidence_angles_from_imaging_list(photons_file)
         self.results = QTable()
         self.results["angle_incidence_focal"] = data["angle_incidence_focal_deg"] * u.deg
+        if self.calculate_primary_secondary_angles:
+            if "angle_incidence_primary_deg" in data:
+                self.results["angle_incidence_primary"] = (
+                    data["angle_incidence_primary_deg"] * u.deg
+                )
+            if "angle_incidence_secondary_deg" in data:
+                self.results["angle_incidence_secondary"] = (
+                    data["angle_incidence_secondary_deg"] * u.deg
+                )
 
         self._save_results()
         return self.results
@@ -238,10 +249,14 @@ class IncidentAnglesCalculator:
         """
         Compute incidence angles from imaging list.
 
-        Parse imaging list ``.lis`` and extract column 26:
-        Angle of incidence at focal surface, w.r.t. optical axis.
+        Extract columns (1-based):
+        - 26: Angle of incidence at focal surface [deg]
+        - 32: Angle of incidence on primary mirror, w.r.t. normal [deg]
+        - 36: Angle of incidence on secondary mirror, w.r.t. normal [deg]
         """
-        angles: list[float] = []
+        focal: list[float] = []
+        primary: list[float] = [] if self.calculate_primary_secondary_angles else None
+        secondary: list[float] = [] if self.calculate_primary_secondary_angles else None
         with photons_file.open("r", encoding="utf-8") as f:
             for line in f:
                 if not line.strip() or line.lstrip().startswith("#"):
@@ -250,11 +265,35 @@ class IncidentAnglesCalculator:
                 if len(parts) < 26:
                     continue
                 try:
-                    # Column 26
-                    angles.append(float(parts[25]))
+                    foc_val = float(parts[25])  # 26th column
                 except ValueError:
                     continue
-        return {"angle_incidence_focal_deg": angles}
+                focal.append(foc_val)
+
+                if self.calculate_primary_secondary_angles:
+                    # Primary (32nd column)
+                    if len(parts) >= 32:
+                        try:
+                            primary.append(float(parts[31]))
+                        except ValueError:
+                            primary.append(float("nan"))
+                    else:
+                        primary.append(float("nan"))
+
+                    # Secondary (36th column)
+                    if len(parts) >= 36:
+                        try:
+                            secondary.append(float(parts[35]))
+                        except ValueError:
+                            secondary.append(float("nan"))
+                    else:
+                        secondary.append(float("nan"))
+
+        result = {"angle_incidence_focal_deg": focal}
+        if self.calculate_primary_secondary_angles:
+            result["angle_incidence_primary_deg"] = primary
+            result["angle_incidence_secondary_deg"] = secondary
+        return result
 
     def _save_results(self) -> None:
         if self.results is None or len(self.results) == 0:

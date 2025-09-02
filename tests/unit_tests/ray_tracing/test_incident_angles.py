@@ -80,10 +80,16 @@ def test_run_produces_results(monkeypatch, calculator, tmp_output_dir):
 
     def _prep_files(self):
         photons_file.parent.mkdir(parents=True, exist_ok=True)
-        # Make imaging list with angle in column 26 (index 25)
+        # Make imaging list with:
+        # - focal angle in column 26 (index 25)
+        # - primary in column 32 (index 31)
+        # - secondary in column 36 (index 35)
         rows = ["# header\n"]
-        for ang in (10.0, 20.0, 30.0):
-            parts = ["0"] * 25 + [str(ang)]
+        triplets = [(10.0, 1.0, 2.0), (20.0, 3.0, 4.0), (30.0, 5.0, 6.0)]
+        for foc, pri, sec in triplets:
+            parts = ["0"] * 25 + [str(foc)]
+            # pad up to 31 then primary, pad to 35 then secondary
+            parts += ["0"] * 5 + [str(pri)] + ["0"] * 4 + [str(sec)]
             rows.append(" ".join(parts) + "\n")
         photons_file.write_text("".join(rows), encoding="utf-8")
         stars_file.write_text("0 0 1 10\n", encoding="utf-8")
@@ -97,6 +103,11 @@ def test_run_produces_results(monkeypatch, calculator, tmp_output_dir):
     assert len(res) == 3
     assert {"angle_incidence_focal"}.issubset(res.colnames)
     assert res["angle_incidence_focal"].unit == u.deg
+    # new columns present and have units
+    assert "angle_incidence_primary" in res.colnames
+    assert "angle_incidence_secondary" in res.colnames
+    assert res["angle_incidence_primary"].unit == u.deg
+    assert res["angle_incidence_secondary"].unit == u.deg
     # Results saved under results_dir
     out = calculator.results_dir / f"incident_angles_{calculator.label}.ecsv"
     assert out.exists()

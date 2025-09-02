@@ -745,3 +745,60 @@ def plot_incident_angles(
     out_png = out_dir / f"incident_angles_multi_{label}.png"
     plt.savefig(out_png, dpi=300)
     plt.close(fig)
+
+    # Also plot primary and secondary if present
+    def _plot_component(column: str, title_suffix: str, out_name: str):
+        arrays = []
+        for off, tab in results_by_offset.items():
+            if tab is None or len(tab) == 0 or column not in tab.colnames:
+                continue
+            arrays.append(tab[column].to(u.deg).value)
+        if not arrays:
+            return
+        all_vals = np.concatenate(arrays)
+        vmin = float(np.floor(all_vals.min() / bin_width_deg) * bin_width_deg)
+        vmax = float(np.ceil(all_vals.max() / bin_width_deg) * bin_width_deg)
+        bins = np.arange(vmin, vmax + bin_width_deg * 0.5, bin_width_deg)
+
+        fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+        for off in sorted(results_by_offset.keys()):
+            tab = results_by_offset[off]
+            if tab is None or len(tab) == 0 or column not in tab.colnames:
+                continue
+            data = tab[column].to(u.deg).value
+            _, _, patches = ax.hist(
+                data, bins=bins, histtype="step", linewidth=0.5, label=f"off-axis {off:g} deg"
+            )
+            color = patches[0].get_edgecolor() if patches else None
+            ax.hist(
+                data,
+                bins=bins,
+                histtype="stepfilled",
+                alpha=0.15,
+                color=color,
+                edgecolor="none",
+                label="_nolegend_",
+            )
+            ax.hist(
+                data, bins=bins, histtype="step", linewidth=0.5, color=color, label="_nolegend_"
+            )
+
+        ax.set_xlabel("Angle of incidence (deg)")
+        ax.set_ylabel("Count / Bin")
+        ax.set_title(f"Incident angle {title_suffix} vs off-axis angle")
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+        plt.tight_layout()
+        plt.savefig(out_dir / out_name, dpi=300)
+        plt.close(fig)
+
+    _plot_component(
+        column="angle_incidence_primary",
+        title_suffix="on primary mirror (w.r.t. normal)",
+        out_name=f"incident_angles_primary_multi_{label}.png",
+    )
+    _plot_component(
+        column="angle_incidence_secondary",
+        title_suffix="on secondary mirror (w.r.t. normal)",
+        out_name=f"incident_angles_secondary_multi_{label}.png",
+    )
