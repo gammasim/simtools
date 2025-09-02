@@ -278,10 +278,10 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
     assert db_name == db.mongo_db_config["db_simulation_model"]
 
     db_copy = copy.deepcopy(db)
-    db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME-LATEST"
-    with pytest.raises(
-        ValueError, match=r"Found LATEST in the DB name but no matching versions found in DB."
-    ):
+    db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME"
+    db_copy.mongo_db_config["db_simulation_model_version"] = "LATEST"
+
+    with pytest.raises(ValueError, match=r"LATEST requested but no released versions found in DB."):
         db_copy._find_latest_simulation_model_db()
 
     db_names = [
@@ -296,7 +296,8 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
         "CTAO-Simulation-ModelParameters-v0-4-19-dev1",
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
-    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-ModelParameters-LATEST"
+    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-ModelParameters"
+    db_copy.mongo_db_config["db_simulation_model_version"] = "LATEST"
     db_copy._find_latest_simulation_model_db()
     assert (
         db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-ModelParameters-v0-3-19"
@@ -617,12 +618,16 @@ def test_get_collections(db, db_config, fs_files):
     assert isinstance(collections, list)
     assert "telescopes" in collections
 
-    collections_from_name = db.get_collections(db_config["db_simulation_model"])
+    db_name = db.get_db_name(
+        model_version=db_config["db_simulation_model_version"],
+        model_name=db_config["db_simulation_model"],
+    )
+    collections_from_name = db.get_collections(db_name)
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
     assert fs_files in collections_from_name
 
-    collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
+    collections_no_model = db.get_collections(db_name, True)
     assert isinstance(collections_no_model, list)
     assert "telescopes" in collections_no_model
     assert fs_files not in collections_no_model
@@ -960,10 +965,10 @@ def test_add_production_table(db, mocker, test_db):
         "parameters": {"param1": "value1"},
     }
 
-    db.add_production_table(test_db, production_table)
+    db.add_production_table(production_table, db_name=test_db)
 
     assert db.db_name == test_db
-    mock_get_collection.assert_called_once_with("production_tables", db_name="test_db")
+    mock_get_collection.assert_called_once_with("production_tables", db_name=test_db)
     mock_insert_one.assert_called_once_with(production_table)
 
 
@@ -973,7 +978,7 @@ def test_add_new_parameter(db, add_parameter_mocks, test_db):
     par_dict = {"parameter": "param1", "value": "value1", "file": False}
     collection_name = "telescopes"
     file_prefix = None
-    db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
+    db.add_new_parameter(par_dict, test_db, collection_name, file_prefix)
     mocks["validate"].assert_called_once_with(par_dict)
     assert mocks["db_name"] == test_db
     mocks["get_collection"].assert_called_once_with(collection_name, db_name=test_db)
@@ -993,7 +998,7 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
-    db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
+    db.add_new_parameter(par_dict, test_db, collection_name, tmp_test_directory)
     mock_is_utf8.assert_called_once_with(Path(f"{tmp_test_directory!s}/value1"))
     mocks["validate"].assert_called_once_with(par_dict)
     assert mocks["db_name"] == test_db
@@ -1009,7 +1014,7 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
     mock_insert_file_to_db.reset_mock()
     mock_is_utf8.return_value = False
     with pytest.raises(ValueError, match=r"File is not UTF-8 encoded"):
-        db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
+        db.add_new_parameter(par_dict, test_db, collection_name, tmp_test_directory)
     mock_insert_file_to_db.assert_not_called()
 
 
@@ -1027,7 +1032,7 @@ def test_add_new_parameter_with_file_no_prefix(db, add_parameter_mocks, test_db)
         match=r"The location of the file to upload, corresponding to the param1 parameter, "
         r"must be provided.",
     ):
-        db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
+        db.add_new_parameter(par_dict, test_db, collection_name, file_prefix)
 
     mocks["validate"].assert_called_once_with(par_dict)
     assert mocks["db_name"] == test_db
@@ -1495,3 +1500,19 @@ def test_generate_compound_indexes(mocker, db):
 
     assert mock_create_index.call_count == len(expected_calls)
     mock_create_index.assert_has_calls(expected_calls, any_order=True)
+
+
+def test_get_db_name(db):
+    """Test _get_db_name with valid configuration."""
+    assert (
+        db.get_db_name(model_version="v1.0.0", model_name="SimulationModel")
+        == "SimulationModel-v1-0-0"
+    )
+    assert db.get_db_name(model_version="v1.0.0") is None
+    assert db.get_db_name(model_name="SimulationModel") is None
+    assert db.get_db_name() is not None
+    assert db.get_db_name(db_name="test_db") == "test_db"
+    assert (
+        db.get_db_name(db_name="test_db", model_version="v1.0.0", model_name="SimulationModel")
+        == "test_db"
+    )
