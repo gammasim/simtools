@@ -52,8 +52,19 @@ jsonschema_db_dict = {
             "type": "string",
             "description": "Name of simulation model database",
         },
+        "db_simulation_model_version": {
+            "type": "string",
+            "description": "Version of simulation model database",
+        },
     },
-    "required": ["db_server", "db_api_port", "db_api_user", "db_api_pw", "db_simulation_model"],
+    "required": [
+        "db_server",
+        "db_api_port",
+        "db_api_user",
+        "db_api_pw",
+        "db_simulation_model",
+        "db_simulation_model_version",
+    ],
 }
 
 
@@ -84,7 +95,12 @@ class DatabaseHandler:
         self._set_up_connection()
         self._find_latest_simulation_model_db()
         self.db_name = (
-            self.mongo_db_config.get("db_simulation_model", None) if self.mongo_db_config else None
+            self.get_db_name(
+                model_version=self.mongo_db_config.get("db_simulation_model_version"),
+                model_name=self.mongo_db_config.get("db_simulation_model"),
+            )
+            if self.mongo_db_config
+            else None
         )
 
     def _set_up_connection(self):
@@ -93,6 +109,16 @@ class DatabaseHandler:
             lock = Lock()
             with lock:
                 DatabaseHandler.db_client = self._open_mongo_db()
+
+    def get_db_name(self, db_name=None, model_version=None, model_name=None):
+        """Build DB name from configuration."""
+        if db_name:
+            return db_name
+        if model_version and model_name:
+            return f"{model_name}-{model_version.replace('.', '-')}"
+        if model_version or model_name:
+            return None
+        return None if (model_version or model_name) else self.db_name
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
@@ -142,8 +168,7 @@ class DatabaseHandler:
         """
         Find the latest released version of the simulation model and update the DB config.
 
-        This is indicated by adding "LATEST" to the name of the simulation model database
-        (field "db_simulation_model" in the database configuration dictionary).
+        This is indicated by "LATEST" to the simulation model data base version.
         Only released versions are considered, pre-releases are ignored.
 
         Raises
@@ -153,27 +178,27 @@ class DatabaseHandler:
 
         """
         try:
+            db_simulation_model_version = self.mongo_db_config["db_simulation_model_version"]
             db_simulation_model = self.mongo_db_config["db_simulation_model"]
-            if not db_simulation_model.endswith("LATEST"):
+            if db_simulation_model_version != "LATEST":
                 return
-        except TypeError:  # db_simulation_model is None
+        except TypeError:  # db_simulation_model_version is None
             return
 
-        prefix = db_simulation_model.replace("LATEST", "")
         list_of_db_names = self.db_client.list_database_names()
-        filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
-        versioned_strings = []
-        version_pattern = re.compile(
-            rf"{re.escape(prefix)}v?(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
-        )
+        filtered_list_of_db_names = [
+            s for s in list_of_db_names if s.startswith(db_simulation_model)
+        ]
+        pattern = re.compile(rf"{re.escape(db_simulation_model)}-v(\d+)-(\d+)-(\d+)(?:-(.+))?$")
 
+        versioned_strings = []
         for s in filtered_list_of_db_names:
-            match = version_pattern.search(s)
-            # A version is considered a pre-release if it contains a '-' character (re group 4)
-            if match and match.group(4) is None:
-                version_str = match.group(1) + "." + match.group(2) + "." + match.group(3)
-                version = Version(version_str)
-                versioned_strings.append((s, version))
+            m = pattern.match(s)
+            if m:
+                # skip pre-releases (have suffix)
+                if m.group(4) is None:
+                    version_str = f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+                    versioned_strings.append((s, Version(version_str)))
 
         if versioned_strings:
             latest_string, _ = max(versioned_strings, key=lambda x: x[1])
@@ -182,7 +207,7 @@ class DatabaseHandler:
                 f"Updated the DB simulation model to the latest version {latest_string}"
             )
         else:
-            raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
+            raise ValueError("LATEST requested but no released versions found in DB.")
 
     def generate_compound_indexes(self, db_name=None):
         """
@@ -805,17 +830,18 @@ class DatabaseHandler:
         buf.seek(0)
         return Table.read(buf.getvalue().decode("utf-8"), format="ascii.ecsv")
 
-    def add_production_table(self, db_name, production_table):
+    def add_production_table(self, production_table, db_name=None):
         """
         Add a production table to the DB.
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB.
         production_table: dict
             The production table to add to the DB.
+        db_name: str
+            the name of the DB.
         """
+        db_name = db_name or self.db_name
         collection = self.get_collection("production_tables", db_name=db_name or self.db_name)
         self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
@@ -823,8 +849,8 @@ class DatabaseHandler:
 
     def add_new_parameter(
         self,
-        db_name,
         par_dict,
+        db_name=None,
         collection_name="telescopes",
         file_prefix=None,
     ):
@@ -836,10 +862,10 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
         par_dict: dict
             dictionary with parameter data
+        db_name: str
+            the name of the DB
         collection_name: str
             The name of the collection to add a parameter to.
         file_prefix: str or Path
