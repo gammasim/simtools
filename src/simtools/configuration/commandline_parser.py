@@ -222,6 +222,13 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
             default=None,
         )
+        _job_group.add_argument(
+            "--db_simulation_model_version",
+            help="version of simulation model database",
+            type=str.strip,
+            required=False,
+            default=None,
+        )
 
     def initialize_simulation_model_arguments(self, model_options):
         """

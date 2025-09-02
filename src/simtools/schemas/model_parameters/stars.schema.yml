@@ -12,7 +12,7 @@ description: |-
   altitude (both in degrees) and weighting factor for the number of photons. An
   optional fourth value is the distance of the light source (in kilometers) or 0
   (standing for infinity). In addition to ray-tracing evaluation, the stars also contribute
-  to the nighsky background rate in the affected pixels.
+  to the night-sky background rate in the affected pixels.
 short_description: File with shining stars in Az/Alt.
 data:
   - type: file

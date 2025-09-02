@@ -27,14 +27,12 @@ def test_add_values_from_json_to_db(mock_collect_data_from_file):
     mock_db = Mock()
     file = "test_file.json"
     collection = "test_collection"
-    db_name = "test_db"
     file_prefix = "test_prefix"
 
-    db_model_upload.add_values_from_json_to_db(file, collection, mock_db, db_name, file_prefix)
+    db_model_upload.add_values_from_json_to_db(file, collection, mock_db, file_prefix)
 
     mock_collect_data_from_file.assert_called_once_with(file_name=file)
     mock_db.add_new_parameter.assert_called_once_with(
-        db_name=db_name,
         par_dict={"parameter": "test_param", "parameter_version": "1.0"},
         collection_name=collection,
         file_prefix=file_prefix,
@@ -75,8 +73,7 @@ def test_add_production_tables_to_db(
     mock_read_production_table, tmp_test_directory, caplog, iter_dir, is_dir
 ):
     mock_db = Mock()
-    args_dict = {"input_path": tmp_test_directory, "db_name": "test_db"}
-    input_path = Path(args_dict["input_path"])
+    input_path = Path(tmp_test_directory)
     model_dir = input_path / "model_version_1"
     model_dir.mkdir(parents=True, exist_ok=True)
     (model_dir / "file1.json").touch()
@@ -93,11 +90,10 @@ def test_add_production_tables_to_db(
 
     with patch(iter_dir, return_value=[model_dir]):
         with patch(is_dir, return_value=True):
-            db_model_upload.add_production_tables_to_db(args_dict, mock_db)
+            db_model_upload.add_production_tables_to_db(input_path, mock_db)
 
     assert mock_read_production_table.call_count == 2
     mock_db.add_production_table.assert_called_once_with(
-        db_name="test_db",
         production_table={
             "parameters": {"MSTS-02": "param_value"},
             "design_model": {"MSTS-02": "MSTx-FlashCam"},
@@ -108,7 +104,7 @@ def test_add_production_tables_to_db(
         {"telescopes": {"parameters": {}, "design_model": {}}}
     )
     with caplog.at_level("INFO"):
-        db_model_upload.add_production_tables_to_db(args_dict, mock_db)
+        db_model_upload.add_production_tables_to_db(input_path, mock_db)
     assert "No production table for telescopes in model version model_version_1" in caplog.text
 
 
@@ -117,8 +113,7 @@ def test_add_model_parameters_to_db(
     mock_add_values_from_json_to_db, tmp_test_directory, iter_dir, is_dir
 ):
     mock_db = Mock()
-    args_dict = {"input_path": tmp_test_directory, "db_name": "test_db"}
-    input_path = Path(args_dict["input_path"])
+    input_path = Path(tmp_test_directory)
     array_element_dir = input_path / "LSTS-01"
     array_element_dir.mkdir(parents=True, exist_ok=True)
     (array_element_dir / "num_gains-0.1.0.json").touch()
@@ -126,20 +121,18 @@ def test_add_model_parameters_to_db(
 
     with patch(iter_dir, return_value=[array_element_dir]):
         with patch(is_dir, return_value=True):
-            db_model_upload.add_model_parameters_to_db(args_dict, mock_db)
+            db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_any_call(
         file=array_element_dir / "num_gains-0.1.0.json",
         collection="telescopes",
         db=mock_db,
-        db_name="test_db",
         file_prefix=input_path / "Files",
     )
     mock_add_values_from_json_to_db.assert_any_call(
         file=array_element_dir / "mirror_list-0.2.1.json",
         collection="telescopes",
         db=mock_db,
-        db_name="test_db",
         file_prefix=input_path / "Files",
     )
     assert mock_add_values_from_json_to_db.call_count == 2
@@ -150,14 +143,13 @@ def test_add_model_parameters_to_db_skip_files_collection(
     mock_add_values_from_json_to_db, tmp_test_directory, iter_dir, is_dir
 ):
     mock_db = Mock()
-    args_dict = {"input_path": tmp_test_directory, "db_name": "test_db"}
-    input_path = Path(args_dict["input_path"])
+    input_path = Path(tmp_test_directory)
     files_dir = input_path / "Files"
     files_dir.mkdir(parents=True, exist_ok=True)
     (files_dir / "file1.json").touch()
 
     with patch(iter_dir, return_value=[files_dir]):
         with patch(is_dir, return_value=True):
-            db_model_upload.add_model_parameters_to_db(args_dict, mock_db)
+            db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_not_called()
