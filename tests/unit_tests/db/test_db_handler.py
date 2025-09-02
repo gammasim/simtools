@@ -1502,6 +1502,35 @@ def test_generate_compound_indexes(mocker, db):
     mock_create_index.assert_has_calls(expected_calls, any_order=True)
 
 
+def test_get_ecsv_file_as_astropy_table(mocker, db):
+    # Prevent any real DB calls by providing a fake db_client and mocking GridFSBucket
+    mocker.patch.object(db_handler.DatabaseHandler, "db_client", {db.db_name: mocker.Mock()})
+
+    mock_gridfs_bucket = mocker.patch("simtools.db.db_handler.gridfs.GridFSBucket")
+    fs_instance = mock_gridfs_bucket.return_value
+
+    # Minimal valid ECSV content so astropy.Table.read can parse it
+    ecsv_content = (
+        b"# %ECSV 0.9\n# ---\n# datatype:\n# - {name: x, datatype: float64}\n# schema: {}\nx\n1.0\n"
+    )
+
+    def download_side_effect(filename, buf):
+        if filename == "nsb_spectrum_halfmoon.ecsv":
+            buf.write(ecsv_content)
+        else:
+            # Raise the same error the real GridFS would raise
+            raise db_handler.gridfs.errors.NoFile("no such file")
+
+    fs_instance.download_to_stream_by_name.side_effect = download_side_effect
+
+    # Positive case: file exists (simulated)
+    assert db.get_ecsv_file_as_astropy_table("nsb_spectrum_halfmoon.ecsv") is not None
+
+    # Negative case: simulate missing file
+    with pytest.raises(FileNotFoundError, match=r"ECSV file 'test_file.ecsv' not found in DB."):
+        db.get_ecsv_file_as_astropy_table("test_file.ecsv")
+
+
 def test_get_db_name(db):
     """Test _get_db_name with valid configuration."""
     assert (
