@@ -840,7 +840,6 @@ class DatabaseHandler:
         file_prefix: str or Path
             where to find files to upload to the DB
         """
-        db_name = db_name or self.db_name
         par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
 
         db_name = db_name or self.db_name
