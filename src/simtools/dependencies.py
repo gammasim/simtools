@@ -40,7 +40,8 @@ def get_version_string(db_config=None, run_time=None):
 
     """
     return (
-        f"Database version: {get_database_version(db_config)}\n"
+        f"Database name: {get_database_version_or_name(db_config, version=False)}\n"
+        f"Database version: {get_database_version_or_name(db_config, version=True)}\n"
         f"sim_telarray version: {get_sim_telarray_version(run_time)}\n"
         f"CORSIKA version: {get_corsika_version(run_time)}\n"
         f"Build options: {get_build_options(run_time)}\n"
@@ -48,25 +49,29 @@ def get_version_string(db_config=None, run_time=None):
     )
 
 
-def get_database_version(db_config):
+def get_database_version_or_name(db_config, version=True):
     """
-    Get the version of the simulation model data base used.
+    Get the version or name of the simulation model data base used.
 
     Parameters
     ----------
     db_config : dict
         Dictionary containing the database configuration.
+    version : bool
+        If True, return the version of the database. If False, return the name.
 
     Returns
     -------
     str
-        Version of the simulation model data base used.
+        Version or name of the simulation model data base used.
 
     """
     if db_config is None:
         return None
     db = DatabaseHandler(db_config)
-    return db.mongo_db_config.get("db_simulation_model")
+    return db.mongo_db_config.get(
+        "db_simulation_model_version" if version else "db_simulation_model"
+    )
 
 
 def get_sim_telarray_version(run_time):
