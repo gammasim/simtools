@@ -962,10 +962,10 @@ def test_add_production_table(db, mocker, test_db):
         "parameters": {"param1": "value1"},
     }
 
-    db.add_production_table(test_db, production_table)
+    db.add_production_table(production_table, db_name=test_db)
 
     assert db.db_name == test_db
-    mock_get_collection.assert_called_once_with("production_tables", db_name="test_db")
+    mock_get_collection.assert_called_once_with("production_tables", db_name=test_db)
     mock_insert_one.assert_called_once_with(production_table)
 
 
@@ -975,7 +975,7 @@ def test_add_new_parameter(db, add_parameter_mocks, test_db):
     par_dict = {"parameter": "param1", "value": "value1", "file": False}
     collection_name = "telescopes"
     file_prefix = None
-    db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
+    db.add_new_parameter(par_dict, test_db, collection_name, file_prefix)
     mocks["validate"].assert_called_once_with(par_dict)
     assert mocks["db_name"] == test_db
     mocks["get_collection"].assert_called_once_with(collection_name, db_name=test_db)
@@ -995,7 +995,7 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
-    db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
+    db.add_new_parameter(par_dict, test_db, collection_name, tmp_test_directory)
     mock_is_utf8.assert_called_once_with(Path(f"{tmp_test_directory!s}/value1"))
     mocks["validate"].assert_called_once_with(par_dict)
     assert mocks["db_name"] == test_db
@@ -1011,7 +1011,7 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
     mock_insert_file_to_db.reset_mock()
     mock_is_utf8.return_value = False
     with pytest.raises(ValueError, match=r"File is not UTF-8 encoded"):
-        db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
+        db.add_new_parameter(par_dict, test_db, collection_name, tmp_test_directory)
     mock_insert_file_to_db.assert_not_called()
 
 
@@ -1029,7 +1029,7 @@ def test_add_new_parameter_with_file_no_prefix(db, add_parameter_mocks, test_db)
         match=r"The location of the file to upload, corresponding to the param1 parameter, "
         r"must be provided.",
     ):
-        db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
+        db.add_new_parameter(par_dict, test_db, collection_name, file_prefix)
 
     mocks["validate"].assert_called_once_with(par_dict)
     assert mocks["db_name"] == test_db
@@ -1499,38 +1499,17 @@ def test_generate_compound_indexes(mocker, db):
     mock_create_index.assert_has_calls(expected_calls, any_order=True)
 
 
-def test_get_db_name_with_valid_config(db):
+def test_get_db_name(db):
     """Test _get_db_name with valid configuration."""
-    db.mongo_db_config = {
-        "db_simulation_model": "SimulationModel",
-        "db_simulation_model_version": "1.0.0",
-    }
-    result = db._get_db_name()
-    assert result == "SimulationModel-1-0-0"
-
-
-def test_get_db_name_with_missing_model_name(db):
-    """Test _get_db_name with missing model name."""
-    db.mongo_db_config = {
-        "db_simulation_model": None,
-        "db_simulation_model_version": "1.0.0",
-    }
-    result = db._get_db_name()
-    assert result is None
-
-
-def test_get_db_name_with_missing_model_version(db):
-    """Test _get_db_name with missing model version."""
-    db.mongo_db_config = {
-        "db_simulation_model": "SimulationModel",
-        "db_simulation_model_version": None,
-    }
-    result = db._get_db_name()
-    assert result is None
-
-
-def test_get_db_name_with_no_config(db):
-    """Test _get_db_name with no configuration."""
-    db.mongo_db_config = None
-    result = db._get_db_name()
-    assert result is None
+    assert (
+        db.get_db_name(model_version="v1.0.0", model_name="SimulationModel")
+        == "SimulationModel-v1-0-0"
+    )
+    assert db.get_db_name(model_version="v1.0.0") is None
+    assert db.get_db_name(model_name="SimulationModel") is None
+    assert db.get_db_name() is not None
+    assert db.get_db_name(db_name="test_db") == "test_db"
+    assert (
+        db.get_db_name(db_name="test_db", model_version="v1.0.0", model_name="SimulationModel")
+        == "test_db"
+    )
