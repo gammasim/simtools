@@ -33,13 +33,13 @@ jobs:
       - name: Download corsika-simtel-package
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
         with:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
+            autoconf.tar.gz
           retention-days: 1
 
   build-corsika-simtelarray:
@@ -75,6 +75,7 @@ jobs:
       - name: Rename corsika simtel package file
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+          mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
