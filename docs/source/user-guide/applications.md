@@ -65,6 +65,7 @@ simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layo
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>

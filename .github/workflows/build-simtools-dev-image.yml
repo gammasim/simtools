@@ -7,11 +7,6 @@ on:
   pull_request:
     paths:
       - './docker/Dockerfile-dev'
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
   release:
     types: [published]
   schedule:

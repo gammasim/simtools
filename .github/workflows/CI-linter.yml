@@ -24,10 +24,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v5
-        with:
-          # super-linter needs the full git history to get the
-          # list of files that changed across commits
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -45,7 +41,6 @@ jobs:
               found=1
             fi
           done < <(find . -type f \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \))
-
           if [ "$found" -eq 1 ]; then
             echo "Non-ASCII characters found in documentation."
             exit 1
@@ -57,21 +52,16 @@ jobs:
             docker run --rm -i ghcr.io/hadolint/hadolint < "$dockerfile"
           done
 
-      - name: install packages not included in super-linter
+      - name: Install and validate pyproject.toml
         run: |
           pip install validate-pyproject
-
-      - name: pyproject.toml
-        run: |
           validate-pyproject pyproject.toml
 
-      - name: Check whether the citation metadata from CITATION.cff is valid
+      - name: Check CITATION.cff metadata
         uses: citation-file-format/cffconvert-github-action@2.0.0
         with:
           args: "--validate"
 
-      # Dependencies required to avoid errors
-      # reported by linters
       - name: Install mamba dependencies
         uses: mamba-org/setup-micromamba@v2
         with:
@@ -81,11 +71,6 @@ jobs:
       - name: Python dependencies
         run: |
           pip install -e '.[tests,dev,doc]'
-          pip install pylint
-
-      - name: pylint
-        run: |
-          git ls-files 'src/simtools/*.py' | xargs pylint -v
 
       - name: Restore pre-commit cache
         uses: actions/cache@v4
@@ -107,19 +92,26 @@ jobs:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
+  superlinter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - name: Lint Code Base
         uses: super-linter/super-linter@v8
         env:
           VALIDATE_ALL_CODEBASE: false
-          # .env file
           VALIDATE_ENV: true
-          # language
           VALIDATE_NATURAL_LANGUAGE: true
-          # bash
           VALIDATE_BASH: true
-          # path for linter rules
           LINTER_RULES_PATH: ./
-          # create a log file
           CREATE_LOG_FILE: true
           LOG_FILE: superlinter.log
           DEFAULT_BRANCH: main
