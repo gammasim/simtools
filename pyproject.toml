@@ -88,6 +88,7 @@ scripts.simtools-derive-ctao-array-layouts = "simtools.applications.derive_ctao_
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-derive-photon-electron-spectrum = "simtools.applications.derive_photon_electron_spectrum:main"
 scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_parameters:main"
+scripts.simtools-derive-trigger-rates = "simtools.applications.derive_trigger_rates:main"
 scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
 scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_produce_calibration_reports:main"
 scripts.simtools-docs-produce-model-parameter-reports = "simtools.applications.docs_produce_model_parameter_reports:main"

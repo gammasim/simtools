@@ -1,7 +1,6 @@
 ---
 name: CI-unittests
-# Execute unit tests
-# (includes CTAO-DPPS-SonarQube)
+# Unit tests (includes CTAO-SonarQube)
 
 on:
   workflow_dispatch:
@@ -9,6 +8,7 @@ on:
     types: [opened, synchronize]
     paths-ignore:
       - 'docs/**'
+      - 'tests/integration_tests/**'
   schedule:
     - cron: "0 0 * * *"
   release:
@@ -17,24 +17,14 @@ on:
 jobs:
   unit_tests:
     env:
-      # For scheduled runs, use production DB
-      SIMTOOLS_DB_SERVER: ${{ github.event_name != 'schedule' && 'localhost' || secrets.DB_SERVER }}
-      SIMTOOLS_DB_API_USER: ${{ github.event_name != 'schedule' && 'api' || secrets.DB_API_USER }}
-      SIMTOOLS_DB_API_PW: ${{ github.event_name != 'schedule' && 'password' || secrets.DB_API_PW }}
-      SIMTOOLS_DB_API_PORT: ${{ github.event_name != 'schedule' && '27017' || secrets.DB_API_PORT }}
+      SIMTOOLS_DB_SERVER: ${{ 'localhost' }}
+      SIMTOOLS_DB_API_USER: ${{ 'api' }}
+      SIMTOOLS_DB_API_PW: ${{ 'password' }}
+      SIMTOOLS_DB_API_PORT: ${{ '27017' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            python-version: "3.11"
-            install-method: mamba
-
-          - os: ubuntu-latest
-            python-version: "3.12"
-            install-method: mamba
-            extra-args: ["codecov", "random-order"]
-
           - os: ubuntu-latest
             python-version: "3.12"
             install-method: pip
@@ -42,6 +32,11 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.13"
             install-method: mamba
+            extra-args: ["codecov", "random-order"]
+
+          - os: ubuntu-latest
+            python-version: "3.13"
+            install-method: pip
 
     services:
       mongodb:
@@ -94,15 +89,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           check-latest: true
 
-      - name: Python dependencies (pip)
-        if: matrix.install-method == 'pip'
+      - name: Python dependencies
         run: |
-          pip install '.[tests,dev,doc]'
-
-      - name: Python dependencies (mamba)
-        if: matrix.install-method == 'mamba'
-        run: |
-          pip install -e '.[tests,dev,doc]'
+          pip install -e '.[tests]'
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
@@ -123,7 +112,6 @@ jobs:
           echo "DB Simulation Model Version: $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Upload data to MongoDB
-        if: github.event_name != 'schedule'
         run: |
           cd database_scripts/
           ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
