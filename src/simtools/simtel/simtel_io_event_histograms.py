@@ -76,7 +76,7 @@ class SimtelIOEventHistograms:
         """
         Define histograms including event data, binning, naming, and labels.
 
-        All histograms are defined for simulated and triggered event (note
+        All histograms are defined for simulated and triggered events (note
         the subtlety of triggered events being read from event_data and triggered_data).
 
         Parameters
@@ -103,51 +103,60 @@ class SimtelIOEventHistograms:
         energy_axis_title = "Energy (TeV)"
         event_count_axis_title = "Event Count"
 
-        hists["energy"] = self.get_histogram_definition(
-            event_data_column="simulated_energy",
-            event_data=event_data,
-            bin_edges=self.energy_bins,
-            axis_titles=[energy_axis_title, event_count_axis_title],
-            plot_scales={"x": "log", "y": "log"},
-        )
-        hists["core_distance"] = self.get_histogram_definition(
-            event_data_column="core_distance_shower",
-            event_data=event_data,
-            bin_edges=self.core_distance_bins,
-            axis_titles=["Core Distance (m)", event_count_axis_title],
-        )
-        hists["angular_distance"] = self.get_histogram_definition(
-            event_data_column="angular_distance",
-            event_data=triggered_data,
-            bin_edges=self.view_cone_bins,
-            axis_titles=["Angular Distance (deg)", event_count_axis_title],
-        )
-        hists["x_core_shower_vs_y_core_shower"] = self.get_histogram_definition(
-            event_data_column=("x_core_shower", "y_core_shower"),
-            event_data=(event_data, event_data),
-            bin_edges=(xy_bins, xy_bins),
-            is_1d=False,
-            axis_titles=["Core X (m)", "Core Y (m)", event_count_axis_title],
-        )
-        hists["core_vs_energy"] = self.get_histogram_definition(
-            event_data_column=("core_distance_shower", "simulated_energy"),
-            event_data=(event_data, event_data),
-            bin_edges=(self.core_distance_bins, self.energy_bins),
-            is_1d=False,
-            axis_titles=["Core Distance (m)", energy_axis_title, event_count_axis_title],
-            plot_scales={"y": "log"},
-        )
-        hists["angular_distance_vs_energy"] = self.get_histogram_definition(
-            event_data_column=("angular_distance", "simulated_energy"),
-            event_data=(triggered_data, event_data),
-            bin_edges=(self.view_cone_bins, self.energy_bins),
-            is_1d=False,
-            axis_titles=["Angular Distance (deg)", energy_axis_title, event_count_axis_title],
-            plot_scales={"y": "log"},
-        )
-        for hist in hists.values():
-            hist["suffix"] = ""
-            hist["title"] = "Triggered Events"
+        definitions = {
+            "energy": {
+                "event_data_column": "simulated_energy",
+                "event_data": event_data,
+                "bin_edges": self.energy_bins,
+                "axis_titles": [energy_axis_title, event_count_axis_title],
+                "plot_scales": {"x": "log", "y": "log"},
+            },
+            "core_distance": {
+                "event_data_column": "core_distance_shower",
+                "event_data": event_data,
+                "bin_edges": self.core_distance_bins,
+                "axis_titles": ["Core Distance (m)", event_count_axis_title],
+            },
+            "angular_distance": {
+                "event_data_column": "angular_distance",
+                "event_data": triggered_data,
+                "bin_edges": self.view_cone_bins,
+                "axis_titles": ["Angular Distance (deg)", event_count_axis_title],
+            },
+            "x_core_shower_vs_y_core_shower": {
+                "event_data_column": ("x_core_shower", "y_core_shower"),
+                "event_data": (event_data, event_data),
+                "bin_edges": (xy_bins, xy_bins),
+                "is_1d": False,
+                "axis_titles": ["Core X (m)", "Core Y (m)", event_count_axis_title],
+            },
+            "core_vs_energy": {
+                "event_data_column": ("core_distance_shower", "simulated_energy"),
+                "event_data": (event_data, event_data),
+                "bin_edges": (self.core_distance_bins, self.energy_bins),
+                "is_1d": False,
+                "axis_titles": ["Core Distance (m)", energy_axis_title, event_count_axis_title],
+                "plot_scales": {"y": "log"},
+            },
+            "angular_distance_vs_energy": {
+                "event_data_column": ("angular_distance", "simulated_energy"),
+                "event_data": (triggered_data, event_data),
+                "bin_edges": (self.view_cone_bins, self.energy_bins),
+                "is_1d": False,
+                "axis_titles": [
+                    "Angular Distance (deg)",
+                    energy_axis_title,
+                    event_count_axis_title,
+                ],
+                "plot_scales": {"y": "log"},
+            },
+        }
+
+        hists = {
+            name: self.get_histogram_definition(**cfg) | {"suffix": "", "title": "Triggered Events"}
+            for name, cfg in definitions.items()
+        }
+
         hists_mc = {}
         for key, hist in hists.items():
             key_mc = f"{key}_mc"
