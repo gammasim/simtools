@@ -137,6 +137,19 @@ def test_run_for_offsets_restores_label_and_collects(monkeypatch, calculator):
     assert calculator.label == base_label  # restored
 
 
+def test_label_suffix_includes_noninteger_off_axis(monkeypatch, calculator, tmp_output_dir):
+    # Avoid running external tool
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
+
+    # Set a non-integer off-axis and ensure file names include off1.5 (no trailing zeros)
+    calculator.rt_params["off_axis_angle"] = 1.5 * u.deg
+    photons_file, stars_file, log_file = calculator._prepare_psf_io_files()
+
+    assert "_off1.5.lis" in photons_file.name
+    assert "_off1.5.lis" in stars_file.name
+    assert "_off1.5.log" in log_file.name
+
+
 def test_repr_contains_label(calculator):
     s = repr(calculator)
     assert "IncidentAnglesCalculator(" in s

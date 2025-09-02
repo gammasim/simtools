@@ -114,7 +114,7 @@ def test_invalid_bin_edges_warning_with_monkeypatch(tmp_path, caplog, monkeypatc
     assert not (out_dir / "invalid_bins.png").exists()
 
 
-def test_bins_adjust_when_vmax_le_vmin(tmp_path):
+def test_bins_adjust_when_vmax_le_vmin():
     # Directly exercise _compute_bins when min == max
     logger = logging.getLogger(__name__)
     arr = np.array([1.234, 1.234])
@@ -124,7 +124,7 @@ def test_bins_adjust_when_vmax_le_vmin(tmp_path):
     assert len(bins) >= 2
 
 
-def test_overlay_skips_missing_and_empty_columns(tmp_path, monkeypatch):
+def test_overlay_skips_missing_and_empty_columns(monkeypatch):
     # Prepare valid and invalid entries
     valid = _make_table([0.1, 0.2], [1.0, 1.1])
     missing = QTable()  # no columns
@@ -161,3 +161,101 @@ def test_top_level_no_results_and_no_arrays(tmp_path, caplog):
     pia.plot_incident_angles({0.0: QTable()}, tmp_path, "empty2")
     msgs = [r.message for r in caplog.records]
     assert any("No non-empty results to plot" in m for m in msgs)
+
+
+def test_primary_component_empty_does_not_emit_focal_empty_warning(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    # Empty table and request primary should not emit the focal-specific empty-results warning
+    results = {0.0: QTable()}
+    out_dir = Path(tmp_path) / "plots"
+    pia._plot_component(
+        results_by_offset=results,
+        column="angle_incidence_primary",
+        title_suffix="on primary mirror (w.r.t. normal)",
+        out_path=out_dir / "should_not_exist.png",
+        bin_width_deg=0.1,
+        log=logging.getLogger(__name__),
+    )
+    msgs = [r.message for r in caplog.records]
+    assert any("No finite angle_incidence_primary values to plot" in m for m in msgs)
+    assert not any("Empty results for off-axis=" in m for m in msgs)
+    assert not (out_dir / "should_not_exist.png").exists()
+
+
+def test_plot_filters_nonfinite_values_and_succeeds(tmp_path):
+    # focal has NaN/Inf/-Inf and valid values; should filter and still plot
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([np.nan, np.inf, -np.inf, 1.0, 2.0]) * u.deg
+    results = {0.0: t}
+    pia.plot_incident_angles(results, tmp_path, "finite_filter")
+    out = Path(tmp_path) / "plots" / "incident_angles_multi_finite_filter.png"
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_compute_bins_edges_follow_floor_ceil():
+    arr = np.array([0.05, 0.24])
+    bins = pia._compute_bins(
+        arr, bin_width_deg=0.1, log=logging.getLogger(__name__), context="angle_incidence_primary"
+    )
+    assert bins is not None
+    # floor(0.05/0.1)=0 -> vmin=0.0; ceil(0.24/0.1)=3 -> vmax=0.3
+    assert np.isclose(bins[0], 0.0)
+    assert np.isclose(bins[-1], 0.3)
+    assert len(bins) == 4
+
+
+def test_overlay_plots_offsets_in_sorted_order(tmp_path, monkeypatch):
+    # Three valid offsets supplied in unsorted order; expect plotting in sorted order 0.0, 1.0, 2.0
+    results = {
+        1.0: _make_table([0.1, 0.2], [1.0, 1.1]),
+        0.0: _make_table([0.2, 0.3], [1.2, 1.3]),
+        2.0: _make_table([0.3, 0.4], [1.4, 1.5]),
+    }
+    arrays = [
+        results[0.0]["angle_incidence_primary"].to(u.deg).value,
+        results[1.0]["angle_incidence_primary"].to(u.deg).value,
+        results[2.0]["angle_incidence_primary"].to(u.deg).value,
+    ]
+    bins = pia._compute_bins(
+        np.concatenate(arrays), 0.1, logging.getLogger(__name__), "angle_incidence_primary"
+    )
+    fig, ax = plt.subplots(1, 1, figsize=(4, 3))
+    first_labels: list[str] = []
+
+    orig_hist = ax.hist
+
+    def _wrapped_hist(*args, **kwargs):
+        lab = kwargs.get("label")
+        if lab and lab != "_nolegend_":
+            first_labels.append(lab)
+        return orig_hist(*args, **kwargs)
+
+    monkeypatch.setattr(ax, "hist", _wrapped_hist)
+    pia._plot_overlay(results, "angle_incidence_primary", bins, ax, use_zorder=False)
+    plt.close(fig)
+    assert first_labels == ["off-axis 0 deg", "off-axis 1 deg", "off-axis 2 deg"]
+
+
+def test_logger_injection_used_for_warnings(tmp_path, caplog):
+    # Use a dedicated logger and ensure warnings are attached to it
+    custom_logger = logging.getLogger("simtools.test.custom_logger")
+    caplog.set_level(logging.WARNING, logger=custom_logger.name)
+    pia.plot_incident_angles({}, tmp_path, "nores", logger=custom_logger)
+    assert any(
+        r.name == custom_logger.name and "No results provided" in r.message for r in caplog.records
+    )
+    # Plots dir should not be created on early return
+    assert not (Path(tmp_path) / "plots").exists()
+
+
+def test_invalid_edges_warning_for_focal_monkeypatch(tmp_path, caplog, monkeypatch):
+    caplog.set_level(logging.WARNING)
+    # Force invalid vmin/vmax only for focal path by monkeypatching floor
+    monkeypatch.setattr(pia.np, "floor", lambda x: np.nan)
+    t = _make_table([0.1, 0.2])
+    pia.plot_incident_angles({0.0: t}, tmp_path, "invfocal")
+    msgs = [r.message for r in caplog.records]
+    assert any("Invalid focal-surface histogram edges" in m for m in msgs)
+    # No output file on failure
+    assert not (Path(tmp_path) / "plots" / "incident_angles_multi_invfocal.png").exists()
