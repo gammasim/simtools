@@ -188,6 +188,9 @@ jobs:
         run: echo "${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}" > .github/gitlab_token
         shell: bash
 
+      - name: Print GitLab token (TODO temporary)
+        run: cat ${{ github.workspace }}/.github/gitlab_token
+
       - name: Build and push optimized image
         uses: docker/build-push-action@v6
         with:
