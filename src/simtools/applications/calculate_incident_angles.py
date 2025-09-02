@@ -140,6 +140,20 @@ def _parse(label):
         action="store_true",
         required=False,
     )
+    calc_group = config.parser.add_mutually_exclusive_group(required=False)
+    calc_group.add_argument(
+        "--calculate_primary_secondary_angles",
+        dest="calculate_primary_secondary_angles",
+        action="store_true",
+        help="Also compute angles of incidence on primary and secondary mirrors",
+    )
+    calc_group.add_argument(
+        "--no-calculate_primary_secondary_angles",
+        dest="calculate_primary_secondary_angles",
+        action="store_false",
+        help="Do not compute angles of incidence on primary and secondary mirrors",
+    )
+    config.parser.set_defaults(calculate_primary_secondary_angles=True)
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "site", "model_version"],
@@ -184,6 +198,9 @@ def main():
         mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
         algn=args_dict.get("algn", None),
         test=args_dict.get("test", False),
+        calculate_primary_secondary_angles=args_dict.get(
+            "calculate_primary_secondary_angles", True
+        ),
     )
     offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
 
