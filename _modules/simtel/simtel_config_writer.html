@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=5699de4d"></script>
+    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g2508cab0e" />
+  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
   </head>
   
   
@@ -582,7 +582,7 @@
         <span class="k">return</span> <span class="n">value</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_sim_telarray_metadata</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">config_type</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">config_type</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">additional_metadata</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return sim_telarray metadata.</span>
@@ -595,8 +595,8 @@
 <span class="sd">            Model parameters dictionary.</span>
 <span class="sd">        telescope_model_name: str</span>
 <span class="sd">            Name of the telescope model</span>
-<span class="sd">        sim_telarray_seeds: dict</span>
-<span class="sd">            Dictionary with configuration for sim_telarray random instrument setup.</span>
+<span class="sd">        additional_metadata: dict</span>
+<span class="sd">            Dictionary with additional metadata to include using &#39;set&#39;.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -637,12 +637,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_parameters_to_metadata</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">,</span> <span class="n">meta_parameters</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">sim_telarray_seeds</span> <span class="ow">and</span> <span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">):</span>
-            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> set instrument_seed=</span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> set instrument_instances=&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s1">&#39;random_instrument_instances&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">additional_metadata</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">additional_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> set </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">meta_parameters</span>
 
@@ -666,7 +664,7 @@
 <div class="viewcode-block" id="SimtelConfigWriter.write_array_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_array_config_file</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">additional_metadata</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the sim_telarray config file for an array of telescopes.</span>
@@ -679,8 +677,8 @@
 <span class="sd">            Dictionary of TelescopeModel&#39;s instances as used by the ArrayModel instance.</span>
 <span class="sd">        site_model: Site model</span>
 <span class="sd">            Site model.</span>
-<span class="sd">        sim_telarray_seeds: dict</span>
-<span class="sd">            Dictionary with configuration for sim_telarray random instrument setup.</span>
+<span class="sd">        additional_metadata: dict</span>
+<span class="sd">            Dictionary with additional metadata to include.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config_file_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
@@ -705,7 +703,7 @@
                 <span class="n">site_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
                 <span class="n">config_file_directory</span><span class="p">,</span>
                 <span class="n">telescope_model</span><span class="p">,</span>
-                <span class="n">sim_telarray_seeds</span><span class="p">,</span>
+                <span class="n">additional_metadata</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;maximum_telescopes = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -727,8 +725,8 @@
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# include &lt;</span><span class="si">{</span><span class="n">tel_config_file</span><span class="si">}</span><span class="s2">&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif </span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># configuration files need to end with \n\n</span>
 
-        <span class="k">if</span> <span class="n">sim_telarray_seeds</span> <span class="ow">and</span> <span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_random_seeds_file</span><span class="p">(</span><span class="n">sim_telarray_seeds</span><span class="p">,</span> <span class="n">config_file_directory</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">additional_metadata</span> <span class="ow">and</span> <span class="n">additional_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_random_seeds_file</span><span class="p">(</span><span class="n">additional_metadata</span><span class="p">,</span> <span class="n">config_file_directory</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_write_random_seeds_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="p">,</span> <span class="n">config_file_directory</span><span class="p">):</span>
@@ -864,7 +862,7 @@
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}</span><span class="s2">metaparam global set </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_write_site_parameters</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">additional_metadata</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write site parameters.</span>
@@ -879,8 +877,8 @@
 <span class="sd">            Path to the model for writing of additional files.</span>
 <span class="sd">        telescope_model: dict of TelescopeModel</span>
 <span class="sd">            Telescope models.</span>
-<span class="sd">        sim_telarray_seeds: dict</span>
-<span class="sd">            Dictionary with configuration for sim_telarray random instrument setup.</span>
+<span class="sd">        additional_metadata: dict</span>
+<span class="sd">            Dictionary with additional metadata to include.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;% Site parameters</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">site_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -895,7 +893,7 @@
             <span class="k">if</span> <span class="n">simtel_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sim_telarray_metadata</span><span class="p">(</span>
-            <span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">,</span> <span class="n">additional_metadata</span>
         <span class="p">):</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">meta</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>

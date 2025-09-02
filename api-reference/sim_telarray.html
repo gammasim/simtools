@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5699de4d"></script>
+    <script src="../_static/documentation_options.js?v=0b84842a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Runners for simulation software" href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g2508cab0e" />
+  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
   </head>
   
   
@@ -588,7 +588,7 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">
-<span class="sig-name descname"><span class="pre">write_array_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter.write_array_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">write_array_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter.write_array_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file" title="Link to this definition">#</a></dt>
 <dd><p>Write the sim_telarray config file for an array of telescopes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -599,7 +599,7 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dd>
 <dt><strong>site_model: Site model</strong></dt><dd><p>Site model.</p>
 </dd>
-<dt><strong>sim_telarray_seeds: dict</strong></dt><dd><p>Dictionary with configuration for sim_telarray random instrument setup.</p>
+<dt><strong>additional_metadata: dict</strong></dt><dd><p>Dictionary with additional metadata to include.</p>
 </dd>
 </dl>
 </dd>
@@ -814,6 +814,27 @@ under the assumption that the file contains the tables “SHOWERS”,
 <dt class="sig sig-object py" id="simtel.simtel_io_event_writer.SimtelIOEventDataWriter.create_tables">
 <span class="sig-name descname"><span class="pre">create_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#SimtelIOEventDataWriter.create_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.create_tables" title="Link to this definition">#</a></dt>
 <dd><p>Create astropy tables from collected data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata">
+<span class="sig-name descname"><span class="pre">get_nsb_level_from_sim_telarray_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Return NSB level from sim_telarray metadata.</p>
+<p>Falls back to preliminary NSB level if not found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file</strong><span class="classifier">Path</span></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>NSB level.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1408,6 +1429,7 @@ mirror_numbers.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-event-writer">simtel_io_event_writer</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.create_tables"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.create_tables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.process_files()</span></code></a></li>
 </ul>
 </li>

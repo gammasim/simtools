@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=5699de4d"></script>
+    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g2508cab0e" />
+  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
   </head>
   
   
@@ -455,6 +455,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_file_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_corsika_run_header</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_sim_telarray_telescope_id_to_telescope_name_mapping</span><span class="p">,</span>
+    <span class="n">read_sim_telarray_metadata</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_circular_mean</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.names</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_common_identifier_from_array_element_name</span>
@@ -621,7 +622,7 @@
                 <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;core_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
                 <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="mf">90.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
                 <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
-                <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_preliminary_nsb_level</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)),</span>
+                <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nsb_level_from_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">),</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
@@ -746,14 +747,36 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">telescope_id_to_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unknown_</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">tel_id</span> <span class="ow">in</span> <span class="n">telescope_ids</span>
         <span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_preliminary_nsb_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_nsb_level_from_sim_telarray_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_nsb_level_from_sim_telarray_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return preliminary NSB level from file name.</span>
+<span class="sd">        Return NSB level from sim_telarray metadata.</span>
 
-<span class="sd">        Hardwired values are used for &quot;dark&quot;, &quot;half&quot;, and &quot;full&quot; NSB levels</span>
-<span class="sd">        (actual values are made up for this example). Will be replaced with</span>
-<span class="sd">        reading of sim_telarray metadata entry for NSB level (to be implemented,</span>
-<span class="sd">        see issue #1572).</span>
+<span class="sd">        Falls back to preliminary NSB level if not found.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file : Path</span>
+<span class="sd">            Path to the sim_telarray file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            NSB level.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">metadata</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">nsb_integrated_flux</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nsb_integrated_flux&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nsb_integrated_flux</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nsb_level_from_file_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_nsb_level_from_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return NSB level from file name.</span>
+
+<span class="sd">        Hardwired values are used for &quot;dark&quot;, &quot;half&quot;, and &quot;full&quot; NSB levels.</span>
+<span class="sd">        Allows to read legacy sim_telarray files without &#39;nsb_integrated_flux&#39;</span>
+<span class="sd">        metadata field.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -765,18 +788,18 @@
 <span class="sd">        float</span>
 <span class="sd">            NSB level extracted from file name.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">nsb_levels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dark&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;half&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">}</span>
+        <span class="n">nsb_levels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dark&quot;</span><span class="p">:</span> <span class="mf">0.24</span><span class="p">,</span> <span class="s2">&quot;half&quot;</span><span class="p">:</span> <span class="mf">0.835</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">}</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">nsb_levels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NSB level set to hardwired value of </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NSB level set to hardwired value of </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="n">value</span>
             <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Invalid file name.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No NSB level found in file name, defaulting to 1.0&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="mf">1.0</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No NSB level found in </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">, defaulting to None&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 </pre></div>
 

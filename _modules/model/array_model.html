@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=5699de4d"></script>
+    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g2508cab0e" />
+  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
   </head>
   
   
@@ -717,7 +717,7 @@
             <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
             <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
-            <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">,</span>
+            <span class="n">additional_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_additional_simtel_metadata</span><span class="p">(),</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
 
@@ -941,7 +941,24 @@
 
         <span class="n">table</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">table</span></div>
-</div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_additional_simtel_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect additional metadata to be included in sim_telarray output.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary with additional metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">)</span>
+
+        <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;nsb_integrated_flux&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_nsb_integrated_flux</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">metadata</span></div>
 
 </pre></div>
 
