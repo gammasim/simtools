@@ -51,7 +51,7 @@ import astropy.units as u
 
 from simtools.configuration import configurator
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
-from simtools.visualization.visualize import plot_incident_angles
+from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 
 def _parse(label):
