@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # Dockerfile for production build of the CTAO Simulation Pipeline.
 #
 # Contains CORSIKA (non-optimized / optimized), sim_telarray, and simtools
@@ -5,7 +6,6 @@
 # CORSIKA optimized build) to be in the same directory as this Dockerfile.
 
 # Shared build arguments
-ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES
 ARG CORSIKA_VERSION="77550"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.0.0"
 ARG BUILD_OPT="prod6-sc"
@@ -21,17 +21,19 @@ ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
 # - SC1091: ignore warning about not being able to source the bashrc
+
 FROM almalinux:9.5 AS patches_stage
-ARG GITLAB_TOKEN_CORSIKA_OPT_PATCHES
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
+
 
 RUN yum update -y && yum install -y git && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
-RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch ${CORSIKA_OPT_PATCH_VERSION} https://oauth2:$GITLAB_TOKEN_CORSIKA_OPT_PATCHES@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git && \
+RUN --mount=type=secret,id=gitlab_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://oauth2:$(cat /run/secrets/gitlab_token)@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git" && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-patches/ && \
     rm -rf corsika-opt-patches
 
