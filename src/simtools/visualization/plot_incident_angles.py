@@ -104,6 +104,7 @@ def _plot_component(
 ):
     arrays = _gather_arrays(results_by_offset, column, log)
     if not arrays:
+        log.warning("No finite %s values to plot", column)
         return
     bins = _compute_bins(np.concatenate(arrays), bin_width_deg, log, context=column)
     if bins is None:
