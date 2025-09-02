@@ -27,8 +27,8 @@ def _parse():
     config.parser.add_argument(
         "--db_name",
         help="Database name",
-        default="all",
-        required=True,
+        default=None,
+        required=False,
     )
     return config.initialize(db_config=True)
 
@@ -44,7 +44,11 @@ def main():  # noqa: D103
     databases = [
         d for d in db.db_client.list_database_names() if d not in ("config", "admin", "local")
     ]
-    requested = args_dict["db_name"]
+    requested = db.get_db_name(
+        db_name=args_dict["db_name"],
+        model_version=args_dict.get("db_simulation_model_version"),
+        model_name=args_dict.get("db_simulation_model"),
+    )
     if requested != "all" and requested not in databases:
         raise ValueError(
             f"Requested database '{requested}' not found. "
