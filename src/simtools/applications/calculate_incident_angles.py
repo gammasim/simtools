@@ -2,7 +2,10 @@
 r"""
 Calculate incident angles using sim_telarray ray tracing.
 
-Run the application from the command line.
+Creates photon files with additional columns for incident angles calculation.
+This application runs a version of sim_telarray compiled with the preprocessing
+flag -DDEBUG_TRACE 99. Outputs files and histograms of the incidence angles at
+the focal plane, primary mirror, and if available, secondary mirror.
 
 Example usage
 -------------
@@ -11,7 +14,7 @@ Example usage
 
     simtools-calculate-incident-angles \
         --zenith 20 \
-    --off_axis_angles 0 1 2 3 4 \
+        --off_axis_angles 0 1 2 3 4 \
         --source_distance 10 \
         --number_of_rays 10000 \
         --model_version 6.0.0 \
@@ -20,6 +23,7 @@ Example usage
 
 Command line arguments
 ----------------------
+
 zenith (float, optional)
     Zenith angle in degrees (default: 20.0).
 off_axis_angles (float, optional)
@@ -174,7 +178,10 @@ def main():
     output_dir = (
         output_base / label if not args_dict.get("use_plain_output_path", False) else output_base
     )
-    # Create the calculator
+    base_label = args_dict.get("label", label)
+    telescope_name = args_dict["telescope"]
+    label_with_telescope = f"{base_label}_{telescope_name}"
+
     calculator = IncidentAnglesCalculator(
         simtel_path=args_dict["simtel_path"],
         db_config=db_config,
@@ -192,7 +199,7 @@ def main():
             "number_of_rays": int(args_dict.get("number_of_rays", 10000)),
         },
         output_dir=output_dir,
-        label=args_dict.get("label", label),
+        label=base_label,
         perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
         overwrite_rdna=bool(args_dict.get("overwrite_rdna", False)),
         mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
@@ -205,7 +212,7 @@ def main():
     offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
 
     results_by_offset = calculator.run_for_offsets(offsets)
-    plot_incident_angles(results_by_offset, output_dir, args_dict.get("label", label))
+    plot_incident_angles(results_by_offset, output_dir, label_with_telescope)
     total = sum(len(t) for t in results_by_offset.values())
     logger.info(
         f"Calculated incident angles for {len(results_by_offset)} offsets, total {total} points"

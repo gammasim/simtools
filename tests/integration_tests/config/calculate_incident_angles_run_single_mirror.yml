@@ -12,9 +12,9 @@ applications:
     use_plain_output_path: true
     test: true
   integration_tests:
-  - output_file: incident_angles_calculate_incident_angles.ecsv
-  - output_file: incident_angles_calculate_incident_angles.png
-  - output_file: incident_angles_calculate_incident_angles.log
+  - output_file: incident_angles/incident_angles_calculate_incident_angles_SSTS-04_off1.ecsv
+  - output_file: plots/incident_angles_multi_calculate_incident_angles_SSTS-04.png
+  - output_file: logs/incident_angles_calculate_incident_angles_SSTS-04_off1.log
   test_name: incident_angles
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

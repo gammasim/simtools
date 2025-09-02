@@ -75,9 +75,11 @@ def test_run_produces_results(monkeypatch, calculator, tmp_output_dir):
     monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
 
     # Prepare custom file paths returned by _prepare_psf_io_files
-    photons_file = calculator.photons_dir / f"incident_angles_photons_{calculator.label}.lis"
-    stars_file = calculator.photons_dir / f"incident_angles_stars_{calculator.label}.lis"
-    log_file = calculator.logs_dir / f"incident_angles_{calculator.label}.log"
+    # Suffix now includes telescope and off-axis angle
+    suffix = f"{calculator.label}_{calculator.config_data['telescope']}_off0"
+    photons_file = calculator.photons_dir / f"incident_angles_photons_{suffix}.lis"
+    stars_file = calculator.photons_dir / f"incident_angles_stars_{suffix}.lis"
+    log_file = calculator.logs_dir / f"incident_angles_{suffix}.log"
 
     def _prep_files(self):
         photons_file.parent.mkdir(parents=True, exist_ok=True)
@@ -110,7 +112,10 @@ def test_run_produces_results(monkeypatch, calculator, tmp_output_dir):
     assert res["angle_incidence_primary"].unit == u.deg
     assert res["angle_incidence_secondary"].unit == u.deg
     # Results saved under results_dir
-    out = calculator.results_dir / f"incident_angles_{calculator.label}.ecsv"
+    out = (
+        calculator.results_dir
+        / f"incident_angles_{calculator.label}_{calculator.config_data['telescope']}_off0.ecsv"
+    )
     assert out.exists()
 
 
@@ -211,8 +216,12 @@ def test_export_results_success_and_no_results(caplog, calculator):
     calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
 
     calculator.export_results()
-    table_file = calculator.results_dir / f"incident_angles_{calculator.label}.ecsv"
-    summary_file = calculator.results_dir / f"incident_angles_summary_{calculator.label}.txt"
+    table_file = calculator.results_dir / (
+        f"incident_angles_{calculator.label}_{calculator.config_data['telescope']}_off0.ecsv"
+    )
+    summary_file = calculator.results_dir / (
+        f"incident_angles_summary_{calculator.label}_{calculator.config_data['telescope']}_off0.txt"
+    )
     assert table_file.exists()
     assert summary_file.exists()
     content = summary_file.read_text(encoding="utf-8")
@@ -257,7 +266,10 @@ def test_write_run_script_path_and_content(calculator):
 
 def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
     # Create an existing photons file to trigger the unlink branch
-    photons_path = calculator.photons_dir / f"incident_angles_photons_{calculator.label}.lis"
+    photons_path = (
+        calculator.photons_dir
+        / f"incident_angles_photons_{calculator.label}_{calculator.config_data['telescope']}_off0.lis"
+    )
     photons_path.parent.mkdir(parents=True, exist_ok=True)
     photons_path.write_text("dummy", encoding="utf-8")
 
