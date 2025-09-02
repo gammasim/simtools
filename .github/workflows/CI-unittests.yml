@@ -74,18 +74,6 @@ jobs:
         run: |
           sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
 
-      - name: Restore micromamba cache
-        if: matrix.install-method == 'mamba'
-        uses: actions/cache@v4
-        id: micromamba-cache
-        with:
-          path: |
-            ~/.cache/micromamba
-            ~/micromamba/envs
-          key: ${{ runner.os }}-micromamba-${{ hashFiles('environment.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-micromamba-
-
       - name: Install mamba dependencies
         if: matrix.install-method == 'mamba'
         uses: mamba-org/setup-micromamba@v2
@@ -93,15 +81,6 @@ jobs:
           environment-file: environment.yml
           create-args: python=${{ matrix.python-version }}
           init-shell: bash
-
-      - name: Save micromamba cache
-        if: matrix.install-method == 'mamba' && success()
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/micromamba
-            ~/micromamba/envs
-          key: ${{ runner.os }}-micromamba-${{ hashFiles('environment.yml') }}
 
       - name: Python setup
         if: matrix.install-method == 'pip'
