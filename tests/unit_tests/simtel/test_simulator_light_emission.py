@@ -216,8 +216,8 @@ def test_runs(mock_simulator):
     assert mock_simulator.number_events == 1
 
 
-def test_photons_per_run_default(mock_simulator):
-    assert mock_simulator.photons_per_run == pytest.approx(1e8)
+def test_flasher_photons_default(mock_simulator):
+    assert mock_simulator.flasher_photons == pytest.approx(1e8)
 
 
 def test_make_light_emission_script(
@@ -687,7 +687,7 @@ def test_add_flasher_options():
     inst._flasher_model = MagicMock()
     inst._telescope_model = MagicMock()
     inst.number_events = 1
-    inst.photons_per_run = 1.23e6
+    inst.flasher_photons = 1.23e6
 
     def gpvu(name):
         mp = {
@@ -962,7 +962,7 @@ def test_prepare_flasher_atmosphere_files_warns_on_copy_failure(tmp_path, monkey
     assert any((ATM_ALIAS2 in w and "Failed to create atmosphere alias" in w) for w in warnings)
 
 
-def test_photons_per_run_flasher_model_non_test(tmp_path):
+def test_flasher_photons_flasher_model_non_test(tmp_path):
     # When flasher model is provided and not in test mode, use model value
     IOHandler().set_paths(
         output_path=str(tmp_path), data_path=str(tmp_path), model_path=str(tmp_path)
@@ -984,11 +984,11 @@ def test_photons_per_run_flasher_model_non_test(tmp_path):
         test=False,
     )
 
-    assert inst.photons_per_run == pytest.approx(7.89e6)
+    assert inst.flasher_photons == pytest.approx(7.89e6)
     flasher.get_parameter_value.assert_called_once_with("photons_per_flasher")
 
 
-def test_photons_per_run_flasher_model_test_mode(tmp_path):
+def test_flasher_photons_flasher_model_test_mode(tmp_path):
     IOHandler().set_paths(
         output_path=str(tmp_path), data_path=str(tmp_path), model_path=str(tmp_path)
     )
@@ -1008,11 +1008,11 @@ def test_photons_per_run_flasher_model_test_mode(tmp_path):
         test=True,
     )
 
-    assert inst.photons_per_run == pytest.approx(1e8)
+    assert inst.flasher_photons == pytest.approx(1e8)
     flasher.get_parameter_value.assert_not_called()
 
 
-def test_photons_per_run_no_models(tmp_path):
+def test_flasher_photons_no_models(tmp_path):
     # When neither calibration nor flasher model is provided, default to 1e8
     tel = MagicMock()
     tel.write_sim_telarray_config_file = MagicMock()
@@ -1029,7 +1029,7 @@ def test_photons_per_run_no_models(tmp_path):
         test=False,
     )
 
-    assert inst.photons_per_run == pytest.approx(1e8)
+    assert inst.flasher_photons == pytest.approx(1e8)
 
 
 def test_get_prefix_non_none_returns_with_underscore():

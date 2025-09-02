@@ -64,7 +64,11 @@ zenith_angle (float, optional)
     Zenith angle in degrees.
 azimuth_angle (float, optional)
     Azimuth angle in degrees.
-flasher_photons (float, optional)
+
+TODO Adapt to new flasher parameters in DB
+
+
+flasher_photons (int, optional)
     Number of photons in the flasher pulse at each photodetector.
 flasher_var_photons (float, optional)
     Relative variance of the number of photons in the flasher pulse.

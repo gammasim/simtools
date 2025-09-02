@@ -168,6 +168,8 @@ class SimulatorArray(SimtelRunner):
         """
         Generate the command to run sim_telarray for flasher simulations.
 
+        TODO - adapt to new flasher parameters in DB
+
         Parameters
         ----------
         calibration_runner_args: dict

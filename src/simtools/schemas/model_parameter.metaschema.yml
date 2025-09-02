@@ -82,6 +82,7 @@ definitions:
           - type: string
           - type: "null"
           - type: array
+          - type: object
         description: "Value of the parameter."
       parameter_version:
         anyOf:
