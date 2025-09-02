@@ -1,16 +1,18 @@
 %YAML 1.2
 ---
-title: Schema for night_sky_background_spectrum model parameter
+title: Schema for nsb_spectrum model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: nsb_background_spectrum
-developer_note: |
-  TODO - check that wavelength range is sufficient
-  TODO - add possible zenith / azimuth dependence
-  (see Granada talk by C. Righi)
-description: Intensity of night-sky background light as function of wavelength.
+developer_note: To be replaced by a data table
+name: nsb_spectrum
+description: |-
+  Spectrum of night sky background (NSB) as a function of wavelength.
+data:
+  - type: file
+    unit: dimensionless
+    default: null
 instrument:
   class: Site
   type:
@@ -18,27 +20,6 @@ instrument:
   site:
     - North
     - South
-data:
-  - type: data_table
-    table_columns:
-      - name: wavelength
-        description: Wavelength
-        required: true
-        unit: nm
-        type: float64
-        required_range:
-          min: 300.0
-          max: 700.0
-        input_processing:
-          - remove_duplicates
-          - sort
-      - name: intensity
-        description: Intensity of the night-sky background
-        required: true
-        unit: photons / arcsec**2 m**2 s** micron
-        type: float64
-        required_range:
-          min: 0.0
 activity:
   setting:
     - SetParameterFromExternal
@@ -47,4 +28,16 @@ activity:
 source:
   - Calibration
 simulation_software:
-  - name: sim_telarray
+  - name: simtools
+plot_configuration:
+  - type: nsb_spectrum
+    title: 'NSB spectrum'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Differential photon rate [10^9 / (nm s m^2 sr)]'
+    xscale: 'linear'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: nsb_spectrum
+        column_x: 'wavelength'
+        column_y: 'differential photon rate'
