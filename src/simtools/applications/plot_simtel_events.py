@@ -4,8 +4,8 @@ r"""
 Plot simulated events.
 
 This application produces figures from one or more sim_telarray (.simtel.zst) files
-by calling functions in ``simtools.visualization.simtel_event_plots``. It is meant to
-run after simulations (e.g., simtools-simulate-flasher, simtools-simulate-illuminator).
+It is meant to run after simulations (e.g., simtools-simulate-flasher,
+simtools-simulate-illuminator).
 
 What it does
 ------------
@@ -84,7 +84,7 @@ from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler
-from simtools.visualization.simtel_event_plots import (
+from simtools.visualization.plot_simtel_events import (
     plot_simtel_event_image,
     plot_simtel_integrated_pedestal_image,
     plot_simtel_integrated_signal_image,
