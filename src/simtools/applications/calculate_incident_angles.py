@@ -65,7 +65,6 @@ def _parse(label):
         description="Calculate incident angles using sim_telarray ray tracing.",
     )
 
-    # Application-specific arguments
     config.parser.add_argument(
         "--zenith",
         help="Zenith angle in degrees",
