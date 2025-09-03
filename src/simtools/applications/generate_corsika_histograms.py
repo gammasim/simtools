@@ -165,15 +165,11 @@ r"""
 """
 
 import logging
-import re
 import time
 from pathlib import Path
 
-import numpy as np
-
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.corsika import corsika_histograms_visualize
 from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.io import io_handler
 
@@ -284,134 +280,6 @@ def _parse(label, description):
     return config_parser, _
 
 
-def _plot_figures(corsika_histograms_instance, test=False):
-    """
-    Auxiliary function to centralize the plotting functions.
-
-    Parameters
-    ----------
-    corsika_histograms_instance: CorsikaHistograms instance.
-        The CorsikaHistograms instance created in main.
-    test: bool
-        If true plots the figures for the first two functions only.
-    """
-    plot_function_names = [
-        plotting_method
-        for plotting_method in dir(corsika_histograms_visualize)
-        if plotting_method.startswith("plot_")
-        and "event_header_distribution" not in plotting_method
-    ]
-    if test:
-        plot_function_names = plot_function_names[:2]
-
-    figure_list = []
-    for function_name in plot_function_names:
-        plot_function = getattr(corsika_histograms_visualize, function_name)
-        figures = plot_function(corsika_histograms_instance)
-        for fig in figures:
-            figure_list.append(fig)
-
-    figure_list = np.array(figure_list).flatten()
-    core_name = re.sub(r"\.hdf5$", "", corsika_histograms_instance.hdf5_file_name)
-    output_file_name = Path(corsika_histograms_instance.output_path).joinpath(f"{core_name}.pdf")
-    corsika_histograms_visualize.save_figs_to_pdf(figure_list, output_file_name)
-
-
-def _derive_event_1d_histograms(
-    corsika_histograms_instance, event_1d_header_keys, pdf, hdf5, overwrite=False
-):
-    """
-    Auxiliary function to derive the histograms for the arguments given by event_1d_histograms.
-
-    Parameters
-    ----------
-    corsika_histograms_instance: CorsikaHistograms instance.
-        The CorsikaHistograms instance created in main.
-    event_1d_header_keys: str
-        Generate 1D histograms for elements given in event_1d_header_keys from the CORSIKA event
-        header and save into hdf5/pdf files.
-    pdf: bool
-        If true, histograms are saved into a pdf file.
-    hdf5: bool
-        If true, histograms are saved into hdf5 files.
-    overwrite: bool
-        If true, overwrites the current output hdf5 file.
-    """
-    figure_list = []
-    for event_header_element in event_1d_header_keys:
-        if pdf:
-            figure = corsika_histograms_visualize.plot_1d_event_header_distribution(
-                corsika_histograms_instance, event_header_element
-            )
-            figure_list.append(figure)
-        if hdf5:
-            corsika_histograms_instance.export_event_header_1d_histogram(
-                event_header_element, bins=50, hist_range=None, overwrite=overwrite
-            )
-    if pdf:
-        figures_list = np.array(figure_list).flatten()
-        output_file_name = Path(corsika_histograms_instance.output_path).joinpath(
-            f"{corsika_histograms_instance.hdf5_file_name}_event_1d_histograms.pdf"
-        )
-        corsika_histograms_visualize.save_figs_to_pdf(figures_list, output_file_name)
-
-
-def _derive_event_2d_histograms(
-    corsika_histograms_instance, event_2d_header_keys, pdf, hdf5, overwrite=False
-):
-    """
-    Auxiliary function to derive the histograms for the arguments given by event_1d_histograms.
-
-    If an odd number of event header keys are given, the last one is discarded.
-
-    Parameters
-    ----------
-    corsika_histograms_instance: CorsikaHistograms instance.
-        The CorsikaHistograms instance created in main.
-    event_2d_header_keys: str
-        Generate 1D histograms for elements given in event_1d_header_keys from the CORSIKA event
-        header and save into hdf5/pdf files.
-    pdf: bool
-        If true, histograms are saved into a pdf file.
-    hdf5: bool
-        If true, histograms are saved into hdf5 files.
-    overwrite: bool
-        If true, overwrites the current output hdf5 file.
-    """
-    figure_list = []
-    for i_event_header_element, _ in enumerate(event_2d_header_keys[::2]):
-        # [::2] to discard the last one in case an odd number of keys are passed
-
-        if len(event_2d_header_keys) % 2 == 1:  # if odd number of keys
-            msg = (
-                "An odd number of keys was passed to generate 2D histograms."
-                "The last key is being ignored."
-            )
-            logger.warning(msg)
-
-        if pdf:
-            figure = corsika_histograms_visualize.plot_2d_event_header_distribution(
-                corsika_histograms_instance,
-                event_2d_header_keys[i_event_header_element],
-                event_2d_header_keys[i_event_header_element + 1],
-            )
-            figure_list.append(figure)
-        if hdf5:
-            corsika_histograms_instance.export_event_header_2d_histogram(
-                event_2d_header_keys[i_event_header_element],
-                event_2d_header_keys[i_event_header_element + 1],
-                bins=50,
-                hist_range=None,
-                overwrite=overwrite,
-            )
-    if pdf:
-        figures_list = np.array(figure_list).flatten()
-        output_file_name = Path(corsika_histograms_instance.output_path).joinpath(
-            f"{corsika_histograms_instance.hdf5_file_name}_event_2d_histograms.pdf"
-        )
-        corsika_histograms_visualize.save_figs_to_pdf(figures_list, output_file_name)
-
-
 def main():  # noqa: D103
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
@@ -427,61 +295,16 @@ def main():  # noqa: D103
     corsika_histograms_instance = CorsikaHistograms(
         args_dict["iact_file"], output_path=output_path, hdf5_file_name=args_dict["hdf5_file_name"]
     )
-    if args_dict["telescope_indices"] is not None:
-        try:
-            indices = np.array(args_dict["telescope_indices"]).astype(int)
-        except ValueError:
-            msg = (
-                f"{args_dict['telescope_indices']} not a valid input. "
-                f"Please use integer numbers for telescope_indices"
-            )
-            logger.error(msg)
-            raise
-    else:
-        indices = None
-    # If the hdf5 output file already exists, the results are appended to it.
-    if (Path(corsika_histograms_instance.hdf5_file_name).exists()) and (
-        args_dict["hdf5"] or args_dict["event_1d_histograms"] or args_dict["event_2d_histograms"]
-    ):
-        msg = (
-            f"Output hdf5 file {corsika_histograms_instance.hdf5_file_name} already exists. "
-            f"Overwriting it."
-        )
-        logger.warning(msg)
-        overwrite = True
-    else:
-        overwrite = False
-    corsika_histograms_instance.set_histograms(
-        telescope_indices=indices,
+    corsika_histograms_instance.run_export_pipeline(
         individual_telescopes=args_dict["individual_telescopes"],
         hist_config=args_dict["hist_config"],
+        indices_arg=args_dict["telescope_indices"],
+        write_pdf=args_dict["pdf"],
+        write_hdf5=args_dict["hdf5"],
+        event1d=args_dict["event_1d_histograms"],
+        event2d=args_dict["event_2d_histograms"],
+        test=args_dict["test"],
     )
-
-    # Cherenkov photons
-    if args_dict["pdf"]:
-        _plot_figures(
-            corsika_histograms_instance=corsika_histograms_instance, test=args_dict["test"]
-        )
-    if args_dict["hdf5"]:
-        corsika_histograms_instance.export_histograms(overwrite=overwrite)
-
-    # Event information
-    if args_dict["event_1d_histograms"] is not None:
-        _derive_event_1d_histograms(
-            corsika_histograms_instance,
-            args_dict["event_1d_histograms"],
-            args_dict["pdf"],
-            args_dict["hdf5"],
-            overwrite=not args_dict["hdf5"],
-        )
-    if args_dict["event_2d_histograms"] is not None:
-        _derive_event_2d_histograms(
-            corsika_histograms_instance,
-            args_dict["event_2d_histograms"],
-            args_dict["pdf"],
-            args_dict["hdf5"],
-            overwrite=not (args_dict["hdf5"] or args_dict["event_1d_histograms"]),
-        )
 
     final_time = time.time()
     logger.info(

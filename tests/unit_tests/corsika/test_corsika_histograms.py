@@ -4,6 +4,7 @@
 import copy
 import logging
 from pathlib import Path
+from unittest import mock
 
 import boost_histogram as bh
 import numpy as np
@@ -827,3 +828,95 @@ def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histog
         )
     tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 13
+
+
+@pytest.fixture(name="corsika_dummy_input")
+def _corsika_dummy_input(tmp_path):
+    # create a tiny dummy file to satisfy existence check
+    p = tmp_path / "dummy.corsikaio"
+    p.write_bytes(b"00")
+    return p
+
+
+def test_parse_telescope_indices_none(corsika_dummy_input, tmp_path):
+    # Patch I/O heavy init pieces by mocking methods used within __init__
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        assert ch.parse_telescope_indices(None) is None
+
+
+def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path):
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        indices = ch.parse_telescope_indices(["1", "2", "3"])
+        assert np.array_equal(indices, np.array([1, 2, 3]))
+
+
+def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path):
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        with pytest.raises(ValueError, match="not a valid input"):
+            ch.parse_telescope_indices(["a", "2"])
+
+
+def test_should_overwrite(corsika_dummy_input, tmp_path):
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        # ensure file exists
+        Path(ch.hdf5_file_name).write_text("{}", encoding="utf-8")
+        assert ch.should_overwrite(True, None, None) is True
+        assert ch.should_overwrite(False, ["a"], None) is True
+        assert ch.should_overwrite(False, None, ["a"]) is True
+        assert ch.should_overwrite(False, None, None) is False
+
+
+def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
+    # Mock heavy operations inside pipeline
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+
+        with (
+            mock.patch.object(CorsikaHistograms, "set_histograms") as m_set,
+            mock.patch.object(CorsikaHistograms, "export_histograms") as m_export,
+            mock.patch(
+                "simtools.corsika.corsika_histograms_visualize.export_all_photon_figures_pdf",
+                return_value=tmp_path / "photons.pdf",
+            ) as m_pdf,
+            mock.patch(
+                "simtools.corsika.corsika_histograms_visualize.derive_event_1d_histograms",
+                return_value=None,
+            ),
+            mock.patch(
+                "simtools.corsika.corsika_histograms_visualize.derive_event_2d_histograms",
+                return_value=None,
+            ),
+        ):
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0", "1"],
+                write_pdf=True,
+                write_hdf5=False,
+                event1d=None,
+                event2d=None,
+                test=True,
+            )
+            m_set.assert_called_once()
+            m_export.assert_not_called()
+            m_pdf.assert_called_once()
+            assert out["pdf_photons"].name == "photons.pdf"
