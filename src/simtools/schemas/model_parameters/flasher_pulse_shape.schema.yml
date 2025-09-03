@@ -7,34 +7,12 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: flasher_pulse_shape
 description: |-
-  Flasher pulse shape defined by the distribution and the characteristic width.
+  Flasher pulse shape. Allowed values are 'Gauss' and 'TopHat'
 short_description: |-
   Flasher pulse shape.
 data:
-  - type: dict
-    json_schema:
-      type: object
-      properties:
-        distribution:
-          type: string
-          enum:
-            - Gauss
-            - TopHat
-          default: Gauss
-          description: |-
-            Flasher pulse shape distribution. Allowed values are 'Gauss' and 'TopHat'
-        width:
-          type: number
-          format: float
-          minimum: 0
-          default: 0
-          description: |-
-            Characteristic width of the pulse. For 'TopHat', this is the pulse width,
-            for 'Gauss' the rms.
-      required:
-        - distribution
-        - width
-      additionalProperties: false
+  - type: string
+    default: Gauss
 instrument:
   class: Calibration
   type:

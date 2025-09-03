@@ -985,7 +985,7 @@ def test_flasher_photons_flasher_model_non_test(tmp_path):
     )
 
     assert inst.flasher_photons == pytest.approx(7.89e6)
-    flasher.get_parameter_value.assert_called_once_with("photons_per_flasher")
+    flasher.get_parameter_value.assert_called_once_with("flasher_photons")
 
 
 def test_flasher_photons_flasher_model_test_mode(tmp_path):
