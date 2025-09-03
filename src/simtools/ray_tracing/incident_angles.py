@@ -282,7 +282,10 @@ class IncidentAnglesCalculator:
         primary_idx = 31 if self.calculate_primary_secondary_angles else None
         secondary_idx = 35 if self.calculate_primary_secondary_angles else None
 
-        col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*:\s*([^\n]*)\s*$", re.IGNORECASE)
+        col_pat = re.compile(
+            r"^\s*#\s*Column\s+(\d{1,4})\s*:\s*([^\r\n]*)$",
+            re.IGNORECASE,
+        )
         with photons_file.open("r", encoding="utf-8") as fh:
             for raw in fh:
                 desc_num = self._match_header_column(col_pat, raw)
@@ -295,13 +298,6 @@ class IncidentAnglesCalculator:
                     primary_idx = num - 1
                 elif kind == "secondary" and self.calculate_primary_secondary_angles:
                     secondary_idx = num - 1
-
-        self.logger.info(
-            "Imaging list columns (1-based): focal=%s primary=%s secondary=%s",
-            (focal_idx + 1 if focal_idx is not None else "n/a"),
-            (primary_idx + 1 if primary_idx is not None else "n/a"),
-            (secondary_idx + 1 if secondary_idx is not None else "n/a"),
-        )
         return focal_idx, primary_idx, secondary_idx
 
     @staticmethod
