@@ -117,7 +117,7 @@ def _parse(label):
         "--algn",
         help="Accuracy of mirror alignment",
         type=float,
-        default=7.0,
+        default=0.005,
         required=False,
     )
     config.parser.add_argument(
