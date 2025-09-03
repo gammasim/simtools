@@ -4,6 +4,7 @@
 
 import importlib
 import logging
+from pathlib import Path
 from types import SimpleNamespace
 
 import astropy.units as u
@@ -596,3 +597,118 @@ def test_plot_simtel_step_traces_defaults(monkeypatch):
 def test__histogram_edges_zero_bins():  # pylint:disable=protected-access
     edges = sep._histogram_edges(5, timing_bins=0)
     np.testing.assert_array_equal(edges, np.arange(-0.5, 5.5, 1.0))
+
+
+def test__make_output_paths_and__save_png(tmp_path):  # pylint:disable=protected-access
+    from simtools.io.io_handler import IOHandler
+
+    ioh = IOHandler()
+    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+
+    out_dir, pdf_path = sep._make_output_paths(ioh, base="base", input_file=Path("in.simtel"))
+    assert out_dir == tmp_path
+    assert pdf_path.name == "base_in.pdf"
+    assert pdf_path.suffix == ".pdf"
+
+    # save_png writes a file; use a tiny empty fig
+    fig = plt.figure()
+    sep._save_png(fig, out_dir, stem="stem", suffix="tag", dpi=72)
+    png = out_dir / "stem_tag.png"
+    assert png.exists()
+    plt.close(fig)
+
+
+def test__call_peak_timing_prefers_return_stats(monkeypatch):  # pylint:disable=protected-access
+    calls = {"count": 0}
+
+    def _stub(filename, **kwargs):
+        calls["count"] += 1
+        fig = plt.figure()
+        if kwargs.get("return_stats"):
+            return fig, {"ok": True}
+        return fig
+
+    monkeypatch.setattr(sep, "plot_simtel_peak_timing", _stub)
+    fig = sep._call_peak_timing(Path("f.simtel"))
+    assert isinstance(fig, plt.Figure)
+    assert calls["count"] == 1
+    plt.close(fig)
+
+
+def test__call_peak_timing_typeerror_fallback(monkeypatch):  # pylint:disable=protected-access
+    calls = {"count": 0}
+
+    def _stub(filename, **kwargs):
+        calls["count"] += 1
+        if kwargs.get("return_stats"):
+            raise TypeError("old signature")
+        return plt.figure()
+
+    monkeypatch.setattr(sep, "plot_simtel_peak_timing", _stub)
+    fig = sep._call_peak_timing(Path("f.simtel"))
+    assert isinstance(fig, plt.Figure)
+    assert calls["count"] == 2  # called twice: with and without return_stats
+    plt.close(fig)
+
+
+def test__collect_figures_for_file_smoke(tmp_path, monkeypatch):  # pylint:disable=protected-access
+    # Stub plotting functions to avoid ctapipe dependency
+    def _fig_returner(*_a, **_k):
+        return plt.figure()
+
+    monkeypatch.setattr(sep, "plot_simtel_event_image", _fig_returner)
+    monkeypatch.setattr(sep, "_call_peak_timing", _fig_returner)
+
+    figs = sep._collect_figures_for_file(
+        filename=Path("in.simtel"),
+        plots=["event_image", "peak_timing"],
+        args={"event_index": None},
+        out_dir=tmp_path,
+        base_stem="s",
+        save_pngs=True,
+        dpi=80,
+    )
+    assert len(figs) == 2
+    assert (tmp_path / "s_event_image.png").exists()
+    assert (tmp_path / "s_peak_timing.png").exists()
+    for f in figs:
+        plt.close(f)
+
+
+def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
+    # Arrange IO and inputs
+    from simtools.io.io_handler import IOHandler
+
+    ioh = IOHandler()
+    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+    simtel_files = [tmp_path / "input.simtel.zst"]
+
+    # Stub collector to return one fig
+    def _collector(**_k):
+        return [plt.figure()]
+
+    # Record pdf path and metadata calls
+    saved = {"pdf": None, "dump": 0}
+
+    def _save(figs, pdf):
+        pdf = Path(pdf)
+        pdf.write_bytes(b"%PDF-1.4\n%\n")
+        saved["pdf"] = pdf
+
+    def _dump(args, pdf_path, add_activity_name=True):
+        saved["dump"] += 1
+        assert Path(pdf_path).suffix == ".pdf"
+
+    monkeypatch.setattr(sep, "_collect_figures_for_file", _collector)
+    monkeypatch.setattr(sep, "save_figs_to_pdf", _save)
+    monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump))
+
+    sep.generate_and_save_plots(
+        simtel_files=simtel_files,
+        plots=["event_image"],
+        args={"output_file": "base"},
+        ioh=ioh,
+    )
+
+    assert saved["pdf"] is not None
+    assert saved["pdf"].exists()
