@@ -46,6 +46,32 @@ The application writes:
 - stars list file
 - a histogram of incident angles (PNG)
 - a results table in ECSV format
+
+
+Example of a focal incident angle plot for a SST:
+
+.. _plot_array_layout_plot:
+.. image:: images/incident_angles_multi_calculate_incident_angles_SSTS-04.png
+    :width: 49 %
+
+Example of a primary mirror incident angle plot for a SST:
+
+.. _plot_array_layout_plot:
+.. image:: images/incident_angles_primary_multi_calculate_incident_angles_SSTS-04.png
+    :width: 49 %
+
+Note also the relation between radius and primary mirror incident angles, and how this relates to
+the peak seen in the primary mirror incident angle distribution:
+
+.. _plot_array_layout_plot:
+.. image:: images/primary_angle_vs_radius.png
+    :width: 49 %
+
+Example of a secondary mirror incident angle plot for a SST:
+
+.. _plot_array_layout_plot:
+.. image:: images/incident_angles_secondary_multi_calculate_incident_angles_SSTS-04.png
+    :width: 49 %
 """
 
 import logging
