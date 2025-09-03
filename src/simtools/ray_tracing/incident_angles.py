@@ -283,7 +283,7 @@ class IncidentAnglesCalculator:
         secondary_idx = 35 if self.calculate_primary_secondary_angles else None
 
         col_pat = re.compile(
-            r"^\s*#\s*Column\s+(\d{1,4})\s*:\s*([^\r\n]*)$",
+            r"^(?>\s*#\s*Column\s+)(\d{1,4})(?>\s*:\s*)([^\r\n]*+)$",
             re.IGNORECASE,
         )
         with photons_file.open("r", encoding="utf-8") as fh:
