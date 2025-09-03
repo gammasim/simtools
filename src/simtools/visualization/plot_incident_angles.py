@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Plot incident angle histograms for focal plane, primary, and secondary mirror."""
+"""Plot incident angle histograms for focal plane, primary, and secondary mirrors."""
 
 import logging
 from pathlib import Path
