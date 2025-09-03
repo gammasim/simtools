@@ -137,7 +137,7 @@ jobs:
             -Dsonar.qualitygate.wait=true
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=${{ matrix.python-version }}
-            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py"
+            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py
             -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**
 
 
