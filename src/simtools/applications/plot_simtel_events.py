@@ -106,6 +106,44 @@ PLOT_CHOICES = {
 }
 
 
+def _call_peak_timing(
+    filename: Path,
+    *,
+    tel_id: int | None = None,
+    sum_threshold: float = 10.0,
+    peak_width: int = 8,
+    examples: int = 3,
+    timing_bins: int | None = None,
+    event_index: int | None = None,
+):
+    """Call plot_simtel_peak_timing handling optional return_stats.
+
+    Returns a matplotlib Figure or None.
+    """
+    try:
+        fig_stats = plot_simtel_peak_timing(
+            filename,
+            tel_id=tel_id,
+            sum_threshold=sum_threshold,
+            peak_width=peak_width,
+            examples=examples,
+            timing_bins=timing_bins,
+            return_stats=True,
+            event_index=event_index,
+        )
+        return fig_stats[0] if isinstance(fig_stats, tuple) else fig_stats
+    except TypeError:
+        return plot_simtel_peak_timing(
+            filename,
+            tel_id=tel_id,
+            sum_threshold=sum_threshold,
+            peak_width=peak_width,
+            examples=examples,
+            timing_bins=timing_bins,
+            event_index=event_index,
+        )
+
+
 def _parse(label: str):
     """Parse command line configuration."""
     config = configurator.Configurator(
@@ -263,30 +301,6 @@ def _collect_figures_for_file(
         else list(plots)
     )
 
-    def _call_peak_timing():
-        try:
-            fig_stats = plot_simtel_peak_timing(
-                filename,
-                tel_id=args.get("tel_id"),
-                sum_threshold=args.get("sum_threshold", 10.0),
-                peak_width=args.get("peak_width", 8),
-                examples=args.get("examples", 3),
-                timing_bins=args.get("timing_bins"),
-                return_stats=True,
-                event_index=args.get("event_index"),
-            )
-            return fig_stats[0] if isinstance(fig_stats, tuple) else fig_stats
-        except TypeError:
-            return plot_simtel_peak_timing(
-                filename,
-                tel_id=args.get("tel_id"),
-                sum_threshold=args.get("sum_threshold", 10.0),
-                peak_width=args.get("peak_width", 8),
-                examples=args.get("examples", 3),
-                timing_bins=args.get("timing_bins"),
-                event_index=args.get("event_index"),
-            )
-
     # function name -> (callable, defaults)
     dispatch: dict[str, tuple[object, dict[str, object]]] = {
         "event_image": (
@@ -313,12 +327,20 @@ def _collect_figures_for_file(
             plot_simtel_integrated_pedestal_image,
             {"tel_id": None, "half_width": 8, "offset": 16, "event_index": None},
         ),
+        "peak_timing": (
+            _call_peak_timing,
+            {
+                "tel_id": None,
+                "sum_threshold": 10.0,
+                "peak_width": 8,
+                "examples": 3,
+                "timing_bins": None,
+                "event_index": None,
+            },
+        ),
     }
 
     for plot_name in plots_to_run:
-        if plot_name == "peak_timing":
-            add(_call_peak_timing(), "peak_timing")
-            continue
         entry = dispatch.get(plot_name)
         if entry is None:
             logger.warning("Unknown plot selection '%s'", plot_name)
