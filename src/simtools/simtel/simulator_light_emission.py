@@ -481,11 +481,15 @@ class SimulatorLightEmission(SimtelRunner):
             )
             command += f" -s {int(flasher_wavelength.to(u.nm).value)}"
 
-            # TODO read both shape and width
-            led_pulse_sigtime = self._calibration_model.get_parameter_value_with_unit(
-                "led_pulse_sigtime"
+            pulse_shape = self._calibration_model.get_parameter_value_with_unit(
+                "flasher_pulse_shape"
             )
-            command += f" -p Gauss:{led_pulse_sigtime.to(u.ns).value}"
+            pulse_width = self._calibration_model.get_parameter_value_with_unit(
+                "flasher_pulse_width"
+            )
+
+            command += f" -p {pulse_shape}:{pulse_width.to(u.ns).value}"
+            # TODO should this be a parameter
             command += " -a isotropic"
 
         return command
