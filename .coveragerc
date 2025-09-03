@@ -1,0 +1,9 @@
+[run]
+omit =
+    */tests/*
+    src/simtools/applications/*
+
+[report]
+omit =
+    */tests/*
+    src/simtools/applications/*
