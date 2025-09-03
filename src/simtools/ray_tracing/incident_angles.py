@@ -18,7 +18,34 @@ from simtools.model.model_utils import initialize_simulation_models
 
 
 class IncidentAnglesCalculator:
-    """Run a PSF-style sim_telarray job and compute incident angles at the focal surface."""
+    """Run a PSF-style sim_telarray job and compute incident angles at mirrors or focal surfaces.
+
+    Parameters
+    ----------
+    simtel_path : str or pathlib.Path
+        Path to the sim_telarray installation directory (containing ``sim_telarray/bin``).
+    db_config : dict or str or None
+        Database configuration passed to ``initialize_simulation_models``.
+    config_data : dict
+        Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
+        ``zenith_angle``, ``off_axis_angle``, ``source_distance``, ``number_of_rays``).
+    output_dir : str or pathlib.Path
+        Output directory where logs, scripts, photons files and results are written.
+    label : str, optional
+        Label used to name outputs; defaults to ``incident_angles_<telescope>`` when omitted.
+    perfect_mirror : bool, default False
+        If True, enforce perfect mirror settings (no random errors in sim_telarray options).
+    overwrite_rdna : bool, default False
+        If True and ``mirror_reflection_random_angle`` is None, force that parameter to 0.
+    mirror_reflection_random_angle : float, optional
+        Mirror reflection random angle (sets sim_telarray ``mirror_reflection_random_angle``).
+    algn : float, optional
+        Mirror alignment randomization amplitude used for horizontal/vertical settings.
+    test : bool, default False
+        If True, reduce the number of rays for a faster run (keeps outputs compatible).
+    calculate_primary_secondary_angles : bool, default True
+        If True, parse and store primary/secondary mirror incidence angles from the imaging list.
+    """
 
     def __init__(
         self,
