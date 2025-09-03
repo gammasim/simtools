@@ -215,7 +215,8 @@ def main():
     plot_incident_angles(results_by_offset, output_dir, label_with_telescope)
     total = sum(len(t) for t in results_by_offset.values())
     logger.info(
-        f"Calculated incident angles for {len(results_by_offset)} offsets, total {total} points"
+        f"Calculated incident angles for {len(results_by_offset)} offsets,\n"
+        f"total photon statistics {total}"
     )
 
 
