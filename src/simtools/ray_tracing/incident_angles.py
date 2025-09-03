@@ -309,10 +309,7 @@ class IncidentAnglesCalculator:
         primary_idx = 31 if self.calculate_primary_secondary_angles else None
         secondary_idx = 35 if self.calculate_primary_secondary_angles else None
 
-        col_pat = re.compile(
-            r"^(?>\s*#\s*Column\s+)(\d{1,4})(?>\s*:\s*)([^\r\n]*+)$",
-            re.IGNORECASE,
-        )
+        col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*$", re.IGNORECASE)
         with photons_file.open("r", encoding="utf-8") as fh:
             for raw in fh:
                 desc_num = self._match_header_column(col_pat, raw)
@@ -382,19 +379,18 @@ class IncidentAnglesCalculator:
     def _match_header_column(col_pat: re.Pattern[str], raw: str) -> tuple[str, int] | None:
         """Return (kind, column_number) if the header line defines a known angle column."""
         s = raw.strip()
-        if not s:
-            return None
-        m = col_pat.match(s)
-        if not m:
-            return None
-        num = int(m.group(1))
-        desc = m.group(2).strip().lower()
-        if "angle of incidence at focal surface" in desc and "optical axis" in desc:
-            return "focal", num
-        if re.search(r"angle of incidence\s+on(to)?\s+primary mirror", desc):
-            return "primary", num
-        if re.search(r"angle of incidence\s+on(to)?\s+secondary mirror", desc):
-            return "secondary", num
+        if s and ":" in s:
+            prefix, desc = s.split(":", 1)
+            m = col_pat.match(prefix)
+            if m:
+                num = int(m.group(1))
+                desc = desc.strip().lower()
+                if "angle of incidence at focal surface" in desc and "optical axis" in desc:
+                    return "focal", num
+                if re.search(r"angle of incidence\s+on(to)?\s+primary mirror", desc):
+                    return "primary", num
+                if re.search(r"angle of incidence\s+on(to)?\s+secondary mirror", desc):
+                    return "secondary", num
         return None
 
     def _save_results(self) -> None:
