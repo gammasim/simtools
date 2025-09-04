@@ -509,8 +509,6 @@ class IncidentAnglesCalculator:
         self, parts, col_idx, radius_m, primary_hit_x_m, primary_hit_y_m
     ):
         """Append primary-mirror hit geometry (radius and x/y in meters)."""
-        if radius_m is None and primary_hit_x_m is None and primary_hit_y_m is None:
-            return
         x_ok, x_cm = self._parse_float(parts, col_idx.get("prim_x"))
         y_ok, y_cm = self._parse_float(parts, col_idx.get("prim_y"))
         if x_ok and y_ok:
@@ -533,8 +531,6 @@ class IncidentAnglesCalculator:
         self, parts, col_idx, secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m
     ):
         """Append secondary-mirror hit geometry (radius and x/y in meters)."""
-        if secondary_radius_m is None and secondary_hit_x_m is None and secondary_hit_y_m is None:
-            return
         sx_ok, sx_cm = self._parse_float(parts, col_idx.get("sec_x"))
         sy_ok, sy_cm = self._parse_float(parts, col_idx.get("sec_y"))
         if sx_ok and sy_ok:
