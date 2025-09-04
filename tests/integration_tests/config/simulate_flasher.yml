@@ -2,11 +2,11 @@
 applications:
 - application: simtools-simulate-flasher
   configuration:
-    flasher: FLSN-01
+    flasher: MSFx-FlashCam
     model_version: 6.0.0
     output_path: simtools-output
-    site: North
-    telescope: MSTN-04
+    site: South
+    telescope: MSTS-04
     test: true
   integration_tests:
   - output_file: logfile.log

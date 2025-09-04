@@ -98,6 +98,10 @@ def main():
     args_dict, db_config = _parse(label)
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    logger.info(
+        f"Flasher simulation for telescope {args_dict['telescope']} "
+        f" with flasher {args_dict['flasher']}."
+    )
     telescope_model, site_model, calibration_model = initialize_simulation_models(
         label=label,
         db_config=db_config,
