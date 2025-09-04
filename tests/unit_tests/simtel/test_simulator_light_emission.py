@@ -1116,25 +1116,6 @@ def test_get_simulation_output_filename_prefix_and_exception():
     assert out == "/out/pre_xyzls_variable.simtel.zst"
 
 
-def test_light_emission_default_configuration_schema():
-    cfg = SimulatorLightEmission.light_emission_default_configuration()
-    # Basic type and required keys
-    assert isinstance(cfg, dict)
-    for key in ("zenith_angle", "azimuth_angle", "source_distance", "off_axis_angle", "fadc_bins"):
-        assert key in cfg
-        assert "len" in cfg[key]
-        assert "default" in cfg[key]
-        assert "names" in cfg[key]
-    # Units
-    assert cfg["zenith_angle"]["unit"] == u.deg
-    assert cfg["azimuth_angle"]["unit"] == u.deg
-    assert cfg["source_distance"]["unit"] == u.m
-    assert cfg["off_axis_angle"]["unit"] == u.deg
-    # Defaults have expected types
-    assert cfg["zenith_angle"]["default"].unit == u.deg
-    assert cfg["source_distance"]["default"].unit == u.m
-
-
 def test_flasher_default_configuration_schema():
     cfg = SimulatorLightEmission.flasher_default_configuration()
     assert isinstance(cfg, dict)

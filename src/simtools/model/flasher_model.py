@@ -72,29 +72,9 @@ class FlasherModel(ModelParameter):
     def _inject_mst_defaults_if_missing(self):
         """Provide dummy defaults (here NectarCam) when flasher collection is absent."""
         defaults = {
-            "photons_per_flasher": {"value": 2.5e6, "type": "float"},
-            # Position near optical axis (cm)
-            "flasher_position": {
-                "value": [0.0, 0.0],
-                "unit": "cm,cm",
-                "type": "float_list",
-            },
-            # Distance flasher window to Winston cones (16.75 m)
-            "flasher_depth": {"value": 1675.0, "unit": "cm", "type": "float"},
-            # Received wavelength at PMT (nm)
-            "spectrum": {"value": 392, "unit": "nm", "type": "float"},
-            # Simple Gaussian pulse width (ns)
-            "lightpulse": {"value": "Gauss:3.0", "type": "string"},
-            # Store rise/decay for future use
-            "rise_time_10_90": {"value": 2.5, "unit": "ns", "type": "float"},
-            "decay_time_90_10": {"value": 5.0, "unit": "ns", "type": "float"},
             # Angular distribution width ~11 deg around axis
             "angular_distribution": {"value": "gauss:11", "type": "string"},
             "centroid_offset_deg": {"value": 0.5, "unit": "deg", "type": "float"},
-            # Bunch size for LE
-            "bunch_size": {"value": 1.0, "type": "float"},
-            # Placeholder for future spectral file usage
-            "spectrum_file": {"value": None, "type": "string"},
         }
 
         missing = []
