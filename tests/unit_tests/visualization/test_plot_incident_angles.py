@@ -307,3 +307,78 @@ def test_debug_plots_generate_expected_files(tmp_path):
     assert (out_dir / "incident_secondary_radius_vs_angle_multi_dbg.png").exists()
     assert (out_dir / "incident_primary_xy_heatmap_off0_dbg.png").exists()
     assert (out_dir / "incident_secondary_xy_heatmap_off0_dbg.png").exists()
+
+
+def test_gather_radius_arrays_handles_units_and_errors(caplog):
+    caplog.set_level(logging.WARNING)
+    t_ok = QTable()
+    t_ok["primary_hit_radius"] = np.array([0.1, 0.2]) * u.m
+    t_missing = QTable()  # missing column
+    t_empty = QTable([[]])  # empty table rows
+    t_bad = QTable()
+    # Put plain floats without units to trigger AttributeError on .to(u.m)
+    t_bad["primary_hit_radius"] = np.array([1.0, 2.0])
+    arrays = pia._gather_radius_arrays(
+        {0.0: t_ok, 1.0: t_missing, 2.0: t_empty, 3.0: t_bad},
+        "primary_hit_radius",
+        logging.getLogger(__name__),
+    )
+    # Only the good one should be gathered
+    assert len(arrays) == 1
+    assert np.allclose(arrays[0], np.array([0.1, 0.2]))
+    # Warning for the bad one
+    assert any("Skipping radius values for off-axis=3.0" in r.message for r in caplog.records)
+
+
+def test_plot_radius_vs_angle_warns_when_no_points(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "no_points.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # Table with finite but filtered out due to no matching columns
+    t = QTable()
+    t["primary_hit_radius"] = np.array([np.nan, np.inf]) * u.m
+    t["angle_incidence_primary"] = np.array([np.nan, np.inf]) * u.deg
+    pia._plot_radius_vs_angle(
+        {0.0: t},
+        radius_col="primary_hit_radius",
+        angle_col="angle_incidence_primary",
+        title="No Points Title",
+        out_path=out_path,
+        log=logging.getLogger(__name__),
+    )
+    assert any("No valid data to plot for No Points Title" in r.message for r in caplog.records)
+    assert not out_path.exists()
+
+
+def test_plot_xy_heatmap_success_and_empty(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_ok = Path(tmp_path) / "plots" / "xy_ok.png"
+    out_empty = Path(tmp_path) / "plots" / "xy_empty.png"
+    out_ok.parent.mkdir(parents=True, exist_ok=True)
+    t_ok = QTable()
+    t_ok["primary_hit_x"] = np.array([0.0, 0.1, 0.2, np.nan]) * u.m
+    t_ok["primary_hit_y"] = np.array([0.0, -0.1, 0.05, 0.2]) * u.m
+    pia._plot_xy_heatmap(
+        {0.0: t_ok},
+        "primary_hit_x",
+        "primary_hit_y",
+        "XY OK",
+        out_ok,
+        logging.getLogger(__name__),
+        bins=32,
+    )
+    assert out_ok.exists()
+    assert out_ok.stat().st_size > 0
+    # Now empty case: wrong columns and empty table
+    t_empty = QTable()
+    pia._plot_xy_heatmap(
+        {0.0: t_empty},
+        "primary_hit_x",
+        "primary_hit_y",
+        "XY EMPTY",
+        out_empty,
+        logging.getLogger(__name__),
+        bins=32,
+    )
+    assert any("No valid data to plot for XY EMPTY" in r.message for r in caplog.records)
+    assert not out_empty.exists()
