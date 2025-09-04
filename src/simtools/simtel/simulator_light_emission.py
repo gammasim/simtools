@@ -67,6 +67,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.output_directory = self.io_handler.get_output_directory(self.label)
 
         self.light_source_type = self.calibration_model.get_parameter_value("flasher_type")
+        self.light_source_type = self.light_source_type.lower() if self.light_source_type else None
         self.flasher_photons = (
             self.calibration_model.get_parameter_value("flasher_photons") if not self.test else 1e8
         )
@@ -93,8 +94,8 @@ class SimulatorLightEmission(SimtelRunner):
         tuple[str, str]
             (app_name, mode)
         """
-        if self.light_source_type == "flasher":
-            return ("ff-1m", "flasher")
+        if self.light_source_type == "flat_fielding":
+            return ("ff-1m", "flat_fielding")
         # default to illuminator xyzls, mode from setup
         return ("xyzls", self.light_source_setup or "layout")
 
@@ -254,9 +255,9 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _build_source_specific_block(self, _x_tel, _y_tel, _z_tel, _config_directory: Path) -> str:
         """Return CLI segment for light-source specific flags."""
-        if self.light_source_type.lower() == "flasher":
+        if self.light_source_type == "flat_fielding":
             return self._add_flasher_command_options("")
-        if self.light_source_type.lower() == "illuminator":
+        if self.light_source_type == "illuminator":
             return self._add_illuminator_command_options("")
         raise ValueError(f"Unknown light_source_type '{self.light_source_type}'")
 
@@ -338,15 +339,7 @@ class SimulatorLightEmission(SimtelRunner):
                 "flasher_wavelength"
             )
             command += f" -s {int(flasher_wavelength.to(u.nm).value)}"
-
-            pulse_shape = self.calibration_model.get_parameter_value_with_unit(
-                "flasher_pulse_shape"
-            )
-            pulse_width = self.calibration_model.get_parameter_value_with_unit(
-                "flasher_pulse_width"
-            )
-
-            command += f" -p {pulse_shape}:{pulse_width.to(u.ns).value}"
+            command += f" -p {self._get_pulse_shape_string_for_sim_telarray()}"
             # TODO should this be a parameter
             command += " -a isotropic"
 
@@ -361,8 +354,8 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The command to run sim_telarray
         """
-        # For flasher sims, avoid calibration pointing entirely; default angles to (0,0)
-        if self.light_source_type == "flasher":
+        # For flat_fielding sims, avoid calibration pointing entirely; default angles to (0,0)
+        if self.light_source_type == "flat_fielding":
             angles = [0, 0]
         else:
             _, angles = self.calibration_pointing_direction()
@@ -401,8 +394,8 @@ class SimulatorLightEmission(SimtelRunner):
             command += super().get_config_option("telescope_theta", f"{angles[0]}")
             command += super().get_config_option("telescope_phi", f"{angles[1]}")
 
-        # For flasher runs, bypass reflections on primary mirror
-        if self.light_source_type == "flasher":
+        # For flat_fielding runs, bypass reflections on primary mirror
+        if self.light_source_type == "flat_fielding":
             command += super().get_config_option("Bypass_Optics", "1")
 
         command += super().get_config_option("power_law", "2.68")
@@ -521,7 +514,7 @@ class SimulatorLightEmission(SimtelRunner):
         astropy.Quantity
             Distance in meters (default: 0 m)
         """
-        if self.light_source_type == "flasher":
+        if self.light_source_type == "flat_fielding":
             return self.calculate_distance_focal_plane_calibration_device()
 
         def _as_meters(val):
@@ -702,7 +695,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The angular distribution string.
         """
-        option_string = self.calibration_model.get_parameter_value("angular_distribution")
+        option_string = self.calibration_model.get_parameter_value("flasher_angular_distribution")
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
