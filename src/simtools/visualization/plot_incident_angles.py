@@ -13,6 +13,8 @@ import numpy as np
 
 __all__ = ["plot_incident_angles"]
 
+Y_AXIS_BIN_COUNT_LABEL = "Count / Bin"
+
 
 def _gather_angle_arrays(results_by_offset, column, log):
     arrays = []
@@ -226,7 +228,7 @@ def _plot_radius_histograms(
             zorder=4,
         )
     ax.set_xlabel(xlabel)
-    ax.set_ylabel("Count / Bin")
+    ax.set_ylabel(Y_AXIS_BIN_COUNT_LABEL)
     ax.set_title(title)
     ax.grid(True, alpha=0.3)
     ax.legend()
@@ -349,7 +351,7 @@ def _plot_component_angles(
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     _plot_overlay_angles(results_by_offset, column, bins, ax, use_zorder=False)
     ax.set_xlabel("Angle of incidence (deg)")
-    ax.set_ylabel("Count / Bin")
+    ax.set_ylabel(Y_AXIS_BIN_COUNT_LABEL)
     ax.set_title(f"Incident angle {title_suffix} vs off-axis angle")
     ax.grid(True, alpha=0.3)
     ax.legend()
@@ -386,7 +388,7 @@ def plot_incident_angles(
                 results_by_offset, "angle_incidence_focal", bins, ax, use_zorder=True
             )
             ax.set_xlabel("Angle of incidence at focal surface (deg) w.r.t. optical axis")
-            ax.set_ylabel("Count / Bin")
+            ax.set_ylabel(Y_AXIS_BIN_COUNT_LABEL)
             ax.set_title("Incident angle distribution vs off-axis angle")
             ax.grid(True, alpha=0.3)
             ax.legend()

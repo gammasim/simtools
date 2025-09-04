@@ -356,14 +356,7 @@ class IncidentAnglesCalculator:
         Defaults (1-based) are focal=26, primary=32, secondary=36,
         primary X/Y = 29/30, secondary X/Y = 33/34.
         """
-        # Defaults (0-based)
-        focal_idx = 25
-        primary_idx = 31 if self.calculate_primary_secondary_angles else None
-        secondary_idx = 35 if self.calculate_primary_secondary_angles else None
-        primary_x_idx = 28 if self.calculate_primary_secondary_angles else None
-        primary_y_idx = 29 if self.calculate_primary_secondary_angles else None
-        secondary_x_idx = 32 if self.calculate_primary_secondary_angles else None
-        secondary_y_idx = 33 if self.calculate_primary_secondary_angles else None
+        indices = self._default_column_indices()
 
         col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*:(.*)$", re.IGNORECASE)
         with photons_file.open("r", encoding="utf-8") as fh:
@@ -376,43 +369,75 @@ class IncidentAnglesCalculator:
                     continue
                 num = int(m.group(1))
                 desc = m.group(2).strip().lower()
-                # Angles
-                if "angle of incidence" in desc:
-                    if "focal surface" in desc:
-                        focal_idx = num - 1
-                        continue
-                    if "primary mirror" in desc and self.calculate_primary_secondary_angles:
-                        primary_idx = num - 1
-                        continue
-                    if "secondary mirror" in desc and self.calculate_primary_secondary_angles:
-                        secondary_idx = num - 1
-                        continue
-                # Reflection points (X/Y)
-                if "reflection point" in desc and self.calculate_primary_secondary_angles:
-                    if "primary mirror" in desc:
-                        if desc.startswith("x ") or " x " in desc:
-                            primary_x_idx = num - 1
-                            continue
-                        if desc.startswith("y ") or " y " in desc:
-                            primary_y_idx = num - 1
-                            continue
-                    if "secondary mirror" in desc:
-                        if desc.startswith("x ") or " x " in desc:
-                            secondary_x_idx = num - 1
-                            continue
-                        if desc.startswith("y ") or " y " in desc:
-                            secondary_y_idx = num - 1
-                            continue
+                self._update_indices_from_header_desc(desc, num, indices)
 
         return (
-            focal_idx,
-            primary_idx,
-            secondary_idx,
-            primary_x_idx,
-            primary_y_idx,
-            secondary_x_idx,
-            secondary_y_idx,
+            indices["focal"],
+            indices.get("primary"),
+            indices.get("secondary"),
+            indices.get("prim_x"),
+            indices.get("prim_y"),
+            indices.get("sec_x"),
+            indices.get("sec_y"),
         )
+
+    def _default_column_indices(self):
+        """Return default 0-based indices matching legacy positions.
+
+        Fallbacks (1-based): focal=26, primary=32, secondary=36,
+        primary X/Y=29/30, secondary X/Y=33/34.
+        """
+        idx = {"focal": 25}
+        if self.calculate_primary_secondary_angles:
+            idx.update(
+                {
+                    "primary": 31,
+                    "secondary": 35,
+                    "prim_x": 28,
+                    "prim_y": 29,
+                    "sec_x": 32,
+                    "sec_y": 33,
+                }
+            )
+        return idx
+
+    def _update_indices_from_header_desc(self, desc, num, indices):
+        """Update indices dict in-place based on a header description and column number."""
+        # Angles
+        if "angle of incidence" in desc:
+            if "focal surface" in desc:
+                indices["focal"] = num - 1
+                return
+            if self.calculate_primary_secondary_angles:
+                if "primary mirror" in desc:
+                    indices["primary"] = num - 1
+                    return
+                if "secondary mirror" in desc:
+                    indices["secondary"] = num - 1
+                    return
+        # Reflection points (X/Y)
+        if not self.calculate_primary_secondary_angles or "reflection point" not in desc:
+            return
+        self._maybe_set_reflection_index(desc, num, indices)
+
+    @staticmethod
+    def _contains_axis(desc, axis):
+        """Return True if desc contains stand-alone axis label ('x' or 'y')."""
+        return bool(re.search(r"(^|\s)" + re.escape(axis) + r"(\s|$)", desc))
+
+    def _maybe_set_reflection_index(self, desc, num, indices):
+        """Set reflection point indices for primary/secondary mirrors if the header matches."""
+        is_primary = "primary mirror" in desc
+        is_secondary = "secondary mirror" in desc
+        if not is_primary and not is_secondary:
+            return
+        is_x = self._contains_axis(desc, "x")
+        is_y = self._contains_axis(desc, "y")
+        if not (is_x or is_y):
+            return
+        key_prefix = "prim" if is_primary else "sec"
+        key = f"{key_prefix}_{'x' if is_x else 'y'}"
+        indices[key] = num - 1
 
     @staticmethod
     def _parse_float(parts, idx):
@@ -464,52 +489,69 @@ class IncidentAnglesCalculator:
         focal.append(foc_val)
         if not self.calculate_primary_secondary_angles:
             return
+
+        self._append_primary_secondary_angles(parts, col_idx, primary, secondary)
+        self._append_primary_hit_geometry(
+            parts, col_idx, radius_m, primary_hit_x_m, primary_hit_y_m
+        )
+        self._append_secondary_hit_geometry(
+            parts, col_idx, secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m
+        )
+
+    def _append_primary_secondary_angles(self, parts, col_idx, primary, secondary):
+        """Append primary/secondary angle values (or NaN) if arrays are provided."""
         if primary is not None:
             primary.append(self._parse_float_with_nan(parts, col_idx.get("primary")))
         if secondary is not None:
             secondary.append(self._parse_float_with_nan(parts, col_idx.get("secondary")))
-        # Primary-hit radius from x/y (header-driven indices; default 0-based 28,29), values in cm
-        if radius_m is not None or primary_hit_x_m is not None or primary_hit_y_m is not None:
-            x_ok, x_cm = self._parse_float(parts, col_idx.get("prim_x"))
-            y_ok, y_cm = self._parse_float(parts, col_idx.get("prim_y"))
-            if x_ok and y_ok:
-                r_m = ((x_cm**2 + y_cm**2) ** 0.5) / 100.0
-                if radius_m is not None:
-                    radius_m.append(r_m)
-                if primary_hit_x_m is not None:
-                    primary_hit_x_m.append(x_cm / 100.0)
-                if primary_hit_y_m is not None:
-                    primary_hit_y_m.append(y_cm / 100.0)
-            else:
-                if radius_m is not None:
-                    radius_m.append(float("nan"))
-                if primary_hit_x_m is not None:
-                    primary_hit_x_m.append(float("nan"))
-                if primary_hit_y_m is not None:
-                    primary_hit_y_m.append(float("nan"))
-        # Secondary-hit radius from x/y (header-driven indices; default 0-based 32,33), values in cm
-        if (
-            secondary_radius_m is not None
-            or secondary_hit_x_m is not None
-            or secondary_hit_y_m is not None
-        ):
-            sx_ok, sx_cm = self._parse_float(parts, col_idx.get("sec_x"))
-            sy_ok, sy_cm = self._parse_float(parts, col_idx.get("sec_y"))
-            if sx_ok and sy_ok:
-                r2_m = ((sx_cm**2 + sy_cm**2) ** 0.5) / 100.0
-                if secondary_radius_m is not None:
-                    secondary_radius_m.append(r2_m)
-                if secondary_hit_x_m is not None:
-                    secondary_hit_x_m.append(sx_cm / 100.0)
-                if secondary_hit_y_m is not None:
-                    secondary_hit_y_m.append(sy_cm / 100.0)
-            else:
-                if secondary_radius_m is not None:
-                    secondary_radius_m.append(float("nan"))
-                if secondary_hit_x_m is not None:
-                    secondary_hit_x_m.append(float("nan"))
-                if secondary_hit_y_m is not None:
-                    secondary_hit_y_m.append(float("nan"))
+
+    def _append_primary_hit_geometry(
+        self, parts, col_idx, radius_m, primary_hit_x_m, primary_hit_y_m
+    ):
+        """Append primary-mirror hit geometry (radius and x/y in meters)."""
+        if radius_m is None and primary_hit_x_m is None and primary_hit_y_m is None:
+            return
+        x_ok, x_cm = self._parse_float(parts, col_idx.get("prim_x"))
+        y_ok, y_cm = self._parse_float(parts, col_idx.get("prim_y"))
+        if x_ok and y_ok:
+            r_m = ((x_cm**2 + y_cm**2) ** 0.5) / 100.0
+            if radius_m is not None:
+                radius_m.append(r_m)
+            if primary_hit_x_m is not None:
+                primary_hit_x_m.append(x_cm / 100.0)
+            if primary_hit_y_m is not None:
+                primary_hit_y_m.append(y_cm / 100.0)
+            return
+        if radius_m is not None:
+            radius_m.append(float("nan"))
+        if primary_hit_x_m is not None:
+            primary_hit_x_m.append(float("nan"))
+        if primary_hit_y_m is not None:
+            primary_hit_y_m.append(float("nan"))
+
+    def _append_secondary_hit_geometry(
+        self, parts, col_idx, secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m
+    ):
+        """Append secondary-mirror hit geometry (radius and x/y in meters)."""
+        if secondary_radius_m is None and secondary_hit_x_m is None and secondary_hit_y_m is None:
+            return
+        sx_ok, sx_cm = self._parse_float(parts, col_idx.get("sec_x"))
+        sy_ok, sy_cm = self._parse_float(parts, col_idx.get("sec_y"))
+        if sx_ok and sy_ok:
+            r2_m = ((sx_cm**2 + sy_cm**2) ** 0.5) / 100.0
+            if secondary_radius_m is not None:
+                secondary_radius_m.append(r2_m)
+            if secondary_hit_x_m is not None:
+                secondary_hit_x_m.append(sx_cm / 100.0)
+            if secondary_hit_y_m is not None:
+                secondary_hit_y_m.append(sy_cm / 100.0)
+            return
+        if secondary_radius_m is not None:
+            secondary_radius_m.append(float("nan"))
+        if secondary_hit_x_m is not None:
+            secondary_hit_x_m.append(float("nan"))
+        if secondary_hit_y_m is not None:
+            secondary_hit_y_m.append(float("nan"))
 
     @staticmethod
     def _match_header_column(col_pat, raw):

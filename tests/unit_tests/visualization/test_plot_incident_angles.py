@@ -235,8 +235,8 @@ def test_compute_bins_adjusts_when_vmax_equals_vmin():
     bins = pia._compute_bins(arr, 0.1, logger, "angle_incidence_primary")
     assert bins is not None
     # Should cover the vmax <= vmin branch
-    assert bins[0] == 0.1
-    assert bins[1] == 0.2
+    assert np.isclose(bins[0], 0.1)
+    assert np.isclose(bins[1], 0.2)
 
 
 def test_plot_xy_heatmap_missing_columns_continue_and_warns(tmp_path, caplog):
