@@ -131,11 +131,12 @@ data:
     observatory: "CTAO"
     site: "South"
     description: "Lightning sensor"
-  MSFx-FlashCam:
+  MSFx:
     collection: "calibration_devices"
     observatory: "CTAO"
-    site: "South"
-    description: "FlashCam flat-fielding device"
+    site: ["North", "South"]
+    design_types: ["FlashCam", "NectarCam", "test"]
+    description: "Flat-fielding device"
   HESS:
     collection: "telescopes"
     site: "South"
