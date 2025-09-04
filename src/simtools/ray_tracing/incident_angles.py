@@ -284,9 +284,28 @@ class IncidentAnglesCalculator:
 
         Column positions may differ between telescope types and sim_telarray builds.
         Parse header lines ("#   Column N: ...") to discover indices; otherwise
-        fall back to legacy positions (1-based): focal=26, primary=32, secondary=36.
+        fall back to legacy positions (1-based): focal=26, primary=32, secondary=36,
+        primary X/Y = 29/30, secondary X/Y = 33/34.
         """
-        focal_idx, primary_idx, secondary_idx = self._discover_column_indices(photons_file)
+        (
+            focal_idx,
+            primary_idx,
+            secondary_idx,
+            primary_x_idx,
+            primary_y_idx,
+            secondary_x_idx,
+            secondary_y_idx,
+        ) = self._discover_column_indices(photons_file)
+
+        col_idx = {
+            "focal": focal_idx,
+            "primary": primary_idx,
+            "secondary": secondary_idx,
+            "prim_x": primary_x_idx,
+            "prim_y": primary_y_idx,
+            "sec_x": secondary_x_idx,
+            "sec_y": secondary_y_idx,
+        }
 
         focal = []
         primary = [] if self.calculate_primary_secondary_angles else None
@@ -304,9 +323,7 @@ class IncidentAnglesCalculator:
         for parts in self._iter_data_rows(photons_file):
             self._append_values(
                 parts,
-                focal_idx,
-                primary_idx,
-                secondary_idx,
+                col_idx,
                 focal,
                 primary,
                 secondary,
@@ -331,29 +348,71 @@ class IncidentAnglesCalculator:
         return result
 
     def _discover_column_indices(self, photons_file):
-        """Return 0-based indices for focal, primary, secondary columns based on headers.
+        """Return 0-based indices discovered from headers.
 
-        Defaults (1-based) are: focal=26, primary=32, secondary=36.
+        Returns a tuple: (focal_idx, primary_idx, secondary_idx,
+        primary_x_idx, primary_y_idx, secondary_x_idx, secondary_y_idx)
+
+        Defaults (1-based) are focal=26, primary=32, secondary=36,
+        primary X/Y = 29/30, secondary X/Y = 33/34.
         """
         # Defaults (0-based)
         focal_idx = 25
         primary_idx = 31 if self.calculate_primary_secondary_angles else None
         secondary_idx = 35 if self.calculate_primary_secondary_angles else None
+        primary_x_idx = 28 if self.calculate_primary_secondary_angles else None
+        primary_y_idx = 29 if self.calculate_primary_secondary_angles else None
+        secondary_x_idx = 32 if self.calculate_primary_secondary_angles else None
+        secondary_y_idx = 33 if self.calculate_primary_secondary_angles else None
 
-        col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*$", re.IGNORECASE)
+        col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*:(.*)$", re.IGNORECASE)
         with photons_file.open("r", encoding="utf-8") as fh:
             for raw in fh:
-                desc_num = self._match_header_column(col_pat, raw)
-                if desc_num is None:
+                s = raw.strip()
+                if not s or not s.startswith("#"):
                     continue
-                kind, num = desc_num
-                if kind == "focal":
-                    focal_idx = num - 1
-                elif kind == "primary" and self.calculate_primary_secondary_angles:
-                    primary_idx = num - 1
-                elif kind == "secondary" and self.calculate_primary_secondary_angles:
-                    secondary_idx = num - 1
-        return focal_idx, primary_idx, secondary_idx
+                m = col_pat.match(s)
+                if not m:
+                    continue
+                num = int(m.group(1))
+                desc = m.group(2).strip().lower()
+                # Angles
+                if "angle of incidence" in desc:
+                    if "focal surface" in desc:
+                        focal_idx = num - 1
+                        continue
+                    if "primary mirror" in desc and self.calculate_primary_secondary_angles:
+                        primary_idx = num - 1
+                        continue
+                    if "secondary mirror" in desc and self.calculate_primary_secondary_angles:
+                        secondary_idx = num - 1
+                        continue
+                # Reflection points (X/Y)
+                if "reflection point" in desc and self.calculate_primary_secondary_angles:
+                    if "primary mirror" in desc:
+                        if desc.startswith("x ") or " x " in desc:
+                            primary_x_idx = num - 1
+                            continue
+                        if desc.startswith("y ") or " y " in desc:
+                            primary_y_idx = num - 1
+                            continue
+                    if "secondary mirror" in desc:
+                        if desc.startswith("x ") or " x " in desc:
+                            secondary_x_idx = num - 1
+                            continue
+                        if desc.startswith("y ") or " y " in desc:
+                            secondary_y_idx = num - 1
+                            continue
+
+        return (
+            focal_idx,
+            primary_idx,
+            secondary_idx,
+            primary_x_idx,
+            primary_y_idx,
+            secondary_x_idx,
+            secondary_y_idx,
+        )
 
     @staticmethod
     def _parse_float(parts, idx):
@@ -387,9 +446,7 @@ class IncidentAnglesCalculator:
     def _append_values(
         self,
         parts,
-        focal_idx,
-        primary_idx,
-        secondary_idx,
+        col_idx,
         focal,
         primary,
         secondary,
@@ -401,20 +458,20 @@ class IncidentAnglesCalculator:
         secondary_hit_y_m,
     ):
         """Append parsed values from parts into target arrays if valid."""
-        foc_ok, foc_val = self._parse_float(parts, focal_idx)
+        foc_ok, foc_val = self._parse_float(parts, col_idx.get("focal"))
         if not foc_ok:
             return
         focal.append(foc_val)
         if not self.calculate_primary_secondary_angles:
             return
         if primary is not None:
-            primary.append(self._parse_float_with_nan(parts, primary_idx))
+            primary.append(self._parse_float_with_nan(parts, col_idx.get("primary")))
         if secondary is not None:
-            secondary.append(self._parse_float_with_nan(parts, secondary_idx))
-        # Primary-hit radius from x/y (1-based 29,30 -> 0-based 28,29), values in cm
+            secondary.append(self._parse_float_with_nan(parts, col_idx.get("secondary")))
+        # Primary-hit radius from x/y (header-driven indices; default 0-based 28,29), values in cm
         if radius_m is not None or primary_hit_x_m is not None or primary_hit_y_m is not None:
-            x_ok, x_cm = self._parse_float(parts, 28)
-            y_ok, y_cm = self._parse_float(parts, 29)
+            x_ok, x_cm = self._parse_float(parts, col_idx.get("prim_x"))
+            y_ok, y_cm = self._parse_float(parts, col_idx.get("prim_y"))
             if x_ok and y_ok:
                 r_m = ((x_cm**2 + y_cm**2) ** 0.5) / 100.0
                 if radius_m is not None:
@@ -430,14 +487,14 @@ class IncidentAnglesCalculator:
                     primary_hit_x_m.append(float("nan"))
                 if primary_hit_y_m is not None:
                     primary_hit_y_m.append(float("nan"))
-        # Secondary-hit radius from x/y (1-based 33,34 -> 0-based 32,33), values in cm
+        # Secondary-hit radius from x/y (header-driven indices; default 0-based 32,33), values in cm
         if (
             secondary_radius_m is not None
             or secondary_hit_x_m is not None
             or secondary_hit_y_m is not None
         ):
-            sx_ok, sx_cm = self._parse_float(parts, 32)
-            sy_ok, sy_cm = self._parse_float(parts, 33)
+            sx_ok, sx_cm = self._parse_float(parts, col_idx.get("sec_x"))
+            sy_ok, sy_cm = self._parse_float(parts, col_idx.get("sec_y"))
             if sx_ok and sy_ok:
                 r2_m = ((sx_cm**2 + sy_cm**2) ** 0.5) / 100.0
                 if secondary_radius_m is not None:
