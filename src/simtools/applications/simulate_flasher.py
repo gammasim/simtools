@@ -22,6 +22,7 @@ telescope (str, required)
 site (str, required)
     Site name (North or South).
 flasher (str, required)
+TODO fix naming
     Flasher device in array, e.g., FLSN-01.
 number_of_events (int, optional):
     Number of events to simulate (default: 1).
@@ -50,7 +51,6 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.model.flasher_model import FlasherModel
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
@@ -63,6 +63,7 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--flasher",
+        # TODO fix naming
         help="Flasher device in array associated with a specific telescope, i.e. FLSN-01",
         type=str,
         required=True,
@@ -89,11 +90,6 @@ def _parse(label):
     )
 
 
-def flasher_configs():
-    """Return default setup for flasher runs (no distances)."""
-    return {"light_source_setup": "layout"}
-
-
 def main():
     """Run the application."""
     label = Path(__file__).stem
@@ -102,39 +98,28 @@ def main():
     args_dict, db_config = _parse(label)
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    telescope_model, site_model = initialize_simulation_models(
+    telescope_model, site_model, calibration_model = initialize_simulation_models(
         label=label,
         db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
+        calibration_device_name=args_dict["flasher"],
         model_version=args_dict["model_version"],
     )
-
-    flasher_model = FlasherModel(
-        site=args_dict["site"],
-        flasher_device_model_name=args_dict["flasher"],
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        label=label,
-    )
-
-    flasher_cfg = flasher_configs()
 
     sim_runner = SimulatorLightEmission(
         telescope_model=telescope_model,
-        flasher_model=flasher_model,
+        calibration_model=calibration_model,
         site_model=site_model,
         light_emission_config=args_dict,
-        light_source_setup=flasher_cfg["light_source_setup"],
         simtel_path=args_dict["simtel_path"],
-        light_source_type="flasher",
         label=args_dict["label"],
         test=args_dict.get("test", False),
     )
 
     sim_runner.run_simulation()
 
-    logger.info("Flasher simulation completed. Use simtools-plot-simtel-number_events for plots.")
+    logger.info("Flasher simulation completed.")
 
 
 if __name__ == "__main__":

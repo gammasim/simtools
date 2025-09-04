@@ -109,7 +109,6 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
@@ -223,35 +222,24 @@ def main():
     """Simulate light emission."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
-    light_emission_config = light_emission_configs(args_dict)
-    print(light_emission_config)
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    telescope_model, site_model = initialize_simulation_models(
+    telescope_model, site_model, calibration_model = initialize_simulation_models(
         label=label,
         db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
+        calibration_device_name=args_dict["illuminator"],
         model_version=args_dict["model_version"],
-    )
-
-    calibration_model = CalibrationModel(
-        site=args_dict["site"],
-        calibration_device_model_name=args_dict["illuminator"],
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        label=label,
     )
 
     light_source = SimulatorLightEmission(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model,
-        light_emission_config=light_emission_config,
-        light_source_setup=args_dict["light_source_setup"],
+        light_emission_config=light_emission_configs(args_dict),
         simtel_path=args_dict["simtel_path"],
-        light_source_type="illuminator",
         label=label,
         test=args_dict["test"],
     )
