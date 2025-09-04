@@ -121,50 +121,6 @@ class SimulatorLightEmission(SimtelRunner):
         return ("xyzls", mode)
 
     @staticmethod
-    def light_emission_default_configuration():
-        """
-        Get default light emission configuration.
-
-        Returns
-        -------
-        dict
-            Default configuration light emission.
-
-        """
-        return {
-            "zenith_angle": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 0.0 * u.deg,
-                "names": ["zenith", "theta"],
-            },
-            "azimuth_angle": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 0.0 * u.deg,
-                "names": ["azimuth", "phi"],
-            },
-            "source_distance": {
-                "len": 1,
-                "unit": u.Unit("m"),
-                "default": 1000 * u.m,
-                "names": ["sourcedist", "srcdist"],
-            },
-            "off_axis_angle": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 0 * u.deg,
-                "names": ["off_axis"],
-            },
-            "fadc_bins": {
-                "len": 1,
-                "unit": u.dimensionless_unscaled,
-                "default": 128,
-                "names": ["fadc_bins"],
-            },
-        }
-
-    @staticmethod
     def flasher_default_configuration():
         """
         Get default flasher configuration.
