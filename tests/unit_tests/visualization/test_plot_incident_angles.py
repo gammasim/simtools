@@ -228,6 +228,148 @@ def test_invalid_edges_warning_for_focal_monkeypatch(tmp_path, caplog, monkeypat
     assert not (Path(tmp_path) / "plots" / "incident_angles_multi_invfocal.png").exists()
 
 
+def test_compute_bins_adjusts_when_vmax_equals_vmin():
+    # Values exactly on a bin edge produce vmin==vmax; branch should adjust vmax
+    logger = logging.getLogger(__name__)
+    arr = np.array([0.1, 0.1])
+    bins = pia._compute_bins(arr, 0.1, logger, "angle_incidence_primary")
+    assert bins is not None
+    # Should cover the vmax <= vmin branch
+    assert bins[0] == 0.1
+    assert bins[1] == 0.2
+
+
+def test_plot_xy_heatmap_missing_columns_continue_and_warns(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "xy_missing_cols.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    t = QTable()
+    t["primary_hit_x"] = np.array([0.0]) * u.m  # y column missing, len>0
+    pia._plot_xy_heatmap(
+        {0.0: t},
+        "primary_hit_x",
+        "primary_hit_y",
+        "XY Missing Cols",
+        out_path,
+        logging.getLogger(__name__),
+        bins=8,
+    )
+    assert any("No valid data to plot for XY Missing Cols" in r.message for r in caplog.records)
+    assert not out_path.exists()
+
+
+def test_plot_xy_heatmap_empty_after_mask_continue(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "xy_empty_after_mask.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    t = QTable()
+    t["primary_hit_x"] = np.array([np.nan]) * u.m
+    t["primary_hit_y"] = np.array([np.nan]) * u.m
+    pia._plot_xy_heatmap(
+        {0.0: t},
+        "primary_hit_x",
+        "primary_hit_y",
+        "XY Empty After Mask",
+        out_path,
+        logging.getLogger(__name__),
+        bins=8,
+    )
+    assert any("No valid data to plot for XY Empty After Mask" in r.message for r in caplog.records)
+    assert not out_path.exists()
+
+
+def test_plot_xy_heatmaps_per_offset_continue_paths(tmp_path):
+    out_dir = Path(tmp_path) / "plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    t_missing = QTable()  # triggers len==0 continue
+    t_partial = QTable()
+    t_partial["primary_hit_x"] = np.array([0.0]) * u.m  # y missing
+    # Also include a table with nan-only to hit x.size==0 continue
+    t_nan = QTable()
+    t_nan["primary_hit_x"] = np.array([np.nan]) * u.m
+    t_nan["primary_hit_y"] = np.array([np.nan]) * u.m
+    pia._plot_xy_heatmaps_per_offset(
+        {0.0: t_missing, 1.0: t_partial, 2.0: t_nan},
+        x_col="primary_hit_x",
+        y_col="primary_hit_y",
+        title_prefix="Primary mirror: X-Y hit distribution",
+        file_stem="incident_primary_xy_heatmap_off",
+        out_dir=out_dir,
+        label="ut",
+        bins=16,
+    )
+    # No files expected as all entries continue
+    assert not any(out_dir.glob("incident_primary_xy_heatmap_off*_ut.png"))
+
+
+def test_plot_radius_histograms_early_returns_and_continues(tmp_path, caplog, monkeypatch):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "radius_none.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    log = logging.getLogger(__name__)
+    # 1) arrays empty -> early return
+    pia._plot_radius_histograms(
+        {0.0: QTable()},
+        radius_col="primary_hit_radius",
+        title="T",
+        xlabel="X",
+        out_path=out_path,
+        bin_width_m=0.1,
+        log=log,
+    )
+    assert not out_path.exists()
+
+    # 2) bins_m None -> early return (monkeypatch np.floor to force NaN)
+    t = QTable()
+    t["primary_hit_radius"] = np.array([0.1, 0.2]) * u.m
+    monkeypatch.setattr(pia.np, "floor", lambda x: np.nan)
+    pia._plot_radius_histograms(
+        {0.0: t},
+        radius_col="primary_hit_radius",
+        title="T2",
+        xlabel="X",
+        out_path=out_path,
+        bin_width_m=0.1,
+        log=log,
+    )
+    assert not out_path.exists()
+
+    # 3) loop continues for missing col and for data filtered to size 0
+    t_missing = QTable()  # missing column continue
+    t_zero = QTable()
+    t_zero["primary_hit_radius"] = np.array([np.nan, np.inf]) * u.m  # size 0 after mask
+    pia._plot_radius_histograms(
+        {0.0: t_missing, 1.0: t_zero},
+        radius_col="primary_hit_radius",
+        title="T3",
+        xlabel="X",
+        out_path=out_path,
+        bin_width_m=0.1,
+        log=log,
+    )
+    # Still no file produced
+    assert not out_path.exists()
+
+
+def test_plot_radius_vs_angle_missing_columns_continue(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "radius_vs_angle_missing_cols.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    t = QTable()
+    # Include only radius column with one finite row, angle column missing
+    t["primary_hit_radius"] = np.array([0.1]) * u.m
+    pia._plot_radius_vs_angle(
+        {0.0: t},
+        radius_col="primary_hit_radius",
+        angle_col="angle_incidence_primary",
+        title="R vs A Missing",
+        out_path=out_path,
+        log=logging.getLogger(__name__),
+    )
+    assert any("No valid data to plot for R vs A Missing" in r.message for r in caplog.records)
+    assert not out_path.exists()
+
+
 def test_plot_radius_histograms_primary(tmp_path):
     out_dir = Path(tmp_path) / "plots"
     out_dir.mkdir(parents=True, exist_ok=True)
