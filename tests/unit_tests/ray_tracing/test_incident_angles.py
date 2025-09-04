@@ -463,3 +463,101 @@ def test_compute_angles_skips_primary_secondary_when_disabled(tmp_path):
     assert out["angle_incidence_focal_deg"] == [42.5]
     assert "angle_incidence_primary_deg" not in out
     assert "angle_incidence_secondary_deg" not in out
+
+
+def test_primary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
+    # focal valid; missing/invalid primary x/y should yield NaNs for radius and coords
+    parts = ["0"] * 25 + ["42.0"]  # focal at col 26
+    # pad cols 27-31, then invalidate prim_x (col 29, idx 28) and prim_y (col 30, idx 29)
+    parts += ["0", "0", "0", "0", "0"]
+    parts[28] = "badx"  # prim_x invalid
+    parts[29] = "bady"  # prim_y invalid
+    # primary and secondary angles present to avoid other issues
+    parts.append("1.0")  # primary at 32
+    parts += ["0", "0", "0", "2.0"]  # secondary at 36
+    pfile = tmp_path / "prim_nan.lis"
+    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    assert len(out["angle_incidence_focal_deg"]) == 1
+    # Primary radius and coords should be NaN
+    assert math.isnan(out["primary_hit_radius_m"][0])
+    assert math.isnan(out["primary_hit_x_m"][0])
+    assert math.isnan(out["primary_hit_y_m"][0])
+
+
+def test_secondary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
+    # focal valid; missing/invalid secondary x/y should yield NaNs for secondary radius/coords
+    parts = ["0"] * 25 + ["42.0"]  # focal at col 26
+    parts += ["0", "0", "0", "0", "0"]  # pad 27-31
+    parts[28] = "0.0"  # valid primary x cm (col 29)
+    parts[29] = "0.0"  # valid primary y cm (col 30)
+    parts.append("1.0")  # primary at 32
+    # secondary x/y (cols 33/34) will be invalid strings
+    parts += ["badx", "bady", "0", "2.0"]  # pad cols and secondary=2.0 at col 36
+    pfile = tmp_path / "sec_nan.lis"
+    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    assert len(out["angle_incidence_focal_deg"]) == 1
+    # Secondary radius and coords should be NaN
+    assert math.isnan(out["secondary_hit_radius_m"][0])
+    assert math.isnan(out["secondary_hit_x_m"][0])
+    assert math.isnan(out["secondary_hit_y_m"][0])
+
+
+def test_iter_data_rows_skips_comments_and_blank(tmp_path):
+    p = tmp_path / "rows.lis"
+    p.write_text("""# header line\n\n1 2 3\n  # another comment\n4 5 6\n""", encoding="utf-8")
+    rows = list(IncidentAnglesCalculator._iter_data_rows(p))
+    assert rows == [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+    ]
+
+
+def test_parse_float_with_nan_out_of_range():
+    parts = ["1.0", "2.0"]
+    # Index out of range returns NaN
+    assert math.isnan(IncidentAnglesCalculator._parse_float_with_nan(parts, 5))
+    # Negative index returns NaN
+    assert math.isnan(IncidentAnglesCalculator._parse_float_with_nan(parts, -1))
+
+
+def test_maybe_set_reflection_index_ignores_when_not_primary_or_secondary():
+    # Desc that mentions an axis but not primary/secondary mirror should not modify indices
+    calc = object.__new__(IncidentAnglesCalculator)
+    indices = {"prim_x": 28, "prim_y": 29, "sec_x": 32, "sec_y": 33}
+    desc = "x reflection point on mirror center [cm]"  # no 'primary mirror' or 'secondary mirror'
+    calc._maybe_set_reflection_index(desc, 15, indices)
+    assert indices == {"prim_x": 28, "prim_y": 29, "sec_x": 32, "sec_y": 33}
+
+
+def test_maybe_set_reflection_index_requires_axis_token():
+    # Desc that mentions primary mirror but no standalone x/y should not modify indices
+    calc = object.__new__(IncidentAnglesCalculator)
+    indices = {}
+    desc = "reflection point on primary mirror [cm]"  # no 'x' or 'y' token
+    calc._maybe_set_reflection_index(desc, 12, indices)
+    assert indices == {}
+
+
+def test_update_indices_reflection_skips_when_flag_disabled():
+    # If calculate_primary_secondary_angles is False, reflection point handling should return early
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = False
+    indices = {"prim_x": 28, "prim_y": 29}
+    desc = "X reflection point on primary mirror [cm]"
+    calc._update_indices_from_header_desc(desc.lower(), 15, indices)
+    # unchanged
+    assert indices == {"prim_x": 28, "prim_y": 29}
+
+
+def test_update_indices_reflection_skips_when_missing_keyword():
+    # With flag True but description not containing 'reflection point', nothing should change
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    indices = {"sec_x": 32, "sec_y": 33}
+    desc = "X point on secondary mirror [cm]"  # missing 'reflection point'
+    calc._update_indices_from_header_desc(desc.lower(), 20, indices)
+    assert indices == {"sec_x": 32, "sec_y": 33}
