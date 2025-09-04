@@ -382,3 +382,48 @@ def test_plot_xy_heatmap_success_and_empty(tmp_path, caplog):
     )
     assert any("No valid data to plot for XY EMPTY" in r.message for r in caplog.records)
     assert not out_empty.exists()
+
+
+def test_gather_angle_arrays_ignores_none_and_logs_for_empty(caplog):
+    caplog.set_level(logging.WARNING)
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
+    arrays = pia._gather_angle_arrays(
+        {0.0: None, 1.0: QTable(), 2.0: t}, "angle_incidence_focal", logging.getLogger(__name__)
+    )
+    assert len(arrays) == 1
+    assert np.allclose(arrays[0], np.array([0.1, 0.2]))
+    assert any("Empty results for off-axis=1.0" in r.message for r in caplog.records)
+
+
+def test_plot_radius_vs_angle_with_missing_columns_warns(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "no_cols.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    pia._plot_radius_vs_angle(
+        {0.0: QTable()},
+        radius_col="primary_hit_radius",
+        angle_col="angle_incidence_primary",
+        title="No Cols",
+        out_path=out_path,
+        log=logging.getLogger(__name__),
+    )
+    assert any("No valid data to plot for No Cols" in r.message for r in caplog.records)
+    assert not out_path.exists()
+
+
+def test_plot_xy_heatmap_with_none_and_missing_warns(tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    out_path = Path(tmp_path) / "plots" / "xy_none.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    pia._plot_xy_heatmap(
+        {0.0: None, 1.0: QTable()},
+        "primary_hit_x",
+        "primary_hit_y",
+        "XY None/Missing",
+        out_path,
+        logging.getLogger(__name__),
+        bins=16,
+    )
+    assert any("No valid data to plot for XY None/Missing" in r.message for r in caplog.records)
+    assert not out_path.exists()

@@ -3,6 +3,7 @@
 
 import logging
 import math
+import re
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
@@ -356,6 +357,96 @@ def test_header_driven_column_detection(calculator, tmp_path):
     assert out["angle_incidence_focal_deg"] == pytest.approx([11.1])
     assert out["angle_incidence_primary_deg"] == pytest.approx([22.2])
     assert out["angle_incidence_secondary_deg"] == pytest.approx([33.3])
+
+
+def test_match_header_column_variants():
+    col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*$", re.IGNORECASE)
+    # Focal surface with optical axis mention
+    raw = "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]"
+    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("focal", 30)
+
+    # Primary mirror with onto
+    raw = "# Column 34: Angle of incidence onto primary mirror [deg]"
+    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("primary", 34)
+
+    # Primary mirror with on
+    raw = "# Column 35: Angle of incidence on primary mirror [deg]"
+    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("primary", 35)
+
+    # Secondary mirror
+    raw = "# Column 40: Angle of incidence onto secondary mirror [deg]"
+    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("secondary", 40)
+
+    # No match
+    raw = "# Column 99: Some other description"
+    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) is None
+
+
+def test_header_driven_reflection_points_indices(calculator, tmp_path):
+    # Build a file that declares reflection point columns for primary and secondary
+    pfile = tmp_path / "refl_headers.lis"
+    header_lines = [
+        "# Column 10: X reflection point on primary mirror [cm]\n",
+        "# Column 11: Y reflection point on primary mirror [cm]\n",
+        "# Column 12: X reflection point on secondary mirror [cm]\n",
+        "# Column 13: Y reflection point on secondary mirror [cm]\n",
+    ]
+    # Provide a dummy data row with enough columns; focal will be default index (25)
+    data = ["0"] * 26
+    pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
+
+    (
+        focal_idx,
+        primary_idx,
+        secondary_idx,
+        primary_x_idx,
+        primary_y_idx,
+        secondary_x_idx,
+        secondary_y_idx,
+    ) = calculator._discover_column_indices(pfile)
+
+    # Focal remains default (25), angles None/31/35 depending on flag, but we only check XY
+    assert primary_x_idx == 9  # 1-based 10 -> 0-based 9
+    assert primary_y_idx == 10  # 1-based 11 -> 0-based 10
+    assert secondary_x_idx == 11  # 1-based 12 -> 0-based 11
+    assert secondary_y_idx == 12  # 1-based 13 -> 0-based 12
+
+
+def test_compute_with_header_driven_reflection_points_values(calculator, tmp_path):
+    # Provide both angle and reflection point headers and a single data line
+    pfile = tmp_path / "full_headers_values.lis"
+    header_lines = [
+        "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]\n",
+        "# Column 34: Angle of incidence onto primary mirror [deg]\n",
+        "# Column 38: Angle of incidence onto secondary mirror [deg]\n",
+        "# Column 10: X reflection point on primary mirror [cm]\n",
+        "# Column 11: Y reflection point on primary mirror [cm]\n",
+        "# Column 12: X reflection point on secondary mirror [cm]\n",
+        "# Column 13: Y reflection point on secondary mirror [cm]\n",
+    ]
+    data = ["0"] * 40
+    data[29] = "11.0"  # focal at 30
+    data[33] = "21.0"  # primary angle at 34
+    data[37] = "31.0"  # secondary angle at 38
+    data[9] = "10.0"  # prim x cm at 10
+    data[10] = "-20.0"  # prim y cm at 11
+    data[11] = "3.0"  # sec x cm at 12
+    data[12] = "4.0"  # sec y cm at 13
+    pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
+
+    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
+    # Angles picked from header-driven indices
+    assert out["angle_incidence_focal_deg"] == pytest.approx([11.0])
+    assert out["angle_incidence_primary_deg"] == pytest.approx([21.0])
+    assert out["angle_incidence_secondary_deg"] == pytest.approx([31.0])
+    # Hit coordinates converted from cm to meters
+    assert out["primary_hit_x_m"] == pytest.approx([0.10])
+    assert out["primary_hit_y_m"] == pytest.approx([-0.20])
+    assert out["secondary_hit_x_m"] == pytest.approx([0.03])
+    assert out["secondary_hit_y_m"] == pytest.approx([0.04])
+    # Radii computed correctly in meters
+    assert out["primary_hit_radius_m"] == pytest.approx([((10.0**2 + 20.0**2) ** 0.5) / 100.0])
+    assert out["secondary_hit_radius_m"] == pytest.approx([((3.0**2 + 4.0**2) ** 0.5) / 100.0])
 
 
 def test_compute_angles_skips_primary_secondary_when_disabled(tmp_path):
