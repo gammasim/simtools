@@ -72,8 +72,6 @@ class FlasherModel(ModelParameter):
     def _inject_mst_defaults_if_missing(self):
         """Provide dummy defaults (here NectarCam) when flasher collection is absent."""
         defaults = {
-            # Angular distribution width ~11 deg around axis
-            "angular_distribution": {"value": "gauss:11", "type": "string"},
             "centroid_offset_deg": {"value": 0.5, "unit": "deg", "type": "float"},
         }
 
