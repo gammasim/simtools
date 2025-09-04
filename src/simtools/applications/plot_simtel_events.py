@@ -3,7 +3,7 @@
 r"""
 Plot simulated events.
 
-This application produces figures from one or more sim_telarray (.simtel.zst) files
+Produces figures from one or more sim_telarray (.simtel.zst) files
 It is meant to run after simulations (e.g., simtools-simulate-flasher,
 simtools-simulate-illuminator).
 
