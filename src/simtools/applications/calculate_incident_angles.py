@@ -169,6 +169,13 @@ def _parse(label):
         action="store_true",
         required=False,
     )
+    config.parser.add_argument(
+        "--debug_plots",
+        dest="debug_plots",
+        help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
+        action="store_true",
+        required=False,
+    )
     calc_group = config.parser.add_mutually_exclusive_group(required=False)
     calc_group.add_argument(
         "--calculate_primary_secondary_angles",
@@ -237,7 +244,12 @@ def main():
     offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
 
     results_by_offset = calculator.run_for_offsets(offsets)
-    plot_incident_angles(results_by_offset, output_dir, label_with_telescope)
+    plot_incident_angles(
+        results_by_offset,
+        output_dir,
+        label_with_telescope,
+        debug_plots=bool(args_dict.get("debug_plots", False)),
+    )
     total = sum(len(t) for t in results_by_offset.values())
     logger.info(
         f"Calculated incident angles for {len(results_by_offset)} offsets,\n"
