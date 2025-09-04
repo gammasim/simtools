@@ -107,18 +107,38 @@ PLOT_CHOICES = {
 
 
 def _call_peak_timing(
-    filename: Path,
+    filename,
     *,
-    tel_id: int | None = None,
-    sum_threshold: float = 10.0,
-    peak_width: int = 8,
-    examples: int = 3,
-    timing_bins: int | None = None,
-    event_index: int | None = None,
+    tel_id=None,
+    sum_threshold=10.0,
+    peak_width=8,
+    examples=3,
+    timing_bins=None,
+    event_index=None,
 ):
-    """Call plot_simtel_peak_timing handling optional return_stats.
+    """Call ``plot_simtel_peak_timing`` and support optional ``return_stats``.
 
-    Returns a matplotlib Figure or None.
+    Parameters
+    ----------
+    filename : pathlib.Path or str
+        Path to the input simtel file.
+    tel_id : int, optional
+        Telescope ID to visualize.
+    sum_threshold : float, default 10.0
+        Minimum pixel sum to consider a pixel.
+    peak_width : int, default 8
+        Expected peak width in samples.
+    examples : int, default 3
+        Number of example traces to draw.
+    timing_bins : int or None, optional
+        Number of bins for timing histogram (contiguous if not set).
+    event_index : int or None, optional
+        0-based index of the event to plot; default is the first event.
+
+    Returns
+    -------
+    object or None
+        The matplotlib Figure if available, otherwise ``None``.
     """
     try:
         fig_stats = plot_simtel_peak_timing(
