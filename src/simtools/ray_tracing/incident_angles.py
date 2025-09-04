@@ -53,14 +53,14 @@ class IncidentAnglesCalculator:
         db_config,
         config_data,
         output_dir,
-        label: str | None = None,
-        perfect_mirror: bool = False,
-        overwrite_rdna: bool = False,
-        mirror_reflection_random_angle: float | None = None,
-        algn: float | None = None,
-        test: bool = False,
-        calculate_primary_secondary_angles: bool = True,
-    ) -> None:
+        label=None,
+        perfect_mirror=False,
+        overwrite_rdna=False,
+        mirror_reflection_random_angle=None,
+        algn=None,
+        test=False,
+        calculate_primary_secondary_angles=True,
+    ):
         self.logger = logging.getLogger(__name__)
 
         self._simtel_path = Path(simtel_path)
@@ -73,7 +73,7 @@ class IncidentAnglesCalculator:
         self.algn = algn
         self.test = test
         self.calculate_primary_secondary_angles = calculate_primary_secondary_angles
-        self.results: QTable | None = None
+        self.results = None
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir = self.output_dir / "logs"
@@ -98,11 +98,11 @@ class IncidentAnglesCalculator:
 
         self.rt_params = self._setup_rt_params(config_data)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Return a concise representation helpful for logging/debugging."""
         return f"IncidentAnglesCalculator(label={self.label})"
 
-    def _label_suffix(self) -> str:
+    def _label_suffix(self):
         """Build a filename suffix including telescope and off-axis angle."""
         tel = str(self.config_data.get("telescope", "TEL"))
         off = float(self.rt_params.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
@@ -120,7 +120,7 @@ class IncidentAnglesCalculator:
             "number_of_rays": n_rays,
         }
 
-    def run(self) -> QTable:
+    def run(self):
         """Run sim_telarray, parse imaging list, and return an angle table."""
         self.logger.info("Running sim_telarray PSF-style simulation for incident angles")
 
@@ -142,17 +142,27 @@ class IncidentAnglesCalculator:
                 self.results["angle_incidence_secondary"] = (
                     data["angle_incidence_secondary_deg"] * u.deg
                 )
+            if "primary_hit_radius_m" in data:
+                self.results["primary_hit_radius"] = data["primary_hit_radius_m"] * u.m
+            if "secondary_hit_radius_m" in data:
+                self.results["secondary_hit_radius"] = data["secondary_hit_radius_m"] * u.m
+            if "primary_hit_x_m" in data and "primary_hit_y_m" in data:
+                self.results["primary_hit_x"] = data["primary_hit_x_m"] * u.m
+                self.results["primary_hit_y"] = data["primary_hit_y_m"] * u.m
+            if "secondary_hit_x_m" in data and "secondary_hit_y_m" in data:
+                self.results["secondary_hit_x"] = data["secondary_hit_x_m"] * u.m
+                self.results["secondary_hit_y"] = data["secondary_hit_y_m"] * u.m
 
         self._save_results()
         return self.results
 
-    def run_for_offsets(self, offsets: list[float]) -> dict[float, QTable]:
+    def run_for_offsets(self, offsets):
         """Run the simulation for multiple off-axis angles.
 
         For each off-axis angle provided, run a full simulation, labeling output files
         accordingly. Returns a mapping from off-axis angle (deg) to the resulting QTable.
         """
-        results_by_offset: dict[float, QTable] = {}
+        results_by_offset = {}
         base_off = self.rt_params.get("off_axis_angle", 0.0 * u.deg)
 
         for off in offsets:
@@ -195,7 +205,7 @@ class IncidentAnglesCalculator:
 
         return photons_file, stars_file, log_file
 
-    def _write_run_script(self, photons_file: Path, stars_file: Path, log_file: Path) -> Path:
+    def _write_run_script(self, photons_file, stars_file, log_file):
         """Generate a run script for sim_telarray with the provided configuration and inputs."""
         script_path = self.scripts_dir / f"run_incident_angles_{self._label_suffix()}.sh"
         simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
@@ -213,18 +223,16 @@ class IncidentAnglesCalculator:
             f"-I{self.telescope_model.config_file_directory}",
         ]
         if self.perfect_mirror:
-            opts.extend(
-                [
-                    "-DPERFECT_DISH=1",
-                    "-C telescope_random_angle=0",
-                    "-C telescope_random_error=0",
-                    "-C random_focal_length=0",
-                    "-C mirror_reflection_random_angle=0",
-                    "-C mirror_align_random_distance=0",
-                    "-C mirror_align_random_horizontal=0,28,0,0",
-                    "-C mirror_align_random_vertical=0,28,0,0",
-                ]
-            )
+            opts += [
+                "-DPERFECT_DISH=1",
+                "-C telescope_random_angle=0",
+                "-C telescope_random_error=0",
+                "-C random_focal_length=0",
+                "-C mirror_reflection_random_angle=0",
+                "-C mirror_align_random_distance=0",
+                "-C mirror_align_random_horizontal=0,28,0,0",
+                "-C mirror_align_random_vertical=0,28,0,0",
+            ]
 
         if self.mirror_reflection_random_angle is not None:
             opts.append(cfg("mirror_reflection_random_angle", self.mirror_reflection_random_angle))
@@ -232,12 +240,8 @@ class IncidentAnglesCalculator:
             opts.append(cfg("mirror_reflection_random_angle", 0))
 
         if self.algn is not None:
-            opts.extend(
-                [
-                    cfg("mirror_align_random_horizontal", f"{self.algn},28.,0.0,0.0"),
-                    cfg("mirror_align_random_vertical", f"{self.algn},28.,0.0,0.0"),
-                ]
-            )
+            opts.append(cfg("mirror_align_random_horizontal", f"{self.algn},28.,0.0,0.0"))
+            opts.append(cfg("mirror_align_random_vertical", f"{self.algn},28.,0.0,0.0"))
 
         opts += [
             cfg("IMAGING_LIST", str(photons_file)),
@@ -266,7 +270,7 @@ class IncidentAnglesCalculator:
         script_path.chmod(script_path.stat().st_mode | 0o110)
         return script_path
 
-    def _run_script(self, script_path: Path, log_file: Path) -> None:
+    def _run_script(self, script_path, log_file):
         """Execute the script and log output; raise an error if execution fails."""
         self.logger.info("Executing %s (logging to %s)", script_path, log_file)
         try:
@@ -274,7 +278,7 @@ class IncidentAnglesCalculator:
         except subprocess.CalledProcessError as exc:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
 
-    def _compute_incidence_angles_from_imaging_list(self, photons_file: Path) -> dict:
+    def _compute_incidence_angles_from_imaging_list(self, photons_file):
         """
         Compute incidence angles from imaging list.
 
@@ -284,22 +288,49 @@ class IncidentAnglesCalculator:
         """
         focal_idx, primary_idx, secondary_idx = self._discover_column_indices(photons_file)
 
-        focal: list[float] = []
-        primary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
-        secondary: list[float] | None = [] if self.calculate_primary_secondary_angles else None
+        focal = []
+        primary = [] if self.calculate_primary_secondary_angles else None
+        secondary = [] if self.calculate_primary_secondary_angles else None
+        # Primary-hit radius on M1 (computed from hit x/y in cm -> meters)
+        radius_m = [] if self.calculate_primary_secondary_angles else None
+        # Secondary-hit radius on M2 (computed from hit x/y in cm -> meters)
+        secondary_radius_m = [] if self.calculate_primary_secondary_angles else None
+        # Hit coordinates (meters), derived from cm columns
+        primary_hit_x_m = [] if self.calculate_primary_secondary_angles else None
+        primary_hit_y_m = [] if self.calculate_primary_secondary_angles else None
+        secondary_hit_x_m = [] if self.calculate_primary_secondary_angles else None
+        secondary_hit_y_m = [] if self.calculate_primary_secondary_angles else None
 
         for parts in self._iter_data_rows(photons_file):
             self._append_values(
-                parts, focal_idx, primary_idx, secondary_idx, focal, primary, secondary
+                parts,
+                focal_idx,
+                primary_idx,
+                secondary_idx,
+                focal,
+                primary,
+                secondary,
+                radius_m,
+                secondary_radius_m,
+                primary_hit_x_m,
+                primary_hit_y_m,
+                secondary_hit_x_m,
+                secondary_hit_y_m,
             )
 
         result = {"angle_incidence_focal_deg": focal}
         if self.calculate_primary_secondary_angles:
             result["angle_incidence_primary_deg"] = primary
             result["angle_incidence_secondary_deg"] = secondary
+            result["primary_hit_radius_m"] = radius_m
+            result["secondary_hit_radius_m"] = secondary_radius_m
+            result["primary_hit_x_m"] = primary_hit_x_m
+            result["primary_hit_y_m"] = primary_hit_y_m
+            result["secondary_hit_x_m"] = secondary_hit_x_m
+            result["secondary_hit_y_m"] = secondary_hit_y_m
         return result
 
-    def _discover_column_indices(self, photons_file: Path) -> tuple[int, int | None, int | None]:
+    def _discover_column_indices(self, photons_file):
         """Return 0-based indices for focal, primary, secondary columns based on headers.
 
         Defaults (1-based) are: focal=26, primary=32, secondary=36.
@@ -325,7 +356,7 @@ class IncidentAnglesCalculator:
         return focal_idx, primary_idx, secondary_idx
 
     @staticmethod
-    def _parse_float(parts: list[str], idx: int | None) -> tuple[bool, float]:
+    def _parse_float(parts, idx):
         """Try parse float from parts[idx]. Returns (ok, value)."""
         if idx is None or idx < 0 or idx >= len(parts):
             return False, 0.0
@@ -335,7 +366,7 @@ class IncidentAnglesCalculator:
             return False, 0.0
 
     @staticmethod
-    def _parse_float_with_nan(parts: list[str], idx: int | None) -> float:
+    def _parse_float_with_nan(parts, idx):
         """Parse float or return NaN when missing/invalid."""
         if idx is None or idx < 0 or idx >= len(parts):
             return float("nan")
@@ -345,7 +376,7 @@ class IncidentAnglesCalculator:
             return float("nan")
 
     @staticmethod
-    def _iter_data_rows(photons_file: Path):
+    def _iter_data_rows(photons_file):
         """Yield tokenized, non-empty, non-comment rows from imaging list."""
         with photons_file.open("r", encoding="utf-8") as fh:
             for line in fh:
@@ -355,14 +386,20 @@ class IncidentAnglesCalculator:
 
     def _append_values(
         self,
-        parts: list[str],
-        focal_idx: int,
-        primary_idx: int | None,
-        secondary_idx: int | None,
-        focal: list[float],
-        primary: list[float] | None,
-        secondary: list[float] | None,
-    ) -> None:
+        parts,
+        focal_idx,
+        primary_idx,
+        secondary_idx,
+        focal,
+        primary,
+        secondary,
+        radius_m,
+        secondary_radius_m,
+        primary_hit_x_m,
+        primary_hit_y_m,
+        secondary_hit_x_m,
+        secondary_hit_y_m,
+    ):
         """Append parsed values from parts into target arrays if valid."""
         foc_ok, foc_val = self._parse_float(parts, focal_idx)
         if not foc_ok:
@@ -374,9 +411,51 @@ class IncidentAnglesCalculator:
             primary.append(self._parse_float_with_nan(parts, primary_idx))
         if secondary is not None:
             secondary.append(self._parse_float_with_nan(parts, secondary_idx))
+        # Primary-hit radius from x/y (1-based 29,30 -> 0-based 28,29), values in cm
+        if radius_m is not None or primary_hit_x_m is not None or primary_hit_y_m is not None:
+            x_ok, x_cm = self._parse_float(parts, 28)
+            y_ok, y_cm = self._parse_float(parts, 29)
+            if x_ok and y_ok:
+                r_m = ((x_cm**2 + y_cm**2) ** 0.5) / 100.0
+                if radius_m is not None:
+                    radius_m.append(r_m)
+                if primary_hit_x_m is not None:
+                    primary_hit_x_m.append(x_cm / 100.0)
+                if primary_hit_y_m is not None:
+                    primary_hit_y_m.append(y_cm / 100.0)
+            else:
+                if radius_m is not None:
+                    radius_m.append(float("nan"))
+                if primary_hit_x_m is not None:
+                    primary_hit_x_m.append(float("nan"))
+                if primary_hit_y_m is not None:
+                    primary_hit_y_m.append(float("nan"))
+        # Secondary-hit radius from x/y (1-based 33,34 -> 0-based 32,33), values in cm
+        if (
+            secondary_radius_m is not None
+            or secondary_hit_x_m is not None
+            or secondary_hit_y_m is not None
+        ):
+            sx_ok, sx_cm = self._parse_float(parts, 32)
+            sy_ok, sy_cm = self._parse_float(parts, 33)
+            if sx_ok and sy_ok:
+                r2_m = ((sx_cm**2 + sy_cm**2) ** 0.5) / 100.0
+                if secondary_radius_m is not None:
+                    secondary_radius_m.append(r2_m)
+                if secondary_hit_x_m is not None:
+                    secondary_hit_x_m.append(sx_cm / 100.0)
+                if secondary_hit_y_m is not None:
+                    secondary_hit_y_m.append(sy_cm / 100.0)
+            else:
+                if secondary_radius_m is not None:
+                    secondary_radius_m.append(float("nan"))
+                if secondary_hit_x_m is not None:
+                    secondary_hit_x_m.append(float("nan"))
+                if secondary_hit_y_m is not None:
+                    secondary_hit_y_m.append(float("nan"))
 
     @staticmethod
-    def _match_header_column(col_pat: re.Pattern[str], raw: str) -> tuple[str, int] | None:
+    def _match_header_column(col_pat, raw):
         """Return (kind, column_number) if the header line defines a known angle column."""
         s = raw.strip()
         if s and ":" in s:
@@ -393,7 +472,7 @@ class IncidentAnglesCalculator:
                     return "secondary", num
         return None
 
-    def _save_results(self) -> None:
+    def _save_results(self):
         """Save the results to an ECSV file in the results directory if available."""
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to save")
@@ -401,7 +480,7 @@ class IncidentAnglesCalculator:
         output_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
 
-    def export_results(self) -> None:
+    def export_results(self):
         """Export the results ECSV and a short text summary file."""
         if self.results is None or len(self.results) == 0:
             self.logger.error("Cannot export results because they do not exist")

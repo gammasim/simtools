@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# pylint: disable=protected-access
+
 import logging
 import math
 import subprocess
@@ -354,3 +356,19 @@ def test_header_driven_column_detection(calculator, tmp_path):
     assert out["angle_incidence_focal_deg"] == pytest.approx([11.1])
     assert out["angle_incidence_primary_deg"] == pytest.approx([22.2])
     assert out["angle_incidence_secondary_deg"] == pytest.approx([33.3])
+
+
+def test_compute_angles_skips_primary_secondary_when_disabled(tmp_path):
+    # Minimal targeted test for the early return when primary/secondary are disabled
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = False
+
+    pfile = tmp_path / "angles.lis"
+    parts = ["0"] * 25 + ["42.5"]  # focal at col 26
+    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+
+    out = calc._compute_incidence_angles_from_imaging_list(pfile)
+    assert "angle_incidence_focal_deg" in out
+    assert out["angle_incidence_focal_deg"] == [42.5]
+    assert "angle_incidence_primary_deg" not in out
+    assert "angle_incidence_secondary_deg" not in out
