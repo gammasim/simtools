@@ -569,3 +569,29 @@ def test_plot_xy_heatmap_with_none_and_missing_warns(tmp_path, caplog):
     )
     assert any("No valid data to plot for XY None/Missing" in r.message for r in caplog.records)
     assert not out_path.exists()
+
+
+def test_plot_radius_histograms_covers_continue_lines(tmp_path):
+    out_path = Path(tmp_path) / "plots" / "radius_continue.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    log = logging.getLogger(__name__)
+    # One valid table to ensure bins are computed and plotting proceeds
+    t_ok = QTable()
+    t_ok["primary_hit_radius"] = np.array([0.1, 0.2, 0.15]) * u.m
+    # One table missing the radius column -> triggers first continue branch
+    t_missing = QTable()
+    # One table with non-finite only -> triggers second continue branch after mask
+    t_zero = QTable()
+    t_zero["primary_hit_radius"] = np.array([np.nan, np.inf]) * u.m
+    pia._plot_radius_histograms(
+        {0.0: t_ok, 1.0: t_missing, 2.0: t_zero},
+        radius_col="primary_hit_radius",
+        title="Radius Hist Continue Coverage",
+        xlabel="Primary-hit radius on M1 (m)",
+        out_path=out_path,
+        bin_width_m=0.05,
+        log=log,
+    )
+    # Plot should still be produced thanks to the valid table
+    assert out_path.exists()
+    assert out_path.stat().st_size > 0
