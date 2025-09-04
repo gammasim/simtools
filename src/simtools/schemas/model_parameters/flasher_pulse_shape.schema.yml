@@ -7,12 +7,13 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: flasher_pulse_shape
 description: |-
-  Flasher pulse shape. Allowed values are 'Gauss' and 'TopHat'
-short_description: |-
   Flasher pulse shape.
 data:
   - type: string
     default: Gauss
+    allowed_values:
+      - Gauss
+      - Simple
 instrument:
   class: Calibration
   type:

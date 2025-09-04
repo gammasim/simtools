@@ -27,7 +27,7 @@ data:
     default: 0.
   - description: reference frame
     type: string
-    unit: null
+    unit: dimensionless
     default: primary_mirror_plane
 instrument:
   class: Calibration
