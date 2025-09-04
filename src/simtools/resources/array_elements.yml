@@ -131,7 +131,7 @@ data:
     observatory: "CTAO"
     site: "South"
     description: "Lightning sensor"
-  MSFxFlashCam:
+  MSFx-FlashCam:
     collection: "calibration_devices"
     observatory: "CTAO"
     site: "South"
