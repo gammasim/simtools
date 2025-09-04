@@ -10,7 +10,7 @@ description: |-
   Photons per bunch for flasher.
 data:
   - type: float64
-    unit: null
+    unit: dimensionless
     default: 1.
 instrument:
   class: Calibration

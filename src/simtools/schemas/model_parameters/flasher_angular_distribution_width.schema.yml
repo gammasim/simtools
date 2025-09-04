@@ -1,19 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for flasher_pulse_shape model parameter
+title: Schema for flasher_angular_distribution_width model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_pulse_shape
+name: flasher_angular_distribution_width
 description: |-
-  Flasher pulse shape.
+  Characteristic width of the flasher angular emission distribution.
+  This is the RMS for Gaussian distributions or the maximum half
+  opening angle for conical shapes.
+short_description: |-
+  Characteristic width of the flasher angular emission distribution.
 data:
-  - type: string
-    default: Gauss
-    allowed_values:
-      - Gauss
-      - Simple
+  - type: float64
+    unit: "deg"
+    default: 0
+    allowed_range:
+      min: 0
 instrument:
   class: Calibration
   type:
