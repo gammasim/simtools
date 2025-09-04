@@ -1,4 +1,4 @@
-"""Simulation using the light emission package for calibration devices."""
+"""Light emission simulation (e.g. illuminators or flashers)."""
 
 import logging
 import shutil
@@ -18,86 +18,65 @@ __all__ = ["SimulatorLightEmission"]
 
 class SimulatorLightEmission(SimtelRunner):
     """
-    Interface with sim_telarray to perform light emission package simulations.
+    Light emission simulation (e.g. illuminators or flashers).
 
+    Interface with sim_telarray to perform light emission package simulations.
     The light emission package is used to simulate an artificial light source, used for calibration.
+
+    Parameters
+    ----------
+    telescope_model : TelescopeModel
+        Model of the telescope to be simulated
+    calibration_model : CalibrationModel
+        Model of the calibration device to be simulated
+    site_model : SiteModel, optional
+        Model of the site
+    light_emission_config : dict, optional
+        Configuration for the light emission
+    simtel_path : Path, optional
+        Path to the sim_telarray installation
+    label : str, optional
+        Label for the simulation
+    test : bool, optional
+        Whether this is a test run
     """
 
     def __init__(
         self,
-        *,
         telescope_model,
-        calibration_model=None,
-        flasher_model=None,
+        calibration_model,
         site_model=None,
         light_emission_config=None,
-        light_source_setup=None,
         simtel_path=None,
-        light_source_type=None,
         label=None,
         test=False,
     ):
-        """Initialize SimtelRunner.
-
-        Parameters
-        ----------
-        telescope_model : TelescopeModel
-            Model of the telescope to be simulated
-        calibration_model : CalibrationModel, optional
-            Model of the calibration device to be simulated
-        flasher_model : FlasherModel, optional
-            Model of the flasher device to be simulated
-        site_model : SiteModel, optional
-            Model of the site
-        light_emission_config : dict, optional
-            Configuration for the light emission
-        light_source_setup : str, optional
-            Setup for light source positioning ("variable" or "layout")
-        simtel_path : Path, optional
-            Path to the sim_telarray installation
-        light_source_type : str, optional
-            Type of light source: 'illuminator', or 'flasher'
-        label : str, optional
-            Label for the simulation
-        test : bool, optional
-            Whether this is a test run
-        """
+        """Initialize SimtelRunner."""
         super().__init__(simtel_path=simtel_path, label=label, corsika_config=None)
 
         self._logger = logging.getLogger(__name__)
 
-        self._telescope_model = telescope_model
-        self._calibration_model = calibration_model
-        self._flasher_model = flasher_model
-        self._site_model = site_model
+        self.telescope_model = telescope_model
+        self.calibration_model = calibration_model
+        self.site_model = site_model
         self.light_emission_config = light_emission_config or {}
-        self.light_source_setup = light_source_setup
-        self.light_source_type = light_source_type or "illuminator"
+        self.light_source_setup = self.light_emission_config.get("light_source_setup")
         self.test = test
 
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
 
-        self.number_events = self.light_emission_config["number_events"]
-
-        if self._calibration_model is not None:
-            self.flasher_photons = (
-                self._calibration_model.get_parameter_value("flasher_photons")
-                if not self.test
-                else 1e8
-            )
-        elif self._flasher_model is not None:
-            self.flasher_photons = (
-                self._flasher_model.get_parameter_value("flasher_photons") if not self.test else 1e8
-            )
-        else:
-            self.flasher_photons = 1e8
+        self.light_source_type = self.calibration_model.get_parameter_value("flasher_type")
+        self.flasher_photons = (
+            self.calibration_model.get_parameter_value("flasher_photons") if not self.test else 1e8
+        )
 
         # Ensure sim_telarray config exists on disk
-        if hasattr(self._telescope_model, "write_sim_telarray_config_file"):
-            self._telescope_model.write_sim_telarray_config_file(additional_model=site_model)
+        if hasattr(self.telescope_model, "write_sim_telarray_config_file"):
+            self.telescope_model.write_sim_telarray_config_file(additional_model=site_model)
 
         # Runtime variables
+        # TODO check if needed
         self.distance = None
 
     def _get_prefix(self) -> str:
@@ -107,7 +86,7 @@ class SimulatorLightEmission(SimtelRunner):
         return ""
 
     def _infer_application(self) -> tuple[str, str]:
-        """Infer the LightEmission application and mode from type/setup.
+        """Infer the LightEmission application and mode from type.
 
         Returns
         -------
@@ -117,97 +96,25 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_source_type == "flasher":
             return ("ff-1m", "flasher")
         # default to illuminator xyzls, mode from setup
-        mode = self.light_source_setup or "layout"
-        return ("xyzls", mode)
-
-    @staticmethod
-    def flasher_default_configuration():
-        """
-        Get default flasher configuration.
-
-        Returns
-        -------
-        dict
-            Default configuration for flasher devices.
-        """
-        return {
-            "number_events": {
-                "len": 1,
-                "unit": None,
-                "default": 1,
-                "names": ["number_events"],
-            },
-            "photons_per_flasher": {
-                "len": 1,
-                "unit": None,
-                "default": 2.5e6,
-                "names": ["photons"],
-            },
-            "bunch_size": {
-                "len": 1,
-                "unit": None,
-                "default": 1.0,
-                "names": ["bunchsize"],
-            },
-            "flasher_position": {
-                "len": 2,
-                "unit": u.Unit("cm"),
-                "default": [0.0, 0.0] * u.cm,
-                "names": ["xy", "position"],
-            },
-            "flasher_depth": {
-                "len": 1,
-                "unit": u.Unit("cm"),
-                "default": 60 * u.cm,
-                "names": ["depth", "distance"],
-            },
-            "flasher_inclination": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 0.0 * u.deg,
-                "names": ["inclination"],
-            },
-            "spectrum": {
-                "len": 1,
-                "unit": u.Unit("nm"),
-                "default": 400 * u.nm,
-                "names": ["wavelength"],
-            },
-            "lightpulse": {
-                "len": 1,
-                "unit": None,
-                "default": "Simple:0",
-                "names": ["pulse"],
-            },
-            "angular_distribution": {
-                "len": 1,
-                "unit": None,
-                "default": "isotropic",
-                "names": ["angular"],
-            },
-            "flasher_pattern": {
-                "len": 1,
-                "unit": None,
-                "default": "all",
-                "names": ["fire", "pattern"],
-            },
-        }
+        return ("xyzls", self.light_source_setup or "layout")
 
     def calibration_pointing_direction(self):
         """
         Calculate the pointing of the calibration device towards the telescope.
+
+        This is for calibration devices not installed on telescopes (e.g. illuminators).
 
         Returns
         -------
         list
             The pointing vector from the calibration device to the telescope.
         """
-        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
+        x_cal, y_cal, z_cal = self.calibration_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
         x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+        x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
         x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
@@ -216,7 +123,6 @@ class SimulatorLightEmission(SimtelRunner):
 
         direction_vector = tel_vect - cal_vect
         # pointing vector from calibration device to telescope
-
         pointing_vector = np.round(direction_vector / np.linalg.norm(direction_vector), 6)
 
         # Calculate telescope theta and phi angles
@@ -237,36 +143,36 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return pointing_vector.tolist(), [tel_theta, tel_phi, source_theta, source_phi]
 
-    def _write_telpos_file(self):
+    def _write_telescope_position_file(self):
         """
-        Write the telescope positions to a telpos file.
+        Write the telescope positions to a telescope_position file.
 
         The file will contain lines in the format: x y z r in cm
 
         Returns
         -------
         Path
-            The path to the generated telpos file.
+            The path to the generated telescope_position file.
         """
-        telpos_file = self.output_directory.joinpath("telpos.dat")
-        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+        telescope_position_file = self.output_directory.joinpath("telescope_position.dat")
+        x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
         x_tel, y_tel, z_tel = [coord.to(u.cm).value for coord in (x_tel, y_tel, z_tel)]
 
-        radius = self._telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
+        radius = self.telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
         radius = radius.to(u.cm).value  # Convert radius to cm
-        with telpos_file.open("w", encoding="utf-8") as file:
+        with telescope_position_file.open("w", encoding="utf-8") as file:
             file.write(f"{x_tel} {y_tel} {z_tel} {radius}\n")
 
-        return telpos_file
+        return telescope_position_file
 
     def _prepare_flasher_atmosphere_files(self, config_directory: Path) -> int:
         """Prepare canonical atmosphere aliases for ff-1m and return model id 1."""
-        atmo_name = self._site_model.get_parameter_value("atmospheric_profile")
-        self._logger.debug(f"Using atmosphere profile: {atmo_name}")
+        atmosphere_file = self.site_model.get_parameter_value("atmospheric_profile")
+        self._logger.debug(f"Using atmosphere profile: {atmosphere_file}")
 
-        src_path = config_directory.joinpath(atmo_name)
+        src_path = config_directory.joinpath(atmosphere_file)
         for canonical in ("atmprof1.dat", "atm_profile_model_1.dat"):
             dst = config_directory.joinpath(canonical)
             if dst.exists() or dst.is_symlink():
@@ -297,15 +203,13 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
-        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+        x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
 
         config_directory = self.io_handler.get_model_configuration_directory(
-            label=self.label, model_version=self._site_model.model_version
+            label=self.label, model_version=self.site_model.model_version
         )
-        telpos_file = self._write_telpos_file()
-
         app_name, _ = self._infer_application()
 
         parts: list[str] = []
@@ -313,30 +217,26 @@ class SimulatorLightEmission(SimtelRunner):
         parts.append(str(self._simtel_path.joinpath("sim_telarray/LightEmission/")))
         parts.append(f"/{app_name}")
 
-        corsika_observation_level = self._site_model.get_parameter_value_with_unit(
+        corsika_observation_level = self.site_model.get_parameter_value_with_unit(
             "corsika_observation_level"
         )
         parts.append(
-            self._build_altitude_atmo_block(
-                app_name, config_directory, corsika_observation_level, telpos_file
-            )
+            self._build_altitude_atmo_block(app_name, config_directory, corsika_observation_level)
         )
 
         parts.append(self._build_source_specific_block(x_tel, y_tel, z_tel, config_directory))
 
         if self.light_source_type == "illuminator":
             parts.append(f" -A {config_directory}/")
-            parts.append(f"{self._telescope_model.get_parameter_value('atmospheric_profile')}")
+            parts.append(f"{self.telescope_model.get_parameter_value('atmospheric_profile')}")
 
         parts.append(f" -o {self.output_directory}/{app_name}.iact.gz")
         parts.append("\n")
 
         return "".join(parts)
 
-    def _build_altitude_atmo_block(
-        self, app_name, config_directory: Path, corsika_observation_level, telpos_file: Path
-    ) -> str:
-        """Return CLI segment for altitude/atmosphere and telpos handling."""
+    def _build_altitude_atmo_block(self, app_name, config_directory, corsika_observation_level):
+        """Return CLI segment for altitude/atmosphere and telescope_position handling."""
         if app_name in ("ff-1m",):
             seg = []
             seg.append(" -I.")
@@ -347,53 +247,55 @@ class SimulatorLightEmission(SimtelRunner):
             seg.append(f" --atmosphere {atmo_id}")
             return "".join(seg)
         # default path (not used for flasher now, but kept for completeness)
-        return f" -h  {corsika_observation_level.to(u.m).value} --telpos-file {telpos_file}"
+        return (
+            f" -h  {corsika_observation_level.to(u.m).value} "
+            f"--telpos-file {self._write_telescope_position_file()}"
+        )
 
     def _build_source_specific_block(self, _x_tel, _y_tel, _z_tel, _config_directory: Path) -> str:
         """Return CLI segment for light-source specific flags."""
-        if self.light_source_type == "flasher":
+        if self.light_source_type.lower() == "flasher":
             return self._add_flasher_command_options("")
-        if self.light_source_type == "illuminator":
+        if self.light_source_type.lower() == "illuminator":
             return self._add_illuminator_command_options("")
-        self._logger.warning("Unknown light_source_type '%s'", self.light_source_type)
-        return ""
+        raise ValueError(f"Unknown light_source_type '{self.light_source_type}'")
 
     def _add_flasher_command_options(self, command):
         """Add flasher-specific options to the script (uniform ff-1m)."""
         return self._add_flasher_options(command)
 
     def _add_flasher_options(self, command):
-        """Add flasher options for all telescope types (ff-1m style)."""
-        # For MST/LST we used to use ff-1m; now apply same for all telescopes
-        flasher_xy = self._flasher_model.get_parameter_value_with_unit("flasher_position")
-        flasher_distance = self._flasher_model.get_parameter_value_with_unit("flasher_depth")
-        # Camera radius required for application, Radius of fiducial sphere enclosing camera
+        """
+        Add flasher options for all telescope types (ff-1m style).
+
+        TODO fixed wavelength, no spectral distribution
+
+        """
+        flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
+        # Camera radius required for application, radius of fiducial sphere enclosing camera
+        # TODO this might not be a diameter for squared cameras
         camera_radius = (
-            self._telescope_model.get_parameter_value_with_unit("camera_body_diameter")
+            self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
             .to(u.cm)
             .value
             / 2
         )
-        spectrum = self._flasher_model.get_parameter_value_with_unit("spectrum")
-        pulse = self._flasher_model.get_parameter_value("lightpulse")
-        angular = self._flasher_model.get_parameter_value("angular_distribution")
-        bunch_size = self._flasher_model.get_parameter_value("bunch_size")
+        flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
+            "flasher_wavelength"
+        )
+        bunch_size = self.calibration_model.get_parameter_value("flasher_bunch_size")
+        dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
 
-        # Convert to plain numbers for CLI
-        fx = flasher_xy[0].to(u.cm).value
-        fy = flasher_xy[1].to(u.cm).value
-        dist_cm = flasher_distance.to(u.cm).value
-        spec_nm = int(spectrum.to(u.nm).value)
-
-        command += f" --events {self.number_events}"
+        command += f" --events {self.light_emission_config['number_events']}"
         command += f" --photons {self.flasher_photons}"
         command += f" --bunchsize {bunch_size}"
-        command += f" --xy {fx},{fy}"
+        command += f" --xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}"
         command += f" --distance {dist_cm}"
         command += f" --camera-radius {camera_radius}"
-        command += f" --spectrum {spec_nm}"
-        command += f" --lightpulse {pulse}"
-        command += f" --angular-distribution {angular}"
+        command += f" --spectrum {int(flasher_wavelength.to(u.nm).value)}"
+        command += f" --lightpulse {self._get_pulse_shape_string_for_sim_telarray()}"
+        command += " --angular-distribution "
+        command += f"{self._get_angular_distribution_string_for_sim_telarray()}"
         return command
 
     def _add_illuminator_command_options(self, command):
@@ -420,7 +322,7 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" -n {self.flasher_photons}"
 
         elif self.light_source_setup == "layout":
-            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
+            x_cal, y_cal, z_cal = self.calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
             command += f" -x {x_cal.to(u.cm).value}"
@@ -432,15 +334,15 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" -n {self.flasher_photons}"
             self._logger.info(f"Photons per run: {self.flasher_photons} ")
 
-            flasher_wavelength = self._calibration_model.get_parameter_value_with_unit(
+            flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
                 "flasher_wavelength"
             )
             command += f" -s {int(flasher_wavelength.to(u.nm).value)}"
 
-            pulse_shape = self._calibration_model.get_parameter_value_with_unit(
+            pulse_shape = self.calibration_model.get_parameter_value_with_unit(
                 "flasher_pulse_shape"
             )
-            pulse_width = self._calibration_model.get_parameter_value_with_unit(
+            pulse_width = self.calibration_model.get_parameter_value_with_unit(
                 "flasher_pulse_width"
             )
 
@@ -468,23 +370,23 @@ class SimulatorLightEmission(SimtelRunner):
         simtel_bin = self._simtel_path.joinpath("sim_telarray/bin/sim_telarray/")
         # Build command without prefix; caller will add SIM_TELARRAY_CONFIG_PATH once
         command = f"{simtel_bin} "
-        command += f"-I{self._telescope_model.config_file_directory} "
+        command += f"-I{self.telescope_model.config_file_directory} "
         command += f"-I{simtel_bin} "
-        command += f"-c {self._telescope_model.config_file_path} "
-        self._remove_line_from_config(self._telescope_model.config_file_path, "array_triggers")
-        self._remove_line_from_config(self._telescope_model.config_file_path, "axes_offsets")
+        command += f"-c {self.telescope_model.config_file_path} "
+        self._remove_line_from_config(self.telescope_model.config_file_path, "array_triggers")
+        self._remove_line_from_config(self.telescope_model.config_file_path, "axes_offsets")
 
         command += "-DNUM_TELESCOPES=1 "
 
         command += super().get_config_option(
             "altitude",
-            self._site_model.get_parameter_value_with_unit("corsika_observation_level")
+            self.site_model.get_parameter_value_with_unit("corsika_observation_level")
             .to(u.m)
             .value,
         )
         command += super().get_config_option(
             "atmospheric_transmission",
-            self._site_model.get_parameter_value("atmospheric_transmission"),
+            self.site_model.get_parameter_value("atmospheric_transmission"),
         )
         command += super().get_config_option("TRIGGER_TELESCOPES", "1")
 
@@ -512,7 +414,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_suffix = ""
         if self.light_source_setup == "variable":
             try:
-                dist_val = int(self._get_distance_for_plotting().to_value(u.m))
+                dist_val = int(self._get_distance_for_file_name().to_value(u.m))
                 dist_suffix = f"_d_{dist_val}"
             except Exception:  # pylint:disable=broad-except
                 dist_suffix = ""
@@ -596,7 +498,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_suffix = ""
         if self.light_source_setup == "variable":
             try:
-                dist_val = int(self._get_distance_for_plotting().to_value(u.m))
+                dist_val = int(self._get_distance_for_file_name().to_value(u.m))
                 dist_suffix = f"_d_{dist_val}"
             except Exception:  # pylint:disable=broad-except
                 dist_suffix = ""
@@ -604,15 +506,23 @@ class SimulatorLightEmission(SimtelRunner):
         pref = self._get_prefix()
         return f"{self.output_directory}/{pref}{app_name}_{app_mode}{dist_suffix}.simtel.zst"
 
-    def _get_distance_for_plotting(self):
-        """Get the distance to be used for plotting as an astropy Quantity.
-
-        For flasher runs, use the flasher_depth (cm) from the flasher model.
-        For illuminator runs, use the configured z_pos quantity.
-        Otherwise, fall back to self.distance if set, or 0 m.
+    def _get_distance_for_file_name(self):
         """
-        if self.light_source_type == "flasher" and self._flasher_model is not None:
-            return self._flasher_model.get_parameter_value_with_unit("flasher_depth").to(u.m)
+        Get the distance to be used for file names as an astropy Quantity.
+
+        For flasher-type light sources, use the calculated distance between focal plane and
+        calibration device. For illuminator-type light sources, use geometrical distance
+        between telescope and calibration device.
+
+        TODO - this is a mess
+
+        Returns
+        -------
+        astropy.Quantity
+            Distance in meters (default: 0 m)
+        """
+        if self.light_source_type == "flasher":
+            return self.calculate_distance_focal_plane_calibration_device()
 
         def _as_meters(val):
             if isinstance(val, u.Quantity):
@@ -691,14 +601,23 @@ class SimulatorLightEmission(SimtelRunner):
             raise KeyError(f"Key '{key}' not found in light emission configuration.")
 
     def calculate_distance_telescope_calibration_device(self):
-        """Calculate distance(s) between telescope and calibration device."""
+        """
+        Calculate distance(s) between telescope and calibration device.
+
+        For illuminator-type light sources.
+
+        Returns
+        -------
+        list
+            List of distances between calibration device and telescope in meters.
+        """
         if self.light_source_setup == "layout":
             # Layout positions: Use DB coordinates
-            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value_with_unit(
+            x_cal, y_cal, z_cal = self.calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
             x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
-            x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value_with_unit(
+            x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
             x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
@@ -720,8 +639,33 @@ class SimulatorLightEmission(SimtelRunner):
             distances.append(np.linalg.norm(cal_vect - tel_vect) * u.m)
         return distances
 
+    def calculate_distance_focal_plane_calibration_device(self):
+        """
+        Calculate distance between focal plane and calibration device.
+
+        For flasher-type light sources.
+        """
+        distance = self.telescope_model.get_parameter_value_with_unit("focal_length")
+        # TODO check sign
+        distance += self.calibration_model.get_parameter_value_with_unit("flasher_position")[2]
+        return distance
+
     def simulate_variable_distances(self, args_dict):
-        """Simulate light emission for variable distances and return output files list."""
+        """
+        Simulate light emission for variable distances.
+
+        For Illuminator-type light sources.
+
+        Parameters
+        ----------
+        args_dict : dict
+            Dictionary of arguments
+
+        Returns
+        -------
+        list[Path]
+            List of output simtel file paths.
+        """
         if args_dict["distances_ls"] is not None:
             self.update_light_emission_config(
                 "z_pos", self.distance_list(args_dict["distances_ls"])
@@ -742,8 +686,37 @@ class SimulatorLightEmission(SimtelRunner):
 
     def simulate_layout_positions(self, args_dict):  # pylint: disable=unused-argument
         """Simulate light emission for layout positions and return output files list."""
+        # TODO is this function needed to be with unused arguments?
         # args_dict kept for API symmetry; explicitly mark as unused
         del args_dict
         self.distance = self.calculate_distance_telescope_calibration_device()[0]
         # Single distance for layout
         return [self.run_simulation()]
+
+    def _get_angular_distribution_string_for_sim_telarray(self):
+        """
+        Get the angular distribution string for sim_telarray.
+
+        Returns
+        -------
+        str
+            The angular distribution string.
+        """
+        option_string = self.calibration_model.get_parameter_value("angular_distribution")
+        width = self.calibration_model.get_parameter_value_with_unit(
+            "flasher_angular_distribution_width"
+        )
+        return f"{option_string}:{width.to(u.deg).value}" if width is not None else option_string
+
+    def _get_pulse_shape_string_for_sim_telarray(self):
+        """
+        Get the pulse shape string for sim_telarray.
+
+        Returns
+        -------
+        str
+            The pulse shape string.
+        """
+        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
+        return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string

@@ -3,6 +3,7 @@
 
 import math
 
+from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
@@ -13,9 +14,11 @@ __all__ = [
 ]
 
 
-def initialize_simulation_models(label, db_config, site, telescope_name, model_version):
+def initialize_simulation_models(
+    label, db_config, model_version, site, telescope_name, calibration_device_name=None
+):
     """
-    Initialize simulation models for a single telescope and site model.
+    Initialize simulation models for a single telescope, site, and calibration device model.
 
     Parameters
     ----------
@@ -23,17 +26,19 @@ def initialize_simulation_models(label, db_config, site, telescope_name, model_v
         Label for the simulation.
     db_config: dict
         Database configuration.
+    model_version: str
+        Version of the simulation model
     site: str
         Name of the site.
     telescope_name: str
         Name of the telescope.
-    model_version: str
-        Version of the simulation model
+    calibration_device_name: str, optional
+        Name of the calibration device.
 
     Returns
     -------
     Tuple
-        Tuple containing the telescope model and site model.
+        Tuple containing the telescope site, (optional) calibration device model.
     """
     tel_model = TelescopeModel(
         site=site,
@@ -48,9 +53,19 @@ def initialize_simulation_models(label, db_config, site, telescope_name, model_v
         mongo_db_config=db_config,
         label=label,
     )
+    if calibration_device_name is not None:
+        calibration_model = CalibrationModel(
+            site=site,
+            calibration_device_model_name=calibration_device_name,
+            mongo_db_config=db_config,
+            model_version=model_version,
+            label=label,
+        )
+    else:
+        calibration_model = None
     for model in tel_model, site_model:
         model.export_model_files()
-    return tel_model, site_model
+    return tel_model, site_model, calibration_model
 
 
 def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:

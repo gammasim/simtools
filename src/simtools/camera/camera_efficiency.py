@@ -40,7 +40,7 @@ class CameraEfficiency:
         self.label = label
 
         self.io_handler = io_handler.IOHandler()
-        self.telescope_model, self.site_model = initialize_simulation_models(
+        self.telescope_model, self.site_model, _ = initialize_simulation_models(
             self.label,
             db_config,
             config_data["site"],

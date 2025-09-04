@@ -30,6 +30,81 @@ PATH_OPEN_TARGET = "pathlib.Path.open"
 OUT_DIR = "/directory"
 
 
+def flasher_default_configuration():
+    """
+    Get default flasher configuration.
+
+    TODO check if this needed.
+
+    Returns
+    -------
+    dict
+        Default configuration for flasher devices.
+    """
+    return {
+        "number_events": {
+            "len": 1,
+            "unit": None,
+            "default": 1,
+            "names": ["number_events"],
+        },
+        "photons_per_flasher": {
+            "len": 1,
+            "unit": None,
+            "default": 2.5e6,
+            "names": ["photons"],
+        },
+        "bunch_size": {
+            "len": 1,
+            "unit": None,
+            "default": 1.0,
+            "names": ["bunchsize"],
+        },
+        "flasher_position": {
+            "len": 2,
+            "unit": u.Unit("cm"),
+            "default": [0.0, 0.0] * u.cm,
+            "names": ["xy", "position"],
+        },
+        "flasher_depth": {
+            "len": 1,
+            "unit": u.Unit("cm"),
+            "default": 60 * u.cm,
+            "names": ["depth", "distance"],
+        },
+        "flasher_inclination": {
+            "len": 1,
+            "unit": u.Unit("deg"),
+            "default": 0.0 * u.deg,
+            "names": ["inclination"],
+        },
+        "spectrum": {
+            "len": 1,
+            "unit": u.Unit("nm"),
+            "default": 400 * u.nm,
+            "names": ["wavelength"],
+        },
+        "lightpulse": {
+            "len": 1,
+            "unit": None,
+            "default": "Simple:0",
+            "names": ["pulse"],
+        },
+        "angular_distribution": {
+            "len": 1,
+            "unit": None,
+            "default": "isotropic",
+            "names": ["angular"],
+        },
+        "flasher_pattern": {
+            "len": 1,
+            "unit": None,
+            "default": "all",
+            "names": ["fire", "pattern"],
+        },
+    }
+
+
 def _prepare_inst_with_common_mocks(
     inst,
     *,
@@ -229,7 +304,7 @@ def test_make_light_emission_script(
     expected_command = (
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
-        f" --telpos-file {mock_output_path}/telpos.dat"
+        f" --telescope_position-file {mock_output_path}/telescope_position.dat"
         " -x -58717.99999999999"
         " -y 275.0"
         " -z 13700.0"
@@ -257,7 +332,7 @@ def test_make_light_emission_script_variable(
     expected_command = (
         f"sim_telarray/LightEmission/xyzls"
         f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
-        f" --telpos-file {mock_output_path}/telpos.dat"
+        f" --telescope_position-file {mock_output_path}/telescope_position.dat"
         " -x 0.0"
         " -y 0.0"
         " -z 100000.0"
@@ -560,31 +635,31 @@ def test__get_prefix_none_and_value(mock_simulator):
     assert mock_simulator._get_prefix() == "xyzls_"
 
 
-def test__get_distance_for_plotting_branches(mock_simulator):
+def test__get_distance_for_file_name_branches(mock_simulator):
     # flasher branch
     mock_simulator.light_source_type = "flasher"
     # Provide a flasher model mock since the fixture doesn't include one
     mock_simulator._flasher_model = MagicMock()
     mock_simulator._flasher_model.get_parameter_value_with_unit.return_value = 60 * u.cm
-    assert mock_simulator._get_distance_for_plotting().to(u.cm).value == 60
+    assert mock_simulator._get_distance_for_file_name().to(u.cm).value == 60
 
     # variable z_pos dict with list default
     mock_simulator.light_source_type = "illuminator"
     mock_simulator.light_emission_config["z_pos"] = {"default": [100 * u.m]}
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 100
+    assert mock_simulator._get_distance_for_file_name().to_value(u.m) == 100
 
     # fallback to instance.distance
     mock_simulator.light_emission_config.pop("z_pos")
     mock_simulator.distance = 42 * u.m
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 42
+    assert mock_simulator._get_distance_for_file_name().to_value(u.m) == 42
 
     # fallback to instance.distance
     mock_simulator.distance = 42
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 42
+    assert mock_simulator._get_distance_for_file_name().to_value(u.m) == 42
 
     # final fallback to 0 m
     mock_simulator.distance = None
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 0
+    assert mock_simulator._get_distance_for_file_name().to_value(u.m) == 0
 
 
 def test_distance_list_valid_and_error(mock_simulator):
@@ -606,7 +681,7 @@ def test__build_altitude_atmo_block_flasher(mock_simulator, tmp_path, monkeypatc
         "ff-1m",
         tmp_path,
         1000 * u.m,
-        tmp_path / "telpos.dat",
+        tmp_path / "telescope_position.dat",
     )
     assert "--altitude 1000.0" in seg
     assert "--atmosphere 1" in seg
@@ -650,9 +725,9 @@ def test_run_simulation_warns_when_no_output(mock_simulator, tmp_path, monkeypat
     assert any("Expected simtel output not found" in r.message for r in caplog.records)
 
 
-def test_write_telpos_file(mock_simulator, tmp_path):
+def test_write_telescope_position_file(mock_simulator, tmp_path):
     """
-    Test the _write_telpos_file method to ensure it writes the correct telescope positions.
+    Test the _write_telescope_position_file method to ensure it writes the correct telescope positions.
     """
     # Mock the output directory to use a temporary path
     mock_simulator.output_directory = tmp_path
@@ -667,14 +742,14 @@ def test_write_telpos_file(mock_simulator, tmp_path):
         }[param]
     )
 
-    # Call the method to write the telpos file
-    telpos_file = mock_simulator._write_telpos_file()
+    # Call the method to write the telescope_position file
+    telescope_position_file = mock_simulator._write_telescope_position_file()
 
     # Verify the file was created and has the correct content
-    assert telpos_file.exists()
+    assert telescope_position_file.exists()
 
     # Read the content of the file
-    with open(telpos_file) as f:
+    with open(telescope_position_file) as f:
         content = f.read().strip()
 
     # Check that the content contains the expected values converted to cm
@@ -797,7 +872,9 @@ def test_build_altitude_atmo_block_ff1m(tmp_path, monkeypatch):
 
     monkeypatch.setattr(inst, "_prepare_flasher_atmosphere_files", lambda *_: 42)
 
-    block = inst._build_altitude_atmo_block("ff-1m", tmp_path, 2150 * u.m, tmp_path / "telpos.dat")
+    block = inst._build_altitude_atmo_block(
+        "ff-1m", tmp_path, 2150 * u.m, tmp_path / "telescope_position.dat"
+    )
 
     assert " -I." in block
     assert f" -I{inst._simtel_path.joinpath('sim_telarray/cfg')}" in block
@@ -811,9 +888,9 @@ def test_build_altitude_atmo_block_default(tmp_path):
     inst._logger = logging.getLogger(SIM_MOD_PATH)
     inst._simtel_path = Path("/simroot")
 
-    telpos = tmp_path / "telpos.dat"
-    block = inst._build_altitude_atmo_block("xyzls", tmp_path, 2100 * u.m, telpos)
-    assert block == f" -h  2100.0 --telpos-file {telpos}"
+    telescope_position = tmp_path / "telescope_position.dat"
+    block = inst._build_altitude_atmo_block("xyzls", tmp_path, 2100 * u.m, telescope_position)
+    assert block == f" -h  2100.0 --telescope_position-file {telescope_position}"
 
 
 def test_build_source_specific_block_branches(tmp_path, caplog, monkeypatch):
@@ -1062,7 +1139,7 @@ def test_make_simtel_script_variable_dist_suffix_exception():
     inst.light_source_setup = "variable"
 
     # Force exception path for distance suffix
-    inst._get_distance_for_plotting = MagicMock(side_effect=Exception("boom"))
+    inst._get_distance_for_file_name = MagicMock(side_effect=Exception("boom"))
     # Avoid calling real calibration method
     inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
@@ -1082,7 +1159,7 @@ def test_make_simtel_script_variable_dist_suffix_success():
     inst.light_source_setup = "variable"
 
     # Return a concrete distance so the suffix is added
-    inst._get_distance_for_plotting = MagicMock(return_value=1000 * u.m)
+    inst._get_distance_for_file_name = MagicMock(return_value=1000 * u.m)
     # Avoid calling real calibration method
     inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
@@ -1104,7 +1181,7 @@ def test_get_simulation_output_filename_prefix_and_exception():
     inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
 
     # Cause exception so no distance suffix is appended
-    inst._get_distance_for_plotting = MagicMock(side_effect=Exception("err"))
+    inst._get_distance_for_file_name = MagicMock(side_effect=Exception("err"))
 
     # Use real inference for app name/mode
     def infer():
@@ -1117,7 +1194,7 @@ def test_get_simulation_output_filename_prefix_and_exception():
 
 
 def test_flasher_default_configuration_schema():
-    cfg = SimulatorLightEmission.flasher_default_configuration()
+    cfg = flasher_default_configuration()
     assert isinstance(cfg, dict)
     for key in (
         "number_events",

@@ -9,6 +9,7 @@ applications:
     site: North
     telescope: MSTN-04
     test: true
+    log_level: DEBUG
   integration_tests:
   - output_file: logfile.log
   - output_file: xyzls_layout.simtel.zst
