@@ -126,7 +126,7 @@ class CorsikaHistograms:
                 f"{indices_arg} not a valid input. Please use integer numbers for telescope_indices"
             )
             self._logger.error(msg)
-            raise exc
+            raise ValueError(msg) from exc
 
     def should_overwrite(
         self, write_hdf5: bool, event1d: list | None, event2d: list | None
