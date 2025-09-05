@@ -234,7 +234,9 @@ class ModelParameter:
             return [_value[i] * _astropy_units[i] for i in range(len(_value))]
 
         except (KeyError, TypeError, AttributeError) as exc:
-            self._logger.debug(f"{exc} encountered, returning only value without units.")
+            self._logger.debug(
+                f"{exc} encountered for parameter {par_name}, returning only value without units."
+            )
             return _value  # if unit is NoneType
 
     def get_parameter_type(self, par_name):

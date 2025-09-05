@@ -240,10 +240,8 @@ def _get_schema_for_version(schema, schema_file, schema_version):
         schema = next((doc for doc in schema if doc.get("schema_version") == schema_version), None)
     if schema is None:
         raise ValueError(f"Schema version {schema_version} not found in {schema_file}.")
-    if schema_version not in (None, "latest") and schema_version != schema.get("schema_version"):
-        _logger.warning(
-            f"Schema version {schema_version} does not match {schema.get('schema_version')}"
-        )
+    if schema_version not in (None, "latest") and schema_version != schema.get("version"):
+        _logger.warning(f"Schema version {schema_version} does not match {schema.get('version')}")
     return schema
 
 

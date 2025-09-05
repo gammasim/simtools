@@ -1,30 +1,22 @@
 %YAML 1.2
 ---
-title: Schema for pedestal_events model parameter
+title: Schema for flasher_bunch_size model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: pedestal_events
+name: flasher_bunch_size
 description: |-
-  Number of pedestal events at start of run with camera lid open (same NSB as for normal events).
-short_description: |-
-  Number of pedestal events at start of run with camera lid open (same NSB as for normal events).
+  Photons per bunch for flasher.
 data:
-  - type: int64
+  - type: float64
     unit: dimensionless
-    default: 0
-    allowed_range:
-      min: 0
+    default: 1.
 instrument:
-  class: Camera
+  class: Calibration
   type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
+    - ILLN
+    - ILLS
 activity:
   setting:
     - SetParameterFromExternal
