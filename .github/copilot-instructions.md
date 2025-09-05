@@ -27,7 +27,7 @@ This repository contains simtools: a Python toolkit for configuring, running, an
 
 ## External integrations
 
-- External binaries: CORSIKA and sim_telarray live outside the repo. Build commands are scripted in runner classes; do not shell out directly from tests. Respect environment variables and paths passed via config.
+- External binaries: CORSIKA and sim_telarray live outside the repository. Build commands are scripted in runner classes; do not shell out directly from tests. Respect environment variables and paths passed via config.
 - Database: Mongo scripts in `database_scripts/**` help bootstrap local DBs. Code uses `pymongo` via model utilities.
 - Containers: Dockerfiles under `docker/` with a dev image; see `docker/README.md` for example `docker run` commands.
 
