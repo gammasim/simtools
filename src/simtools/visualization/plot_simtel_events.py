@@ -859,7 +859,6 @@ def _make_output_paths(
 
 def _call_peak_timing(
     filename: Path,
-    *,
     tel_id: int | None = None,
     sum_threshold: float = 10.0,
     peak_width: int = 8,
