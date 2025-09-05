@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from astropy import units as u
 
 from simtools.corsika import corsika_histograms_visualize
 
@@ -151,3 +152,95 @@ def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler
     figs_list = np.array(figs_list).flatten()
     corsika_histograms_visualize.save_figs_to_pdf(figs_list, output_file)
     assert output_file.exists()
+
+
+def test_event_header_1d_dimensionless_and_log_toggle(corsika_histograms_instance_set_histograms):
+    # Force dimensionless unit to exercise the else-branch for xlabel and log_y=False path
+    key = "total_energy"
+    corsika_histograms_instance_set_histograms.event_information[key] = (
+        corsika_histograms_instance_set_histograms.event_information[key].value
+        * u.dimensionless_unscaled
+    )
+    fig = corsika_histograms_visualize.plot_1d_event_header_distribution(
+        corsika_histograms_instance_set_histograms, key, log_y=False
+    )
+    assert isinstance(fig, plt.Figure)
+
+
+def test_event_header_2d_logz_false_and_dimensionless_labels(
+    corsika_histograms_instance_set_histograms,
+):
+    # Force both units to be dimensionless to cover xlabel/ylabel else-branches and log_z=False
+    key_x = "zenith"
+    key_y = "azimuth"
+    corsika_histograms_instance_set_histograms.event_information[key_x] = (
+        corsika_histograms_instance_set_histograms.event_information[key_x].value
+        * u.dimensionless_unscaled
+    )
+    corsika_histograms_instance_set_histograms.event_information[key_y] = (
+        corsika_histograms_instance_set_histograms.event_information[key_y].value
+        * u.dimensionless_unscaled
+    )
+    fig = corsika_histograms_visualize.plot_2d_event_header_distribution(
+        corsika_histograms_instance_set_histograms, key_x, key_y, log_z=False
+    )
+    assert isinstance(fig, plt.Figure)
+
+
+def test_build_and_export_all_photon_figures(
+    corsika_histograms_instance_set_histograms, io_handler
+):
+    # Build a reduced set for speed
+    figs = corsika_histograms_visualize.build_all_photon_figures(
+        corsika_histograms_instance_set_histograms, test=True
+    )
+    assert isinstance(figs, np.ndarray)
+    assert figs.size > 0
+
+    # Export reduced set to a single PDF
+    pdf_path = corsika_histograms_visualize.export_all_photon_figures_pdf(
+        corsika_histograms_instance_set_histograms, test=True
+    )
+    assert pdf_path.exists()
+
+
+def test_derive_event_histograms_pdf_and_hdf5(
+    corsika_histograms_instance_set_histograms, io_handler
+):
+    # 1D event histograms: create PDF and HDF5 outputs
+    pdf_1d = corsika_histograms_visualize.derive_event_1d_histograms(
+        corsika_histograms_instance_set_histograms,
+        event_1d_header_keys=["total_energy", "zenith"],
+        pdf=True,
+        hdf5=True,
+        overwrite=True,
+    )
+    assert pdf_1d is not None
+    assert pdf_1d.exists()
+
+    # 2D event histograms: create PDF and HDF5 outputs
+    pdf_2d = corsika_histograms_visualize.derive_event_2d_histograms(
+        corsika_histograms_instance_set_histograms,
+        event_2d_header_keys=["zenith", "azimuth"],
+        pdf=True,
+        hdf5=True,
+        overwrite=True,
+    )
+    assert pdf_2d is not None
+    assert pdf_2d.exists()
+
+
+def test_derive_event_2d_histograms_odd_keys_warning(
+    corsika_histograms_instance_set_histograms, caplog
+):
+    with caplog.at_level(logging.WARNING):
+        # Use odd number of keys and disable outputs to only exercise the warning path
+        result = corsika_histograms_visualize.derive_event_2d_histograms(
+            corsika_histograms_instance_set_histograms,
+            event_2d_header_keys=["zenith", "azimuth", "total_energy"],
+            pdf=False,
+            hdf5=False,
+            overwrite=False,
+        )
+    assert result is None
+    assert "An odd number of keys was passed" in caplog.text

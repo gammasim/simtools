@@ -577,11 +577,15 @@ def build_all_photon_figures(histograms_instance, test: bool = False):
 
     When test is True, only generate the first two figure groups to reduce runtime.
     """
-    plot_function_names = [
-        name
-        for name in dir(__import__(__name__))
-        if name.startswith("plot_") and "event_header_distribution" not in name
-    ]
+    plot_function_names = sorted(
+        [
+            name
+            for name, obj in globals().items()
+            if name.startswith("plot_")
+            and "event_header_distribution" not in name
+            and callable(obj)
+        ]
+    )
     if test:
         plot_function_names = plot_function_names[:2]
 
