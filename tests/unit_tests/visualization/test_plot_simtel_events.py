@@ -712,3 +712,183 @@ def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
 
     assert saved["pdf"] is not None
     assert saved["pdf"].exists()
+
+
+def test__compute_integration_window_edges():  # pylint:disable=protected-access
+    # signal mode basic
+    a, b = sep._compute_integration_window(
+        peak_idx=1, n_samp=10, half_width=2, mode="signal", offset=None
+    )
+    assert (a, b) == (0, 4)
+
+    # pedestal within bounds
+    a, b = sep._compute_integration_window(
+        peak_idx=6, n_samp=20, half_width=2, mode="pedestal", offset=5
+    )
+    assert (a, b) == (11, 16)
+
+    # pedestal fallback branch when start+win_len > n_samp
+    a, b = sep._compute_integration_window(
+        peak_idx=9, n_samp=10, half_width=2, mode="pedestal", offset=16
+    )
+    assert (a, b) == (0, 5)
+
+    # pedestal degenerate branch a>=b (n_samp=0)
+    a, b = sep._compute_integration_window(
+        peak_idx=0, n_samp=0, half_width=1, mode="pedestal", offset=100
+    )
+    assert (a, b) == (0, 0)
+
+
+def test__format_integrated_title_variants():  # pylint:disable=protected-access
+    t = sep._format_integrated_title("CT1", "flasher", half_width=2, mode="signal", offset=None)
+    assert "integrated signal" in t
+    assert "win 5" in t
+
+    t = sep._format_integrated_title("CT1", "flasher", half_width=2, mode="pedestal", offset=None)
+    assert "integrated pedestal" in t
+    assert "offset 16" in t
+
+    t = sep._format_integrated_title("CT1", "flasher", half_width=3, mode="pedestal", offset=7)
+    assert "win 7" in t
+    assert "offset 7" in t
+
+
+def test_integrated_images_no_r1_and_no_waveform(monkeypatch, caplog):
+    # Case 1: no r1.tel entries at all
+    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
+    src = _fake_source_with_event(ev, tel_id)
+    _install_fake_ctapipe(monkeypatch, src)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+        fig1 = sep.plot_simtel_integrated_signal_image(DUMMY_SIMTEL)
+    assert fig1 is None
+    assert any("integrated-signal image" in r.message for r in caplog.records)
+
+    # Case 2: r1.tel present but waveform is None
+    ev2, tel_id2 = _fake_event(dl1_image=np.array([1.0, 2.0]), r1_waveforms=None)
+    # Inject r1.tel[tel_id] with waveform=None to hit second branch
+    ev2.r1.tel[tel_id2] = SimpleNamespace(waveform=None)
+    src2 = _fake_source_with_event(ev2, tel_id2)
+    _install_fake_ctapipe(monkeypatch, src2)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        fig2 = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL)
+    assert fig2 is None
+    assert any("No R1 waveforms available" in r.message for r in caplog.records)
+
+
+def test__save_png_error_handling(tmp_path, monkeypatch, caplog):  # pylint:disable=protected-access
+    fig = plt.figure()
+
+    class _F:
+        def savefig(self, *a, **k):  # pylint:disable=unused-argument
+            raise RuntimeError("fail")
+
+    monkeypatch.setattr(fig, "savefig", _F().savefig)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        sep._save_png(fig, tmp_path, stem="s", suffix="t", dpi=80)
+    assert any("Failed to save PNG" in r.message for r in caplog.records)
+    plt.close(fig)
+
+
+def test__collect_figures_for_file_unknown_and_none(tmp_path, monkeypatch, caplog):  # pylint:disable=protected-access
+    # Unknown plot name should warn, and None figure should warn
+    monkeypatch.setattr(sep, "plot_simtel_event_image", lambda *a, **k: None)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        figs = sep._collect_figures_for_file(
+            filename=Path("in.simtel"),
+            plots=["unknown", "event_image"],
+            args={},
+            out_dir=tmp_path,
+            base_stem="base",
+            save_pngs=False,
+            dpi=80,
+        )
+    assert figs == []
+    msgs = [r.message for r in caplog.records]
+    assert any("Unknown plot selection" in m for m in msgs)
+    assert any("returned no figure" in m for m in msgs)
+
+
+def test__collect_figures_for_file_all_dispatch(tmp_path, monkeypatch):  # pylint:disable=protected-access
+    # Stub all dispatched functions to return a figure
+    ret_fig = lambda *a, **k: plt.figure()  # noqa: E731
+    monkeypatch.setattr(sep, "plot_simtel_event_image", ret_fig)
+    monkeypatch.setattr(sep, "plot_simtel_time_traces", ret_fig)
+    monkeypatch.setattr(sep, "plot_simtel_waveform_matrix", ret_fig)
+    monkeypatch.setattr(sep, "plot_simtel_step_traces", ret_fig)
+    monkeypatch.setattr(sep, "plot_simtel_integrated_signal_image", ret_fig)
+    monkeypatch.setattr(sep, "plot_simtel_integrated_pedestal_image", ret_fig)
+    monkeypatch.setattr(sep, "_call_peak_timing", ret_fig)
+
+    figs = sep._collect_figures_for_file(
+        filename=Path("in.simtel"),
+        plots=["all"],
+        args={},
+        out_dir=tmp_path,
+        base_stem="b",
+        save_pngs=False,
+        dpi=100,
+    )
+    assert len(figs) == 7
+    for f in figs:
+        plt.close(f)
+
+
+def test_generate_and_save_plots_error_branches(tmp_path, monkeypatch, caplog):
+    from simtools.io.io_handler import IOHandler
+
+    ioh = IOHandler()
+    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+    simtel_files = [tmp_path / "input.simtel.zst"]
+
+    # Case 1: no figures produced -> warning and continue
+    monkeypatch.setattr(sep, "_collect_figures_for_file", lambda **_k: [])
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        sep.generate_and_save_plots(
+            simtel_files, plots=["event_image"], args={"output_file": "base"}, ioh=ioh
+        )
+    assert any("No figures produced" in r.message for r in caplog.records)
+
+    # Case 2: save_figs_to_pdf raises -> error logged
+    def _collector(**_k):
+        return [plt.figure()]
+
+    def _save_fail(figs, pdf):  # pylint:disable=unused-argument
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(sep, "_collect_figures_for_file", _collector)
+    monkeypatch.setattr(sep, "save_figs_to_pdf", _save_fail)
+
+    caplog.clear()
+    with caplog.at_level("ERROR", logger=sep._logger.name):
+        sep.generate_and_save_plots(
+            simtel_files, plots=["event_image"], args={"output_file": "base"}, ioh=ioh
+        )
+    assert any("Failed to save PDF" in r.message for r in caplog.records)
+
+    # Case 3: metadata dump raises -> warning logged
+    monkeypatch.setattr(sep, "save_figs_to_pdf", lambda figs, pdf: None)
+
+    class _MC:
+        @staticmethod
+        def dump(args, pdf_path, add_activity_name=True):  # pylint:disable=unused-argument
+            raise RuntimeError("fail dump")
+
+    monkeypatch.setattr(sep, "MetadataCollector", _MC)
+
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        sep.generate_and_save_plots(
+            simtel_files, plots=["event_image"], args={"output_file": "base"}, ioh=ioh
+        )
+    assert any("Failed to write metadata" in r.message for r in caplog.records)
