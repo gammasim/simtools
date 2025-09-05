@@ -107,7 +107,6 @@ def _parse(label: str):
         default=["event_image"],
         choices=sorted(PLOT_CHOICES),
     )
-    # common plotting options
     config.parser.add_argument("--tel_id", type=int, default=None, help="Telescope ID")
     config.parser.add_argument(
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
