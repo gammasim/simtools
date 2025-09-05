@@ -21,7 +21,7 @@ class SimulatorLightEmission(SimtelRunner):
     """
     Light emission simulation (e.g. illuminators or flashers).
 
-    Interface with sim_telarray to perform light emission package simulations.
+    Uses the sim_telarray LightEmission package to simulate the light emission.
 
     Parameters
     ----------
@@ -41,29 +41,41 @@ class SimulatorLightEmission(SimtelRunner):
         )
         self._logger = logging.getLogger(__name__)
 
-        self.light_emission_config = light_emission_config
-        # TODO replace by array model?
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(
                 label=label,
                 db_config=db_config,
-                site=self.light_emission_config.get("site"),
-                telescope_name=self.light_emission_config.get("telescope"),
-                calibration_device_name=self.light_emission_config.get("light_source"),
-                model_version=self.light_emission_config.get("model_version"),
+                site=light_emission_config.get("site"),
+                telescope_name=light_emission_config.get("telescope"),
+                calibration_device_name=light_emission_config.get("light_source"),
+                model_version=light_emission_config.get("model_version"),
             )
         )
-        self.light_source_setup = self.light_emission_config.get("light_source_setup")
+        self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
 
-        self.light_source_type = self.calibration_model.get_parameter_value("flasher_type")
-        self.light_source_type = self.light_source_type.lower() if self.light_source_type else None
-        self.flasher_photons = (
+        self.light_emission_config = self._initialize_light_emission_configuration(
+            light_emission_config
+        )
+
+    def _initialize_light_emission_configuration(self, config):
+        """Initialize light emission configuration."""
+        if self.calibration_model.get_parameter_value("flasher_type"):
+            config["light_source_type"] = self.calibration_model.get_parameter_value(
+                "flasher_type"
+            ).lower()
+
+        config["flasher_photons"] = (
             self.calibration_model.get_parameter_value("flasher_photons")
-            if not self.light_emission_config.get("test", False)
+            if not config.get("test", False)
             else 1e8
         )
 
-        self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
+        if config.get("light_source_position") is not None:
+            config["light_source_position"] = (
+                np.array(config["light_source_position"], dtype=float) * u.m
+            )
+
+        return config
 
     def simulate(self):
         """
@@ -145,7 +157,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             app_name
         """
-        if self.light_source_type == "flat_fielding":
+        if self.light_emission_config["light_source_type"] == "flat_fielding":
             return "ff-1m"
         # default to illuminator xyzls, mode from setup
         return "xyzls"
@@ -214,33 +226,32 @@ class SimulatorLightEmission(SimtelRunner):
 
         radius = self.telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
         radius = radius.to(u.cm).value  # Convert radius to cm
-        with telescope_position_file.open("w", encoding="utf-8") as file:
-            file.write(f"{x_tel} {y_tel} {z_tel} {radius}\n")
 
+        telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file
 
     def _prepare_flasher_atmosphere_files(self, config_directory):
-        """Prepare canonical atmosphere aliases for ff-1m and return model id 1."""
-        atmosphere_file = self.site_model.get_parameter_value("atmospheric_profile")
-        self._logger.debug(f"Using atmosphere profile: {atmosphere_file}")
+        """
+        Prepare canonical atmosphere aliases for ff-1m and return model id 1.
 
-        src_path = config_directory.joinpath(atmosphere_file)
-        for canonical in ("atmprof1.dat", "atm_profile_model_1.dat"):
-            dst = config_directory.joinpath(canonical)
-            if dst.exists() or dst.is_symlink():
-                try:
-                    dst.unlink()
-                except OSError:
-                    pass
+        The ff-1m tool requires atmosphere files atmprof1.dat or atm_profile_model_1.dat and
+        as configuration parameter the atmosphere id ('--atmosphere id').
+
+        """
+        src_path = config_directory / self.site_model.get_parameter_value("atmospheric_profile")
+        self._logger.debug(f"Using atmosphere profile: {src_path}")
+
+        for name in ("atmprof1.dat", "atm_profile_model_1.dat"):
+            dst = config_directory / name
             try:
-                dst.symlink_to(src_path)
-            except OSError:
+                if dst.exists() or dst.is_symlink():
+                    dst.unlink()
                 try:
+                    dst.symlink_to(src_path)
+                except OSError:
                     shutil.copy2(src_path, dst)
-                except OSError as copy_err:
-                    self._logger.warning(
-                        f"Failed to create atmosphere alias {dst.name}: {copy_err}"
-                    )
+            except OSError as copy_err:
+                self._logger.warning(f"Failed to create atmosphere alias {dst.name}: {copy_err}")
         return 1
 
     def _make_light_emission_script(self):
@@ -272,7 +283,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts.append(self._get_light_source_command())
 
-        if self.light_source_type == "illuminator":
+        if self.light_emission_config["light_source_type"] == "illuminator":
             parts.append(f" -A {config_directory}/")
             parts.append(f"{self.telescope_model.get_parameter_value('atmospheric_profile')}")
 
@@ -300,11 +311,13 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _get_light_source_command(self):
         """Return light-source specific command options."""
-        if self.light_source_type == "flat_fielding":
+        if self.light_emission_config["light_source_type"] == "flat_fielding":
             return self._add_flasher_command_options("")
-        if self.light_source_type == "illuminator":
+        if self.light_emission_config["light_source_type"] == "illuminator":
             return self._add_illuminator_command_options("")
-        raise ValueError(f"Unknown light_source_type '{self.light_source_type}'")
+        raise ValueError(
+            f"Unknown light_source_type '{self.light_emission_config['light_source_type']}'"
+        )
 
     def _add_flasher_command_options(self, command):
         """
@@ -328,7 +341,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
 
         command += f" --events {self.light_emission_config['number_events']}"
-        command += f" --photons {self.flasher_photons}"
+        command += f" --photons {self.light_emission_config['flasher_photons']}"
         command += f" --bunchsize {bunch_size}"
         command += f" --xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}"
         command += f" --distance {dist_cm}"
@@ -353,14 +366,12 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The updated command string
         """
-        if self.light_emission_config.get("light_source_position") is not None:
-            x_cal = self.light_emission_config["light_source_position"][0]
-            y_cal = self.light_emission_config["light_source_position"][1]
-            z_cal = self.light_emission_config["light_source_position"][2]
-        else:
-            x_cal, y_cal, z_cal = self.calibration_model.get_parameter_value_with_unit(
+        pos = self.light_emission_config.get("light_source_position")
+        if pos is None:
+            pos = self.calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
+        x_cal, y_cal, z_cal = pos
         command += f" -x {x_cal.to(u.cm).value}"
         command += f" -y {y_cal.to(u.cm).value}"
         command += f" -z {z_cal.to(u.cm).value}"
@@ -370,8 +381,8 @@ class SimulatorLightEmission(SimtelRunner):
             pointing_vector = self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
         command += f" -d {','.join(map(str, pointing_vector))}"
 
-        command += f" -n {self.flasher_photons}"
-        self._logger.info(f"Photons per run: {self.flasher_photons} ")
+        command += f" -n {self.light_emission_config['flasher_photons']}"
+        self._logger.info(f"Photons per run: {self.light_emission_config['flasher_photons']}")
 
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
@@ -393,7 +404,7 @@ class SimulatorLightEmission(SimtelRunner):
             The command to run sim_telarray
         """
         # For flat_fielding sims, avoid calibration pointing entirely; default angles to (0,0)
-        if self.light_source_type == "flat_fielding":
+        if self.light_emission_config["light_source_type"] == "flat_fielding":
             angles = [0, 0]
         else:
             _, angles = self._calibration_pointing_direction()
@@ -404,9 +415,6 @@ class SimulatorLightEmission(SimtelRunner):
         command += f"-I{self.telescope_model.config_file_directory} "
         command += f"-I{simtel_bin} "
         command += f"-c {self.telescope_model.config_file_path} "
-        self._remove_line_from_config(self.telescope_model.config_file_path, "array_triggers")
-        self._remove_line_from_config(self.telescope_model.config_file_path, "axes_offsets")
-
         command += "-DNUM_TELESCOPES=1 "
 
         command += super().get_config_option(
@@ -434,7 +442,7 @@ class SimulatorLightEmission(SimtelRunner):
             command += super().get_config_option("telescope_phi", f"{angles[1]}")
 
         # For flat_fielding runs, bypass reflections on primary mirror
-        if self.light_source_type == "flat_fielding":
+        if self.light_emission_config["light_source_type"] == "flat_fielding":
             command += super().get_config_option("Bypass_Optics", "1")
 
         command += super().get_config_option("power_law", "2.68")
@@ -455,28 +463,6 @@ class SimulatorLightEmission(SimtelRunner):
 
         # Remove the default sim_telarray configuration directories
         return clear_default_sim_telarray_cfg_directories(command)
-
-    def _remove_line_from_config(self, file_path, line_prefix):
-        """
-        Remove lines starting with a specific prefix from the config.
-
-        # TODO check why this is needed only here (and not in other simulations)
-
-        Parameters
-        ----------
-        file_path : Path
-            The path to the configuration file.
-        line_prefix : str
-            The prefix of lines to be removed.
-        """
-        file_path = Path(file_path)
-        with file_path.open("r", encoding="utf-8") as file:
-            lines = file.readlines()
-
-        with file_path.open("w", encoding="utf-8") as file:
-            for line in lines:
-                if not line.startswith(line_prefix):
-                    file.write(line)
 
     def _get_simulation_output_filename(self):
         """Get the filename of the simulation output."""

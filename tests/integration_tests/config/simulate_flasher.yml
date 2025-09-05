@@ -9,6 +9,7 @@ applications:
     site: South
     telescope: MSTS-04
     test: true
+    log_level: DEBUG
   integration_tests:
   - output_file: logfile.log
   - output_file: ff-1m_flasher.simtel.zst
