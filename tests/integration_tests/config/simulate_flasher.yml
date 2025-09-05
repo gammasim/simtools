@@ -2,7 +2,8 @@
 applications:
 - application: simtools-simulate-flasher
   configuration:
-    flasher: MSFx-FlashCam
+    run_mode: full_simulation
+    light_source: MSFx-FlashCam
     model_version: 6.0.0
     output_path: simtools-output
     site: South

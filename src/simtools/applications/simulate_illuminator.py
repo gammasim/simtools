@@ -105,11 +105,8 @@ Expected Output:
 import logging
 from pathlib import Path
 
-import astropy.units as u
-
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 
@@ -118,7 +115,8 @@ def _parse(label):
     config = configurator.Configurator(
         label=label,
         description=(
-            "Simulate the light emission by an artificial light source for calibration purposes."
+            "Simulate the light emission by a calibration light source "
+            "(not attached to a telescope)."
         ),
     )
     config.parser.add_argument(
@@ -128,24 +126,23 @@ def _parse(label):
         default=0.0,
         required=False,
     )
-
     config.parser.add_argument(
-        "--light_source_setup",
-        help="Select calibration light source positioning/setup: \
-              varying distances (variable), layout positions (layout)",
-        type=str,
-        choices=["layout", "variable"],
-        default=None,
-        required=True,
-    )
-    config.parser.add_argument(
-        "--distances_ls",
-        help="Light source distance in m (Example --distances_ls 800 1200)",
-        nargs="+",
+        "--light_source_position",
+        help="Light source position (x,y,z) relative to the array center (ground coordinates) in m",
+        nargs=3,
         required=False,
     )
     config.parser.add_argument(
-        "--illuminator",
+        "--light_source_pointing",
+        help=(
+            "Light source pointing direction "
+            "(Example for pointing downwards: --light_source_pointing 0 0 -1)"
+        ),
+        nargs=3,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--light_source",
         help="Illuminator in array, i.e. ILLN-design",
         type=str,
         default=None,
@@ -172,87 +169,21 @@ def _parse(label):
     )
 
 
-def light_emission_configs(args_dict):
-    """
-    Define default light emission configurations.
-
-    Predefined angular distribution names not requiring to read any table are
-    "Isotropic", "Gauss:<rms>", "Rayleigh", "Cone:<angle>", and "FilledCone:<angle>", "Parallel",
-    with all angles given in degrees, all with respect to the given direction vector
-    (vertically downwards if missing). If the light source has a non-zero length and velocity
-    (in units of the vacuum speed of light), it is handled as a moving source,
-    in the given direction.
-
-    Parameters
-    ----------
-    args_dict: dict
-        Dictionary with command line arguments.
-
-    args_dict: dict
-        Dictionary with command line arguments.
-
-    Returns
-    -------
-    default_config: dict
-        Default light emission configuration.
-    """
-    if args_dict["light_source_setup"] == "variable":
-        cfg = {
-            "x_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["x_position"]},
-            "y_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["y_position"]},
-            "z_pos": {
-                "len": 1,
-                "unit": u.Unit("cm"),
-                "default": [i * 100 for i in [200, 300, 400, 600, 800, 1200, 2000, 4000]] * u.cm,
-                "names": ["z_position"],
-            },
-            "direction": {
-                "len": 3,
-                "unit": u.dimensionless_unscaled,
-                "default": [0, 0, -1],
-                "names": ["direction", "cx,cy,cz"],
-            },
-        }
-        args_dict.update(cfg)
-        return args_dict
-    return args_dict
-
-
 def main():
     """Simulate light emission."""
     label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
     logger = logging.getLogger()
+
+    args_dict, db_config = _parse(label)
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    telescope_model, site_model, calibration_model = initialize_simulation_models(
-        label=label,
-        db_config=db_config,
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        calibration_device_name=args_dict["illuminator"],
-        model_version=args_dict["model_version"],
-    )
-
     light_source = SimulatorLightEmission(
-        telescope_model=telescope_model,
-        calibration_model=calibration_model,
-        site_model=site_model,
-        light_emission_config=light_emission_configs(args_dict),
-        simtel_path=args_dict["simtel_path"],
+        light_emission_config=args_dict,
+        db_config=db_config,
         label=label,
-        test=args_dict["test"],
     )
 
-    if args_dict["light_source_setup"] == "variable":
-        outputs = light_source.simulate_variable_distances(args_dict)
-    elif args_dict["light_source_setup"] == "layout":
-        outputs = light_source.simulate_layout_positions(args_dict)
-    else:
-        outputs = []
-
-    if outputs:
-        logger.info("Simulation outputs:\n%s", "\n".join(str(p) for p in outputs))
+    light_source.simulate()
 
 
 if __name__ == "__main__":

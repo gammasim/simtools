@@ -2,13 +2,13 @@
 applications:
 - application: simtools-simulate-illuminator
   configuration:
-    illuminator: ILLN-01
-    light_source_setup: layout
+    light_source: ILLN-01
     model_version: 6.0.0
-    output_path: simtools-output
+    output_path: simtools-output/illuminator-layout
     site: North
     telescope: MSTN-04
     test: true
+    use_plain_output_path: true
     log_level: DEBUG
   integration_tests:
   - output_file: logfile.log

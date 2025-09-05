@@ -350,8 +350,8 @@ def test_make_light_emission_script_variable(
     # removed laser command test; laser mode no longer supported
 
 
-def test_calibration_pointing_direction(mock_simulator):
-    pointing_vector, angles = mock_simulator.calibration_pointing_direction()
+def test__calibration_pointing_direction(mock_simulator):
+    pointing_vector, angles = mock_simulator._calibration_pointing_direction()
 
     expected_pointing_vector = [0.979, -0.104, -0.174]
     expected_angles = [79.952, 186.092, 79.952, 173.908]
@@ -373,7 +373,7 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator._site_model = MagicMock()
         mock_simulator._calibration_model = MagicMock()
 
-        mock_simulator.calibration_pointing_direction = MagicMock(
+        mock_simulator._calibration_pointing_direction = MagicMock(
             return_value=([0, 0, 1], [76.980826, 180.17047, 0, 0])
         )
 
@@ -1122,7 +1122,7 @@ def test_make_simtel_script_variable_type_sets_zero_angles():
     inst.light_source_type = "variable"
 
     # Avoid calling real calibration method
-    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
+    inst._calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
     mock_file_content = "dummy"
     with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
@@ -1141,7 +1141,7 @@ def test_make_simtel_script_variable_dist_suffix_exception():
     # Force exception path for distance suffix
     inst._get_distance_for_file_name = MagicMock(side_effect=Exception("boom"))
     # Avoid calling real calibration method
-    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
+    inst._calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
     mock_file_content = "dummy"
     with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
@@ -1161,7 +1161,7 @@ def test_make_simtel_script_variable_dist_suffix_success():
     # Return a concrete distance so the suffix is added
     inst._get_distance_for_file_name = MagicMock(return_value=1000 * u.m)
     # Avoid calling real calibration method
-    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
+    inst._calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
 
     mock_file_content = "dummy"
     with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
