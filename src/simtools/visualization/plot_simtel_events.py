@@ -15,7 +15,6 @@ from scipy import signal as _signal
 
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import io_handler
 
 __all__ = [
     "generate_and_save_plots",
@@ -49,9 +48,7 @@ PLOT_CHOICES = {
 }
 
 
-def _get_event_source_and_r1_tel(
-    filename, event_index: int | None = None, warn_context: str | None = None
-):
+def _get_event_source_and_r1_tel(filename, event_index=None, warn_context=None):
     """Return (source, event, first_r1_tel_id) or None if unavailable.
 
     Centralizes creation of EventSource, event selection, and first R1 tel-id lookup.
@@ -76,9 +73,7 @@ def _get_event_source_and_r1_tel(
     return source, event, int(tel_ids[0])
 
 
-def _compute_integration_window(
-    peak_idx: int, n_samp: int, half_width: int, mode: str, offset: int | None
-) -> tuple[int, int]:
+def _compute_integration_window(peak_idx, n_samp, half_width, mode, offset):
     """Return [a, b) window bounds for integration for signal/pedestal modes."""
     hw = int(half_width)
     win_len = 2 * hw + 1
@@ -99,9 +94,7 @@ def _compute_integration_window(
     return a, b
 
 
-def _format_integrated_title(
-    tel_label: str, et_name: str, half_width: int, mode: str, offset: int | None
-) -> str:
+def _format_integrated_title(tel_label, et_name, half_width, mode, offset):
     win_len = 2 * int(half_width) + 1
     if mode == "signal":
         return f"{tel_label} integrated signal (win {win_len}) ({et_name})"
@@ -237,9 +230,9 @@ def plot_simtel_event_image(filename, distance=None, event_index=None):
 
 def plot_simtel_time_traces(
     filename,
-    tel_id: int | None = None,
-    n_pixels: int = 3,
-    event_index: int | None = None,
+    tel_id=None,
+    n_pixels=3,
+    event_index=None,
 ):
     """
     Plot R1 time traces for a few pixels of one event.
@@ -310,10 +303,10 @@ def plot_simtel_time_traces(
 
 def plot_simtel_waveform_matrix(
     filename,
-    tel_id: int | None = None,
-    vmax: float | None = None,
-    event_index: int | None = None,
-    pixel_step: int | None = None,
+    tel_id=None,
+    vmax=None,
+    event_index=None,
+    pixel_step=None,
 ):
     """
     Create a pseudocolor image of R1 waveforms (sample index vs. pixel id).
@@ -377,10 +370,10 @@ def plot_simtel_waveform_matrix(
 
 def plot_simtel_step_traces(
     filename,
-    tel_id: int | None = None,
-    pixel_step: int = 100,
-    max_pixels: int | None = None,
-    event_index: int | None = None,
+    tel_id=None,
+    pixel_step=100,
+    max_pixels=None,
+    event_index=None,
 ):
     """
     Plot step-style R1 traces for regularly sampled pixels (0, N, 2N, ...).
@@ -616,13 +609,13 @@ def _draw_peak_hist(
 
 def plot_simtel_peak_timing(
     filename,
-    tel_id: int | None = None,
-    sum_threshold: float = 10.0,
-    peak_width: int = 8,
-    examples: int = 3,
-    timing_bins: int | None = None,
-    return_stats: bool = False,
-    event_index: int | None = None,
+    tel_id=None,
+    sum_threshold=10.0,
+    peak_width=8,
+    examples=3,
+    timing_bins=None,
+    return_stats=False,
+    event_index=None,
 ):
     """
     Peak finding per pixel; report mean/std of peak sample and plot a histogram.
@@ -771,9 +764,9 @@ def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=No
 
 def plot_simtel_integrated_signal_image(
     filename,
-    tel_id: int | None = None,
-    half_width: int = 8,
-    event_index: int | None = None,
+    tel_id=None,
+    half_width=8,
+    event_index=None,
 ):
     """Plot camera image of integrated signal per pixel around the flasher peak."""
     return _plot_simtel_integrated_image(
@@ -787,10 +780,10 @@ def plot_simtel_integrated_signal_image(
 
 def plot_simtel_integrated_pedestal_image(
     filename,
-    tel_id: int | None = None,
-    half_width: int = 8,
-    offset: int = 16,
-    event_index: int | None = None,
+    tel_id=None,
+    half_width=8,
+    offset=16,
+    event_index=None,
 ):
     """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
     return _plot_simtel_integrated_image(
@@ -805,11 +798,11 @@ def plot_simtel_integrated_pedestal_image(
 
 def _plot_simtel_integrated_image(
     filename,
-    tel_id: int | None,
-    half_width: int,
-    event_index: int | None,
-    mode: str,
-    offset: int | None = None,
+    tel_id,
+    half_width,
+    event_index,
+    mode,
+    offset=None,
 ):
     """Shared implementation for integrated signal/pedestal images.
 
@@ -845,7 +838,7 @@ def _plot_simtel_integrated_image(
     return fig
 
 
-def _save_png(fig, out_dir: Path, stem: str, suffix: str, dpi: int):
+def _save_png(fig, out_dir, stem, suffix, dpi):
     """Save figure as PNG to out_dir.
 
     Errors during saving are logged as warnings.
@@ -857,9 +850,7 @@ def _save_png(fig, out_dir: Path, stem: str, suffix: str, dpi: int):
         _logger.warning("Failed to save PNG %s: %s", png_path, ex)
 
 
-def _make_output_paths(
-    ioh: io_handler.IOHandler, base: str | None, input_file: Path
-) -> tuple[Path, Path]:
+def _make_output_paths(ioh, base, input_file):
     """Return (out_dir, pdf_path) based on base name and input file."""
     out_dir = ioh.get_output_directory(label=Path(__file__).stem)
     pdf_path = ioh.get_output_file(f"{base}_{input_file.stem}" if base else input_file.stem)
@@ -868,13 +859,13 @@ def _make_output_paths(
 
 
 def _call_peak_timing(
-    filename: Path,
-    tel_id: int | None = None,
-    sum_threshold: float = 10.0,
-    peak_width: int = 8,
-    examples: int = 3,
-    timing_bins: int | None = None,
-    event_index: int | None = None,
+    filename,
+    tel_id=None,
+    sum_threshold=10.0,
+    peak_width=8,
+    examples=3,
+    timing_bins=None,
+    event_index=None,
 ):
     """Call plot_simtel_peak_timing while tolerating older signature.
 
@@ -905,21 +896,21 @@ def _call_peak_timing(
 
 
 def _collect_figures_for_file(
-    filename: Path,
-    plots: list[str],
-    args: dict,
-    out_dir: Path,
-    base_stem: str,
-    save_pngs: bool,
-    dpi: int,
+    filename,
+    plots,
+    args,
+    out_dir,
+    base_stem,
+    save_pngs,
+    dpi,
 ):
     """Generate selected plots for a single sim_telarray file.
 
     Returns a list of figures. If ``save_pngs`` is True, also writes PNGs to ``out_dir``.
     """
-    figures: list[object] = []
+    figures = []
 
-    def add(fig, tag: str):
+    def add(fig, tag):
         if fig is not None:
             figures.append(fig)
             if save_pngs:
@@ -941,7 +932,7 @@ def _collect_figures_for_file(
         else list(plots)
     )
 
-    dispatch: dict[str, tuple[object, dict[str, object]]] = {
+    dispatch = {
         "event_image": (
             plot_simtel_event_image,
             {"distance": None, "event_index": None},
@@ -993,10 +984,10 @@ def _collect_figures_for_file(
 
 
 def generate_and_save_plots(
-    simtel_files: list[Path],
-    plots: list[str],
-    args: dict,
-    ioh: io_handler.IOHandler,
+    simtel_files,
+    plots,
+    args,
+    ioh,
 ):
     """Generate plots for files and save a multi-page PDF per input.
 
