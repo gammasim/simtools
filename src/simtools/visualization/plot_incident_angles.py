@@ -90,18 +90,8 @@ def _plot_xy_heatmap(
 ):
     any_points = False
     fig, ax = plt.subplots(1, 1, figsize=(6, 5))
-    for off in sorted(results_by_offset.keys()):
-        tab = results_by_offset[off]
-        if tab is None or len(tab) == 0:
-            continue
-        if x_col not in tab.colnames or y_col not in tab.colnames:
-            continue
-        x = tab[x_col].to(u.m).value
-        y = tab[y_col].to(u.m).value
-        mask = np.isfinite(x) & np.isfinite(y)
-        x, y = x[mask], y[mask]
-        if x.size == 0:
-            continue
+    h = None
+    for _off, x, y in _iter_xy_valid_points(results_by_offset, x_col, y_col):
         any_points = True
         h = ax.hist2d(x, y, bins=bins, cmap="viridis", norm=None)
     if not any_points:
@@ -129,18 +119,7 @@ def _plot_xy_heatmaps_per_offset(
     label,
     bins=400,
 ):
-    for off in sorted(results_by_offset.keys()):
-        tab = results_by_offset[off]
-        if tab is None or len(tab) == 0:
-            continue
-        if x_col not in tab.colnames or y_col not in tab.colnames:
-            continue
-        x = tab[x_col].to(u.m).value
-        y = tab[y_col].to(u.m).value
-        mask = np.isfinite(x) & np.isfinite(y)
-        x, y = x[mask], y[mask]
-        if x.size == 0:
-            continue
+    for off, x, y in _iter_xy_valid_points(results_by_offset, x_col, y_col):
         fig, ax = plt.subplots(1, 1, figsize=(6, 5))
         h = ax.hist2d(x, y, bins=bins, cmap="viridis", norm=None)
         ax.set_xlabel("X hit (m)")
@@ -153,6 +132,27 @@ def _plot_xy_heatmaps_per_offset(
         out_path = out_dir / f"{file_stem}{off:g}_{label}.png"
         plt.savefig(out_path, dpi=300)
         plt.close(fig)
+
+
+def _iter_xy_valid_points(results_by_offset, x_col, y_col):
+    """Yield (off, x, y) arrays for valid entries with finite X/Y in meters.
+
+    Filters out None/empty tables, missing columns, and non-finite rows.
+    Offsets are iterated in sorted order.
+    """
+    for off in sorted(results_by_offset.keys()):
+        tab = results_by_offset[off]
+        if tab is None or len(tab) == 0:
+            continue
+        if x_col not in tab.colnames or y_col not in tab.colnames:
+            continue
+        x = tab[x_col].to(u.m).value
+        y = tab[y_col].to(u.m).value
+        mask = np.isfinite(x) & np.isfinite(y)
+        x, y = x[mask], y[mask]
+        if x.size == 0:
+            continue
+        yield off, x, y
 
 
 def _compute_bins(all_vals, bin_width, log, context):

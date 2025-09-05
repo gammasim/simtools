@@ -429,6 +429,29 @@ def test_xy_heatmaps_per_offset_primary(tmp_path):
     assert (out_dir / "incident_primary_xy_heatmap_off1_ut.png").exists()
 
 
+def test_iter_xy_valid_points_sorted_and_filtered():
+    t0 = QTable()
+    t1 = QTable()
+    t2 = QTable()
+    # valid at 1.0
+    t1["primary_hit_x"] = np.array([0.0, 0.1, np.nan]) * u.m
+    t1["primary_hit_y"] = np.array([0.0, -0.1, 0.2]) * u.m
+    # missing y at 0.0 -> skipped
+    t0["primary_hit_x"] = np.array([0.5]) * u.m
+    # nan-only at 2.0 -> skipped
+    t2["primary_hit_x"] = np.array([np.nan]) * u.m
+    t2["primary_hit_y"] = np.array([np.nan]) * u.m
+    res = {1.0: t1, 0.0: t0, 2.0: t2}
+    out = list(pia._iter_xy_valid_points(res, "primary_hit_x", "primary_hit_y"))
+    # Only the 1.0 entry should survive filtering
+    assert len(out) == 1
+    off, x, y = out[0]
+    assert np.isclose(off, 1.0)
+    # Last nan should be filtered out
+    assert np.all(np.isfinite(x))
+    assert np.all(np.isfinite(y))
+
+
 def test_debug_plots_generate_expected_files(tmp_path):
     out_dir = Path(tmp_path) / "plots"
     t0 = QTable()
