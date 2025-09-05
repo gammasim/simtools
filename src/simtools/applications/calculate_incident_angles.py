@@ -6,6 +6,7 @@ Creates photon files with additional columns for incident angles calculation.
 This application runs a version of sim_telarray compiled with the preprocessing
 flag -DDEBUG_TRACE 99. Outputs files and histograms of the incidence angles at
 the focal plane, primary mirror, and if available, secondary mirror.
+Optional debug plots can be also generated.
 
 Example usage
 -------------
@@ -24,22 +25,34 @@ Example usage
 Command line arguments
 ----------------------
 
-zenith (float, optional)
-    Zenith angle in degrees (default: 20.0).
-off_axis_angles (float, optional)
-    One or more off-axis angles in degrees (space-separated).
-source_distance (float, optional)
-    Source distance in kilometers (default: 10.0).
-number_of_rays (int, optional)
-    Number of star photons to trace per run (default: 10000).
-perfect_mirror (flag, optional)
+- zenith (float, optional)
+    Zenith angle in degrees. Default: 20.0.
+- off_axis_angles (float, optional)
+    One or more off-axis angles in degrees (space-separated). Default: [0.0].
+- source_distance (float, optional)
+    Source distance in kilometers. Default: 10.0.
+- number_of_rays (int, optional)
+    Number of star photons to trace per run. Default: 10000.
+- camera_shift (float, optional)
+    Camera shift along optical axis. Reserved for future use. Default: 0.0.
+- overwrite_rdna (flag, optional)
+    Overwrite mirror_reflection_random_angle with 0 deg when not provided.
+- mirror_reflection_random_angle (float, optional)
+    Explicit mirror_reflection_random_angle in degrees; overrides overwrite_rdna.
+- algn (float, optional)
+    Accuracy parameter for mirror alignment distributions. Default: 0.005.
+- use_prod4 (flag, optional)
+    Use prod-4 (SST: prod-5) config files instead of prod-6.
+- flip_mirror_layout (flag, optional)
+    Flip mirror layout x/y (if supported by the configuration).
+- no_optimisation (flag, optional)
+    Disable optimisation in ray-tracing (containment radii around c.o.g.).
+- perfect_mirror (flag, optional)
     Assume perfect mirror shape/alignment/reflection.
-overwrite_rdna (flag, optional)
-    Overwrite mirror_reflection_random_angle with 0 deg.
-mirror_reflection_random_angle (float, optional)
-    Set mirror_reflection_random_angle in degrees (overrides overwrite_rdna).
-algn (float, optional)
-    Accuracy parameter for mirror alignment distributions.
+- debug_plots (flag, optional)
+    Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle).
+- calculate_primary_secondary_angles / no-calculate_primary_secondary_angles
+    Include or skip angles on primary/secondary mirrors. Default: include.
 
 The application writes:
 - imaging list (photons) file
@@ -50,26 +63,26 @@ The application writes:
 
 Example of a focal incident angle plot for a SST:
 
-.. _plot_array_layout_plot:
+.. _plot_calculate_incident_angles_plot:
 .. image:: images/incident_angles_multi_calculate_incident_angles_SSTS-04.png
     :width: 49 %
 
 Example of a primary mirror incident angle plot for a SST:
 
-.. _plot_array_layout_plot:
+.. _plot_calculate_incident_angles_plot:
 .. image:: images/incident_angles_primary_multi_calculate_incident_angles_SSTS-04.png
     :width: 49 %
 
 Note also the relation between radius and primary mirror incident angles, and how this relates to
 the peak seen in the primary mirror incident angle distribution:
 
-.. _plot_array_layout_plot:
+.. _plot_calculate_incident_angles_plot:
 .. image:: images/primary_angle_vs_radius.png
     :width: 49 %
 
 Example of a secondary mirror incident angle plot for a SST:
 
-.. _plot_array_layout_plot:
+.. _plot_calculate_incident_angles_plot:
 .. image:: images/incident_angles_secondary_multi_calculate_incident_angles_SSTS-04.png
     :width: 49 %
 """
