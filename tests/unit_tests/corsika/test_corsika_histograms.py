@@ -920,3 +920,171 @@ def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
             m_export.assert_not_called()
             m_pdf.assert_called_once()
             assert out["pdf_photons"].name == "photons.pdf"
+
+
+def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_path):
+    # Cover event1d/event2d branches and write_hdf5 path, including overwrite flag logic
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+
+        with (
+            mock.patch.object(CorsikaHistograms, "set_histograms") as m_set,
+            mock.patch.object(CorsikaHistograms, "export_histograms") as m_export,
+            mock.patch(
+                "simtools.corsika.corsika_histograms_visualize.export_all_photon_figures_pdf",
+                return_value=None,
+            ),
+            mock.patch(
+                "simtools.corsika.corsika_histograms_visualize.derive_event_1d_histograms",
+                return_value=tmp_path / "event1d.pdf",
+            ) as m_e1d,
+            mock.patch(
+                "simtools.corsika.corsika_histograms_visualize.derive_event_2d_histograms",
+                return_value=tmp_path / "event2d.pdf",
+            ) as m_e2d,
+        ):
+            # Case A: write_hdf5 True triggers export and event1d provided
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0"],
+                write_pdf=False,
+                write_hdf5=True,
+                event1d=["total_energy"],
+                event2d=None,
+                test=True,
+            )
+            m_set.assert_called()
+            m_export.assert_called()
+            m_e1d.assert_called()
+            assert out["pdf_event_1d"].name == "event1d.pdf"
+
+            m_set.reset_mock()
+            m_export.reset_mock()
+            m_e1d.reset_mock()
+            m_e2d.reset_mock()
+
+            # Case B: event2d only, write_hdf5 False => overwrite True for event2d
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0"],
+                write_pdf=False,
+                write_hdf5=False,
+                event1d=None,
+                event2d=[("azimuth", "zenith")],
+                test=True,
+            )
+            m_export.assert_not_called()
+            m_e2d.assert_called_once()
+            # check overwrite=True was passed
+            kwargs = m_e2d.call_args.kwargs
+            assert kwargs.get("overwrite") is True
+            assert out["pdf_event_2d"].name == "event2d.pdf"
+
+            m_set.reset_mock()
+            m_export.reset_mock()
+            m_e1d.reset_mock()
+            m_e2d.reset_mock()
+
+            # Case C: event2d with write_hdf5 True => overwrite False for event2d
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0"],
+                write_pdf=False,
+                write_hdf5=True,
+                event1d=None,
+                event2d=[("azimuth", "zenith")],
+                test=True,
+            )
+            kwargs = m_e2d.call_args.kwargs
+            assert kwargs.get("overwrite") is False
+            assert out["pdf_event_2d"].name == "event2d.pdf"
+
+
+def test_set_histograms_raises_when_no_photon_bunches(corsika_histograms_instance):
+    # Patch IACTFile to yield events without 'photon_bunches' to hit the error branch
+    class _Evt:
+        def __init__(self):
+            # minimal structure for access in set_histograms
+            self.n_photons = np.array([0])
+
+    class _IACTCtx:
+        def __enter__(self_inner):  # noqa: N805
+            return [
+                _Evt(),  # a single event without 'photon_bunches'
+            ]
+
+        def __exit__(self_inner, exc_type, exc, tb):  # noqa: N805
+            return False
+
+    with mock.patch("simtools.corsika.corsika_histograms.IACTFile", return_value=_IACTCtx()):
+        # Only one telescope index to match our event.n_photons length
+        with pytest.raises(AttributeError):
+            corsika_histograms_instance.set_histograms(
+                telescope_indices=[0], individual_telescopes=False
+            )
+
+
+def test_fill_histograms_with_rotation(corsika_output_file_name):
+    # Cover rotation branch in _fill_histograms by providing both angles
+    photons = [
+        {
+            "x": 100.0,
+            "y": 50.0,
+            "cx": 0.1,
+            "cy": -0.2,
+            "time": -10.0,
+            "zem": 1.2e6,
+            "photons": 1.0,
+            "wavelength": 400.0,
+        }
+    ]
+    ch = CorsikaHistograms(corsika_output_file_name)
+    ch.individual_telescopes = False
+    ch.telescope_indices = [0]
+    ch._create_histograms(individual_telescopes=False)
+    # No entries before
+    assert np.count_nonzero(ch.hist_position[0].values()) == 0
+    # Provide angles to trigger rotate path
+    ch._fill_histograms(
+        photons, rotation_around_z_axis=10 * u.deg, rotation_around_y_axis=5 * u.deg
+    )
+    assert np.count_nonzero(ch.hist_position[0].values()) > 0
+
+
+def test_export_histograms_overwrite_true(corsika_histograms_instance_set_histograms, io_handler):
+    # Ensure both append/overwrite branches in _export_1d_histograms run
+    corsika_histograms_instance_set_histograms.hdf5_file_name = "overwrite_true.hdf5"
+    corsika_histograms_instance_set_histograms.export_histograms(overwrite=True)
+    out = io_handler.get_output_directory().joinpath("overwrite_true.hdf5")
+    assert out.exists()
+
+
+def test_export_event_header_histograms_overwrite_true(corsika_histograms_instance_set_histograms):
+    # 1D overwrite True
+    corsika_histograms_instance_set_histograms.export_event_header_1d_histogram(
+        "total_energy", bins=10, hist_range=None, overwrite=True
+    )
+    # 2D overwrite True
+    corsika_histograms_instance_set_histograms.export_event_header_2d_histogram(
+        "azimuth", "zenith", bins=(5, 5), hist_range=None, overwrite=True
+    )
+
+
+def test_event_histogram_invalid_keys(corsika_histograms_instance_set_histograms, caplog):
+    # 1D invalid key
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.event_1d_histogram("nope")
+    assert "key is not valid" in caplog.text
+    # 2D invalid key (one invalid is enough)
+    caplog.clear()
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.event_2d_histogram("nope", "zenith")
+    assert "At least one of the keys given is not valid" in caplog.text
