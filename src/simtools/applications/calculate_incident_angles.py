@@ -45,8 +45,8 @@ Command line arguments
     Use prod-4 (SST: prod-5) config files instead of prod-6.
 - flip_mirror_layout (flag, optional)
     Flip mirror layout x/y (if supported by the configuration).
-- no_optimisation (flag, optional)
-    Disable optimisation in ray-tracing (containment radii around c.o.g.).
+- no_optimization (flag, optional)
+    Disable optimization in ray-tracing (containment radii around c.o.g.).
 - perfect_mirror (flag, optional)
     Assume perfect mirror shape/alignment/reflection.
 - debug_plots (flag, optional)
@@ -55,13 +55,13 @@ Command line arguments
     Include or skip angles on primary/secondary mirrors. Default: include.
 
 The application writes:
+
 - imaging list (photons) file
 - stars list file
 - a histogram of incident angles (PNG)
 - a results table in ECSV format
 
-
-Example of a focal incident angle plot for a SST:
+Example of a focal-plane incident angle plot for a SST:
 
 .. _plot_calculate_incident_angles_plot:
 .. image:: images/incident_angles_multi_calculate_incident_angles_SSTS-04.png
@@ -171,8 +171,8 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--no_optimisation",
-        help="No optimisation in rx. Containment radii around c.o.g.",
+        "--no_optimization",
+        help="No optimization in rx. Containment radii around c.o.g.",
         action="store_true",
         required=False,
     )
