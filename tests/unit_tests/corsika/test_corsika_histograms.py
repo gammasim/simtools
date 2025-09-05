@@ -9,6 +9,7 @@ from unittest import mock
 import boost_histogram as bh
 import numpy as np
 import pytest
+import tables
 from astropy import units as u
 from astropy.table import Table
 
@@ -828,6 +829,24 @@ def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histog
         )
     tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 13
+
+
+def test_export_histograms_individual_telescopes_naming(corsika_histograms_instance, io_handler):
+    # Configure for individual telescope export to hit tel_index naming branches
+    corsika_histograms_instance.set_histograms(telescope_indices=[0], individual_telescopes=True)
+    corsika_histograms_instance.hdf5_file_name = "indiv_tel.hdf5"
+
+    # Export both 1D and 2D histograms
+    corsika_histograms_instance.export_histograms(overwrite=True)
+
+    out = io_handler.get_output_directory().joinpath("indiv_tel.hdf5")
+    assert out.exists()
+
+    # Verify table paths include tel_index in both 1D and 2D histograms
+    with tables.open_file(out.as_posix(), mode="r") as h5:
+        node_paths = [n._v_pathname for n in h5.walk_nodes("/", "Table")]
+    assert any("_tel_index_0" in p for p in node_paths)
+    assert any("hist_2d_" in p and "_tel_index_0" in p for p in node_paths)
 
 
 @pytest.fixture(name="corsika_dummy_input")
