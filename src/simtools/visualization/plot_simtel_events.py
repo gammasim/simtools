@@ -49,6 +49,33 @@ PLOT_CHOICES = {
 }
 
 
+def _get_event_source_and_r1_tel(
+    filename, event_index: int | None = None, warn_context: str | None = None
+):
+    """Return (source, event, first_r1_tel_id) or None if unavailable.
+
+    Centralizes creation of EventSource, event selection, and first R1 tel-id lookup.
+
+    When no event exists, logs a standard warning. When the event has no R1 tel data,
+    logs either a contextual message ("Event has no R1 data for <context>") if
+    warn_context is provided, or the generic "First event has no R1 telescope data".
+    """
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source)(event_index=event_index)
+    if not event:
+        _logger.warning("No event found in the file.")
+        return None
+
+    tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if not tel_ids:
+        if warn_context:
+            _logger.warning("Event has no R1 data for %s", warn_context)
+        else:
+            _logger.warning("First event has no R1 telescope data")
+        return None
+    return source, event, int(tel_ids[0])
+
+
 def _compute_integration_window(
     peak_idx: int, n_samp: int, half_width: int, mode: str, offset: int | None
 ) -> tuple[int, int]:
@@ -157,17 +184,10 @@ def plot_simtel_event_image(filename, distance=None, event_index=None):
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if no suitable event/image is available.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-    if not event:
-        _logger.warning("No event found in the file.")
+    prepared = _get_event_source_and_r1_tel(filename, event_index=event_index, warn_context=None)
+    if prepared is None:
         return None
-
-    tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if not tel_ids:
-        _logger.warning("First event has no R1 telescope data")
-        return None
-    tel_id = tel_ids[0]
+    source, event, tel_id = prepared
 
     calib = CameraCalibrator(subarray=source.subarray)
     calib(event)
@@ -240,15 +260,13 @@ def plot_simtel_time_traces(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        dl1_tel_ids = sorted(getattr(event.dl1, "tel", {}).keys())
-        tel_id = tel_id or dl1_tel_ids[0]
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="time traces plot"
+    )
+    if prepared is None:
+        return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     calib = CameraCalibrator(subarray=source.subarray)
     try:
@@ -318,15 +336,13 @@ def plot_simtel_waveform_matrix(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for waveform plot")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="waveform plot"
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -387,15 +403,13 @@ def plot_simtel_step_traces(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for traces plot")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="traces plot"
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -639,15 +653,13 @@ def plot_simtel_peak_timing(
         ``return_stats`` is True, a tuple ``(fig, stats)`` is returned, where
         ``stats`` has keys ``{"considered", "found", "mean", "std"}``.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for peak timing plot")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="peak timing plot"
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -737,15 +749,13 @@ def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=No
         ``n_samp`` are integers, and ``source``, ``event`` and ``tel_id`` are
         the ctapipe objects used. Returns ``None`` on failure.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning(f"Event has no R1 data for {context_no_r1}")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context=context_no_r1
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
