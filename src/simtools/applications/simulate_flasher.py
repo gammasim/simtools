@@ -9,7 +9,7 @@ The flasher simulation allows two different run modes:
 2. Simulation of the full light path (using the light-emission package from sim_telarray).
 
 The direct injection mode uses a simplified model for the flasher light source. Both run modes
-provided events in sim_telarray format that can be processed by standard analysis steps or
+provide events in sim_telarray format that can be processed by standard analysis steps or
 visualized using e.g. the 'simtools-plot-simtel-events' application.
 
 Example Usage
@@ -99,9 +99,9 @@ def _parse(label):
 def main():
     """Simulate flasher devices."""
     label = Path(__file__).stem
-    logger = logging.getLogger(__name__)
 
     args_dict, db_config = _parse(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     logger.info(
