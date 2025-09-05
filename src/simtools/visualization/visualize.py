@@ -4,6 +4,7 @@
 import logging
 import re
 from collections import OrderedDict
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -641,9 +642,6 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     title: str
         Title of the figure to be added to the log message.
     """
-    # pylint: disable=import-outside-toplevel
-    from pathlib import Path
-
     figure_format = figure_format or ["pdf", "png"]
     for fmt in figure_format:
         _file = Path(output_file).with_suffix(f".{fmt}")

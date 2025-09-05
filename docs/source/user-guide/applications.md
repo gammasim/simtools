@@ -49,6 +49,7 @@ Parameters with the same functionality are named consistently the same among all
 :glob: true
 :maxdepth: 1
 
+simtools-calculate-incident-angles <applications/simtools-calculate-incident-angles>
 simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
