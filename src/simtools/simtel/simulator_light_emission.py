@@ -13,6 +13,7 @@ from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
+from simtools.utils.geometry import fiducial_radius_from_shape
 
 __all__ = ["SimulatorLightEmission"]
 
@@ -33,13 +34,14 @@ class SimulatorLightEmission(SimtelRunner):
 
     def __init__(self, light_emission_config, db_config=None, label=None):
         """Initialize SimulatorLightEmission."""
+        self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
-        self.output_directory = self.io_handler.get_output_directory(label)
 
         super().__init__(
             simtel_path=light_emission_config.get("simtel_path"), label=label, corsika_config=None
         )
-        self._logger = logging.getLogger(__name__)
+
+        self.output_directory = self.io_handler.get_output_directory(label)
 
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(
@@ -111,36 +113,33 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             Full path of the run script.
         """
-        _script_dir = self.output_directory.joinpath("scripts")
-        _script_dir.mkdir(parents=True, exist_ok=True)
+        script_dir = self.output_directory.joinpath("scripts")
+        script_dir.mkdir(parents=True, exist_ok=True)
+
         app_name = self._get_light_emission_application_name()
-        _script_file = _script_dir.joinpath(f"{app_name}-light_emission.sh")
-        self._logger.debug(f"Run bash script - {_script_file}")
+        script_file = script_dir / f"{app_name}-light_emission.sh"
+        self._logger.debug(f"Run bash script - {script_file}")
 
         target_out = Path(self._get_simulation_output_filename())
         if target_out.exists():
-            msg = f"sim_telarray output file exists already, cancelling simulation: {target_out}"
-            self._logger.error(msg)
-            raise FileExistsError(msg)
+            raise FileExistsError(
+                f"sim_telarray output file exists, cancelling simulation: {target_out}"
+            )
 
-        command_le = self._make_light_emission_script()
-        command_simtel = self._make_simtel_script()
-
-        with _script_file.open("w", encoding="utf-8") as file:
-            file.write("#!/usr/bin/env bash\n")
-
-            file.write(f"{command_le}\n\n")
-            file.write(
+        lines = [
+            "#!/usr/bin/env bash\n",
+            f"{self._make_light_emission_script()}\n\n",
+            (
                 f"[ -s '{self.output_directory}/{app_name}.iact.gz' ] || "
                 f"{{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }}\n\n"
-            )
-            file.write(f"{command_simtel}\n\n")
+            ),
+            f"{self._make_simtel_script()}\n\n",
+            f"rm -f '{self.output_directory}/{app_name}.iact.gz'\n\n",
+        ]
 
-            # Cleanup intermediate IACT file at the end of the run
-            file.write(f"rm -f '{self.output_directory}/{app_name}.iact.gz'\n\n")
-
-        _script_file.chmod(_script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        return _script_file
+        script_file.write_text("".join(lines), encoding="utf-8")
+        script_file.chmod(script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        return script_file
 
     def _get_prefix(self):
         prefix = self.light_emission_config.get("output_prefix", "")
@@ -218,7 +217,6 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             The path to the generated telescope_position file.
         """
-        telescope_position_file = self.output_directory.joinpath("telescope_position.dat")
         x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
@@ -227,12 +225,13 @@ class SimulatorLightEmission(SimtelRunner):
         radius = self.telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
         radius = radius.to(u.cm).value  # Convert radius to cm
 
+        telescope_position_file = self.output_directory.joinpath("telescope_position.dat")
         telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file
 
-    def _prepare_flasher_atmosphere_files(self, config_directory):
+    def _prepare_flasher_atmosphere_files(self, config_directory, model_id=1):
         """
-        Prepare canonical atmosphere aliases for ff-1m and return model id 1.
+        Prepare canonical atmosphere aliases for ff-1m and return model id.
 
         The ff-1m tool requires atmosphere files atmprof1.dat or atm_profile_model_1.dat and
         as configuration parameter the atmosphere id ('--atmosphere id').
@@ -241,7 +240,7 @@ class SimulatorLightEmission(SimtelRunner):
         src_path = config_directory / self.site_model.get_parameter_value("atmospheric_profile")
         self._logger.debug(f"Using atmosphere profile: {src_path}")
 
-        for name in ("atmprof1.dat", "atm_profile_model_1.dat"):
+        for name in (f"atmprof{model_id}.dat", f"atm_profile_model_{model_id}.dat"):
             dst = config_directory / name
             try:
                 if dst.exists() or dst.is_symlink():
@@ -252,7 +251,7 @@ class SimulatorLightEmission(SimtelRunner):
                     shutil.copy2(src_path, dst)
             except OSError as copy_err:
                 self._logger.warning(f"Failed to create atmosphere alias {dst.name}: {copy_err}")
-        return 1
+        return model_id
 
     def _make_light_emission_script(self):
         """
@@ -270,133 +269,110 @@ class SimulatorLightEmission(SimtelRunner):
             label=self.label, model_version=self.site_model.model_version
         )
         app_name = self._get_light_emission_application_name()
-
-        parts: list[str] = []
-        # application path
-        parts.append(str(self._simtel_path.joinpath("sim_telarray/LightEmission/")))
-        parts.append(f"/{app_name}")
-
         corsika_observation_level = self.site_model.get_parameter_value_with_unit(
             "corsika_observation_level"
         )
-        parts.append(self._get_site_command(app_name, config_directory, corsika_observation_level))
 
-        parts.append(self._get_light_source_command())
-
+        parts = [str(self._simtel_path / "sim_telarray/LightEmission") + f"/{app_name}"]
+        parts.extend(self._get_site_command(app_name, config_directory, corsika_observation_level))
+        parts.extend(self._get_light_source_command())
         if self.light_emission_config["light_source_type"] == "illuminator":
-            parts.append(f" -A {config_directory}/")
-            parts.append(f"{self.telescope_model.get_parameter_value('atmospheric_profile')}")
-
-        parts.append(f" -o {self.output_directory}/{app_name}.iact.gz")
-        parts.append("\n")
-
-        return "".join(parts)
+            parts += [
+                f"-A {config_directory}/",
+                f"{self.telescope_model.get_parameter_value('atmospheric_profile')}",
+            ]
+        parts += [f" -o {self.output_directory}/{app_name}.iact.gz", "\n"]
+        return " ".join(parts)
 
     def _get_site_command(self, app_name, config_directory, corsika_observation_level):
         """Return site command with altitude, atmosphere and telescope_position handling."""
         if app_name in ("ff-1m",):
-            seg = []
-            seg.append(" -I.")
-            seg.append(f" -I{self._simtel_path.joinpath('sim_telarray/cfg')}")
-            seg.append(f" -I{config_directory}")
-            seg.append(f" --altitude {corsika_observation_level.to(u.m).value}")
             atmo_id = self._prepare_flasher_atmosphere_files(config_directory)
-            seg.append(f" --atmosphere {atmo_id}")
-            return "".join(seg)
+            return [
+                "-I.",
+                f"-I{self._simtel_path / 'sim_telarray/cfg'}",
+                f"-I{config_directory}",
+                f"--altitude {corsika_observation_level.to(u.m).value}",
+                f"--atmosphere {atmo_id}",
+            ]
         # default path (not used for flasher now, but kept for completeness)
-        return (
-            f" -h  {corsika_observation_level.to(u.m).value} "
-            f"--telpos-file {self._write_telescope_position_file()}"
-        )
+        return [
+            f"-h  {corsika_observation_level.to(u.m).value} ",
+            f"--telpos-file {self._write_telescope_position_file()}",
+        ]
 
     def _get_light_source_command(self):
         """Return light-source specific command options."""
         if self.light_emission_config["light_source_type"] == "flat_fielding":
-            return self._add_flasher_command_options("")
+            return self._add_flasher_command_options()
         if self.light_emission_config["light_source_type"] == "illuminator":
-            return self._add_illuminator_command_options("")
+            return self._add_illuminator_command_options()
         raise ValueError(
             f"Unknown light_source_type '{self.light_emission_config['light_source_type']}'"
         )
 
-    def _add_flasher_command_options(self, command):
-        """
-        Add flasher options for all telescope types (ff-1m style).
-
-        TODO fixed wavelength, no spectral distribution
-        """
+    def _add_flasher_command_options(self):
+        """Add flasher options for all telescope types (ff-1m style)."""
         flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
-        # Camera radius required for application, radius of fiducial sphere enclosing camera
-        # TODO this might not be a diameter for squared cameras
-        camera_radius = (
+        camera_radius = fiducial_radius_from_shape(
             self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
             .to(u.cm)
-            .value
-            / 2
+            .value,
+            self.telescope_model.get_parameter_value("camera_body_shape"),
         )
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
         )
-        bunch_size = self.calibration_model.get_parameter_value("flasher_bunch_size")
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
+        angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        command += f" --events {self.light_emission_config['number_events']}"
-        command += f" --photons {self.light_emission_config['flasher_photons']}"
-        command += f" --bunchsize {bunch_size}"
-        command += f" --xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}"
-        command += f" --distance {dist_cm}"
-        command += f" --camera-radius {camera_radius}"
-        command += f" --spectrum {int(flasher_wavelength.to(u.nm).value)}"
-        command += f" --lightpulse {self._get_pulse_shape_string_for_sim_telarray()}"
-        command += " --angular-distribution "
-        command += f"{self._get_angular_distribution_string_for_sim_telarray()}"
-        return command
+        return [
+            f"--events {self.light_emission_config['number_events']}",
+            f"--photons {self.light_emission_config['flasher_photons']}",
+            f"--bunchsize {self.calibration_model.get_parameter_value('flasher_bunch_size')}",
+            f"--xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}",
+            f"--distance {dist_cm}",
+            f"--camera-radius {camera_radius}",
+            f"--spectrum {int(flasher_wavelength.to(u.nm).value)}",
+            f"--lightpulse {self._get_pulse_shape_string_for_sim_telarray()}",
+            f"--angular-distribution {angular_distribution}",
+        ]
 
-    def _add_illuminator_command_options(self, command):
-        """
-        Add illuminator-specific command options to the light emission script.
-
-        Parameters
-        ----------
-        command : str
-            The command string to add options to
-
-        Returns
-        -------
-        str
-            The updated command string
-        """
+    def _add_illuminator_command_options(self):
+        """Get illuminator-specific command options for light emission script."""
         pos = self.light_emission_config.get("light_source_position")
         if pos is None:
             pos = self.calibration_model.get_parameter_value_with_unit(
                 "array_element_position_ground"
             )
         x_cal, y_cal, z_cal = pos
-        command += f" -x {x_cal.to(u.cm).value}"
-        command += f" -y {y_cal.to(u.cm).value}"
-        command += f" -z {z_cal.to(u.cm).value}"
         if self.light_emission_config.get("light_source_pointing"):
             pointing_vector = self.light_emission_config["light_source_pointing"]
         else:
             pointing_vector = self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
-        command += f" -d {','.join(map(str, pointing_vector))}"
-
-        command += f" -n {self.light_emission_config['flasher_photons']}"
-        self._logger.info(f"Photons per run: {self.light_emission_config['flasher_photons']}")
-
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
         )
-        command += f" -s {int(flasher_wavelength.to(u.nm).value)}"
-        command += f" -p {self._get_pulse_shape_string_for_sim_telarray()}"
-        # TODO should this be a parameter
-        command += " -a isotropic"
+        # TODO TMP
+        # angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
+        angular_distribution = "isotropic"
 
-        return command
+        return [
+            f"-x {x_cal.to(u.cm).value}",
+            f"-y {y_cal.to(u.cm).value}",
+            f"-z {z_cal.to(u.cm).value}",
+            f"-d {','.join(map(str, pointing_vector))}",
+            f"-n {self.light_emission_config['flasher_photons']}",
+            f"-s {int(flasher_wavelength.to(u.nm).value)}",
+            f"-p {self._get_pulse_shape_string_for_sim_telarray()}",
+            f"-a {angular_distribution}",
+        ]
 
     def _make_simtel_script(self):
         """
         Return the command to run sim_telarray using the output from the previous step.
+
+        TODO clean up all +=
 
         Returns
         -------
@@ -506,6 +482,6 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The pulse shape string.
         """
-        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape").lower()
         width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string
