@@ -20,7 +20,7 @@ applications:
     log_level: DEBUG
   integration_tests:
   - output_file: logfile.log
-  - output_file: xyzls_variable_d_200.simtel.zst
+  - output_file: xyzls.simtel.zst
   model_version_use_current: true
   test_name: run-configurable-position
 schema_name: application_workflow.metaschema

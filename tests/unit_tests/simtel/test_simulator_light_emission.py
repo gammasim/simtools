@@ -42,11 +42,11 @@ def flasher_default_configuration():
         Default configuration for flasher devices.
     """
     return {
-        "number_events": {
+        "number_of_events": {
             "len": 1,
             "unit": None,
             "default": 1,
-            "names": ["number_events"],
+            "names": ["number_of_events"],
         },
         "photons_per_flasher": {
             "len": 1,
@@ -114,7 +114,7 @@ def _prepare_inst_with_common_mocks(
     """Prepare a SimulatorLightEmission instance with common test mocks."""
     inst.light_source_setup = light_source_setup
     inst.output_directory = OUT_DIR
-    inst.light_emission_config = {"output_prefix": None, "number_events": 1}
+    inst.light_emission_config = {"output_prefix": None, "number_of_events": 1}
 
     # Simtel installation path used to compose include paths
     inst._simtel_path = MagicMock()
@@ -214,7 +214,7 @@ def mock_simulator(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        light_emission_config={"number_events": 1, "output_prefix": None},
+        light_emission_config={"number_of_events": 1, "output_prefix": None},
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         light_source_setup="layout",
@@ -247,7 +247,7 @@ def mock_simulator_variable(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        light_emission_config={**default_config, "number_events": 1, "output_prefix": None},
+        light_emission_config={**default_config, "number_of_events": 1, "output_prefix": None},
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         light_source_setup="variable",
@@ -275,7 +275,7 @@ def calibration_model_illn(db_config, io_handler, model_version):
 def test_initialization(mock_simulator, default_config):
     assert isinstance(mock_simulator, SimulatorLightEmission)
     assert mock_simulator.light_source_type == "illuminator"
-    assert mock_simulator.light_emission_config.get("number_events", 1) == 1
+    assert mock_simulator.light_emission_config.get("number_of_events", 1) == 1
 
 
 def test_initialization_variable(mock_simulator_variable, default_config):
@@ -284,11 +284,11 @@ def test_initialization_variable(mock_simulator_variable, default_config):
     # default config plus CLI-derived settings
     for k, v in default_config.items():
         assert mock_simulator_variable.light_emission_config[k] == v
-    assert mock_simulator_variable.light_emission_config.get("number_events", 1) == 1
+    assert mock_simulator_variable.light_emission_config.get("number_of_events", 1) == 1
 
 
 def test_runs(mock_simulator):
-    assert mock_simulator.number_events == 1
+    assert mock_simulator.number_of_events == 1
 
 
 def test_flasher_photons_default(mock_simulator):
@@ -411,7 +411,7 @@ def test_make_simtel_script(mock_simulator):
             mock_simulator._site_model.get_parameter_value.side_effect = _get_site_param2
 
             mock_simulator.output_directory = OUT_DIR
-            mock_simulator.light_emission_config = {"output_prefix": None, "number_events": 1}
+            mock_simulator.light_emission_config = {"output_prefix": None, "number_of_events": 1}
 
             expected_command = (
                 "SIM_TELARRAY_CONFIG_PATH='' "
@@ -761,7 +761,7 @@ def test_add_flasher_options():
     inst = object.__new__(SimulatorLightEmission)
     inst._flasher_model = MagicMock()
     inst._telescope_model = MagicMock()
-    inst.number_events = 1
+    inst.number_of_events = 1
     inst.flasher_photons = 1.23e6
 
     def gpvu(name):
@@ -1054,7 +1054,7 @@ def test_flasher_photons_flasher_model_non_test(tmp_path):
         calibration_model=None,
         flasher_model=flasher,
         site_model=None,
-        light_emission_config={"number_events": 1, "output_prefix": None},
+        light_emission_config={"number_of_events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test",
@@ -1078,7 +1078,7 @@ def test_flasher_photons_flasher_model_test_mode(tmp_path):
         calibration_model=None,
         flasher_model=flasher,
         site_model=None,
-        light_emission_config={"number_events": 1, "output_prefix": None},
+        light_emission_config={"number_of_events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="flasher",
         label="photons-test2",
@@ -1099,7 +1099,7 @@ def test_flasher_photons_no_models(tmp_path):
         calibration_model=None,
         flasher_model=None,
         site_model=None,
-        light_emission_config={"number_events": 1, "output_prefix": None},
+        light_emission_config={"number_of_events": 1, "output_prefix": None},
         simtel_path=tmp_path,
         light_source_type="illuminator",
         label="photons-test3",
@@ -1111,7 +1111,7 @@ def test_flasher_photons_no_models(tmp_path):
 
 def test_get_prefix_non_none_returns_with_underscore():
     inst = object.__new__(SimulatorLightEmission)
-    inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
+    inst.light_emission_config = {"output_prefix": "pre", "number_of_events": 1}
     assert inst._get_prefix() == "pre_"
 
 
@@ -1178,7 +1178,7 @@ def test_get_simulation_output_filename_prefix_and_exception():
     inst.output_directory = "/out"
     inst.light_source_type = "illuminator"
     inst.light_source_setup = "variable"
-    inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
+    inst.light_emission_config = {"output_prefix": "pre", "number_of_events": 1}
 
     # Cause exception so no distance suffix is appended
     inst._get_distance_for_file_name = MagicMock(side_effect=Exception("err"))
@@ -1197,7 +1197,7 @@ def test_flasher_default_configuration_schema():
     cfg = flasher_default_configuration()
     assert isinstance(cfg, dict)
     for key in (
-        "number_events",
+        "number_of_events",
         "photons_per_flasher",
         "bunch_size",
         "flasher_position",

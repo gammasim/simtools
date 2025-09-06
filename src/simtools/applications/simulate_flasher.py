@@ -76,7 +76,7 @@ def _parse(label):
         required=True,
     )
     config.parser.add_argument(
-        "--number_events",
+        "--number_of_events",
         help="Number of flasher events to simulate",
         type=int,
         default=1,
@@ -92,7 +92,10 @@ def _parse(label):
     return config.initialize(
         db_config=True,
         simulation_model=["site", "layout", "telescope", "model_version"],
-        require_command_line=True,
+        simulation_configuration={
+            "corsika_configuration": ["run_number", "azimuth_angle", "zenith_angle"],
+            "sim_telarray_configuration": ["all"],
+        },
     )
 
 
@@ -107,7 +110,7 @@ def main():
     logger.info(
         f"Flasher simulation for telescope {args_dict['telescope']} "
         f" with light source {args_dict['light_source']} "
-        f" ({args_dict['number_events']} events, run mode: {args_dict['run_mode']})"
+        f" ({args_dict['number_of_events']} events, run mode: {args_dict['run_mode']})"
     )
 
     if args_dict["run_mode"] == "full_simulation":

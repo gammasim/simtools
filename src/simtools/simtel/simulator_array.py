@@ -109,9 +109,10 @@ class SimulatorArray(SimtelRunner):
                 "reference_point_altitude"
             ).to_value("m"),
         )
-        command += super().get_config_option(
-            "nsb_scaling_factor", calibration_runner_args["nsb_scaling_factor"]
-        )
+        if calibration_runner_args.get("nsb_scaling_factor"):
+            command += super().get_config_option(
+                "nsb_scaling_factor", calibration_runner_args["nsb_scaling_factor"]
+            )
         if calibration_runner_args.get("stars"):
             command += super().get_config_option("stars", calibration_runner_args["stars"])
 
@@ -125,7 +126,7 @@ class SimulatorArray(SimtelRunner):
             command += super().get_config_option(
                 "dark_events", calibration_runner_args["number_of_events"]
             )
-        if calibration_runner_args.get("run_mode") == "flasher":
+        if calibration_runner_args.get("run_mode") == "direct_injection":
             command += self._flasher_command(calibration_runner_args)
 
         command += f" {input_file}"

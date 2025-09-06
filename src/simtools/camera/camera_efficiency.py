@@ -41,11 +41,11 @@ class CameraEfficiency:
 
         self.io_handler = io_handler.IOHandler()
         self.telescope_model, self.site_model, _ = initialize_simulation_models(
-            self.label,
-            db_config,
-            config_data["site"],
-            config_data["telescope"],
-            config_data["model_version"],
+            label=self.label,
+            db_config=db_config,
+            model_version=config_data["model_version"],
+            site=config_data["site"],
+            telescope_name=config_data["telescope"],
         )
         self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
 

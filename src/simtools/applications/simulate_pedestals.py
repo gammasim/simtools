@@ -18,7 +18,7 @@ nominal value. A list of stars can be provided to simulate additional contributi
 
 .. code-block:: console
 
-    simtools-simulate-calibration-events --run_mode=pedestals \\
+    simtools-simulate-pedestals --run_mode=pedestals \\
         --run_number 10 --number_of_events 1000 \\
         --array_layout_name alpha --site North \\
         --model_version 6.0.0 \\
@@ -52,19 +52,6 @@ zenith_angle (float, optional)
     Zenith angle in degrees.
 azimuth_angle (float, optional)
     Azimuth angle in degrees.
-
-TODO Adapt to new flasher parameters in DB
-
-
-flasher_photons (int, optional)
-    Number of photons in the flasher pulse at each photodetector.
-flasher_var_photons (float, optional)
-    Relative variance of the number of photons in the flasher pulse.
-flasher_exp_time (float, optional)
-    Exponential decay time of the flasher pulse in nano-seconds.
-flasher_sig_time (float, optional)
-    Sigma of Gaussian-shaped flasher pulse in nano-seconds.
-
 """
 
 import logging
@@ -106,32 +93,6 @@ def _parse(label):
         help="List of stars (azimuth, zenith, weighting factor).",
         type=str,
         default=None,
-    )
-    # TODO - to be replaced
-    flasher_args = config.parser.add_argument_group("Flasher configuration")
-    flasher_args.add_argument(
-        "--flasher_photons",
-        help="Number of photons in the flasher pulse at each photodetector.",
-        type=float,
-        default=500.0,
-    )
-    flasher_args.add_argument(
-        "--flasher_var_photons",
-        help="Relative variance of the number of photons in the flasher pulse.",
-        type=float,
-        default=0.05,
-    )
-    flasher_args.add_argument(
-        "--flasher_exp_time",
-        help="Exponential decay time of the flasher pulse in nanoseconds.",
-        type=float,
-        default=0.0,
-    )
-    flasher_args.add_argument(
-        "--flasher_sig_time",
-        help="Sigma of Gaussian-shaped flasher pulse in nanoseconds.",
-        type=float,
-        default=0.0,
     )
 
     return config.initialize(

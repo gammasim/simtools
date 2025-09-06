@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-simulate-calibration-events
+- application: simtools-simulate-pedestals
   configuration:
     run_mode: pedestals
     array_layout_name: alpha
