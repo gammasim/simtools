@@ -36,7 +36,7 @@ Command Line Arguments
 ----------------------
 light_source (str, optional)
     Illuminator in array, e.g., ILLN-01.
-number_events (int, optional)
+number_of_events (int, optional)
     Number of events to simulate.
 telescope (str, required)
     Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
@@ -98,7 +98,7 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--number_events",
+        "--number_of_events",
         help="Number of events to simulate",
         type=int,
         default=1,

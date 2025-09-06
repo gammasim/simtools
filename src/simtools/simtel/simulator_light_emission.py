@@ -278,8 +278,11 @@ class SimulatorLightEmission(SimtelRunner):
         parts.extend(self._get_light_source_command())
         if self.light_emission_config["light_source_type"] == "illuminator":
             parts += [
-                f"-A {config_directory}/",
-                f"{self.telescope_model.get_parameter_value('atmospheric_profile')}",
+                "-A ",
+                (
+                    f"{config_directory}/"
+                    f"{self.telescope_model.get_parameter_value('atmospheric_profile')}"
+                ),
             ]
         parts += [f" -o {self.output_directory}/{app_name}.iact.gz", "\n"]
         return " ".join(parts)
@@ -327,7 +330,7 @@ class SimulatorLightEmission(SimtelRunner):
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
         return [
-            f"--events {self.light_emission_config['number_events']}",
+            f"--events {self.light_emission_config['number_of_events']}",
             f"--photons {self.light_emission_config['flasher_photons']}",
             f"--bunchsize {self.calibration_model.get_parameter_value('flasher_bunch_size')}",
             f"--xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}",
