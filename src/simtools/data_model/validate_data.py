@@ -187,9 +187,14 @@ class DataValidator:
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
 
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
-                value, unit, index
-            )
+            try:
+                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
+                    value, unit, index
+                )
+            except TypeError as ex:
+                raise TypeError(
+                    f"Error validating dictionary using {self.schema_file_name}"
+                ) from ex
 
         if len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
