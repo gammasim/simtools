@@ -1,24 +1,22 @@
 %YAML 1.2
 ---
-title: Schema for laser_external_trigger model parameter
+title: Schema for flasher_wavelength model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_external_trigger
+name: flasher_wavelength
 description: |-
-  A laser/LED flatfielding unit would typically operate at a sufficient illumination \
-  that the camera can trigger by itself. If operated at low illumination \
-  (e.g. a single-p.e. calibration unit outside of the camera), then an external trigger is needed.
+  The wavelength of the light emitted from the flasher device.
+  All photons are emitted exactly with this wavelength.
 short_description: |-
-  Use external trigger for calibration.
+  Wavelength of flasher device.
 data:
-  - type: int64
-    default: 0
+  - type: float64
+    unit: "nm"
+    default: 400
     allowed_range:
-      min: 0
-      max: 1
-
+      min: 200
 instrument:
   class: Calibration
   type:

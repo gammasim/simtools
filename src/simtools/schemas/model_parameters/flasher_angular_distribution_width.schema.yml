@@ -1,19 +1,20 @@
 %YAML 1.2
 ---
-title: Schema for laser_pulse_twidth model parameter
+title: Schema for flasher_angular_distribution_width model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_pulse_twidth
+name: flasher_angular_distribution_width
 description: |-
-  To be used (non-zero) if the pulse shape of the light emitted from the flat-fielding \
-  or single-p.e. calibration unit follows a top-hat (Heavyside) function, with the given number standing for the full width.
+  Characteristic width of the flasher angular emission distribution.
+  This is the RMS for Gaussian distributions or the maximum half
+  opening angle for conical shapes.
 short_description: |-
-  Top-Hat pulse time full-width.
+  Characteristic width of the flasher angular emission distribution.
 data:
   - type: float64
-    unit: "ns"
+    unit: "deg"
     default: 0
     allowed_range:
       min: 0
