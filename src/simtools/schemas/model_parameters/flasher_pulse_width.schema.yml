@@ -1,18 +1,19 @@
 %YAML 1.2
 ---
-title: Schema for dark_events model parameter
+title: Schema for flasher_pulse_width model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: dark_events
+name: flasher_pulse_width
 description: |-
-  Pedestal events at start of run with camera lid closed (completely dark, no NSB).
+  Flasher pulse shape characteristic width.
+  For 'TopHat', this is the pulse width, for 'Gauss' the rms.
 short_description: |-
-  Pedestal events at start of run closed lid.
+  Flasher pulse shape width.
 data:
-  - type: int64
-    unit: dimensionless
+  - type: float64
+    unit: "ns"
     default: 0
     allowed_range:
       min: 0

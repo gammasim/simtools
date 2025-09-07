@@ -1,27 +1,28 @@
 %YAML 1.2
 ---
-title: Schema for photons_per_run model parameter
+title: Schema for flasher_angular_distribution model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: photons_per_run
+name: flasher_angular_distribution
 description: |-
-  Number of total emitted photons by the calibration light source per run.
-short_description: |-
-  Number of photons per run.
+  Flasher photon emission angle distribution.
 data:
-  - type: float64
-    unit: dimensionless
-    default: 1e10
-    allowed_range:
-      min: 1
+  - type: string
+    default: Isotropic
+    allowed_values:
+      - Isotropic
+      - Gauss
+      - Rayleigh
+      - Cone
+      - FilledCone
+      - Parallel
 instrument:
   class: Calibration
   type:
     - ILLN
     - ILLS
-
 activity:
   setting:
     - SetParameterFromExternal

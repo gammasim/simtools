@@ -1,15 +1,14 @@
 %YAML 1.2
 ---
-title: Schema for laser_pulse_exptime model parameter
+title: Schema for flasher_exp_decay_time model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_pulse_exptime
+name: flasher_exp_decay_time
 description: |-
-  To be used (non-zero) if the pulse shape of the light emitted from the flat-fielding \
-  or single-p.e. calibration unit follows an exponential, e.g. as used in early HESS calibration \
-  units with a UV laser illuminating a scintillator and exciting it to emit light with a decay time of 2.5 ns.
+  Exponentially decaying pulse shape time (e.g. with UV laser illuminating
+  a scintillator with typically decay times of 2-3 ns).
 short_description: |-
   Exponentially decaying pulse shape time.
 data:

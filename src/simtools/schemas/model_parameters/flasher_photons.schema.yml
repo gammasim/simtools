@@ -1,23 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for led_events model parameter
+title: Schema for flasher_photons model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: led_events
+name: flasher_photons
 description: |-
-  If greater than zero than additional calibration-type events are simulated before \
-  the first shower events, assuming an independent LED in front of each pixel, \
-  taking this type of data with closed lid, i.e. without NSB.
+  Number of flasher photons simulated. Depending on the device and simulation type,
+  this might be the number of emitted photons or the number of photons at each
+  detector.
 short_description: |-
-  Additional calibration-type events.
+  Number of flasher photons simulated.
 data:
   - type: int64
     unit: dimensionless
-    default: 0
+    default: 500
     allowed_range:
-      min: 0
+      min: 1
 instrument:
   class: Calibration
   type:
