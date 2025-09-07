@@ -378,3 +378,23 @@ class TelescopeModel(ModelParameter):
         except InvalidModelParameterError as exc:
             self._logger.error(f"Coordinate system {coordinate_system} not found.")
             raise exc
+
+    def get_calibration_device_name(self, device_type):
+        """
+        Get the calibration device name for this telescope.
+
+        Parameters
+        ----------
+        device_type: str
+            Type of the calibration device (e.g., 'flasher', 'illuminator')
+
+        Returns
+        -------
+        str or None
+            Calibration device name or None if not defined.
+        """
+        try:
+            devices = self.get_parameter_value("calibration_devices") or {}
+        except InvalidModelParameterError:
+            return None
+        return devices.get(device_type)
