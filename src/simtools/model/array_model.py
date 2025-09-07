@@ -9,6 +9,7 @@ from astropy.table import QTable
 from simtools.data_model import data_reader, schema
 from simtools.db import db_handler
 from simtools.io import io_handler
+from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -40,18 +41,21 @@ class ArrayModel:
         Dictionary with configuration for sim_telarray random instrument setup.
     simtel_path: str, Path, optional
         Path to the sim_telarray installation directory.
+    calibration_device_types: List[str], optional
+        List of calibration device types (e.g., 'flat_fielding')
     """
 
     def __init__(
         self,
-        mongo_db_config: dict,
-        model_version: str,
-        label: str | None = None,
-        site: str | None = None,
-        layout_name: str | None = None,
-        array_elements: str | Path | list[str] | None = None,
-        sim_telarray_seeds: dict | None = None,
-        simtel_path: str | Path | None = None,
+        mongo_db_config,
+        model_version,
+        label=None,
+        site=None,
+        layout_name=None,
+        array_elements=None,
+        sim_telarray_seeds=None,
+        simtel_path=None,
+        calibration_device_types=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
@@ -69,8 +73,8 @@ class ArrayModel:
         self.io_handler = io_handler.IOHandler()
         self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
-        self.array_elements, self.site_model, self.telescope_model = self._initialize(
-            site, array_elements
+        self.array_elements, self.site_model, self.telescope_model, self.calibration_model = (
+            self._initialize(site, array_elements, calibration_device_types)
         )
 
         self._telescope_model_files_exported = False
@@ -78,7 +82,7 @@ class ArrayModel:
         self.sim_telarray_seeds = sim_telarray_seeds
         self.simtel_path = simtel_path
 
-    def _initialize(self, site: str, array_elements_config: str | Path | list[str]):
+    def _initialize(self, site, array_elements_config, calibration_device_types):
         """
         Initialize ArrayModel taking different configuration options into account.
 
@@ -88,6 +92,8 @@ class ArrayModel:
             Site name.
         array_elements_config: Union[str, Path, List[str]]
             Array element definitions.
+        calibration_device_types: str
+            Calibration device types.
 
         Returns
         -------
@@ -106,7 +112,6 @@ class ArrayModel:
             label=self.label,
         )
 
-        array_elements = {}
         # Case 1: array_elements is a file name
         if isinstance(array_elements_config, str | Path):
             array_elements = self._load_array_element_positions_from_file(
@@ -120,16 +125,20 @@ class ArrayModel:
             array_elements = self._get_array_elements_from_list(
                 site_model.get_array_elements_for_layout(self.layout_name)
             )
-        if not array_elements:
+        else:
             raise ValueError(
                 "No array elements found. "
                 "Possibly missing valid layout name or missing telescope list."
             )
-        telescope_model = self._build_telescope_models(site_model, array_elements)
-        return array_elements, site_model, telescope_model
+
+        telescope_model, calibration_model = self._build_telescope_models(
+            site_model, array_elements, calibration_device_types
+        )
+
+        return array_elements, site_model, telescope_model, calibration_model
 
     @property
-    def config_file_path(self) -> Path:
+    def config_file_path(self):
         """
         Return the path of the array config file for sim_telarray.
 
@@ -149,7 +158,7 @@ class ArrayModel:
         return self._config_file_path
 
     @property
-    def number_of_telescopes(self) -> int:
+    def number_of_telescopes(self):
         """
         Return the number of telescopes.
 
@@ -200,11 +209,12 @@ class ArrayModel:
             )
         self._model_version = model_version
 
-    def _build_telescope_models(self, site_model: SiteModel, array_elements: dict) -> dict:
+    def _build_telescope_models(self, site_model, array_elements, calibration_device_types):
         """
         Build the the telescope models for all telescopes of this array.
 
-        Includes reading of telescope model parameters from the DB.
+        Adds calibration device models, if requested through the calibration_device_types argument.
+        Includes reading of telescope model parameters from the database.
         The array is defined in the telescopes dictionary. Array element positions
         are read from the database if no values are given in this dictionary.
 
@@ -214,24 +224,62 @@ class ArrayModel:
             Site model.
         array_elements: dict
             Dict with array elements.
+        calibration_device_types: List[str]
+            List of calibration device types (e.g., 'flat_fielding')
+
+        Returns
+        -------
+        dict, dict
+            Dictionaries with telescope and calibration models.
+        """
+        telescope_models, calibration_models = {}, {}
+
+        for element_name in array_elements:
+            if names.get_collection_name_from_array_element_name(element_name) != "telescopes":
+                continue
+
+            telescope_models[element_name] = TelescopeModel(
+                site=site_model.site,
+                telescope_name=element_name,
+                model_version=self.model_version,
+                mongo_db_config=self.mongo_db_config,
+                label=self.label,
+            )
+            calibration_models.update(
+                self._build_calibration_models(
+                    telescope_models[element_name],
+                    site_model,
+                    calibration_device_types,
+                )
+            )
+
+        return telescope_models, calibration_models
+
+    def _build_calibration_models(self, telescope_model, site_model, calibration_device_types):
+        """
+        Build calibration device models for all telescopes in the array.
+
+        A telescope can have multiple calibration devices of different types.
 
         Returns
         -------
         dict
-            Dictionary with telescope models.
+            Dict with calibration device models.
         """
-        telescope_model = {}
-        for element_name, _ in array_elements.items():
-            collection = names.get_collection_name_from_array_element_name(element_name)
-            if collection == "telescopes":
-                telescope_model[element_name] = TelescopeModel(
-                    site=site_model.site,
-                    telescope_name=element_name,
-                    model_version=self.model_version,
-                    mongo_db_config=self.mongo_db_config,
-                    label=self.label,
-                )
-        return telescope_model
+        calibration_models = {}
+        for calibration_device_type in calibration_device_types or []:
+            device_name = telescope_model.get_calibration_device_name(calibration_device_type)
+            if device_name is None:
+                continue
+
+            calibration_models[device_name] = CalibrationModel(
+                site=site_model.site,
+                calibration_device_model_name=device_name,
+                mongo_db_config=self.mongo_db_config,
+                model_version=self.model_version,
+                label=self.label,
+            )
+        return calibration_models
 
     def print_telescope_list(self):
         """Print list of telescopes."""
