@@ -88,13 +88,27 @@ class IncidentAnglesCalculator:
         )
 
     def _label_suffix(self):
-        """Build a filename suffix including telescope and off-axis angle."""
+        """Build a filename suffix including telescope and off-axis angle.
+
+        Returns
+        -------
+        str
+            Suffix of the form ``"<label>_<telescope>_off<angle>"`` where
+            ``<angle>`` is formatted without trailing zeros.
+        """
         tel = str(self.config_data.get("telescope", "TEL"))
         off = float(self.config_data.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
         return f"{self.label}_{tel}_off{off:g}"
 
     def run(self):
-        """Run sim_telarray, parse imaging list, and return an angle table."""
+        """Run sim_telarray, parse the imaging list, and return an angle table.
+
+        Returns
+        -------
+        astropy.table.QTable
+            Table containing at least the ``angle_incidence_focal`` column
+            and, when configured, primary/secondary angles and hit geometry.
+        """
         self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
 
         photons_file, stars_file, log_file = self._prepare_psf_io_files()
@@ -126,7 +140,17 @@ class IncidentAnglesCalculator:
         """Run the simulation for multiple off-axis angles.
 
         For each off-axis angle provided, run a full simulation, labeling output files
-        accordingly. Returns a mapping from off-axis angle (deg) to the resulting QTable.
+        accordingly.
+
+        Parameters
+        ----------
+        offsets : Iterable[float]
+            Off-axis angles in degrees.
+
+        Returns
+        -------
+        dict[float, astropy.table.QTable]
+            Mapping from off-axis angle (deg) to the resulting table.
         """
         results_by_offset = {}
         base_off = self.config_data.get("off_axis_angle", 0.0 * u.deg)
@@ -141,7 +165,13 @@ class IncidentAnglesCalculator:
         return results_by_offset
 
     def _prepare_psf_io_files(self):
-        """Prepare photons, stars, and log file paths for a PSF-style incident angle simulation."""
+        """Prepare photons, stars, and log file paths for a PSF-style incident angle simulation.
+
+        Returns
+        -------
+        tuple[pathlib.Path, pathlib.Path, pathlib.Path]
+            Paths to the photons file, stars file, and log file.
+        """
         suffix = self._label_suffix()
         photons_file = self.photons_dir / f"incident_angles_photons_{suffix}.lis"
         stars_file = self.photons_dir / f"incident_angles_stars_{suffix}.lis"
@@ -173,7 +203,18 @@ class IncidentAnglesCalculator:
         return photons_file, stars_file, log_file
 
     def _write_run_script(self, photons_file, stars_file, log_file):
-        """Generate a run script for sim_telarray with the provided configuration and inputs."""
+        """Generate a run script for sim_telarray with the provided configuration and inputs.
+
+        Parameters
+        ----------
+        photons_file, stars_file, log_file : pathlib.Path
+            Input/output files for the run.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the generated shell script.
+        """
         script_path = self.scripts_dir / f"run_incident_angles_{self._label_suffix()}.sh"
         simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
@@ -239,7 +280,15 @@ class IncidentAnglesCalculator:
         return script_path
 
     def _run_script(self, script_path, log_file):
-        """Execute the script and log output; raise an error if execution fails."""
+        """Execute the script and log output; raise an error if execution fails.
+
+        Parameters
+        ----------
+        script_path : pathlib.Path
+            Path to the script to execute.
+        log_file : pathlib.Path
+            Destination log file.
+        """
         self.logger.info("Executing %s (logging to %s)", script_path, log_file)
         try:
             subprocess.check_call([str(script_path)])
@@ -247,28 +296,36 @@ class IncidentAnglesCalculator:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
 
     def _compute_incidence_angles_from_imaging_list(self, photons_file):
-        """
-        Compute incidence angles from imaging list.
+        """Compute incidence angles from an imaging list file.
 
         Column positions may differ between telescope types and sim_telarray builds.
-        Parse header lines ("#   Column N: ...") to find indices; otherwise
-        fall back to legacy positions (1-based): focal=26, primary=32, secondary=36,
+        Header lines (``# Column N: ...``) are parsed to find indices; otherwise
+        legacy positions (1-based) are used: focal=26, primary=32, secondary=36,
         primary X/Y = 29/30, secondary X/Y = 33/34.
+
+        Parameters
+        ----------
+        photons_file : pathlib.Path
+            Path to the imaging list file (``.lis``).
+
+        Returns
+        -------
+        dict[str, list[float]]
+            Parsed columns in degrees/meters as plain Python lists. Always
+            contains ``angle_incidence_focal_deg``; additional keys are present
+            when primary/secondary angles are enabled.
         """
         col_idx = self._find_column_indices(photons_file)
 
         focal = []
-        primary = [] if self.calculate_primary_secondary_angles else None
-        secondary = [] if self.calculate_primary_secondary_angles else None
-        # Primary-hit radius on M1 (computed from hit x/y in cm -> meters)
-        radius_m = [] if self.calculate_primary_secondary_angles else None
-        # Secondary-hit radius on M2 (computed from hit x/y in cm -> meters)
-        secondary_radius_m = [] if self.calculate_primary_secondary_angles else None
-        # Hit coordinates (meters), derived from cm columns
-        primary_hit_x_m = [] if self.calculate_primary_secondary_angles else None
-        primary_hit_y_m = [] if self.calculate_primary_secondary_angles else None
-        secondary_hit_x_m = [] if self.calculate_primary_secondary_angles else None
-        secondary_hit_y_m = [] if self.calculate_primary_secondary_angles else None
+        # Initialize optional arrays once based on the configuration
+        primary = secondary = radius_m = secondary_radius_m = None
+        primary_hit_x_m = primary_hit_y_m = secondary_hit_x_m = secondary_hit_y_m = None
+        if self.calculate_primary_secondary_angles:
+            primary, secondary = [], []
+            radius_m, secondary_radius_m = [], []
+            primary_hit_x_m, primary_hit_y_m = [], []
+            secondary_hit_x_m, secondary_hit_y_m = [], []
 
         for parts in self._iter_data_rows(photons_file):
             self._append_values(
@@ -300,11 +357,18 @@ class IncidentAnglesCalculator:
     def _find_column_indices(self, photons_file):
         """Return 0-based column indices found from headers as a dict.
 
-        Returns a mapping with keys 'focal', and when applicable 'primary', 'secondary',
-        'prim_x', 'prim_y', 'sec_x', 'sec_y'.
+        Returns a mapping with keys ``'focal'`` and, when applicable, ``'primary'``,
+        ``'secondary'``, ``'prim_x'``, ``'prim_y'``, ``'sec_x'``, ``'sec_y'``.
 
-        Defaults (1-based) are focal=26, primary=32, secondary=36,
-        primary X/Y = 29/30, secondary X/Y = 33/34.
+        Parameters
+        ----------
+        photons_file : pathlib.Path
+            Imaging list file whose headers may define column numbers.
+
+        Returns
+        -------
+        dict[str, int]
+            0-based indices for the required columns.
         """
         indices = self._default_column_indices()
 
@@ -324,10 +388,16 @@ class IncidentAnglesCalculator:
         return indices
 
     def _default_column_indices(self):
-        """Return default 0-based indices matching the photon files as in the case of the SST.
+        """Return default 0-based indices matching SST-like photon files.
 
         Fallbacks (1-based): focal=26, primary=32, secondary=36,
         primary X/Y=29/30, secondary X/Y=33/34.
+
+        Returns
+        -------
+        dict[str, int]
+            Default index mapping. When primary/secondary angles are disabled,
+            only ``'focal'`` is included.
         """
         idx = {"focal": 25}
         if self.calculate_primary_secondary_angles:
@@ -344,7 +414,17 @@ class IncidentAnglesCalculator:
         return idx
 
     def _update_indices_from_header_desc(self, desc, num, indices):
-        """Update indices dict in-place based on a header description and column number."""
+        """Update indices dict in-place based on a header description and column number.
+
+        Parameters
+        ----------
+        desc : str
+            Header description text (lower-cased).
+        num : int
+            1-based column number from the header.
+        indices : dict[str, int]
+            Mapping to update in-place.
+        """
         # Angles
         if "angle of incidence" in desc:
             if "focal surface" in desc:
@@ -364,11 +444,35 @@ class IncidentAnglesCalculator:
 
     @staticmethod
     def _contains_axis(desc, axis):
-        """Return True if desc contains stand-alone axis label ('x' or 'y')."""
+        """Check whether a description contains a stand-alone axis label.
+
+        Parameters
+        ----------
+        desc : str
+            Header description string.
+        axis : str
+            Either ``"x"`` or ``"y"``.
+
+        Returns
+        -------
+        bool
+            True when the token is present as a separate word; False otherwise.
+        """
         return bool(re.search(r"(^|\s)" + re.escape(axis) + r"(\s|$)", desc))
 
     def _maybe_set_reflection_index(self, desc, num, indices):
-        """Set reflection point indices for primary/secondary mirrors if the header matches."""
+        """Set reflection point indices for primary/secondary mirrors if the header matches.
+
+        Parameters
+        ----------
+        desc : str
+            Header description string (lower-cased).
+        num : int
+            1-based column number from the header.
+        indices : dict[str, int]
+            Mapping to update in-place with keys ``prim_x``, ``prim_y``,
+            ``sec_x``, or ``sec_y``.
+        """
         is_primary = "primary mirror" in desc
         is_secondary = "secondary mirror" in desc
         if not is_primary and not is_secondary:
@@ -383,7 +487,21 @@ class IncidentAnglesCalculator:
 
     @staticmethod
     def _parse_float(parts, idx):
-        """Try parse float from parts[idx]. Returns (ok, value)."""
+        """Try to parse a float from ``parts[idx]``.
+
+        Parameters
+        ----------
+        parts : list[str]
+            Tokenized row.
+        idx : int | None
+            Index into ``parts``.
+
+        Returns
+        -------
+        tuple[bool, float]
+            Tuple of ``(ok, value)`` where ``ok`` is False when parsing fails
+            or the index is out of range; in that case ``value`` is 0.0.
+        """
         if idx is None or idx < 0 or idx >= len(parts):
             return False, 0.0
         try:
@@ -393,7 +511,20 @@ class IncidentAnglesCalculator:
 
     @staticmethod
     def _parse_float_with_nan(parts, idx):
-        """Parse float or return NaN when missing/invalid."""
+        """Parse a float or return NaN when missing/invalid.
+
+        Parameters
+        ----------
+        parts : list[str]
+            Tokenized row.
+        idx : int | None
+            Index into ``parts``.
+
+        Returns
+        -------
+        float
+            Parsed float value, or ``nan`` when unavailable/invalid.
+        """
         if idx is None or idx < 0 or idx >= len(parts):
             return float("nan")
         try:
@@ -403,7 +534,18 @@ class IncidentAnglesCalculator:
 
     @staticmethod
     def _iter_data_rows(photons_file):
-        """Yield tokenized, non-empty, non-comment rows from imaging list."""
+        """Iterate over tokenized, non-empty, non-comment rows.
+
+        Parameters
+        ----------
+        photons_file : pathlib.Path
+            Imaging list file to read.
+
+        Returns
+        -------
+        Iterator[list[str]]
+            Iterator over tokenized rows.
+        """
         with photons_file.open("r", encoding="utf-8") as fh:
             for line in fh:
                 if not line.strip() or line.lstrip().startswith("#"):
@@ -424,7 +566,21 @@ class IncidentAnglesCalculator:
         secondary_hit_x_m,
         secondary_hit_y_m,
     ):
-        """Append parsed values from parts into target arrays if valid."""
+        """Append parsed values from parts into target arrays if valid.
+
+        Parameters
+        ----------
+        parts : list[str]
+            Tokenized input row.
+        col_idx : dict[str, int]
+            Column indices used to read values.
+        focal, primary, secondary : list | None
+            Output arrays to append into.
+        radius_m, secondary_radius_m : list | None
+            Output arrays for radii in meters.
+        primary_hit_x_m, primary_hit_y_m, secondary_hit_x_m, secondary_hit_y_m : list | None
+            Output arrays for hit coordinates in meters.
+        """
         foc_ok, foc_val = self._parse_float(parts, col_idx.get("focal"))
         if not foc_ok:
             return
@@ -441,7 +597,17 @@ class IncidentAnglesCalculator:
         )
 
     def _append_primary_secondary_angles(self, parts, col_idx, primary, secondary):
-        """Append primary/secondary angle values (or NaN) if arrays are provided."""
+        """Append primary/secondary angle values (or NaN) if arrays are provided.
+
+        Parameters
+        ----------
+        parts : list[str]
+            Tokenized input row.
+        col_idx : dict[str, int]
+            Indices for angle columns.
+        primary, secondary : list | None
+            Output arrays to append into.
+        """
         if primary is not None:
             primary.append(self._parse_float_with_nan(parts, col_idx.get("primary")))
         if secondary is not None:
@@ -450,7 +616,17 @@ class IncidentAnglesCalculator:
     def _append_primary_hit_geometry(
         self, parts, col_idx, radius_m, primary_hit_x_m, primary_hit_y_m
     ):
-        """Append primary-mirror hit geometry (radius and x/y in meters)."""
+        """Append primary-mirror hit geometry (radius and x/y in meters).
+
+        Parameters
+        ----------
+        parts : list[str]
+            Tokenized input row.
+        col_idx : dict[str, int]
+            Indices for hit coordinate columns.
+        radius_m, primary_hit_x_m, primary_hit_y_m : list | None
+            Output arrays to append into.
+        """
         x_ok, x_cm = self._parse_float(parts, col_idx.get("prim_x"))
         y_ok, y_cm = self._parse_float(parts, col_idx.get("prim_y"))
         if x_ok and y_ok:
@@ -472,7 +648,17 @@ class IncidentAnglesCalculator:
     def _append_secondary_hit_geometry(
         self, parts, col_idx, secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m
     ):
-        """Append secondary-mirror hit geometry (radius and x/y in meters)."""
+        """Append secondary-mirror hit geometry (radius and x/y in meters).
+
+        Parameters
+        ----------
+        parts : list[str]
+            Tokenized input row.
+        col_idx : dict[str, int]
+            Indices for hit coordinate columns.
+        secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m : list | None
+            Output arrays to append into.
+        """
         sx_ok, sx_cm = self._parse_float(parts, col_idx.get("sec_x"))
         sy_ok, sy_cm = self._parse_float(parts, col_idx.get("sec_y"))
         if sx_ok and sy_ok:
@@ -493,7 +679,20 @@ class IncidentAnglesCalculator:
 
     @staticmethod
     def _match_header_column(col_pat, raw):
-        """Return (kind, column_number) if the header line defines a known angle column."""
+        """Parse a header line for a known angle column.
+
+        Parameters
+        ----------
+        col_pat : Pattern[str]
+            Compiled regular expression matching ``# Column N`` prefix.
+        raw : str
+            Raw header line.
+
+        Returns
+        -------
+        tuple[str, int] | None
+            ``(kind, column_number)`` when recognized, otherwise ``None``.
+        """
         s = raw.strip()
         if s and ":" in s:
             prefix, desc = s.split(":", 1)
