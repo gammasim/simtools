@@ -3,8 +3,7 @@ r"""
 Calculate photon incident angles on focal plain and primary/secondary mirrors.
 
 Creates photon files with additional columns for incident angles calculation.
-This application runs a version of sim_telarray compiled with the preprocessing
-flag -DDEBUG_TRACE 99. Outputs files and histograms of the incidence angles at
+Outputs files and histograms of the incidence angles at
 the focal plane, primary mirror, and if available, secondary mirror.
 Optional debug plots can be also generated.
 
