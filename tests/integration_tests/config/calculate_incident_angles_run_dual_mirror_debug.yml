@@ -5,13 +5,11 @@ applications:
     site: South
     telescope: SSTS-01
     off_axis_angles: 1.0
-    zenith: 20
     number_of_photons: 10000
     model_version: 6.0.0
     output_path: simtools-output
     debug_plots: true
     use_plain_output_path: true
-    test: true
   integration_tests:
   - output_file: incident_angles/incident_angles_calculate_incident_angles_SSTS-01_off1.ecsv
   - output_file: plots/incident_angles_multi_calculate_incident_angles_SSTS-01.png
