@@ -35,8 +35,6 @@ class IncidentAnglesCalculator:
         Label used to name outputs; defaults to ``incident_angles_<telescope>`` when omitted.
     perfect_mirror : bool, default False
         If True, enforce perfect mirror settings (no random errors in sim_telarray options).
-    overwrite_rdna : bool, default False
-        If True and ``mirror_reflection_random_angle`` is None, force that parameter to 0.
     mirror_reflection_random_angle : float, optional
         Mirror reflection random angle (sets sim_telarray ``mirror_reflection_random_angle``).
     algn : float, optional
@@ -55,7 +53,6 @@ class IncidentAnglesCalculator:
         output_dir,
         label=None,
         perfect_mirror=False,
-        overwrite_rdna=False,
         mirror_reflection_random_angle=None,
         algn=None,
         test=False,
@@ -68,7 +65,6 @@ class IncidentAnglesCalculator:
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
         self.perfect_mirror = perfect_mirror
-        self.overwrite_rdna = overwrite_rdna
         self.mirror_reflection_random_angle = mirror_reflection_random_angle
         self.algn = algn
         self.test = test
@@ -236,9 +232,6 @@ class IncidentAnglesCalculator:
 
         if self.mirror_reflection_random_angle is not None:
             opts.append(cfg("mirror_reflection_random_angle", self.mirror_reflection_random_angle))
-        elif self.overwrite_rdna:
-            opts.append(cfg("mirror_reflection_random_angle", 0))
-
         if self.algn is not None:
             opts.append(cfg("mirror_align_random_horizontal", f"{self.algn},28.,0.0,0.0"))
             opts.append(cfg("mirror_align_random_vertical", f"{self.algn},28.,0.0,0.0"))

@@ -32,10 +32,8 @@ Command line arguments
     Source distance in kilometers. Default: 10.0.
 - number_of_photons (int, optional)
     Number of photons of the light source to trace per run. Default: 10000.
-- overwrite_rdna (flag, optional)
-    Overwrite mirror_reflection_random_angle with 0 deg when not provided.
 - mirror_reflection_random_angle (float, optional)
-    Explicit mirror_reflection_random_angle in degrees; overrides overwrite_rdna.
+    Explicit mirror_reflection_random_angle in degrees.
 - algn (float, optional)
     Accuracy parameter for mirror alignment distributions. Default: 0.005.
 - use_prod4 (flag, optional)
@@ -130,14 +128,8 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--overwrite_rdna",
-        help="Overwrite random reflection angle",
-        action="store_true",
-        required=False,
-    )
-    config.parser.add_argument(
         "--mirror_reflection_random_angle",
-        help="Set mirror_reflection_random_angle in degrees (overrides overwrite_rdna)",
+        help="Set mirror_reflection_random_angle in degrees",
         type=float,
         required=False,
     )
@@ -236,7 +228,6 @@ def main():
         output_dir=output_dir,
         label=base_label,
         perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
-        overwrite_rdna=bool(args_dict.get("overwrite_rdna", False)),
         mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
         algn=args_dict.get("algn", None),
         test=args_dict.get("test", False),
