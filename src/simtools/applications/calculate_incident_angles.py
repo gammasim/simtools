@@ -31,9 +31,7 @@ Command line arguments
 - source_distance (float, optional)
     Source distance in kilometers. Default: 10.0.
 - number_of_photons (int, optional)
-    Number of star photons to trace per run. Default: 10000.
-- camera_shift (float, optional)
-    Camera shift along optical axis. Reserved for future use. Default: 0.0.
+    Number of photons of the light source to trace per run. Default: 10000.
 - overwrite_rdna (flag, optional)
     Overwrite mirror_reflection_random_angle with 0 deg when not provided.
 - mirror_reflection_random_angle (float, optional)
@@ -129,13 +127,6 @@ def _parse(label):
         help="Number of star photons to trace (per run)",
         type=int,
         default=10000,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--camera_shift",
-        help="Camera shift along optical axis",
-        type=float,
-        default=0.0,
         required=False,
     )
     config.parser.add_argument(
