@@ -251,11 +251,11 @@ class IncidentAnglesCalculator:
         Compute incidence angles from imaging list.
 
         Column positions may differ between telescope types and sim_telarray builds.
-        Parse header lines ("#   Column N: ...") to discover indices; otherwise
+        Parse header lines ("#   Column N: ...") to find indices; otherwise
         fall back to legacy positions (1-based): focal=26, primary=32, secondary=36,
         primary X/Y = 29/30, secondary X/Y = 33/34.
         """
-        col_idx = self._discover_column_indices(photons_file)
+        col_idx = self._find_column_indices(photons_file)
 
         focal = []
         primary = [] if self.calculate_primary_secondary_angles else None
@@ -297,8 +297,8 @@ class IncidentAnglesCalculator:
             result["secondary_hit_y_m"] = secondary_hit_y_m
         return result
 
-    def _discover_column_indices(self, photons_file):
-        """Return 0-based column indices discovered from headers as a dict.
+    def _find_column_indices(self, photons_file):
+        """Return 0-based column indices found from headers as a dict.
 
         Returns a mapping with keys 'focal', and when applicable 'primary', 'secondary',
         'prim_x', 'prim_y', 'sec_x', 'sec_y'.
