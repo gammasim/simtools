@@ -13,7 +13,6 @@ Example usage
 .. code-block:: console
 
     simtools-calculate-incident-angles \
-        --zenith 20 \
         --off_axis_angles 0 1 2 3 4 \
         --source_distance 10 \
         --number_of_photons 10000 \
@@ -24,8 +23,6 @@ Example usage
 Command line arguments
 ----------------------
 
-- zenith (float, optional)
-    Zenith angle in degrees. Default: 20.0.
 - off_axis_angles (float, optional)
     One or more off-axis angles in degrees (space-separated). Default: [0.0].
 - source_distance (float, optional)
@@ -91,14 +88,6 @@ def _parse(label):
         description=(
             "Calculate photon incident angles on focal plane and primary/secondary mirrors."
         ),
-    )
-
-    config.parser.add_argument(
-        "--zenith",
-        help="Zenith angle in degrees",
-        type=float,
-        default=20.0,
-        required=False,
     )
     config.parser.add_argument(
         "--off_axis_angles",
