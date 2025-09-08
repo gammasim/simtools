@@ -548,6 +548,87 @@ def test_update_indices_reflection_skips_when_missing_keyword():
     assert indices == {"sec_x": 32, "sec_y": 33}
 
 
+def test_default_column_indices_flag_behavior():
+    # With flag True
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    idx = calc._default_column_indices()
+    assert idx["focal"] == 25
+    for k in ("primary", "secondary", "prim_x", "prim_y", "sec_x", "sec_y"):
+        assert k in idx
+
+    # With flag False
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = False
+    idx2 = calc._default_column_indices()
+    assert idx2 == {"focal": 25}
+
+
+def test_update_indices_from_header_desc_angles():
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    indices = {"focal": 25}
+    # Focal surface
+    calc._update_indices_from_header_desc(
+        "angle of incidence at focal surface with respect to the optical axis", 30, indices
+    )
+    assert indices["focal"] == 29
+    # Primary mirror
+    calc._update_indices_from_header_desc(
+        "angle of incidence onto primary mirror [deg]", 34, indices
+    )
+    assert indices["primary"] == 33
+    # Secondary mirror
+    calc._update_indices_from_header_desc(
+        "angle of incidence on secondary mirror [deg]", 38, indices
+    )
+    assert indices["secondary"] == 37
+
+
+def test_append_values_minimal_success():
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    parts = ["42.0", "1.0", "2.0", "10.0", "20.0", "3.0", "4.0"]
+    col_idx = {
+        "focal": 0,
+        "primary": 1,
+        "secondary": 2,
+        "prim_x": 3,
+        "prim_y": 4,
+        "sec_x": 5,
+        "sec_y": 6,
+    }
+    focal, primary, secondary = [], [], []
+    r1, r2 = [], []
+    px, py, sx, sy = [], [], [], []
+    calc._append_values(parts, col_idx, focal, primary, secondary, r1, r2, px, py, sx, sy)
+    assert focal == [42.0]
+    assert primary == [1.0]
+    assert secondary == [2.0]
+    # radii in meters
+    assert r1 == [((10.0**2 + 20.0**2) ** 0.5) / 100.0]
+    assert r2 == [((3.0**2 + 4.0**2) ** 0.5) / 100.0]
+    # hits in meters
+    assert px == [0.10]
+    assert py == [0.20]
+    assert sx == [0.03]
+    assert sy == [0.04]
+
+
+def test_append_primary_secondary_angles_direct():
+    parts = ["0", "3.0", "bad"]
+    col_idx = {"primary": 1, "secondary": 2}
+    primary, secondary = [], []
+    IncidentAnglesCalculator._append_primary_secondary_angles(
+        object.__new__(IncidentAnglesCalculator), parts, col_idx, primary, secondary
+    )
+    assert primary == [3.0]
+    assert len(secondary) == 1
+    import math as _math
+
+    assert _math.isnan(secondary[0])
+
+
 def test_find_column_indices_defaults(calculator, tmp_path):
     # No header lines -> defaults (0-based): focal=25; others present only when flag True
     pfile = tmp_path / "no_headers.lis"
