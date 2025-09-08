@@ -95,8 +95,6 @@ class IncidentAnglesCalculator:
 
     def run(self):
         """Run sim_telarray, parse imaging list, and return an angle table."""
-        self.logger.info("Running sim_telarray PSF-style simulation for incident angles")
-
         self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
 
         photons_file, stars_file, log_file = self._prepare_psf_io_files()
@@ -135,7 +133,7 @@ class IncidentAnglesCalculator:
 
         for off in offsets:
             self.config_data["off_axis_angle"] = float(off) * u.deg
-            self.logger.info(f"Running for off-axis angle {off:g} deg with label {self.label}")
+            self.logger.info(f"Running for off-axis angle {off:g} deg")
             tbl = self.run()
             results_by_offset[float(off)] = tbl.copy()
 
@@ -153,7 +151,7 @@ class IncidentAnglesCalculator:
             try:
                 photons_file.unlink()
             except OSError as err:
-                self.logger.warning(f"Failed to remove existing photons file {photons_file}: {err}")
+                self.logger.error(f"Failed to remove existing photons file {photons_file}: {err}")
 
         with photons_file.open("w", encoding="utf-8") as pf:
             pf.write(f"#{'=' * 50}\n")
