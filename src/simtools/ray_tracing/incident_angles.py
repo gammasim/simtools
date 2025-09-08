@@ -43,6 +43,9 @@ class IncidentAnglesCalculator:
     - ``calculate_primary_secondary_angles`` (bool, default True)
     """
 
+    # Use fixed zenith angle (degrees) for incident-angle simulations.
+    ZENITH_ANGLE_DEG = 45.0
+
     def __init__(
         self,
         simtel_path,
@@ -188,15 +191,14 @@ class IncidentAnglesCalculator:
             pf.write("# Imaging list for Incident Angle simulations\n")
             pf.write(f"#{'=' * 50}\n")
             pf.write(f"# config_file = {self.telescope_model.config_file_path}\n")
-            # Always write zenith angle as 20 deg for incident angle calculations
-            pf.write("# zenith_angle [deg] = 20\n")
+            pf.write(f"# zenith_angle [deg] = {self.ZENITH_ANGLE_DEG}\n")
             pf.write(
                 f"# off_axis_angle [deg] = {self.config_data['off_axis_angle'].to_value(u.deg)}\n"
             )
             pf.write(f"# source_distance [km] = {self.config_data['source_distance']}\n")
 
         with stars_file.open("w", encoding="utf-8") as sf:
-            zen = 20
+            zen = self.ZENITH_ANGLE_DEG
             dist = float(self.config_data["source_distance"])
             sf.write(f"0. {90.0 - zen} 1.0 {dist}\n")
 
@@ -219,7 +221,7 @@ class IncidentAnglesCalculator:
         simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
-        theta = 20
+        theta = self.ZENITH_ANGLE_DEG
         off = float(self.config_data["off_axis_angle"].to_value(u.deg))
         star_photons = self.config_data["number_of_photons"]
 
@@ -729,7 +731,7 @@ class IncidentAnglesCalculator:
         with summary_file.open("w", encoding="utf-8") as f:
             f.write(f"Incident angle results for {self.telescope_model.name}\n")
             f.write(f"Site: {self.telescope_model.site}\n")
-            f.write("Zenith angle: 20\n")
+            f.write(f"Zenith angle: {self.ZENITH_ANGLE_DEG}\n")
             f.write(f"Off-axis angle: {self.config_data['off_axis_angle']}\n")
             f.write(f"Source distance: {self.config_data['source_distance']}\n\n")
             f.write(f"Number of data points: {len(self.results)}\n")
