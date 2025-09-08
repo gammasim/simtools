@@ -554,3 +554,69 @@ def test_update_indices_reflection_skips_when_missing_keyword():
     desc = "X point on secondary mirror [cm]"  # missing 'reflection point'
     calc._update_indices_from_header_desc(desc.lower(), 20, indices)
     assert indices == {"sec_x": 32, "sec_y": 33}
+
+
+def test_find_column_indices_defaults(calculator, tmp_path):
+    # No header lines -> defaults (0-based): focal=25; others present only when flag True
+    pfile = tmp_path / "no_headers.lis"
+    pfile.write_text("0 1 2 3\n", encoding="utf-8")
+
+    idx = calculator._find_column_indices(pfile)
+    assert idx["focal"] == 25
+    # When flag True, default mirror-related indices should exist
+    assert idx["primary"] == 31
+    assert idx["secondary"] == 35
+    assert idx["prim_x"] == 28
+    assert idx["prim_y"] == 29
+    assert idx["sec_x"] == 32
+    assert idx["sec_y"] == 33
+
+
+def test_find_column_indices_header_overrides(calculator, tmp_path):
+    # Header provides custom 1-based columns for angles and reflection points
+    pfile = tmp_path / "headers_all.lis"
+    header = "\n".join(
+        [
+            "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]",
+            "# Column 34: Angle of incidence onto primary mirror [deg]",
+            "# Column 38: Angle of incidence onto secondary mirror [deg]",
+            "# Column 10: X reflection point on primary mirror [cm]",
+            "# Column 11: Y reflection point on primary mirror [cm]",
+            "# Column 12: X reflection point on secondary mirror [cm]",
+            "# Column 13: Y reflection point on secondary mirror [cm]",
+        ]
+    )
+    pfile.write_text(header + "\n0\n", encoding="utf-8")
+
+    idx = calculator._find_column_indices(pfile)
+    # Converted to 0-based
+    assert idx["focal"] == 29
+    assert idx["primary"] == 33
+    assert idx["secondary"] == 37
+    assert idx["prim_x"] == 9
+    assert idx["prim_y"] == 10
+    assert idx["sec_x"] == 11
+    assert idx["sec_y"] == 12
+
+
+def test_find_column_indices_ignores_mirror_when_disabled(tmp_path):
+    # Even with headers present, when calculate_primary_secondary_angles is False,
+    # only 'focal' should be returned/overridden.
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = False
+
+    pfile = tmp_path / "headers_disabled.lis"
+    header = "\n".join(
+        [
+            "# Column 26: Angle of incidence at focal surface, with respect to the optical axis [deg]",
+            "# Column 32: Angle of incidence onto primary mirror [deg]",
+            "# Column 36: Angle of incidence onto secondary mirror [deg]",
+            "# Column 29: X reflection point on primary mirror [cm]",
+            "# Column 30: Y reflection point on primary mirror [cm]",
+        ]
+    )
+    pfile.write_text(header + "\n0\n", encoding="utf-8")
+
+    idx = calc._find_column_indices(pfile)
+    assert set(idx.keys()) == {"focal"}
+    assert idx["focal"] == 25  # 1-based 26 -> 0-based 25
