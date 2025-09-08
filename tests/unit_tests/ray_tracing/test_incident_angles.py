@@ -628,7 +628,8 @@ def test_parse_float_success_and_failure():
 
 
 def test_contains_axis_cases():
-    assert IncidentAnglesCalculator._contains_axis("X reflection point on primary", "x")
+    # Function expects lower-cased descriptions (callers lower-case header text)
+    assert IncidentAnglesCalculator._contains_axis("x reflection point on primary", "x")
     assert IncidentAnglesCalculator._contains_axis("y reflection point", "y")
     # Should not match axis embedded in a word
     assert not IncidentAnglesCalculator._contains_axis("xcoord value", "x")

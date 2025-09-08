@@ -458,7 +458,9 @@ class IncidentAnglesCalculator:
         bool
             True when the token is present as a separate word; False otherwise.
         """
-        return bool(re.search(r"(^|\s)" + re.escape(axis) + r"(\s|$)", desc))
+        desc_l = desc.lower()
+        axis_l = axis.lower()
+        return bool(re.search(r"(^|\s)" + re.escape(axis_l) + r"(\s|$)", desc_l))
 
     def _maybe_set_reflection_index(self, desc, num, indices):
         """Set reflection point indices for primary/secondary mirrors if the header matches.
