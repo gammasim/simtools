@@ -6,7 +6,7 @@ applications:
     telescope: SSTS-01
     off_axis_angles: 1.0
     zenith: 20
-    number_of_rays: 10000
+    number_of_photons: 10000
     model_version: 6.0.0
     output_path: simtools-output
     use_plain_output_path: true
