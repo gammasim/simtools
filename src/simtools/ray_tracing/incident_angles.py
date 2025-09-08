@@ -87,10 +87,6 @@ class IncidentAnglesCalculator:
             config_data["model_version"],
         )
 
-    def __repr__(self):
-        """Return a concise representation helpful for logging/debugging."""
-        return f"IncidentAnglesCalculator(label={self.label})"
-
     def _label_suffix(self):
         """Build a filename suffix including telescope and off-axis angle."""
         tel = str(self.config_data.get("telescope", "TEL"))
@@ -111,24 +107,19 @@ class IncidentAnglesCalculator:
         self.results = QTable()
         self.results["angle_incidence_focal"] = data["angle_incidence_focal_deg"] * u.deg
         if self.calculate_primary_secondary_angles:
-            if "angle_incidence_primary_deg" in data:
-                self.results["angle_incidence_primary"] = (
-                    data["angle_incidence_primary_deg"] * u.deg
-                )
-            if "angle_incidence_secondary_deg" in data:
-                self.results["angle_incidence_secondary"] = (
-                    data["angle_incidence_secondary_deg"] * u.deg
-                )
-            if "primary_hit_radius_m" in data:
-                self.results["primary_hit_radius"] = data["primary_hit_radius_m"] * u.m
-            if "secondary_hit_radius_m" in data:
-                self.results["secondary_hit_radius"] = data["secondary_hit_radius_m"] * u.m
-            if "primary_hit_x_m" in data and "primary_hit_y_m" in data:
-                self.results["primary_hit_x"] = data["primary_hit_x_m"] * u.m
-                self.results["primary_hit_y"] = data["primary_hit_y_m"] * u.m
-            if "secondary_hit_x_m" in data and "secondary_hit_y_m" in data:
-                self.results["secondary_hit_x"] = data["secondary_hit_x_m"] * u.m
-                self.results["secondary_hit_y"] = data["secondary_hit_y_m"] * u.m
+            field_map = {
+                "angle_incidence_primary_deg": ("angle_incidence_primary", u.deg),
+                "angle_incidence_secondary_deg": ("angle_incidence_secondary", u.deg),
+                "primary_hit_radius_m": ("primary_hit_radius", u.m),
+                "secondary_hit_radius_m": ("secondary_hit_radius", u.m),
+                "primary_hit_x_m": ("primary_hit_x", u.m),
+                "primary_hit_y_m": ("primary_hit_y", u.m),
+                "secondary_hit_x_m": ("secondary_hit_x", u.m),
+                "secondary_hit_y_m": ("secondary_hit_y", u.m),
+            }
+            for key, (name, unit) in field_map.items():
+                if key in data:
+                    self.results[name] = data[key] * unit
 
         self._save_results()
         return self.results
