@@ -178,8 +178,8 @@ def test_write_run_script_reflection_angle(calculator):
     assert "-C mirror_reflection_random_angle=0.123" in txt
 
 
-def test_write_run_script_alignment_algn(calculator):
-    calculator.algn = 0.05
+def test_write_run_script_alignment_mirror_alignment_random(calculator):
+    calculator.mirror_alignment_random = 0.05
     photons, stars, log_file = calculator._prepare_psf_io_files()
     script = calculator._write_run_script(photons, stars, log_file)
     txt = script.read_text(encoding="utf-8")
