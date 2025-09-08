@@ -263,7 +263,7 @@ class IncidentAnglesCalculator:
             primary_y_idx,
             secondary_x_idx,
             secondary_y_idx,
-        ) = self._discover_column_indices(photons_file)
+        ) = self._find_column_indices(photons_file)
 
         col_idx = {
             "focal": focal_idx,
@@ -315,7 +315,7 @@ class IncidentAnglesCalculator:
             result["secondary_hit_y_m"] = secondary_hit_y_m
         return result
 
-    def _discover_column_indices(self, photons_file):
+    def _find_column_indices(self, photons_file):
         """Return 0-based indices discovered from headers.
 
         Returns a tuple: (focal_idx, primary_idx, secondary_idx,

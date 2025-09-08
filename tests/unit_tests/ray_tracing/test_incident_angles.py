@@ -375,7 +375,7 @@ def test_match_header_column_variants():
     assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) is None
 
 
-def test_header_driven_reflection_points_indices(calculator, tmp_path):
+def test_find_column_indices(calculator, tmp_path):
     # Build a file that declares reflection point columns for primary and secondary
     pfile = tmp_path / "refl_headers.lis"
     header_lines = [
@@ -396,7 +396,7 @@ def test_header_driven_reflection_points_indices(calculator, tmp_path):
         primary_y_idx,
         secondary_x_idx,
         secondary_y_idx,
-    ) = calculator._discover_column_indices(pfile)
+    ) = calculator._find_column_indices(pfile)
 
     # Focal remains default (25), angles None/31/35 depending on flag, but we only check XY
     assert primary_x_idx == 9  # 1-based 10 -> 0-based 9
