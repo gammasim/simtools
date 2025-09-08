@@ -36,8 +36,6 @@ Command line arguments
     Explicit mirror_reflection_random_angle in degrees.
 - mirror_alignment_random (float, optional)
     Accuracy parameter for mirror alignment distributions. Default: 0.005.
-- flip_mirror_layout (flag, optional)
-    Flip mirror layout x/y (if supported by the configuration).
 - no_optimization (flag, optional)
     Disable optimization in ray-tracing (containment radii around c.o.g.).
 - perfect_mirror (flag, optional)
@@ -136,12 +134,6 @@ def _parse(label):
         help="Accuracy of mirror alignment",
         type=float,
         default=0.005,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--flip_mirror_layout",
-        help="Flip mirror layout x/y",
-        action="store_true",
         required=False,
     )
     config.parser.add_argument(
