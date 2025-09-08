@@ -28,7 +28,7 @@ class IncidentAnglesCalculator:
         Database configuration passed to ``initialize_simulation_models``.
     config_data : dict
         Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
-        ``zenith_angle``, ``off_axis_angle``, ``source_distance``, ``number_of_rays``).
+        ``zenith_angle``, ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
     output_dir : str or pathlib.Path
         Output directory where logs, scripts, photons files and results are written.
     label : str, optional
@@ -112,12 +112,12 @@ class IncidentAnglesCalculator:
         zenith = config_data.get("zenith_angle", 20.0 * u.deg).to(u.deg)
         off = config_data.get("off_axis_angle", 0.0 * u.deg).to(u.deg)
         src_dist = config_data.get("source_distance", 10.0 * u.km).to(u.km)
-        n_rays = int(config_data.get("number_of_rays", 10000))
+        n_rays = int(config_data.get("number_of_photons", 10000))
         return {
             "zenith_angle": zenith,
             "off_axis_angle": off,
             "source_distance": src_dist,
-            "number_of_rays": n_rays,
+            "number_of_photons": n_rays,
         }
 
     def run(self):
@@ -213,7 +213,7 @@ class IncidentAnglesCalculator:
 
         theta = float(self.rt_params["zenith_angle"].to_value(u.deg))
         off = float(self.rt_params["off_axis_angle"].to_value(u.deg))
-        star_photons = self.rt_params["number_of_rays"] if not self.test else 5000
+        star_photons = self.rt_params["number_of_photons"] if not self.test else 5000
 
         def cfg(par, val):
             return f"-C {par}={val}"

@@ -16,7 +16,7 @@ Example usage
         --zenith 20 \
         --off_axis_angles 0 1 2 3 4 \
         --source_distance 10 \
-        --number_of_rays 10000 \
+        --number_of_photons 10000 \
         --model_version 6.0.0 \
         --telescope MSTN-04 \
         --site North
@@ -30,7 +30,7 @@ Command line arguments
     One or more off-axis angles in degrees (space-separated). Default: [0.0].
 - source_distance (float, optional)
     Source distance in kilometers. Default: 10.0.
-- number_of_rays (int, optional)
+- number_of_photons (int, optional)
     Number of star photons to trace per run. Default: 10000.
 - camera_shift (float, optional)
     Camera shift along optical axis. Reserved for future use. Default: 0.0.
@@ -125,7 +125,7 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--number_of_rays",
+        "--number_of_photons",
         help="Number of star photons to trace (per run)",
         type=int,
         default=10000,
@@ -240,7 +240,7 @@ def main():
                 else 0.0 * u.deg
             ),
             "source_distance": args_dict["source_distance"] * u.km,
-            "number_of_rays": int(args_dict.get("number_of_rays", 10000)),
+            "number_of_photons": int(args_dict.get("number_of_photons", 10000)),
         },
         output_dir=output_dir,
         label=base_label,
