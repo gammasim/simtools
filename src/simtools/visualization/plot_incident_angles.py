@@ -159,9 +159,9 @@ def _compute_bins(all_vals, bin_width, log, context):
     finite_mask = np.isfinite(all_vals)
     if not np.any(finite_mask):
         if context == "focal":
-            log.warning("No finite focal-surface incidence angle values to plot")
+            log.warning("No focal-surface incidence angle values to plot for this telescope type")
         else:
-            log.warning("No finite %s values to plot", context)
+            log.warning("No %s values to plot for this telescope type", context)
         return None
     vals = all_vals[finite_mask]
     vmin = float(np.floor(vals.min() / bin_width) * bin_width)
