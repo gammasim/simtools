@@ -13,15 +13,15 @@ description: |-
 short_description: |-
   Position of flasher.
 data:
-  - description: position in x-directory (in the specified reference frame)
+  - description: position in x-direction (in the specified reference frame)
     type: float64
     unit: cm
     default: 0.
-  - description: position in y-directory (in the specified reference frame)
+  - description: position in y-direction (in the specified reference frame)
     type: float64
     unit: cm
     default: 0.
-  - description: position in z-directory (in the specified reference frame)
+  - description: position in z-direction (in the specified reference frame)
     type: float64
     unit: cm
     default: 0.
