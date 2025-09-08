@@ -163,11 +163,11 @@ class IncidentAnglesCalculator:
             pf.write(
                 f"# off_axis_angle [deg] = {self.config_data['off_axis_angle'].to_value(u.deg)}\n"
             )
-            pf.write(f"# source_distance [km] = {self.config_data['source_distance'].value}\n")
+            pf.write(f"# source_distance [km] = {self.config_data['source_distance']}\n")
 
         with stars_file.open("w", encoding="utf-8") as sf:
             zen = 20
-            dist = float(self.config_data["source_distance"].to_value(u.km))
+            dist = float(self.config_data["source_distance"])
             sf.write(f"0. {90.0 - zen} 1.0 {dist}\n")
 
         return photons_file, stars_file, log_file
