@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 r"""
-Calculate photon incident angles on focal plain and primary/secondary mirrors.
+Calculate photon incident angles on focal plane and primary/secondary mirrors.
 
 Creates photon files with additional columns for incident angles calculation.
 Outputs files and histograms of the incidence angles at
@@ -88,7 +88,9 @@ def _parse(label):
     """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
-        description="Calculate incident angles using sim_telarray ray tracing.",
+        description=(
+            "Calculate photon incident angles on focal plane and primary/secondary mirrors."
+        ),
     )
 
     config.parser.add_argument(
