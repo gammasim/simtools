@@ -1,4 +1,4 @@
-"""Calculate incident angles using a sim_telarray PSF-style run.
+"""Calculate photon incident angles on focal plain and primary/secondary mirrors.
 
 Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses
 Angle of incidence at focal surface, with respect to the optical axis [deg],
