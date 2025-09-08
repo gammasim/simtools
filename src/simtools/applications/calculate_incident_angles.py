@@ -137,20 +137,14 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    calc_group = config.parser.add_mutually_exclusive_group(required=False)
-    calc_group.add_argument(
+    config.parser.add_argument(
         "--calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
-        action="store_true",
         help="Also compute angles of incidence on primary and secondary mirrors",
+        type=bool,
+        required=False,
+        action="store_true",
     )
-    calc_group.add_argument(
-        "--no-calculate_primary_secondary_angles",
-        dest="calculate_primary_secondary_angles",
-        action="store_false",
-        help="Do not compute angles of incidence on primary and secondary mirrors",
-    )
-    config.parser.set_defaults(calculate_primary_secondary_angles=True)
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "site", "model_version"],
