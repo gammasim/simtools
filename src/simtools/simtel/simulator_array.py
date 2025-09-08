@@ -34,6 +34,7 @@ class SimulatorArray(SimtelRunner):
         label=None,
         use_multipipe=False,
         sim_telarray_seeds=None,
+        calibration_config=None,
     ):
         """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ class SimulatorArray(SimtelRunner):
 
         self.sim_telarray_seeds = sim_telarray_seeds
         self.corsika_config = corsika_config
+        self.calibration_config = calibration_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
 
@@ -70,7 +72,32 @@ class SimulatorArray(SimtelRunner):
         """
         command = self._common_run_command(run_number, weak_pointing)
 
-        command += f" {input_file}"
+        if self.calibration_config:
+            command += self._make_run_command_for_calibration_simulations(input_file)
+        else:
+            command += self._make_run_command_for_shower_simulations(input_file)
+
+        return clear_default_sim_telarray_cfg_directories(command)
+
+    def _make_run_command_for_shower_simulations(self, input_file=None):
+        """
+        Build and return the command to run sim_telarray shower simulations.
+
+        Parameters
+        ----------
+        input_file: str
+            Full path of the input CORSIKA file
+        run_number: int (optional)
+            run number
+        weak_pointing: bool (optional)
+            Specify weak pointing option for sim_telarray.
+
+        Returns
+        -------
+        str
+            Command to run sim_telarray.
+        """
+        command = f" {input_file}"
         command += f" | gzip > {self._log_file} 2>&1 || exit"
         command += super().get_config_option(
             "power_law",
@@ -78,61 +105,36 @@ class SimulatorArray(SimtelRunner):
                 self.corsika_config.primary_particle
             ),
         )
+        return command
 
-        return clear_default_sim_telarray_cfg_directories(command)
+    def _make_run_command_for_calibration_simulations(self, input_file=None):
+        """Build sim_telarray command for calibration simulations."""
+        cfg = self.calibration_config
+        altitude = self.corsika_config.array_model.site_model.get_parameter_value_with_unit(
+            "reference_point_altitude"
+        ).to_value("m")
 
-    def make_run_command_for_calibration_simulations(
-        self, run_number=None, input_file=None, calibration_runner_args=None
-    ):
-        """
-        Build and return the command to run sim_telarray for calibration simulations.
+        command = super().get_config_option("Altitude", altitude)
 
-        Parameters
-        ----------
-        calibration_runner_args: dict
-            Dictionary with calibration runner arguments.
-        input_file: str
-            Full path of the input CORSIKA file
-        run_number: int (optional)
-            run number
+        for key in ("nsb_scaling_factor", "stars"):
+            if cfg.get(key):
+                command += super().get_config_option(key, cfg[key])
 
-        Returns
-        -------
-        str
-            Command to run sim_telarray for pedestal simulations.
-        """
-        command = self._common_run_command(run_number)
-
-        command += super().get_config_option(
-            "Altitude",
-            self.corsika_config.array_model.site_model.get_parameter_value_with_unit(
-                "reference_point_altitude"
-            ).to_value("m"),
-        )
-        if calibration_runner_args.get("nsb_scaling_factor"):
-            command += super().get_config_option(
-                "nsb_scaling_factor", calibration_runner_args["nsb_scaling_factor"]
-            )
-        if calibration_runner_args.get("stars"):
-            command += super().get_config_option("stars", calibration_runner_args["stars"])
-
-        if calibration_runner_args.get("run_mode") in ("pedestals", "nsb_only_pedestals"):
-            command += super().get_config_option(
-                "pedestal_events", calibration_runner_args["number_of_events"]
-            )
-        if calibration_runner_args.get("run_mode") == "nsb_only_pedestals":
+        run_mode = cfg.get("run_mode")
+        if run_mode in ("pedestals", "nsb_only_pedestals"):
+            n_events = cfg.get("number_of_pedestal_events", cfg["number_of_events"])
+            command += super().get_config_option("pedestal_events", n_events)
+        if run_mode == "nsb_only_pedestals":
             command += self._nsb_only_pedestals_command()
-        if calibration_runner_args.get("run_mode") == "dark_pedestals":
-            command += super().get_config_option(
-                "dark_events", calibration_runner_args["number_of_events"]
-            )
-        if calibration_runner_args.get("run_mode") == "direct_injection":
-            command += self._flasher_command(calibration_runner_args)
+        if run_mode == "dark_pedestals":
+            n_events = cfg.get("number_of_dark_events", cfg["number_of_events"])
+            command += super().get_config_option("dark_events", n_events)
+        if run_mode == "direct_injection":
+            n_events = cfg.get("number_of_flasher_events", cfg["number_of_events"])
+            command += super().get_config_option("laser_events", n_events)
 
-        command += f" {input_file}"
-        command += f" | gzip > {self._log_file} 2>&1 || exit"
-
-        return clear_default_sim_telarray_cfg_directories(command)
+        command += f" {input_file} | gzip > {self._log_file} 2>&1 || exit"
+        return command
 
     def _common_run_command(self, run_number, weak_pointing=None):
         """Build generic run command for sim_telarray."""
@@ -162,41 +164,6 @@ class SimulatorArray(SimtelRunner):
             command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
         command += super().get_config_option("show", "all")
         command += super().get_config_option("output_file", output_file)
-
-        return command
-
-    def _flasher_command(self, calibration_runner_args):
-        """
-        Generate the command to run sim_telarray for flasher simulations.
-
-        TODO - adapt to new flasher parameters in DB
-
-        Parameters
-        ----------
-        calibration_runner_args: dict
-            Dictionary with calibration runner arguments.
-
-        Returns
-        -------
-        str
-            Command to run sim_telarray for flasher simulations.
-        """
-        command = super().get_config_option(
-            "laser_events", calibration_runner_args["number_of_events"]
-        )
-        command += super().get_config_option(
-            "laser_photons", calibration_runner_args["flasher_photons"]
-        )
-        command += super().get_config_option(
-            "laser_var_photons", calibration_runner_args["flasher_var_photons"]
-        )
-        command += super().get_config_option(
-            "laser_pulse_exptime", calibration_runner_args["flasher_exp_time"]
-        )
-        command += super().get_config_option(
-            "laser_pulse_sigtime", calibration_runner_args["flasher_sig_time"]
-        )
-        command += super().get_config_option("laser_external_trigger", 1)
 
         return command
 
