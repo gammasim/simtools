@@ -24,7 +24,7 @@ class IncidentAnglesCalculator:
     ----------
     simtel_path : str or pathlib.Path
         Path to the sim_telarray installation directory (containing ``sim_telarray/bin``).
-    db_config : dict or str or None
+    db_config : dict
         Database configuration passed to ``initialize_simulation_models``.
     config_data : dict
         Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
