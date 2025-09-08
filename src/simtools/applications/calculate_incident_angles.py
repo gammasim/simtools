@@ -36,8 +36,6 @@ Command line arguments
     Explicit mirror_reflection_random_angle in degrees.
 - mirror_alignment_random (float, optional)
     Accuracy parameter for mirror alignment distributions. Default: 0.005.
-- no_optimization (flag, optional)
-    Disable optimization in ray-tracing (containment radii around c.o.g.).
 - perfect_mirror (flag, optional)
     Assume perfect mirror shape/alignment/reflection.
 - debug_plots (flag, optional)
@@ -134,12 +132,6 @@ def _parse(label):
         help="Accuracy of mirror alignment",
         type=float,
         default=0.005,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--no_optimization",
-        help="No optimization in rx. Containment radii around c.o.g.",
-        action="store_true",
         required=False,
     )
     config.parser.add_argument(
