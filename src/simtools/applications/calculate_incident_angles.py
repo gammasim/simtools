@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 r"""
-Calculate incident angles using sim_telarray ray tracing.
+Calculate photon incident angles on focal plain and primary/secondary mirrors.
 
 Creates photon files with additional columns for incident angles calculation.
 This application runs a version of sim_telarray compiled with the preprocessing
