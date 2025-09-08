@@ -55,20 +55,20 @@ Example of a focal-plane incident angle plot for a SST:
 
 Example of a primary mirror incident angle plot for a SST:
 
-.. _plot_calculate_incident_angles_plot:
+.. _plot_calculate_incident_angles_plot_primary:
 .. image:: images/incident_angles_primary_multi_calculate_incident_angles_SSTS-04.png
     :width: 49 %
 
 Note also the relation between radius and primary mirror incident angles, and how this relates to
 the peak seen in the primary mirror incident angle distribution:
 
-.. _plot_calculate_incident_angles_plot:
+.. _plot_calculate_incident_angles_plot_angle_vs_radius:
 .. image:: images/primary_angle_vs_radius.png
     :width: 49 %
 
 Example of a secondary mirror incident angle plot for a SST:
 
-.. _plot_calculate_incident_angles_plot:
+.. _plot_calculate_incident_angles_plot_secondary:
 .. image:: images/incident_angles_secondary_multi_calculate_incident_angles_SSTS-04.png
     :width: 49 %
 """
