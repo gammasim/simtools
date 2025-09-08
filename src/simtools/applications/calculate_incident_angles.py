@@ -34,7 +34,7 @@ Command line arguments
     Number of photons of the light source to trace per run. Default: 10000.
 - mirror_reflection_random_angle (float, optional)
     Explicit mirror_reflection_random_angle in degrees.
-- algn (float, optional)
+- mirror_alignment_random (float, optional)
     Accuracy parameter for mirror alignment distributions. Default: 0.005.
 - use_prod4 (flag, optional)
     Use prod-4 (SST: prod-5) config files instead of prod-6.
@@ -134,7 +134,7 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--algn",
+        "--mirror_alignment_random",
         help="Accuracy of mirror alignment",
         type=float,
         default=0.005,
@@ -229,7 +229,7 @@ def main():
         label=base_label,
         perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
         mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
-        algn=args_dict.get("algn", None),
+        mirror_alignment_random=args_dict.get("mirror_alignment_random", None),
         test=args_dict.get("test", False),
         calculate_primary_secondary_angles=args_dict.get(
             "calculate_primary_secondary_angles", True

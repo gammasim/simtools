@@ -37,7 +37,7 @@ class IncidentAnglesCalculator:
         If True, enforce perfect mirror settings (no random errors in sim_telarray options).
     mirror_reflection_random_angle : float, optional
         Mirror reflection random angle (sets sim_telarray ``mirror_reflection_random_angle``).
-    algn : float, optional
+    mirror_alignment_random : float, optional
         Mirror alignment randomization amplitude used for horizontal/vertical settings.
     test : bool, default False
         If True, reduce the number of rays for a faster run (keeps outputs compatible).
@@ -54,7 +54,7 @@ class IncidentAnglesCalculator:
         label=None,
         perfect_mirror=False,
         mirror_reflection_random_angle=None,
-        algn=None,
+        mirror_alignment_random=None,
         test=False,
         calculate_primary_secondary_angles=True,
     ):
@@ -66,7 +66,7 @@ class IncidentAnglesCalculator:
         self.label = label or f"incident_angles_{config_data['telescope']}"
         self.perfect_mirror = perfect_mirror
         self.mirror_reflection_random_angle = mirror_reflection_random_angle
-        self.algn = algn
+        self.mirror_alignment_random = mirror_alignment_random
         self.test = test
         self.calculate_primary_secondary_angles = calculate_primary_secondary_angles
         self.results = None
@@ -232,9 +232,13 @@ class IncidentAnglesCalculator:
 
         if self.mirror_reflection_random_angle is not None:
             opts.append(cfg("mirror_reflection_random_angle", self.mirror_reflection_random_angle))
-        if self.algn is not None:
-            opts.append(cfg("mirror_align_random_horizontal", f"{self.algn},28.,0.0,0.0"))
-            opts.append(cfg("mirror_align_random_vertical", f"{self.algn},28.,0.0,0.0"))
+        if self.mirror_alignment_random is not None:
+            opts.append(
+                cfg("mirror_align_random_horizontal", f"{self.mirror_alignment_random},28.,0.0,0.0")
+            )
+            opts.append(
+                cfg("mirror_align_random_vertical", f"{self.mirror_alignment_random},28.,0.0,0.0")
+            )
 
         opts += [
             cfg("IMAGING_LIST", str(photons_file)),
