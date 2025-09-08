@@ -350,7 +350,7 @@ class IncidentAnglesCalculator:
         )
 
     def _default_column_indices(self):
-        """Return default 0-based indices matching legacy positions.
+        """Return default 0-based indices matching the photon files as in the case of the SST.
 
         Fallbacks (1-based): focal=26, primary=32, secondary=36,
         primary X/Y=29/30, secondary X/Y=33/34.
