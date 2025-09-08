@@ -1,3 +1,4 @@
+%YAML 1.2
 ---
 title: Schema for calibration_devices model parameter
 schema_version: 0.1.0
@@ -36,4 +37,4 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
+  - name: simtools
