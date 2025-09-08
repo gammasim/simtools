@@ -141,6 +141,7 @@ def _parse(label):
     config.parser.add_argument(
         "--debug_plots",
         dest="debug_plots",
+        type=bool,
         help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
         action="store_true",
         required=False,
@@ -197,7 +198,7 @@ def main():
         results_by_offset,
         output_dir,
         label_with_telescope,
-        debug_plots=bool(args_dict.get("debug_plots", False)),
+        debug_plots=args_dict.get("debug_plots", False),
     )
     total = sum(len(t) for t in results_by_offset.values())
     logger.info(
