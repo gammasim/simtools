@@ -255,25 +255,7 @@ class IncidentAnglesCalculator:
         fall back to legacy positions (1-based): focal=26, primary=32, secondary=36,
         primary X/Y = 29/30, secondary X/Y = 33/34.
         """
-        (
-            focal_idx,
-            primary_idx,
-            secondary_idx,
-            primary_x_idx,
-            primary_y_idx,
-            secondary_x_idx,
-            secondary_y_idx,
-        ) = self._find_column_indices(photons_file)
-
-        col_idx = {
-            "focal": focal_idx,
-            "primary": primary_idx,
-            "secondary": secondary_idx,
-            "prim_x": primary_x_idx,
-            "prim_y": primary_y_idx,
-            "sec_x": secondary_x_idx,
-            "sec_y": secondary_y_idx,
-        }
+        col_idx = self._discover_column_indices(photons_file)
 
         focal = []
         primary = [] if self.calculate_primary_secondary_angles else None
@@ -315,11 +297,11 @@ class IncidentAnglesCalculator:
             result["secondary_hit_y_m"] = secondary_hit_y_m
         return result
 
-    def _find_column_indices(self, photons_file):
-        """Return 0-based indices discovered from headers.
+    def _discover_column_indices(self, photons_file):
+        """Return 0-based column indices discovered from headers as a dict.
 
-        Returns a tuple: (focal_idx, primary_idx, secondary_idx,
-        primary_x_idx, primary_y_idx, secondary_x_idx, secondary_y_idx)
+        Returns a mapping with keys 'focal', and when applicable 'primary', 'secondary',
+        'prim_x', 'prim_y', 'sec_x', 'sec_y'.
 
         Defaults (1-based) are focal=26, primary=32, secondary=36,
         primary X/Y = 29/30, secondary X/Y = 33/34.
@@ -339,15 +321,7 @@ class IncidentAnglesCalculator:
                 desc = m.group(2).strip().lower()
                 self._update_indices_from_header_desc(desc, num, indices)
 
-        return (
-            indices["focal"],
-            indices.get("primary"),
-            indices.get("secondary"),
-            indices.get("prim_x"),
-            indices.get("prim_y"),
-            indices.get("sec_x"),
-            indices.get("sec_y"),
-        )
+        return indices
 
     def _default_column_indices(self):
         """Return default 0-based indices matching the photon files as in the case of the SST.
