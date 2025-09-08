@@ -36,8 +36,6 @@ Command line arguments
     Explicit mirror_reflection_random_angle in degrees.
 - mirror_alignment_random (float, optional)
     Accuracy parameter for mirror alignment distributions. Default: 0.005.
-- use_prod4 (flag, optional)
-    Use prod-4 (SST: prod-5) config files instead of prod-6.
 - flip_mirror_layout (flag, optional)
     Flip mirror layout x/y (if supported by the configuration).
 - no_optimization (flag, optional)
@@ -138,12 +136,6 @@ def _parse(label):
         help="Accuracy of mirror alignment",
         type=float,
         default=0.005,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--use_prod4",
-        help="Use prod-4 config files (SST: prod-5) instead of prod-6",
-        action="store_true",
         required=False,
     )
     config.parser.add_argument(
