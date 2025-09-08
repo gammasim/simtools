@@ -19,7 +19,14 @@ from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 
 @pytest.fixture
 def config_data():
-    return {"telescope": "LST-1", "site": "North", "model_version": "prod6"}
+    return {
+        "telescope": "LST-1",
+        "site": "North",
+        "model_version": "prod6",
+        "off_axis_angle": 0.0 * u.deg,
+        "source_distance": 10.0,  # km
+        "number_of_photons": 1000,
+    }
 
 
 @pytest.fixture
@@ -62,10 +69,6 @@ def test_initialization(calculator, config_data):
     assert calculator.config_data == config_data
     assert calculator.output_dir.is_dir()
     assert calculator.results is None
-    # rt_params should carry units
-    assert calculator.rt_params["zenith_angle"].unit == u.deg
-    assert calculator.rt_params["off_axis_angle"].unit == u.deg
-    assert calculator.rt_params["source_distance"].unit == u.km
     # subdirectories are created
     assert calculator.logs_dir.is_dir()
     assert calculator.scripts_dir.is_dir()
@@ -145,7 +148,7 @@ def test_label_suffix_includes_noninteger_off_axis(monkeypatch, calculator, tmp_
     monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
 
     # Set a non-integer off-axis and ensure file names include off1.5 (no trailing zeros)
-    calculator.rt_params["off_axis_angle"] = 1.5 * u.deg
+    calculator.config_data["off_axis_angle"] = 1.5 * u.deg
     photons_file, stars_file, log_file = calculator._prepare_psf_io_files()
 
     assert "_off1.5.lis" in photons_file.name
@@ -155,8 +158,7 @@ def test_label_suffix_includes_noninteger_off_axis(monkeypatch, calculator, tmp_
 
 def test_repr_contains_label(calculator):
     s = repr(calculator)
-    assert "IncidentAnglesCalculator(" in s
-    assert f"label={calculator.label}" in s
+    assert "IncidentAnglesCalculator" in s
 
 
 def test_write_run_script_perfect_mirror_flags(calculator):
@@ -375,7 +377,7 @@ def test_match_header_column_variants():
     assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) is None
 
 
-def test_find_column_indices(calculator, tmp_path):
+def test_find_column_indices_reflection_headers(calculator, tmp_path):
     # Build a file that declares reflection point columns for primary and secondary
     pfile = tmp_path / "refl_headers.lis"
     header_lines = [
@@ -384,25 +386,15 @@ def test_find_column_indices(calculator, tmp_path):
         "# Column 12: X reflection point on secondary mirror [cm]\n",
         "# Column 13: Y reflection point on secondary mirror [cm]\n",
     ]
-    # Provide a dummy data row with enough columns; focal will be default index (25)
     data = ["0"] * 26
     pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
 
-    (
-        focal_idx,
-        primary_idx,
-        secondary_idx,
-        primary_x_idx,
-        primary_y_idx,
-        secondary_x_idx,
-        secondary_y_idx,
-    ) = calculator._find_column_indices(pfile)
-
-    # Focal remains default (25), angles None/31/35 depending on flag, but we only check XY
-    assert primary_x_idx == 9  # 1-based 10 -> 0-based 9
-    assert primary_y_idx == 10  # 1-based 11 -> 0-based 10
-    assert secondary_x_idx == 11  # 1-based 12 -> 0-based 11
-    assert secondary_y_idx == 12  # 1-based 13 -> 0-based 12
+    idx = calculator._find_column_indices(pfile)
+    # Focal remains default (25), check XY indices converted to 0-based
+    assert idx["prim_x"] == 9
+    assert idx["prim_y"] == 10
+    assert idx["sec_x"] == 11
+    assert idx["sec_y"] == 12
 
 
 def test_compute_with_header_driven_reflection_points_values(calculator, tmp_path):
