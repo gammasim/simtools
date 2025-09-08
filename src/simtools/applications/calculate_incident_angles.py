@@ -15,7 +15,7 @@ Example usage
     simtools-calculate-incident-angles \
         --off_axis_angles 0 1 2 3 4 \
         --source_distance 10 \
-        --number_of_photons 10000 \
+        --number_of_photons 1000000 \
         --model_version 6.0.0 \
         --telescope MSTN-04 \
         --site North
@@ -132,7 +132,6 @@ def _parse(label):
     config.parser.add_argument(
         "--debug_plots",
         dest="debug_plots",
-        type=bool,
         help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
         action="store_true",
         required=False,
@@ -141,7 +140,6 @@ def _parse(label):
         "--calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
         help="Also compute angles of incidence on primary and secondary mirrors",
-        type=bool,
         required=False,
         action="store_true",
     )
