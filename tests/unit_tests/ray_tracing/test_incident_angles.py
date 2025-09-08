@@ -612,3 +612,137 @@ def test_find_column_indices_ignores_mirror_when_disabled(tmp_path):
     idx = calc._find_column_indices(pfile)
     assert set(idx.keys()) == {"focal"}
     assert idx["focal"] == 25  # 1-based 26 -> 0-based 25
+
+
+def test_parse_float_success_and_failure():
+    parts = ["1.5", "bad"]
+    ok, val = IncidentAnglesCalculator._parse_float(parts, 0)
+    assert ok
+    assert math.isclose(val, 1.5, rel_tol=0.0, abs_tol=1e-12)
+    ok, val = IncidentAnglesCalculator._parse_float(parts, 1)
+    assert not ok
+    assert math.isclose(val, 0.0, rel_tol=0.0, abs_tol=1e-12)
+    ok, val = IncidentAnglesCalculator._parse_float(parts, 5)
+    assert not ok
+    assert math.isclose(val, 0.0, rel_tol=0.0, abs_tol=1e-12)
+
+
+def test_contains_axis_cases():
+    assert IncidentAnglesCalculator._contains_axis("X reflection point on primary", "x")
+    assert IncidentAnglesCalculator._contains_axis("y reflection point", "y")
+    # Should not match axis embedded in a word
+    assert not IncidentAnglesCalculator._contains_axis("xcoord value", "x")
+    # Case-insensitive check
+    assert IncidentAnglesCalculator._contains_axis("Axis: X", "x")
+
+
+def test_update_indices_angle_headers():
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    indices = {"focal": 25, "primary": 31, "secondary": 35}
+    # focal
+    calc._update_indices_from_header_desc(
+        "angle of incidence at focal surface with respect to the optical axis", 30, indices
+    )
+    assert indices["focal"] == 29
+    # primary
+    calc._update_indices_from_header_desc("angle of incidence onto primary mirror", 40, indices)
+    assert indices["primary"] == 39
+    # secondary
+    calc._update_indices_from_header_desc("angle of incidence on secondary mirror", 44, indices)
+    assert indices["secondary"] == 43
+
+
+def test_label_suffix_returns_expected_format(calculator):
+    # Default off-axis is 0 deg
+    s = calculator._label_suffix()
+    assert calculator.config_data["telescope"] in s
+    assert f"{calculator.label}_" in s
+    assert s.endswith("off0")
+
+
+def test_append_values_only_focal_when_disabled(tmp_path):
+    # Minimal test to check early return after focal append
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = False
+    parts = ["0"] * 25 + ["42.0"]
+    col_idx = {"focal": 25}
+    focal = []
+    calc._append_values(
+        parts,
+        col_idx,
+        focal,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    assert len(focal) == 1
+    assert math.isclose(focal[0], 42.0, rel_tol=0.0, abs_tol=1e-12)
+
+
+def test_append_primary_secondary_angles_values():
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    parts[31] = "3.0"  # primary at idx 31
+    parts[35] = "bad"  # secondary invalid -> NaN
+    col_idx = {"primary": 31, "secondary": 35}
+    primary, secondary = [], []
+    calc._append_primary_secondary_angles(parts, col_idx, primary, secondary)
+    assert math.isclose(primary[0], 3.0, rel_tol=0.0, abs_tol=1e-12)
+    assert math.isnan(secondary[0])
+
+
+def test_append_primary_hit_geometry_valid_and_invalid():
+    calc = object.__new__(IncidentAnglesCalculator)
+    # Valid coordinates
+    parts = ["0"] * 40
+    parts[28] = "10.0"  # x cm
+    parts[29] = "-20.0"  # y cm
+    col_idx = {"prim_x": 28, "prim_y": 29}
+    radius, x_m, y_m = [], [], []
+    calc._append_primary_hit_geometry(parts, col_idx, radius, x_m, y_m)
+    assert math.isclose(radius[0], ((10.0**2 + 20.0**2) ** 0.5) / 100.0, rel_tol=0.0, abs_tol=1e-12)
+    assert math.isclose(x_m[0], 0.10, rel_tol=0.0, abs_tol=1e-12)
+    assert math.isclose(y_m[0], -0.20, rel_tol=0.0, abs_tol=1e-12)
+    # Invalid coordinates -> NaNs
+    parts[28] = "bad"
+    parts[29] = "-20.0"
+    calc._append_primary_hit_geometry(parts, col_idx, radius, x_m, y_m)
+    assert math.isnan(radius[1])
+    assert math.isnan(x_m[1])
+    assert math.isnan(y_m[1])
+
+
+def test_append_secondary_hit_geometry_valid_and_invalid():
+    calc = object.__new__(IncidentAnglesCalculator)
+    # Valid coordinates
+    parts = ["0"] * 40
+    parts[32] = "3.0"  # x cm
+    parts[33] = "4.0"  # y cm
+    col_idx = {"sec_x": 32, "sec_y": 33}
+    radius2, x2_m, y2_m = [], [], []
+    calc._append_secondary_hit_geometry(parts, col_idx, radius2, x2_m, y2_m)
+    assert math.isclose(radius2[0], 0.05, rel_tol=0.0, abs_tol=1e-12)
+    assert math.isclose(x2_m[0], 0.03, rel_tol=0.0, abs_tol=1e-12)
+    assert math.isclose(y2_m[0], 0.04, rel_tol=0.0, abs_tol=1e-12)
+    # Invalid -> NaNs
+    parts[32] = "bad"
+    parts[33] = "4.0"
+    calc._append_secondary_hit_geometry(parts, col_idx, radius2, x2_m, y2_m)
+    assert math.isnan(radius2[1])
+    assert math.isnan(x2_m[1])
+    assert math.isnan(y2_m[1])
+
+
+def test_update_indices_reflection_positive():
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    indices = {}
+    desc = "X reflection point on primary mirror [cm]".lower()
+    calc._update_indices_from_header_desc(desc, 15, indices)
+    assert indices["prim_x"] == 14
