@@ -79,8 +79,6 @@ Example of a secondary mirror incident angle plot for a SST:
 import logging
 from pathlib import Path
 
-import astropy.units as u
-
 from simtools.configuration import configurator
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
@@ -188,28 +186,9 @@ def main():
     calculator = IncidentAnglesCalculator(
         simtel_path=args_dict["simtel_path"],
         db_config=db_config,
-        config_data={
-            "telescope": args_dict["telescope"],
-            "site": args_dict["site"],
-            "model_version": args_dict["model_version"],
-            "zenith_angle": args_dict["zenith"] * u.deg,
-            "off_axis_angle": (
-                (args_dict.get("off_axis_angles")[0] * u.deg)
-                if args_dict.get("off_axis_angles")
-                else 0.0 * u.deg
-            ),
-            "source_distance": args_dict["source_distance"] * u.km,
-            "number_of_photons": int(args_dict.get("number_of_photons", 10000)),
-        },
+        config_data=args_dict,
         output_dir=output_dir,
         label=base_label,
-        perfect_mirror=bool(args_dict.get("perfect_mirror", False)),
-        mirror_reflection_random_angle=args_dict.get("mirror_reflection_random_angle", None),
-        mirror_alignment_random=args_dict.get("mirror_alignment_random", None),
-        test=args_dict.get("test", False),
-        calculate_primary_secondary_angles=args_dict.get(
-            "calculate_primary_secondary_angles", True
-        ),
     )
     offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
 

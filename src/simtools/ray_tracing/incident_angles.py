@@ -33,16 +33,14 @@ class IncidentAnglesCalculator:
         Output directory where logs, scripts, photons files and results are written.
     label : str, optional
         Label used to name outputs; defaults to ``incident_angles_<telescope>`` when omitted.
-    perfect_mirror : bool, default False
-        If True, enforce perfect mirror settings (no random errors in sim_telarray options).
-    mirror_reflection_random_angle : float, optional
-        Mirror reflection random angle (sets sim_telarray ``mirror_reflection_random_angle``).
-    mirror_alignment_random : float, optional
-        Mirror alignment randomization amplitude used for horizontal/vertical settings.
-    test : bool, default False
-        If True, reduce the number of rays for a faster run (keeps outputs compatible).
-    calculate_primary_secondary_angles : bool, default True
-        If True, parse and store primary/secondary mirror incidence angles from the imaging list.
+
+    Notes
+    -----
+    Additional options are read from ``config_data`` when present:
+    - ``perfect_mirror`` (bool, default False)
+    - ``mirror_reflection_random_angle`` (float, optional)
+    - ``mirror_alignment_random`` (float, optional)
+    - ``calculate_primary_secondary_angles`` (bool, default True)
     """
 
     def __init__(
@@ -52,11 +50,6 @@ class IncidentAnglesCalculator:
         config_data,
         output_dir,
         label=None,
-        perfect_mirror=False,
-        mirror_reflection_random_angle=None,
-        mirror_alignment_random=None,
-        test=False,
-        calculate_primary_secondary_angles=True,
     ):
         self.logger = logging.getLogger(__name__)
 
@@ -64,11 +57,13 @@ class IncidentAnglesCalculator:
         self.config_data = config_data
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
-        self.perfect_mirror = perfect_mirror
-        self.mirror_reflection_random_angle = mirror_reflection_random_angle
-        self.mirror_alignment_random = mirror_alignment_random
-        self.test = test
-        self.calculate_primary_secondary_angles = calculate_primary_secondary_angles
+        cfg = config_data
+        self.perfect_mirror = cfg.get("perfect_mirror", False)
+        self.mirror_reflection_random_angle = cfg.get("mirror_reflection_random_angle")
+        self.mirror_alignment_random = cfg.get("mirror_alignment_random")
+        self.calculate_primary_secondary_angles = cfg.get(
+            "calculate_primary_secondary_angles", True
+        )
         self.results = None
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -108,12 +103,12 @@ class IncidentAnglesCalculator:
         zenith = config_data.get("zenith_angle", 20.0 * u.deg).to(u.deg)
         off = config_data.get("off_axis_angle", 0.0 * u.deg).to(u.deg)
         src_dist = config_data.get("source_distance", 10.0 * u.km).to(u.km)
-        n_rays = int(config_data.get("number_of_photons", 10000))
+        n_photons = int(config_data.get("number_of_photons", 10000))
         return {
             "zenith_angle": zenith,
             "off_axis_angle": off,
             "source_distance": src_dist,
-            "number_of_photons": n_rays,
+            "number_of_photons": n_photons,
         }
 
     def run(self):
@@ -209,7 +204,7 @@ class IncidentAnglesCalculator:
 
         theta = float(self.rt_params["zenith_angle"].to_value(u.deg))
         off = float(self.rt_params["off_axis_angle"].to_value(u.deg))
-        star_photons = self.rt_params["number_of_photons"] if not self.test else 5000
+        star_photons = self.rt_params["number_of_photons"]
 
         def cfg(par, val):
             return f"-C {par}={val}"
