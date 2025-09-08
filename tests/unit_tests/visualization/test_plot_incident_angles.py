@@ -60,7 +60,7 @@ def test_no_finite_focal_bins_none(tmp_path, caplog):
     results = {0.0: t}
     pia.plot_incident_angles(results, tmp_path, "nanfocal")
     msgs = [r.message for r in caplog.records]
-    assert any("No finite focal-surface incidence angle values to plot" in m for m in msgs)
+    assert any("No focal-surface incidence angle values to plot" in m for m in msgs)
     out_dir = Path(tmp_path) / "plots"
     assert not (out_dir / "incident_angles_multi_nanfocal.png").exists()
 
@@ -78,7 +78,7 @@ def test_no_finite_nonfocal_bins_none(tmp_path, caplog):
         log=logging.getLogger(__name__),
     )
     msgs = [r.message for r in caplog.records]
-    assert any("No finite angle_incidence_primary values to plot" in m for m in msgs)
+    assert any("No angle_incidence_primary values to plot" in m for m in msgs)
     assert not (out_dir / "should_not_exist.png").exists()
 
 
