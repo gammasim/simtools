@@ -28,7 +28,7 @@ class IncidentAnglesCalculator:
         Database configuration passed to ``initialize_simulation_models``.
     config_data : dict
         Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
-        ``zenith_angle``, ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
+        ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
     output_dir : str or pathlib.Path
         Output directory where logs, scripts, photons files and results are written.
     label : str, optional
@@ -87,8 +87,6 @@ class IncidentAnglesCalculator:
             config_data["model_version"],
         )
 
-        self.rt_params = self._setup_rt_params(config_data)
-
     def __repr__(self):
         """Return a concise representation helpful for logging/debugging."""
         return f"IncidentAnglesCalculator(label={self.label})"
@@ -96,20 +94,8 @@ class IncidentAnglesCalculator:
     def _label_suffix(self):
         """Build a filename suffix including telescope and off-axis angle."""
         tel = str(self.config_data.get("telescope", "TEL"))
-        off = float(self.rt_params.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
+        off = float(self.config_data.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
         return f"{self.label}_{tel}_off{off:g}"
-
-    def _setup_rt_params(self, config_data):
-        zenith = config_data.get("zenith_angle", 20.0 * u.deg).to(u.deg)
-        off = config_data.get("off_axis_angle", 0.0 * u.deg).to(u.deg)
-        src_dist = config_data.get("source_distance", 10.0 * u.km).to(u.km)
-        n_photons = int(config_data.get("number_of_photons", 10000))
-        return {
-            "zenith_angle": zenith,
-            "off_axis_angle": off,
-            "source_distance": src_dist,
-            "number_of_photons": n_photons,
-        }
 
     def run(self):
         """Run sim_telarray, parse imaging list, and return an angle table."""
@@ -154,15 +140,15 @@ class IncidentAnglesCalculator:
         accordingly. Returns a mapping from off-axis angle (deg) to the resulting QTable.
         """
         results_by_offset = {}
-        base_off = self.rt_params.get("off_axis_angle", 0.0 * u.deg)
+        base_off = self.config_data.get("off_axis_angle", 0.0 * u.deg)
 
         for off in offsets:
-            self.rt_params["off_axis_angle"] = float(off) * u.deg
+            self.config_data["off_axis_angle"] = float(off) * u.deg
             self.logger.info(f"Running for off-axis angle {off:g} deg with label {self.label}")
             tbl = self.run()
             results_by_offset[float(off)] = tbl.copy()
 
-        self.rt_params["off_axis_angle"] = base_off
+        self.config_data["off_axis_angle"] = base_off
         return results_by_offset
 
     def _prepare_psf_io_files(self):
@@ -183,15 +169,16 @@ class IncidentAnglesCalculator:
             pf.write("# Imaging list for Incident Angle simulations\n")
             pf.write(f"#{'=' * 50}\n")
             pf.write(f"# config_file = {self.telescope_model.config_file_path}\n")
-            pf.write(f"# zenith_angle [deg] = {self.rt_params['zenith_angle'].value}\n")
+            # Always write zenith angle as 20 deg for incident angle calculations
+            pf.write("# zenith_angle [deg] = 20\n")
             pf.write(
-                f"# off_axis_angle [deg] = {self.rt_params['off_axis_angle'].to_value(u.deg)}\n"
+                f"# off_axis_angle [deg] = {self.config_data['off_axis_angle'].to_value(u.deg)}\n"
             )
-            pf.write(f"# source_distance [km] = {self.rt_params['source_distance'].value}\n")
+            pf.write(f"# source_distance [km] = {self.config_data['source_distance'].value}\n")
 
         with stars_file.open("w", encoding="utf-8") as sf:
-            zen = float(self.rt_params["zenith_angle"].to_value(u.deg))
-            dist = float(self.rt_params["source_distance"].to_value(u.km))
+            zen = 20
+            dist = float(self.config_data["source_distance"].to_value(u.km))
             sf.write(f"0. {90.0 - zen} 1.0 {dist}\n")
 
         return photons_file, stars_file, log_file
@@ -202,9 +189,9 @@ class IncidentAnglesCalculator:
         simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
         corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
-        theta = float(self.rt_params["zenith_angle"].to_value(u.deg))
-        off = float(self.rt_params["off_axis_angle"].to_value(u.deg))
-        star_photons = self.rt_params["number_of_photons"]
+        theta = 20
+        off = float(self.config_data["off_axis_angle"].to_value(u.deg))
+        star_photons = self.config_data["number_of_photons"]
 
         def cfg(par, val):
             return f"-C {par}={val}"
@@ -578,7 +565,7 @@ class IncidentAnglesCalculator:
         with summary_file.open("w", encoding="utf-8") as f:
             f.write(f"Incident angle results for {self.telescope_model.name}\n")
             f.write(f"Site: {self.telescope_model.site}\n")
-            f.write(f"Zenith angle: {self.rt_params['zenith_angle']}\n")
-            f.write(f"Off-axis angle: {self.rt_params['off_axis_angle']}\n")
-            f.write(f"Source distance: {self.rt_params['source_distance']}\n\n")
+            f.write("Zenith angle: 20\n")
+            f.write(f"Off-axis angle: {self.config_data['off_axis_angle']}\n")
+            f.write(f"Source distance: {self.config_data['source_distance']}\n\n")
             f.write(f"Number of data points: {len(self.results)}\n")
