@@ -624,9 +624,8 @@ def test_append_primary_secondary_angles_direct():
     )
     assert primary == [3.0]
     assert len(secondary) == 1
-    import math as _math
 
-    assert _math.isnan(secondary[0])
+    assert math.isnan(secondary[0])
 
 
 def test_find_column_indices_defaults(calculator, tmp_path):
