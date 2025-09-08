@@ -235,8 +235,6 @@ class IncidentAnglesCalculator:
         if self.perfect_mirror:
             opts += [
                 "-DPERFECT_DISH=1",
-                "-C telescope_random_angle=0",
-                "-C telescope_random_error=0",
                 "-C random_focal_length=0",
                 "-C mirror_reflection_random_angle=0",
                 "-C mirror_align_random_distance=0",
