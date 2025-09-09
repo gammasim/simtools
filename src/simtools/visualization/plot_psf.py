@@ -458,11 +458,11 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         color="orange",
         linestyle=":",
         alpha=0.7,
-        label=f"±1 std: {std_metric:.6f}",
+        label=f"$\sigma$: {std_metric:.6f}",
     )
     ax1.axvline(mean_metric + std_metric, color="orange", linestyle=":", alpha=0.7)
     ax1.set_xlabel(metric_name)
-    ax1.set_ylabel("Frequency")
+    ax1.set_ylabel("Counts")
     ax1.set_title(f"{metric_name} Distribution")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
@@ -481,7 +481,7 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         ax2.axvline(0.05, color="orange", linestyle="--", alpha=0.7, label="p = 0.05")
         ax2.axvline(0.01, color="red", linestyle="--", alpha=0.7, label="p = 0.01")
         ax2.set_xlabel("p-value")
-        ax2.set_ylabel("Frequency")
+        ax2.set_ylabel("Counts")
         ax2.set_title("p-value Distribution")
         ax2.legend()
         ax2.grid(True, alpha=0.3)
@@ -496,11 +496,11 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         color="orange",
         linestyle=":",
         alpha=0.7,
-        label=f"±1 std: {std_d80:.4f} cm",
+        label=f"$\sigma$: {std_d80:.4f} cm",
     )
     ax3.axvline(mean_d80 + std_d80, color="orange", linestyle=":", alpha=0.7)
     ax3.set_xlabel(D80_CM_LABEL)
-    ax3.set_ylabel("Frequency")
+    ax3.set_ylabel("Counts")
     ax3.set_title("D80 Distribution")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
