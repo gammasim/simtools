@@ -160,6 +160,7 @@ jobs:
       - name: Rename corsika-simtel-package files and set build branch
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+          mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
