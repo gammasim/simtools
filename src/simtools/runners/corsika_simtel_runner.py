@@ -33,6 +33,8 @@ class CorsikaSimtelRunner:
         Use multipipe to run CORSIKA and sim_telarray.
     sim_telarray_seeds : dict
         Dictionary with configuration for sim_telarray random instrument setup.
+    calibration_config : dict
+        Configuration for the calibration of the sim_telarray data.
     """
 
     def __init__(

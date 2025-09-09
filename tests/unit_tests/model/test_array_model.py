@@ -178,7 +178,7 @@ def test_get_all_array_elements_of_type(array_model, io_handler):
 def test_update_array_element_position(array_model_from_list):
     am = array_model_from_list
     assert "LSTN-01" in am.array_elements
-    assert "LSTN-01" in am.telescope_model
+    assert "LSTN-01" in am.telescope_models
     assert am.array_elements["LSTN-01"] is None
 
 

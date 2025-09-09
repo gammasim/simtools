@@ -203,3 +203,41 @@ def test_transform_ground_to_shower_coordinates():
     )
 
     np.testing.assert_allclose(result, expected, rtol=1e-7, atol=1.0e-10)
+
+
+def test_fiducial_radius_from_shape():
+    # Test for circle (shape = 0)
+    width_circle = 10.0
+    shape_circle = 0
+    expected_radius_circle = 5.0
+    assert transf.fiducial_radius_from_shape(width_circle, shape_circle) == pytest.approx(
+        expected_radius_circle
+    )
+
+    # Test for square (shape = 2)
+    width_square = 10.0
+    shape_square = 2
+    expected_radius_square = 10.0 / np.sqrt(2.0)
+    assert transf.fiducial_radius_from_shape(width_square, shape_square) == pytest.approx(
+        expected_radius_square
+    )
+
+    # Test for hexagon (shape = 1)
+    width_hexagon_1 = 10.0
+    shape_hexagon_1 = 1
+    expected_radius_hexagon_1 = 10.0 / np.sqrt(3.0)
+    assert transf.fiducial_radius_from_shape(width_hexagon_1, shape_hexagon_1) == pytest.approx(
+        expected_radius_hexagon_1
+    )
+
+    # Test for hexagon (shape = 3)
+    width_hexagon_3 = 10.0
+    shape_hexagon_3 = 3
+    expected_radius_hexagon_3 = 10.0 / np.sqrt(3.0)
+    assert transf.fiducial_radius_from_shape(width_hexagon_3, shape_hexagon_3) == pytest.approx(
+        expected_radius_hexagon_3
+    )
+
+    # Test for invalid shape
+    with pytest.raises(ValueError, match="Unknown shape value 4"):
+        transf.fiducial_radius_from_shape(10.0, 4)
