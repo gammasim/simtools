@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """Plot incident angle histograms for focal, primary, and secondary mirrors.
 
-Also plots the primary-mirror hit radius if available.
+Plots the primary-mirror hit radius if available.
 """
 
 import logging
