@@ -509,21 +509,21 @@ def test_parse_float_with_nan_out_of_range():
     assert math.isnan(IncidentAnglesCalculator._parse_float_with_nan(parts, -1))
 
 
-def test_maybe_set_reflection_index_ignores_when_not_primary_or_secondary():
+def test_set_reflection_index_if_match_ignores_when_not_primary_or_secondary():
     # Desc that mentions an axis but not primary/secondary mirror should not modify indices
     calc = object.__new__(IncidentAnglesCalculator)
     indices = {"prim_x": 28, "prim_y": 29, "sec_x": 32, "sec_y": 33}
     desc = "x reflection point on mirror center [cm]"  # no 'primary mirror' or 'secondary mirror'
-    calc._maybe_set_reflection_index(desc, 15, indices)
+    calc._set_reflection_index_if_match(desc, 15, indices)
     assert indices == {"prim_x": 28, "prim_y": 29, "sec_x": 32, "sec_y": 33}
 
 
-def test_maybe_set_reflection_index_requires_axis_token():
+def test_set_reflection_index_if_match_requires_axis_token():
     # Desc that mentions primary mirror but no standalone x/y should not modify indices
     calc = object.__new__(IncidentAnglesCalculator)
     indices = {}
     desc = "reflection point on primary mirror [cm]"  # no 'x' or 'y' token
-    calc._maybe_set_reflection_index(desc, 12, indices)
+    calc._set_reflection_index_if_match(desc, 12, indices)
     assert indices == {}
 
 

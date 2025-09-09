@@ -440,7 +440,7 @@ class IncidentAnglesCalculator:
         # Reflection points (X/Y)
         if not self.calculate_primary_secondary_angles or "reflection point" not in desc:
             return
-        self._maybe_set_reflection_index(desc, num, indices)
+        self._set_reflection_index_if_match(desc, num, indices)
 
     @staticmethod
     def _contains_axis(desc, axis):
@@ -462,7 +462,7 @@ class IncidentAnglesCalculator:
         axis_l = axis.lower()
         return bool(re.search(r"(^|\s)" + re.escape(axis_l) + r"(\s|$)", desc_l))
 
-    def _maybe_set_reflection_index(self, desc, num, indices):
+    def _set_reflection_index_if_match(self, desc, num, indices):
         """Set reflection point indices for primary/secondary mirrors if the header matches.
 
         Parameters
