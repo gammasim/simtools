@@ -14,7 +14,7 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     return 1
 fi
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -lt 2 ]; then
     echo "Usage: $0 <DB simulation model name> <DB simulation model version> [branch]"
     echo ""
     echo "Uses the .env file in the simtools directory for database configuration."
