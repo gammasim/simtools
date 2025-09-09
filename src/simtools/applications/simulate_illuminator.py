@@ -66,8 +66,7 @@ def _parse(label):
     config = configurator.Configurator(
         label=label,
         description=(
-            "Simulate the light emission by a calibration light source "
-            "(not attached to a telescope)."
+            "Simulate light emission by a calibration light source (not attached to a telescope)."
         ),
     )
     config.parser.add_argument(

@@ -3,7 +3,7 @@
 r"""
 Simulate flasher devices used e.g. for camera flat fielding.
 
-The flasher simulation allows two different run modes:
+The flasher simulation allows for two different run modes:
 
 1. Direct injection of light into the camera (bypassing the telescope optics).
 2. Simulation of the full light path (using the light-emission package from sim_telarray).
@@ -14,6 +14,7 @@ visualized using e.g. the 'simtools-plot-simtel-events' application.
 
 Example Usage
 -------------
+# TODO check examples
 
 1. Simulate flashers for a telescope (direct injection):
 
@@ -71,7 +72,7 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--light_source",
-        help="Flasher device name associated with a specific telescope, i.e. MSFx-FlashCam",
+        help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
         required=True,
     )
