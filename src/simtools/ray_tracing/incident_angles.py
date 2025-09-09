@@ -2,8 +2,8 @@
 
 Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses
 Angle of incidence at focal surface, with respect to the optical axis [deg],
-Angle of incidence on(to) primary mirror [deg], and
-Angle of incidence on(to) secondary mirror [deg] (if available).
+Angle of incidence on to primary mirror [deg], and
+Angle of incidence on to secondary mirror [deg] (if available).
 """
 
 import logging
