@@ -55,6 +55,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
+from simtools.simulator import Simulator
 
 
 def _parse(label):
@@ -119,13 +120,11 @@ def main():
             label=args_dict.get("label"),
         )
     elif args_dict["run_mode"] == "direct_injection":
-        logger.warning("Direct injection mode for flasher is not implemented yet.")
-        light_source = None
-    #        light_source = Simulator(
-    #            args_dict=args_dict,
-    #            db_config=db_config,
-    #            label=args_dict.get("label"),
-    #        )
+        light_source = Simulator(
+            args_dict=args_dict,
+            db_config=db_config,
+            label=args_dict.get("label"),
+        )
     else:
         raise ValueError(f"Unsupported run_mode: {args_dict['run_mode']}")
 

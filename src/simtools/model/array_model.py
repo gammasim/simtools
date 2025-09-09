@@ -73,7 +73,7 @@ class ArrayModel:
         self.io_handler = io_handler.IOHandler()
         self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
-        self.array_elements, self.site_model, self.telescope_model, self.calibration_model = (
+        self.array_elements, self.site_model, self.telescope_models, self.calibration_models = (
             self._initialize(site, array_elements, calibration_device_types)
         )
 
@@ -131,11 +131,11 @@ class ArrayModel:
                 "Possibly missing valid layout name or missing telescope list."
             )
 
-        telescope_model, calibration_model = self._build_telescope_models(
+        telescope_models, calibration_models = self._build_telescope_models(
             site_model, array_elements, calibration_device_types
         )
 
-        return array_elements, site_model, telescope_model, calibration_model
+        return array_elements, site_model, telescope_models, calibration_models
 
     @property
     def config_file_path(self):
@@ -167,7 +167,7 @@ class ArrayModel:
         int
             Number of telescopes.
         """
-        return len(self.telescope_model)
+        return len(self.telescope_models)
 
     @property
     def site(self) -> str:
@@ -211,11 +211,14 @@ class ArrayModel:
 
     def _build_telescope_models(self, site_model, array_elements, calibration_device_types):
         """
-        Build the the telescope models for all telescopes of this array.
+        Build telescope models for all telescopes of this array.
 
         Adds calibration device models, if requested through the calibration_device_types argument.
+        Calibration models are stored in a dictionary with the telescope name is key (to identify
+        the calibration device model on a given telescope).
+
         Includes reading of telescope model parameters from the database.
-        The array is defined in the telescopes dictionary. Array element positions
+        The array is defined in the array_elements dictionary. Array element positions
         are read from the database if no values are given in this dictionary.
 
         Parameters
@@ -245,12 +248,10 @@ class ArrayModel:
                 mongo_db_config=self.mongo_db_config,
                 label=self.label,
             )
-            calibration_models.update(
-                self._build_calibration_models(
-                    telescope_models[element_name],
-                    site_model,
-                    calibration_device_types,
-                )
+            calibration_models[element_name] = self._build_calibration_models(
+                telescope_models[element_name],
+                site_model,
+                calibration_device_types,
             )
 
         return telescope_models, calibration_models
@@ -283,19 +284,21 @@ class ArrayModel:
 
     def print_telescope_list(self):
         """Print list of telescopes."""
-        for tel_name, data in self.telescope_model.items():
+        for tel_name, data in self.telescope_models.items():
             print(f"Name: {tel_name}\t Model: {data.name}")
 
     def export_simtel_telescope_config_files(self):
         """Export sim_telarray configuration files for all telescopes into the model directory."""
         exported_models = []
-        for _, tel_model in self.telescope_model.items():
+        for tel_model in self.telescope_models.values():
             name = tel_model.name + (
                 "_" + tel_model.extra_label if tel_model.extra_label != "" else ""
             )
             if name not in exported_models:
                 self._logger.debug(f"Exporting configuration file for telescope {name}")
-                tel_model.write_sim_telarray_config_file()
+                tel_model.write_sim_telarray_config_file(
+                    additional_models=self.calibration_models.get(tel_model.name)
+                )
                 exported_models.append(name)
             else:
                 self._logger.debug(
@@ -318,7 +321,7 @@ class ArrayModel:
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.config_file_path,
-            telescope_model=self.telescope_model,
+            telescope_model=self.telescope_models,
             site_model=self.site_model,
             additional_metadata=self._get_additional_simtel_metadata(),
         )
@@ -507,7 +510,7 @@ class ArrayModel:
         table = QTable(meta={"array_name": self.layout_name, "site": self.site_model.site})
 
         name, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
-        for tel_name, data in self.telescope_model.items():
+        for tel_name, data in self.telescope_models.items():
             name.append(tel_name)
             xyz = data.position(coordinate_system=coordinate_system)
             pos_x.append(xyz[0])
