@@ -497,7 +497,7 @@ class ModelParameter:
         )
         self._is_exported_model_files_up_to_date = True
 
-    def write_sim_telarray_config_file(self, additional_model=None):
+    def write_sim_telarray_config_file(self, additional_models=None):
         """
         Write the sim_telarray configuration file.
 
@@ -509,17 +509,26 @@ class ModelParameter:
         self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
         self.export_model_files(update_if_necessary=True)
 
-        if additional_model:
-            self.parameters.update(additional_model.parameters)
-            additional_model.export_model_files(
-                self.config_file_directory, update_if_necessary=True
-            )
+        self._add_additional_models(additional_models)
 
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
             parameters=self.parameters,
         )
+
+    def _add_additional_models(self, additional_models):
+        """Add additional models to the current model parameters."""
+        if additional_models is None:
+            return
+
+        if isinstance(additional_models, dict):
+            for additional_model in additional_models.values():
+                self._add_additional_models(additional_model)
+            return
+
+        self.parameters.update(additional_models.parameters)
+        additional_models.export_model_files(self.config_file_directory, update_if_necessary=True)
 
     @property
     def config_file_directory(self):

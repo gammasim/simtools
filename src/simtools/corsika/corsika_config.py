@@ -748,7 +748,7 @@ class CorsikaConfig:
             Piece of text to be added to the CORSIKA input file.
         """
         corsika_input_list = ""
-        for telescope_name, telescope in self.array_model.telescope_model.items():
+        for telescope_name, telescope in self.array_model.telescope_models.items():
             positions = telescope.get_parameter_value_with_unit("array_element_position_ground")
             corsika_input_list += "TELESCOPE"
             for pos in positions:

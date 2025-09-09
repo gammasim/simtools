@@ -25,4 +25,4 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
+  - name: simtools
