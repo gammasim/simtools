@@ -356,9 +356,7 @@ class SimulatorLightEmission(SimtelRunner):
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
         )
-        # TODO TMP
-        # angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
-        angular_distribution = "isotropic"
+        angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
         return [
             f"-x {x_cal.to(u.cm).value}",
@@ -375,8 +373,6 @@ class SimulatorLightEmission(SimtelRunner):
         """
         Return the command to run sim_telarray using the output from the previous step.
 
-        TODO clean up all +=
-
         Returns
         -------
         str
@@ -389,63 +385,61 @@ class SimulatorLightEmission(SimtelRunner):
             _, angles = self._calibration_pointing_direction()
 
         simtel_bin = self._simtel_path.joinpath("sim_telarray/bin/sim_telarray/")
-        # Build command without prefix; caller will add SIM_TELARRAY_CONFIG_PATH once
-        command = f"{simtel_bin} "
-        command += f"-I{self.telescope_model.config_file_directory} "
-        command += f"-I{simtel_bin} "
-        command += f"-c {self.telescope_model.config_file_path} "
-        command += "-DNUM_TELESCOPES=1 "
 
-        command += super().get_config_option(
-            "altitude",
-            self.site_model.get_parameter_value_with_unit("corsika_observation_level")
-            .to(u.m)
-            .value,
-        )
-        command += super().get_config_option(
-            "atmospheric_transmission",
-            self.site_model.get_parameter_value("atmospheric_transmission"),
-        )
-        command += super().get_config_option("TRIGGER_TELESCOPES", "1")
-
-        command += super().get_config_option("TELTRIG_MIN_SIGSUM", "2")
-        command += super().get_config_option("PULSE_ANALYSIS", "-30")
-        command += super().get_config_option("MAXIMUM_TELESCOPES", 1)
+        parts = [
+            f"{simtel_bin}",
+            f"-I{self.telescope_model.config_file_directory}",
+            f"-I{simtel_bin}",
+            f"-c {self.telescope_model.config_file_path}",
+            "-DNUM_TELESCOPES=1",
+            super().get_config_option(
+                "altitude",
+                self.site_model.get_parameter_value_with_unit("corsika_observation_level")
+                .to(u.m)
+                .value,
+            ),
+            super().get_config_option(
+                "atmospheric_transmission",
+                self.site_model.get_parameter_value("atmospheric_transmission"),
+            ),
+            super().get_config_option("TRIGGER_TELESCOPES", "1"),
+            super().get_config_option("TELTRIG_MIN_SIGSUM", "2"),
+            super().get_config_option("PULSE_ANALYSIS", "-30"),
+            super().get_config_option("MAXIMUM_TELESCOPES", 1),
+        ]
 
         if self.light_emission_config.get("light_source_position") is not None:
             self._logger.warning("Using fixed (vertical up) telescope pointing.")
-            command += super().get_config_option("telescope_theta", 0)
-            command += super().get_config_option("telescope_phi", 0)
+            parts += [
+                super().get_config_option("telescope_theta", 0),
+                super().get_config_option("telescope_phi", 0),
+            ]
         else:
-            command += super().get_config_option("telescope_theta", f"{angles[0]}")
-            command += super().get_config_option("telescope_phi", f"{angles[1]}")
+            parts += [
+                super().get_config_option("telescope_theta", f"{angles[0]}"),
+                super().get_config_option("telescope_phi", f"{angles[1]}"),
+            ]
 
-        # For flat_fielding runs, bypass reflections on primary mirror
         if self.light_emission_config["light_source_type"] == "flat_fielding":
-            command += super().get_config_option("Bypass_Optics", "1")
+            parts.append(super().get_config_option("Bypass_Optics", "1"))
 
-        command += super().get_config_option("power_law", "2.68")
         app_name = self._get_light_emission_application_name()
         pref = self._get_prefix()
-        command += super().get_config_option(
-            "input_file", f"{self.output_directory}/{app_name}.iact.gz"
-        )
+        parts += [
+            super().get_config_option("power_law", "2.68"),
+            super().get_config_option("input_file", f"{self.output_directory}/{app_name}.iact.gz"),
+            super().get_config_option(
+                "output_file", f"{self.output_directory}/{pref}{app_name}.simtel.zst"
+            ),
+            super().get_config_option(
+                "histogram_file", f"{self.output_directory}/{pref}{app_name}.ctsim.hdata\n"
+            ),
+        ]
 
-        command += super().get_config_option(
-            "output_file",
-            f"{self.output_directory}/{pref}{app_name}.simtel.zst",
-        )
-        command += super().get_config_option(
-            "histogram_file",
-            f"{self.output_directory}/{pref}{app_name}.ctsim.hdata\n",
-        )
-
-        # Remove the default sim_telarray configuration directories
-        return clear_default_sim_telarray_cfg_directories(command)
+        return clear_default_sim_telarray_cfg_directories(" ".join(parts))
 
     def _get_simulation_output_filename(self):
         """Get the filename of the simulation output."""
-        # TODO check why this is not used everywhere
         app_name = self._get_light_emission_application_name()
         pref = self._get_prefix()
         return f"{self.output_directory}/{pref}{app_name}.simtel.zst"

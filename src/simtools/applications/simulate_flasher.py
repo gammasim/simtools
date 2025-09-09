@@ -14,23 +14,23 @@ visualized using e.g. the 'simtools-plot-simtel-events' application.
 
 Example Usage
 -------------
-# TODO check examples
 
 1. Simulate flashers for a telescope (direct injection):
 
     .. code-block:: console
 
         simtools-simulate-flasher --run_mode direct_injection \
-        --telescope MSTS-04 --site South \
-        --flasher MSFx-FlashCam --model_version 6.0.0
+        --light_source MSFx-FlashCam --model_version 6.0.0 \
+        --array_layout_name subsystem_msts --site South \
+        --azimuth_angle 0. --zenith_angle 20. --run_number 3
 
 2. Simulate flashers for a telescope (detailed simulation):
 
     .. code-block:: console
 
         simtools-simulate-flasher --run_mode full_simulation \
-        --telescope MSTS-04 --site South \
-        --flasher MSFx-FlashCam --model_version 6.0.0
+        --light_source MSFx-FlashCam --model_version 6.0.0 \
+        --telescope MSTS-04 --site South
 
 Command Line Arguments
 ----------------------
