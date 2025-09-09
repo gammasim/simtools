@@ -12,9 +12,9 @@ r"""
     A file name is expected, in which the file should contain 3 columns: radial distance in mm, \
     differential value of photon intensity and its integral value.
 
-    The derivation is performed through gradient descent optimization. The algorithm iteratively \
-    adjusts the parameters to minimize the Root Mean Squared Deviation between measured and \
-    simulated PSF curves. The optimization continues until the RMSD threshold is reached.
+    The derivation is performed through gradient descent optimization that minimizes either the \
+    Root Mean Squared Deviation (RMSD) between measured and simulated PSF curves (default) or the \
+    Kolmogorov-Smirnov (KS) statistic when the --ks_statistic flag is used.
 
     The optimization workflow includes:
 
@@ -62,6 +62,12 @@ r"""
         If activated, application will be faster by simulating fewer photons.
     write_psf_parameters (activation mode, optional)
         Write the optimized PSF parameters as simulation model parameter files.
+    rmsd_threshold (float, optional)
+        RMSD threshold for gradient descent convergence (default: 0.007).
+    learning_rate (float, optional)
+        Learning rate for gradient descent optimization (default: 0.01).
+    monte_carlo_analysis (activation mode, optional)
+        Run Monte Carlo analysis to find statistical uncertainties.
 
     Example
     -------
@@ -152,19 +158,30 @@ def _parse():
     )
     config.parser.add_argument(
         "--rmsd_threshold",
-        help="RMSD threshold for gradient descent convergence.",
+        help=(
+            "RMSD threshold for gradient descent convergence "
+            "(not used with --monte_carlo_analysis)."
+        ),
         type=float,
         default=0.007,
     )
     config.parser.add_argument(
         "--learning_rate",
-        help="Learning rate for gradient descent optimization.",
+        help=(
+            "Learning rate for gradient descent optimization "
+            "(not used with --monte_carlo_analysis)."
+        ),
         type=float,
         default=0.01,
     )
     config.parser.add_argument(
         "--monte_carlo_analysis",
         help="Run analysis to find monte carlo uncertainties.",
+        action="store_true",
+    )
+    config.parser.add_argument(
+        "--ks_statistic",
+        help="Use KS statistic for minimization and plots instead of RMSD.",
         action="store_true",
     )
     return config.initialize(
