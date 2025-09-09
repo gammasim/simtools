@@ -42,7 +42,7 @@ class ArrayModel:
     simtel_path: str, Path, optional
         Path to the sim_telarray installation directory.
     calibration_device_types: List[str], optional
-        List of calibration device types (e.g., 'flat_fielding')
+        List of calibration device types (e.g., 'flat_fielding') attached to each telescope.
     """
 
     def __init__(
@@ -214,7 +214,7 @@ class ArrayModel:
         Build telescope models for all telescopes of this array.
 
         Adds calibration device models, if requested through the calibration_device_types argument.
-        Calibration models are stored in a dictionary with the telescope name is key (to identify
+        Calibration models are stored in a dictionary with the telescope name as key (to identify
         the calibration device model on a given telescope).
 
         Includes reading of telescope model parameters from the database.

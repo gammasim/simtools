@@ -114,7 +114,8 @@ jobs:
       - name: Upload data to MongoDB
         run: |
           cd database_scripts/
-          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+          # TODO temporary from branch for testing of flasher parameters
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} flaser_models
 
       - name: Unit tests
         shell: bash -l {0}
