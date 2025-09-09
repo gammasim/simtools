@@ -12,6 +12,8 @@ data:
   - type: float64
     unit: dimensionless
     default: 1.
+    allowed_range:
+      min: 1.
 instrument:
   class: Calibration
   type:
