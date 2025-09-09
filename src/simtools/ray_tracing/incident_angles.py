@@ -706,25 +706,45 @@ class IncidentAnglesCalculator:
         return None
 
     def _save_results(self):
-        """Save the results to an ECSV file in the results directory if available."""
+        """Save the results to an ECSV file with metadata."""
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to save")
             return
+        self._attach_results_metadata()
         output_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
 
     def export_results(self):
-        """Export the results ECSV and a short text summary file."""
+        """Export the results ECSV with embedded metadata.
+
+        The run summary is stored in the table's metadata and written into the
+        ECSV header.
+        """
         if self.results is None or len(self.results) == 0:
             self.logger.error("Cannot export results because they do not exist")
             return
+        self._attach_results_metadata()
         table_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
         self.results.write(table_file, format="ascii.ecsv", overwrite=True)
-        summary_file = self.results_dir / f"incident_angles_summary_{self._label_suffix()}.txt"
-        with summary_file.open("w", encoding="utf-8") as f:
-            f.write(f"Incident angle results for {self.telescope_model.name}\n")
-            f.write(f"Site: {self.telescope_model.site}\n")
-            f.write(f"Zenith angle: {self.ZENITH_ANGLE_DEG}\n")
-            f.write(f"Off-axis angle: {self.config_data['off_axis_angle']}\n")
-            f.write(f"Source distance: {self.config_data['source_distance']}\n\n")
-            f.write(f"Number of data points: {len(self.results)}\n")
+
+    def _attach_results_metadata(self):
+        """Attach a run summary to ``self.results.meta``."""
+        meta = self.results.meta if isinstance(self.results.meta, dict) else {}
+        off_deg = float(self.config_data.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
+        src_km = float(self.config_data.get("source_distance", 0.0))
+        tel_name_val = getattr(self.telescope_model, "name", None)
+        site_val = getattr(self.site_model, "site", None)
+
+        meta.update(
+            {
+                "label": self.label,
+                "telescope_name": tel_name_val,
+                "site": site_val,
+                "zenith_angle_deg": float(self.ZENITH_ANGLE_DEG),
+                "off_axis_angle_deg": off_deg,
+                "source_distance_km": src_km,
+                "config_file": str(self.telescope_model.config_file_path),
+                "data_points": len(self.results),
+            }
+        )
+        self.results.meta = meta

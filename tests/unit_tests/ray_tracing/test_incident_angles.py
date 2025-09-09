@@ -230,15 +230,15 @@ def test_export_results_success_and_no_results(caplog, calculator):
     table_file = calculator.results_dir / (
         f"incident_angles_{calculator.label}_{calculator.config_data['telescope']}_off0.ecsv"
     )
-    summary_file = calculator.results_dir / (
-        f"incident_angles_summary_{calculator.label}_{calculator.config_data['telescope']}_off0.txt"
-    )
     assert table_file.exists()
-    assert summary_file.exists()
-    content = summary_file.read_text(encoding="utf-8")
-    assert "Incident angle results for" in content
-    assert "Site:" in content
-    assert "Number of data points:" in content
+    # Read table and check metadata
+    tbl = QTable.read(table_file, format="ascii.ecsv")
+    meta = tbl.meta
+    assert meta.get("zenith_angle_deg") == calculator.ZENITH_ANGLE_DEG
+    assert meta.get("off_axis_angle_deg") == pytest.approx(0.0)
+    assert meta.get("telescope_name") == "LST-1"
+    assert meta.get("site") == "North"
+    assert meta.get("data_points") == len(tbl)
 
 
 def test_compute_incidence_angles_parsing(calculator, tmp_path):
@@ -298,6 +298,34 @@ def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
     assert any("Failed to remove existing photons file" in rec.message for rec in caplog.records)
     # File should exist and be (re)written despite unlink failure
     assert photons.exists()
+
+
+def test_attach_results_metadata_sets_expected_fields(calculator):
+    # Prepare minimal results table
+    calculator.results = QTable()
+    calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
+
+    # Sanity: config contains expected values from fixtures
+    assert calculator.config_data["site"] == "North"
+    assert calculator.config_data["telescope"] == "LST-1"
+
+    # Invoke metadata attachment
+    calculator._attach_results_metadata()
+
+    meta = calculator.results.meta
+    # Core fields
+    assert meta.get("label") == calculator.label
+    assert meta.get("telescope_name") == "LST-1"
+    assert meta.get("site") == "North"
+    assert meta.get("zenith_angle_deg") == calculator.ZENITH_ANGLE_DEG
+    # Off-axis from fixture is 0 deg
+    assert meta.get("off_axis_angle_deg") == pytest.approx(0.0)
+    # Source distance from fixture
+    assert meta.get("source_distance_km") == pytest.approx(10.0)
+    # Config file path recorded as string
+    assert isinstance(meta.get("config_file"), str)
+    # Data points equals table length
+    assert meta.get("data_points") == len(calculator.results)
 
 
 def test_primary_valueerror_results_in_nan(calculator, tmp_path):
