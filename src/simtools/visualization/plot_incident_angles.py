@@ -13,7 +13,7 @@ import numpy as np
 
 __all__ = ["plot_incident_angles"]
 
-Y_AXIS_BIN_COUNT_LABEL = "Count / Bin"
+Y_AXIS_BIN_COUNT_LABEL = "Density"
 
 
 def _gather_angle_arrays(results_by_offset, column, log):
@@ -202,6 +202,8 @@ def _plot_radius_histograms(
         _, _, patches = ax.hist(
             data,
             bins=bins_m,
+            density=True,
+            stacked=True,
             histtype="step",
             linewidth=0.5,
             label=f"off-axis {off:g} deg",
@@ -211,6 +213,8 @@ def _plot_radius_histograms(
         ax.hist(
             data,
             bins=bins_m,
+            density=True,
+            stacked=True,
             histtype="stepfilled",
             alpha=0.15,
             color=color,
@@ -221,6 +225,8 @@ def _plot_radius_histograms(
         ax.hist(
             data,
             bins=bins_m,
+            density=True,
+            stacked=True,
             histtype="step",
             linewidth=0.5,
             color=color,
@@ -307,6 +313,8 @@ def _plot_overlay_angles(results_by_offset, column, bins, ax, use_zorder):
         _, _, patches = ax.hist(
             data,
             bins=bins,
+            density=True,
+            stacked=True,
             histtype="step",
             linewidth=0.5,
             label=f"off-axis {off:g} deg",
@@ -316,6 +324,8 @@ def _plot_overlay_angles(results_by_offset, column, bins, ax, use_zorder):
         ax.hist(
             data,
             bins=bins,
+            density=True,
+            stacked=True,
             histtype="stepfilled",
             alpha=0.15,
             color=color,
@@ -326,6 +336,8 @@ def _plot_overlay_angles(results_by_offset, column, bins, ax, use_zorder):
         ax.hist(
             data,
             bins=bins,
+            density=True,
+            stacked=True,
             histtype="step",
             linewidth=0.5,
             color=color,
