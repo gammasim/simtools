@@ -22,18 +22,18 @@ def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):
     array_model_mock.site_model.parameters = {
         "altitude": {"value": 2158.0, "type": "float"},
     }
-    array_model_mock.telescope_model = {}
-    array_model_mock.telescope_model = {}
-    array_model_mock.telescope_model["LST-01"] = MagicMock()
-    array_model_mock.telescope_model["LST-01"].parameters = {
+    array_model_mock.telescope_models = {}
+    array_model_mock.telescope_models = {}
+    array_model_mock.telescope_models["LST-01"] = MagicMock()
+    array_model_mock.telescope_models["LST-01"].parameters = {
         "mirror_area": {"value": 386.0, "type": "float"},
     }
-    array_model_mock.telescope_model["MST-01"] = MagicMock()
-    array_model_mock.telescope_model["MST-01"].parameters = {
+    array_model_mock.telescope_models["MST-01"] = MagicMock()
+    array_model_mock.telescope_models["MST-01"].parameters = {
         "mirror_area": {"value": 386.0, "type": "float"},
     }
-    array_model_mock.telescope_model["SST-01"] = MagicMock()
-    array_model_mock.telescope_model["SST-01"].parameters = {
+    array_model_mock.telescope_models["SST-01"] = MagicMock()
+    array_model_mock.telescope_models["SST-01"].parameters = {
         "mirror_area": {"value": 386.0, "type": "float"},
     }
 
@@ -54,9 +54,9 @@ def test_assert_sim_telarray_metadata_using_array_model(sim_telarray_file_gamma,
 
     # rename one telescope
     array_model_north_renamed_telescope = copy.deepcopy(array_model_north)
-    array_model_north_renamed_telescope.telescope_model = {
+    array_model_north_renamed_telescope.telescope_models = {
         f"tel_{old_key}": model
-        for old_key, model in array_model_north_renamed_telescope.telescope_model.items()
+        for old_key, model in array_model_north_renamed_telescope.telescope_models.items()
     }
 
     with pytest.raises(
@@ -79,7 +79,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
         assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched_site)
 
     array_model_mismatched_telescope = copy.deepcopy(array_model_north)
-    array_model_mismatched_telescope.telescope_model["LSTN-02"].parameters[
+    array_model_mismatched_telescope.telescope_models["LSTN-02"].parameters[
         "random_mono_probability"
     ]["value"] = 0.99
 

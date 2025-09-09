@@ -263,7 +263,7 @@ class Simulator:
                     label=self.label,
                     args_dict=self.args_dict,
                     db_config=self.db_config,
-                    dummy_simulations=self._is_calibration_run(),
+                    dummy_simulations=self._is_calibration_run(self.run_mode),
                 )
             )
         return (
@@ -302,7 +302,9 @@ class Simulator:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = self.args_dict.get("sequential", False)
-            runner_args["calibration_config"] = self.args_dict
+            runner_args["calibration_config"] = (
+                self.args_dict if self._is_calibration_run(self.run_mode) else None
+            )
 
         return runner_class(**runner_args)
 
@@ -754,23 +756,30 @@ class Simulator:
 
             corsika_log_files.append(str(new_log))
 
-    def _is_calibration_run(self):
+    @staticmethod
+    def _is_calibration_run(run_mode):
         """
         Check if this simulation is a calibration run.
+
+        Parameters
+        ----------
+        run_mode: str
+            Run mode of the simulation.
 
         Returns
         -------
         bool
             True if it is a calibration run, False otherwise.
         """
-        return self.run_mode in [
+        return run_mode in [
             "pedestals",
             "dark_pedestals",
             "nsb_only_pedestals",
             "direct_injection",
         ]
 
-    def _get_calibration_device_types(self, run_mode):
+    @staticmethod
+    def _get_calibration_device_types(run_mode):
         """
         Get the list of calibration device types based on the run mode.
 
