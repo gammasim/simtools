@@ -7,6 +7,7 @@ Angle of incidence on to secondary mirror [deg] (if available).
 """
 
 import logging
+import math
 import re
 import subprocess
 from pathlib import Path
@@ -632,20 +633,17 @@ class IncidentAnglesCalculator:
         x_ok, x_cm = self._parse_float(parts, col_idx.get("prim_x"))
         y_ok, y_cm = self._parse_float(parts, col_idx.get("prim_y"))
         if x_ok and y_ok:
-            r_m = ((x_cm**2 + y_cm**2) ** 0.5) / 100.0
-            if radius_m is not None:
-                radius_m.append(r_m)
-            if primary_hit_x_m is not None:
-                primary_hit_x_m.append(x_cm / 100.0)
-            if primary_hit_y_m is not None:
-                primary_hit_y_m.append(y_cm / 100.0)
-            return
+            x_m, y_m = x_cm / 100.0, y_cm / 100.0
+            r_m = math.hypot(x_cm, y_cm) / 100.0
+        else:
+            x_m = y_m = r_m = math.nan
+
         if radius_m is not None:
-            radius_m.append(float("nan"))
+            radius_m.append(r_m)
         if primary_hit_x_m is not None:
-            primary_hit_x_m.append(float("nan"))
+            primary_hit_x_m.append(x_m)
         if primary_hit_y_m is not None:
-            primary_hit_y_m.append(float("nan"))
+            primary_hit_y_m.append(y_m)
 
     def _append_secondary_hit_geometry(
         self, parts, col_idx, secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m
@@ -664,20 +662,17 @@ class IncidentAnglesCalculator:
         sx_ok, sx_cm = self._parse_float(parts, col_idx.get("sec_x"))
         sy_ok, sy_cm = self._parse_float(parts, col_idx.get("sec_y"))
         if sx_ok and sy_ok:
-            r2_m = ((sx_cm**2 + sy_cm**2) ** 0.5) / 100.0
-            if secondary_radius_m is not None:
-                secondary_radius_m.append(r2_m)
-            if secondary_hit_x_m is not None:
-                secondary_hit_x_m.append(sx_cm / 100.0)
-            if secondary_hit_y_m is not None:
-                secondary_hit_y_m.append(sy_cm / 100.0)
-            return
+            x_m, y_m = sx_cm / 100.0, sy_cm / 100.0
+            r_m = math.hypot(sx_cm, sy_cm) / 100.0
+        else:
+            x_m = y_m = r_m = math.nan
+
         if secondary_radius_m is not None:
-            secondary_radius_m.append(float("nan"))
+            secondary_radius_m.append(r_m)
         if secondary_hit_x_m is not None:
-            secondary_hit_x_m.append(float("nan"))
+            secondary_hit_x_m.append(x_m)
         if secondary_hit_y_m is not None:
-            secondary_hit_y_m.append(float("nan"))
+            secondary_hit_y_m.append(y_m)
 
     @staticmethod
     def _match_header_column(col_pat, raw):
