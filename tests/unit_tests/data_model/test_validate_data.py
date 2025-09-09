@@ -713,6 +713,14 @@ def test_validate_data_dict():
     result_3_str = data_validator_3._validate_data_dict(lists_as_strings=True)
     assert isinstance(result_3_str["value"], str)
 
+    data_validator_3.data_dict = {
+        "name": "random_focal_length",
+        "value": None,
+        "unit": ["m", "m"],
+    }
+    with pytest.raises(TypeError, match=r"^Error validating dictionary using"):
+        data_validator_3._validate_data_dict()
+
 
 def test_convert_results_to_model_format():
     data_validator_3 = validate_data.DataValidator(
