@@ -53,7 +53,7 @@ class SimulatorLightEmission(SimtelRunner):
                 model_version=light_emission_config.get("model_version"),
             )
         )
-        self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
+        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
 
         self.light_emission_config = self._initialize_light_emission_configuration(
             light_emission_config

@@ -146,7 +146,7 @@ class SimulatorRayTracing(SimtelRunner):
 
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
-        self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
+        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
 
         if self.config.single_mirror_mode:
             # Note: no mirror length defined for dual-mirror telescopes

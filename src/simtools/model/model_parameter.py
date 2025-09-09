@@ -503,7 +503,7 @@ class ModelParameter:
 
         Parameters
         ----------
-        additional_model: TelescopeModel or SiteModel
+        additional_models: TelescopeModel or SiteModel
             Model object for additional parameter to be written to the config file.
         """
         self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
