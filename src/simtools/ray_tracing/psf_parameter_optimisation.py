@@ -15,6 +15,7 @@ from collections import OrderedDict
 
 import astropy.units as u
 import numpy as np
+from astropy.table import Table
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy import stats
 
@@ -85,29 +86,6 @@ def _format_parameter_value(value):
     return str(value)
 
 
-def _validate_psf_data(data_to_plot, radius):
-    """
-    Validate that PSF data and radius are available for analysis.
-
-    Parameters
-    ----------
-    data_to_plot : dict or None
-        PSF data dictionary
-    radius : array or None
-        Radius data array
-
-    Raises
-    ------
-    ValueError
-        If data is not available for analysis
-    """
-    if data_to_plot is None or radius is None:
-        raise ValueError(
-            "PSF data and radius are required for analysis. "
-            "Please provide measured PSF data using the --data argument."
-        )
-
-
 def calculate_rmsd(data, sim):
     """Calculate RMSD between measured and simulated cumulative PSF curves."""
     return np.sqrt(np.mean((data - sim) ** 2))
@@ -137,11 +115,9 @@ def get_previous_values(tel_model):
         - mirror_align_random_horizontal: full 4-element array
         - mirror_align_random_vertical: full 4-element array
     """
-    # Get mirror reflection parameters
     split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
     mrra_0, mfr_0, mrra2_0 = split_par[0], split_par[1], split_par[2]
 
-    # Get full mirror alignment arrays
     mirror_align_h = tel_model.get_parameter_value("mirror_align_random_horizontal")
     mirror_align_v = tel_model.get_parameter_value("mirror_align_random_vertical")
 
@@ -202,11 +178,10 @@ def run_psf_simulation(
     radius,
     pdf_pages=None,
     is_best=False,
-    return_simulated_data=False,
     use_ks_statistic=False,
 ):
     """
-    Run the simulation for one set of parameters and return D80, RMSD or KS statistic.
+    Run simulation for one parameter set and return D80, metric, p_value, and simulated data.
 
     Parameters
     ----------
@@ -226,19 +201,16 @@ def run_psf_simulation(
         PDF pages object for plotting. If None, no plotting is done.
     is_best : bool, optional
         Whether this is the best parameter set for highlighting in plots.
-    return_simulated_data : bool, optional
-        If True, returns simulated data as third element in return tuple.
     use_ks_statistic : bool, optional
         If True, returns KS statistic and p-value instead of RMSD.
 
     Returns
     -------
     tuple
-        (d80, rmsd) if use_ks_statistic=False and return_simulated_data=False
-        (d80, rmsd, simulated_data) if use_ks_statistic=False and return_simulated_data=True
-        (d80, ks_statistic, p_value) if use_ks_statistic=True and return_simulated_data=False
-        (d80, ks_statistic, p_value, simulated_data) if use_ks_statistic=True and
-        return_simulated_data=True
+        - d80: float, D80 value in cm
+        - metric: float, RMSD or KS statistic depending on use_ks_statistic
+        - p_value: float or None, p-value for KS statistic or None for RMSD
+        - simulated_data: structured array, simulated cumulative PSF data
     """
     d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
 
@@ -252,13 +224,12 @@ def run_psf_simulation(
             data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF]
         )
         metric = ks_statistic
-        extra_return = p_value
     else:
         rmsd = calculate_rmsd(
             data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF]
         )
         metric = rmsd
-        extra_return = None
+        p_value = None
 
     # Handle plotting if requested
     if pdf_pages is not None and args_dict.get("plot_all", False):
@@ -270,18 +241,12 @@ def run_psf_simulation(
             metric,
             is_best,
             pdf_pages,
-            p_value=extra_return,
+            p_value=p_value,
             use_ks_statistic=use_ks_statistic,
         )
         del data_to_plot["simulated"]
 
-    if use_ks_statistic:
-        return (
-            (d80, metric, extra_return, simulated_data)
-            if return_simulated_data
-            else (d80, metric, extra_return)
-        )
-    return (d80, metric, simulated_data) if return_simulated_data else (d80, metric)
+    return d80, metric, p_value, simulated_data
 
 
 def load_and_process_data(args_dict):
@@ -296,23 +261,30 @@ def load_and_process_data(args_dict):
     Returns
     -------
     tuple
-        (data_to_plot, radius) where:
         - data_to_plot: OrderedDict containing loaded and processed data
         - radius: Radius data from loaded data (if available)
     """
     data_to_plot = OrderedDict()
     radius = None
-    if args_dict["data"] is not None:
-        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+    if args_dict["data"] is None:
+        raise FileNotFoundError("No data file specified for PSF optimization.")
 
-        # Load data from text file containing cumulative PSF measurements
-        d_type = {"names": (RADIUS_CM, CUMULATIVE_PSF), "formats": ("f8", "f8")}
-        data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
-        data[RADIUS_CM] *= 0.1  # Convert from mm to cm
-        data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))  # Normalize to max = 1.0
+    data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
 
-        data_to_plot["measured"] = data
-        radius = data[RADIUS_CM]
+    table = Table.read(data_file, format="ascii.ecsv")
+
+    d_type = {"names": (RADIUS_CM, CUMULATIVE_PSF), "formats": ("f8", "f8")}
+    data = np.zeros(len(table), dtype=d_type)
+
+    radius_values = table["radius_mm"].quantity
+    data[RADIUS_CM] = radius_values.to(u.cm).value
+
+    data[CUMULATIVE_PSF] = table["cumulative_psf"]
+    data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))  # Normalize to max = 1.0
+
+    radius = data[RADIUS_CM]
+
+    data_to_plot["measured"] = data
     return data_to_plot, radius
 
 
@@ -462,7 +434,7 @@ def _calculate_parameter_gradient(
             perturbed_params[param_name] = value + epsilon
 
         try:
-            result = run_psf_simulation(
+            _, perturbed_rmsd, _, _ = run_psf_simulation(
                 tel_model,
                 site_model,
                 args_dict,
@@ -471,19 +443,8 @@ def _calculate_parameter_gradient(
                 radius,
                 pdf_pages=None,
                 is_best=False,
-                return_simulated_data=False,
                 use_ks_statistic=use_ks_statistic,
             )
-            # Extract the metric value based on whether we're using KS statistic
-            if use_ks_statistic:
-                _, perturbed_rmsd, _ = (
-                    result  # (d80, ks_statistic, p_value)  # pylint: disable=unbalanced-tuple-unpacking
-                )
-            else:
-                # pylint: disable=unbalanced-tuple-unpacking
-                _, perturbed_rmsd = (  # pylint: disable=unbalanced-tuple-unpacking
-                    result  # (d80, rmsd)  # pylint: disable=unbalanced-tuple-unpacking
-                )
 
             gradient = (perturbed_rmsd - current_rmsd) / epsilon
             param_gradients.append(gradient)
@@ -553,7 +514,10 @@ def calculate_gradient(
 
 def apply_gradient_step(current_params, gradients, learning_rate):
     """
-    Apply gradient descent step.
+    Move parameters in the direction of negative gradient.
+
+    Formula:
+    new_value = old_value - learning_rate*gradient.
 
     Parameters
     ----------
@@ -599,68 +563,22 @@ def _setup_optimization_plotting(args_dict, output_dir, tel_model):
 def _evaluate_initial_parameters(
     tel_model, site_model, args_dict, current_params, data_to_plot, radius, pdf_pages
 ):
-    """Evaluate initial parameters and return results."""
-    use_ks_statistic = args_dict.get("ks_statistic", False)
-    plot_all = args_dict.get("plot_all", False)
+    """Evaluate initial parameters and return results. Always uses RMSD for optimization."""
+    # Always use RMSD for optimization, never KS statistic during optimization
+    # Pass pdf_pages only if plot_all is enabled
+    plot_pages = pdf_pages if args_dict.get("plot_all", False) else None
 
-    if plot_all:
-        if use_ks_statistic:
-            current_d80, current_metric, current_p_value, simulated_data = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                tel_model,
-                site_model,
-                args_dict,
-                current_params,
-                data_to_plot,
-                radius,
-                pdf_pages=pdf_pages,
-                is_best=False,
-                return_simulated_data=True,
-                use_ks_statistic=True,
-            )
-        else:
-            current_d80, current_metric, simulated_data = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                tel_model,
-                site_model,
-                args_dict,
-                current_params,
-                data_to_plot,
-                radius,
-                pdf_pages=pdf_pages,
-                is_best=False,
-                return_simulated_data=True,
-                use_ks_statistic=False,
-            )
-            current_p_value = None
-    else:
-        if use_ks_statistic:
-            current_d80, current_metric, current_p_value = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                tel_model,
-                site_model,
-                args_dict,
-                current_params,
-                data_to_plot,
-                radius,
-                pdf_pages=None,
-                is_best=False,
-                return_simulated_data=False,
-                use_ks_statistic=True,
-            )
-            simulated_data = None
-        else:
-            current_d80, current_metric = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                tel_model,
-                site_model,
-                args_dict,
-                current_params,
-                data_to_plot,
-                radius,
-                pdf_pages=None,
-                is_best=False,
-                return_simulated_data=False,
-                use_ks_statistic=False,
-            )
-            simulated_data = None
-            current_p_value = None
+    current_d80, current_metric, current_p_value, simulated_data = run_psf_simulation(
+        tel_model,
+        site_model,
+        args_dict,
+        current_params,
+        data_to_plot,
+        radius,
+        pdf_pages=plot_pages,
+        is_best=False,
+        use_ks_statistic=False,  # Always use RMSD for optimization
+    )
 
     return current_d80, current_metric, current_p_value, simulated_data
 
@@ -674,7 +592,6 @@ def _perform_gradient_step(
     data_to_plot,
     radius,
     learning_rate,
-    use_ks_statistic,
 ):
     """Perform a single gradient descent step."""
     try:
@@ -686,84 +603,28 @@ def _perform_gradient_step(
             data_to_plot,
             radius,
             current_metric,
-            use_ks_statistic=use_ks_statistic,
+            use_ks_statistic=False,
         )
 
         new_params = apply_gradient_step(current_params, gradients, learning_rate)
 
-        plot_all = args_dict.get("plot_all", False)
-
-        if plot_all:
-            if use_ks_statistic:
-                new_d80, new_metric, new_p_value, new_simulated_data = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                    tel_model,
-                    site_model,
-                    args_dict,
-                    new_params,
-                    data_to_plot,
-                    radius,
-                    pdf_pages=None,
-                    is_best=False,
-                    use_ks_statistic=True,
-                    return_simulated_data=True,
-                )
-            else:
-                new_d80, new_metric, new_simulated_data = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                    tel_model,
-                    site_model,
-                    args_dict,
-                    new_params,
-                    data_to_plot,
-                    radius,
-                    pdf_pages=None,
-                    is_best=False,
-                    use_ks_statistic=False,
-                    return_simulated_data=True,
-                )
-                new_p_value = None
-        else:
-            if use_ks_statistic:
-                new_d80, new_metric, new_p_value = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                    tel_model,
-                    site_model,
-                    args_dict,
-                    new_params,
-                    data_to_plot,
-                    radius,
-                    pdf_pages=None,
-                    is_best=False,
-                    use_ks_statistic=True,
-                    return_simulated_data=False,
-                )
-                new_simulated_data = None
-            else:
-                new_d80, new_metric = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
-                    tel_model,
-                    site_model,
-                    args_dict,
-                    new_params,
-                    data_to_plot,
-                    radius,
-                    pdf_pages=None,
-                    is_best=False,
-                    use_ks_statistic=False,
-                    return_simulated_data=False,
-                )
-                new_simulated_data = None
-                new_p_value = None
+        new_d80, new_metric, new_p_value, new_simulated_data = run_psf_simulation(
+            tel_model,
+            site_model,
+            args_dict,
+            new_params,
+            data_to_plot,
+            radius,
+            pdf_pages=None,
+            is_best=False,
+            use_ks_statistic=False,
+        )
 
         return new_params, new_d80, new_metric, new_p_value, new_simulated_data, True
 
     except (ValueError, RuntimeError, KeyError) as e:
         logger.error(f"Error in gradient step: {e}")
         return None, None, None, None, None, False
-
-
-def _should_accept_step(current_metric, new_metric):
-    """Determine if a gradient step should be accepted."""
-    improvement = current_metric - new_metric
-    relative_improvement = improvement / current_metric if current_metric > 0 else 0
-    return improvement > 0 and (relative_improvement > 0.001 or improvement > 0.0001)
 
 
 def _create_accepted_step_plot(
@@ -797,69 +658,31 @@ def _create_accepted_step_plot(
         del data_to_plot["simulated"]
 
 
-def _log_iteration_metrics(use_ks_statistic, current_metric, current_d80):
-    """Log initial metrics for the gradient descent optimization."""
-    metric_name = KS_STATISTIC_NAME if use_ks_statistic else "RMSD"
-    logger.info(f"Initial {metric_name}: {current_metric:.6f}, D80: {current_d80:.6f} cm")
-
-
-def _should_stop_optimization(current_metric, rmsd_threshold, use_ks_statistic):
+def _should_stop_optimization(current_metric, rmsd_threshold):
     """Check if optimization should stop based on threshold."""
     if current_metric <= rmsd_threshold:
-        metric_name = KS_STATISTIC_NAME if use_ks_statistic else "RMSD"
         logger.info(
-            f"Optimization converged: {metric_name} {current_metric:.6f} <= "
-            f"threshold {rmsd_threshold:.6f}"
+            f"Optimization converged: RMSD {current_metric:.6f} <= threshold {rmsd_threshold:.6f}"
         )
         return True
     return False
 
 
-def _update_learning_rate_on_rejection(learning_rate, current_metric, new_metric, use_ks_statistic):
-    """Update learning rate when step is rejected."""
-    learning_rate *= 0.7
-    improvement = current_metric - new_metric
-    relative_improvement = improvement / current_metric if current_metric > 0 else 0
-    metric_name = KS_STATISTIC_NAME if use_ks_statistic else "RMSD"
-
-    logger.info(
-        f"  Rejected step: {metric_name} would change from {current_metric:.6f} to "
-        f"{new_metric:.6f} (improvement: {improvement:.6f}, {relative_improvement * 100:.3f}%)"
-    )
-
-    if learning_rate < 1e-6:
-        logger.info("Learning rate getting too small for this iteration, moving to next iteration.")
-        return learning_rate, True  # Should break
-
-    return learning_rate, False
-
-
-def _log_accepted_step(current_metric, new_metric, use_ks_statistic):
-    """Log information about an accepted gradient step."""
-    improvement = current_metric - new_metric
-    relative_improvement = improvement / current_metric if current_metric > 0 else 0
-    metric_name = KS_STATISTIC_NAME if use_ks_statistic else "RMSD"
-
-    logger.info(
-        f"  Accepted step: {metric_name} improved by {improvement:.6f} "
-        f"({relative_improvement * 100:.3f}%) to {new_metric:.6f}"
-    )
-
-
-def _handle_iteration_failure(step_accepted, learning_rate, iteration):
+def _handle_iteration_failure(step_accepted, learning_rate):
     """Handle case where no step was accepted in an iteration."""
     if not step_accepted:
-        learning_rate *= 1.2
+        learning_rate *= 2.0
         logger.info(f"No step accepted, increasing learning rate to {learning_rate:.6f}")
 
         if learning_rate > 0.1:
             logger.warning("Learning rate getting very large - optimization may be stuck")
             return learning_rate, True  # Should break
 
-    if iteration % 10 == 0 and iteration > 0:
-        original_lr = 0.0001  # Default learning rate
-        logger.info(f"Resetting learning rate to original value: {original_lr}")
-        return original_lr, False
+    # Reset learning rate periodically to avoid getting stuck
+    # if iteration % 10 == 0 and iteration > 0:
+    #    default_lr = 0.001  # Default learning rate
+    #    logger.info(f"Resetting learning rate to: {default_lr}")
+    #    return default_lr, False
 
     return learning_rate, False
 
@@ -883,7 +706,6 @@ def _create_final_best_plot(
         pdf_pages=None,
         is_best=False,
         use_ks_statistic=True,
-        return_simulated_data=True,
     )
 
     best_rmsd = calculate_rmsd(
@@ -914,11 +736,15 @@ def _try_gradient_step_with_retries(
     data_to_plot,
     radius,
     learning_rate,
-    use_ks_statistic,
     max_retries=3,
 ):
-    """Try gradient step with retries, return result or None if failed."""
-    for retries in range(max_retries):
+    """Try gradient step with learning rate reduction on rejection.
+
+    Always uses RMSD for optimization.
+    """
+    current_lr = learning_rate
+
+    for attempt in range(max_retries):
         step_result = _perform_gradient_step(
             tel_model,
             site_model,
@@ -927,19 +753,41 @@ def _try_gradient_step_with_retries(
             current_metric,
             data_to_plot,
             radius,
-            learning_rate,
-            use_ks_statistic,
+            current_lr,
         )
 
-        _, _, _, _, _, step_success = step_result
+        new_params, new_d80, new_metric, new_p_value, new_simulated_data, step_success = step_result
 
-        if step_success:
-            return step_result
+        if not step_success:
+            # Technical failure (simulation error) - skip this attempt
+            logger.warning(f"Simulation failed on attempt {attempt + 1}")
+            continue
 
-        if retries >= max_retries - 1:
-            logger.warning("Too many retries, moving to next iteration")
+        if new_metric < current_metric:
+            # Step accepted - return successful result with updated learning rate
+            return (
+                new_params,
+                new_d80,
+                new_metric,
+                new_p_value,
+                new_simulated_data,
+                True,
+                current_lr,
+            )
 
-    return None
+        # Step rejected - reduce learning rate and try again
+        logger.info(
+            f"Step rejected (RMSD {current_metric:.6f} -> {new_metric:.6f}), "
+            f"reducing learning rate {current_lr:.6f} -> {current_lr * 0.7:.6f}"
+        )
+        current_lr *= 0.7
+
+        if current_lr < 1e-6:
+            logger.info("Learning rate too small, giving up on this iteration")
+            break
+
+    # All attempts failed
+    return None, None, None, None, None, False, current_lr
 
 
 def _update_best_parameters(
@@ -959,11 +807,13 @@ def _execute_single_iteration(
     data_to_plot,
     radius,
     learning_rate,
-    use_ks_statistic,
     pdf_pages,
     results,
 ):
-    """Execute a single gradient descent iteration with retry logic."""
+    """Execute a single gradient descent iteration with retry logic.
+
+    Always uses RMSD for optimization.
+    """
     current_params, current_metric, current_d80, best_params, best_metric, best_d80 = (
         optimization_state
     )
@@ -977,68 +827,65 @@ def _execute_single_iteration(
         data_to_plot,
         radius,
         learning_rate,
-        use_ks_statistic,
     )
 
-    if step_result is None:
-        return optimization_state, learning_rate, False
+    # Unpack the 7-tuple result
+    (
+        new_params,
+        new_d80,
+        new_metric,
+        new_p_value,
+        new_simulated_data,
+        step_accepted,
+        updated_lr,
+    ) = step_result
 
-    new_params, new_d80, new_metric, new_p_value, new_simulated_data, _ = step_result
+    if not step_accepted or new_params is None:
+        return optimization_state, updated_lr, False
 
-    if _should_accept_step(current_metric, new_metric):
-        # Update current parameters
-        current_params = new_params
-        current_metric = new_metric
-        current_d80 = new_d80
-        current_p_value = new_p_value if use_ks_statistic else None
+    # Step was accepted - update state
+    current_params = new_params
+    current_metric = new_metric
+    current_d80 = new_d80
+    current_p_value = None  # Always None since we use RMSD for optimization
 
-        results.append(
-            (
-                current_params.copy(),
-                current_metric,
-                current_p_value,
-                current_d80,
-                new_simulated_data,
-            )
-        )
-
-        best_metric, best_params, best_d80 = _update_best_parameters(
-            current_metric, best_metric, current_params, best_params, current_d80, best_d80
-        )
-
-        _create_accepted_step_plot(
-            pdf_pages,
-            args_dict,
-            data_to_plot,
-            new_simulated_data,
-            current_params,
-            new_d80,
-            new_metric,
-            new_p_value,
-            use_ks_statistic,
-        )
-
-        _log_accepted_step(
-            best_metric if best_metric != current_metric else current_metric,
-            new_metric,
-            use_ks_statistic,
-        )
-
-        updated_state = (
-            current_params,
+    results.append(
+        (
+            current_params.copy(),
             current_metric,
+            current_p_value,
             current_d80,
-            best_params,
-            best_metric,
-            best_d80,
+            new_simulated_data,
         )
-        return updated_state, learning_rate, True
-    learning_rate, should_break = _update_learning_rate_on_rejection(
-        learning_rate, current_metric, new_metric, use_ks_statistic
     )
-    if should_break:
-        return optimization_state, learning_rate, False
-    return optimization_state, learning_rate, False
+
+    best_metric, best_params, best_d80 = _update_best_parameters(
+        current_metric, best_metric, current_params, best_params, current_d80, best_d80
+    )
+
+    _create_accepted_step_plot(
+        pdf_pages,
+        args_dict,
+        data_to_plot,
+        new_simulated_data,
+        current_params,
+        new_d80,
+        new_metric,
+        new_p_value,
+        False,  # use_ks_statistic is always False for optimization
+    )
+
+    logger.info(f"  Accepted step: improved to {new_metric:.6f}")
+
+    updated_state = (
+        current_params,
+        current_metric,
+        current_d80,
+        best_params,
+        best_metric,
+        best_d80,
+    )
+    return updated_state, updated_lr, True
 
 
 def run_gradient_descent_optimization(
@@ -1087,7 +934,7 @@ def run_gradient_descent_optimization(
     pdf_pages = _setup_optimization_plotting(args_dict, output_dir, tel_model)
 
     results = []
-    use_ks_statistic = args_dict.get("ks_statistic", False)
+    # Force optimization to always use RMSD, never KS statistic
 
     # Evaluate initial parameters
     current_d80, current_metric, current_p_value, simulated_data = _evaluate_initial_parameters(
@@ -1101,13 +948,13 @@ def run_gradient_descent_optimization(
     best_params = current_params.copy()
     best_d80 = current_d80
 
-    _log_iteration_metrics(use_ks_statistic, current_metric, current_d80)
+    logger.info(f"Initial RMSD: {current_metric:.6f}, D80: {current_d80:.6f} cm")
 
     iteration = 0
-    max_total_iterations = 10
+    max_total_iterations = 100
 
     while iteration < max_total_iterations:
-        if _should_stop_optimization(current_metric, rmsd_threshold, use_ks_statistic):
+        if _should_stop_optimization(current_metric, rmsd_threshold):
             break
 
         iteration += 1
@@ -1129,7 +976,6 @@ def run_gradient_descent_optimization(
             data_to_plot,
             radius,
             learning_rate,
-            use_ks_statistic,
             pdf_pages,
             results,
         )
@@ -1137,9 +983,7 @@ def run_gradient_descent_optimization(
             optimization_state
         )
 
-        learning_rate, should_break = _handle_iteration_failure(
-            step_accepted, learning_rate, iteration
-        )
+        learning_rate, should_break = _handle_iteration_failure(step_accepted, learning_rate)
         if should_break:
             break
 
@@ -1267,29 +1111,27 @@ def _run_monte_carlo_simulation(
     """Run a single Monte Carlo simulation."""
     try:
         if use_ks_statistic:
-            d80, metric, p_value = run_psf_simulation(
+            d80, metric, p_value, _ = run_psf_simulation(
                 tel_model,
                 site_model,
                 args_dict,
                 initial_params,
                 data_to_plot,
                 radius,
-                return_simulated_data=False,
                 use_ks_statistic=True,
             )
             return d80, metric, p_value, True
-        # When use_ks_statistic=False and return_simulated_data=False, returns (d80, rmsd)
-        d80, metric = run_psf_simulation(  # pylint: disable=unbalanced-tuple-unpacking
+        # When use_ks_statistic=False, returns (d80, rmsd, None, simulated_data)
+        d80, metric, p_value, _ = run_psf_simulation(
             tel_model,
             site_model,
             args_dict,
             initial_params,
             data_to_plot,
             radius,
-            return_simulated_data=False,
             use_ks_statistic=False,
         )
-        return d80, metric, None, True
+        return d80, metric, p_value, True
     except (ValueError, RuntimeError) as e:
         logger.warning(f"WARNING: Simulation {i + 1} failed: {e}")
         return None, None, None, False
@@ -1646,19 +1488,18 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         pdf_pages=None,
         is_best=True,
         use_ks_statistic=True,
-        return_simulated_data=True,
+    )
+
+    # Always calculate RMSD since that's what was used for optimization
+    best_rmsd = calculate_rmsd(
+        data_to_plot["measured"][CUMULATIVE_PSF], best_simulated_data[CUMULATIVE_PSF]
     )
 
     print("\nFinal performance metrics for best parameters:")
-    print(f"KS statistic: {best_ks_stat:.6f}")
-    print(f"p-value: {best_p_value:.6f}")
-
-    # Also calculate RMSD for comparison if we were optimizing using KS statistic
-    if use_ks_statistic:
-        best_rmsd = calculate_rmsd(
-            data_to_plot["measured"][CUMULATIVE_PSF], best_simulated_data[CUMULATIVE_PSF]
-        )
-        print(f"RMSD: {best_rmsd:.6f}")
+    print(f"RMSD (used for optimization): {best_rmsd:.6f}")
+    if use_ks_statistic:  # Only show KS statistic if requested
+        print(f"KS statistic: {best_ks_stat:.6f}")
+        print(f"p-value: {best_p_value:.6f}")
 
     # Export best parameters as simulation model parameter files (if flag is provided)
     if args_dict.get("export_parameter_files", False):
@@ -1666,6 +1507,6 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         logger.warning("Parameter file export not yet implemented")
 
     print(f"\nOptimal D80: {best_d80:.3f} cm")
-    optimization_method = f"gradient_descent ({'KS_statistic' if use_ks_statistic else 'RMSD'})"
+    optimization_method = "gradient_descent (RMSD)"  # Always use RMSD for optimization
     print(f"Optimization method: {optimization_method}")
     print(f"Total iterations: {len(gd_results)}")
