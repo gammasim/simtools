@@ -19,115 +19,82 @@ logger = logging.getLogger(__name__)
 # Constants
 RADIUS_CM = "Radius [cm]"
 CUMULATIVE_PSF = "Cumulative PSF"
+D80_CM_LABEL = "D80 (cm)"
 MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
 OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
 
 
-def create_psf_parameter_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_pages):
+def _get_significance_level(p_value):
+    """Get significance level description for p-value."""
+    if p_value > 0.05:
+        return "GOOD"
+    if p_value > 0.01:
+        return "FAIR"
+    return "POOR"
+
+
+def _format_metric_text(d80, metric, p_value=None, use_ks_statistic=False, second_metric=None):
     """
-    Create a plot for PSF simulation results.
+    Format metric text for display in plots.
 
     Parameters
     ----------
-    data_to_plot : dict
-        Data dictionary for plotting.
-    pars : dict
-        Parameter set dictionary.
     d80 : float
-        D80 value.
-    rmsd : float
-        RMSD value.
-    is_best : bool
-        Whether this is the best parameter set.
-    pdf_pages : PdfPages
-        PDF pages object for saving plots.
+        D80 value
+    metric : float
+        Primary metric value (RMSD or KS statistic)
+    p_value : float, optional
+        P-value from KS test
+    use_ks_statistic : bool
+        If True, metric is KS statistic; if False, metric is RMSD
+    second_metric : float, optional
+        Second metric value to display alongside the primary metric
+
+    Returns
+    -------
+    str
+        Formatted metric text
     """
-    fig = visualize.plot_1d(
-        data_to_plot,
-        plot_difference=True,
-        no_markers=True,
-    )
-    ax = fig.get_axes()[0]
-    ax.set_ylim(0, 1.05)
-    ax.set_ylabel(CUMULATIVE_PSF)
-
-    title_prefix = "* " if is_best else ""
-    ax.set_title(
-        f"{title_prefix}refl_rnd = "
-        f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
-        f"align_rnd = {pars['mirror_align_random_vertical'][0]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][1]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][2]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][3]:.5f}"
-    )
-
-    d80_color = "red" if is_best else "black"
-    d80_weight = "bold" if is_best else "normal"
     d80_text = f"D80 = {d80:.5f} cm"
 
-    ax.text(
-        0.5,
-        0.3,
-        f"{d80_text}\nRMSD = {rmsd:.4f}",
-        verticalalignment="center",
-        horizontalalignment="left",
-        transform=ax.transAxes,
-        color=d80_color,
-        weight=d80_weight,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "yellow", "alpha": 0.7}
-        if is_best
-        else None,
-    )
+    # Create metric text based on the optimization method
+    if second_metric is not None:
+        # Special case: show both RMSD and KS statistic (for final best plot)
+        metric_text = f"RMSD = {metric:.4f}"  # metric is RMSD in this case
+        metric_text += f"\nKS statistic = {second_metric:.4f}"  # second_metric is KS statistic
+        if p_value is not None:
+            metric_text += f"\np-value = {p_value:.4f}"
+    elif use_ks_statistic:
+        metric_text = f"KS stat = {metric:.6f}"
+        if p_value is not None:
+            significance = _get_significance_level(p_value)
+            metric_text += f"\np-value = {p_value:.6f} ({significance})"
+    else:
+        metric_text = f"RMSD = {metric:.4f}"
 
-    if is_best:
-        fig.text(
-            0.02,
-            0.02,
-            "* Best parameter set (lowest RMSD)",
-            fontsize=8,
-            style="italic",
-            color="red",
-        )
-
-    pdf_pages.savefig(fig, bbox_inches="tight")
-    plt.clf()
+    return f"{d80_text}\n{metric_text}"
 
 
-def create_detailed_parameter_plot(
-    pars, rmsd, d80, simulated_data, data_to_plot, is_best, pdf_pages
-):
+def _create_base_plot_figure(data_to_plot, simulated_data=None):
     """
-    Create a detailed plot for a parameter set showing all parameter values.
+    Create base figure for PSF parameter plots.
 
     Parameters
     ----------
-    pars : dict
-        Parameter set dictionary
-    rmsd : float
-        RMSD value for this parameter set
-    d80 : float
-        D80 value for this parameter set
-    simulated_data : array
-        Simulated data for plotting
     data_to_plot : dict
         Data dictionary for plotting
-    is_best : bool
-        Whether this is the best parameter set
-    pdf_pages : PdfPages
-        PDF pages object to save the plot
+    simulated_data : array, optional
+        Simulated data to temporarily set in data_to_plot
+
+    Returns
+    -------
+    tuple
+        (fig, ax, original_simulated) - figure, axis, and original simulated data
     """
     original_simulated = data_to_plot.get("simulated")
 
-    # Check if we have valid simulated data for plotting
-    if simulated_data is None:
-        logger.warning(
-            "No simulated data available for plotting this parameter set, skipping plot creation"
-        )
-        return
-
-    data_to_plot["simulated"] = simulated_data
+    if simulated_data is not None:
+        data_to_plot["simulated"] = simulated_data
 
     try:
         fig = visualize.plot_1d(
@@ -135,21 +102,23 @@ def create_detailed_parameter_plot(
             plot_difference=True,
             no_markers=True,
         )
+        ax = fig.get_axes()[0]
+        ax.set_ylim(0, 1.05)
+        ax.set_ylabel(CUMULATIVE_PSF)
+        return fig, ax, original_simulated
     except (ValueError, RuntimeError, KeyError, TypeError) as e:
-        logger.error(f"Failed to create plot for parameters: {e}")
-        # Restore original simulated data before returning
+        # Restore original simulated data before raising
         if original_simulated is not None:
             data_to_plot["simulated"] = original_simulated
-        elif "simulated" in data_to_plot:
+        elif simulated_data is not None and "simulated" in data_to_plot:
             del data_to_plot["simulated"]
-        return
-    ax = fig.get_axes()[0]
-    ax.set_ylim(0, 1.05)
-    ax.set_ylabel(CUMULATIVE_PSF)
+        raise e
 
+
+def _build_parameter_title(pars, is_best):
+    """Build parameter title string for plots."""
     title_prefix = "* " if is_best else ""
-
-    ax.set_title(
+    return (
         f"{title_prefix}reflection = "
         f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
         f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
@@ -164,13 +133,16 @@ def create_detailed_parameter_plot(
         f"{pars['mirror_align_random_horizontal'][3]:.5f}"
     )
 
+
+def _add_metric_text_box(ax, metrics_text, is_best):
+    """Add metric text box to plot."""
     d80_color = "red" if is_best else "black"
     d80_weight = "bold" if is_best else "normal"
 
     ax.text(
         0.5,
         0.3,
-        f"D80 = {d80:.5f} cm\nRMSD = {rmsd:.4f}",
+        metrics_text,
         verticalalignment="center",
         horizontalalignment="left",
         transform=ax.transAxes,
@@ -180,6 +152,40 @@ def create_detailed_parameter_plot(
         if is_best
         else None,
     )
+
+
+def _add_plot_annotations(
+    ax, fig, pars, d80, metric, is_best, p_value=None, use_ks_statistic=False, second_metric=None
+):
+    """
+    Add title, text annotations, and best parameter indicators to plot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The plot axes
+    fig : matplotlib.figure.Figure
+        The plot figure
+    pars : dict
+        Parameter set dictionary
+    d80 : float
+        D80 value
+    metric : float
+        Primary metric value
+    is_best : bool
+        Whether this is the best parameter set
+    p_value : float, optional
+        P-value from KS test
+    use_ks_statistic : bool
+        If True, metric is KS statistic; if False, metric is RMSD
+    second_metric : float, optional
+        Second metric value to display
+    """
+    title = _build_parameter_title(pars, is_best)
+    ax.set_title(title)
+
+    metrics_text = _format_metric_text(d80, metric, p_value, use_ks_statistic, second_metric)
+    _add_metric_text_box(ax, metrics_text, is_best)
 
     if is_best:
         fig.text(
@@ -191,11 +197,110 @@ def create_detailed_parameter_plot(
             color="red",
         )
 
+
+def create_psf_parameter_plot(
+    data_to_plot,
+    pars,
+    d80,
+    metric,
+    is_best,
+    pdf_pages,
+    p_value=None,
+    use_ks_statistic=False,
+    second_metric=None,
+):
+    """
+    Create a plot for PSF simulation results.
+
+    Parameters
+    ----------
+    data_to_plot : dict
+        Data dictionary for plotting.
+    pars : dict
+        Parameter set dictionary.
+    d80 : float
+        D80 value.
+    metric : float
+        RMSD value (if use_ks_statistic=False) or KS statistic (if use_ks_statistic=True).
+    is_best : bool
+        Whether this is the best parameter set.
+    pdf_pages : PdfPages
+        PDF pages object for saving plots.
+    p_value : float, optional
+        P-value from KS test (only used when use_ks_statistic=True).
+    use_ks_statistic : bool, optional
+        If True, metric is KS statistic; if False, metric is RMSD.
+    second_metric : float, optional
+        Second metric value to display alongside the primary metric (for final best plot).
+    """
+    fig, ax, _ = _create_base_plot_figure(data_to_plot)
+
+    _add_plot_annotations(
+        ax, fig, pars, d80, metric, is_best, p_value, use_ks_statistic, second_metric
+    )
+
     pdf_pages.savefig(fig, bbox_inches="tight")
     plt.clf()
 
+
+def create_detailed_parameter_plot(
+    pars, ks_statistic, d80, simulated_data, data_to_plot, is_best, pdf_pages, p_value=None
+):
+    """
+    Create a detailed plot for a parameter set showing all parameter values.
+
+    Parameters
+    ----------
+    pars : dict
+        Parameter set dictionary
+    ks_statistic : float
+        KS statistic value for this parameter set
+    d80 : float
+        D80 value for this parameter set
+    simulated_data : array
+        Simulated data for plotting
+    data_to_plot : dict
+        Data dictionary for plotting
+    is_best : bool
+        Whether this is the best parameter set
+    pdf_pages : PdfPages
+        PDF pages object to save the plot
+    p_value : float, optional
+        P-value from KS test for statistical significance
+    """
+    # Check if we have valid simulated data for plotting
+    if simulated_data is None:
+        logger.warning(
+            "No simulated data available for plotting this parameter set, skipping plot creation"
+        )
+        return
+
+    try:
+        fig, ax, original_simulated = _create_base_plot_figure(data_to_plot, simulated_data)
+    except (ValueError, RuntimeError, KeyError, TypeError) as e:
+        logger.error(f"Failed to create plot for parameters: {e}")
+        return
+
+    _add_plot_annotations(
+        ax,
+        fig,
+        pars,
+        d80,
+        ks_statistic,
+        is_best,
+        p_value,
+        use_ks_statistic=True,
+        second_metric=None,
+    )
+
+    pdf_pages.savefig(fig, bbox_inches="tight")
+    plt.clf()
+
+    # Restore original simulated data
     if original_simulated is not None:
         data_to_plot["simulated"] = original_simulated
+    elif "simulated" in data_to_plot:
+        del data_to_plot["simulated"]
 
 
 def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pages):
@@ -205,7 +310,7 @@ def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pag
     Parameters
     ----------
     results : list
-        List of (pars, rmsd, d80, simulated_data) tuples
+        List of (pars, ks_statistic, p_value, d80, simulated_data) tuples
     best_pars : dict
         Best parameter set for highlighting
     data_to_plot : dict
@@ -215,7 +320,7 @@ def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pag
     """
     logger.info("Creating plots for all parameter sets...")
 
-    for i, (pars, rmsd, d80, simulated_data) in enumerate(results):
+    for i, (pars, ks_statistic, p_value, d80, simulated_data) in enumerate(results):
         if simulated_data is None:
             logger.warning(f"No simulated data for iteration {i}, skipping plot")
             continue
@@ -224,49 +329,211 @@ def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pag
         logger.info(f"Creating plot {i + 1}/{len(results)}{' (BEST)' if is_best else ''}")
 
         create_detailed_parameter_plot(
-            pars, rmsd, d80, simulated_data, data_to_plot, is_best, pdf_pages
+            pars, ks_statistic, d80, simulated_data, data_to_plot, is_best, pdf_pages, p_value
         )
 
 
-def create_gradient_descent_convergence_plot(gd_results, rmsd_threshold, output_file):
+def create_gradient_descent_convergence_plot(
+    gd_results, threshold, output_file, use_ks_statistic=False
+):
     """
-    Create convergence plot showing RMSD and D80 progression during gradient descent.
+    Create convergence plot showing optimization metric and D80 progression during gradient descent.
 
     Parameters
     ----------
     gd_results : list
-        List of (params, rmsd, d80, simulated_data) tuples from gradient descent
-    rmsd_threshold : float
-        RMSD threshold used for convergence
+        List of (params, metric, p_value, d80, simulated_data) tuples from gradient descent
+    threshold : float
+        Optimization metric threshold used for convergence
     output_file : Path
         Output file path for saving the plot
+    use_ks_statistic : bool
+        Whether to use KS statistic or RMSD labels and titles
     """
     logger.info("Creating gradient descent convergence plot...")
 
-    _, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), tight_layout=True)
+    # Check if results include p-values (for KS statistic mode)
+    has_p_values = len(gd_results[0]) >= 4 and gd_results[0][2] is not None
+
+    if has_p_values and use_ks_statistic:
+        _, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 12), tight_layout=True)
+    else:
+        _, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), tight_layout=True)
 
     iterations = list(range(len(gd_results)))
-    rmsds = [r[1] for r in gd_results]
-    d80s = [r[2] for r in gd_results]
+    metrics = [r[1] for r in gd_results]
+    d80s = [r[3] for r in gd_results]
 
-    ax1.plot(iterations, rmsds, "b.-", linewidth=2, markersize=6)
-    ax1.axhline(y=rmsd_threshold, color="r", linestyle="--", label=f"Threshold: {rmsd_threshold}")
+    metric_name = "KS Statistic" if use_ks_statistic else "RMSD"
+
+    # Plot optimization metric progression
+    ax1.plot(iterations, metrics, "b.-", linewidth=2, markersize=6)
+    ax1.axhline(y=threshold, color="r", linestyle="--", label=f"Threshold: {threshold}")
     ax1.set_xlabel("Iteration")
-    ax1.set_ylabel("RMSD")
-    ax1.set_title("Gradient Descent Convergence - RMSD")
+    ax1.set_ylabel(metric_name)
+    ax1.set_title(f"Gradient Descent Convergence - {metric_name}")
     ax1.grid(True, alpha=0.3)
     ax1.legend()
 
+    # Plot D80 progression
     ax2.plot(iterations, d80s, "g.-", linewidth=2, markersize=6)
     ax2.set_xlabel("Iteration")
-    ax2.set_ylabel("D80 (cm)")
+    ax2.set_ylabel(D80_CM_LABEL)
     ax2.set_title("Gradient Descent Convergence - D80")
     ax2.grid(True, alpha=0.3)
+
+    # Plot p-value progression if available and using KS statistic
+    if has_p_values and use_ks_statistic:
+        p_values = [r[2] for r in gd_results if r[2] is not None]
+        p_iterations = [i for i, r in enumerate(gd_results) if r[2] is not None]
+
+        ax3.plot(p_iterations, p_values, "m.-", linewidth=2, markersize=6)
+        ax3.axhline(
+            y=0.05, color="orange", linestyle="--", alpha=0.7, label="p = 0.05 (significance)"
+        )
+        ax3.axhline(
+            y=0.01, color="r", linestyle="--", alpha=0.7, label="p = 0.01 (high significance)"
+        )
+        ax3.set_xlabel("Iteration")
+        ax3.set_ylabel("p-value")
+        ax3.set_title("Gradient Descent Convergence - Statistical Significance")
+        ax3.set_yscale("log")  # Log scale for p-values
+        ax3.grid(True, alpha=0.3)
+        ax3.legend()
 
     plt.savefig(output_file, bbox_inches="tight")
     plt.close()
 
     logger.info(f"Convergence plot saved to {output_file}")
+
+
+def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statistic=False):
+    """
+    Create uncertainty analysis plots showing optimization metric and p-value distributions.
+
+    Parameters
+    ----------
+    mc_results : tuple
+        Results from Monte Carlo analysis: (mean_metric, std_metric, metric_values,
+        mean_p, std_p, p_values, mean_d80, std_d80, d80_values)
+    output_file : Path
+        Output file path for saving the plot
+    use_ks_statistic : bool, optional
+        Whether KS statistic mode is being used (affects filename suffix)
+    """
+    (
+        mean_metric,
+        std_metric,
+        metric_values,
+        mean_p_value,
+        _,  # std_p_value (unused)
+        p_values,
+        mean_d80,
+        std_d80,
+        d80_values,
+    ) = mc_results
+
+    logger.info("Creating Monte Carlo uncertainty analysis plot...")
+
+    # Check if we have valid p-values to determine if this is KS statistic or RMSD mode
+    valid_p_values = [p for p in p_values if p is not None] if p_values else []
+    is_ks_mode = len(valid_p_values) > 0
+
+    # Create subplot layout based on mode
+    if is_ks_mode:
+        # KS mode: 2x2 layout with all 4 plots
+        _, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10), tight_layout=True)
+    else:
+        # RMSD mode: 1x2 layout with only metric and D80 plots
+        _, (ax1, ax3) = plt.subplots(1, 2, figsize=(12, 5), tight_layout=True)
+
+    # Metric histogram (KS statistic or RMSD)
+    metric_name = "KS Statistic" if is_ks_mode else "RMSD"
+    ax1.hist(metric_values, bins=20, alpha=0.7, color="blue", edgecolor="black")
+    ax1.axvline(
+        mean_metric, color="red", linestyle="--", linewidth=2, label=f"Mean: {mean_metric:.6f}"
+    )
+    ax1.axvline(
+        mean_metric - std_metric,
+        color="orange",
+        linestyle=":",
+        alpha=0.7,
+        label=f"±1 std: {std_metric:.6f}",
+    )
+    ax1.axvline(mean_metric + std_metric, color="orange", linestyle=":", alpha=0.7)
+    ax1.set_xlabel(metric_name)
+    ax1.set_ylabel("Frequency")
+    ax1.set_title(f"{metric_name} Distribution")
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+
+    # p-value histogram (only for KS statistic mode)
+    if is_ks_mode:
+        ax2.hist(valid_p_values, bins=20, alpha=0.7, color="magenta", edgecolor="black")
+        if mean_p_value is not None:
+            ax2.axvline(
+                mean_p_value,
+                color="red",
+                linestyle="--",
+                linewidth=2,
+                label=f"Mean: {mean_p_value:.6f}",
+            )
+        ax2.axvline(0.05, color="orange", linestyle="--", alpha=0.7, label="p = 0.05")
+        ax2.axvline(0.01, color="red", linestyle="--", alpha=0.7, label="p = 0.01")
+        ax2.set_xlabel("p-value")
+        ax2.set_ylabel("Frequency")
+        ax2.set_title("p-value Distribution")
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+
+    # D80 histogram
+    ax3.hist(d80_values, bins=20, alpha=0.7, color="green", edgecolor="black")
+    ax3.axvline(
+        mean_d80, color="red", linestyle="--", linewidth=2, label=f"Mean: {mean_d80:.4f} cm"
+    )
+    ax3.axvline(
+        mean_d80 - std_d80,
+        color="orange",
+        linestyle=":",
+        alpha=0.7,
+        label=f"±1 std: {std_d80:.4f} cm",
+    )
+    ax3.axvline(mean_d80 + std_d80, color="orange", linestyle=":", alpha=0.7)
+    ax3.set_xlabel(D80_CM_LABEL)
+    ax3.set_ylabel("Frequency")
+    ax3.set_title("D80 Distribution")
+    ax3.legend()
+    ax3.grid(True, alpha=0.3)
+
+    # Scatter plot: Metric vs p-value (only for KS statistic mode)
+    if is_ks_mode:
+        ax4.scatter(metric_values, valid_p_values, alpha=0.6, color="purple")
+        ax4.axhline(y=0.05, color="orange", linestyle="--", alpha=0.7, label="p = 0.05")
+        ax4.axhline(y=0.01, color="red", linestyle="--", alpha=0.7, label="p = 0.01")
+        ax4.set_xlabel(metric_name)
+        ax4.set_ylabel("p-value")
+        ax4.set_title(f"{metric_name} vs p-value Correlation")
+        ax4.set_yscale("log")
+        ax4.legend()
+        ax4.grid(True, alpha=0.3)
+
+    # Save plot in both PDF and PNG formats with appropriate suffix
+    suffix = "_ks" if use_ks_statistic else "_rmsd"
+
+    # Generate base filename without extension
+    base_path = output_file.with_suffix("")
+    base_name = str(base_path)
+
+    # Add suffix and save in both formats
+    pdf_file = f"{base_name}{suffix}.pdf"
+    png_file = f"{base_name}{suffix}.png"
+
+    plt.savefig(pdf_file, bbox_inches="tight")
+    plt.savefig(png_file, bbox_inches="tight", dpi=150)
+    plt.close()
+
+    logger.info(f"Monte Carlo uncertainty plot saved to {pdf_file}")
+    logger.info(f"Monte Carlo uncertainty plot saved to {png_file}")
 
 
 def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
@@ -326,7 +593,7 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
             f"align_vertical={best_pars['mirror_align_random_vertical'][0]:.4f}\n"
         )
         plt.xlabel("Off-axis Angle (degrees)")
-        plt.ylabel("D80 (cm)" if key == "d80_cm" else "D80 (degrees)")
+        plt.ylabel(D80_CM_LABEL if key == "d80_cm" else "D80 (degrees)")
         plt.ylim(bottom=0)
         plt.xticks(rotation=45)
         plt.xlim(0, max_offset)
