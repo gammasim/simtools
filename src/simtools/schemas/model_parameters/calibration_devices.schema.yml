@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: calibration_devices
 description: |-
   List of calibration device types and names associated with a telescopes.
-  Allows to assign e.g. to a given telescope a set of devices used for flatfielding
+  Allows to assign to a given telescope e.g., a set of devices used for flatfielding
   or photo-electron calibration.
 data:
   - type: dict

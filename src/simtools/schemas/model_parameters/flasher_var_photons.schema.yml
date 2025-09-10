@@ -7,9 +7,7 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: flasher_var_photons
 description: |-
-  Relative variation of flasher shots from shot to shot.
-short_description: |-
-  Relative variation of flasher shots from shot to shot.
+  Variance on the number of photons per flasher shot.
 data:
   - type: float64
     unit: dimensionless
