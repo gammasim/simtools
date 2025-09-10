@@ -26,7 +26,14 @@ RUN yum update -y && yum install -y \
 ADD corsika_simtelarray.tar.gz .
 RUN rm -f examples-with-data.tar.gz && \
     rm -f sim_telarray_config.tar.gz && \
-    export EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
+    # build with debug options; move binary to temporary location (to avoid being purged in next step)
+    export EXTRA_DEFINES="${EXTRA_DEF} -DDEBUG_TRACE_99" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl && \
+    mv /workdir/sim_telarray/sim_telarray/sim_telarray \
+       /workdir/sim_telarray/sim_telarray/sim_telarray_debug_trace && \
+    # build without debug options; move debug option binary back to sim_telarray/bin
+    export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl && \
+    mv /workdir/sim_telarray/sim_telarray/sim_telarray_debug_trace \
+       /workdir/sim_telarray/sim_telarray/bin/sim_telarray_debug_trace
 
 # CORSIKA source code is removed to follow
 # the CORSIKA non-distribution policy.

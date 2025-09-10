@@ -8,6 +8,7 @@ on:
     types: [opened, synchronize]
     paths-ignore:
       - 'docs/**'
+      - 'tests/unit_tests/**'
   schedule:
     - cron: "0 0 * * *"
   release:
@@ -85,10 +86,12 @@ jobs:
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
-          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
+          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Create environment file (local DB)
         if: github.event_name != 'schedule'
@@ -98,6 +101,7 @@ jobs:
             echo "SIMTOOLS_DB_API_USER=api"
             echo "SIMTOOLS_DB_API_PW=password"
             echo "SIMTOOLS_DB_API_PORT=27017"
+            echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
             echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
           } > .env
@@ -108,12 +112,13 @@ jobs:
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
           cd database_scripts/
-          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
 
       - name: Integration tests
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
           SIMTOOLS_DB_SERVER: ${{ github.event_name == 'schedule' && secrets.DB_SERVER || 'mongodb' }}
         run: |
           source /workdir/env/bin/activate
