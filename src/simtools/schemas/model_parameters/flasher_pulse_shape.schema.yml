@@ -13,7 +13,7 @@ data:
     default: Gauss
     allowed_values:
       - Gauss
-      - Simple
+      - TopHat
       - Exponential
 instrument:
   class: Calibration
