@@ -37,15 +37,6 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 
 ```
 
-## flasher_model
-
-(flasher-model)=
-
-```{eval-rst}
-.. automodule:: model.flasher_model
-   :members:
-```
-
 ## mirrors
 
 (mirrors-1)=
