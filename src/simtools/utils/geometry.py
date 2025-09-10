@@ -267,4 +267,7 @@ def fiducial_radius_from_shape(width, shape):
         return width / math.sqrt(2.0)
     if shape in (1, 3):
         return width / math.sqrt(3.0)
-    raise ValueError(f"Unknown shape value {shape}")
+    raise ValueError(
+        f"Unknown shape value {shape}. Valid values are: "
+        "0 (circle), 1 or 3 (hexagon), 2 (square)."
+    )
