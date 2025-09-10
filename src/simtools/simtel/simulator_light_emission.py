@@ -161,6 +161,26 @@ class SimulatorLightEmission(SimtelRunner):
         # default to illuminator xyzls, mode from setup
         return "xyzls"
 
+    def _get_telescope_pointing(self):
+        """
+        Return telescope pointing based on light source type.
+
+        For flat_fielding sims, avoid calibration pointing entirely; default angles to (0,0).
+
+        Returns
+        -------
+        tuple
+            The telescope pointing angles (theta, phi).
+
+        """
+        if self.light_emission_config["light_source_type"] == "flat_fielding":
+            return 0.0, 0.0
+        if self.light_emission_config.get("light_source_position") is not None:
+            self._logger.info("Using fixed (vertical up) telescope pointing.")
+            return 0.0, 0.0
+        _, angles = self._calibration_pointing_direction()
+        return angles[0], angles[1]
+
     def _calibration_pointing_direction(self, x_cal=None, y_cal=None, z_cal=None):
         """
         Calculate the pointing of the calibration device towards the telescope.
@@ -278,13 +298,13 @@ class SimulatorLightEmission(SimtelRunner):
         parts.extend(self._get_light_source_command())
         if self.light_emission_config["light_source_type"] == "illuminator":
             parts += [
-                "-A ",
+                "-A",
                 (
                     f"{config_directory}/"
                     f"{self.telescope_model.get_parameter_value('atmospheric_profile')}"
                 ),
             ]
-        parts += [f" -o {self.output_directory}/{app_name}.iact.gz", "\n"]
+        parts += [f"-o {self.output_directory}/{app_name}.iact.gz", "\n"]
         return " ".join(parts)
 
     def _get_site_command(self, app_name, config_directory, corsika_observation_level):
@@ -378,11 +398,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The command to run sim_telarray
         """
-        # For flat_fielding sims, avoid calibration pointing entirely; default angles to (0,0)
-        if self.light_emission_config["light_source_type"] == "flat_fielding":
-            angles = [0, 0]
-        else:
-            _, angles = self._calibration_pointing_direction()
+        theta, phi = self._get_telescope_pointing()
 
         simtel_bin = self._simtel_path.joinpath("sim_telarray/bin/sim_telarray/")
 
@@ -406,19 +422,9 @@ class SimulatorLightEmission(SimtelRunner):
             super().get_config_option("TELTRIG_MIN_SIGSUM", "2"),
             super().get_config_option("PULSE_ANALYSIS", "-30"),
             super().get_config_option("MAXIMUM_TELESCOPES", 1),
+            super().get_config_option("telescope_theta", f"{theta}"),
+            super().get_config_option("telescope_phi", f"{phi}"),
         ]
-
-        if self.light_emission_config.get("light_source_position") is not None:
-            self._logger.warning("Using fixed (vertical up) telescope pointing.")
-            parts += [
-                super().get_config_option("telescope_theta", 0),
-                super().get_config_option("telescope_phi", 0),
-            ]
-        else:
-            parts += [
-                super().get_config_option("telescope_theta", f"{angles[0]}"),
-                super().get_config_option("telescope_phi", f"{angles[1]}"),
-            ]
 
         if self.light_emission_config["light_source_type"] == "flat_fielding":
             parts.append(super().get_config_option("Bypass_Optics", "1"))
@@ -449,10 +455,16 @@ class SimulatorLightEmission(SimtelRunner):
         Calculate distance between focal plane and calibration device.
 
         For flasher-type light sources.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Distance between calibration device and focal plane.
         """
-        distance = self.telescope_model.get_parameter_value_with_unit("focal_length")
-        # TODO check sign
-        distance += self.calibration_model.get_parameter_value_with_unit("flasher_position")[2]
+        distance = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
+        distance += self.calibration_model.get_parameter_value_with_unit("flasher_position")[2].to(
+            u.m
+        )
         return distance
 
     def _get_angular_distribution_string_for_sim_telarray(self):
@@ -464,7 +476,9 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The angular distribution string.
         """
-        option_string = self.calibration_model.get_parameter_value("flasher_angular_distribution")
+        option_string = self.calibration_model.get_parameter_value(
+            "flasher_angular_distribution"
+        ).lower()
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
