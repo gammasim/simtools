@@ -239,3 +239,113 @@ def test_get_additional_simtel_metadata(array_model, caplog, mocker):
 
     assert "nsb_integrated_flux" in array_model_cp._get_additional_simtel_metadata()
     assert "seeds" in array_model_cp._get_additional_simtel_metadata()
+
+
+def test_build_calibration_models():
+    """Test _build_calibration_models method with mocked dependencies."""
+    from unittest.mock import Mock
+
+    from simtools.model.array_model import ArrayModel
+
+    # Create a mock array model instance
+    array_model = Mock(spec=ArrayModel)
+    array_model._build_calibration_models = ArrayModel._build_calibration_models
+
+    # Mock telescope model
+    telescope_model = Mock()
+    telescope_model.get_calibration_device_name = Mock()
+
+    # Mock site model
+    site_model = Mock()
+    site_model.site = "North"
+
+    # Test case 1: No calibration device types provided
+    result = array_model._build_calibration_models(array_model, telescope_model, site_model, None)
+    assert result == {}
+
+    # Test case 2: Empty calibration device types list
+    result = array_model._build_calibration_models(array_model, telescope_model, site_model, [])
+    assert result == {}
+
+    # Test case 3: Calibration device types provided but device name not found
+    telescope_model.get_calibration_device_name.return_value = None
+    result = array_model._build_calibration_models(
+        array_model, telescope_model, site_model, ["flasher"]
+    )
+    assert result == {}
+    telescope_model.get_calibration_device_name.assert_called_with("flasher")
+
+    # Test case 4: Calibration device types provided and device names found
+    def mock_device_name(device_type):
+        return f"device_{device_type}" if device_type in ["flasher", "illuminator"] else None
+
+    telescope_model.get_calibration_device_name.side_effect = mock_device_name
+
+    # Mock the CalibrationModel constructor
+    with patch("simtools.model.array_model.CalibrationModel") as mock_calibration_model:
+        mock_calibration_instance = Mock()
+        mock_calibration_model.return_value = mock_calibration_instance
+
+        # Set up array model attributes for CalibrationModel initialization
+        array_model.mongo_db_config = {"test": "config"}
+        array_model.model_version = "6.0.0"
+        array_model.label = "test_label"
+
+        result = array_model._build_calibration_models(
+            array_model, telescope_model, site_model, ["flasher", "illuminator", "nonexistent"]
+        )
+
+        # Should create calibration models for flasher and illuminator, but not nonexistent
+        assert len(result) == 2
+        assert "device_flasher" in result
+        assert "device_illuminator" in result
+        assert result["device_flasher"] == mock_calibration_instance
+        assert result["device_illuminator"] == mock_calibration_instance
+
+        # Check that CalibrationModel was called twice with correct parameters
+        assert mock_calibration_model.call_count == 2
+
+
+def test_export_all_simtel_config_files():
+    """Test export_all_simtel_config_files method calls both export methods when needed."""
+    from unittest.mock import Mock
+
+    array_model = Mock()
+    array_model._telescope_model_files_exported = False
+    array_model._array_model_file_exported = False
+
+    ArrayModel.export_all_simtel_config_files(array_model)
+
+    array_model.export_simtel_telescope_config_files.assert_called_once()
+    array_model.export_sim_telarray_config_file.assert_called_once()
+
+
+def test_build_telescope_models():
+    """Test _build_telescope_models method with mocked dependencies."""
+    from unittest.mock import Mock, patch
+
+    array_model = Mock()
+    array_model.model_version = "6.0.0"
+    array_model.mongo_db_config = {"test": "config"}
+    array_model.label = "test"
+
+    site_model = Mock()
+    site_model.site = "North"
+
+    array_elements = {"LSTN-01": None, "non_telescope": None}
+
+    with (
+        patch(
+            "simtools.model.array_model.names.get_collection_name_from_array_element_name"
+        ) as mock_names,
+        patch("simtools.model.array_model.TelescopeModel") as mock_tel_model,
+    ):
+        mock_names.side_effect = lambda name: "telescopes" if name == "LSTN-01" else "other"
+
+        telescope_models, _ = ArrayModel._build_telescope_models(
+            array_model, site_model, array_elements, None
+        )
+
+        assert "LSTN-01" in telescope_models
+        assert "non_telescope" not in telescope_models
+        mock_tel_model.assert_called_once()

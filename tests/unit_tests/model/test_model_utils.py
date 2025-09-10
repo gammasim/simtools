@@ -62,3 +62,58 @@ def test_initialize_simulation_models(mocker, mock_db_config, site, telescope_na
 
     mock_tel_model.return_value.export_model_files.assert_called_once()
     mock_site_model.return_value.export_model_files.assert_called_once()
+
+
+def test_initialize_simulation_models_with_calibration_device(mocker, mock_db_config):
+    """Test initialize_simulation_models when calibration_device_name is provided."""
+    mocker.patch("simtools.model.model_utils.TelescopeModel")
+    mocker.patch("simtools.model.model_utils.SiteModel")
+    mock_cal_model = mocker.patch("simtools.model.model_utils.CalibrationModel")
+
+    label = "test_label"
+    model_version = "test_version"
+    site = "North"
+    telescope_name = "LSTN-01"
+    calibration_device_name = "flasher_device"
+
+    _, _, calibration_model = model_utils.initialize_simulation_models(
+        label=label,
+        db_config=mock_db_config,
+        site=site,
+        telescope_name=telescope_name,
+        model_version=model_version,
+        calibration_device_name=calibration_device_name,
+    )
+
+    mock_cal_model.assert_called_once_with(
+        site=site,
+        calibration_device_model_name=calibration_device_name,
+        mongo_db_config=mock_db_config,
+        model_version=model_version,
+        label=label,
+    )
+    assert calibration_model == mock_cal_model.return_value
+
+
+def test_initialize_simulation_models_without_calibration_device(mocker, mock_db_config):
+    """Test initialize_simulation_models when calibration_device_name is None."""
+    mocker.patch("simtools.model.model_utils.TelescopeModel")
+    mocker.patch("simtools.model.model_utils.SiteModel")
+    mock_cal_model = mocker.patch("simtools.model.model_utils.CalibrationModel")
+
+    label = "test_label"
+    model_version = "test_version"
+    site = "North"
+    telescope_name = "LSTN-01"
+
+    _, _, calibration_model = model_utils.initialize_simulation_models(
+        label=label,
+        db_config=mock_db_config,
+        site=site,
+        telescope_name=telescope_name,
+        model_version=model_version,
+        calibration_device_name=None,
+    )
+
+    mock_cal_model.assert_not_called()
+    assert calibration_model is None
