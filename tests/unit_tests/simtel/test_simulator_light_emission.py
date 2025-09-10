@@ -1160,7 +1160,7 @@ def test__calibration_pointing_direction(simulator_instance):
 
     # Verify calculations - direction vector is [10, 0, 10]
     expected_direction = np.array([10.0, 0.0, 10.0])
-    expected_norm = np.linalg.norm(expected_direction)  # sqrt(200) ≈ 14.142
+    expected_norm = np.linalg.norm(expected_direction)  # sqrt(200) roughly 14.142
     expected_pointing = np.round(expected_direction / expected_norm, 6).tolist()
 
     assert pointing_vector == expected_pointing
