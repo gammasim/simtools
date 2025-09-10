@@ -84,35 +84,27 @@ def _create_base_plot_figure(data_to_plot, simulated_data=None):
     data_to_plot : dict
         Data dictionary for plotting
     simulated_data : array, optional
-        Simulated data to temporarily set in data_to_plot
+        Simulated data to add to the plot
 
     Returns
     -------
     tuple
-        (fig, ax, original_simulated) - figure, axis, and original simulated data
+        (fig, ax) - figure and axis objects
     """
-    original_simulated = data_to_plot.get("simulated")
+    plot_data = data_to_plot.copy()
 
     if simulated_data is not None:
-        data_to_plot["simulated"] = simulated_data
+        plot_data["simulated"] = simulated_data
 
-    try:
-        fig = visualize.plot_1d(
-            data_to_plot,
-            plot_difference=True,
-            no_markers=True,
-        )
-        ax = fig.get_axes()[0]
-        ax.set_ylim(0, 1.05)
-        ax.set_ylabel(CUMULATIVE_PSF)
-        return fig, ax, original_simulated
-    except (ValueError, RuntimeError, KeyError, TypeError) as e:
-        # Restore original simulated data before raising
-        if original_simulated is not None:
-            data_to_plot["simulated"] = original_simulated
-        elif simulated_data is not None and "simulated" in data_to_plot:
-            del data_to_plot["simulated"]
-        raise e
+    fig = visualize.plot_1d(
+        plot_data,
+        plot_difference=True,
+        no_markers=True,
+    )
+    ax = fig.get_axes()[0]
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel(CUMULATIVE_PSF)
+    return fig, ax
 
 
 def _build_parameter_title(pars, is_best):
@@ -233,7 +225,7 @@ def create_psf_parameter_plot(
     second_metric : float, optional
         Second metric value to display alongside the primary metric (for final best plot).
     """
-    fig, ax, _ = _create_base_plot_figure(data_to_plot)
+    fig, ax = _create_base_plot_figure(data_to_plot)
 
     _add_plot_annotations(
         ax, fig, pars, d80, metric, is_best, p_value, use_ks_statistic, second_metric
@@ -276,7 +268,7 @@ def create_detailed_parameter_plot(
         return
 
     try:
-        fig, ax, original_simulated = _create_base_plot_figure(data_to_plot, simulated_data)
+        fig, ax = _create_base_plot_figure(data_to_plot, simulated_data)
     except (ValueError, RuntimeError, KeyError, TypeError) as e:
         logger.error(f"Failed to create plot for parameters: {e}")
         return
@@ -295,12 +287,6 @@ def create_detailed_parameter_plot(
 
     pdf_pages.savefig(fig, bbox_inches="tight")
     plt.clf()
-
-    # Restore original simulated data
-    if original_simulated is not None:
-        data_to_plot["simulated"] = original_simulated
-    elif "simulated" in data_to_plot:
-        del data_to_plot["simulated"]
 
 
 def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pages):
@@ -458,7 +444,7 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         color="orange",
         linestyle=":",
         alpha=0.7,
-        label=f"$\sigma$: {std_metric:.6f}",
+        label=f"$\\sigma$: {std_metric:.6f}",
     )
     ax1.axvline(mean_metric + std_metric, color="orange", linestyle=":", alpha=0.7)
     ax1.set_xlabel(metric_name)
@@ -496,7 +482,7 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         color="orange",
         linestyle=":",
         alpha=0.7,
-        label=f"$\sigma$: {std_d80:.4f} cm",
+        label=f"$\\sigma$: {std_d80:.4f} cm",
     )
     ax3.axvline(mean_d80 + std_d80, color="orange", linestyle=":", alpha=0.7)
     ax3.set_xlabel(D80_CM_LABEL)
@@ -599,8 +585,10 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         plt.xlim(0, max_offset)
         plt.grid(True, alpha=0.3)
 
-        plot_file_name = f"tune_psf_{tel_model.name}_best_params_{key}.pdf"
+        plot_file_name = f"tune_psf_{tel_model.name}_best_params_{key}.png"
         plot_file = output_dir.joinpath(plot_file_name)
-        visualize.save_figure(plt, plot_file, log_title=f"D80 vs off-axis ({key})")
+        visualize.save_figure(
+            plt, plot_file, figure_format=["png"], log_title=f"D80 vs off-axis ({key})"
+        )
 
     plt.close("all")
