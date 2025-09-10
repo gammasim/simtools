@@ -23,7 +23,6 @@ def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):
         "altitude": {"value": 2158.0, "type": "float"},
     }
     array_model_mock.telescope_models = {}
-    array_model_mock.telescope_models = {}
     array_model_mock.telescope_models["LST-01"] = MagicMock()
     array_model_mock.telescope_models["LST-01"].parameters = {
         "mirror_area": {"value": 386.0, "type": "float"},
