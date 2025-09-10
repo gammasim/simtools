@@ -74,7 +74,7 @@ simtools-generate-corsika-histograms <applications/simtools-generate-corsika-his
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
-simtools-maintain-simulation-model-add-production-table <applications/simtools-maintain-simulation-model-add-production-table>
+simtools-maintain-simulation-model-add-production-tables <applications/simtools-maintain-simulation-model-add-production-tables>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-merge-tables <applications/simtools-merge-tables>
