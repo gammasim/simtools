@@ -59,12 +59,13 @@ RUN yum update -y && yum install -y \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
 WORKDIR /tmp/
-ADD autoconf.tar.gz /tmp/
+COPY autoconf.tar.gz .
 # hadolint ignore=DL3003
-RUN cd autoconf-2.71 && \
+RUN mkdir autoconf && tar -xzf autoconf.tar.gz --strip-components=1 -C autoconf && \
+    cd autoconf && \
     ./configure --prefix=/usr && \
     make && make install && \
-    cd / && rm -rf /tmp/autoconf-2.71*
+    cd / && rm -rf /tmp/autoconf
 
 WORKDIR /workdir/sim_telarray
 ADD corsika_simtelarray.tar.gz .
