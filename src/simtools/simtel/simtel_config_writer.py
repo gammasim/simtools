@@ -178,6 +178,8 @@ class SimtelConfigWriter:
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
         if shape in mapping:
             simtel_par[mapping[shape]] = width
+        else:
+            self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
 
         return simtel_par
 
