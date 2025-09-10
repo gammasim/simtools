@@ -67,6 +67,21 @@ def test_make_run_command(simtel_runner):
     assert "test_file_with_seeds.txt" in run_command
 
 
+def test_make_run_command_with_calibration_config(simtel_runner):
+    """Test make_run_command when calibration_config is set."""
+    input_file = "test_calibration.inp"
+    simtel_runner.calibration_config = {
+        "run_mode": "pedestals",
+        "number_of_events": 100,
+    }
+
+    run_command = simtel_runner.make_run_command(run_number=5, input_file=input_file)
+
+    assert "sim_telarray" in run_command
+    assert "-C pedestal_events=100" in run_command
+    assert input_file in run_command
+
+
 def test_make_run_command_divergent(simtel_runner):
     input_file = "test_make_run_command_divergent.inp"
     run_command = simtel_runner.make_run_command(
@@ -133,3 +148,26 @@ def test_make_run_command_for_calibration_simulations(simtel_runner):
         input_file=input_file,
     )
     assert "-C fadc_err_pedestal=0.0" in run_command  # From _nsb_only_pedestals_command
+
+
+def test_make_run_command_for_calibration_simulations_additional_modes(simtel_runner):
+    """Test additional run modes for calibration simulations."""
+    input_file = "test_calibration.inp"
+
+    # Test dark_pedestals mode
+    simtel_runner.calibration_config = {
+        "run_mode": "dark_pedestals",
+        "number_of_events": 50,
+        "number_of_dark_events": 75,
+    }
+    run_command = simtel_runner._make_run_command_for_calibration_simulations(input_file)
+    assert "-C dark_events=75" in run_command
+
+    # Test direct_injection mode
+    simtel_runner.calibration_config = {
+        "run_mode": "direct_injection",
+        "number_of_events": 50,
+        "number_of_flasher_events": 200,
+    }
+    run_command = simtel_runner._make_run_command_for_calibration_simulations(input_file)
+    assert "-C laser_events=200" in run_command
