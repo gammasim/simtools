@@ -1,22 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for laser_pulse_sigtime model parameter
+title: Schema for flasher_photons model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_pulse_sigtime
+name: flasher_photons
 description: |-
-  To be used (non-zero) if the pulse shape of the light emitted from the flat-fielding \
-  or single-p.e. calibration unit follows a Gaussian, with the given number standing for the sigma of the Gaussian.
+  Number of flasher photons simulated. Depending on the device and simulation type,
+  this might be the number of emitted photons or the number of photons at each
+  detector.
 short_description: |-
-  Gaussian pulse time width.
+  Number of flasher photons simulated.
 data:
-  - type: float64
-    unit: "ns"
-    default: 0
+  - type: int64
+    unit: dimensionless
+    default: 500
     allowed_range:
-      min: 0
+      min: 1
 instrument:
   class: Calibration
   type:
