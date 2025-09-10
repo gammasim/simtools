@@ -1,23 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for led_var_photons model parameter
+title: Schema for flasher_angular_distribution model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: led_var_photons
+name: flasher_angular_distribution
 description: |-
-  Variation of the average amplitude of the LEDs in front of each pixel,\
-  from pixel to pixel (not including the statistical event-to-event fluctuation).
-short_description: |-
-  Average amplitude variation of LED in front of each pixel.
+  Flasher photon emission angular distribution.
 data:
-  - type: float64
-    unit: dimensionless
-    default: 0.0
-    allowed_range:
-      min: 0.0
-      max: 1.0
+  - type: string
+    default: Isotropic
+    allowed_values:
+      - Isotropic
+      - Gauss
+      - Rayleigh
+      - Cone
+      - FilledCone
+      - Parallel
 instrument:
   class: Calibration
   type:

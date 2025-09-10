@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for flasher_position model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: flasher_position
+description: |-
+  Geometrical position of flasher device mounted on the telescopes (devices like illuminator
+  use the `array_element_position` to determine their positions).
+  Reference frame depend on the type of flasher device.
+short_description: |-
+  Position of flasher.
+data:
+  - description: position in x-direction (in the specified reference frame)
+    type: float64
+    unit: cm
+    default: 0.
+  - description: position in y-direction (in the specified reference frame)
+    type: float64
+    unit: cm
+    default: 0.
+  - description: position in z-direction (in the specified reference frame)
+    type: float64
+    unit: cm
+    default: 0.
+  - description: reference frame
+    type: string
+    unit: dimensionless
+    default: primary_mirror_frame
+instrument:
+  class: Calibration
+  type:
+    - ILLN
+    - ILLS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
