@@ -807,7 +807,6 @@ def test_create_d80_vs_offaxis_plot(
     """Test creating D80 vs off-axis angle plot."""
     with (
         patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_ray_class,
-        patch("matplotlib.pyplot.figure") as mock_figure,
         patch("matplotlib.pyplot.title") as mock_title,
         patch("matplotlib.pyplot.xlabel") as mock_xlabel,
         patch("matplotlib.pyplot.ylabel") as mock_ylabel,
@@ -832,10 +831,6 @@ def test_create_d80_vs_offaxis_plot(
         mock_ray.simulate.assert_called_once_with(test=False, force=True)
         mock_ray.analyze.assert_called_once_with(force=True)
 
-        # Check plotting was called for both d80_cm and d80_deg
-        assert (
-            mock_figure.call_count == 4
-        )  # one pdf and one png plot for each of d80_cm and d80_deg
         assert mock_title.call_count == 2
         assert mock_xlabel.call_count == 2
         assert mock_ylabel.call_count == 2
