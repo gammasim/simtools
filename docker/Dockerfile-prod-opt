@@ -49,6 +49,7 @@ ARG BUILD_BRANCH
 ARG PYTHON_VERSION
 ARG SIMTOOLS_REQUIREMENT
 ARG CORSIKA_OPT_PATCH_VERSION
+ARG AUTOCONF_VERSION
 
 ENV GCC_PATH="/usr/bin/"
 
@@ -62,7 +63,7 @@ RUN yum update -y && yum install -y \
 WORKDIR /tmp/
 ADD autoconf.tar.gz /tmp/
 # hadolint ignore=DL3003
-RUN cd autoconf-$AUTOCONF_VERSION && \
+RUN cd "autoconf-$AUTOCONF_VERSION" && \
     ./configure --prefix=/usr && \
     make && make install && \
     cd / && rm -rf /tmp/autoconf-*
