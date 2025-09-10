@@ -239,5 +239,5 @@ def test_fiducial_radius_from_shape():
     )
 
     # Test for invalid shape
-    with pytest.raises(ValueError, match="Unknown shape value 4"):
+    with pytest.raises(ValueError, match=r"Unknown shape value 4\. Valid values are:"):
         transf.fiducial_radius_from_shape(10.0, 4)
