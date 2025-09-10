@@ -2,6 +2,23 @@
 
 The simtools continuous integration tests, lints, and builds code, documentation and binaries. The CI is based on GitHub Actions and defined in the `.github/workflows` directory. This page documents the simtools CI workflows.
 
+## Summary
+
+| Workflow | PR | PR (path filter) | PR (types) | release | schedule |
+|---|---:|---:|---:|---:|---:|
+| `CI-docs` | x | - | opened, ready_for_review | x | - |
+| `CI-linter` | x | - | opened, synchronize | - | nightly |
+| `CI-unittests` | x | `docs/**`, `tests/integration_tests/**` |  opened, synchronize | x | nightly |
+| `CI-integrationtests` | x |  `docs/**`, `tests/unit_tests/**` | opened, synchronize | x | nightly |
+| `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - |
+| `CI-software-update` | - | - | - | - | monthly |
+| `build-simtools-production-image` | x | `docker/Dockerfile-simtelarray`, `docker/Dockerfile-prod-opt` | - | x | weekly (no deploy) |
+| `build-simtools-dev-image` | x | `docker/Dockerfile-dev` | - | x | weekly (no deploy) |
+| `changelog` | x | - | opened, labeled, unlabeled, ready_for_review | - | - |
+| `pypi` | - | - | - | x | - |
+
+All workflows can be triggered manually (`workflow_dispatch`).
+
 ## Units tests
 
 Unit tests are testing the code on a module and function level, see the [unit tests](testing.md#unit-tests) documentation for more details.

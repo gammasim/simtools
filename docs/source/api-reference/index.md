@@ -25,6 +25,7 @@ runners
 sim_telarray
 simulators
 testing
+trigger
 utils
 visualization
 ```

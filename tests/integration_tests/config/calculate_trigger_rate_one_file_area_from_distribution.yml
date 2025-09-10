@@ -1,9 +1,0 @@
----
-applications:
-- application: simtools-calculate-trigger-rate
-  configuration:
-    area_from_distribution: true
-    simtel_file_names: ./tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
-  test_name: one_file_area_from_distribution
-schema_name: application_workflow.metaschema
-schema_version: 0.4.0

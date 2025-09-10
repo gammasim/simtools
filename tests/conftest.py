@@ -72,6 +72,7 @@ def _mock_settings_env_vars(tmp_test_directory):
             "SIMTOOLS_DB_API_PORT": "42",
             "SIMTOOLS_DB_SERVER": "abc@def.de",
             "SIMTOOLS_DB_SIMULATION_MODEL": "sim_model",
+            "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": "v0.0.0",
         },
         clear=True,
     ):
@@ -145,6 +146,7 @@ def db_config():
         "db_api_authentication_database",
         "db_server",
         "db_simulation_model",
+        "db_simulation_model_version",
     )
     for _para in _db_para:
         if _para not in mongo_db_config:

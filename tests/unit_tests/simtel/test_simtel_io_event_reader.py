@@ -143,10 +143,10 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fi
     new_file_info["nsb_level"] = [1.0, 1.0]
     new_file_info["energy_min"] = [1.0, 1.0]
     new_file_info["energy_max"] = [1.0, 1.0]
-    new_file_info["viewcone_min"] = [1.0, 1.0]
-    new_file_info["viewcone_max"] = [1.0, 1.0]
-    new_file_info["core_scatter_min"] = [1.0, 1.0]
-    new_file_info["core_scatter_max"] = [1.0, 1.0]
+    new_file_info["viewcone_min"] = [1.0 * u.deg, 1.0 * u.deg]
+    new_file_info["viewcone_max"] = [1.0 * u.deg, 1.0 * u.deg]
+    new_file_info["core_scatter_min"] = [1.0 * u.m, 1.0 * u.m]
+    new_file_info["core_scatter_max"] = [1.0 * u.m, 1.0 * u.m]
 
     # Replace the existing table
     reader.simulation_file_info = new_file_info
