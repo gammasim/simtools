@@ -815,21 +815,22 @@ def test_generate_plot_configurations():
     assert plot_simtel_event_histograms._generate_plot_configurations(histos, None) == {}
 
     histos = {"energy": {"histogram": "abc", "1d": True}}
-    plot_simtel_event_histograms._create_1d_plot_config = MagicMock()
-    plot_simtel_event_histograms._generate_plot_configurations(histos, None)
-    plot_simtel_event_histograms._create_1d_plot_config.assert_called_once()
+    with patch(f"{MOD}._create_1d_plot_config") as mock_create_1d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        mock_create_1d.assert_called_once()
 
     histos = {"energy": {"histogram": "abc", "1d": False}}
-    plot_simtel_event_histograms._create_2d_plot_config = MagicMock()
-    plot_simtel_event_histograms._generate_plot_configurations(histos, None)
-    plot_simtel_event_histograms._create_2d_plot_config.assert_called_once()
+    with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        mock_create_2d.assert_called_once()
 
-    _, kwargs = plot_simtel_event_histograms._create_2d_plot_config.call_args
-    assert "plot_params" in kwargs
-    assert kwargs["plot_params"]["norm"] == "log"
+        _, kwargs = mock_create_2d.call_args
+        assert "plot_params" in kwargs
+        assert kwargs["plot_params"]["norm"] == "log"
 
     histos = {"energy_cumulative": {"histogram": "abc", "1d": False}}
-    plot_simtel_event_histograms._generate_plot_configurations(histos, None)
-    _, kwargs = plot_simtel_event_histograms._create_2d_plot_config.call_args
-    assert "plot_params" in kwargs
-    assert kwargs["plot_params"]["norm"] == "linear"
+    with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        _, kwargs = mock_create_2d.call_args
+        assert "plot_params" in kwargs
+        assert kwargs["plot_params"]["norm"] == "linear"
