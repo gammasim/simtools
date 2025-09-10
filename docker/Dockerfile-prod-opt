@@ -65,7 +65,7 @@ ADD autoconf.tar.gz /tmp/
 RUN cd autoconf-$AUTOCONF_VERSION && \
     ./configure --prefix=/usr && \
     make && make install && \
-    cd / && rm -rf /tmp/autoconf-$AUTOCONF_VERSION*
+    cd / && rm -rf /tmp/autoconf-*
 
 WORKDIR /workdir/sim_telarray
 ADD corsika_simtelarray.tar.gz .
