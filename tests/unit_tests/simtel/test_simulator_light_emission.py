@@ -557,7 +557,7 @@ def test__get_light_source_command(simulator_instance):
         simulator_instance._get_light_source_command()
 
 
-def test__get_site_command(simulator_instance):
+def test__get_site_command(simulator_instance, tmp_test_directory):
     """Test _get_site_command method."""
     simulator_instance._simtel_path = Path("/mock/simtel")
 
@@ -583,13 +583,15 @@ def test__get_site_command(simulator_instance):
 
     # Test default path (non-flasher)
     with patch.object(
-        simulator_instance, "_write_telescope_position_file", return_value="/tmp/telpos.txt"
+        simulator_instance,
+        "_write_telescope_position_file",
+        return_value=f"{tmp_test_directory}/telpos.txt",
     ) as mock_telpos:
         result = simulator_instance._get_site_command("other-app", "/config/dir", mock_altitude)
 
         expected = [
             "-h  2200 ",
-            "--telpos-file /tmp/telpos.txt",
+            f"--telpos-file {tmp_test_directory}/telpos.txt",
         ]
         assert result == expected
         mock_telpos.assert_called_once()
