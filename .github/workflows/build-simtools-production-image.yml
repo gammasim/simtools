@@ -33,6 +33,7 @@ jobs:
       - name: Download corsika-simtel-package
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
         with:
@@ -134,6 +135,8 @@ jobs:
           - {simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67', hadronic_model: 'qgs2', avx_instruction: 'no_opt'}
           - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'no_opt'}
           - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'avx2'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'avx512f'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'sse4'}
           - {simtel_version: '250304', corsika_version: '78000', bernlohr_version: '1.69', hadronic_model: 'qgs3', avx_instruction: 'no_opt'}
           - {simtel_version: '250304', corsika_version: '78000', bernlohr_version: '1.69', hadronic_model: 'qgs3', avx_instruction: 'avx2'}
         production:
@@ -157,6 +160,7 @@ jobs:
       - name: Rename corsika-simtel-package files and set build branch
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+          mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else

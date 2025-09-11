@@ -14,6 +14,7 @@ ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG BERNLOHR_VERSION="1.68"
 ARG PYTHON_VERSION=3.12
+ARG AUTOCONF_VERSION="2.71"
 ARG BUILD_BRANCH=main
 ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 
@@ -48,6 +49,7 @@ ARG BUILD_BRANCH
 ARG PYTHON_VERSION
 ARG SIMTOOLS_REQUIREMENT
 ARG CORSIKA_OPT_PATCH_VERSION
+ARG AUTOCONF_VERSION
 
 ENV GCC_PATH="/usr/bin/"
 
@@ -61,10 +63,10 @@ RUN yum update -y && yum install -y \
 WORKDIR /tmp/
 ADD autoconf.tar.gz /tmp/
 # hadolint ignore=DL3003
-RUN cd autoconf-2.71 && \
+RUN cd "autoconf-$AUTOCONF_VERSION" && \
     ./configure --prefix=/usr && \
     make && make install && \
-    cd / && rm -rf /tmp/autoconf-2.71*
+    cd / && rm -rf /tmp/autoconf-*
 
 WORKDIR /workdir/sim_telarray
 ADD corsika_simtelarray.tar.gz .
