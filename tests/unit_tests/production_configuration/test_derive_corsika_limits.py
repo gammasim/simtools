@@ -6,7 +6,6 @@ from astropy.table import Table
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
 from simtools.production_configuration.derive_corsika_limits import (
     _create_results_table,
-    _read_array_layouts_from_db,
     _round_value,
     generate_corsika_limits_grid,
     write_results,
@@ -183,59 +182,8 @@ def test_round_value():
     assert _round_value("unknown", "string_value") == "string_value"
 
 
-def test_read_array_layouts_from_db_specific_layouts(mocker):
-    """Test _read_array_layouts_from_db with specific layout names."""
-    mock_site_model = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SiteModel"
-    )
-    instance = mock_site_model.return_value
-    instance.get_array_elements_for_layout.side_effect = (
-        lambda name: [1, 2] if name == "LST" else [3, 4]
-    )
-
-    layouts = ["LST", "MST"]
-    site = "North"
-    model_version = "v1.0.0"
-    db_config = {"host": "localhost"}
-
-    result = _read_array_layouts_from_db(layouts, site, model_version, db_config)
-
-    assert result == {"LST": [1, 2], "MST": [3, 4]}
-    mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, mongo_db_config=db_config
-    )
-    assert instance.get_array_elements_for_layout.call_count == 2
-    instance.get_array_elements_for_layout.assert_any_call("LST")
-    instance.get_array_elements_for_layout.assert_any_call("MST")
-
-
-def test_read_array_layouts_from_db_all_layouts(mocker):
-    """Test _read_array_layouts_from_db with 'all' layouts."""
-    mock_site_model = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.SiteModel"
-    )
-    instance = mock_site_model.return_value
-    instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
-    instance.get_array_elements_for_layout.side_effect = (
-        lambda name: [10, 20] if name == "LST" else [30, 40]
-    )
-
-    layouts = ["all"]
-    site = "South"
-    model_version = "v2.0.0"
-    db_config = {"host": "db"}
-
-    result = _read_array_layouts_from_db(layouts, site, model_version, db_config)
-
-    assert result == {"LST": [10, 20], "MST": [30, 40]}
-    instance.get_list_of_array_layouts.assert_called_once()
-    assert instance.get_array_elements_for_layout.call_count == 2
-    instance.get_array_elements_for_layout.assert_any_call("LST")
-    instance.get_array_elements_for_layout.assert_any_call("MST")
-
-
 def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
-    """Test generate_corsika_limits_grid using _read_array_layouts_from_db."""
+    """Test generate_corsika_limits_grid using get_array_elements_from_db_for_layouts."""
     # Prepare args_dict to use array_layout_name
     args = mock_args_dict.copy()
     args["array_layout_name"] = ["LST", "MST"]
@@ -243,7 +191,8 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     args["model_version"] = "v1.2.3"
 
     mock_read_layouts = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._read_array_layouts_from_db"
+        "simtools.production_configuration.derive_corsika_limits."
+        "get_array_elements_from_db_for_layouts"
     )
     mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
 
@@ -304,7 +253,7 @@ def test_compute_viewcone(hdf5_file_name, mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"angular_distance": mock_hist}
+    mock_histograms.histograms = {"angular_distance": {"histogram": mock_hist}}
     mock_histograms.view_cone_bins = mock_bins
 
     result = derive_corsika_limits.compute_viewcone(mock_histograms, 0.2)
@@ -326,7 +275,7 @@ def test_compute_lower_energy_limit(hdf5_file_name, mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"energy": mock_hist}
+    mock_histograms.histograms = {"energy": {"histogram": mock_hist}}
     mock_histograms.energy_bins = mock_bins
     mock_histograms.file_info = {}
 
@@ -349,7 +298,7 @@ def test_compute_upper_radius_limit(hdf5_file_name, mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"core_distance": mock_hist}
+    mock_histograms.histograms = {"core_distance": {"histogram": mock_hist}}
     mock_histograms.core_distance_bins = mock_bins
     mock_histograms.file_info = {}
 
@@ -427,11 +376,10 @@ def test_process_file_with_mocked_histograms(mocker):
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
 
 
-def test_process_file_with_plot_histograms(mocker):
-    """Test _process_file with plot_histograms=True."""
+def test_process_file_with_plot_histograms(mocker, tmp_path):
+    """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
-    mock_histograms.plot_data.return_value = None
 
     mocker.patch(
         SIMTEL_IO_EVENT_HISTOGRAMS_PATH,
@@ -441,7 +389,7 @@ def test_process_file_with_plot_histograms(mocker):
     mock_io_handler = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
-    mock_io_handler.return_value.get_output_directory.return_value = "mock_output_dir"
+    mock_io_handler.return_value.get_output_directory.return_value = tmp_path
 
     mocker.patch(
         COMPUTE_LOWER_ENERGY_LIMIT_PATH,
@@ -456,6 +404,10 @@ def test_process_file_with_plot_histograms(mocker):
         return_value=2.0 * u.deg,
     )
 
+    mock_plot = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.plot_simtel_event_histograms.plot"
+    )
+
     derive_corsika_limits._process_file(
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
@@ -464,11 +416,14 @@ def test_process_file_with_plot_histograms(mocker):
         plot_histograms=True,
     )
 
-    mock_histograms.plot_data.assert_called_once_with(
-        output_path="mock_output_dir",
-        limits={
-            "lower_energy_limit": 1.0 * u.TeV,
-            "upper_radius_limit": 100.0 * u.m,
-            "viewcone_radius": 2.0 * u.deg,
-        },
-    )
+    mock_plot.assert_called_once()
+    args, kwargs = mock_plot.call_args
+    # First positional argument should be the histograms instance
+    assert args[0] is mock_histograms.histograms
+    assert kwargs["output_path"] == tmp_path
+    assert kwargs["limits"] == {
+        "lower_energy_limit": 1.0 * u.TeV,
+        "upper_radius_limit": 100.0 * u.m,
+        "viewcone_radius": 2.0 * u.deg,
+    }
+    assert kwargs["array_name"] == "MockArray"

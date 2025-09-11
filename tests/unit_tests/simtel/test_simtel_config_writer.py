@@ -54,7 +54,7 @@ def test_write_array_config_file(
             config_file_path=_file,
             telescope_model=telescope_model,
             site_model=site_model_north,
-            sim_telarray_seeds={
+            additional_metadata={
                 "seed": 12345,
                 "seed_file_name": "sim_telarray_instrument_seeds.txt",
                 "random_instrument_instances": 5,

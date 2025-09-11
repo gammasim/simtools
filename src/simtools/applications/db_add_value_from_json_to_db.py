@@ -62,8 +62,8 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     if args_dict.get("test_db", False):
-        db_config["db_simulation_model"] = db_config["db_simulation_model"] + str(uuid.uuid4())
-        logger.info(f"Using test database: {db_config['db_simulation_model']}")
+        db_config["db_simulation_model_version"] = str(uuid.uuid4())
+        logger.info(f"Using test database version {db_config['db_simulation_model_version']}")
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     files_to_insert = []
@@ -83,14 +83,13 @@ def main():  # noqa: D103
     print(*files_to_insert, sep="\n")
     print()
 
-    logger.info(f"DB {args_dict['db_simulation_model']} selected.")
+    logger.info(f"DB {db.get_db_name()} selected.")
 
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
             par_dict = ascii_handler.collect_data_from_file(file_name=file_to_insert_now)
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
-                db_name=db_config["db_simulation_model"],
                 par_dict=par_dict,
                 collection_name=args_dict["db_collection"],
                 file_prefix="./",
@@ -103,11 +102,9 @@ def main():  # noqa: D103
         logger.info("Aborted, no change applied to the database")
 
     # drop test database; be safe and required DB name is sandbox
-    if args_dict.get("test_db", False) and "sandbox" in args_dict["db_simulation_model"]:
-        logger.info(
-            f"Test database used. Dropping all data from {db_config['db_simulation_model']}"
-        )
-        db.db_client.drop_database(db_config["db_simulation_model"])
+    if args_dict.get("test_db", False) and "sandbox" in db.get_db_name():
+        logger.info(f"Test database used. Dropping all data from {db.get_db_name()}")
+        db.db_client.drop_database(db.get_db_name())
 
 
 if __name__ == "__main__":

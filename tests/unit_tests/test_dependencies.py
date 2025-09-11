@@ -11,7 +11,10 @@ from simtools.db.db_handler import DatabaseHandler
 
 @pytest.fixture
 def mongo_db_config():
-    return {"db_simulation_model": "v1.0.0"}
+    return {
+        "db_simulation_model": "sim_model_db",
+        "db_simulation_model_version": "v1.0.0",
+    }
 
 
 @pytest.fixture
@@ -92,6 +95,7 @@ def test_get_version_string_success(
             with mock.patch(subprocess_popen, return_value=mock_corsika_process):
                 with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
                     expected_output = (
+                        "Database name: sim_model_db\n"
                         "Database version: v1.0.0\n"
                         "sim_telarray version: 2024.271.0\n"
                         "CORSIKA version: 7.7550\n"
@@ -119,6 +123,7 @@ def test_get_version_string_no_env_var(
         with caplog.at_level(logging.WARNING):
             with mock.patch(get_build_options_literal, return_value=None):
                 expected_output = (
+                    "Database name: sim_model_db\n"
                     "Database version: v1.0.0\n"
                     "sim_telarray version: None\n"
                     "CORSIKA version: None\n"
@@ -130,22 +135,22 @@ def test_get_version_string_no_env_var(
         assert env_not_set_error in caplog.text
 
 
-def test_get_database_version_success(mongo_db_config, db_config, db_handler_function):
+def test_get_database_version_or_name_success(mongo_db_config, db_config, db_handler_function):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
     mock_db_handler.mongo_db_config = mongo_db_config
 
     with mock.patch(db_handler_function, return_value=mock_db_handler):
-        assert dependencies.get_database_version(db_config) == "v1.0.0"
+        assert dependencies.get_database_version_or_name(db_config) == "v1.0.0"
 
-    assert dependencies.get_database_version(None) is None
+    assert dependencies.get_database_version_or_name(None) is None
 
 
-def test_get_database_version_no_version(db_config, db_handler_function):
+def test_get_database_version_or_name_no_version(db_config, db_handler_function):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
     mock_db_handler.mongo_db_config = {}
 
     with mock.patch(db_handler_function, return_value=mock_db_handler):
-        assert dependencies.get_database_version(db_config) is None
+        assert dependencies.get_database_version_or_name(db_config) is None
 
 
 def test_get_sim_telarray_version_success(monkeypatch, fake_path, subprocess_run):

@@ -20,6 +20,7 @@ from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.simtel.simtel_io_file_info import get_corsika_run_header
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
+    read_sim_telarray_metadata,
 )
 from simtools.utils.geometry import calculate_circular_mean
 from simtools.utils.names import get_common_identifier_from_array_element_name
@@ -175,7 +176,7 @@ class SimtelIOEventDataWriter:
                 "core_scatter_max": run_info["core_range"][1],
                 "zenith": 90.0 - np.degrees(run_info["direction"][1]),
                 "azimuth": np.degrees(run_info["direction"][0]),
-                "nsb_level": self._get_preliminary_nsb_level(str(file)),
+                "nsb_level": self.get_nsb_level_from_sim_telarray_metadata(file),
             }
         )
 
@@ -300,14 +301,33 @@ class SimtelIOEventDataWriter:
             self.telescope_id_to_name.get(tel_id, f"Unknown_{tel_id}") for tel_id in telescope_ids
         ]
 
-    def _get_preliminary_nsb_level(self, file):
+    def get_nsb_level_from_sim_telarray_metadata(self, file):
         """
-        Return preliminary NSB level from file name.
+        Return NSB level from sim_telarray metadata.
 
-        Hardwired values are used for "dark", "half", and "full" NSB levels
-        (actual values are made up for this example). Will be replaced with
-        reading of sim_telarray metadata entry for NSB level (to be implemented,
-        see issue #1572).
+        Falls back to preliminary NSB level if not found.
+
+        Parameters
+        ----------
+        file : Path
+            Path to the sim_telarray file.
+
+        Returns
+        -------
+        float
+            NSB level.
+        """
+        metadata, _ = read_sim_telarray_metadata(file)
+        nsb_integrated_flux = metadata.get("nsb_integrated_flux")
+        return nsb_integrated_flux or self._get_nsb_level_from_file_name(str(file))
+
+    def _get_nsb_level_from_file_name(self, file):
+        """
+        Return NSB level from file name.
+
+        Hardwired values are used for "dark", "half", and "full" NSB levels.
+        Allows to read legacy sim_telarray files without 'nsb_integrated_flux'
+        metadata field.
 
         Parameters
         ----------
@@ -319,15 +339,15 @@ class SimtelIOEventDataWriter:
         float
             NSB level extracted from file name.
         """
-        nsb_levels = {"dark": 1.0, "half": 2.0, "full": 5.0}
+        nsb_levels = {"dark": 0.24, "half": 0.835, "full": 1.2}
 
         for key, value in nsb_levels.items():
             try:
                 if key in file.lower():
-                    self._logger.warning(f"NSB level set to hardwired value of {value}")
+                    self._logger.warning(f"NSB level set to hardwired value of {value} for {file}")
                     return value
             except AttributeError as exc:
                 raise AttributeError("Invalid file name.") from exc
 
-        self._logger.warning("No NSB level found in file name, defaulting to 1.0")
-        return 1.0
+        self._logger.warning(f"No NSB level found in {file}, defaulting to None")
+        return None
