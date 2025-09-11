@@ -61,9 +61,10 @@ def calculate_ks_statistic(data, sim):
 
 def get_previous_values(tel_model):
     """Retrieve previous parameter values from the telescope model."""
-    split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
     return {
-        "mirror_reflection_random_angle": [split_par[0], split_par[1], split_par[2]],
+        "mirror_reflection_random_angle": tel_model.get_parameter_value(
+            "mirror_reflection_random_angle"
+        ),
         "mirror_align_random_horizontal": tel_model.get_parameter_value(
             "mirror_align_random_horizontal"
         ),
