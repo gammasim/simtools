@@ -1,9 +1,9 @@
 r"""
-Generate simulation model production tables for a new model version.
+Generate a new simulation model production and update tables and model parameters.
 
 This script is used to maintain the simulation model repository. It allows to create
-new production tables by copying an existing base version and applies modifications defined in
-a YAML file (see the example file below).
+new production tables by copying an existing base version and applies modifications
+to production tables and model parameters as provided in a YAML file (see the example file below).
 
 Two main use cases are covered by this script:
 
@@ -15,6 +15,9 @@ Two main use cases are covered by this script:
    modifications file. No unmodified tables are copied. For new production tables with patch
    modifications, the key-value pair `base_model_version: <base_model version>` is added.
 
+Both use cases will also apply the modifications to the model parameters as defined in the
+modifications file.
+
 Example
 -------
 
@@ -22,7 +25,7 @@ The following example applies a patch update with changes defined in a YAML file
 
 .. code-block:: console
 
-    simtools-maintain-simulation-model-add-production-tables \\
+    simtools-maintain-simulation-model-add-new-production \\
         --simulation_models_path ../simulation-models-dev/simulation-models/ \\
         --base_model_version 6.0.0 \\
         --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml \\
@@ -91,13 +94,11 @@ def _parse(label, description):
 
 def main():  # noqa: D103
     label = Path(__file__).stem
-    args_dict, _ = _parse(
-        label=label, description=("Copy and update simulation model production tables.")
-    )
+    args_dict, _ = _parse(label=label, description="Generate a new simulation model production")
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    model_repository.copy_and_update_production_table(args_dict)
+    model_repository.generate_new_production(args_dict)
 
 
 if __name__ == "__main__":
