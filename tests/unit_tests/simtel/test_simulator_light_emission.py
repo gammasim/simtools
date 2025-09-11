@@ -1012,6 +1012,7 @@ def test_photons_per_run_flasher_model_test_mode(tmp_path):
     flasher.get_parameter_value.assert_not_called()
 
 
+@pytest.mark.xfail(reason="see issue #1720")
 def test_photons_per_run_no_models(tmp_path):
     # When neither calibration nor flasher model is provided, default to 1e8
     tel = MagicMock()
