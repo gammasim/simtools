@@ -20,7 +20,7 @@ from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 @pytest.fixture
 def config_data():
     return {
-        "telescope": "LST-1",
+        "telescope": "LSTN-01",
         "site": "North",
         "model_version": "prod6",
         "off_axis_angle": 0.0 * u.deg,
@@ -204,25 +204,17 @@ def test_save_results_no_data_logs_warning(caplog, calculator, tmp_output_dir):
     assert not out
 
 
-def test_export_results_success_and_no_results(caplog, calculator):
-    # No results path
-    calculator.results = QTable()
-    caplog.clear()
-    caplog.set_level(logging.ERROR, logger=ia.__name__)
-    calculator.export_results()
-    assert any("Cannot export results" in rec.message for rec in caplog.records)
-
-    # Valid results path
+def test_save_results_success(caplog, calculator):
     calculator.results = QTable()
     calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
-
-    calculator.export_results()
+    caplog.set_level(logging.INFO, logger=ia.__name__)
+    calculator._save_results()
     table_file = calculator.results_dir / (
         f"incident_angles_{calculator.label}_{calculator.config_data['telescope']}_off0.ecsv"
     )
     assert table_file.exists()
-    meta_file = table_file.with_suffix(".yml")
-    assert meta_file.exists()
+    # MetadataCollector adds '.meta.yml' suffix
+    assert table_file.with_suffix(".meta.yml").exists()
 
 
 def test_compute_incidence_angles_parsing(calculator, tmp_path):
@@ -284,13 +276,7 @@ def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
     assert photons.exists()
 
 
-def test_attach_results_metadata_noop(calculator):
-    calculator.results = QTable()
-    calculator.results["angle_incidence_focal"] = [1.0] * u.deg
-    # Should not raise and should leave meta dict (possibly empty) intact
-    before = dict(calculator.results.meta)
-    calculator._attach_results_metadata()
-    assert calculator.results.meta == before
+## Removed _attach_results_metadata test (method removed)
 
 
 def test_primary_valueerror_results_in_nan(calculator, tmp_path):
