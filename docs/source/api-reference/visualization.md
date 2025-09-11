@@ -74,3 +74,12 @@ the visualization module.
 .. automodule:: visualization.plot_simtel_event_histograms
    :members:
 ```
+
+(visualization-plot-psf)=
+
+## plot_psf
+
+```{eval-rst}
+.. automodule:: visualization.plot_psf
+   :members:
+```
