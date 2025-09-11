@@ -412,76 +412,46 @@ def test_create_new_parameter_entry_no_latest_file(mock_get_latest, tmp_path):
         )
 
 
-def test_update_parameters_with_existing_telescope_and_param():
-    """Test updating parameters when telescope and parameter exist."""
-    params = {
-        "MSTx-FlashCam": {"dsum_threshold": "3.0.0"},
-        "MSTx-NectarCam": {"discriminator_threshold": "3.0.0"},
-    }
+# Note: _update_parameters tests removed as function replaced by _get_new_parameters_only
+# The new function has different signature and behavior - creates a new parameters dict
+# rather than updating an existing one in place.
+
+
+def test_get_new_parameters_only_with_matching_telescope():
+    """Test getting new parameters for a specific telescope."""
     changes = {
         "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
         "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
+    production_table_name = "MSTx-FlashCam"
 
-    model_repository._update_parameters(params, changes)
+    result = model_repository._get_new_parameters_only(changes, production_table_name)
 
-    assert params["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert params["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
-
-
-def test_update_parameters_with_missing_telescope():
-    """Test updating parameters when telescope is missing."""
-    params = {
-        "MSTx-FlashCam": {"dsum_threshold": "3.0.0"},
-    }
-    changes = {
-        "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
-    }
-
-    model_repository._update_parameters(params, changes)
-
-    assert "MSTx-NectarCam" not in params
-    assert params["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
+    assert "MSTx-FlashCam" in result
+    assert "MSTx-NectarCam" not in result
+    assert result["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
-def test_update_parameters_with_missing_param():
-    """Test updating parameters when parameter is missing."""
-    params = {
-        "MSTx-FlashCam": {"dsum_threshold": "3.0.0"},
-    }
-    changes = {
-        "MSTx-FlashCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
-    }
-
-    model_repository._update_parameters(params, changes)
-
-    assert "discriminator_threshold" in params["MSTx-FlashCam"]
-    assert params["MSTx-FlashCam"]["discriminator_threshold"] == "4.0.0"
-    assert params["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
-
-
-def test_update_parameters_with_empty_params():
-    """Test updating parameters when params is empty."""
-    params = {}
+def test_get_new_parameters_only_with_non_matching_telescope():
+    """Test getting new parameters when telescope doesn't exist in changes."""
     changes = {
         "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
     }
+    production_table_name = "NonExistent"
 
-    model_repository._update_parameters(params, changes)
+    result = model_repository._get_new_parameters_only(changes, production_table_name)
 
-    assert params == {}
+    assert result == {}
 
 
-def test_update_parameters_with_empty_changes():
-    """Test updating parameters when changes is empty."""
-    params = {
-        "MSTx-FlashCam": {"dsum_threshold": "3.0.0"},
-    }
+def test_get_new_parameters_only_with_empty_changes():
+    """Test getting new parameters when changes is empty."""
     changes = {}
+    production_table_name = "MSTx-FlashCam"
 
-    model_repository._update_parameters(params, changes)
+    result = model_repository._get_new_parameters_only(changes, production_table_name)
 
-    assert params["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
+    assert result == {}
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -530,8 +500,9 @@ def test_apply_changes_to_production_table_update_parameters():
         data, changes, model_version, False, "6.0.0"
     )
 
+    # Only parameters for the matching production_table_name should be included
     assert data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
+    assert "MSTx-NectarCam" not in data["parameters"]
 
 
 def test_apply_changes_to_production_table_no_parameters():
@@ -545,7 +516,8 @@ def test_apply_changes_to_production_table_no_parameters():
     )
 
     assert data["model_version"] == "6.5.0"
-    assert "parameters" not in data
+    # Parameters should now be created with only the matching telescope parameters
+    assert data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
 def test_apply_changes_to_production_table_with_list_data():
@@ -611,9 +583,9 @@ def test_apply_changes_to_production_tables(tmp_path):
     )
     updated_data = json.loads(prod_table_file.read_text())
     assert updated_data["model_version"] == "6.5.0"
-    # When production_table_name matches, ALL parameters in the changes dict get updated
+    # When production_table_name matches, only parameters for that specific telescope are included
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert updated_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
+    assert "MSTx-NectarCam" not in updated_data["parameters"]
 
     # Verify configuration table file model_version is updated but parameters unchanged
     config_data = json.loads(prod_config_file.read_text())
@@ -649,7 +621,8 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
     # Verify the production table file is updated
     updated_data = json.loads(prod_table_file.read_text())
     assert updated_data["model_version"] == "6.5.0"
-    assert "MSTx-FlashCam" not in updated_data["parameters"]
+    # Parameters should be created with the matching telescope parameters
+    assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
 def test_apply_changes_to_production_tables_simple(tmp_path):
