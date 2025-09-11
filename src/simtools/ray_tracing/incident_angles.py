@@ -45,7 +45,7 @@ class IncidentAnglesCalculator:
     """
 
     # Use fixed zenith angle (degrees) for incident-angle simulations.
-    ZENITH_ANGLE_DEG = 45.0
+    ZENITH_ANGLE_DEG = 0
 
     def __init__(
         self,
