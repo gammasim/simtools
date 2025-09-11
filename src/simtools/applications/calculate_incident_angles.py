@@ -6,6 +6,8 @@ Creates photon files with additional columns for incident angles calculation.
 Outputs files and histograms of the incidence angles at
 the focal plane, primary mirror, and if available, secondary mirror.
 Optional debug plots can be also generated.
+Note that this application does not include a full raytracing of telescope structures,
+and their non symmetric shadowing at off-axis angles.
 
 Example usage
 -------------
