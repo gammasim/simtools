@@ -80,17 +80,17 @@ r"""
     .. code-block:: console
 
         simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
-            --model_version 6.0.0 --data tests/resources/PSFcurve_data_v2.txt --plot_all --test
+            --model_version 6.0.0 --data tests/resources/PSFcurve_data_v2.ecsv --plot_all --test
 
     Run with parameter export:
 
     .. code-block:: console
 
         simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\
-            --plot_all --test --rmsd_threshold 0.008 --learning_rate 0.001 \\
-            --data tests/resources/PSFcurve_data_v2.txt \\
+            --plot_all --test --rmsd_threshold 0.01 --learning_rate 0.001 \\
+            --data tests/resources/PSFcurve_data_v2.ecsv \\
             --write_psf_parameters 2>&1 | grep -E \
-                "(Initial RMSD|Accepted step|Rejected step|iteration)"
+                "(Initial RMSD|Accepted step|Step rejected|iteration)"
 
     The output is saved in simtools-output/derive_psf_parameters.
 
@@ -157,7 +157,7 @@ def _parse():
             "(not used with --monte_carlo_analysis)."
         ),
         type=float,
-        default=0.007,
+        default=0.01,
     )
     config.parser.add_argument(
         "--learning_rate",
@@ -175,7 +175,7 @@ def _parse():
     )
     config.parser.add_argument(
         "--ks_statistic",
-        help="Use KS statistic for minimization and plots instead of RMSD.",
+        help="Use KS statistic for monte carlo error analysis.",
         action="store_true",
     )
     return config.initialize(
