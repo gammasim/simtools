@@ -13,7 +13,7 @@ Two main use cases are covered by this script:
 
 2. patch_update: Create a set of new production tables including the changes defined in the
    modifications file. No unmodified tables are copied. For new production tables with patch
-   modifications, the key-value pair `base_model_version: <base_model version>` is added.
+   modifications, the key-value pair 'base_model_version: <base_model version>' is added.
 
 Both use cases will also apply the modifications to the model parameters as defined in the
 modifications file.
