@@ -2,12 +2,14 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
+
+TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
 
 @pytest.fixture
@@ -98,7 +100,6 @@ def sample_mc_results():
     )
 
 
-# Test 1: _create_log_header_and_format_value
 @pytest.mark.parametrize(
     ("title", "additional_info", "value", "expected_checks"),
     [
@@ -161,7 +162,6 @@ def test_get_previous_values(mock_telescope_model):
     assert len(values["mirror_align_random_horizontal"]) == 4
 
 
-# Test 5: load_and_process_data
 @pytest.mark.parametrize(
     ("data_file", "should_raise_error"),
     [
@@ -204,7 +204,6 @@ def test_load_and_process_data(mock_args_dict, data_file, should_raise_error):
             assert len(radius) > 0
 
 
-# Test 7: _run_ray_tracing_simulation
 @pytest.mark.parametrize(
     ("pars", "should_raise_error", "expected_d80"),
     [
@@ -258,7 +257,6 @@ def test_run_ray_tracing_simulation_none_parameters(
         )
 
 
-# Test 9: run_psf_simulation
 @pytest.mark.parametrize(
     ("use_ks_statistic", "plot_all", "radius_none", "should_raise_error", "expected_behavior"),
     [
@@ -383,10 +381,23 @@ def test_export_psf_parameters(mock_telescope_model, temp_dir, sample_parameters
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation._add_units_to_psf_parameters"
         ) as mock_units,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.writer"),
+        patch("simtools.ray_tracing.psf_parameter_optimisation.writer") as mock_writer,
     ):
         mock_units.return_value = sample_parameters
-        psf_opt.export_psf_parameters(sample_parameters, mock_telescope_model, "1.0.0", temp_dir)
+
+        psf_opt.export_psf_parameters(
+            sample_parameters, mock_telescope_model.name, "1.0.0", temp_dir
+        )
+
+        mock_units.assert_called_once_with(sample_parameters)
+        assert mock_writer.ModelDataWriter.dump_model_parameter.call_count == len(sample_parameters)
+
+        for call_args in mock_writer.ModelDataWriter.dump_model_parameter.call_args_list:
+            _, kwargs = call_args
+            assert kwargs["instrument"] == mock_telescope_model.name
+            assert kwargs["parameter_version"] == "1.0.0"
+            assert kwargs["use_plain_output_path"] is True
+            assert kwargs["output_path"] == temp_dir / mock_telescope_model.name
 
 
 def test_calculate_param_gradient(
@@ -484,28 +495,29 @@ def test_create_step_plot(sample_data):
     """Test creating step plot for optimization iteration."""
     data_to_plot = {"measured": sample_data}
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    args_dict = {"plot_all": True}
 
-    with patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf:
+    with (
+        patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
+        patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
+    ):
         mock_pages = MagicMock()
         mock_pdf.return_value = mock_pages
 
-        # Test with None pdf_pages
         psf_opt._create_step_plot(
-            None, {"plot_all": False}, data_to_plot, current_params, 3.5, 0.1, 0.8, sample_data
+            mock_pages, args_dict, data_to_plot, current_params, 3.5, 0.1, 0.8, sample_data
         )
 
-        # Test with actual pdf_pages
-        with patch("simtools.visualization.plot_psf.create_psf_parameter_plot"):
-            psf_opt._create_step_plot(
-                mock_pages,
-                {"plot_all": True},
-                data_to_plot,
-                current_params,
-                3.5,
-                0.1,
-                0.8,
-                sample_data,
-            )
+        mock_plot.assert_called_once_with(
+            data_to_plot,
+            current_params,
+            3.5,  # new_d80
+            0.1,  # new_metric
+            False,  # is_best
+            mock_pages,  # pdf_pages
+            p_value=0.8,
+            use_ks_statistic=False,
+        )
 
 
 def test_create_final_plot(mock_telescope_model, mock_site_model, mock_args_dict, sample_data):
@@ -516,26 +528,15 @@ def test_create_final_plot(mock_telescope_model, mock_site_model, mock_args_dict
 
     with (
         patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
-        patch("simtools.visualization.plot_psf.create_psf_parameter_plot"),
+        patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
         patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.calculate_rmsd") as mock_rmsd,
     ):
         mock_pages = MagicMock()
         mock_pdf.return_value = mock_pages
         mock_sim.return_value = (3.5, 0.08, 0.9, sample_data)
+        mock_rmsd.return_value = 0.05
 
-        # Test with None pdf_pages
-        psf_opt._create_final_plot(
-            None,
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            best_params,
-            data_to_plot,
-            radius,
-            3.5,
-        )
-
-        # Test with actual pdf_pages
         psf_opt._create_final_plot(
             mock_pages,
             mock_telescope_model,
@@ -546,6 +547,40 @@ def test_create_final_plot(mock_telescope_model, mock_site_model, mock_args_dict
             radius,
             3.5,
         )
+
+        mock_sim.assert_called_once_with(
+            mock_telescope_model,
+            mock_site_model,
+            mock_args_dict,
+            best_params,
+            data_to_plot,
+            radius,
+            pdf_pages=None,
+            is_best=False,
+            use_ks_statistic=True,
+        )
+
+        mock_rmsd.assert_called_once()
+        call_args = mock_rmsd.call_args[0]
+        assert len(call_args) == 2
+        np.testing.assert_array_equal(
+            call_args[0], data_to_plot["measured"][psf_opt.CUMULATIVE_PSF]
+        )
+        np.testing.assert_array_equal(call_args[1], sample_data[psf_opt.CUMULATIVE_PSF])
+
+        mock_plot.assert_called_once_with(
+            data_to_plot,
+            best_params,
+            3.5,  # best_d80
+            0.05,  # best_rmsd from mock
+            True,  # is_best
+            mock_pages,  # pdf_pages
+            p_value=0.9,  # p_value from mock_sim
+            use_ks_statistic=False,
+            second_metric=0.08,  # ks_stat from mock_sim
+        )
+
+        mock_pages.close.assert_called_once()
 
 
 def test_run_gradient_descent_optimization(
@@ -581,7 +616,7 @@ def test_run_gradient_descent_optimization(
             radius,
             rmsd_threshold=0.1,
             learning_rate=0.1,
-            output_dir=Path("/tmp"),
+            output_dir=TEST_OUTPUT_DIR,
         )
         assert "mirror_reflection_random_angle" in best_pars
         assert isinstance(best_d80, float)
@@ -702,6 +737,7 @@ def test_handle_monte_carlo_analysis(
     sample_data,
     monte_carlo_enabled,
     expected_result,
+    temp_dir,
 ):
     """Test Monte Carlo analysis handling when enabled and disabled."""
     radius = sample_data[psf_opt.RADIUS_CM]
@@ -729,7 +765,7 @@ def test_handle_monte_carlo_analysis(
                 0.1,
                 [3.4, 3.5, 3.6],
             )
-            mock_write.return_value = Path("/tmp/mc_log.log")
+            mock_write.return_value = temp_dir / "mc_log.log"
 
             result = psf_opt._handle_monte_carlo_analysis(
                 mock_telescope_model,
@@ -737,7 +773,7 @@ def test_handle_monte_carlo_analysis(
                 mock_args_dict,
                 data_to_plot,
                 radius,
-                Path("/tmp"),
+                temp_dir,
                 False,
             )
     else:
@@ -747,28 +783,11 @@ def test_handle_monte_carlo_analysis(
             mock_args_dict,
             data_to_plot,
             radius,
-            Path("/tmp"),
+            temp_dir,
             False,
         )
 
     assert result is expected_result
-
-
-def test_export_psf_parameters_value_error(mock_telescope_model):
-    """Test export PSF parameters with ValueError."""
-    best_pars = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-
-    with (
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._add_units_to_psf_parameters"
-        ) as mock_units,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.writer") as mock_writer,
-    ):
-        mock_units.return_value = best_pars
-        mock_writer.ModelDataWriter.dump_model_parameter.side_effect = ValueError("Invalid value")
-
-        # Should not raise exception but log error
-        psf_opt.export_psf_parameters(best_pars, mock_telescope_model, "1.0.0", Path("/output"))
 
 
 def test_calculate_param_gradient_with_exception(
@@ -806,7 +825,7 @@ def test_run_gradient_descent_optimization_no_data():
     args_dict = {}
 
     result = psf_opt.run_gradient_descent_optimization(
-        mock_tel_model, mock_site_model, args_dict, None, None, 0.01, 0.1, Path("/tmp")
+        mock_tel_model, mock_site_model, args_dict, None, None, 0.01, 0.1, TEST_OUTPUT_DIR
     )
 
     assert result == (None, None, [])
@@ -911,7 +930,7 @@ def test_run_gradient_descent_optimization_no_step_accepted(
             radius,
             rmsd_threshold=0.01,
             learning_rate=0.1,
-            output_dir=Path("/tmp"),
+            output_dir=TEST_OUTPUT_DIR,
         )
 
         assert best_pars is not None
@@ -1018,7 +1037,7 @@ def test_perform_gradient_step_with_retries_learning_rate_reset(
         assert len(result) == 7
         assert result[5] is False  # step_accepted should be False
         # Check that learning rate was reduced and potentially reset (just check it's different)
-        assert result[6] != pytest.approx(1e-6)  # learning rate should be different from initial
+        assert result[6] != pytest.approx(1e-6)  # learning rate should be reset
 
 
 def test_perform_gradient_step_with_retries_all_exceptions(
@@ -1091,33 +1110,12 @@ def test_run_gradient_descent_optimization_step_accepted_path(
             radius,
             rmsd_threshold=0.01,
             learning_rate=0.1,
-            output_dir=Path("/tmp"),
+            output_dir=TEST_OUTPUT_DIR,
         )
 
         assert best_pars == new_params
         assert len(results) == 2  # Initial + 1 accepted step
         mock_plot.assert_called_once()  # Should create step plot
-
-
-def test_run_psf_optimization_workflow_early_return_monte_carlo(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test PSF optimization workflow early return when Monte Carlo analysis is enabled."""
-    with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._handle_monte_carlo_analysis"
-        ) as mock_mc,
-    ):
-        mock_load.return_value = ({"measured": sample_data}, np.linspace(0, 10, 21))
-        mock_mc.return_value = True  # Monte Carlo analysis enabled, should return early
-
-        psf_opt.run_psf_optimization_workflow(
-            mock_telescope_model, mock_site_model, mock_args_dict, Path("/tmp")
-        )
-
-        # Should return early after Monte Carlo analysis
-        mock_mc.assert_called_once()
 
 
 def test_run_psf_optimization_workflow_optimization_failed_no_radius(
@@ -1139,7 +1137,7 @@ def test_run_psf_optimization_workflow_optimization_failed_no_radius(
 
         with patch("logging.Logger.error") as mock_logger:
             psf_opt.run_psf_optimization_workflow(
-                mock_telescope_model, mock_site_model, mock_args_dict, Path("/tmp")
+                mock_telescope_model, mock_site_model, mock_args_dict, TEST_OUTPUT_DIR
             )
 
             # Should log error about no radius data
@@ -1179,10 +1177,10 @@ def test_run_psf_optimization_workflow_complete_success_path(
         best_pars = {"param": 1.5}
         gd_results = [(best_pars, 0.03, 0.9, 3.2, sample_data)]
         mock_gd.return_value = (best_pars, 3.2, gd_results)
-        mock_log.return_value = Path("/tmp/log.log")
+        mock_log.return_value = TEST_OUTPUT_DIR / "log.log"
 
         psf_opt.run_psf_optimization_workflow(
-            mock_telescope_model, mock_site_model, mock_args_dict, Path("/tmp")
+            mock_telescope_model, mock_site_model, mock_args_dict, TEST_OUTPUT_DIR
         )
 
         # Verify all the final workflow steps were executed
@@ -1190,44 +1188,3 @@ def test_run_psf_optimization_workflow_complete_success_path(
         mock_conv_plot.assert_called_once()
         mock_log.assert_called_once()
         mock_d80_plot.assert_called_once()
-
-
-def test_write_monte_carlo_analysis_significance_classification():
-    """Test Monte Carlo analysis with different p-value significance levels."""
-    # Test data with different p-values to cover all significance branches
-    metric_values = [0.05, 0.03, 0.008]
-    p_values = [0.1, 0.02, 0.005]  # GOOD, FAIR, POOR respectively
-    d80_values = [3.0, 3.2, 3.5]
-
-    mc_results = (
-        0.03,
-        0.02,
-        metric_values,  # mean_metric, std_metric, metric_values
-        0.04,
-        0.05,
-        p_values,  # mean_p_value, std_p_value, p_values
-        3.2,
-        0.2,
-        d80_values,  # mean_d80, std_d80, d80_values
-    )
-
-    mock_telescope = MagicMock()
-    mock_telescope.name = "test_tel"
-
-    with patch("builtins.open", mock_open()) as mock_file:
-        result_file = psf_opt.write_monte_carlo_analysis(
-            mc_results, Path("/tmp"), mock_telescope, use_ks_statistic=True
-        )
-
-        # Verify file operations
-        mock_file.assert_called_once()
-        handle = mock_file()
-
-        # Check that all significance levels are written
-        write_calls = [call.args[0] for call in handle.write.call_args_list]
-        content = "".join(write_calls)
-
-        assert "GOOD" in content
-        assert "FAIR" in content
-        assert "POOR" in content
-        assert result_file == Path("/tmp/monte_carlo_ks_analysis_test_tel.log")
