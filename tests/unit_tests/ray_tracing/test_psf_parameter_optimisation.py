@@ -854,7 +854,6 @@ def test_analyze_monte_carlo_error_all_simulations_fail(
     with (
         patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
         patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.side_effect = RuntimeError("All simulations failed")
@@ -871,7 +870,6 @@ def test_analyze_monte_carlo_error_all_simulations_fail(
         assert result[0] is None  # mean_metric should be None
         assert result[1] is None  # std_metric should be None
         assert result[2] == []  # metric_values should be empty
-
 
 
 def test_analyze_monte_carlo_error_with_ks_statistic(
