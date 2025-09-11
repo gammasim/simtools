@@ -1,0 +1,18 @@
+---
+applications:
+- application: simtools-calculate-incident-angles
+  configuration:
+    site: South
+    telescope: SSTS-01
+    off_axis_angles: 1.0
+    number_of_photons: 10000
+    model_version: 6.0.0
+    output_path: simtools-output
+    use_plain_output_path: true
+  integration_tests:
+  - output_file: incident_angles/incident_angles_calculate_incident_angles_SSTS-01_off1.ecsv
+  - output_file: plots/incident_angles_multi_calculate_incident_angles_SSTS-01.png
+  - output_file: logs/incident_angles_calculate_incident_angles_SSTS-01_off1.log
+  test_name: incident_angles_dual_mirror
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
