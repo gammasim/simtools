@@ -31,8 +31,6 @@ Command line arguments
     Source distance in kilometers. Default: 10.0.
 - number_of_photons (int, optional)
     Number of photons of the light source to trace per run. Default: 10000.
-- mirror_reflection_random_angle (float, optional)
-    Explicit mirror_reflection_random_angle in degrees.
 - mirror_alignment_random (float, optional)
     Accuracy parameter for mirror alignment distributions. Default: 0.005.
 - perfect_mirror (flag, optional)
@@ -110,12 +108,6 @@ def _parse(label):
         help="Number of star photons to trace (per run)",
         type=int,
         default=10000,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--mirror_reflection_random_angle",
-        help="Set mirror_reflection_random_angle in degrees",
-        type=float,
         required=False,
     )
     config.parser.add_argument(

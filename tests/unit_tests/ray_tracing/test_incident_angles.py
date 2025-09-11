@@ -168,16 +168,6 @@ def test_write_run_script_perfect_mirror_flags(calculator):
     txt = script.read_text(encoding="utf-8")
     assert "-DPERFECT_DISH=1" in txt
     assert "-C telescope_random_angle=0" in txt
-    assert "-C mirror_reflection_random_angle=0" in txt
-
-
-def test_write_run_script_reflection_angle(calculator):
-    # explicit value wins
-    calculator.mirror_reflection_random_angle = 0.123
-    photons, stars, log_file = calculator._prepare_psf_io_files()
-    script = calculator._write_run_script(photons, stars, log_file)
-    txt = script.read_text(encoding="utf-8")
-    assert "-C mirror_reflection_random_angle=0.123" in txt
 
 
 def test_write_run_script_alignment_mirror_alignment_random(calculator):
