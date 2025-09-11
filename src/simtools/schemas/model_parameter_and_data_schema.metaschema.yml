@@ -3,8 +3,8 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsDataAndModelParameters'
 title: SimPipe Data and Model Parameter Metaschema
 description: YAML representation of data and model parameter metaschema
-version: 0.1.0
-name: model_parameter_and_data_schema.metaschema
+schema_version: 0.1.0
+schema_name: model_parameter_and_data_schema.metaschema
 type: object
 
 

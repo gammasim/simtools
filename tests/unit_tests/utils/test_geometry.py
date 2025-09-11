@@ -3,6 +3,7 @@ import logging
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import UnitsError
 
 import simtools.utils.geometry as transf
@@ -106,8 +107,30 @@ def test_calculate_circular_mean():
 
     # Test mean of random angles
     angles = np.array([0.1, 0.2, 0.3])
-    expected = 0.2
-    assert transf.calculate_circular_mean(angles) == pytest.approx(expected, abs=1e-6)
+    assert transf.calculate_circular_mean(angles) == pytest.approx(0.2, abs=1e-6)
+
+
+def test_solid_angle():
+    # Test with angle in radians
+    angle_rad = 1 * u.rad
+    expected_solid_angle_rad = 2 * np.pi * (1 - np.cos(angle_rad)) * u.sr
+    assert_quantity_allclose(transf.solid_angle(angle_rad), expected_solid_angle_rad)
+
+    # Test with angle in degrees
+    angle_deg = 90 * u.deg
+    expected_solid_angle_deg = 2 * np.pi * (1 - np.cos(angle_deg.to(u.rad))) * u.sr
+    assert_quantity_allclose(transf.solid_angle(angle_deg), expected_solid_angle_deg)
+
+    # Test with zero angle
+    angle_zero = 0 * u.rad
+    assert_quantity_allclose(transf.solid_angle(angle_zero), 0 * u.sr)
+
+    # Test with a full circle (360 degrees)
+    angle_full_circle = 360 * u.deg
+    expected_solid_angle_full_circle = 2 * np.pi * (1 - np.cos(angle_full_circle.to(u.rad))) * u.sr
+    assert_quantity_allclose(
+        transf.solid_angle(angle_full_circle), expected_solid_angle_full_circle
+    )
 
 
 def test_transform_ground_to_shower_coordinates():
