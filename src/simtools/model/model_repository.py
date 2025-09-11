@@ -5,7 +5,6 @@ a gitlab repository ('SimulationModels'). This module provides service
 functions to interact with and verify the repository.
 """
 
-import json
 import logging
 import shutil
 from pathlib import Path
@@ -136,9 +135,15 @@ def _get_model_parameter_file_path(
     )
 
 
-def copy_and_update_production_table(args_dict):
+def generate_new_production(args_dict):
     """
-    Copy and update simulation model production tables.
+    Generate a new production definition (production tables and model parameters).
+
+    The following steps are performed:
+
+    - copy of production tables from an existing base model version
+    - update production tables with changes defined in a YAML file
+    - generate new model parameter entries for changed parameters
 
     Parameters
     ----------
@@ -147,14 +152,14 @@ def copy_and_update_production_table(args_dict):
     """
     modifications = ascii_handler.collect_data_from_file(args_dict["modifications"])
     changes = modifications.get("changes", {})
+    base_model_version = args_dict["base_model_version"]
     model_version = modifications["model_version"]
 
     simulation_models_path = Path(args_dict["simulation_models_path"])
-    source_prod_table_path = (
-        simulation_models_path / "productions" / args_dict["source_prod_table_dir"]
-    )
+    source_prod_table_path = simulation_models_path / "productions" / base_model_version
     target_prod_table_path = simulation_models_path / "productions" / model_version
     model_parameters_dir = simulation_models_path / "model_parameters"
+    patch_update = args_dict.get("patch_update", False)
 
     _logger.info(
         f"Copying production tables from {source_prod_table_path} to {target_prod_table_path}"
@@ -164,31 +169,88 @@ def copy_and_update_production_table(args_dict):
         raise FileExistsError(
             f"The target production table directory '{target_prod_table_path}' already exists."
         )
-    shutil.copytree(source_prod_table_path, target_prod_table_path)
 
-    _apply_changes_to_production_tables(target_prod_table_path, changes, model_version)
+    _copy_production_tables(source_prod_table_path, target_prod_table_path, changes, patch_update)
 
-    for telescope, parameters in changes.items():
-        for param, param_data in parameters.items():
-            if param_data.get("value"):
-                _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
+    _apply_changes_to_production_tables(
+        target_prod_table_path,
+        changes,
+        model_version,
+        patch_update,
+        base_model_version,
+    )
+
+    _apply_changes_to_model_parameters(changes, model_parameters_dir)
 
 
-def _apply_changes_to_production_tables(target_prod_table_path, changes, model_version):
-    """Apply changes to the production tables in the target directory."""
+def _copy_production_tables(source_prod_table_path, target_prod_table_path, changes, patch_update):
+    """
+    Copy production tables from source to target directory.
+
+    Allows to copy all production tables or only those for array elements with changes.
+
+    Parameters
+    ----------
+    source_prod_table_path: str
+        Path to the source production tables.
+    target_prod_table_path: str
+        Path to the target production tables.
+    changes: dict
+        Dictionary containing the changes to be applied.
+    patch_update: bool
+        Patch update, copy only tables for changed elements.
+    """
+    if patch_update:
+        target_prod_table_path.mkdir(parents=True, exist_ok=True)
+        for array_element in changes.keys():
+            source_file = source_prod_table_path / f"{array_element}.json"
+            target_file = target_prod_table_path / f"{array_element}.json"
+            if source_file.exists():
+                shutil.copy2(source_file, target_file)
+            else:
+                _logger.warning(f"Source file for '{array_element}' does not exist. Skipping.")
+    else:
+        shutil.copytree(source_prod_table_path, target_prod_table_path)
+
+
+def _apply_changes_to_production_tables(
+    target_prod_table_path, changes, model_version, patch_update, base_model_version
+):
+    """
+    Apply changes to the production tables in the target directory.
+
+    Changes are applied in place (files are copied already in a previous step).
+
+    Parameters
+    ----------
+    target_prod_table_path: str
+        Path to the target production tables.
+    changes: dict
+        The changes to be applied.
+    model_version: str
+        The model version to be set in the JSON data.
+    patch_update: bool
+        Patch update, copy only tables for changed elements.
+    base_model_version: str
+        The base model version from which the production tables were copied.
+    """
     for file_path in Path(target_prod_table_path).rglob("*.json"):
         if file_path.name.startswith("configuration"):
             continue
         data = ascii_handler.collect_data_from_file(file_path)
-        _apply_changes_to_production_table(data, changes, model_version)
-        with file_path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, sort_keys=True)
-            f.write("\n")
+        _apply_changes_to_production_table(
+            data, changes, model_version, patch_update, base_model_version
+        )
+        ascii_handler.write_data_to_file(data, file_path, sort_keys=True)
 
 
-def _apply_changes_to_production_table(data, changes, model_version):
+def _apply_changes_to_production_table(
+    data, changes, model_version, patch_update, base_model_version
+):
     """
     Recursively apply changes to the new production tables.
+
+    Add base model version to production tables for patch updates.
 
     Parameters
     ----------
@@ -198,15 +260,22 @@ def _apply_changes_to_production_table(data, changes, model_version):
         The changes to be applied.
     model_version: str
         The model version to be set in the JSON data.
+    patch_update: bool
+        Patch update, copy only tables for changed elements.
+    base_model_version: str
+        The base model version from which the production tables were copied.
     """
     if isinstance(data, dict):
         if "model_version" in data:
             data["model_version"] = model_version
         _update_parameters(data.get("parameters", {}), changes)
-
+        if patch_update:
+            data["base_model_version"] = base_model_version
     elif isinstance(data, list):
         for item in data:
-            _apply_changes_to_production_table(item, changes, model_version)
+            _apply_changes_to_production_table(
+                item, changes, model_version, patch_update, base_model_version
+            )
 
 
 def _update_parameters(params, changes):
@@ -226,6 +295,23 @@ def _update_parameters(params, changes):
                     f"with version {param_data['version']}"
                 )
                 params[telescope][param] = param_data["version"]
+
+
+def _apply_changes_to_model_parameters(changes, model_parameters_dir):
+    """
+    Apply changes to model parameters by creating new parameter entries.
+
+    Parameters
+    ----------
+    changes: dict
+        The changes to be applied.
+    model_parameters_dir: str
+        Path to the model parameters directory.
+    """
+    for telescope, parameters in changes.items():
+        for param, param_data in parameters.items():
+            if param_data.get("value"):
+                _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
 
 
 def _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir):
@@ -271,9 +357,7 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     new_file_name = f"{param}-{param_data['version']}.json"
     new_file_path = param_dir / new_file_name
 
-    with new_file_path.open("w", encoding="utf-8") as f:
-        json.dump(json_data, f, indent=4)
-        f.write("\n")
+    ascii_handler.write_data_to_file(json_data, new_file_path, sort_keys=True)
     _logger.info(f"Created new model parameter JSON file: {new_file_path}")
 
 
