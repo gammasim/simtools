@@ -571,13 +571,16 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
         ray.plot(key, marker="o", linestyle="-", color="blue", linewidth=2, markersize=6)
 
-        plt.title(
-            f"PSF D80 vs Off-axis Angle - {tel_model.name}\n"
+        parameters_text = (
             f"Best Parameters: \n"
-            f"reflection=[{best_pars['mirror_reflection_random_angle'][0]:.4f}],\n"
-            f"align_horizontal={best_pars['mirror_align_random_horizontal'][0]:.4f}\n"
-            f"align_vertical={best_pars['mirror_align_random_vertical'][0]:.4f}\n"
+            f"reflection=["
+            f"{', '.join(f'{x:.4f}' for x in best_pars['mirror_reflection_random_angle'])}],\n"
+            f"align_horizontal=["
+            f"{', '.join(f'{x:.4f}' for x in best_pars['mirror_align_random_horizontal'])}]\n"
+            f"align_vertical=["
+            f"{', '.join(f'{x:.4f}' for x in best_pars['mirror_align_random_vertical'])}]\n"
         )
+        plt.title(parameters_text)
         plt.xlabel("Off-axis Angle (degrees)")
         plt.ylabel(D80_CM_LABEL if key == "d80_cm" else "D80 (degrees)")
         plt.ylim(bottom=0)
@@ -585,7 +588,7 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         plt.xlim(0, max_offset)
         plt.grid(True, alpha=0.3)
 
-        plot_file_name = f"tune_psf_{tel_model.name}_best_params_{key}.png"
+        plot_file_name = f"{tel_model.name}_best_params_{key}.png"
         plot_file = output_dir.joinpath(plot_file_name)
         visualize.save_figure(
             plt, plot_file, figure_format=["png"], log_title=f"D80 vs off-axis ({key})"
