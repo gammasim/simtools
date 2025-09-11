@@ -267,7 +267,7 @@ def _apply_changes_to_production_table(
         if "model_version" in data:
             data["model_version"] = model_version
         if data["production_table_name"] in changes.keys():
-            _update_parameters(data.get("parameters", {}), changes)
+            data["parameters"] = _get_new_parameters_only(changes, data["production_table_name"])
         if patch_update:
             data["base_model_version"] = base_model_version
     elif isinstance(data, list):
@@ -277,23 +277,31 @@ def _apply_changes_to_production_table(
             )
 
 
-def _update_parameters(params, changes):
-    """Update parameters in the given dictionary based on changes."""
-    for telescope, updates in changes.items():
-        if telescope not in params:
-            continue
+def _get_new_parameters_only(changes, production_table_name):
+    """
+    Create a new parameters dictionary containing only the parameters for the specific telescope.
+
+    Parameters
+    ----------
+    changes: dict
+        The changes to be applied, containing telescope and parameter information.
+    production_table_name: str
+        The name of the production table (telescope) to filter parameters for.
+
+    Returns
+    -------
+    dict
+        Dictionary containing only the new/changed parameters for the specified telescope.
+    """
+    new_params = {}
+    if production_table_name in changes:
+        new_params[production_table_name] = {}
+        updates = changes[production_table_name]
         for param, param_data in updates.items():
-            if param in params[telescope]:
-                old = params[telescope][param]
-                new = param_data["version"]
-                _logger.info(f"Updating '{telescope} - {param}' from {old} to {new}")
-                params[telescope][param] = new
-            else:
-                _logger.info(
-                    f"Adding new parameter '{telescope} - {param}' "
-                    f"with version {param_data['version']}"
-                )
-                params[telescope][param] = param_data["version"]
+            version = param_data["version"]
+            _logger.info(f"Setting '{production_table_name} - {param}' to version {version}")
+            new_params[production_table_name][param] = version
+    return new_params
 
 
 def _apply_changes_to_model_parameters(changes, model_parameters_dir):
