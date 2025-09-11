@@ -175,7 +175,7 @@ def _parse():
     )
     config.parser.add_argument(
         "--ks_statistic",
-        help="Use KS statistic for monte carlo error analysis.",
+        help="Use KS statistic for monte carlo uncertainty analysis.",
         action="store_true",
     )
     return config.initialize(
