@@ -169,10 +169,13 @@ def main():
         debug_plots=args_dict.get("debug_plots", False),
     )
     total = sum(len(t) for t in results_by_offset.values())
-    logger.info(
+    summary_msg = (
         f"Calculated incident angles for {len(results_by_offset)} offsets,\n"
         f"total photon statistics {total}"
     )
+    if total < 1_000_000:
+        summary_msg += " (below 1e6; results may be statistically unstable)"
+    logger.info(summary_msg)
 
 
 if __name__ == "__main__":
