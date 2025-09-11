@@ -296,7 +296,7 @@ class IncidentAnglesCalculator:
     def _compute_incidence_angles_from_imaging_list(self, photons_file):
         """Compute incidence angles from an imaging list file.
 
-        Column positions may differ between telescope types and sim_telarray builds.
+        Column positions may differ between telescope types and sim_telarray versions.
         Header lines (``# Column N: ...``) are parsed to find indices; otherwise
         legacy positions (1-based) are used: focal=26, primary=32, secondary=36,
         primary X/Y = 29/30, secondary X/Y = 33/34.
