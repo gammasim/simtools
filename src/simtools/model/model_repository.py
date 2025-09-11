@@ -235,8 +235,6 @@ def _apply_changes_to_production_tables(
         The base model version from which the production tables were copied.
     """
     for file_path in Path(target_prod_table_path).rglob("*.json"):
-        if file_path.name.startswith("configuration"):
-            continue
         data = ascii_handler.collect_data_from_file(file_path)
         _apply_changes_to_production_table(
             data, changes, model_version, patch_update, base_model_version
@@ -268,7 +266,8 @@ def _apply_changes_to_production_table(
     if isinstance(data, dict):
         if "model_version" in data:
             data["model_version"] = model_version
-        _update_parameters(data.get("parameters", {}), changes)
+        if data["production_table_name"] in changes.keys():
+            _update_parameters(data.get("parameters", {}), changes)
         if patch_update:
             data["base_model_version"] = base_model_version
     elif isinstance(data, list):
