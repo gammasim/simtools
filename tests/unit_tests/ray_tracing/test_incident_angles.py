@@ -170,15 +170,6 @@ def test_write_run_script_perfect_mirror_flags(calculator):
     assert "-C telescope_random_angle=0" in txt
 
 
-def test_write_run_script_alignment_mirror_alignment_random(calculator):
-    calculator.mirror_alignment_random = 0.05
-    photons, stars, log_file = calculator._prepare_psf_io_files()
-    script = calculator._write_run_script(photons, stars, log_file)
-    txt = script.read_text(encoding="utf-8")
-    assert "-C mirror_align_random_horizontal=0.05,28.,0.0,0.0" in txt
-    assert "-C mirror_align_random_vertical=0.05,28.,0.0,0.0" in txt
-
-
 def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp_output_dir):
     script = tmp_output_dir / "fail.sh"
     script.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")

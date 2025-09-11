@@ -40,7 +40,6 @@ class IncidentAnglesCalculator:
     -----
     Additional options are read from ``config_data`` when present:
     - ``perfect_mirror`` (bool, default False)
-    - ``mirror_alignment_random`` (float, optional)
     - ``calculate_primary_secondary_angles`` (bool, default True)
     """
 
@@ -63,7 +62,6 @@ class IncidentAnglesCalculator:
         self.label = label or f"incident_angles_{config_data['telescope']}"
         cfg = config_data
         self.perfect_mirror = cfg.get("perfect_mirror", False)
-        self.mirror_alignment_random = cfg.get("mirror_alignment_random")
         self.calculate_primary_secondary_angles = cfg.get(
             "calculate_primary_secondary_angles", True
         )
@@ -241,14 +239,6 @@ class IncidentAnglesCalculator:
                 "-C mirror_align_random_horizontal=0,28,0,0",
                 "-C mirror_align_random_vertical=0,28,0,0",
             ]
-
-        if self.mirror_alignment_random is not None:
-            opts.append(
-                cfg("mirror_align_random_horizontal", f"{self.mirror_alignment_random},28.,0.0,0.0")
-            )
-            opts.append(
-                cfg("mirror_align_random_vertical", f"{self.mirror_alignment_random},28.,0.0,0.0")
-            )
 
         opts += [
             cfg("IMAGING_LIST", str(photons_file)),
