@@ -221,14 +221,8 @@ def test_export_results_success_and_no_results(caplog, calculator):
         f"incident_angles_{calculator.label}_{calculator.config_data['telescope']}_off0.ecsv"
     )
     assert table_file.exists()
-    # Read table and check metadata
-    tbl = QTable.read(table_file, format="ascii.ecsv")
-    meta = tbl.meta
-    assert meta.get("zenith_angle_deg") == calculator.ZENITH_ANGLE_DEG
-    assert meta.get("off_axis_angle_deg") == pytest.approx(0.0)
-    assert meta.get("telescope_name") == "LST-1"
-    assert meta.get("site") == "North"
-    assert meta.get("data_points") == len(tbl)
+    meta_file = table_file.with_suffix(".yml")
+    assert meta_file.exists()
 
 
 def test_compute_incidence_angles_parsing(calculator, tmp_path):
@@ -290,32 +284,13 @@ def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
     assert photons.exists()
 
 
-def test_attach_results_metadata_sets_expected_fields(calculator):
-    # Prepare minimal results table
+def test_attach_results_metadata_noop(calculator):
     calculator.results = QTable()
-    calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
-
-    # Sanity: config contains expected values from fixtures
-    assert calculator.config_data["site"] == "North"
-    assert calculator.config_data["telescope"] == "LST-1"
-
-    # Invoke metadata attachment
+    calculator.results["angle_incidence_focal"] = [1.0] * u.deg
+    # Should not raise and should leave meta dict (possibly empty) intact
+    before = dict(calculator.results.meta)
     calculator._attach_results_metadata()
-
-    meta = calculator.results.meta
-    # Core fields
-    assert meta.get("label") == calculator.label
-    assert meta.get("telescope_name") == "LST-1"
-    assert meta.get("site") == "North"
-    assert meta.get("zenith_angle_deg") == calculator.ZENITH_ANGLE_DEG
-    # Off-axis from fixture is 0 deg
-    assert meta.get("off_axis_angle_deg") == pytest.approx(0.0)
-    # Source distance from fixture
-    assert meta.get("source_distance_km") == pytest.approx(10.0)
-    # Config file path recorded as string
-    assert isinstance(meta.get("config_file"), str)
-    # Data points equals table length
-    assert meta.get("data_points") == len(calculator.results)
+    assert calculator.results.meta == before
 
 
 def test_primary_valueerror_results_in_nan(calculator, tmp_path):

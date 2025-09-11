@@ -15,6 +15,7 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.model_utils import initialize_simulation_models
 
 
@@ -706,41 +707,10 @@ class IncidentAnglesCalculator:
         if self.results is None or len(self.results) == 0:
             self.logger.warning("No results to save")
             return
-        self._attach_results_metadata()
         output_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
         self.results.write(output_file, format="ascii.ecsv", overwrite=True)
 
-    def export_results(self):
-        """Export the results ECSV with embedded metadata.
-
-        The run summary is stored in the table's metadata and written into the
-        ECSV header.
-        """
-        if self.results is None or len(self.results) == 0:
-            self.logger.error("Cannot export results because they do not exist")
-            return
-        self._attach_results_metadata()
-        table_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
-        self.results.write(table_file, format="ascii.ecsv", overwrite=True)
-
-    def _attach_results_metadata(self):
-        """Attach a run summary to ``self.results.meta``."""
-        meta = self.results.meta if isinstance(self.results.meta, dict) else {}
-        off_deg = float(self.config_data.get("off_axis_angle", 0.0 * u.deg).to_value(u.deg))
-        src_km = float(self.config_data.get("source_distance", 0.0))
-        tel_name_val = getattr(self.telescope_model, "name", None)
-        site_val = getattr(self.site_model, "site", None)
-
-        meta.update(
-            {
-                "label": self.label,
-                "telescope_name": tel_name_val,
-                "site": site_val,
-                "zenith_angle_deg": float(self.ZENITH_ANGLE_DEG),
-                "off_axis_angle_deg": off_deg,
-                "source_distance_km": src_km,
-                "config_file": str(self.telescope_model.config_file_path),
-                "data_points": len(self.results),
-            }
+        MetadataCollector.dump(
+            args_dict=self.config_data,
+            output_file=output_file.with_suffix(".yml"),
         )
-        self.results.meta = meta
