@@ -351,7 +351,11 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     json_data["parameter_version"] = _update_model_parameter_version(
         json_data, param_data, param, telescope
     )
-    json_data["value"] = param_data["value"]
+    # important for e.g. nsb_pixel_rate
+    if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
+        json_data["value"] = [param_data["value"]] * len(json_data["value"])
+    else:
+        json_data["value"] = param_data["value"]
 
     new_file_name = f"{param}-{param_data['version']}.json"
     new_file_path = param_dir / new_file_name
