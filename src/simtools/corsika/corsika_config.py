@@ -114,8 +114,8 @@ class CorsikaConfig:
             return {}
 
         self.is_file_updated = False
-        self.azimuth_angle = int(args_dict["azimuth_angle"].to("deg").value)
-        self.zenith_angle = args_dict["zenith_angle"].to("deg").value
+        self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
+        self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
 
         self._logger.debug(
             f"Setting CORSIKA parameters from database ({args_dict['model_version']})"

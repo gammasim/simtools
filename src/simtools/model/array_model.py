@@ -214,8 +214,8 @@ class ArrayModel:
         Build telescope models for all telescopes of this array.
 
         Adds calibration device models, if requested through the calibration_device_types argument.
-        Calibration models are stored in a dictionary with the telescope name as key (to identify
-        the calibration device model on a given telescope).
+        Calibration device models are stored in a dictionary with the telescope name as key (to
+        identify the calibration device model on a given telescope).
 
         Includes reading of telescope model parameters from the database.
         The array is defined in the array_elements dictionary. Array element positions

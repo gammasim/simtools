@@ -3,8 +3,8 @@
 r"""
 Simulate pedestal events.
 
-Use sim_telarray to simulate calibration events for an array of telescopes.
-The following types of event types are supported:
+Use sim_telarray to simulate pedestal events for an array of telescopes.
+The following types are supported:
 
 * Pedestal events (includes night-sky background and camera noise)
 * Dark pedestal events (closed camera lid, camera noise only)

@@ -22,7 +22,7 @@ Example Usage
         simtools-simulate-flasher --run_mode direct_injection \
         --light_source MSFx-FlashCam --model_version 6.0.0 \
         --array_layout_name subsystem_msts --site South \
-        --azimuth_angle 0. --zenith_angle 20. --run_number 3
+        --run_number 3
 
 2. Simulate flashers for a telescope (detailed simulation):
 
@@ -40,14 +40,20 @@ telescope (str, required)
     Telescope model name (e.g. LSTN-01, MSTN-04, SSTS-04, ...)
 site (str, required)
     Site name (North or South).
-flasher (str, required)
-    Flasher device in array, e.g., MSFx-FlashCam
+light_source (str, required)
+    Calibration light source, e.g., MSFx-FlashCam
 number_of_events (int, optional):
     Number of events to simulate (default: 1).
 output_prefix (str, optional):
     Prefix for output files (default: empty).
 model_version (str, optional)
     Version of the simulation model.
+array_layout_name (str, optional)
+    Name of the array layout to use (required for direct injection mode).
+run_number (int, optional)
+    Run number to use (default: 1, required for direct injection mode).
+telescope (str, optional)
+    Telescope name (required for full simulation mode).
 """
 
 import logging
@@ -94,7 +100,7 @@ def _parse(label):
         db_config=True,
         simulation_model=["site", "layout", "telescope", "model_version"],
         simulation_configuration={
-            "corsika_configuration": ["run_number", "azimuth_angle", "zenith_angle"],
+            "corsika_configuration": ["run_number"],
             "sim_telarray_configuration": ["all"],
         },
     )
