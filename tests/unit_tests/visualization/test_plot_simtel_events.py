@@ -949,7 +949,7 @@ def test__get_event_source_and_r1_tel_returns_sorted_tel_id(monkeypatch):  # pyl
 
 def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):  # pylint:disable=protected-access
     # Build two events and select the second via event_index
-    e0, tid0 = _fake_event(dl1_image=np.array([1.0]), r1_waveforms=None)
+    e0, _ = _fake_event(dl1_image=np.array([1.0]), r1_waveforms=None)
     e0.r1 = SimpleNamespace(tel={})  # explicitly no r1
 
     e1 = SimpleNamespace()
