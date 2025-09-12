@@ -74,3 +74,12 @@ the visualization module.
 .. automodule:: visualization.plot_simtel_event_histograms
    :members:
 ```
+
+(plot-incident-angles)=
+
+## plot_incident_angles
+
+```{eval-rst}
+.. automodule:: visualization.plot_incident_angles
+   :members:
+```
