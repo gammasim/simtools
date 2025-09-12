@@ -8,6 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -172,8 +173,8 @@ class Simulator:
 
         seed = semver_to_int(model_version) * 10000000
         seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
-        seed = seed + (int)(self.args_dict.get("zenith_angle", 0) * 1000)
-        return seed + (int)(self.args_dict.get("azimuth_angle", 0) * 1000)
+        seed = seed + (int)(self.args_dict.get("zenith_angle", 0.0 * u.deg).value) * 1000
+        return seed + (int)(self.args_dict.get("azimuth_angle", 0.0 * u.deg).value)
 
     def _initialize_run_list(self):
         """
