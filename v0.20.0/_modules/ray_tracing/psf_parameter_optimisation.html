@@ -1,0 +1,1337 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ray_tracing.psf_parameter_optimisation &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=b52c616d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/ray_tracing/psf_parameter_optimisation';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.20.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ray_tracing.psf_parameter_optimisation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for ray_tracing.psf_parameter_optimisation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">PSF parameter optimisation and fitting routines for mirror alignment and reflection parameters.</span>
+
+<span class="sd">This module provides functions for loading PSF data, generating random parameter sets,</span>
+<span class="sd">running PSF simulations, calculating RMSD, and finding the best-fit parameters for a given</span>
+<span class="sd">telescope model.</span>
+
+<span class="sd">PSF (Point Spread Function) describes how a point source of light is spread out by the</span>
+<span class="sd">optical system, and RMSD (Root Mean Squared Deviation) is used as the optimization metric</span>
+<span class="sd">to quantify the difference between measured and simulated PSF curves.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.backends.backend_pdf</span><span class="w"> </span><span class="kn">import</span> <span class="n">PdfPages</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_data_writer</span> <span class="k">as</span> <span class="n">writer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Constants</span>
+<span class="n">RADIUS_CM</span> <span class="o">=</span> <span class="s2">&quot;Radius [cm]&quot;</span>
+<span class="n">CUMULATIVE_PSF</span> <span class="o">=</span> <span class="s2">&quot;Cumulative PSF&quot;</span>
+
+<span class="n">MRRA_RANGE_DEFAULT</span> <span class="o">=</span> <span class="mf">0.004</span>  <span class="c1"># Mirror reflection random angle range</span>
+<span class="n">MRF_RANGE_DEFAULT</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Mirror reflection fraction range</span>
+<span class="n">MRRA2_RANGE_DEFAULT</span> <span class="o">=</span> <span class="mf">0.03</span>  <span class="c1"># Second mirror reflection random angle range</span>
+<span class="n">MAR_RANGE_DEFAULT</span> <span class="o">=</span> <span class="mf">0.005</span>  <span class="c1"># Mirror alignment random range</span>
+<span class="n">MAX_OFFSET_DEFAULT</span> <span class="o">=</span> <span class="mf">4.5</span>  <span class="c1"># Maximum off-axis angle in degrees</span>
+<span class="n">OFFSET_STEPS_DEFAULT</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Step size for off-axis angle sampling</span>
+
+
+<div class="viewcode-block" id="load_psf_data">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.load_psf_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_psf_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load data from a text file containing cumulative PSF measurements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_file : str</span>
+<span class="sd">        Name of the data file with the measured cumulative PSF.</span>
+<span class="sd">        Expected format:</span>
+<span class="sd">        Column 0: radial distance in mm</span>
+<span class="sd">        Column 2: cumulative PSF values</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Loaded and processed data with radius in cm and normalized cumulative PSF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d_type</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">RADIUS_CM</span><span class="p">,</span> <span class="n">CUMULATIVE_PSF</span><span class="p">),</span> <span class="s2">&quot;formats&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;f8&quot;</span><span class="p">,</span> <span class="s2">&quot;f8&quot;</span><span class="p">)}</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">d_type</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">RADIUS_CM</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">0.1</span>  <span class="c1"># Convert from mm to cm</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">CUMULATIVE_PSF</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">CUMULATIVE_PSF</span><span class="p">]))</span>  <span class="c1"># Normalize to max = 1.0</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_rmsd">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.calculate_rmsd">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_rmsd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate Root Mean Squared Deviation to be used as metric to find the best parameters.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">data</span> <span class="o">-</span> <span class="n">sim</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="add_parameters">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.add_parameters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_parameters</span><span class="p">(</span>
+    <span class="n">all_parameters</span><span class="p">,</span>
+    <span class="n">mirror_reflection</span><span class="p">,</span>
+    <span class="n">mirror_align</span><span class="p">,</span>
+    <span class="n">mirror_reflection_fraction</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
+    <span class="n">mirror_reflection_2</span><span class="o">=</span><span class="mf">0.035</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform and add parameters to the all_parameters list.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mirror_reflection : float</span>
+<span class="sd">        The random angle of mirror reflection.</span>
+<span class="sd">    mirror_align : float</span>
+<span class="sd">        The random angle for mirror alignment (both horizontal and vertical).</span>
+<span class="sd">    mirror_reflection_fraction : float, optional</span>
+<span class="sd">        The fraction of the mirror reflection. Default is 0.15.</span>
+<span class="sd">    mirror_reflection_2 : float, optional</span>
+<span class="sd">        A secondary random angle for mirror reflection. Default is 0.035.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        Updates the all_parameters list in place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pars</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">mirror_reflection</span><span class="p">,</span>
+            <span class="n">mirror_reflection_fraction</span><span class="p">,</span>
+            <span class="n">mirror_reflection_2</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;mirror_align_random_horizontal&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">mirror_align</span><span class="p">,</span> <span class="mf">28.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="s2">&quot;mirror_align_random_vertical&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">mirror_align</span><span class="p">,</span> <span class="mf">28.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">all_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_previous_values">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.get_previous_values">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_previous_values</span><span class="p">(</span><span class="n">tel_model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve previous parameter values from the telescope model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Tuple containing the previous values of mirror_reflection_random_angle (first entry),</span>
+<span class="sd">        mirror_reflection_fraction, second entry), mirror_reflection_random_angle (third entry),</span>
+<span class="sd">        and mirror_align_random_horizontal/vertical.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">split_par</span> <span class="o">=</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">)</span>
+    <span class="n">mrra_0</span><span class="p">,</span> <span class="n">mfr_0</span><span class="p">,</span> <span class="n">mrra2_0</span> <span class="o">=</span> <span class="n">split_par</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">split_par</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">split_par</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">mar_0</span> <span class="o">=</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_align_random_horizontal&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">&quot;Previous parameter values:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MRRA = </span><span class="si">{</span><span class="n">mrra_0</span><span class="si">!s}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MRF = </span><span class="si">{</span><span class="n">mfr_0</span><span class="si">!s}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MRRA2 = </span><span class="si">{</span><span class="n">mrra2_0</span><span class="si">!s}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MAR = </span><span class="si">{</span><span class="n">mar_0</span><span class="si">!s}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">mrra_0</span><span class="p">,</span> <span class="n">mfr_0</span><span class="p">,</span> <span class="n">mrra2_0</span><span class="p">,</span> <span class="n">mar_0</span></div>
+
+
+
+<div class="viewcode-block" id="generate_random_parameters">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.generate_random_parameters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_random_parameters</span><span class="p">(</span>
+    <span class="n">all_parameters</span><span class="p">,</span> <span class="n">n_runs</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">mrra_0</span><span class="p">,</span> <span class="n">mfr_0</span><span class="p">,</span> <span class="n">mrra2_0</span><span class="p">,</span> <span class="n">mar_0</span><span class="p">,</span> <span class="n">tel_model</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate random parameters for tuning.</span>
+
+<span class="sd">    The parameter ranges around the previous values are configurable via module constants.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    all_parameters : list</span>
+<span class="sd">        List to store all parameter sets.</span>
+<span class="sd">    n_runs : int</span>
+<span class="sd">        Number of random parameter combinations to test.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing parsed command-line arguments.</span>
+<span class="sd">    mrra_0 : float</span>
+<span class="sd">        Initial value of mirror_reflection_random_angle.</span>
+<span class="sd">    mfr_0 : float</span>
+<span class="sd">        Initial value of mirror_reflection_fraction.</span>
+<span class="sd">    mrra2_0 : float</span>
+<span class="sd">        Initial value of the second mirror_reflection_random_angle.</span>
+<span class="sd">    mar_0 : float</span>
+<span class="sd">        Initial value of mirror_align_random_horizontal/vertical.</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object to check if it&#39;s a dual mirror telescope.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;fixed=True - First entry of mirror_reflection_random_angle is kept fixed.&quot;</span><span class="p">)</span>
+
+    <span class="n">is_dual_mirror</span> <span class="o">=</span> <span class="n">model_utils</span><span class="o">.</span><span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_dual_mirror</span><span class="p">:</span>
+        <span class="n">mar_fixed_value</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mar_fixed_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
+        <span class="n">mrra_range</span> <span class="o">=</span> <span class="n">MRRA_RANGE_DEFAULT</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">mrf_range</span> <span class="o">=</span> <span class="n">MRF_RANGE_DEFAULT</span>
+        <span class="n">mrra2_range</span> <span class="o">=</span> <span class="n">MRRA2_RANGE_DEFAULT</span>
+        <span class="n">mar_range</span> <span class="o">=</span> <span class="n">MAR_RANGE_DEFAULT</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">))</span>
+        <span class="n">mrra</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mrra_0</span> <span class="o">-</span> <span class="n">mrra_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mrra_0</span> <span class="o">+</span> <span class="n">mrra_range</span><span class="p">)</span>
+        <span class="n">mrf</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mfr_0</span> <span class="o">-</span> <span class="n">mrf_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mfr_0</span> <span class="o">+</span> <span class="n">mrf_range</span><span class="p">)</span>
+        <span class="n">mrra2</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mrra2_0</span> <span class="o">-</span> <span class="n">mrra2_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mrra2_0</span> <span class="o">+</span> <span class="n">mrra2_range</span><span class="p">)</span>
+
+        <span class="c1"># Set mar to 0 for dual mirror telescopes, otherwise use random value</span>
+        <span class="k">if</span> <span class="n">mar_fixed_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mar</span> <span class="o">=</span> <span class="n">mar_fixed_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mar</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mar_0</span> <span class="o">-</span> <span class="n">mar_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mar_0</span> <span class="o">+</span> <span class="n">mar_range</span><span class="p">)</span>
+
+        <span class="n">add_parameters</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">,</span> <span class="n">mrra</span><span class="p">,</span> <span class="n">mar</span><span class="p">,</span> <span class="n">mrf</span><span class="p">,</span> <span class="n">mrra2</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_ray_tracing_simulation</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run a ray tracing simulation with the given telescope parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object.</span>
+<span class="sd">    site_model : SiteModel</span>
+<span class="sd">        Site model object.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing parsed command-line arguments.</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (d80, simulated_data) - D80 value and simulated data from ray tracing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">pars</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No best parameters found&quot;</span><span class="p">)</span>
+
+    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
+        <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">],</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;src_distance&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_rx</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">images</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">d80</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_psf</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">d80</span><span class="p">,</span> <span class="n">im</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_psf_simulation_plot</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">is_best</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a plot for PSF simulation results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting.</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary.</span>
+<span class="sd">    d80 : float</span>
+<span class="sd">        D80 value.</span>
+<span class="sd">    rmsd : float</span>
+<span class="sd">        RMSD value.</span>
+<span class="sd">    is_best : bool</span>
+<span class="sd">        Whether this is the best parameter set.</span>
+<span class="sd">    pdf_pages : PdfPages</span>
+<span class="sd">        PDF pages object for saving plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_1d</span><span class="p">(</span>
+        <span class="n">data_to_plot</span><span class="p">,</span>
+        <span class="n">plot_difference</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">CUMULATIVE_PSF</span><span class="p">)</span>
+
+    <span class="n">title_prefix</span> <span class="o">=</span> <span class="s2">&quot;* &quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title_prefix</span><span class="si">}</span><span class="s2">refl_rnd = &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;align_rnd = </span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">d80_color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;black&quot;</span>
+    <span class="n">d80_weight</span> <span class="o">=</span> <span class="s2">&quot;bold&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;normal&quot;</span>
+    <span class="n">d80_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;D80 = </span><span class="si">{</span><span class="n">d80</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2"> cm&quot;</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="mf">0.3</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d80_text</span><span class="si">}</span><span class="se">\n</span><span class="s2">RMSD = </span><span class="si">{</span><span class="n">rmsd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">d80_color</span><span class="p">,</span>
+        <span class="n">weight</span><span class="o">=</span><span class="n">d80_weight</span><span class="p">,</span>
+        <span class="n">bbox</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;boxstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;round,pad=0.3&quot;</span><span class="p">,</span> <span class="s2">&quot;facecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">is_best</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_best</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="mf">0.02</span><span class="p">,</span>
+            <span class="mf">0.02</span><span class="p">,</span>
+            <span class="s2">&quot;* Best parameter set (lowest RMSD)&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="s2">&quot;italic&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="run_psf_simulation">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.run_psf_simulation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_psf_simulation</span><span class="p">(</span>
+    <span class="n">tel_model</span><span class="p">,</span>
+    <span class="n">site_model</span><span class="p">,</span>
+    <span class="n">args_dict</span><span class="p">,</span>
+    <span class="n">pars</span><span class="p">,</span>
+    <span class="n">data_to_plot</span><span class="p">,</span>
+    <span class="n">radius</span><span class="p">,</span>
+    <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_simulated_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run the simulation for one set of parameters and return D80, RMSD.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object.</span>
+<span class="sd">    site_model : SiteModel</span>
+<span class="sd">        Site model object.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing parsed command-line arguments.</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary.</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting.</span>
+<span class="sd">    radius : array-like</span>
+<span class="sd">        Radius data.</span>
+<span class="sd">    pdf_pages : PdfPages, optional</span>
+<span class="sd">        PDF pages object for plotting. If None, no plotting is done.</span>
+<span class="sd">    is_best : bool, optional</span>
+<span class="sd">        Whether this is the best parameter set for highlighting in plots.</span>
+<span class="sd">    return_simulated_data : bool, optional</span>
+<span class="sd">        If True, returns simulated data as third element in return tuple.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (d80, rmsd) if return_simulated_data=False</span>
+<span class="sd">        (d80, rmsd, simulated_data) if return_simulated_data=True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d80</span><span class="p">,</span> <span class="n">im</span> <span class="o">=</span> <span class="n">_run_ray_tracing_simulation</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Radius data is not available.&quot;</span><span class="p">)</span>
+
+    <span class="n">simulated_data</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_cumulative_data</span><span class="p">(</span><span class="n">radius</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">calculate_rmsd</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="n">CUMULATIVE_PSF</span><span class="p">],</span> <span class="n">simulated_data</span><span class="p">[</span><span class="n">CUMULATIVE_PSF</span><span class="p">])</span>
+
+    <span class="c1"># Handle plotting if requested</span>
+    <span class="k">if</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">simulated_data</span>
+        <span class="n">_create_psf_simulation_plot</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">is_best</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">d80</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_simulated_data</span> <span class="k">else</span> <span class="p">(</span><span class="n">d80</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="load_and_process_data">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.load_and_process_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_and_process_data</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load and process data if specified in the command-line arguments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    - data_to_plot: OrderedDict containing loaded and processed data.</span>
+<span class="sd">    - radius: Radius data from loaded data (if available).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_to_plot</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_path&quot;</span><span class="p">])</span>
+        <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_psf_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">)</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="n">RADIUS_CM</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_plot_for_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">is_best</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a single plot for a parameter set.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary</span>
+<span class="sd">    rmsd : float</span>
+<span class="sd">        RMSD value for this parameter set</span>
+<span class="sd">    d80 : float</span>
+<span class="sd">        D80 value for this parameter set</span>
+<span class="sd">    simulated_data : array</span>
+<span class="sd">        Simulated data for plotting</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting</span>
+<span class="sd">    is_best : bool</span>
+<span class="sd">        Whether this is the best parameter set</span>
+<span class="sd">    pdf_pages : PdfPages</span>
+<span class="sd">        PDF pages object to save the plot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">original_simulated</span> <span class="o">=</span> <span class="n">data_to_plot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulated&quot;</span><span class="p">)</span>
+    <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">simulated_data</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_1d</span><span class="p">(</span>
+        <span class="n">data_to_plot</span><span class="p">,</span>
+        <span class="n">plot_difference</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">CUMULATIVE_PSF</span><span class="p">)</span>
+
+    <span class="n">title_prefix</span> <span class="o">=</span> <span class="s2">&quot;* &quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title_prefix</span><span class="si">}</span><span class="s2">reflection = &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;align_vertical = </span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;align_horizontal = </span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">d80_color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;black&quot;</span>
+    <span class="n">d80_weight</span> <span class="o">=</span> <span class="s2">&quot;bold&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;normal&quot;</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="mf">0.3</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;D80 = </span><span class="si">{</span><span class="n">d80</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2"> cm</span><span class="se">\n</span><span class="s2">RMSD = </span><span class="si">{</span><span class="n">rmsd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">d80_color</span><span class="p">,</span>
+        <span class="n">weight</span><span class="o">=</span><span class="n">d80_weight</span><span class="p">,</span>
+        <span class="n">bbox</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;boxstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;round,pad=0.3&quot;</span><span class="p">,</span> <span class="s2">&quot;facecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">is_best</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_best</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="mf">0.02</span><span class="p">,</span>
+            <span class="mf">0.02</span><span class="p">,</span>
+            <span class="s2">&quot;* Best parameter set (lowest RMSD)&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="s2">&quot;italic&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">original_simulated</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_simulated</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_all_plots</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create plots for all parameter sets if requested.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list</span>
+<span class="sd">        List of (pars, rmsd, d80, simulated_data) tuples</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Best parameter set for highlighting</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting</span>
+<span class="sd">    pdf_pages : PdfPages</span>
+<span class="sd">        PDF pages object to save plots</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating plots for all parameter sets...&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+        <span class="n">is_best</span> <span class="o">=</span> <span class="n">pars</span> <span class="ow">is</span> <span class="n">best_pars</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating plot </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}{</span><span class="s1">&#39; (BEST)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">is_best</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">_create_plot_for_parameters</span><span class="p">(</span>
+            <span class="n">pars</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">is_best</span><span class="p">,</span> <span class="n">pdf_pages</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="find_best_parameters">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.find_best_parameters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_best_parameters</span><span class="p">(</span>
+    <span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the best parameters by running simulations for all parameter sets.</span>
+
+<span class="sd">    Loop over all parameter sets, run the simulation, compute RMSD,</span>
+<span class="sd">    and return the best parameters and their RMSD.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">best_rmsd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">best_pars</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">best_d80</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Store (pars, rmsd, d80, simulated_data)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2"> simulations...&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pars</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running simulation </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">d80</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">simulated_data</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
+                <span class="n">tel_model</span><span class="p">,</span>
+                <span class="n">site_model</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">,</span>
+                <span class="n">pars</span><span class="p">,</span>
+                <span class="n">data_to_plot</span><span class="p">,</span>
+                <span class="n">radius</span><span class="p">,</span>
+                <span class="n">return_simulated_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulation failed for parameters </span><span class="si">{</span><span class="n">pars</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pars</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">rmsd</span> <span class="o">&lt;</span> <span class="n">best_rmsd</span><span class="p">:</span>
+            <span class="n">best_rmsd</span> <span class="o">=</span> <span class="n">rmsd</span>
+            <span class="n">best_pars</span> <span class="o">=</span> <span class="n">pars</span>
+            <span class="n">best_d80</span> <span class="o">=</span> <span class="n">d80</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best RMSD found: </span><span class="si">{</span><span class="n">best_rmsd</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create all plots if requested</span>
+    <span class="k">if</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">_create_all_plots</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">best_d80</span><span class="p">,</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="create_d80_vs_offaxis_plot">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.create_d80_vs_offaxis_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_d80_vs_offaxis_plot</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create D80 vs off-axis angle plot using the best parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object.</span>
+<span class="sd">    site_model : SiteModel</span>
+<span class="sd">        Site model object.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing parsed command-line arguments.</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Best parameter set.</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Output directory for saving plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating D80 vs off-axis angle plot with best parameters...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Apply best parameters to telescope model</span>
+    <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">best_pars</span><span class="p">)</span>
+
+    <span class="c1"># Create off-axis angle array</span>
+    <span class="n">max_offset</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_offset&quot;</span><span class="p">,</span> <span class="n">MAX_OFFSET_DEFAULT</span><span class="p">)</span>
+    <span class="n">offset_steps</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;offset_steps&quot;</span><span class="p">,</span> <span class="n">OFFSET_STEPS_DEFAULT</span><span class="p">)</span>
+    <span class="n">off_axis_angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_offset</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">max_offset</span> <span class="o">/</span> <span class="n">offset_steps</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
+        <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">],</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;src_distance&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">off_axis_angles</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running ray tracing for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">off_axis_angles</span><span class="p">)</span><span class="si">}</span><span class="s2"> off-axis angles...&quot;</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;d80_cm&quot;</span><span class="p">,</span> <span class="s2">&quot;d80_deg&quot;</span><span class="p">]:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">ray</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;PSF D80 vs Off-axis Angle - </span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Best Parameters: </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;reflection=[</span><span class="si">{</span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">],</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;align_horizontal=</span><span class="si">{</span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;align_vertical=</span><span class="si">{</span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Off-axis Angle (degrees)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;D80 (cm)&quot;</span> <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;d80_cm&quot;</span> <span class="k">else</span> <span class="s2">&quot;D80 (degrees)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_offset</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+        <span class="n">plot_file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;tune_psf_</span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_best_params_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+        <span class="n">plot_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span><span class="n">plt</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">log_title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;D80 vs off-axis (</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_tested_parameters_to_file">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.write_tested_parameters_to_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_tested_parameters_to_file</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">best_d80</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write all tested parameters and their metrics to a text file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list</span>
+<span class="sd">        List of (pars, rmsd, d80, simulated_data) tuples</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Best parameter set</span>
+<span class="sd">    best_d80 : float</span>
+<span class="sd">        Best D80 value</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Output directory path</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object for filename generation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">param_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;psf_optimization_</span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.log&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">param_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# PSF Parameter Optimization Log</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# Telescope: </span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# Total parameter sets tested: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;PARAMETER TESTING RESULTS:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">d80</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+            <span class="n">is_best</span> <span class="o">=</span> <span class="n">pars</span> <span class="ow">is</span> <span class="n">best_pars</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;BEST&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;TESTED&quot;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">] Set </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: RMSD=</span><span class="si">{</span><span class="n">rmsd</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, D80=</span><span class="si">{</span><span class="n">d80</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2"> cm</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;OPTIMIZATION SUMMARY:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best RMSD: </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">results</span><span class="p">)</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best D80: </span><span class="si">{</span><span class="n">best_d80</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2"> cm</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">OPTIMIZED PARAMETERS:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">best_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">param_file</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_units_to_psf_parameters</span><span class="p">(</span><span class="n">best_pars</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add proper astropy units to PSF parameters based on their schemas.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Dictionary with PSF parameter names as keys and values as lists</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with same keys but values converted to astropy quantities with units</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">psf_pars_with_units</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">best_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">param_name</span> <span class="o">==</span> <span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">:</span>
+            <span class="n">psf_pars_with_units</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mirror_align_random_horizontal&quot;</span><span class="p">,</span> <span class="s2">&quot;mirror_align_random_vertical&quot;</span><span class="p">]:</span>
+            <span class="n">psf_pars_with_units</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">psf_pars_with_units</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_values</span>
+
+    <span class="k">return</span> <span class="n">psf_pars_with_units</span>
+
+
+<div class="viewcode-block" id="export_psf_parameters">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.export_psf_parameters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_psf_parameters</span><span class="p">(</span><span class="n">best_pars</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export PSF parameters as simulation model parameter files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Best parameter set</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object</span>
+<span class="sd">    parameter_version : str</span>
+<span class="sd">        Parameter version string</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Output directory path</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Exporting best PSF parameters as simulation model parameter files&quot;</span><span class="p">)</span>
+        <span class="n">psf_pars_with_units</span> <span class="o">=</span> <span class="n">_add_units_to_psf_parameters</span><span class="p">(</span><span class="n">best_pars</span><span class="p">)</span>
+        <span class="n">parameter_output_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">for</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">parameter_value</span> <span class="ow">in</span> <span class="n">psf_pars_with_units</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
+                <span class="n">parameter_name</span><span class="o">=</span><span class="n">parameter_name</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">parameter_value</span><span class="p">,</span>
+                <span class="n">instrument</span><span class="o">=</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">parameter_version</span><span class="o">=</span><span class="n">parameter_version</span><span class="p">,</span>
+                <span class="n">output_file</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">,</span>
+                <span class="n">output_path</span><span class="o">=</span><span class="n">parameter_output_path</span><span class="p">,</span>
+                <span class="n">use_plain_output_path</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simulation model parameter files exported to </span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not export simulation parameters: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error exporting simulation parameters: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_psf_optimization_workflow">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_psf_optimization_workflow</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run the complete PSF parameter optimization workflow.</span>
+
+<span class="sd">    This function consolidates the main optimization logic to make the application lighter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object</span>
+<span class="sd">    site_model : SiteModel</span>
+<span class="sd">        Site model object</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing parsed command-line arguments</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Output directory path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        All results are saved to files and printed to console</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Generate parameter sets</span>
+    <span class="n">all_parameters</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mrra_0</span><span class="p">,</span> <span class="n">mfr_0</span><span class="p">,</span> <span class="n">mrra2_0</span><span class="p">,</span> <span class="n">mar_0</span> <span class="o">=</span> <span class="n">get_previous_values</span><span class="p">(</span><span class="n">tel_model</span><span class="p">)</span>
+
+    <span class="n">n_runs</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_runs&quot;</span><span class="p">)</span>
+    <span class="n">generate_random_parameters</span><span class="p">(</span>
+        <span class="n">all_parameters</span><span class="p">,</span> <span class="n">n_runs</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">mrra_0</span><span class="p">,</span> <span class="n">mfr_0</span><span class="p">,</span> <span class="n">mrra2_0</span><span class="p">,</span> <span class="n">mar_0</span><span class="p">,</span> <span class="n">tel_model</span>
+    <span class="p">)</span>
+
+    <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span> <span class="o">=</span> <span class="n">load_and_process_data</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+
+    <span class="c1"># Preparing figure name and PDF pages for plotting</span>
+    <span class="n">plot_file_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="s2">&quot;tune_psf&quot;</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">))</span>
+    <span class="n">plot_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+    <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">plot_file</span><span class="p">)</span>
+
+    <span class="c1"># Find best parameters</span>
+    <span class="n">best_pars</span><span class="p">,</span> <span class="n">best_d80</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">find_best_parameters</span><span class="p">(</span>
+        <span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span>
+    <span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Write all tested parameters and their metrics to a file</span>
+    <span class="n">param_file</span> <span class="o">=</span> <span class="n">write_tested_parameters_to_file</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">best_d80</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">tel_model</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Parameter results written to </span><span class="si">{</span><span class="n">param_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Automatically create D80 vs off-axis angle plot for best parameters</span>
+    <span class="n">create_d80_vs_offaxis_plot</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;D80 vs off-axis angle plots created successfully&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Best parameters:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">best_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Export best parameters as simulation model parameter files (if flag is provided)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;write_psf_parameters&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">export_psf_parameters</span><span class="p">(</span>
+            <span class="n">best_pars</span><span class="p">,</span>
+            <span class="n">tel_model</span><span class="p">,</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0.0&quot;</span><span class="p">),</span>
+            <span class="n">output_dir</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
