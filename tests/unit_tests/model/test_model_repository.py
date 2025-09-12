@@ -417,41 +417,19 @@ def test_create_new_parameter_entry_no_latest_file(mock_get_latest, tmp_path):
 # rather than updating an existing one in place.
 
 
-def test_get_new_parameters_only_with_matching_telescope():
-    """Test getting new parameters for a specific telescope."""
+def test_update_parameters_new_function():
+    """Test the new _update_parameters function."""
+    existing_params = {"dsum_threshold": "3.0.0"}
     changes = {
         "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
         "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
-    production_table_name = "MSTx-FlashCam"
+    table_name = "MSTx-FlashCam"
 
-    result = model_repository._get_new_parameters_only(changes, production_table_name)
+    result = model_repository._update_parameters(existing_params, changes, table_name)
 
     assert "MSTx-FlashCam" in result
-    assert "MSTx-NectarCam" not in result
     assert result["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-
-
-def test_get_new_parameters_only_with_non_matching_telescope():
-    """Test getting new parameters when telescope doesn't exist in changes."""
-    changes = {
-        "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
-    }
-    production_table_name = "NonExistent"
-
-    result = model_repository._get_new_parameters_only(changes, production_table_name)
-
-    assert result == {}
-
-
-def test_get_new_parameters_only_with_empty_changes():
-    """Test getting new parameters when changes is empty."""
-    changes = {}
-    production_table_name = "MSTx-FlashCam"
-
-    result = model_repository._get_new_parameters_only(changes, production_table_name)
-
-    assert result == {}
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -507,7 +485,7 @@ def test_apply_changes_to_production_table_update_parameters():
 
 def test_apply_changes_to_production_table_no_parameters():
     """Test applying changes when no parameters exist in the production table."""
-    data = {"model_version": "6.0.0", "production_table_name": "MSTx-FlashCam"}
+    data = {"model_version": "6.0.0", "production_table_name": "MSTx-FlashCam", "parameters": {}}
     changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
     model_version = "6.5.0"
 
@@ -542,12 +520,20 @@ def test_apply_changes_to_production_table_with_list_data():
 
 def test_apply_changes_to_production_tables(tmp_path):
     """Test applying changes to production tables."""
+    # Create source directory with sample files
+    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path.mkdir(parents=True)
     target_prod_table_path = tmp_path / "productions" / "6.5.0"
-    target_prod_table_path.mkdir(parents=True)
 
-    # Create a sample production table file
-    prod_table_file = target_prod_table_path / "prod_table.json"
+    # Create sample production table files in source
     prod_table_data = {
+        "production_table_name": "MSTx-FlashCam",
+        "model_version": "6.0.0",
+        "parameters": {
+            "MSTx-FlashCam": {"dsum_threshold": "3.0.0"},
+        },
+    }
+    config_table_data = {
         "production_table_name": "configuration_sim_telarray",
         "model_version": "6.0.0",
         "parameters": {
@@ -555,57 +541,53 @@ def test_apply_changes_to_production_tables(tmp_path):
             "MSTx-NectarCam": {"discriminator_threshold": "3.0.0"},
         },
     }
+
+    prod_table_file = source_prod_table_path / "MSTx-FlashCam.json"
     prod_table_file.write_text(json.dumps(prod_table_data))
-    prod_config_file = target_prod_table_path / "configuration_sim_telarray.json"
-    prod_config_file.write_text(json.dumps(prod_table_data))
+    config_file = source_prod_table_path / "configuration_sim_telarray.json"
+    config_file.write_text(json.dumps(config_table_data))
 
     # Mock changes to be applied
     changes = {
         "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
-        "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
 
-    # Verify the configuration table file is not updated (no matching production_table_name)
+    # Apply changes from source to target
     model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
     )
-    updated_data = json.loads(prod_config_file.read_text())
-    assert updated_data["model_version"] == "6.5.0"
-    assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
-    assert updated_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "3.0.0"
 
-    # Update production table to have matching production_table_name and verify it gets updated
-    prod_table_data["production_table_name"] = "MSTx-FlashCam"
-    prod_table_file.write_text(json.dumps(prod_table_data))
-
-    model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, "6.5.0", False, "6.0.0"
-    )
-    updated_data = json.loads(prod_table_file.read_text())
+    # Verify the production table file is updated with changes
+    updated_prod_file = target_prod_table_path / "MSTx-FlashCam.json"
+    assert updated_prod_file.exists()
+    updated_data = json.loads(updated_prod_file.read_text())
     assert updated_data["model_version"] == "6.5.0"
-    # When production_table_name matches, only parameters for that specific telescope are included
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert "MSTx-NectarCam" not in updated_data["parameters"]
 
     # Verify configuration table file model_version is updated but parameters unchanged
-    config_data = json.loads(prod_config_file.read_text())
+    config_target_file = target_prod_table_path / "configuration_sim_telarray.json"
+    assert config_target_file.exists()
+    config_data = json.loads(config_target_file.read_text())
     assert config_data["model_version"] == "6.5.0"
+    # Parameters unchanged since production_table_name doesn't match changes
     assert config_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
     assert config_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "3.0.0"
 
 
 def test_apply_changes_to_production_tables_no_parameters(tmp_path):
     """Test applying changes to production tables with no parameters."""
+    # Create source directory with sample files
+    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path.mkdir(parents=True)
     target_prod_table_path = tmp_path / "productions" / "6.5.0"
-    target_prod_table_path.mkdir(parents=True)
 
-    # Create a sample production table file
-    prod_table_file = target_prod_table_path / "prod_table.json"
+    # Create a sample production table file in source
     prod_table_data = {
         "model_version": "6.0.0",
         "production_table_name": "MSTx-FlashCam",
         "parameters": {},
     }
+    prod_table_file = source_prod_table_path / "MSTx-FlashCam.json"
     prod_table_file.write_text(json.dumps(prod_table_data))
 
     # Mock changes to be applied
@@ -615,11 +597,13 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
     )
 
-    # Verify the production table file is updated
-    updated_data = json.loads(prod_table_file.read_text())
+    # Verify the production table file is updated in target
+    target_file = target_prod_table_path / "MSTx-FlashCam.json"
+    assert target_file.exists()
+    updated_data = json.loads(target_file.read_text())
     assert updated_data["model_version"] == "6.5.0"
     # Parameters should be created with the matching telescope parameters
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
@@ -627,16 +611,18 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 
 def test_apply_changes_to_production_tables_simple(tmp_path):
     """Test applying changes to production tables."""
+    # Create source directory with sample files
+    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path.mkdir(parents=True)
     target_prod_table_path = tmp_path / "productions" / "6.5.0"
-    target_prod_table_path.mkdir(parents=True)
 
-    # Create a sample production table file
-    prod_table_file = target_prod_table_path / "test_table.json"
+    # Create a sample production table file in source
     prod_table_data = {
         "model_version": "6.0.0",
         "production_table_name": "MSTx-FlashCam",
         "parameters": {"MSTx-FlashCam": {"dsum_threshold": "3.0.0"}},
     }
+    prod_table_file = source_prod_table_path / "MSTx-FlashCam.json"
     prod_table_file.write_text(json.dumps(prod_table_data))
 
     # Changes to be applied
@@ -644,23 +630,25 @@ def test_apply_changes_to_production_tables_simple(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
     )
 
-    # Verify the production table file is updated
-    updated_data = json.loads(prod_table_file.read_text())
+    # Verify the production table file is updated in target
+    target_file = target_prod_table_path / "MSTx-FlashCam.json"
+    assert target_file.exists()
+    updated_data = json.loads(target_file.read_text())
     assert updated_data["model_version"] == "6.5.0"
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
 def test_apply_changes_to_production_tables_multiple_files(tmp_path):
     """Test applying changes to multiple production table files."""
+    # Create source directory with sample files
+    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path.mkdir(parents=True)
     target_prod_table_path = tmp_path / "productions" / "6.5.0"
-    target_prod_table_path.mkdir(parents=True)
 
-    # Create multiple sample production table files
-    prod_table_file_1 = target_prod_table_path / "prod_table_1.json"
-    prod_table_file_2 = target_prod_table_path / "prod_table_2.json"
+    # Create multiple sample production table files in source
     prod_table_data_1 = {
         "model_version": "6.0.0",
         "production_table_name": "MSTx-FlashCam",
@@ -671,6 +659,8 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
         "production_table_name": "MSTx-NectarCam",
         "parameters": {"MSTx-NectarCam": {"discriminator_threshold": "3.0.0"}},
     }
+    prod_table_file_1 = source_prod_table_path / "MSTx-FlashCam.json"
+    prod_table_file_2 = source_prod_table_path / "MSTx-NectarCam.json"
     prod_table_file_1.write_text(json.dumps(prod_table_data_1))
     prod_table_file_2.write_text(json.dumps(prod_table_data_2))
 
@@ -682,24 +672,27 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
     )
 
-    # Verify the production table files are updated
-    updated_data_1 = json.loads(prod_table_file_1.read_text())
-    updated_data_2 = json.loads(prod_table_file_2.read_text())
+    # Verify the production table files are updated in target
+    target_file_1 = target_prod_table_path / "MSTx-FlashCam.json"
+    target_file_2 = target_prod_table_path / "MSTx-NectarCam.json"
+    assert target_file_1.exists()
+    assert target_file_2.exists()
+    updated_data_1 = json.loads(target_file_1.read_text())
+    updated_data_2 = json.loads(target_file_2.read_text())
     assert updated_data_1["model_version"] == "6.5.0"
     assert updated_data_1["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
     assert updated_data_2["model_version"] == "6.5.0"
     assert updated_data_2["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
 
 
-@patch("simtools.model.model_repository.shutil.copytree")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
-@patch("simtools.model.model_repository._create_new_parameter_entry")
+@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
 def test_generate_new_production_success(
-    mock_create_entry, mock_apply_changes, mock_collect_data, mock_copytree, tmp_path
+    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_path
 ):
     """Test successful execution of generate_new_production."""
     args_dict = {
@@ -714,16 +707,20 @@ def test_generate_new_production_success(
 
     model_repository.generate_new_production(args_dict)
 
-    mock_copytree.assert_called_once_with(
-        tmp_path / "productions" / "source", tmp_path / "productions" / "6.5.0"
+    # Verify the new functions were called correctly
+    mock_apply_table_changes.assert_called_once_with(
+        tmp_path / "productions" / "source",
+        tmp_path / "productions" / "6.5.0",
+        {"telescope": {"param": {"version": "1.0.0", "value": 42}}},
+        "6.5.0",
+        False,
+        "source",
     )
-    mock_apply_changes.assert_called_once()
-    mock_create_entry.assert_called_once()
+    mock_apply_model_changes.assert_called_once()
 
 
-@patch("simtools.model.model_repository.shutil.copytree")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-def test_generate_new_production_target_exists(mock_collect_data, mock_copytree, tmp_path):
+def test_generate_new_production_target_exists(mock_collect_data, tmp_path):
     """Test error when target directory already exists."""
     args_dict = {
         "simulation_models_path": str(tmp_path),
@@ -740,15 +737,14 @@ def test_generate_new_production_target_exists(mock_collect_data, mock_copytree,
     with pytest.raises(FileExistsError, match="already exists"):
         model_repository.generate_new_production(args_dict)
 
-    mock_copytree.assert_not_called()
+    # No need to assert mock calls since the exception is raised before any processing
 
 
-@patch("simtools.model.model_repository.shutil.copytree")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
-@patch("simtools.model.model_repository._create_new_parameter_entry")
+@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
 def test_generate_new_production_no_changes(
-    mock_create_entry, mock_apply_changes, mock_collect_data, mock_copytree, tmp_path
+    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_path
 ):
     """Test execution with no changes in modifications."""
     args_dict = {
@@ -760,9 +756,11 @@ def test_generate_new_production_no_changes(
 
     model_repository.generate_new_production(args_dict)
 
-    mock_copytree.assert_called_once()
-    mock_apply_changes.assert_called_once()
-    mock_create_entry.assert_not_called()
+    mock_apply_table_changes.assert_called_once()
+    # Since there are no changes, _apply_changes_to_model_parameters should still be called
+    mock_apply_model_changes.assert_called_once_with(
+        {}, Path(args_dict["simulation_models_path"]) / "model_parameters"
+    )
 
 
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
@@ -790,61 +788,41 @@ def test_create_new_parameter_entry_no_latest_file_error(mock_get_latest, tmp_pa
         )
 
 
-def test_copy_production_tables_simple(tmp_path):
-    """Test copying production tables from source to target directory."""
-    # Create source directory with sample files
-    source_path = tmp_path / "source" / "6.0.0"
-    source_path.mkdir(parents=True)
-
-    # Create sample production table files
-    (source_path / "MSTx-FlashCam.json").write_text('{"model_version": "6.0.0"}')
-    (source_path / "MSTx-NectarCam.json").write_text('{"model_version": "6.0.0"}')
-
-    target_path = tmp_path / "target" / "6.5.0"
-    changes = {"MSTx-FlashCam": {"param": "value"}}
-
-    # Test full copy (patch_update=False)
-    model_repository._copy_production_tables(source_path, target_path, changes, False)
-
-    # Verify all files were copied
-    assert (target_path / "MSTx-FlashCam.json").exists()
-    assert (target_path / "MSTx-NectarCam.json").exists()
-    assert (target_path / "MSTx-FlashCam.json").read_text() == '{"model_version": "6.0.0"}'
-
-    # Test patch copy (patch_update=True) - only copies files for changed elements
-    target_patch_path = tmp_path / "target_patch" / "6.5.0"
-    model_repository._copy_production_tables(source_path, target_patch_path, changes, True)
-
-    # Verify only the changed element file was copied
-    assert (target_patch_path / "MSTx-FlashCam.json").exists()
-    assert not (target_patch_path / "MSTx-NectarCam.json").exists()
-    assert (target_patch_path / "MSTx-FlashCam.json").read_text() == '{"model_version": "6.0.0"}'
-
-    # Test patch copy with missing source file (should skip gracefully)
-    changes_with_missing = {"MSTx-FlashCam": {"param": "value"}, "NonExistent": {"param": "value"}}
-    target_missing_path = tmp_path / "target_missing" / "6.5.0"
-
-    model_repository._copy_production_tables(
-        source_path, target_missing_path, changes_with_missing, True
-    )
-
-    # Verify existing file copied, non-existent file skipped
-    assert (target_missing_path / "MSTx-FlashCam.json").exists()
-    assert not (target_missing_path / "NonExistent.json").exists()
+# test_copy_production_tables_simple removed as _copy_production_tables function no longer exists
+# This functionality has been integrated into _apply_changes_to_production_tables
 
 
 def test_apply_changes_to_production_table_patch_update():
-    """Test patch update sets base_model_version."""
-    data = {"model_version": "6.0.0", "production_table_name": "test_table"}
-    changes = {}
+    """Test patch update behavior with matching changes."""
+    data = {
+        "model_version": "6.0.0",
+        "production_table_name": "test_table",
+        "parameters": {"test_table": {"param1": "1.0.0"}},
+    }
+    changes = {"test_table": {"param1": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
     base_model_version = "5.0.0"
 
-    model_repository._apply_changes_to_production_table(
+    result = model_repository._apply_changes_to_production_table(
         data, changes, model_version, True, base_model_version
     )
 
+    assert result is True  # Should return True when changes match
     assert data["base_model_version"] == "5.0.0"
+    assert data["model_version"] == "6.5.0"
+
+    # Test case where patch_update is True but no changes apply to this table
+    data_no_changes = {
+        "model_version": "6.0.0",
+        "production_table_name": "other_table",
+        "parameters": {"other_table": {"param1": "1.0.0"}},
+    }
+
+    result_no_changes = model_repository._apply_changes_to_production_table(
+        data_no_changes, changes, model_version, True, base_model_version
+    )
+
+    assert result_no_changes is False  # Should return False when no changes apply
 
 
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
@@ -881,3 +859,30 @@ def test_create_new_parameter_entry_list_value_edge_case(
         assert data["parameter_version"] == "2.0.0"
         # Single value replicated to match original list length
         assert data["value"] == [0.5, 0.5, 0.5]
+
+
+@patch("simtools.model.model_repository._create_new_parameter_entry")
+def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
+    """Test applying changes to model parameters."""
+    model_parameters_dir = tmp_path / "model_parameters"
+    changes = {
+        "MSTx-FlashCam": {
+            "dsum_threshold": {"version": "4.0.0", "value": 62.5},
+            "param_without_value": {"version": "1.0.0"},  # Should be skipped
+        },
+        "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
+    }
+
+    model_repository._apply_changes_to_model_parameters(changes, model_parameters_dir)
+
+    # Should only call _create_new_parameter_entry for parameters with values
+    assert mock_create_entry.call_count == 2
+    mock_create_entry.assert_any_call(
+        "MSTx-FlashCam", "dsum_threshold", {"version": "4.0.0", "value": 62.5}, model_parameters_dir
+    )
+    mock_create_entry.assert_any_call(
+        "MSTx-NectarCam",
+        "discriminator_threshold",
+        {"version": "4.0.0", "value": 31.9},
+        model_parameters_dir,
+    )
