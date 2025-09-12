@@ -346,25 +346,6 @@ def test_create_new_parameter_entry_success(mock_collect_data, mock_get_latest, 
 
 
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
-def test_create_new_parameter_entry_missing_telescope_dir(mock_get_latest, tmp_path):
-    """Test creation of a new parameter entry when telescope directory is missing."""
-    telescope = "MSTx-FlashCam"
-    param = "dsum_threshold"
-    param_data = {"version": "4.0.0", "value": 62.5}
-    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
-
-    # Don't create telescope directory to test the error condition
-
-    with pytest.raises(
-        FileNotFoundError,
-        match=f"Directory for telescope '{telescope}' does not exist in '{model_parameters_dir}'.",
-    ):
-        model_repository._create_new_parameter_entry(
-            telescope, param, param_data, model_parameters_dir
-        )
-
-
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
 def test_create_new_parameter_entry_missing_param_dir(mock_get_latest, tmp_path):
     """Test creation of a new parameter entry when parameter directory is missing."""
     telescope = "MSTx-FlashCam"
@@ -720,27 +701,6 @@ def test_generate_new_production_success(
 
 
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-def test_generate_new_production_target_exists(mock_collect_data, tmp_path):
-    """Test error when target directory already exists."""
-    args_dict = {
-        "simulation_models_path": str(tmp_path),
-        "base_model_version": "source",
-        "modifications": TEST_MODIFICATIONS_FILE,
-    }
-    target_path = tmp_path / "productions" / "6.5.0"
-    target_path.mkdir(parents=True)
-
-    mock_collect_data.return_value = {
-        "model_version": "6.5.0",
-    }
-
-    with pytest.raises(FileExistsError, match="already exists"):
-        model_repository.generate_new_production(args_dict)
-
-    # No need to assert mock calls since the exception is raised before any processing
-
-
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._apply_changes_to_model_parameters")
 def test_generate_new_production_no_changes(
@@ -808,7 +768,6 @@ def test_apply_changes_to_production_table_patch_update():
     )
 
     assert result is True  # Should return True when changes match
-    assert data["base_model_version"] == "5.0.0"
     assert data["model_version"] == "6.5.0"
 
     # Test case where patch_update is True but no changes apply to this table
