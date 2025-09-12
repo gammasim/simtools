@@ -1033,12 +1033,12 @@ def test_set_histograms_raises_when_no_photon_bunches(corsika_histograms_instanc
             self.n_photons = np.array([0])
 
     class _IACTCtx:
-        def __enter__(self_inner):  # noqa: N805
+        def __enter__(self):
             return [
                 _Evt(),  # a single event without 'photon_bunches'
             ]
 
-        def __exit__(self_inner, exc_type, exc, tb):  # noqa: N805
+        def __exit__(self, exc_type, exc, tb):
             return False
 
     with mock.patch("simtools.corsika.corsika_histograms.IACTFile", return_value=_IACTCtx()):
