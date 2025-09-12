@@ -974,3 +974,21 @@ def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):  # pyli
     _source, event, tel = res
     assert event is e1
     assert tel == 7
+
+
+def test__collect_figures_for_file_logs_when_plot_returns_none(tmp_path, monkeypatch, caplog):  # pylint:disable=protected-access
+    # plot_simtel_event_image returns None -> should log warning and produce no figs
+    monkeypatch.setattr(sep, "plot_simtel_event_image", lambda *a, **k: None)
+    caplog.clear()
+    with caplog.at_level("WARNING", logger=sep._logger.name):
+        figs = sep._collect_figures_for_file(
+            filename=Path("in.simtel"),
+            plots=["event_image"],
+            args={},
+            out_dir=tmp_path,
+            base_stem="s",
+            save_pngs=False,
+            dpi=72,
+        )
+    assert figs == []
+    assert any("returned no figure" in r.message for r in caplog.records)
