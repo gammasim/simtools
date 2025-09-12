@@ -172,8 +172,8 @@ class Simulator:
 
         seed = semver_to_int(model_version) * 10000000
         seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
-        seed = seed + (int)(self.args_dict["zenith_angle"].value) * 1000
-        return seed + (int)(self.args_dict["azimuth_angle"].value)
+        seed = seed + (int)(self.args_dict.get("zenith_angle", 0) * 1000)
+        return seed + (int)(self.args_dict.get("azimuth_angle", 0) * 1000)
 
     def _initialize_run_list(self):
         """
