@@ -162,11 +162,6 @@ def generate_new_production(args_dict):
 
     _logger.info(f"Copying production tables from {source_path} to {target_path}")
 
-    if Path(target_path).exists():
-        raise FileExistsError(
-            f"The target production table directory '{target_path}' already exists."
-        )
-
     _apply_changes_to_production_tables(
         source_path,
         target_path,
