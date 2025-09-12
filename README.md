@@ -37,8 +37,6 @@ Please cite this software if it is used for a publication, see the [Zenodo recor
 [![CI-integrationtest](https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml)
 [![CI-docs](https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml)
 
--[![Quality](https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7)](https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Coverage](https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH)](https://codecov.io/gh/gammasim/simtools)
 [![Coverage](https://sonar-ctao.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14&metric=coverage&token=sqb_5d1fde56fa060247eee7d5e53fa5ac0a4aabe483)](https://sonar-ctao.zeuthen.desy.de/dashboard?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14)
 [![Quality Gate Status](https://sonar-ctao.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14&metric=alert_status&token=sqb_5d1fde56fa060247eee7d5e53fa5ac0a4aabe483)](https://sonar-ctao.zeuthen.desy.de/dashboard?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14)
 
