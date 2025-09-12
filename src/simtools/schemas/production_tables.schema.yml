@@ -12,7 +12,11 @@ additionalProperties: false
 
 definitions:
   ProductionModelTable:
+    additionalProperties: false
     properties:
+      production_table_name:
+        type: string
+        description: Name of the production table.
       model_version:
         type: string
         description: Model version.
@@ -37,5 +41,6 @@ definitions:
           type: string
           description: Design model of a telescope
     required:
+      - production_table_name
       - model_version
       - parameters
