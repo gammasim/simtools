@@ -216,8 +216,6 @@ def _apply_changes_to_production_table(
     """
     Recursively apply changes to the new production tables.
 
-    Add base model version to production tables for patch updates.
-
     Parameters
     ----------
     data: dict or list
@@ -246,9 +244,6 @@ def _apply_changes_to_production_table(
             )
         elif patch_update:
             return False
-
-        if patch_update:
-            data["base_model_version"] = base_model_version
 
     elif isinstance(data, list):
         for item in data:
