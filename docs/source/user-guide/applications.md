@@ -49,6 +49,7 @@ Parameters with the same functionality are named consistently the same among all
 :glob: true
 :maxdepth: 1
 
+simtools-calculate-incident-angles <applications/simtools-calculate-incident-angles>
 simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
@@ -88,9 +89,9 @@ simtools-production-derive-statistics <applications/simtools-production-derive-s
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
-simtools-simulate-calibration-events <applications/simtools-simulate-calibration-events>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
+simtools-simulate-pedestals <applications/simtools-simulate-pedestals>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>

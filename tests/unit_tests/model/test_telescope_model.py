@@ -320,3 +320,36 @@ def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
     with patch("astropy.io.ascii.read", return_value=fake_table):
         with pytest.raises(ValueError, match="^No value for the on-axis"):
             telescope_model_lst.get_on_axis_eff_optical_area()
+
+
+def test_get_calibration_device_name():
+    """Test get_calibration_device_name method with mocked get_parameter_value."""
+    from simtools.model.telescope_model import TelescopeModel
+
+    # Create a mock telescope model instance
+    telescope_model = Mock(spec=TelescopeModel)
+    telescope_model.get_calibration_device_name = TelescopeModel.get_calibration_device_name
+
+    # Test case 1: Parameter exists and device type found
+    mock_devices = {"flasher": "my_flasher_device", "illuminator": "my_illuminator_device"}
+    telescope_model.get_parameter_value = Mock(return_value=mock_devices)
+
+    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
+    assert result == "my_flasher_device"
+    telescope_model.get_parameter_value.assert_called_with("calibration_devices")
+
+    # Test case 2: Parameter exists but device type not found
+    result = telescope_model.get_calibration_device_name(telescope_model, "nonexistent_device")
+    assert result is None
+
+    # Test case 3: Parameter exists but is None
+    telescope_model.get_parameter_value = Mock(return_value=None)
+    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
+    assert result is None
+
+    # Test case 4: Parameter does not exist (InvalidModelParameterError raised)
+    telescope_model.get_parameter_value = Mock(
+        side_effect=InvalidModelParameterError("Parameter not found")
+    )
+    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
+    assert result is None

@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: flasher_pulse_width
 description: |-
   Flasher pulse shape characteristic width.
-  For 'TopHat', this is the pulse width, for 'Gauss' the rms.
+  For 'TopHat', this is the pulse width, for 'Gauss' the rms, for 'Exponential' the decay time.
 short_description: |-
   Flasher pulse shape width.
 data:
@@ -31,3 +31,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_pulse_twidth

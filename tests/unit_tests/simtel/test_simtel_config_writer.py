@@ -377,3 +377,63 @@ def test_write_single_mirror_list_file(simtel_config_writer, tmp_path, file_has_
     )
 
     assert file_has_text(single_mirror_list_file, "0. 0. 120.0 0 0 0.")
+
+
+@pytest.mark.parametrize(
+    ("shape", "width", "expected_sigtime", "expected_twidth", "expected_exptime"),
+    [
+        ("gauss", 2.5, 2.5, 0.0, 0.0),
+        ("tophat", 5.0, 0.0, 5.0, 0.0),
+        ("exponential", 3.2, 0.0, 0.0, 3.2),
+        ("GAUSS", 1.5, 1.5, 0.0, 0.0),  # case insensitive
+    ],
+)
+def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
+    simtel_config_writer, shape, width, expected_sigtime, expected_twidth, expected_exptime
+):
+    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes."""
+    parameters = {
+        "flasher_pulse_shape": {"value": shape},
+        "flasher_pulse_width": {"value": width},
+    }
+    result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
+
+    assert result["laser_pulse_sigtime"] == pytest.approx(expected_sigtime)
+    assert result["laser_pulse_twidth"] == pytest.approx(expected_twidth)
+    assert result["laser_pulse_exptime"] == pytest.approx(expected_exptime)
+
+
+@pytest.mark.parametrize("shape", ["unknown_shape", ""])
+def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
+    simtel_config_writer, caplog, shape
+):
+    """Test _get_flasher_parameters_for_sim_telarray with invalid shapes - covers warning case."""
+    parameters = {
+        "flasher_pulse_shape": {"value": shape},
+        "flasher_pulse_width": {"value": 1.0},
+    }
+
+    with caplog.at_level(logging.WARNING):
+        result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
+
+    assert all(
+        result[key] == pytest.approx(0.0)
+        for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
+    )
+    assert f"Flasher pulse shape '{shape}' without width definition" in caplog.text
+
+
+def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_writer, caplog):
+    """Test _get_flasher_parameters_for_sim_telarray with missing parameters and existing ones."""
+    simtel_par = {"existing_param": "existing_value"}
+
+    with caplog.at_level(logging.WARNING):
+        result = simtel_config_writer._get_flasher_parameters_for_sim_telarray({}, simtel_par)
+
+    # All flasher parameters should be 0.0, existing parameter preserved
+    assert all(
+        result[key] == pytest.approx(0.0)
+        for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
+    )
+    assert result["existing_param"] == "existing_value"
+    assert "Flasher pulse shape '' without width definition" in caplog.text
