@@ -602,28 +602,13 @@ class DatabaseHandler:
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
 
-        # recursively fetch base model (if any)
-        base_data = {}
-        base_version = post.get("base_model_version")
-        if base_version:
-            print("AAAAA BASE VERSION", base_version)
-            base_data = self.read_production_table_from_mongo_db(collection_name, base_version)
-        else:
-            print("BBBB no base VERSION", model_version, collection_name)
-        merged_params = {**base_data.get("parameters", {}), **post["parameters"]}
-
-        result = {
+        return {
             "collection": post["collection"],
             "model_version": post["model_version"],
-            "parameters": merged_params,
+            "parameters": post["parameters"],
             "design_model": post.get("design_model", {}),
             "entry_date": ObjectId(post["_id"]).generation_time,
         }
-
-        if base_data:
-            result["base_model"] = base_data
-
-        return result
 
     def get_model_versions(self, collection_name="telescopes"):
         """
