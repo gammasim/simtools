@@ -81,11 +81,11 @@ class IncidentAnglesCalculator:
             config_data["telescope"],
         )
         self.telescope_model, self.site_model, _ = initialize_simulation_models(
-            self.label,
-            db_config,
-            config_data["site"],
-            config_data["telescope"],
-            config_data["model_version"],
+            label=self.label,
+            db_config=db_config,
+            site=config_data["site"],
+            telescope_name=config_data["telescope"],
+            model_version=config_data["model_version"],
         )
 
     def _label_suffix(self):
