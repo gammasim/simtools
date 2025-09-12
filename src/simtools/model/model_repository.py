@@ -6,7 +6,6 @@ functions to interact with and verify the repository.
 """
 
 import logging
-import shutil
 from pathlib import Path
 
 from simtools.io import ascii_handler
@@ -156,24 +155,21 @@ def generate_new_production(args_dict):
     model_version = modifications["model_version"]
 
     simulation_models_path = Path(args_dict["simulation_models_path"])
-    source_prod_table_path = simulation_models_path / "productions" / base_model_version
-    target_prod_table_path = simulation_models_path / "productions" / model_version
+    source_path = simulation_models_path / "productions" / base_model_version
+    target_path = simulation_models_path / "productions" / model_version
     model_parameters_dir = simulation_models_path / "model_parameters"
     patch_update = args_dict.get("patch_update", False)
 
-    _logger.info(
-        f"Copying production tables from {source_prod_table_path} to {target_prod_table_path}"
-    )
+    _logger.info(f"Copying production tables from {source_path} to {target_path}")
 
-    if Path(target_prod_table_path).exists():
+    if Path(target_path).exists():
         raise FileExistsError(
-            f"The target production table directory '{target_prod_table_path}' already exists."
+            f"The target production table directory '{target_path}' already exists."
         )
 
-    _copy_production_tables(source_prod_table_path, target_prod_table_path, changes, patch_update)
-
     _apply_changes_to_production_tables(
-        target_prod_table_path,
+        source_path,
+        target_path,
         changes,
         model_version,
         patch_update,
@@ -183,47 +179,17 @@ def generate_new_production(args_dict):
     _apply_changes_to_model_parameters(changes, model_parameters_dir)
 
 
-def _copy_production_tables(source_prod_table_path, target_prod_table_path, changes, patch_update):
-    """
-    Copy production tables from source to target directory.
-
-    Allows to copy all production tables or only those for array elements with changes.
-
-    Parameters
-    ----------
-    source_prod_table_path: str
-        Path to the source production tables.
-    target_prod_table_path: str
-        Path to the target production tables.
-    changes: dict
-        Dictionary containing the changes to be applied.
-    patch_update: bool
-        Patch update, copy only tables for changed elements.
-    """
-    if patch_update:
-        target_prod_table_path.mkdir(parents=True, exist_ok=True)
-        for array_element in changes.keys():
-            source_file = source_prod_table_path / f"{array_element}.json"
-            target_file = target_prod_table_path / f"{array_element}.json"
-            if source_file.exists():
-                shutil.copy2(source_file, target_file)
-            else:
-                _logger.warning(f"Source file for '{array_element}' does not exist. Skipping.")
-    else:
-        shutil.copytree(source_prod_table_path, target_prod_table_path)
-
-
 def _apply_changes_to_production_tables(
-    target_prod_table_path, changes, model_version, patch_update, base_model_version
+    source_path, target_path, changes, model_version, patch_update, base_model_version
 ):
     """
-    Apply changes to the production tables in the target directory.
-
-    Changes are applied in place (files are copied already in a previous step).
+    Apply changes to production tables and write them to target directory.
 
     Parameters
     ----------
-    target_prod_table_path: str
+    source_path: Path
+        Path to the source production tables.
+    target_path: Path
         Path to the target production tables.
     changes: dict
         The changes to be applied.
@@ -234,12 +200,14 @@ def _apply_changes_to_production_tables(
     base_model_version: str
         The base model version from which the production tables were copied.
     """
-    for file_path in Path(target_prod_table_path).rglob("*.json"):
+    target_path.mkdir(parents=True, exist_ok=True)
+    for file_path in Path(source_path).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
-        _apply_changes_to_production_table(
+        write_to_disk = _apply_changes_to_production_table(
             data, changes, model_version, patch_update, base_model_version
         )
-        ascii_handler.write_data_to_file(data, file_path, sort_keys=True)
+        if write_to_disk:
+            ascii_handler.write_data_to_file(data, target_path / file_path.name, sort_keys=True)
 
 
 def _apply_changes_to_production_table(
@@ -262,22 +230,36 @@ def _apply_changes_to_production_table(
         Patch update, copy only tables for changed elements.
     base_model_version: str
         The base model version from which the production tables were copied.
+
+    Returns
+    -------
+    bool
+        True if data was modified and should be written to disk (patch updates) and always
+        for full updates.
     """
     if isinstance(data, dict):
-        if "model_version" in data:
-            data["model_version"] = model_version
-        if data["production_table_name"] in changes.keys():
-            data["parameters"] = _get_new_parameters_only(changes, data["production_table_name"])
+        table_name = data["production_table_name"]
+        data["model_version"] = model_version
+        if table_name in changes:
+            data["parameters"] = _update_parameters(
+                {} if patch_update else data["parameters"].get(table_name, {}), changes, table_name
+            )
+        elif patch_update:
+            return False
+
         if patch_update:
             data["base_model_version"] = base_model_version
+
     elif isinstance(data, list):
         for item in data:
             _apply_changes_to_production_table(
                 item, changes, model_version, patch_update, base_model_version
             )
 
+    return True
 
-def _get_new_parameters_only(changes, production_table_name):
+
+def _update_parameters(parameters, changes, table_name):
     """
     Create a new parameters dictionary containing only the parameters for the specific telescope.
 
@@ -285,7 +267,7 @@ def _get_new_parameters_only(changes, production_table_name):
     ----------
     changes: dict
         The changes to be applied, containing telescope and parameter information.
-    production_table_name: str
+    table_name: str
         The name of the production table (telescope) to filter parameters for.
 
     Returns
@@ -293,14 +275,11 @@ def _get_new_parameters_only(changes, production_table_name):
     dict
         Dictionary containing only the new/changed parameters for the specified telescope.
     """
-    new_params = {}
-    if production_table_name in changes:
-        new_params[production_table_name] = {}
-        updates = changes[production_table_name]
-        for param, param_data in updates.items():
-            version = param_data["version"]
-            _logger.info(f"Setting '{production_table_name} - {param}' to version {version}")
-            new_params[production_table_name][param] = version
+    new_params = {table_name: parameters}
+    for param, data in changes[table_name].items():
+        version = data["version"]
+        _logger.info(f"Setting '{table_name} - {param}' to version {version}")
+        new_params[table_name][param] = version
     return new_params
 
 
