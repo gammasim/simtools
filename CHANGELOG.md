@@ -7,6 +7,34 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.20.0](https://github.com/gammasim/simtools/releases/tag/v0.20.0) - 2025-09-12
+
+### Bugfixes
+
+- Fix warning messages in simtel metadata reader to avoid the log-file testing routines to fail. ([#1712](https://github.com/gammasim/simtools/pull/1712))
+- Developer image is using an old base image with CORSIKA and sim_telarray. Fix naming of containers used in developer image to ensure the most recent are used. ([#1716](https://github.com/gammasim/simtools/pull/1716))
+- Introduce `DB_SIMULATION_MODEL_VERSION` to fix instability of environment when introducing new model parameters. ([#1729](https://github.com/gammasim/simtools/pull/1729))
+- Fix reduce complexity issue raised in sonar in plot simtel events. ([#1735](https://github.com/gammasim/simtools/pull/1735))
+- Fix bug in schema file for model parameters regarding schema version. Improved printing on error. ([#1742](https://github.com/gammasim/simtools/pull/1742))
+
+### New Features
+
+- Add new application to calculate telescope and array trigger rates from reduced event lists. ([#1685](https://github.com/gammasim/simtools/pull/1685))
+- Add application to calculate photon incident angles at the camera plane. ([#1687](https://github.com/gammasim/simtools/pull/1687))
+- Add sim_telarry executable compiled with debug options to containers. Allows to generate additional output columns for e.g. sim_telarray ray tracing. ([#1715](https://github.com/gammasim/simtools/pull/1715))
+- Add / update `nsb_spectrum` model parameter and calculate integrated NSB rate. ([#1718](https://github.com/gammasim/simtools/pull/1718))
+- Add avx512f and sse4 vector optimization images for production images. ([#1741](https://github.com/gammasim/simtools/pull/1741))
+
+### Maintenance
+
+- Remove calculate trigger rate application and associated code. Replaced by simtools-derive-trigger-rate (see PR #1685). ([#1693](https://github.com/gammasim/simtools/pull/1693))
+- Improve robustness of image building and downloading autoconf. ([#1722](https://github.com/gammasim/simtools/pull/1722))
+- Improvement of CI-workflow efficiency and documentation. ([#1723](https://github.com/gammasim/simtools/pull/1723))
+- Improve handling of secrets in CI workflows. ([#1728](https://github.com/gammasim/simtools/pull/1728))
+- Add new field `production_table_name` to production table schema. ([#1756](https://github.com/gammasim/simtools/pull/1756))
+- Remove Codecov from CI (covered by SonarQube). ([#1759](https://github.com/gammasim/simtools/pull/1759))
+
+
 ## [v0.19.0](https://github.com/gammasim/simtools/releases/tag/v0.19.0) - 2025-08-27
 
 ### Bugfixes
