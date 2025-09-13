@@ -7,14 +7,15 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: flasher_external_trigger
 description: |-
-  A flasher device typically operates at a sufficient illumination level for the camera to trigger on its own.
-  If operated at low illumination (e.g., using a single photoelectron calibration unit outside the camera), then an external trigger can be defined.
+  External trigger for flasher calibration.
+  A flasher device typically operates at a sufficient illumination \
+  that the camera can trigger by itself. If operated at low illumination \
+  (e.g. a single-p.e. calibration unit outside of the camera), then an external trigger can be defined.
 short_description: |-
-  Use external trigger for calibration.
+  External trigger for flasher calibration.
 data:
   - type: boolean
     default: false
-
 instrument:
   class: Calibration
   type:
@@ -29,3 +30,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_external_trigger
