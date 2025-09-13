@@ -1,23 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for flasher_angular_distribution_width model parameter
+title: Schema for laser_photons model parameter
+deprecated: true
+deprecation_note: "Replaced by flasher_photons"
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_angular_distribution_width
+name: laser_photons
 description: |-
-  Characteristic width of the flasher angular emission distribution.
-  This is the RMS for Gaussian distributions or the maximum half
-  opening angle for conical shapes.
+  Number of laser photons at each photo detector.
 short_description: |-
-  Characteristic width of the flasher angular emission distribution.
+  Number of laser photons at each photo detector.
 data:
   - type: float64
-    unit: "deg"
-    default: 0
+    unit: dimensionless
+    default: 500
     allowed_range:
-      min: 0
+      min: 1
 instrument:
   class: Calibration
   type:
@@ -31,5 +31,6 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
+  - name: sim_telarray
   - name: simtools
-    version: ">=0.21.0"
+    version: "<0.21.0"
