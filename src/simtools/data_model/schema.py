@@ -4,9 +4,12 @@ import logging
 from pathlib import Path
 
 import jsonschema
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 from referencing import Registry, Resource
 
 import simtools.utils.general as gen
+from simtools import version
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -114,6 +117,8 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         return None
     if json_schema is None:
         json_schema = load_schema(schema_file, get_schema_version_from_data(data))
+
+    _validate_deprecation_and_version(data)
 
     validator = jsonschema.Draft6Validator(
         schema=json_schema,
@@ -294,3 +299,43 @@ def _add_array_elements(key, schema):
 
     recursive_search(schema, key)
     return schema
+
+
+def _validate_deprecation_and_version(data, software_name="simtools"):
+    """
+    Check if data contains deprecated parameters or version mismatches.
+
+    Parameters
+    ----------
+    data: dict
+        Data dictionary to validate.
+
+    Raises
+    ------
+    ValueError
+        If version mismatches.
+    """
+    if not isinstance(data, dict):
+        return
+
+    if data.get("deprecated", False):
+        note = data.get("deprecation_note", "(no deprecation note provided)")
+        _logger.warning(f"Data is deprecated. Note: {note}")
+
+    for sw in data.get("simulation_software", []):
+        if sw.get("name") == software_name:
+            constraint = sw.get("version")
+            if constraint is None:
+                return
+            constraint = constraint.strip()
+            spec = SpecifierSet(constraint, prereleases=True)
+            if Version(version.__version__) in spec:
+                _logger.debug(
+                    f"Version {version.__version__} of "
+                    f"{software_name} matches constraint {constraint}."
+                )
+            else:
+                raise ValueError(
+                    f"Version {version.__version__} of "
+                    f"{software_name} does not match constraint {constraint}."
+                )
