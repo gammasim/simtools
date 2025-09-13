@@ -32,3 +32,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_photons
