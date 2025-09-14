@@ -1,23 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for laser_pulse_offset model parameter
+title: Schema for flasher_photons model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_pulse_offset
+name: flasher_photons
 description: |-
-  The flat-fielding and single-p.e. calibration units are assumed to operate with an external trigger.\
-  Thus the position of the signal in the read-out window can be shifted \
-  (negative number: earlier, positive numbers: later).
+  Number of flasher photons simulated. Depending on the device and simulation type,
+  this might be the number of emitted photons or the number of photons at each
+  detector.
 short_description: |-
-  Shift position of the signal in the read-out window.
+  Number of flasher photons simulated.
 data:
-  - type: float64
-    unit: "ns"
-    default: 0.0
+  - type: int64
+    unit: dimensionless
+    default: 500
     allowed_range:
-      min: 0.0
+      min: 1
 instrument:
   class: Calibration
   type:
@@ -32,3 +32,6 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_photons
+  - name: simtools
+    version: ">=0.21.0"

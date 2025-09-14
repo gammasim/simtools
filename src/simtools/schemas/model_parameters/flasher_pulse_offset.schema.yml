@@ -1,21 +1,24 @@
 %YAML 1.2
 ---
-title: Schema for led_pulse_offset model parameter
+title: Schema for flasher_pulse_offset model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: led_pulse_offset
+name: flasher_pulse_offset
 description: |-
+  Shift position of the flasher pulse in the read-out window.\
   The flat-fielding and single-p.e. calibration units are assumed to operate with an external trigger.\
   Thus the position of the signal in the read-out window can be shifted \
   (negative number: earlier, positive numbers: later).
 short_description: |-
-  Shift position of the signal in the read-out window.
+  Shift position of the flasher pulse in the read-out window.
 data:
   - type: float64
     unit: "ns"
     default: 0.0
+    allowed_range:
+      min: 0.0
 instrument:
   class: Calibration
   type:
@@ -30,3 +33,6 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_pulse_offset
+  - name: simtools
+    version: ">=0.21.0"

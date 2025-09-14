@@ -1,23 +1,24 @@
-%YAML 1.2
 ---
-title: Schema for pedestal_events model parameter
-deprecated: true
-deprecation_note: "Replaced by configuration parameter in corresponding application"
+title: Schema for calibration_devices model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: pedestal_events
+name: calibration_devices
 description: |-
-  Number of pedestal events at start of run with camera lid open (same NSB as for normal events).
-short_description: |-
-  Number of pedestal events at start of run with camera lid open (same NSB as for normal events).
+  List of calibration device types and names associated with a telescopes.
+  Allows to assign to a given telescope e.g., a set of devices used for flatfielding
+  or photo-electron calibration.
 data:
-  - type: int64
-    unit: dimensionless
-    default: 0
-    allowed_range:
-      min: 0
+  - type: dict
+    json_schema:
+      type: array
+      items:
+        type: object
+        additionalProperties:
+          type: string
+          default: null
+          description: "Calibration device name"
 instrument:
   class: Camera
   type:
@@ -35,6 +36,4 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
   - name: simtools
-    version: "<0.21.0"
