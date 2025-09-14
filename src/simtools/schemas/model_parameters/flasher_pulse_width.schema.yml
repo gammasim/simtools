@@ -1,20 +1,19 @@
 %YAML 1.2
 ---
-title: Schema for laser_pulse_exptime model parameter
+title: Schema for flasher_pulse_width model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_pulse_exptime
+name: flasher_pulse_width
 description: |-
-  To be used (non-zero) if the pulse shape of the light emitted from the flat-fielding \
-  or single-p.e. calibration unit follows an exponential, e.g. as used in early HESS calibration \
-  units with a UV laser illuminating a scintillator and exciting it to emit light with a decay time of 2.5 ns.
+  Flasher pulse shape characteristic width.
+  For 'TopHat', this is the pulse width, for 'Gauss' the rms, for 'Exponential' the decay time.
 short_description: |-
-  Exponentially decaying pulse shape time.
+  Flasher pulse shape width.
 data:
   - type: float64
-    unit: "ns"
+    unit: ns
     default: 0
     allowed_range:
       min: 0
@@ -32,3 +31,6 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_pulse_twidth
+  - name: simtools
+    version: ">=0.21.0"

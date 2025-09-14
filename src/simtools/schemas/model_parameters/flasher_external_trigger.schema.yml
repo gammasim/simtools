@@ -1,24 +1,21 @@
 %YAML 1.2
 ---
-title: Schema for laser_external_trigger model parameter
+title: Schema for flasher_external_trigger model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_external_trigger
+name: flasher_external_trigger
 description: |-
-  A laser/LED flatfielding unit would typically operate at a sufficient illumination \
+  External trigger for flasher calibration.
+  A flasher device typically operates at a sufficient illumination \
   that the camera can trigger by itself. If operated at low illumination \
-  (e.g. a single-p.e. calibration unit outside of the camera), then an external trigger is needed.
+  (e.g. a single-p.e. calibration unit outside of the camera), then an external trigger can be defined.
 short_description: |-
-  Use external trigger for calibration.
+  External trigger for flasher calibration.
 data:
-  - type: int64
-    default: 0
-    allowed_range:
-      min: 0
-      max: 1
-
+  - type: boolean
+    default: false
 instrument:
   class: Calibration
   type:
@@ -33,3 +30,6 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: laser_external_trigger
+  - name: simtools
+    version: ">=0.21.0"

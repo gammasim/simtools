@@ -1,22 +1,19 @@
 %YAML 1.2
 ---
-title: Schema for laser_var_photons model parameter
+title: Schema for flasher_bunch_size model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_var_photons
+name: flasher_bunch_size
 description: |-
-  Relative variation of laser shots from shot to shot, independent for each telescope.
-short_description: |-
-  Relative variation of laser shots from shot to shot.
+  Photons per bunch for flasher.
 data:
   - type: float64
     unit: dimensionless
-    default: 0.05
+    default: 1.
     allowed_range:
-      min: 0
-      max: 1
+      min: 1.
 instrument:
   class: Calibration
   type:
@@ -30,4 +27,5 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
+  - name: simtools
+    version: ">=0.21.0"

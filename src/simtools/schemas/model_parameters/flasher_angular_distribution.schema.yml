@@ -1,22 +1,23 @@
 %YAML 1.2
 ---
-title: Schema for laser_pulse_sigtime model parameter
+title: Schema for flasher_angular_distribution model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: laser_pulse_sigtime
+name: flasher_angular_distribution
 description: |-
-  To be used (non-zero) if the pulse shape of the light emitted from the flat-fielding \
-  or single-p.e. calibration unit follows a Gaussian, with the given number standing for the sigma of the Gaussian.
-short_description: |-
-  Gaussian pulse time width.
+  Flasher photon emission angular distribution.
 data:
-  - type: float64
-    unit: "ns"
-    default: 0
-    allowed_range:
-      min: 0
+  - type: string
+    default: Isotropic
+    allowed_values:
+      - Isotropic
+      - Gauss
+      - Rayleigh
+      - Cone
+      - FilledCone
+      - Parallel
 instrument:
   class: Calibration
   type:
@@ -30,4 +31,5 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
+  - name: simtools
+    version: ">=0.21.0"
