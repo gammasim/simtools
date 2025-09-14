@@ -8,6 +8,7 @@ functions to interact with and verify the repository.
 import logging
 from pathlib import Path
 
+import simtools.data_model.model_data_writer as writer
 from simtools.io import ascii_handler
 from simtools.utils import names
 
@@ -251,7 +252,10 @@ def _apply_changes_to_production_table(
 
 def _update_parameters(parameters, changes, table_name):
     """
-    Create a new parameters dictionary containing only the parameters for the specific telescope.
+    Create a new parameters dictionary for the production tables.
+
+    Include only changes relevant to the specific telescope.
+    Do not include parameters if 'remove' flag is set to True.
 
     Parameters
     ----------
@@ -266,10 +270,15 @@ def _update_parameters(parameters, changes, table_name):
         Dictionary containing only the new/changed parameters for the specified telescope.
     """
     new_params = {table_name: parameters}
+
     for param, data in changes[table_name].items():
-        version = data["version"]
-        _logger.info(f"Setting '{table_name} - {param}' to version {version}")
-        new_params[table_name][param] = version
+        if data.get("remove", False):
+            _logger.info(f"Removing model parameter '{table_name} - {param}'")
+        else:
+            version = data["version"]
+            _logger.info(f"Setting '{table_name} - {param}' to version {version}")
+            new_params[table_name][param] = version
+
     return new_params
 
 
@@ -286,13 +295,16 @@ def _apply_changes_to_model_parameters(changes, model_parameters_dir):
     """
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
-            if param_data.get("value"):
+            if param_data.get("value") is not None:
                 _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
 
 
 def _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir):
     """
-    Create new model parameter JSON file by copying the latest version and updating fields.
+    Create new model parameter JSON file.
+
+    If a model parameter files exists, copy latest version and update the fields.
+    Others generate new file using the model parameter schema.
 
     Parameters
     ----------
@@ -312,16 +324,20 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
         )
 
     param_dir = telescope_dir / param
-    if not param_dir.exists():
-        raise FileNotFoundError(
-            f"Directory for parameter '{param}' does not exist in '{telescope}'."
+    try:
+        latest_file = _get_latest_model_parameter_file(param_dir, param)
+    except FileNotFoundError:
+        writer.ModelDataWriter.dump_model_parameter(
+            parameter_name=param,
+            value=param_data["value"],
+            instrument=telescope,
+            parameter_version=param_data["version"],
+            output_file=f"{param}-{param_data['version']}.json",
+            output_path=param_dir,
+            use_plain_output_path=True,
+            unit=param_data.get("unit"),
         )
-
-    latest_file = _get_latest_model_parameter_file(param_dir, param)
-    if not latest_file:
-        raise FileNotFoundError(
-            f"No files found for parameter '{param}' in directory '{param_dir}'."
-        )
+        return
 
     json_data = ascii_handler.collect_data_from_file(latest_file)
 
@@ -338,7 +354,7 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     new_file_path = param_dir / new_file_name
 
     ascii_handler.write_data_to_file(json_data, new_file_path, sort_keys=True)
-    _logger.info(f"Created new model parameter JSON file: {new_file_path}")
+    _logger.info(f"Created model parameter file: {new_file_path}")
 
 
 def _get_latest_model_parameter_file(directory, parameter):
