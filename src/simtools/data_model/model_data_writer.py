@@ -107,6 +107,7 @@ class ModelDataWriter:
         use_plain_output_path=False,
         metadata_input_dict=None,
         db_config=None,
+        unit=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -131,6 +132,8 @@ class ModelDataWriter:
             Input to metadata collector.
         db_config: dict
             Database configuration. If not None, check if parameter with the same version exists.
+        unit: str
+            Unit of the parameter value (if applicable and value is not an astropy Quantity).
 
         Returns
         -------
@@ -160,7 +163,7 @@ class ModelDataWriter:
             )
 
         _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, parameter_version, unique_id
+            parameter_name, value, instrument, parameter_version, unique_id, unit=unit
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
@@ -210,6 +213,7 @@ class ModelDataWriter:
         parameter_version,
         unique_id=None,
         schema_version=None,
+        unit=None,
     ):
         """
         Get validated parameter dictionary.
@@ -236,7 +240,8 @@ class ModelDataWriter:
         schema_file = schema.get_model_parameter_schema_file(parameter_name)
         self.schema_dict = ascii_handler.collect_data_from_file(schema_file)
 
-        value, unit = value_conversion.split_value_and_unit(value)
+        if unit is None:
+            value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
@@ -399,7 +404,7 @@ class ModelDataWriter:
         ascii_handler.write_data_to_file(
             data=data_dict,
             output_file=self.io_handler.get_output_file(file_name),
-            sort_keys=False,
+            sort_keys=True,
             numpy_types=True,
         )
 
