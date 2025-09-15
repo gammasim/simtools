@@ -97,7 +97,8 @@ def test_add_production_tables_to_db(mock_read_production_table, tmp_test_direct
                 db_model_upload.add_production_tables_to_db(input_path, mock_db)
     assert "No production table for telescopes in model version 1.0.0" in caplog.text
 
-    # Test with info.yml file containing model_version_history (covers lines 116-117)
+    # Test with info.yml file containing model_version_history
+    caplog.clear()
     info_content = {"model_version_history": ["0.9.0", "0.8.0"]}
     info_file = model_dir / "info.yml"
     with open(info_file, "w") as f:
@@ -109,7 +110,10 @@ def test_add_production_tables_to_db(mock_read_production_table, tmp_test_direct
     ):
         with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
             with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
-                db_model_upload.add_production_tables_to_db(input_path, mock_db)
+                with caplog.at_level("INFO"):
+                    db_model_upload.add_production_tables_to_db(input_path, mock_db)
+    assert "model_version_history" in info_content
+    assert "Reading production tables from repository" in caplog.text
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
