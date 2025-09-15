@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
@@ -108,6 +109,7 @@ class ModelDataWriter:
         metadata_input_dict=None,
         db_config=None,
         unit=None,
+        meta_parameter=False,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -163,7 +165,13 @@ class ModelDataWriter:
             )
 
         _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, parameter_version, unique_id, unit=unit
+            parameter_name,
+            value,
+            instrument,
+            parameter_version,
+            unique_id,
+            unit=unit,
+            meta_parameter=meta_parameter,
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
@@ -214,6 +222,7 @@ class ModelDataWriter:
         unique_id=None,
         schema_version=None,
         unit=None,
+        meta_parameter=False,
     ):
         """
         Get validated parameter dictionary.
@@ -230,6 +239,12 @@ class ModelDataWriter:
             Version of the parameter.
         schema_version: str
             Version of the schema.
+        unique_id: str
+            Unique ID of the parameter set (from metadata).
+        unit: str
+            Unit of the parameter value (if applicable and value is not an astropy Quantity).
+        meta_parameter: bool
+            Setting for meta parameter flag.
 
         Returns
         -------
@@ -237,8 +252,7 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        schema_file = schema.get_model_parameter_schema_file(parameter_name)
-        self.schema_dict = ascii_handler.collect_data_from_file(schema_file)
+        self.schema_dict, schema_file = self._read_schema_dict(parameter_name, schema_version)
 
         if unit is None:
             value, unit = value_conversion.split_value_and_unit(value)
@@ -254,16 +268,61 @@ class ModelDataWriter:
             "unit": unit,
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
-            "meta_parameter": False,
-            "model_parameter_schema_version": self.schema_dict.get(
-                "model_parameter_schema_version", "0.1.0"
-            ),
+            "meta_parameter": meta_parameter,
+            "model_parameter_schema_version": self.schema_dict.get("schema_version", "0.1.0"),
         }
         return self.validate_and_transform(
             product_data_dict=data_dict,
             validate_schema_file=schema_file,
             is_model_parameter=True,
         )
+
+    def _read_schema_dict(self, parameter_name, schema_version):
+        """
+        Read schema dict for given parameter name and version.
+
+        TODO - schema_version and model_parameter_schema_version are confusingly similar.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        schema_version: str
+            Schema version.
+
+        Returns
+        -------
+        dict
+            Schema dictionary.
+        """
+        schema_file = schema.get_model_parameter_schema_file(parameter_name)
+        schema_dict = ascii_handler.collect_data_from_file(schema_file)
+        if isinstance(schema_dict, list):
+            if schema_version is None:
+                return self._find_highest_schema_version(schema_dict), schema_file
+            for entry in schema_dict:
+                if entry.get("schema_version") == schema_version:
+                    return entry, schema_file
+        else:
+            return schema_dict, schema_file
+        return {}, schema_file
+
+    def _find_highest_schema_version(self, schema_list):
+        """
+        Find entry with highest schema_version in a list of schema dicts.
+
+        Parameters
+        ----------
+        schema_list: list
+            List of schema dictionaries.
+
+        Returns
+        -------
+        dict
+            Schema dictionary with highest schema_version.
+        """
+        valid_entries = [entry for entry in schema_list if "schema_version" in entry]
+        return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
 
     def _get_parameter_type(self):
         """

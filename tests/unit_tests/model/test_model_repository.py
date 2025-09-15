@@ -206,7 +206,7 @@ def test_get_model_parameter_file_path_configuration_corsika(mock_get_collection
     assert result == expected
 
 
-def test_update_model_parameter_version_no_major_jump():
+def test_check_for_major_version_jump_no_major_jump():
     """Test version update without a major version jump."""
     json_data = {
         "schema_version": "0.3.0",
@@ -216,14 +216,12 @@ def test_update_model_parameter_version_no_major_jump():
     param = "dsum_threshold"
     telescope = "MSTx-FlashCam"
 
-    result = model_repository._update_model_parameter_version(
-        json_data, param_data, param, telescope
-    )
+    result = model_repository._check_for_major_version_jump(json_data, param_data, param, telescope)
 
     assert result == "4.1.0"
 
 
-def test_update_model_parameter_version_major_jump():
+def test_check_for_major_version_jump_major_jump():
     """Test version update with a major version jump."""
     json_data = {
         "schema_version": "0.3.0",
@@ -233,14 +231,12 @@ def test_update_model_parameter_version_major_jump():
     param = "dsum_threshold"
     telescope = "MSTx-FlashCam"
 
-    result = model_repository._update_model_parameter_version(
-        json_data, param_data, param, telescope
-    )
+    result = model_repository._check_for_major_version_jump(json_data, param_data, param, telescope)
 
     assert result == "6.0.0"
 
 
-def test_update_model_parameter_version_no_previous_version():
+def test_check_for_major_version_jump_no_previous_version():
     """Test version update when no previous version exists."""
     json_data = {
         "schema_version": "0.3.0",
@@ -249,36 +245,9 @@ def test_update_model_parameter_version_no_previous_version():
     param = "dsum_threshold"
     telescope = "MSTx-FlashCam"
 
-    result = model_repository._update_model_parameter_version(
-        json_data, param_data, param, telescope
-    )
+    result = model_repository._check_for_major_version_jump(json_data, param_data, param, telescope)
 
     assert result == "1.0.0"
-
-
-@patch("simtools.model.model_repository.Path")
-def test_get_latest_model_parameter_file_success(mock_path):
-    """Test retrieving the latest model parameter file successfully."""
-    mock_directory = Mock()
-    mock_path.return_value = mock_directory
-
-    mock_file_1 = Mock()
-    mock_file_1.stem = "parameter-1.0.0"
-    mock_file_2 = Mock()
-    mock_file_2.stem = "parameter-2.0.0"
-    mock_directory.glob.return_value = [mock_file_1, mock_file_2]
-
-    result = model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
-
-    assert result == str(mock_file_2)
-
-    mock_file_3 = Mock()
-    mock_file_3.stem = "parameter-2.0.0-rc"
-    mock_directory.glob.return_value = [mock_file_1, mock_file_2, mock_file_3]
-
-    result = model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
-
-    assert result == str(mock_file_3)
 
 
 @patch("simtools.model.model_repository.Path")
@@ -312,97 +281,14 @@ def test_get_latest_model_parameter_file_unsorted_versions(mock_path):
     assert result == str(mock_file_2)
 
 
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-def test_create_new_parameter_entry_success(mock_collect_data, mock_get_latest, tmp_path):
-    """Test successful creation of a new parameter entry."""
-    telescope = "MSTx-FlashCam"
-    param = "dsum_threshold"
-    param_data = {"version": "4.0.0", "value": 62.5}
-    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
-
-    # Create real directory structure
-    telescope_dir = model_parameters_dir / telescope
-    param_dir = telescope_dir / param
-    param_dir.mkdir(parents=True)
-
-    # Mock latest file and its content
-    latest_file = param_dir / "dsum_threshold-3.0.0.json"
-    latest_file.touch()
-    mock_get_latest.return_value = str(latest_file)
-    mock_collect_data.return_value = {"parameter_version": "3.0.0", "value": 50.0}
-
-    # Call the function
-    model_repository._create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
-
-    # Verify the new file is created with updated content
-    new_file = param_dir / "dsum_threshold-4.0.0.json"
-    assert new_file.exists()
-
-    with new_file.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-        assert data["parameter_version"] == "4.0.0"
-        assert data["value"] == pytest.approx(62.5)
-
-
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-def test_create_new_parameter_entry_missing_param_dir(mock_get_latest, tmp_path):
-    """Test creation of a new parameter entry when parameter directory is missing."""
-    telescope = "MSTx-FlashCam"
-    param = "dsum_threshold"
-    param_data = {"version": "4.0.0", "value": 62.5}
-    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
-
-    # Create telescope directory but not parameter directory
-    telescope_dir = model_parameters_dir / telescope
-    telescope_dir.mkdir(parents=True)
-
-    with pytest.raises(
-        FileNotFoundError,
-        match=f"Directory for parameter '{param}' does not exist in '{telescope}'.",
-    ):
-        model_repository._create_new_parameter_entry(
-            telescope, param, param_data, model_parameters_dir
-        )
-
-
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-def test_create_new_parameter_entry_no_latest_file(mock_get_latest, tmp_path):
-    """Test creation of a new parameter entry when no latest file exists."""
-    telescope = "MSTx-FlashCam"
-    param = "dsum_threshold"
-    param_data = {"version": "4.0.0", "value": 62.5}
-    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
-
-    # Create directory structure
-    telescope_dir = model_parameters_dir / telescope
-    param_dir = telescope_dir / param
-    param_dir.mkdir(parents=True)
-
-    # Mock no latest file found
-    mock_get_latest.side_effect = FileNotFoundError(
-        f"No files found for parameter '{param}' in directory '{param_dir}'."
-    )
-
-    with pytest.raises(
-        FileNotFoundError,
-        match=f"No files found for parameter '{param}' in directory '{param_dir}'.",
-    ):
-        model_repository._create_new_parameter_entry(
-            telescope, param, param_data, model_parameters_dir
-        )
-
-
-# Note: _update_parameters tests removed as function replaced by _get_new_parameters_only
-# The new function has different signature and behavior - creates a new parameters dict
-# rather than updating an existing one in place.
-
-
 def test_update_parameters_new_function():
     """Test the new _update_parameters function."""
     existing_params = {"dsum_threshold": "3.0.0"}
     changes = {
-        "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
+        "MSTx-FlashCam": {
+            "dsum_threshold": {"version": "4.0.0", "value": 62.5},
+            "param_to_remove": {"version": "1.0.0", "remove": True},
+        },
         "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
     table_name = "MSTx-FlashCam"
@@ -411,6 +297,7 @@ def test_update_parameters_new_function():
 
     assert "MSTx-FlashCam" in result
     assert result["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
+    assert "param_to_remove" not in result["MSTx-FlashCam"]  # Should be removed
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -723,35 +610,6 @@ def test_generate_new_production_no_changes(
     )
 
 
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-def test_create_new_parameter_entry_no_latest_file_error(mock_get_latest, tmp_path):
-    """Test creation of a new parameter entry when no latest file exists."""
-    telescope = "MSTx-FlashCam"
-    param = "dsum_threshold"
-    param_data = {"version": "4.0.0", "value": 62.5}
-    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
-
-    # Create directory structure
-    telescope_dir = model_parameters_dir / telescope
-    param_dir = telescope_dir / param
-    param_dir.mkdir(parents=True)
-
-    # Mock no latest file found
-    mock_get_latest.return_value = None
-
-    with pytest.raises(
-        FileNotFoundError,
-        match=f"No files found for parameter '{param}' in directory '{param_dir}'.",
-    ):
-        model_repository._create_new_parameter_entry(
-            telescope, param, param_data, model_parameters_dir
-        )
-
-
-# test_copy_production_tables_simple removed as _copy_production_tables function no longer exists
-# This functionality has been integrated into _apply_changes_to_production_tables
-
-
 def test_apply_changes_to_production_table_patch_update():
     """Test patch update behavior with matching changes."""
     data = {
@@ -784,43 +642,7 @@ def test_apply_changes_to_production_table_patch_update():
     assert result_no_changes is False  # Should return False when no changes apply
 
 
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-def test_create_new_parameter_entry_list_value_edge_case(
-    mock_collect_data, mock_get_latest, tmp_path
-):
-    """Test edge case where json_data has list value but param_data has single value."""
-    telescope = "MSTx-FlashCam"
-    param = "nsb_pixel_rate"
-    param_data = {"version": "2.0.0", "value": 0.5}
-    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
-
-    # Create real directory structure
-    telescope_dir = model_parameters_dir / telescope
-    param_dir = telescope_dir / param
-    param_dir.mkdir(parents=True)
-
-    # Mock latest file and its content with list value
-    latest_file = param_dir / "nsb_pixel_rate-1.0.0.json"
-    latest_file.touch()
-    mock_get_latest.return_value = str(latest_file)
-    mock_collect_data.return_value = {"parameter_version": "1.0.0", "value": [0.1, 0.2, 0.3]}
-
-    # Call the function
-    model_repository._create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
-
-    # Verify the new file is created with list value replicated
-    new_file = param_dir / "nsb_pixel_rate-2.0.0.json"
-    assert new_file.exists()
-
-    with new_file.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-        assert data["parameter_version"] == "2.0.0"
-        # Single value replicated to match original list length
-        assert data["value"] == [0.5, 0.5, 0.5]
-
-
-@patch("simtools.model.model_repository._create_new_parameter_entry")
+@patch("simtools.model.model_repository._create_new_model_parameter_entry")
 def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
     """Test applying changes to model parameters."""
     model_parameters_dir = tmp_path / "model_parameters"
@@ -834,7 +656,7 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
 
     model_repository._apply_changes_to_model_parameters(changes, model_parameters_dir)
 
-    # Should only call _create_new_parameter_entry for parameters with values
+    # Should only call _create_new_model_parameter_entry for parameters with values
     assert mock_create_entry.call_count == 2
     mock_create_entry.assert_any_call(
         "MSTx-FlashCam", "dsum_threshold", {"version": "4.0.0", "value": 62.5}, model_parameters_dir
@@ -845,3 +667,88 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
         {"version": "4.0.0", "value": 31.9},
         model_parameters_dir,
     )
+
+
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.dump_model_parameter")
+def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp_test_directory):
+    """Test creating a new model parameter entry."""
+    telescope = "MSTx-FlashCam"
+    param = "dsum_threshold"
+    param_data = {"version": "1.0.0", "value": 42.5}
+    model_parameters_dir = Path(tmp_test_directory / "model_parameters")
+    telescope_dir = model_parameters_dir / telescope
+    telescope_dir.mkdir(parents=True)
+
+    # Mock no existing file
+    mock_get_latest.side_effect = FileNotFoundError("No files found")
+
+    model_repository._create_new_model_parameter_entry(
+        telescope, param, param_data, model_parameters_dir
+    )
+
+    # Verify dump_model_parameter was called with correct arguments
+    mock_dump.assert_called_once_with(
+        parameter_name=param,
+        value=param_data["value"],
+        instrument=telescope,
+        parameter_version=param_data["version"],
+        output_file=f"{param}-{param_data['version']}.json",
+        output_path=telescope_dir / param,
+        use_plain_output_path=True,
+        unit=None,
+        meta_parameter=False,
+    )
+
+
+def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_directory):
+    """Test that FileNotFoundError is raised when telescope directory doesn't exist."""
+    telescope = "NonExistentTelescope"
+    param = "some_param"
+    param_data = {"version": "1.0.0", "value": 42.5}
+    model_parameters_dir = Path(tmp_test_directory / "model_parameters")
+
+    # Don't create the telescope directory
+    with pytest.raises(
+        FileNotFoundError, match="Directory for telescope 'NonExistentTelescope' does not exist"
+    ):
+        model_repository._create_new_model_parameter_entry(
+            telescope, param, param_data, model_parameters_dir
+        )
+
+
+@patch("simtools.model.model_repository._check_for_major_version_jump")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.dump_model_parameter")
+def test_create_new_model_parameter_entry_with_existing_file(
+    mock_dump, mock_get_latest, mock_collect_data, mock_check_version, tmp_test_directory
+):
+    """Test creating a new model parameter entry when existing file exists."""
+    telescope = "MSTx-FlashCam"
+    param = "dsum_threshold"
+    param_data = {"version": "1.0.0", "value": 42.5, "unit": "count"}
+    model_parameters_dir = Path(tmp_test_directory / "model_parameters")
+    telescope_dir = model_parameters_dir / telescope
+    telescope_dir.mkdir(parents=True)
+
+    # Mock existing file found
+    mock_get_latest.return_value = "/path/to/existing/file.json"
+    mock_collect_data.return_value = {
+        "value": [30.0, 31.0, 32.0],  # List value to trigger the conversion
+        "meta_parameter": True,
+    }
+    mock_check_version.return_value = "2.0.0"
+
+    model_repository._create_new_model_parameter_entry(
+        telescope, param, param_data, model_parameters_dir
+    )
+
+    # Verify that existing file data was processed
+    mock_collect_data.assert_called_once_with("/path/to/existing/file.json")
+    mock_check_version.assert_called_once()
+
+    # Verify that param_data was updated with existing file info
+    assert param_data["version"] == "2.0.0"
+    assert param_data["meta_parameter"] is True
+    assert param_data["value"] == [42.5, 42.5, 42.5]  # Single value converted to list
