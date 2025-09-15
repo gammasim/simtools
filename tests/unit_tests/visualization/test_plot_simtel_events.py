@@ -152,7 +152,7 @@ def test_plot_simtel_event_image_missing_r1(monkeypatch, caplog):
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+    with caplog.at_level("WARNING", logger=sep._logger.name):
         fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
     assert fig is None
     assert any("First event has no R1 telescope data" in r.message for r in caplog.records)
@@ -176,7 +176,7 @@ def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+    with caplog.at_level("WARNING", logger=sep._logger.name):
         fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
     assert fig is None
     assert any("No event found in the file." in r.message for r in caplog.records)
@@ -226,7 +226,7 @@ def test_plot_simtel_time_traces_invalid_tel_id(monkeypatch, caplog):
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+    with caplog.at_level("WARNING", logger=sep._logger.name):
         fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=9999)
     assert fig is None
     assert any("No R1 waveforms available" in r.message for r in caplog.records)
@@ -263,7 +263,7 @@ def test_plot_simtel_time_traces_no_waveforms(monkeypatch, caplog):
     _install_fake_ctapipe(monkeypatch, src)
 
     caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):  # pylint:disable=protected-access
+    with caplog.at_level("WARNING", logger=sep._logger.name):
         fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL)
     assert fig is None
     # With no R1 telescope data at all, the centralized helper logs a contextual message
@@ -358,7 +358,7 @@ def test__detect_peaks_prefers_cwt():
 
     trace = np.zeros(10)
     trace[7] = 1.0
-    peaks = sep._detect_peaks(trace, peak_width=4, signal_mod=_Sig)  # pylint:disable=protected-access
+    peaks = sep._detect_peaks(trace, peak_width=4, signal_mod=_Sig)
     np.testing.assert_array_equal(peaks, np.array([3, 7]))
 
 
@@ -373,7 +373,7 @@ def test__detect_peaks_fallback_to_find_peaks():
             return np.array([2]), {}
 
     trace = np.array([0, 0.1, 2.0, 0.5, 0.0])
-    peaks = sep._detect_peaks(trace, peak_width=3, signal_mod=_Sig)  # pylint:disable=protected-access
+    peaks = sep._detect_peaks(trace, peak_width=3, signal_mod=_Sig)
     np.testing.assert_array_equal(peaks, np.array([2]))
 
 
@@ -384,7 +384,7 @@ def test__detect_peaks_handles_errors():
             raise ValueError("bad fp")
 
     trace = np.ones(5)
-    peaks = sep._detect_peaks(trace, peak_width=2, signal_mod=_Sig)  # pylint:disable=protected-access
+    peaks = sep._detect_peaks(trace, peak_width=2, signal_mod=_Sig)
     assert peaks.size == 0
 
 
@@ -407,7 +407,7 @@ def test__collect_peak_samples_basic():
         def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
             return np.array([int(np.argmax(trace))]), {}
 
-    peak_samples, pix_ids, found = sep._collect_peak_samples(  # pylint:disable=protected-access
+    peak_samples, pix_ids, found = sep._collect_peak_samples(
         w, sum_threshold=5.0, peak_width=3, signal_mod=_Sig
     )
     np.testing.assert_array_equal(pix_ids, np.array([0, 2]))
@@ -427,7 +427,7 @@ def test__collect_peak_samples_threshold_excludes_all():
         def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
             return np.array([0]), {}
 
-    peak_samples, pix_ids, found = sep._collect_peak_samples(  # pylint:disable=protected-access
+    peak_samples, pix_ids, found = sep._collect_peak_samples(
         w, sum_threshold=10.0, peak_width=3, signal_mod=_Sig
     )
     assert peak_samples is None
@@ -462,7 +462,7 @@ def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
     plt.close(fig)
 
 
-def test__time_axis_from_readout_valid_and_errors():  # pylint:disable=protected-access
+def test__time_axis_from_readout_valid_and_errors():
     class R:
         def __init__(self, sr):
             self.sampling_rate = sr
@@ -481,7 +481,7 @@ def test__time_axis_from_readout_valid_and_errors():  # pylint:disable=protected
     np.testing.assert_array_equal(t, np.array([0.0, 1.0]))
 
 
-def test__select_event_by_type_first_and_index_and_oob(caplog):  # pylint:disable=protected-access
+def test__select_event_by_type_first_and_index_and_oob(caplog):
     evs = ["e0", "e1", "e2"]
     selector = sep._select_event_by_type(evs)
     assert selector() == "e0"
@@ -595,12 +595,12 @@ def test_plot_simtel_step_traces_defaults(monkeypatch):
     plt.close(fig)
 
 
-def test__histogram_edges_zero_bins():  # pylint:disable=protected-access
+def test__histogram_edges_zero_bins():
     edges = sep._histogram_edges(5, timing_bins=0)
     np.testing.assert_array_equal(edges, np.arange(-0.5, 5.5, 1.0))
 
 
-def test__make_output_paths(tmp_path):  # pylint:disable=protected-access
+def test__make_output_paths(tmp_path):
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
@@ -612,7 +612,7 @@ def test__make_output_paths(tmp_path):  # pylint:disable=protected-access
     assert pdf_path.suffix == ".pdf"
 
 
-def test__call_peak_timing_prefers_return_stats(monkeypatch):  # pylint:disable=protected-access
+def test__call_peak_timing_prefers_return_stats(monkeypatch):
     calls = {"count": 0}
 
     def _stub(filename, **kwargs):
@@ -629,7 +629,7 @@ def test__call_peak_timing_prefers_return_stats(monkeypatch):  # pylint:disable=
     plt.close(fig)
 
 
-def test__call_peak_timing_typeerror_fallback(monkeypatch):  # pylint:disable=protected-access
+def test__call_peak_timing_typeerror_fallback(monkeypatch):
     calls = {"count": 0}
 
     def _stub(filename, **kwargs):
@@ -645,7 +645,7 @@ def test__call_peak_timing_typeerror_fallback(monkeypatch):  # pylint:disable=pr
     plt.close(fig)
 
 
-def test__collect_figures_for_file_smoke(tmp_path, monkeypatch):  # pylint:disable=protected-access
+def test__collect_figures_for_file_smoke(tmp_path, monkeypatch):
     # Stub plotting functions to avoid ctapipe dependency
     def _fig_returner(*_a, **_k):
         return plt.figure()
@@ -708,7 +708,7 @@ def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
     assert saved["pdf"].exists()
 
 
-def test__compute_integration_window_branches():  # pylint:disable=protected-access
+def test__compute_integration_window_branches():
     # signal mode, centered
     a, b = sep._compute_integration_window(
         peak_idx=5, n_samp=20, half_width=2, mode="signal", offset=None
@@ -740,14 +740,14 @@ def test__compute_integration_window_branches():  # pylint:disable=protected-acc
     assert (a, b) == (0, 0)
 
 
-def test__format_integrated_title_variants():  # pylint:disable=protected-access
+def test__format_integrated_title_variants():
     t = sep._format_integrated_title("CT1", "flasher", half_width=2, mode="signal", offset=None)
     assert "integrated signal (win 5)" in t
     t = sep._format_integrated_title("CT1", "flasher", half_width=3, mode="pedestal", offset=None)
     assert "integrated pedestal (win 7, offset 16)" in t
 
 
-def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):  # pylint:disable=protected-access
+def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
@@ -760,7 +760,7 @@ def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):  # 
     assert pdf_path.name == "given.pdf"
 
 
-def test__collect_figures_for_file_unknown_and_all(tmp_path, monkeypatch, caplog):  # pylint:disable=protected-access
+def test__collect_figures_for_file_unknown_and_all(tmp_path, monkeypatch, caplog):
     # Unknown plot should warn and return empty list
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -856,7 +856,7 @@ def test_generate_and_save_plots_empty_and_error_paths(tmp_path, monkeypatch, ca
     assert any("Failed to write metadata" in r.message for r in caplog.records)
 
 
-def test__get_event_source_and_r1_tel_no_event(monkeypatch, caplog):  # pylint:disable=protected-access
+def test__get_event_source_and_r1_tel_no_event(monkeypatch, caplog):
     # Source that yields a single None event
     src = _fake_source_with_event(None, None)
 
@@ -869,7 +869,7 @@ def test__get_event_source_and_r1_tel_no_event(monkeypatch, caplog):  # pylint:d
     assert any("No event found in the file." in r.message for r in caplog.records)
 
 
-def test__get_event_source_and_r1_tel_no_r1_default_warning(monkeypatch, caplog):  # pylint:disable=protected-access
+def test__get_event_source_and_r1_tel_no_r1_default_warning(monkeypatch, caplog):
     # Event without any R1 telescope data
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
@@ -883,7 +883,7 @@ def test__get_event_source_and_r1_tel_no_r1_default_warning(monkeypatch, caplog)
     assert any("First event has no R1 telescope data" in r.message for r in caplog.records)
 
 
-def test__get_event_source_and_r1_tel_no_r1_with_context(monkeypatch, caplog):  # pylint:disable=protected-access
+def test__get_event_source_and_r1_tel_no_r1_with_context(monkeypatch, caplog):
     # Event without any R1 telescope data, contextual warning is used
     ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
@@ -897,7 +897,7 @@ def test__get_event_source_and_r1_tel_no_r1_with_context(monkeypatch, caplog):  
     assert any("Event has no R1 data for waveform plot" in r.message for r in caplog.records)
 
 
-def test__get_event_source_and_r1_tel_returns_sorted_tel_id(monkeypatch):  # pylint:disable=protected-access
+def test__get_event_source_and_r1_tel_returns_sorted_tel_id(monkeypatch):
     # Construct an event with multiple R1 tel entries out of order
     ev = SimpleNamespace()
     ev.index = SimpleNamespace(obs_id=1, event_id=2)
@@ -929,7 +929,7 @@ def test__get_event_source_and_r1_tel_returns_sorted_tel_id(monkeypatch):  # pyl
     assert tel == 2  # smallest tel id selected
 
 
-def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):  # pylint:disable=protected-access
+def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):
     # Build two events and select the second via event_index
     e0, _ = _fake_event(dl1_image=np.array([1.0]), r1_waveforms=None)
     e0.r1 = SimpleNamespace(tel={})  # explicitly no r1
@@ -958,7 +958,7 @@ def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):  # pyli
     assert tel == 7
 
 
-def test__collect_figures_for_file_logs_when_plot_returns_none(tmp_path, monkeypatch, caplog):  # pylint:disable=protected-access
+def test__collect_figures_for_file_logs_when_plot_returns_none(tmp_path, monkeypatch, caplog):
     # plot_simtel_event_image returns None -> should log warning and produce no figs
     monkeypatch.setattr(sep, "plot_simtel_event_image", lambda *a, **k: None)
     caplog.clear()
