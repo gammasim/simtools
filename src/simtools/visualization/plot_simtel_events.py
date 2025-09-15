@@ -1,16 +1,15 @@
 #!/usr/bin/python3
-# isort: skip_file
 """Plots for light emission (flasher/calibration) sim_telarray events."""
 
 import logging
 from pathlib import Path
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
 from ctapipe.calib import CameraCalibrator
 from ctapipe.io import EventSource
 from ctapipe.visualization import CameraDisplay
-import matplotlib.pyplot as plt
-import numpy as np
 from scipy import signal as _signal
 
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
