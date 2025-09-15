@@ -29,7 +29,7 @@ Example Usage
         simtools-simulate-illuminator --light_source ILLN-01 \
         --light_source_position 0. 0. 1000. \
         --light_source_pointing 0. 0. -1. \
-        --telescope MSTN-04 --site North \
+        --telescope MSTN-15 --site North \
         --model_version 6.0.0
 
 Command Line Arguments
