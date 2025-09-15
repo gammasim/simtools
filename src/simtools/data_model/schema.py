@@ -95,7 +95,9 @@ def get_model_parameter_schema_version(schema_version=None):
     raise ValueError(f"Schema version {schema_version} not found in {MODEL_PARAMETER_METASCHEMA}.")
 
 
-def validate_dict_using_schema(data, schema_file=None, json_schema=None):
+def validate_dict_using_schema(
+    data, schema_file=None, json_schema=None, ignore_software_version=False
+):
     """
     Validate a data dictionary against a schema.
 
@@ -105,6 +107,10 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         dictionary to be validated
     schema_file (dict)
         schema used for validation
+    json_schema (dict)
+        schema used for validation
+    ignore_software_version: bool
+        If True, ignore software version check.
 
     Raises
     ------
@@ -118,7 +124,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     if json_schema is None:
         json_schema = load_schema(schema_file, get_schema_version_from_data(data))
 
-    _validate_deprecation_and_version(data)
+    _validate_deprecation_and_version(data, ignore_software_version)
 
     validator = jsonschema.Draft6Validator(
         schema=json_schema,
@@ -301,7 +307,9 @@ def _add_array_elements(key, schema):
     return schema
 
 
-def _validate_deprecation_and_version(data, software_name="simtools"):
+def _validate_deprecation_and_version(
+    data, software_name="simtools", ignore_software_version=False
+):
     """
     Check if data contains deprecated parameters or version mismatches.
 
@@ -337,7 +345,11 @@ def _validate_deprecation_and_version(data, software_name="simtools"):
                     f"{software_name} matches constraint {constraint}."
                 )
             else:
-                raise ValueError(
-                    f"Version {version.__version__} of "
-                    f"{software_name} does not match constraint {constraint}."
+                msg = (
+                    f"Version {version.__version__} of {software_name} "
+                    f"does not match constraint {constraint}."
                 )
+                if ignore_software_version:
+                    _logger.warning(f"{msg}, but version check is ignored.")
+                    return
+                raise ValueError(msg)
