@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v5
+        with:
+          fetch-tags: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
