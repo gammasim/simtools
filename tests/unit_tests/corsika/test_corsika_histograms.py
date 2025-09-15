@@ -913,15 +913,15 @@ def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
             mock.patch.object(CorsikaHistograms, "set_histograms") as m_set,
             mock.patch.object(CorsikaHistograms, "export_histograms") as m_export,
             mock.patch(
-                "simtools.corsika.plot_corsika_histograms.export_all_photon_figures_pdf",
+                "simtools.visualization.plot_corsika_histograms.export_all_photon_figures_pdf",
                 return_value=tmp_path / "photons.pdf",
             ) as m_pdf,
             mock.patch(
-                "simtools.corsika.plot_corsika_histograms.derive_event_1d_histograms",
+                "simtools.visualization.plot_corsika_histograms.derive_event_1d_histograms",
                 return_value=None,
             ),
             mock.patch(
-                "simtools.corsika.plot_corsika_histograms.derive_event_2d_histograms",
+                "simtools.visualization.plot_corsika_histograms.derive_event_2d_histograms",
                 return_value=None,
             ),
         ):
@@ -953,15 +953,15 @@ def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_p
             mock.patch.object(CorsikaHistograms, "set_histograms") as m_set,
             mock.patch.object(CorsikaHistograms, "export_histograms") as m_export,
             mock.patch(
-                "simtools.corsika.plot_corsika_histograms.export_all_photon_figures_pdf",
+                "simtools.visualization.plot_corsika_histograms.export_all_photon_figures_pdf",
                 return_value=None,
             ),
             mock.patch(
-                "simtools.corsika.plot_corsika_histograms.derive_event_1d_histograms",
+                "simtools.visualization.plot_corsika_histograms.derive_event_1d_histograms",
                 return_value=tmp_path / "event1d.pdf",
             ) as m_e1d,
             mock.patch(
-                "simtools.corsika.plot_corsika_histograms.derive_event_2d_histograms",
+                "simtools.visualization.plot_corsika_histograms.derive_event_2d_histograms",
                 return_value=tmp_path / "event2d.pdf",
             ) as m_e2d,
         ):
