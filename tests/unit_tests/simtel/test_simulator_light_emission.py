@@ -1,1168 +1,1221 @@
 #!/usr/bin/python3
 
-import logging
-import shutil
-import stat
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, PropertyMock, call, mock_open, patch
+from unittest.mock import Mock, patch
 
 import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.io.io_handler import IOHandler
-from simtools.model.calibration_model import CalibrationModel
-from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
-from simtools.utils import general as gen
-
-SIM_MOD_PATH = "simtools.simtel.simulator_light_emission"
-
-# Test constants to avoid duplicated string literals
-DUMMY_SIMTEL = "dummy.simtel.zst"
-ATM_ALIAS1 = "atmprof1.dat"
-ATM_ALIAS2 = "atm_profile_model_1.dat"
-SIMTEL_BIN = "/path/to/sim_telarray/bin/sim_telarray/"
-CONFIG_DIR = "/path/to/config/"
-CONFIG_FILE = "/path/to/config/config.cfg"
-PATH_OPEN_TARGET = "pathlib.Path.open"
-OUT_DIR = "/directory"
 
 
-def _prepare_inst_with_common_mocks(
-    inst,
-    *,
-    light_source_setup: str = "layout",
-    light_source_type: str | None = None,
-):
-    """Prepare a SimulatorLightEmission instance with common test mocks."""
-    inst.light_source_setup = light_source_setup
-    inst.output_directory = OUT_DIR
-    inst.light_emission_config = {"output_prefix": None, "number_events": 1}
-
-    # Simtel installation path used to compose include paths
-    inst._simtel_path = MagicMock()
-    inst._simtel_path.joinpath.return_value = SIMTEL_BIN
-
-    # Telescope model provides configuration file and parameters used by sim_telarray
-    inst._telescope_model = MagicMock()
-    inst._telescope_model.config_file_directory = CONFIG_DIR
-    type(inst._telescope_model).config_file_path = PropertyMock(return_value=CONFIG_FILE)
-
-    # Common parameters accessed by code under test
-    def _get_tm_param(name):
-        if name == "atmospheric_transmission":
-            return "atm_test"
-        if name == "array_element_position_ground":
-            return (1, 1, 1)
-        return "X"
-
-    inst._telescope_model.get_parameter_value.side_effect = _get_tm_param
-
-    # Site model supplies altitude (observation level) with units
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
-
-    # Return concrete values for site params used in simtel script
-    def _get_site_param(param):
-        if param == "atmospheric_transmission":
-            return "atm_test"
-        if param == "corsika_observation_level":
-            return "999"
-        return MagicMock()
-
-    inst._site_model.get_parameter_value.side_effect = _get_site_param
-
-    if light_source_type is not None:
-        inst.light_source_type = light_source_type
-
+@pytest.fixture
+def simulator_instance():
+    """Create a fresh mock SimulatorLightEmission instance for each test."""
+    inst = object.__new__(SimulatorLightEmission)
+    # Create fresh mocks for each test to avoid cross-test contamination
+    inst.calibration_model = Mock()
+    inst.telescope_model = Mock()
+    inst.site_model = Mock()
+    inst.light_emission_config = {}
+    inst.output_directory = "/test/output"
+    inst._simtel_path = Mock()
+    inst._logger = Mock()
     return inst
 
 
-@pytest.fixture(name="label")
-def label_fixture():
-    return "test-simtel-light-emission"
+def test_get_prefix_non_none_returns_with_underscore(simulator_instance):
+    simulator_instance.light_emission_config = {"output_prefix": "pre", "number_of_events": 1}
+    assert simulator_instance._get_prefix() == "pre_"
 
 
-@pytest.fixture(name="default_config")
-def default_config_fixture():
-    return {
-        "x_pos": {
-            "len": 1,
-            "unit": u.Unit("cm"),
-            "default": 0 * u.cm,
-            "names": ["x_position"],
-        },
-        "y_pos": {
-            "len": 1,
-            "unit": u.Unit("cm"),
-            "default": 0 * u.cm,
-            "names": ["y_position"],
-        },
-        "z_pos": {
-            "len": 1,
-            "unit": u.Unit("cm"),
-            "default": 100000 * u.cm,
-            "names": ["z_position"],
-        },
-        "direction": {
-            "len": 3,
-            "unit": u.dimensionless_unscaled,
-            "default": [0, 0, -1],
-            "names": ["direction", "cx,cy,cz"],
-        },
+@patch("simtools.simtel.simulator_light_emission.clear_default_sim_telarray_cfg_directories")
+@patch.object(SimulatorLightEmission, "_get_telescope_pointing")
+@patch.object(SimulatorLightEmission, "_get_light_emission_application_name")
+@patch.object(SimulatorLightEmission, "_get_prefix")
+def test__make_simtel_script(
+    mock_prefix, mock_app_name, mock_pointing, mock_clear_cfg, simulator_instance
+):
+    """Test _make_simtel_script method with different conditions."""
+    simulator_instance._simtel_path = Path("/mock/simtel")
+    simulator_instance.telescope_model.config_file_directory = "/mock/config"
+    simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
+
+    mock_altitude = Mock()
+    mock_altitude.to.return_value.value = 2200
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = mock_altitude
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_trans.dat"
+
+    mock_pointing.return_value = [10.5, 20.0]
+    mock_app_name.return_value = "test-app"
+    mock_prefix.return_value = "test_"
+    mock_clear_cfg.return_value = "mocked_command_string"
+
+    def mock_get_config_option(key, value):
+        return f"-C{key}={value}"
+
+    with patch.object(
+        simulator_instance.__class__.__bases__[0],
+        "get_config_option",
+        side_effect=mock_get_config_option,
+    ):
+        # Test 1: flat_fielding with no light_source_position
+        simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+
+        result = simulator_instance._make_simtel_script()
+
+        assert result == "mocked_command_string"
+        mock_clear_cfg.assert_called()
+        mock_pointing.assert_called_once()
+
+        # Reset mocks for next test
+        mock_clear_cfg.reset_mock()
+        mock_pointing.reset_mock()
+
+        # Test 2: flat_fielding with light_source_position (should use fixed pointing)
+        simulator_instance.light_emission_config = {
+            "light_source_type": "flat_fielding",
+            "light_source_position": [1.0, 2.0, 3.0],
+        }
+
+        result = simulator_instance._make_simtel_script()
+
+        assert result == "mocked_command_string"
+        mock_clear_cfg.assert_called()
+        # Should still call _get_telescope_pointing
+        mock_pointing.assert_called_once()
+
+        # Reset for next test
+        mock_clear_cfg.reset_mock()
+        mock_pointing.reset_mock()
+
+        # Test 3: illuminator (not flat_fielding)
+        simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+        result = simulator_instance._make_simtel_script()
+
+        assert result == "mocked_command_string"
+        mock_clear_cfg.assert_called()
+        mock_pointing.assert_called_once()
+
+
+def test__make_simtel_script_bypass_optics_condition(simulator_instance):
+    """Test that flat_fielding adds Bypass_Optics option."""
+    # Setup minimal mocks
+    simulator_instance._simtel_path = Path("/mock/simtel")
+    simulator_instance.telescope_model.config_file_directory = "/mock/config"
+    simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
+
+    mock_altitude = Mock()
+    mock_altitude.to.return_value.value = 2200
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = mock_altitude
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_trans.dat"
+
+    def mock_get_config_option(key, value):
+        return f"-C{key}={value}"
+
+    # Mock the helper methods
+    with (
+        patch.object(simulator_instance, "_get_telescope_pointing", return_value=[0, 0]),
+        patch.object(
+            simulator_instance, "_get_light_emission_application_name", return_value="ff-1m"
+        ),
+        patch.object(simulator_instance, "_get_prefix", return_value=""),
+        patch(
+            "simtools.simtel.simulator_light_emission.clear_default_sim_telarray_cfg_directories"
+        ) as mock_clear,
+        patch.object(
+            simulator_instance.__class__.__bases__[0],
+            "get_config_option",
+            side_effect=mock_get_config_option,
+        ) as mock_config,
+    ):
+        mock_clear.return_value = "final_command"
+
+        # Test flat_fielding - should include Bypass_Optics
+        simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+
+        simulator_instance._make_simtel_script()
+
+        # Verify Bypass_Optics was called for flat_fielding
+        bypass_calls = [
+            call for call in mock_config.call_args_list if call[0][0] == "Bypass_Optics"
+        ]
+        assert len(bypass_calls) == 1
+        assert bypass_calls[0][0] == ("Bypass_Optics", "1")
+
+        # Reset for next test
+        mock_config.reset_mock()
+
+        # Test illuminator - should NOT include Bypass_Optics
+        simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+        simulator_instance._make_simtel_script()
+
+        # Verify Bypass_Optics was NOT called for illuminator
+        bypass_calls = [
+            call for call in mock_config.call_args_list if call[0][0] == "Bypass_Optics"
+        ]
+        assert len(bypass_calls) == 0
+
+
+def test__get_simulation_output_filename(simulator_instance):
+    # Test with flat_fielding and prefix
+    simulator_instance.light_emission_config = {
+        "light_source_type": "flat_fielding",
+        "output_prefix": "pre",
     }
+    result = simulator_instance._get_simulation_output_filename()
+    assert result == "/test/output/pre_ff-1m.simtel.zst"
+
+    # Test with no prefix (should return empty string for prefix)
+    simulator_instance.light_emission_config = {
+        "light_source_type": "flat_fielding",
+        "output_prefix": None,
+    }
+    result = simulator_instance._get_simulation_output_filename()
+    assert result == "/test/output/ff-1m.simtel.zst"
 
 
-@pytest.fixture
-def mock_simulator(
-    db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
-):
-    telescope_model = TelescopeModel(
-        site="North",
-        telescope_name="LSTN-01",
-        model_version=model_version,
-        label="test-simtel-light-emission",
-        mongo_db_config=db_config,
+def test_calculate_distance_focal_plane_calibration_device(simulator_instance):
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = 10 * u.m
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        0.0 * u.cm,
+        0.0 * u.cm,
+        20.0 * u.cm,
+    ]
+
+    result = simulator_instance.calculate_distance_focal_plane_calibration_device()
+    assert result.unit.is_equivalent(u.m)
+    assert np.isclose(result.value, 10.2, rtol=1e-9)
+
+
+def test__get_angular_distribution_string_for_sim_telarray(simulator_instance):
+    # Test with width provided
+    simulator_instance.calibration_model.get_parameter_value.return_value = "Gauss"
+    mock_width = Mock()
+    mock_width.to.return_value.value = 5.0
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = mock_width
+
+    result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
+    assert result == "gauss:5.0"
+
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_angular_distribution"
     )
-    calibration_model = CalibrationModel(
-        site="North",
-        calibration_device_model_name="ILLN-01",
-        mongo_db_config=db_config,
-        model_version=model_version,
-        label="test-simtel-light-emission",
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "flasher_angular_distribution_width"
     )
+    mock_width.to.assert_called_once_with(u.deg)
 
-    light_source_type = "illuminator"
-    return SimulatorLightEmission(
-        telescope_model=telescope_model,
-        calibration_model=calibration_model,
-        site_model=site_model_north,
-        light_emission_config={"number_events": 1, "output_prefix": None},
-        simtel_path=simtel_path,
-        light_source_type=light_source_type,
-        light_source_setup="layout",
-        label=label,
-        test=True,
+    # Reset mocks for second test
+    simulator_instance.calibration_model.reset_mock()
+
+    # Test with width None
+    simulator_instance.calibration_model.get_parameter_value.return_value = "Gauss"
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = None
+
+    result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
+    assert result == "gauss"
+
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_angular_distribution"
     )
-
-
-@pytest.fixture
-def mock_simulator_variable(
-    db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
-):
-    telescope_model = TelescopeModel(
-        site="North",
-        telescope_name="LSTN-01",
-        model_version=model_version,
-        label="test-simtel-light-emission",
-        mongo_db_config=db_config,
-    )
-    calibration_model = CalibrationModel(
-        site="North",
-        calibration_device_model_name="ILLN-01",
-        mongo_db_config=db_config,
-        model_version=model_version,
-        label="test-simtel-light-emission",
-    )
-
-    light_source_type = "illuminator"
-    return SimulatorLightEmission(
-        telescope_model=telescope_model,
-        calibration_model=calibration_model,
-        site_model=site_model_north,
-        light_emission_config={**default_config, "number_events": 1, "output_prefix": None},
-        simtel_path=simtel_path,
-        light_source_type=light_source_type,
-        light_source_setup="variable",
-        label=label,
-        test=True,
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "flasher_angular_distribution_width"
     )
 
 
-@pytest.fixture
-def mock_output_path(label, io_handler):
-    return io_handler.get_output_directory(label)
+def test__get_pulse_shape_string_for_sim_telarray(simulator_instance):
+    # Test with pulse width provided
+    simulator_instance.calibration_model.get_parameter_value.return_value = "Gauss"
+    mock_width = Mock()
+    mock_width.to.return_value.value = 5.0
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = mock_width
 
+    result = simulator_instance._get_pulse_shape_string_for_sim_telarray()
+    assert result == "gauss:5.0"
 
-@pytest.fixture
-def calibration_model_illn(db_config, io_handler, model_version):
-    return CalibrationModel(
-        site="North",
-        calibration_device_model_name="ILLN-01",
-        mongo_db_config=db_config,
-        model_version=model_version,
-        label="test-simtel-light-emission",
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_pulse_shape"
+    )
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "flasher_pulse_width"
+    )
+    mock_width.to.assert_called_once_with(u.ns)
+
+    # Reset mocks for second test
+    simulator_instance.calibration_model.reset_mock()
+
+    # Test with pulse width None
+    simulator_instance.calibration_model.get_parameter_value.return_value = "Line"
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = None
+
+    result = simulator_instance._get_pulse_shape_string_for_sim_telarray()
+    assert result == "line"
+
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_pulse_shape"
+    )
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "flasher_pulse_width"
     )
 
 
-def test_initialization(mock_simulator, default_config):
-    assert isinstance(mock_simulator, SimulatorLightEmission)
-    assert mock_simulator.light_source_type == "illuminator"
-    assert mock_simulator.light_emission_config.get("number_events", 1) == 1
+def test__add_illuminator_command_options(simulator_instance):
+    """Test _add_illuminator_command_options with different conditions."""
+    # Mock calibration model methods
+    mock_wavelength = Mock()
+    mock_wavelength.to.return_value.value = 450
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
+        [1.0 * u.m, 2.0 * u.m, 3.0 * u.m],  # array_element_position_ground
+        mock_wavelength,  # flasher_wavelength
+    ]
+
+    # Mock helper methods
+    with (
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="gauss:5.0",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="square:2.0",
+        ),
+        patch.object(
+            simulator_instance,
+            "_calibration_pointing_direction",
+            return_value=([0.1, 0.2, 0.3], []),
+        ),
+    ):
+        # Test 1: No light_source_position, no light_source_pointing (uses defaults)
+        simulator_instance.light_emission_config = {"flasher_photons": 1000000}
+
+        result = simulator_instance._add_illuminator_command_options()
+
+        # Verify structure and key values
+        assert isinstance(result, list)
+        assert len(result) == 8
+        assert result[0] == "-x 100.0"  # 1.0m -> 100.0cm
+        assert result[1] == "-y 200.0"  # 2.0m -> 200.0cm
+        assert result[2] == "-z 300.0"  # 3.0m -> 300.0cm
+        assert result[3] == "-d 0.1,0.2,0.3"  # pointing vector from _calibration_pointing_direction
+        assert result[4] == "-n 1000000"  # flasher_photons
+        assert result[5] == "-s 450"  # wavelength in nm
+        assert result[6] == "-p square:2.0"  # pulse shape
+        assert result[7] == "-a gauss:5.0"  # angular distribution
 
 
-def test_initialization_variable(mock_simulator_variable, default_config):
-    assert isinstance(mock_simulator_variable, SimulatorLightEmission)
-    assert mock_simulator_variable.light_source_type == "illuminator"
-    # default config plus CLI-derived settings
-    for k, v in default_config.items():
-        assert mock_simulator_variable.light_emission_config[k] == v
-    assert mock_simulator_variable.light_emission_config.get("number_events", 1) == 1
-
-
-def test_runs(mock_simulator):
-    assert mock_simulator.number_events == 1
-
-
-def test_photons_per_run_default(mock_simulator):
-    assert mock_simulator.photons_per_run == pytest.approx(1e8)
-
-
-def test_make_light_emission_script(
-    mock_simulator,
-    site_model_north,
-    mock_output_path,
-):
-    """layout coordinate vector between LST and ILLN"""
-    expected_command = (
-        f"sim_telarray/LightEmission/xyzls"
-        f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
-        f" --telpos-file {mock_output_path}/telpos.dat"
-        " -x -58717.99999999999"
-        " -y 275.0"
-        " -z 13700.0"
-        " -d 0.979101,-0.104497,-0.174477"
-        " -n 100000000.0"
-        " -s 300"
-        " -p Gauss:0.0"
-        " -a isotropic"
-        f" -A {mock_output_path}/model/6.0.0/"
-        f"{site_model_north.get_parameter_value('atmospheric_profile')}"
-        f" -o {mock_output_path}/xyzls.iact.gz\n"
+def test__add_illuminator_command_options_with_custom_position_and_pointing(simulator_instance):
+    """Test _add_illuminator_command_options with custom position and pointing."""
+    # Mock calibration model methods (only wavelength needed when position is provided)
+    mock_wavelength = Mock()
+    mock_wavelength.to.return_value.value = 380
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        mock_wavelength
     )
 
-    command = mock_simulator._make_light_emission_script()
+    # Mock helper methods
+    with (
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="uniform",
+        ),
+        patch.object(
+            simulator_instance, "_get_pulse_shape_string_for_sim_telarray", return_value="gauss"
+        ),
+    ):
+        # Test 2: Custom light_source_position and light_source_pointing
+        simulator_instance.light_emission_config = {
+            "flasher_photons": 2000000,
+            "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m],
+            "light_source_pointing": [0.5, 0.6, 0.7],
+        }
 
-    assert command == expected_command
+        result = simulator_instance._add_illuminator_command_options()
+
+        # Verify custom values are used
+        assert isinstance(result, list)
+        assert len(result) == 8
+        assert result[0] == "-x 500.0"  # 5.0m -> 500.0cm
+        assert result[1] == "-y 600.0"  # 6.0m -> 600.0cm
+        assert result[2] == "-z 700.0"  # 7.0m -> 700.0cm
+        assert result[3] == "-d 0.5,0.6,0.7"  # custom pointing vector
+        assert result[4] == "-n 2000000"  # custom flasher_photons
+        assert result[5] == "-s 380"  # wavelength in nm
+        assert result[6] == "-p gauss"  # pulse shape
+        assert result[7] == "-a uniform"  # angular distribution
 
 
-def test_make_light_emission_script_variable(
-    mock_simulator_variable,
-    site_model_north,
-    mock_output_path,
-):
-    """layout coordinate vector between LST and ILLN"""
-    expected_command = (
-        f"sim_telarray/LightEmission/xyzls"
-        f" -h  {site_model_north.get_parameter_value('corsika_observation_level')}"
-        f" --telpos-file {mock_output_path}/telpos.dat"
-        " -x 0.0"
-        " -y 0.0"
-        " -z 100000.0"
-        " -d 0,0,-1"
-        " -n 100000000.0"
-        f" -A {mock_output_path}/model/6.0.0/"
-        f"{site_model_north.get_parameter_value('atmospheric_profile')}"
-        f" -o {mock_output_path}/xyzls.iact.gz\n"
+def test__add_illuminator_command_options_position_fallback(simulator_instance):
+    """Test _add_illuminator_command_options position fallback behavior."""
+    # Mock calibration model to return position when light_source_position is None
+    mock_wavelength = Mock()
+    mock_wavelength.to.return_value.value = 500
+
+    def mock_get_param_with_unit(param_name):
+        if param_name == "array_element_position_ground":
+            return [10.0 * u.m, 20.0 * u.m, 30.0 * u.m]
+        if param_name == "flasher_wavelength":
+            return mock_wavelength
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
     )
 
-    command = mock_simulator_variable._make_light_emission_script()
+    # Mock helper methods
+    with (
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="test_angular",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="test_pulse",
+        ),
+        patch.object(
+            simulator_instance,
+            "_calibration_pointing_direction",
+            return_value=([0.8, 0.9, 1.0], []),
+        ) as mock_pointing,
+    ):
+        # Test 3: light_source_position is None, should use calibration_model position
+        simulator_instance.light_emission_config = {
+            "flasher_photons": 500000,
+            "light_source_position": None,  # Explicitly None
+        }
 
-    assert command == expected_command
+        result = simulator_instance._add_illuminator_command_options()
 
-    # removed laser command test; laser mode no longer supported
+        # Verify fallback position is used and _calibration_pointing_direction is called
+        assert result[0] == "-x 1000.0"  # 10.0m -> 1000.0cm
+        assert result[1] == "-y 2000.0"  # 20.0m -> 2000.0cm
+        assert result[2] == "-z 3000.0"  # 30.0m -> 3000.0cm
+        assert result[3] == "-d 0.8,0.9,1.0"  # pointing from _calibration_pointing_direction
 
-
-def test_calibration_pointing_direction(mock_simulator):
-    pointing_vector, angles = mock_simulator.calibration_pointing_direction()
-
-    expected_pointing_vector = [0.979, -0.104, -0.174]
-    expected_angles = [79.952, 186.092, 79.952, 173.908]
-
-    np.testing.assert_array_almost_equal(pointing_vector, expected_pointing_vector, decimal=3)
-    np.testing.assert_array_almost_equal(angles, expected_angles, decimal=3)
+        # Verify _calibration_pointing_direction was called with the fallback position values
+        mock_pointing.assert_called_once()
 
 
-def test_make_simtel_script(mock_simulator):
-    mock_file_content = "Sample content of config file"
+def test__add_flasher_command_options(simulator_instance):
+    """Test _add_flasher_command_options method."""
+    # Mock calibration model methods
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
+        [5.0 * u.cm, -3.0 * u.cm],  # flasher_position (x, y)
+        600.0 * u.nm,  # flasher_wavelength
+    ]
+    # flasher_bunch_size
+    simulator_instance.calibration_model.get_parameter_value.return_value = 10000
 
-    # Patch the built-in open function to return a mock file
-    with patch("builtins.open", mock_open(read_data=mock_file_content)) as mock_file:
-        mock_file.reset_mock()
+    # Mock telescope model methods
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 200.0  # 200 cm diameter
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
 
-        # Mock the necessary attributes and methods used within _make_simtel_script
-        mock_simulator._simtel_path = MagicMock()
-        mock_simulator._telescope_model = MagicMock()
-        mock_simulator._site_model = MagicMock()
-        mock_simulator._calibration_model = MagicMock()
+    # Mock helper methods
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="gauss:2.5",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="square:3.0",
+        ),
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape", return_value=86.6
+        ) as mock_radius,
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 1200.0  # 12 m = 1200 cm
+        mock_distance.return_value = mock_distance_value
 
-        mock_simulator.calibration_pointing_direction = MagicMock(
-            return_value=([0, 0, 1], [76.980826, 180.17047, 0, 0])
+        # Set up configuration
+        simulator_instance.light_emission_config = {
+            "number_of_events": 1000,
+            "flasher_photons": 500000,
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        # Verify the result structure and values
+        assert isinstance(result, list)
+        assert len(result) == 9
+        assert result[0] == "--events 1000"
+        assert result[1] == "--photons 500000"
+        assert result[2] == "--bunchsize 10000"
+        assert result[3] == "--xy 5.0,-3.0"  # flasher x,y position in cm
+        assert result[4] == "--distance 1200.0"  # distance in cm
+        assert result[5] == "--camera-radius 86.6"  # calculated camera radius
+        assert result[6] == "--spectrum 600"  # wavelength in nm (as int)
+        assert result[7] == "--lightpulse square:3.0"  # pulse shape
+        assert result[8] == "--angular-distribution gauss:2.5"  # angular distribution
+
+        # Verify method calls
+        mock_radius.assert_called_once_with(200.0, "hexagonal")
+        mock_distance.assert_called_once()
+
+
+def test__add_flasher_command_options_different_values(simulator_instance):
+    """Test _add_flasher_command_options with different parameter values."""
+    # Mock calibration model methods with different values
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
+        [-10.0 * u.cm, 15.0 * u.cm],  # flasher_position (x, y)
+        380.0 * u.nm,  # flasher_wavelength
+    ]
+    # flasher_bunch_size
+    simulator_instance.calibration_model.get_parameter_value.return_value = 5000
+
+    # Mock telescope model methods
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 150.0  # 150 cm diameter
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.return_value = "circular"
+
+    # Mock helper methods
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="uniform",
+        ),
+        patch.object(
+            simulator_instance, "_get_pulse_shape_string_for_sim_telarray", return_value="gauss"
+        ),
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape", return_value=75.0
+        ),
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 800.0  # 8 m = 800 cm
+        mock_distance.return_value = mock_distance_value
+
+        # Set up different configuration
+        simulator_instance.light_emission_config = {
+            "number_of_events": 2000,
+            "flasher_photons": 750000,
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        # Verify the result with different values
+        assert isinstance(result, list)
+        assert len(result) == 9
+        assert result[0] == "--events 2000"
+        assert result[1] == "--photons 750000"
+        assert result[2] == "--bunchsize 5000"
+        assert result[3] == "--xy -10.0,15.0"  # different flasher x,y position
+        assert result[4] == "--distance 800.0"  # different distance
+        assert result[5] == "--camera-radius 75.0"  # different camera radius
+        assert result[6] == "--spectrum 380"  # different wavelength
+        assert result[7] == "--lightpulse gauss"  # different pulse shape
+        assert result[8] == "--angular-distribution uniform"  # different angular distribution
+
+
+def test__get_light_source_command(simulator_instance):
+    """Test _get_light_source_command method."""
+    # Test flat_fielding type
+    simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+
+    with patch.object(
+        simulator_instance, "_add_flasher_command_options", return_value=["flasher_option"]
+    ) as mock_flasher:
+        result = simulator_instance._get_light_source_command()
+        assert result == ["flasher_option"]
+        mock_flasher.assert_called_once()
+
+    # Test illuminator type
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+    with patch.object(
+        simulator_instance, "_add_illuminator_command_options", return_value=["illuminator_option"]
+    ) as mock_illuminator:
+        result = simulator_instance._get_light_source_command()
+        assert result == ["illuminator_option"]
+        mock_illuminator.assert_called_once()
+
+    # Test unknown type raises ValueError
+    simulator_instance.light_emission_config = {"light_source_type": "unknown_type"}
+
+    with pytest.raises(ValueError, match="Unknown light_source_type 'unknown_type'"):
+        simulator_instance._get_light_source_command()
+
+
+def test__get_site_command(simulator_instance, tmp_test_directory):
+    """Test _get_site_command method."""
+    simulator_instance._simtel_path = Path("/mock/simtel")
+
+    # Mock altitude value
+    mock_altitude = Mock()
+    mock_altitude.to.return_value.value = 2200
+
+    # Test ff-1m app (flasher path)
+    with patch.object(
+        simulator_instance, "_prepare_flasher_atmosphere_files", return_value="atm_id_123"
+    ) as mock_atmo:
+        result = simulator_instance._get_site_command("ff-1m", "/config/dir", mock_altitude)
+
+        expected = [
+            "-I.",
+            "-I/mock/simtel/sim_telarray/cfg",
+            "-I/config/dir",
+            "--altitude 2200",
+            "--atmosphere atm_id_123",
+        ]
+        assert result == expected
+        mock_atmo.assert_called_once_with("/config/dir")
+
+    # Test default path (non-flasher)
+    with patch.object(
+        simulator_instance,
+        "_write_telescope_position_file",
+        return_value=f"{tmp_test_directory}/telpos.txt",
+    ) as mock_telpos:
+        result = simulator_instance._get_site_command("other-app", "/config/dir", mock_altitude)
+
+        expected = [
+            "-h  2200 ",
+            f"--telpos-file {tmp_test_directory}/telpos.txt",
+        ]
+        assert result == expected
+        mock_telpos.assert_called_once()
+
+
+def test__make_light_emission_script(simulator_instance):
+    """Test _make_light_emission_script method."""
+    simulator_instance._simtel_path = Path("/mock/simtel")
+    simulator_instance.output_directory = "/output"
+    simulator_instance.label = "test_label"
+
+    # Mock io_handler
+    mock_io_handler = Mock()
+    mock_io_handler.get_model_configuration_directory.return_value = "/config/dir"
+    simulator_instance.io_handler = mock_io_handler
+
+    # Mock site model
+    mock_obs_level = Mock()
+    mock_obs_level.to.return_value.value = 2200
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = mock_obs_level
+    simulator_instance.site_model.model_version = "test_version"
+
+    # Mock helper methods
+    with (
+        patch.object(
+            simulator_instance, "_get_light_emission_application_name", return_value="ff-1m"
+        ) as mock_app_name,
+        patch.object(
+            simulator_instance, "_get_site_command", return_value=["-I.", "--altitude 2200"]
+        ) as mock_site,
+        patch.object(
+            simulator_instance, "_get_light_source_command", return_value=["--photons 1000000"]
+        ) as mock_light_source,
+    ):
+        # Test flat_fielding (no atmospheric profile)
+        simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+
+        result = simulator_instance._make_light_emission_script()
+
+        expected = (
+            "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
+            "--photons 1000000 -o /output/ff-1m.iact.gz \n"
+        )
+        assert result == expected
+
+        # Verify method calls
+        mock_app_name.assert_called_once()
+        mock_site.assert_called_once_with("ff-1m", "/config/dir", mock_obs_level)
+        mock_light_source.assert_called_once()
+
+    # Test illuminator (with atmospheric profile)
+    simulator_instance.telescope_model.get_parameter_value.return_value = "atm_profile.dat"
+
+    with (
+        patch.object(
+            simulator_instance,
+            "_get_light_emission_application_name",
+            return_value="illuminator-app",
+        ),
+        patch.object(simulator_instance, "_get_site_command", return_value=["-h 2200"]),
+        patch.object(
+            simulator_instance, "_get_light_source_command", return_value=["-x 100", "-y 200"]
+        ),
+    ):
+        simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+        result = simulator_instance._make_light_emission_script()
+
+        expected = (
+            "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
+            "-x 100 -y 200 -A /config/dir/atm_profile.dat "
+            "-o /output/illuminator-app.iact.gz \n"
+        )
+        assert result == expected
+
+
+def test__prepare_flasher_atmosphere_files(simulator_instance):
+    """Test _prepare_flasher_atmosphere_files method."""
+    config_directory = Path("/config/dir")
+
+    # Mock site model
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_profile.dat"
+
+    # Mock Path operations
+    with (
+        patch("pathlib.Path.exists", return_value=False),
+        patch("pathlib.Path.is_symlink", return_value=False),
+        patch("pathlib.Path.symlink_to") as mock_symlink,
+        patch("shutil.copy2"),
+    ):
+        # Test successful symlink creation
+        result = simulator_instance._prepare_flasher_atmosphere_files(config_directory)
+
+        # Should return the default model_id
+        assert result == 1
+
+        # Should try to create both atmosphere file aliases
+        assert mock_symlink.call_count == 2
+
+        # Verify symlink calls
+        expected_calls = [
+            ((config_directory / "atm_profile.dat",),),
+            ((config_directory / "atm_profile.dat",),),
+        ]
+        mock_symlink.assert_has_calls(expected_calls, any_order=True)
+
+    # Test with custom model_id
+    with (
+        patch("pathlib.Path.exists", return_value=False),
+        patch("pathlib.Path.is_symlink", return_value=False),
+        patch("pathlib.Path.symlink_to") as mock_symlink,
+    ):
+        result = simulator_instance._prepare_flasher_atmosphere_files(config_directory, model_id=5)
+
+        # Should return the custom model_id
+        assert result == 5
+        assert mock_symlink.call_count == 2
+
+
+def test__prepare_flasher_atmosphere_files_with_existing_files(simulator_instance):
+    """Test _prepare_flasher_atmosphere_files method when files already exist."""
+    config_directory = Path("/config/dir")
+
+    # Mock site model
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_profile.dat"
+
+    # Mock existing file that needs unlinking
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.is_symlink", return_value=False),
+        patch("pathlib.Path.unlink") as mock_unlink,
+        patch("pathlib.Path.symlink_to") as mock_symlink,
+    ):
+        result = simulator_instance._prepare_flasher_atmosphere_files(config_directory)
+
+        # Should unlink existing files before creating new ones
+        assert mock_unlink.call_count == 2
+        assert mock_symlink.call_count == 2
+        assert result == 1
+
+
+def test__prepare_flasher_atmosphere_files_symlink_fallback_to_copy(simulator_instance):
+    """Test _prepare_flasher_atmosphere_files when symlink fails and falls back to copy."""
+    config_directory = Path("/config/dir")
+
+    # Mock site model
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_profile.dat"
+
+    # Mock symlink failure, successful copy
+    with (
+        patch("pathlib.Path.exists", return_value=False),
+        patch("pathlib.Path.is_symlink", return_value=False),
+        patch("pathlib.Path.symlink_to", side_effect=OSError("Symlink failed")),
+        patch("shutil.copy2") as mock_copy,
+    ):
+        result = simulator_instance._prepare_flasher_atmosphere_files(config_directory)
+
+        # Should fall back to copy when symlink fails
+        assert mock_copy.call_count == 2
+        assert result == 1
+
+
+def test__prepare_flasher_atmosphere_files_copy_also_fails(simulator_instance):
+    """Test _prepare_flasher_atmosphere_files when both symlink and copy fail."""
+    config_directory = Path("/config/dir")
+
+    # Mock site model
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_profile.dat"
+
+    # Mock both symlink and copy failure
+    with (
+        patch("pathlib.Path.exists", return_value=False),
+        patch("pathlib.Path.is_symlink", return_value=False),
+        patch("pathlib.Path.symlink_to", side_effect=OSError("Symlink failed")),
+        patch("shutil.copy2", side_effect=OSError("Copy failed")),
+    ):
+        result = simulator_instance._prepare_flasher_atmosphere_files(config_directory)
+
+        # Should log warnings but still return model_id
+        assert simulator_instance._logger.warning.call_count == 2
+        assert result == 1
+
+
+def test__get_light_emission_application_name(simulator_instance):
+    """Test _get_light_emission_application_name method."""
+    # Test flat_fielding type returns ff-1m
+    simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+    result = simulator_instance._get_light_emission_application_name()
+    assert result == "ff-1m"
+
+    # Test any other type returns xyzls (default)
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    result = simulator_instance._get_light_emission_application_name()
+    assert result == "xyzls"
+
+
+def test_prepare_script(simulator_instance, tmp_test_directory):
+    """Test prepare_script method."""
+    # Setup mocks
+    simulator_instance.output_directory = Path(tmp_test_directory) / "output"
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+    # Mock the internal methods
+    with (
+        patch.object(
+            simulator_instance, "_get_light_emission_application_name", return_value="xyzls"
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_simulation_output_filename",
+            return_value="test_output.simtel.gz",
+        ),
+        patch.object(
+            simulator_instance, "_make_light_emission_script", return_value="light_emission_cmd"
+        ),
+        patch.object(simulator_instance, "_make_simtel_script", return_value="simtel_cmd"),
+    ):
+        result = simulator_instance.prepare_script()
+
+        # Verify return value is the script path
+        expected_path = Path(tmp_test_directory) / "output" / "scripts" / "xyzls-light_emission.sh"
+        assert result == expected_path
+
+        # Verify script file was created and contains expected content
+        assert result.exists()
+        content = result.read_text()
+        assert "#!/usr/bin/env bash" in content
+        assert "light_emission_cmd" in content
+        assert "simtel_cmd" in content
+
+        # Verify script is executable
+        import stat
+
+        assert result.stat().st_mode & stat.S_IXUSR
+
+
+def test_prepare_script_output_file_exists(simulator_instance, tmp_test_directory):
+    """Test prepare_script method when output file already exists."""
+    simulator_instance.output_directory = Path(tmp_test_directory) / "output"
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+    # Create the actual output file to trigger FileExistsError
+    output_file_path = Path(tmp_test_directory) / "output" / "existing_output.simtel.gz"
+    output_file_path.parent.mkdir(parents=True, exist_ok=True)
+    output_file_path.touch()  # Create the file
+
+    with patch.object(
+        simulator_instance, "_get_simulation_output_filename", return_value=str(output_file_path)
+    ):
+        # Should raise FileExistsError
+        with pytest.raises(FileExistsError, match="sim_telarray output file exists"):
+            simulator_instance.prepare_script()
+
+
+def test_simulate(simulator_instance, tmp_test_directory):
+    """Test simulate method."""
+    from unittest.mock import mock_open
+
+    # Setup
+    simulator_instance.output_directory = Path(tmp_test_directory) / "output"
+    simulator_instance.output_directory.mkdir(parents=True, exist_ok=True)
+
+    # Mock the methods called by simulate
+    mock_script_path = Path(tmp_test_directory) / "output" / "scripts" / "test_script.sh"
+    mock_output_file = Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
+
+    with (
+        patch.object(simulator_instance, "prepare_script", return_value=mock_script_path),
+        patch.object(
+            simulator_instance,
+            "_get_simulation_output_filename",
+            return_value=str(mock_output_file),
+        ),
+        patch("subprocess.run") as mock_subprocess,
+        patch("builtins.open", mock_open()) as mock_file,
+    ):
+        # Create the output file to simulate successful run
+        mock_output_file.parent.mkdir(parents=True, exist_ok=True)
+        mock_output_file.touch()
+
+        result = simulator_instance.simulate()
+
+        # Verify subprocess was called correctly
+        mock_subprocess.assert_called_once()
+        call_args = mock_subprocess.call_args
+        assert call_args[0][0] == mock_script_path  # First positional arg is the script
+        assert call_args[1]["shell"] is False
+        assert call_args[1]["check"] is False
+        assert call_args[1]["text"] is True
+
+        # Verify log file was opened
+        expected_log_path = Path(tmp_test_directory) / "output" / "logfile.log"
+        mock_file.assert_called_once_with(expected_log_path, "w", encoding="utf-8")
+
+        # Verify return value
+        assert result == mock_output_file
+
+
+def test_simulate_output_file_missing(simulator_instance, tmp_test_directory):
+    """Test simulate method when output file is missing (logs warning)."""
+    from unittest.mock import mock_open
+
+    # Setup
+    simulator_instance.output_directory = Path(tmp_test_directory) / "output"
+    simulator_instance.output_directory.mkdir(parents=True, exist_ok=True)
+
+    # Mock the methods called by simulate
+    mock_script_path = Path(tmp_test_directory) / "output" / "scripts" / "test_script.sh"
+    mock_output_file = Path(tmp_test_directory) / "output" / "missing_output.simtel.gz"
+
+    with (
+        patch.object(simulator_instance, "prepare_script", return_value=mock_script_path),
+        patch.object(
+            simulator_instance,
+            "_get_simulation_output_filename",
+            return_value=str(mock_output_file),
+        ),
+        patch("subprocess.run"),
+        patch("builtins.open", mock_open()),
+    ):
+        # Don't create the output file to simulate missing output
+        result = simulator_instance.simulate()
+
+        # Verify warning was logged
+        simulator_instance._logger.warning.assert_called_once_with(
+            f"Expected sim_telarray output not found: {mock_output_file}"
         )
 
-        # Set paths and config
-        mock_simulator._simtel_path.joinpath.return_value = SIMTEL_BIN
-        path_to_config_directory = CONFIG_DIR
-        mock_simulator._telescope_model.config_file_directory = path_to_config_directory
-        path_to_config_file = CONFIG_FILE
-        config_file_path_mock = PropertyMock(return_value=path_to_config_file)
-        type(mock_simulator._telescope_model).config_file_path = config_file_path_mock
-
-        # Patch Path.open to mock file handling for the config file
-        with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)) as mock_path_open:
-
-            def get_telescope_model_param(param):
-                if param == "atmospheric_transmission":
-                    return "atm_test"
-                if param == "array_element_position_ground":
-                    return (1, 1, 1)
-                return MagicMock()
-
-            mock_simulator._telescope_model.get_parameter_value.side_effect = (
-                get_telescope_model_param
-            )
-
-            mock_simulator._site_model.get_parameter_value_with_unit.return_value = 999 * u.m
-
-            def _get_site_param2(param):
-                if param == "atmospheric_transmission":
-                    return "atm_test"
-                if param == "corsika_observation_level":
-                    return "999"
-                return MagicMock()
-
-            mock_simulator._site_model.get_parameter_value.side_effect = _get_site_param2
-
-            mock_simulator.output_directory = OUT_DIR
-            mock_simulator.light_emission_config = {"output_prefix": None, "number_events": 1}
-
-            expected_command = (
-                "SIM_TELARRAY_CONFIG_PATH='' "
-                f"{SIMTEL_BIN} "
-                f"-I{CONFIG_DIR} -I{SIMTEL_BIN} "
-                f"-c {CONFIG_FILE} "
-                "-DNUM_TELESCOPES=1  "
-                "-C altitude=999.0 -C atmospheric_transmission=atm_test "
-                "-C TRIGGER_TELESCOPES=1 "
-                "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
-                "-C MAXIMUM_TELESCOPES=1 "
-                "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
-                f"-C power_law=2.68 -C input_file={OUT_DIR}/xyzls.iact.gz "
-                f"-C output_file={OUT_DIR}/xyzls_layout.simtel.zst "
-                f"-C histogram_file={OUT_DIR}/xyzls_layout.ctsim.hdata\n"
-            )
-
-            command = mock_simulator._make_simtel_script()
-            assert command == expected_command
-
-            mock_path_open.assert_has_calls(
-                [
-                    call("r", encoding="utf-8"),
-                    call("w", encoding="utf-8"),
-                ],
-                any_order=True,
-            )
-
-
-@patch("os.system")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._make_light_emission_script")
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission._make_simtel_script")
-@patch("builtins.open", create=True)
-def test_prepare_script(
-    mock_open,
-    mock_make_simtel_script,
-    mock_make_light_emission_script,
-    mock_os_system,
-    mock_simulator,
-):
-    mock_file = Mock()
-    mock_open.return_value.__enter__.return_value = mock_file
-    mock_make_light_emission_script.return_value = "light_emission_script_command"
-    mock_make_simtel_script.return_value = "simtel_script_command"
-    mock_simulator.distance = 1000 * u.m
-    script_path = mock_simulator.prepare_script()
-
-    assert gen.program_is_executable(script_path)
-    mock_make_light_emission_script.assert_called_once()
-    mock_make_simtel_script.assert_called_once()
-
-    check_line = (
-        f"[ -s '{mock_simulator.output_directory}/"
-        f"{mock_simulator._infer_application()[0]}.iact.gz' ] || "
-        "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }\n\n"
-    )
-    cleanup_line = (
-        f"rm -f '{mock_simulator.output_directory}"
-        f"/{mock_simulator._infer_application()[0]}.iact.gz'\n\n"
-    )
-    expected_calls = [
-        "#!/usr/bin/env bash\n\n",
-        "light_emission_script_command\n\n",
-        check_line,
-        "simtel_script_command\n\n",
-        cleanup_line,
-        "# End\n\n",
-    ]
-    for call_args, expected_content in zip(mock_file.write.call_args_list, expected_calls):
-        assert call_args[0][0] == expected_content
-
-
-def test_prepare_script_raises_if_output_exists(mock_simulator, tmp_path):
-    mock_simulator.output_directory = tmp_path
-
-    expected_out = tmp_path / "xyzls_layout.simtel.zst"
-    expected_out.write_text("", encoding="utf-8")
-
-    with pytest.raises(FileExistsError):
-        mock_simulator.prepare_script()
-
-
-def test_remove_line_from_config(mock_simulator):
-    config_content = """array_triggers: value1
-    axes_offsets: value2
-    some_other_config: value3
-    """
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-        config_path = Path(tmp_file.name)
-        tmp_file.write(config_content.encode("utf-8"))
-
-    mock_simulator._remove_line_from_config(config_path, "array_triggers")
-
-    with open(config_path, encoding="utf-8") as f:
-        updated_content = f.read()
-
-    expected_content = """
-    axes_offsets: value2
-    some_other_config: value3
-    """
-    assert updated_content.strip() == expected_content.strip()
-
-    config_path.unlink()
-
-
-def test_update_light_emission_config(mock_simulator_variable):
-    """Test updating the light emission configuration."""
-    # Valid key
-    mock_simulator_variable.update_light_emission_config("z_pos", [200 * u.cm, 300 * u.cm])
-    assert mock_simulator_variable.light_emission_config["z_pos"]["default"] == [
-        200 * u.cm,
-        300 * u.cm,
-    ]
-
-    # Invalid key
-    with pytest.raises(
-        KeyError, match="Key 'invalid_key' not found in light emission configuration."
-    ):
-        mock_simulator_variable.update_light_emission_config("invalid_key", 100 * u.cm)
-
-
-def test_distance_list(mock_simulator_variable):
-    """Test converting a list of distances to astropy.Quantity."""
-    distances = mock_simulator_variable.distance_list(["100", "200", "300"])
-    assert distances == [100 * u.m, 200 * u.m, 300 * u.m]
-
-    # Invalid input
-    with pytest.raises(ValueError, match="Distances must be numeric values"):
-        mock_simulator_variable.distance_list(["100", "invalid", "300"])
-
-
-def test_calculate_distance_telescope_calibration_device_layout(mock_simulator):
-    """Test distance calculation for layout positions."""
-    distances = mock_simulator.calculate_distance_telescope_calibration_device()
-    assert len(distances) == 1
-    assert isinstance(distances[0], u.Quantity)
-
-
-def test_calculate_distance_telescope_calibration_device_variable(mock_simulator_variable):
-    """Test distance calculation for variable positions."""
-    mock_simulator_variable.light_emission_config["z_pos"]["default"] = [100 * u.m, 200 * u.m]
-    distances = mock_simulator_variable.calculate_distance_telescope_calibration_device()
-    assert len(distances) == 2
-    assert distances[0].unit == u.m
-    assert distances[1].unit == u.m
-    assert distances[0].value == pytest.approx(100)
-    assert distances[1].value == pytest.approx(200)
-
-
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
-def test_simulate_variable_distances(mock_run_simulation, mock_simulator_variable):
-    """Test simulating light emission for variable distances."""
-    mock_simulator_variable.light_emission_config["z_pos"]["default"] = [100 * u.m, 200 * u.m]
-    args_dict = {"distances_ls": None, "telescope": "LSTN-01"}
-
-    mock_simulator_variable.simulate_variable_distances(args_dict)
-
-    assert mock_run_simulation.call_count == 2
-
-    args_dict = {"distances_ls": [100, 200], "telescope": "LSTN-01"}
-    mock_simulator_variable.simulate_variable_distances(args_dict)
-    assert mock_run_simulation.call_count == 4
-
-
-@patch(f"{SIM_MOD_PATH}.SimulatorLightEmission.run_simulation")
-def test_simulate_layout_positions(mock_run_simulation, mock_simulator):
-    """Test simulating light emission for layout positions."""
-    args_dict = {"telescope": "LSTN-01"}
-
-    mock_simulator.simulate_layout_positions(args_dict)
-
-    mock_run_simulation.assert_called_once()
-
-
-def test_get_simulation_output_filename(mock_simulator_variable):
-    """Test the _get_simulation_output_filename method."""
-    mock_simulator_variable.output_directory = "./tests/resources/"
-
-    filename = mock_simulator_variable._get_simulation_output_filename()
-
-    expected_filename = "./tests/resources//xyzls_variable_d_1000.simtel.zst"
-    assert filename == expected_filename
-
-
-@patch("subprocess.run")
-@patch("builtins.open", new_callable=mock_open)
-def test_run_simulation(mock_open, mock_subprocess_run, mock_simulator_variable):
-    """Test the run_simulation method."""
-
-    mock_simulator_variable.prepare_script = Mock(return_value="dummy_script.sh")
-    mock_simulator_variable.run_simulation()
-
-    # first open for write, then append via FileHandler
-    assert mock_open.call_count >= 1
-    first_call = mock_open.call_args_list[0]
-    assert first_call.args[0] == Path(mock_simulator_variable.output_directory) / "logfile.log"
-
-    mock_subprocess_run.assert_called_once_with(
-        "dummy_script.sh",
-        shell=False,
-        check=False,
-        text=True,
-        stdout=mock_open.return_value.__enter__.return_value,
-        stderr=mock_open.return_value.__enter__.return_value,
-    )
-
-
-def test__build_source_specific_block_unknown_logs_warning(mock_simulator, caplog):
-    mock_simulator.light_source_type = "unknown"
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=mock_simulator._logger.name):
-        seg = mock_simulator._build_source_specific_block(0, 0, 0, Path())
-        assert seg == ""
-        assert any("Unknown light_source_type" in r.message for r in caplog.records)
-
-
-def test__get_prefix_none_and_value(mock_simulator):
-    mock_simulator.light_emission_config["output_prefix"] = None
-    assert mock_simulator._get_prefix() == ""
-    mock_simulator.light_emission_config["output_prefix"] = "xyzls"
-    assert mock_simulator._get_prefix() == "xyzls_"
-
-
-def test__get_distance_for_plotting_branches(mock_simulator):
-    # flasher branch
-    mock_simulator.light_source_type = "flasher"
-    # Provide a flasher model mock since the fixture doesn't include one
-    mock_simulator._flasher_model = MagicMock()
-    mock_simulator._flasher_model.get_parameter_value_with_unit.return_value = 60 * u.cm
-    assert mock_simulator._get_distance_for_plotting().to(u.cm).value == 60
-
-    # variable z_pos dict with list default
-    mock_simulator.light_source_type = "illuminator"
-    mock_simulator.light_emission_config["z_pos"] = {"default": [100 * u.m]}
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 100
-
-    # fallback to instance.distance
-    mock_simulator.light_emission_config.pop("z_pos")
-    mock_simulator.distance = 42 * u.m
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 42
-
-    # fallback to instance.distance
-    mock_simulator.distance = 42
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 42
-
-    # final fallback to 0 m
-    mock_simulator.distance = None
-    assert mock_simulator._get_distance_for_plotting().to_value(u.m) == 0
-
-
-def test_distance_list_valid_and_error(mock_simulator):
-    vals = mock_simulator.distance_list(["1", 2, 3.5])
-    assert [v.to_value(u.m) for v in vals] == [1.0, 2.0, 3.5]
-    with pytest.raises(ValueError, match="numeric"):
-        mock_simulator.distance_list(["a", 1])
-
-
-def test_update_light_emission_config_keyerror(mock_simulator):
-    with pytest.raises(KeyError):
-        mock_simulator.update_light_emission_config("nope", 1)
-
-
-def test__build_altitude_atmo_block_flasher(mock_simulator, tmp_path, monkeypatch):
-    mock_simulator._simtel_path = Path("/opt/simtel")
-    monkeypatch.setattr(mock_simulator, "_prepare_flasher_atmosphere_files", lambda d: 1)
-    seg = mock_simulator._build_altitude_atmo_block(
-        "ff-1m",
-        tmp_path,
-        1000 * u.m,
-        tmp_path / "telpos.dat",
-    )
-    assert "--altitude 1000.0" in seg
-    assert "--atmosphere 1" in seg
-    assert f"-I{mock_simulator._simtel_path.joinpath('sim_telarray/cfg')}" in seg
-
-
-def test__prepare_flasher_atmosphere_files_creates_aliases(mock_simulator, tmp_path):
-    src_name = "atm_src_profile.dat"
-    (tmp_path / src_name).write_text("x", encoding="utf-8")
-    # Ensure telescope model is a mock for this test
-    mock_simulator._telescope_model = MagicMock()
-    mock_simulator._site_model = MagicMock()
-    mock_simulator._site_model.get_parameter_value.return_value = src_name
-    atmo_id = mock_simulator._prepare_flasher_atmosphere_files(tmp_path)
-    assert atmo_id == 1
-    assert (tmp_path / "atmprof1.dat").exists()
-    assert (tmp_path / "atm_profile_model_1.dat").exists()
-
-
-def test_prepare_script_raises_if_output_exists_dup_removed():
-    # Removed duplicated test to avoid redefinition; original test covers this case.
-    pass
-
-
-def test_run_simulation_warns_when_no_output(mock_simulator, tmp_path, monkeypatch, caplog):
-    # Create a tiny runnable script file
-    script = tmp_path / "run.sh"
-    script.write_text("#!/usr/bin/env bash\necho hi\n", encoding="utf-8")
-    script.chmod(script.stat().st_mode | stat.S_IXUSR)
-
-    monkeypatch.setattr(mock_simulator, "prepare_script", lambda: script)
-    target_out = tmp_path / "target.simtel.zst"
-    if target_out.exists():
-        target_out.unlink()
-    mock_simulator._get_simulation_output_filename = lambda: str(target_out)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=mock_simulator._logger.name):
-        out_path = mock_simulator.run_simulation()
-    assert Path(out_path) == target_out
-    assert any("Expected simtel output not found" in r.message for r in caplog.records)
-
-
-def test_write_telpos_file(mock_simulator, tmp_path):
-    """
-    Test the _write_telpos_file method to ensure it writes the correct telescope positions.
-    """
-    # Mock the output directory to use a temporary path
-    mock_simulator.output_directory = tmp_path
-
-    # Mock the telescope model
-    mock_simulator._telescope_model = MagicMock()
-
-    mock_simulator._telescope_model.get_parameter_value_with_unit.side_effect = (
-        lambda param, *args: {
-            "array_element_position_ground": (1.0 * u.m, 2.0 * u.m, 3.0 * u.m),
-            "telescope_sphere_radius": 4.0 * u.m,
-        }[param]
-    )
-
-    # Call the method to write the telpos file
-    telpos_file = mock_simulator._write_telpos_file()
-
-    # Verify the file was created and has the correct content
-    assert telpos_file.exists()
-
-    # Read the content of the file
-    with open(telpos_file) as f:
-        content = f.read().strip()
-
-    # Check that the content contains the expected values converted to cm
-    # 1m = 100cm, 2m = 200cm, 3m = 300cm, 4m = 400cm
-    assert content == "100.0 200.0 300.0 400.0"
-
-
-def test_add_flasher_options():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._flasher_model = MagicMock()
-    inst._telescope_model = MagicMock()
-    inst.number_events = 1
-    inst.photons_per_run = 1.23e6
-
-    def gpvu(name):
-        mp = {
-            "flasher_position": [0.5 * u.cm, -1.5 * u.cm],
-            "flasher_depth": 250.0 * u.cm,
-            "spectrum": 405 * u.nm,
+        # Should still return the expected path
+        assert result == mock_output_file
+
+
+def test__initialize_light_emission_configuration(simulator_instance):
+    """Test _initialize_light_emission_configuration method."""
+
+    # Mock calibration model - flasher_type is called twice
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "LED"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Test basic configuration
+    config = {"existing_key": "value"}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Verify flasher_type was converted to light_source_type (lowercase)
+    assert result["light_source_type"] == "led"
+    assert result["flasher_photons"] == pytest.approx(5e6)
+    assert result["existing_key"] == "value"  # Existing key preserved
+
+
+def test__initialize_light_emission_configuration_test_mode(simulator_instance):
+    """Test _initialize_light_emission_configuration method in test mode."""
+
+    # Mock calibration model
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "Laser"
+        if param_name == "flasher_photons":
+            return 5e6  # Will be overridden by test mode
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Test configuration with test=True
+    config = {"test": True}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Verify test mode overrides flasher_photons
+    assert result["light_source_type"] == "laser"
+    assert result["flasher_photons"] == pytest.approx(1e8)  # Test mode value
+    assert result["test"] is True
+
+
+def test__initialize_light_emission_configuration_with_position(simulator_instance):
+    """Test _initialize_light_emission_configuration with light_source_position."""
+    import numpy as np
+
+    # Mock calibration model - no flasher_type
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return None  # No flasher type
+        if param_name == "flasher_photons":
+            return 1e7
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Test configuration with position
+    config = {"light_source_position": [1.5, 2.0, 3.5]}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Verify position was converted to astropy units
+    assert hasattr(result["light_source_position"], "unit")
+    assert result["light_source_position"].unit == u.m
+    np.testing.assert_array_equal(result["light_source_position"].value, [1.5, 2.0, 3.5])
+    assert result["flasher_photons"] == pytest.approx(1e7)
+    # No light_source_type should be set since flasher_type is None
+    assert "light_source_type" not in result
+
+
+def test___init__(tmp_test_directory):
+    """Test __init__ method."""
+    from simtools.simtel.simulator_light_emission import SimulatorLightEmission
+
+    # Mock the dependencies
+    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
+    models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+
+    with patch(io_handler_path) as mock_io_handler, patch(models_path) as mock_init_models:
+        # Setup mock returns
+        mock_io_instance = Mock()
+        output_path = Path(tmp_test_directory) / "output"
+        mock_io_instance.get_output_directory.return_value = output_path
+        mock_io_handler.return_value = mock_io_instance
+
+        mock_telescope_model = Mock()
+        mock_site_model = Mock()
+        mock_calibration_model = Mock()
+        mock_calibration_model.get_parameter_value.return_value = None
+        mock_init_models.return_value = (
+            mock_telescope_model,
+            mock_site_model,
+            mock_calibration_model,
+        )
+
+        # Test configuration
+        config = {
+            "simtel_path": "/test/simtel",
+            "site": "North",
+            "telescope": "LSTN-01",
+            "light_source": "calibration_device",
+            "model_version": "6.0.0",
         }
-        return mp[name]
 
-    inst._flasher_model.get_parameter_value_with_unit.side_effect = gpvu
-    inst._flasher_model.get_parameter_value.side_effect = lambda n: {
-        "lightpulse": "Gauss:3.2",
-        "angular_distribution": "isotropic",
-        "bunch_size": 2.0,
-    }[n]
+        # Create instance
+        instance = SimulatorLightEmission(config, db_config={}, label="test_label")
 
-    inst._telescope_model.get_parameter_value_with_unit.return_value = 120.0 * u.cm
+        # Verify initialization
+        assert hasattr(instance, "_logger")
+        assert hasattr(instance, "io_handler")
+        assert hasattr(instance, "telescope_model")
+        assert hasattr(instance, "site_model")
+        assert hasattr(instance, "calibration_model")
+        assert hasattr(instance, "light_emission_config")
 
-    cmd = inst._add_flasher_options("")
+        # Verify models were initialized correctly
+        mock_init_models.assert_called_once_with(
+            label="test_label",
+            db_config={},
+            site="North",
+            telescope_name="LSTN-01",
+            calibration_device_name="calibration_device",
+            model_version="6.0.0",
+        )
 
-    assert "--events 1" in cmd
-    assert "--photons 1230000.0" in cmd
-    assert "--bunchsize 2.0" in cmd
-    assert "--xy 0.5,-1.5" in cmd
-    assert "--distance 250.0" in cmd
-    assert "--camera-radius 60.0" in cmd
-    assert "--spectrum 405" in cmd
-    assert "--lightpulse Gauss:3.2" in cmd
-    assert "--angular-distribution isotropic" in cmd
-
-
-def test_add_flasher_command_options_branch():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._telescope_model = MagicMock()
-    inst._flasher_model = MagicMock()
-
-    with patch.object(inst, "_add_flasher_options", return_value="mst") as mst:
-        inst._telescope_model.name = "SSTS-05"
-        out = inst._add_flasher_command_options("")
-        assert out == "mst"
-        mst.assert_called_once()
-
-    with patch.object(inst, "_add_flasher_options", return_value="mst") as mst:
-        inst._telescope_model.name = "MSTN-04"
-        out = inst._add_flasher_command_options("")
-        assert out == "mst"
-        mst.assert_called_once()
+        # Verify telescope model config file was written
+        mock_telescope_model.write_sim_telarray_config_file.assert_called_once_with(
+            additional_models=mock_site_model
+        )
 
 
-def test_prepare_flasher_atmosphere_files_creates_aliases(tmp_path, caplog):
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value.return_value = "atm_test_profile.dat"
+def test__get_telescope_pointing(simulator_instance):
+    """Test _get_telescope_pointing method."""
+    # Test flat_fielding type returns (0.0, 0.0)
+    simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+    result = simulator_instance._get_telescope_pointing()
+    assert result == (0.0, 0.0)
 
-    src = tmp_path / "atm_test_profile.dat"
-    src.write_text("atmcontent", encoding="utf-8")
-
-    with caplog.at_level(logging.DEBUG, logger=SIM_MOD_PATH):
-        rid = inst._prepare_flasher_atmosphere_files(tmp_path)
-
-    assert rid == 1
-    for name in (ATM_ALIAS1, ATM_ALIAS2):
-        alias = tmp_path / name
-        assert alias.exists()
-        # Content must match source (works for symlink or copied file)
-        assert alias.read_text(encoding="utf-8") == "atmcontent"
-
-
-def test_prepare_flasher_atmosphere_files_copy_fallback(tmp_path, monkeypatch):
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value.return_value = "atm_prof2.dat"
-
-    src = tmp_path / "atm_prof2.dat"
-    src.write_text("X", encoding="utf-8")
-
-    def raise_oserr(self, target):
-        raise OSError("symlink not permitted")
-
-    monkeypatch.setattr(Path, "symlink_to", raise_oserr, raising=True)
-
-    def fake_copy2(src_path, dst_path):
-        Path(dst_path).write_bytes(Path(src_path).read_bytes())
-        return str(dst_path)
-
-    monkeypatch.setattr(shutil, "copy2", fake_copy2, raising=True)
-
-    rid = inst._prepare_flasher_atmosphere_files(tmp_path)
-    assert rid == 1
-
-    a1 = tmp_path / ATM_ALIAS1
-    a2 = tmp_path / ATM_ALIAS2
-    assert a1.exists()
-    assert a2.exists()
-    assert not a1.is_symlink()
-    assert not a2.is_symlink()
-    assert a1.read_text(encoding="utf-8") == "X"
-    assert a2.read_text(encoding="utf-8") == "X"
-
-
-def test_build_altitude_atmo_block_ff1m(tmp_path, monkeypatch):
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._simtel_path = Path("/simroot")
-
-    monkeypatch.setattr(inst, "_prepare_flasher_atmosphere_files", lambda *_: 42)
-
-    block = inst._build_altitude_atmo_block("ff-1m", tmp_path, 2150 * u.m, tmp_path / "telpos.dat")
-
-    assert " -I." in block
-    assert f" -I{inst._simtel_path.joinpath('sim_telarray/cfg')}" in block
-    assert f" -I{tmp_path}" in block
-    assert "--altitude 2150.0" in block
-    assert "--atmosphere 42" in block
-
-
-def test_build_altitude_atmo_block_default(tmp_path):
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._simtel_path = Path("/simroot")
-
-    telpos = tmp_path / "telpos.dat"
-    block = inst._build_altitude_atmo_block("xyzls", tmp_path, 2100 * u.m, telpos)
-    assert block == f" -h  2100.0 --telpos-file {telpos}"
-
-
-def test_build_source_specific_block_branches(tmp_path, caplog, monkeypatch):
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-
-    monkeypatch.setattr(inst, "_add_flasher_command_options", lambda cmd: "FLASHER")
-    monkeypatch.setattr(inst, "_add_illuminator_command_options", lambda cmd: "LED")
-    monkeypatch.setattr(
-        inst,
-        "_add_flasher_command_options",
-        lambda cmd: "FLASHER",
+    # Test with light_source_position returns (0.0, 0.0) and logs info message
+    simulator_instance.light_emission_config = {
+        "light_source_type": "illuminator",
+        "light_source_position": [1.0, 2.0, 3.0],
+    }
+    result = simulator_instance._get_telescope_pointing()
+    assert result == (0.0, 0.0)
+    simulator_instance._logger.info.assert_called_with(
+        "Using fixed (vertical up) telescope pointing."
     )
 
-    inst.light_source_type = None
-
-    out = inst._build_source_specific_block(1, 2, 3, tmp_path)
-    # Default light_source_type is None -> warning + empty string
-    assert out == ""
-
-    with caplog.at_level(logging.WARNING, logger=SIM_MOD_PATH):
-        inst.light_source_type = "unknown"
-        out = inst._build_source_specific_block(1, 2, 3, tmp_path)
-        assert out == ""
-        assert any("Unknown light_source_type" in r.message for r in caplog.records)
-
-    inst.light_source_type = "flasher"
-    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "FLASHER"
-
-    inst.light_source_type = "illuminator"
-    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "LED"
-
-    inst.light_source_type = "flasher"
-    assert inst._build_source_specific_block(1, 2, 3, tmp_path) == "FLASHER"
-
-
-def test_make_simtel_script_includes_bypass_for_flasher():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    _prepare_inst_with_common_mocks(inst, light_source_type="flasher")
-
-    mock_file_content = "dummy"
-    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
-        cmd = inst._make_simtel_script()
-
-    expected = (
-        "SIM_TELARRAY_CONFIG_PATH='' "
-        f"{SIMTEL_BIN} "
-        f"-I{CONFIG_DIR} -I{SIMTEL_BIN} "
-        f"-c {CONFIG_FILE} "
-        "-DNUM_TELESCOPES=1  "
-        "-C altitude=999.0 -C atmospheric_transmission=atm_test "
-        "-C TRIGGER_TELESCOPES=1 "
-        "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
-        "-C MAXIMUM_TELESCOPES=1 "
-        "-C telescope_theta=0 -C telescope_phi=0 "
-        "-C Bypass_Optics=1 "
-        f"-C power_law=2.68 -C input_file={OUT_DIR}/ff-1m.iact.gz "
-        f"-C output_file={OUT_DIR}/ff-1m_flasher.simtel.zst "
-        f"-C histogram_file={OUT_DIR}/ff-1m_flasher.ctsim.hdata\n"
-    )
-
-    assert cmd == expected
-
-
-def test_prepare_flasher_atmosphere_files_unlink_ignored_and_copy(tmp_path, monkeypatch):
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value.return_value = "atm_prof3.dat"
-
-    # Source atmosphere file
-    src = tmp_path / "atm_prof3.dat"
-    src.write_text("atmcontent3", encoding="utf-8")
-
-    # Pre-create alias files so that unlink() will be attempted on them
-    a1 = tmp_path / ATM_ALIAS1
-    a2 = tmp_path / ATM_ALIAS2
-    a1.write_text("old1", encoding="utf-8")
-    a2.write_text("old2", encoding="utf-8")
-
-    calls = []
-    orig_unlink = Path.unlink
-
-    def fake_unlink(self):
-        # Record attempts to unlink our aliases and raise OSError to exercise except path
-        if self.name in (ATM_ALIAS1, ATM_ALIAS2):
-            calls.append(self)
-            raise OSError("cannot unlink")
-        return orig_unlink(self)
-
-    monkeypatch.setattr(Path, "unlink", fake_unlink, raising=True)
-
-    # Ensure that symlink creation fails so copy fallback is used (since files still exist)
-    # In practice, symlink_to on existing path raises FileExistsError, but make it explicit
-    def fake_symlink_to(self, target):
-        raise OSError("file exists")
-
-    monkeypatch.setattr(Path, "symlink_to", fake_symlink_to, raising=True)
-
-    # Run
-    rid = inst._prepare_flasher_atmosphere_files(tmp_path)
-
-    # Assertions
-    assert rid == 1
-    assert len(calls) == 2
-
-    assert a1.exists()
-    assert a2.exists()
-    # Should end up as regular files with copied content
-    assert not a1.is_symlink()
-    assert not a2.is_symlink()
-    assert a1.read_text(encoding="utf-8") == "atmcontent3"
-    assert a2.read_text(encoding="utf-8") == "atmcontent3"
-
-
-def test_prepare_flasher_atmosphere_files_warns_on_copy_failure(tmp_path, monkeypatch, caplog):
-    # Instance with mocked logger and telescope model
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst._site_model = MagicMock()
-    inst._site_model.get_parameter_value.return_value = "atm_failed.dat"
-
-    # Create source file
-    src = tmp_path / "atm_failed.dat"
-    src.write_text("atm", encoding="utf-8")
-
-    # Force symlink_to to fail, then copy2 to fail, to trigger warning branch
-    monkeypatch.setattr(
-        Path,
-        "symlink_to",
-        lambda self, target: (_ for _ in ()).throw(OSError("no symlink")),
-        raising=True,
-    )
-    monkeypatch.setattr(
-        shutil, "copy2", lambda s, d: (_ for _ in ()).throw(OSError("copy failed")), raising=True
-    )
-
-    with caplog.at_level(logging.WARNING, logger=SIM_MOD_PATH):
-        rid = inst._prepare_flasher_atmosphere_files(tmp_path)
-
-    assert rid == 1
-    # Two aliases attempted -> two warnings, one per destination name
-    warnings = [r.message for r in caplog.records if r.levelno == logging.WARNING]
-    assert any(ATM_ALIAS1 in w and "Failed to create atmosphere alias" in w for w in warnings)
-    assert any((ATM_ALIAS2 in w and "Failed to create atmosphere alias" in w) for w in warnings)
-
-
-def test_photons_per_run_flasher_model_non_test(tmp_path):
-    # When flasher model is provided and not in test mode, use model value
-    IOHandler().set_paths(
-        output_path=str(tmp_path), data_path=str(tmp_path), model_path=str(tmp_path)
-    )
-    tel = MagicMock()
-    tel.write_sim_telarray_config_file = MagicMock()
-    flasher = MagicMock()
-    flasher.get_parameter_value.return_value = 7.89e6
-
-    inst = SimulatorLightEmission(
-        telescope_model=tel,
-        calibration_model=None,
-        flasher_model=flasher,
-        site_model=None,
-        light_emission_config={"number_events": 1, "output_prefix": None},
-        simtel_path=tmp_path,
-        light_source_type="flasher",
-        label="photons-test",
-        test=False,
-    )
-
-    assert inst.photons_per_run == pytest.approx(7.89e6)
-    flasher.get_parameter_value.assert_called_once_with("photons_per_flasher")
-
-
-def test_photons_per_run_flasher_model_test_mode(tmp_path):
-    IOHandler().set_paths(
-        output_path=str(tmp_path), data_path=str(tmp_path), model_path=str(tmp_path)
-    )
-    tel = MagicMock()
-    tel.write_sim_telarray_config_file = MagicMock()
-    flasher = MagicMock()
-
-    inst = SimulatorLightEmission(
-        telescope_model=tel,
-        calibration_model=None,
-        flasher_model=flasher,
-        site_model=None,
-        light_emission_config={"number_events": 1, "output_prefix": None},
-        simtel_path=tmp_path,
-        light_source_type="flasher",
-        label="photons-test2",
-        test=True,
-    )
-
-    assert inst.photons_per_run == pytest.approx(1e8)
-    flasher.get_parameter_value.assert_not_called()
-
-
-@pytest.mark.xfail(reason="see issue #1720")
-def test_photons_per_run_no_models(tmp_path):
-    # When neither calibration nor flasher model is provided, default to 1e8
-    tel = MagicMock()
-    tel.write_sim_telarray_config_file = MagicMock()
-
-    inst = SimulatorLightEmission(
-        telescope_model=tel,
-        calibration_model=None,
-        flasher_model=None,
-        site_model=None,
-        light_emission_config={"number_events": 1, "output_prefix": None},
-        simtel_path=tmp_path,
-        light_source_type="illuminator",
-        label="photons-test3",
-        test=False,
-    )
-
-    assert inst.photons_per_run == pytest.approx(1e8)
-
-
-def test_get_prefix_non_none_returns_with_underscore():
-    inst = object.__new__(SimulatorLightEmission)
-    inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
-    assert inst._get_prefix() == "pre_"
-
-
-def test_make_simtel_script_variable_type_sets_zero_angles():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    _prepare_inst_with_common_mocks(inst)
-    inst.light_source_type = "variable"
-
-    # Avoid calling real calibration method
-    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
-
-    mock_file_content = "dummy"
-    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
-        cmd = inst._make_simtel_script()
-
-    assert "-C telescope_theta=0 -C telescope_phi=0 " in cmd
-
-
-def test_make_simtel_script_variable_dist_suffix_exception():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    _prepare_inst_with_common_mocks(inst)
-    inst.light_source_type = "illuminator"
-    inst.light_source_setup = "variable"
-
-    # Force exception path for distance suffix
-    inst._get_distance_for_plotting = MagicMock(side_effect=Exception("boom"))
-    # Avoid calling real calibration method
-    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
-
-    mock_file_content = "dummy"
-    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
-        cmd = inst._make_simtel_script()
-
-    assert "-C output_file=/directory/xyzls_variable.simtel.zst " in cmd
-    assert "-C histogram_file=/directory/xyzls_variable.ctsim.hdata\n" in cmd
-
-
-def test_make_simtel_script_variable_dist_suffix_success():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    _prepare_inst_with_common_mocks(inst)
-    inst.light_source_type = "illuminator"
-    inst.light_source_setup = "variable"
-
-    # Return a concrete distance so the suffix is added
-    inst._get_distance_for_plotting = MagicMock(return_value=1000 * u.m)
-    # Avoid calling real calibration method
-    inst.calibration_pointing_direction = MagicMock(return_value=([0, 0, 1], [10, 20]))
-
-    mock_file_content = "dummy"
-    with patch(PATH_OPEN_TARGET, mock_open(read_data=mock_file_content)):
-        cmd = inst._make_simtel_script()
-
-    # Distance suffix should be appended
-    assert "-C output_file=/directory/xyzls_variable_d_1000.simtel.zst " in cmd
-    assert "-C histogram_file=/directory/xyzls_variable_d_1000.ctsim.hdata\n" in cmd
-
-
-def test_get_simulation_output_filename_prefix_and_exception():
-    inst = object.__new__(SimulatorLightEmission)
-    inst._logger = logging.getLogger(SIM_MOD_PATH)
-    inst.output_directory = "/out"
-    inst.light_source_type = "illuminator"
-    inst.light_source_setup = "variable"
-    inst.light_emission_config = {"output_prefix": "pre", "number_events": 1}
-
-    # Cause exception so no distance suffix is appended
-    inst._get_distance_for_plotting = MagicMock(side_effect=Exception("err"))
-
-    # Use real inference for app name/mode
-    def infer():
-        return ("xyzls", "variable")
-
-    inst._infer_application = infer
-
-    out = inst._get_simulation_output_filename()
-    assert out == "/out/pre_xyzls_variable.simtel.zst"
-
-
-def test_light_emission_default_configuration_schema():
-    cfg = SimulatorLightEmission.light_emission_default_configuration()
-    # Basic type and required keys
-    assert isinstance(cfg, dict)
-    for key in ("zenith_angle", "azimuth_angle", "source_distance", "off_axis_angle", "fadc_bins"):
-        assert key in cfg
-        assert "len" in cfg[key]
-        assert "default" in cfg[key]
-        assert "names" in cfg[key]
-    # Units
-    assert cfg["zenith_angle"]["unit"] == u.deg
-    assert cfg["azimuth_angle"]["unit"] == u.deg
-    assert cfg["source_distance"]["unit"] == u.m
-    assert cfg["off_axis_angle"]["unit"] == u.deg
-    # Defaults have expected types
-    assert cfg["zenith_angle"]["default"].unit == u.deg
-    assert cfg["source_distance"]["default"].unit == u.m
-
-
-def test_flasher_default_configuration_schema():
-    cfg = SimulatorLightEmission.flasher_default_configuration()
-    assert isinstance(cfg, dict)
-    for key in (
-        "number_events",
-        "photons_per_flasher",
-        "bunch_size",
-        "flasher_position",
-        "flasher_depth",
-        "flasher_inclination",
-        "spectrum",
-        "lightpulse",
-        "angular_distribution",
-        "flasher_pattern",
+    # Test default case uses _calibration_pointing_direction
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    simulator_instance._logger.reset_mock()
+
+    with patch.object(
+        simulator_instance,
+        "_calibration_pointing_direction",
+        return_value=(None, [45.0, 180.0, 90.0, 0.0]),
+    ) as mock_pointing:
+        result = simulator_instance._get_telescope_pointing()
+
+        # Should return tel_theta, tel_phi (first two angles)
+        assert result == (45.0, 180.0)
+        mock_pointing.assert_called_once()
+        simulator_instance._logger.info.assert_not_called()
+
+
+def test__write_telescope_position_file(simulator_instance):
+    """Test _write_telescope_position_file method."""
+    simulator_instance.output_directory = Path("/output")
+
+    # Mock telescope model parameters
+    mock_x = Mock()
+    mock_x.to.return_value.value = 100.0
+    mock_y = Mock()
+    mock_y.to.return_value.value = 200.0
+    mock_z = Mock()
+    mock_z.to.return_value.value = 300.0
+
+    mock_radius = Mock()
+    mock_radius.to.return_value.value = 1500.0
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = [
+        [mock_x, mock_y, mock_z],  # array_element_position_ground
+        mock_radius,  # telescope_sphere_radius
+    ]
+
+    # Mock file writing
+    mock_file = Mock()
+    with (
+        patch.object(Path, "joinpath", return_value=mock_file) as mock_joinpath,
+        patch.object(mock_file, "write_text") as mock_write,
     ):
-        assert key in cfg
-        assert "len" in cfg[key]
-        assert "default" in cfg[key]
-        assert "names" in cfg[key]
+        result = simulator_instance._write_telescope_position_file()
 
-    # Vector and units checks
-    pos = cfg["flasher_position"]
-    assert pos["len"] == 2
-    assert pos["unit"] == u.cm
-    assert len(pos["default"]) == 2
-    assert pos["default"].unit == u.cm
+        # Should return the telescope position file path
+        assert result == mock_file
 
-    assert cfg["flasher_depth"]["unit"] == u.cm
-    assert cfg["flasher_inclination"]["unit"] == u.deg
-    assert cfg["spectrum"]["unit"] == u.nm
+        # Should create file in output directory
+        mock_joinpath.assert_called_once_with("telescope_position.dat")
+
+        # Should write coordinates and radius in correct format
+        expected_content = "100.0 200.0 300.0 1500.0\n"
+        mock_write.assert_called_once_with(expected_content, encoding="utf-8")
+
+        # Verify unit conversions were called
+        mock_x.to.assert_called_once_with(u.cm)
+        mock_y.to.assert_called_once_with(u.cm)
+        mock_z.to.assert_called_once_with(u.cm)
+        mock_radius.to.assert_called_once_with(u.cm)
+
+
+def test__calibration_pointing_direction(simulator_instance):
+    """Test _calibration_pointing_direction method."""
+    import numpy as np
+
+    # Mock calibration device position at origin
+    cal_x, cal_y, cal_z = 0 * u.m, 0 * u.m, 0 * u.m
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        cal_x,
+        cal_y,
+        cal_z,
+    ]
+
+    # Mock telescope position at (10, 0, 10) meters
+    tel_x, tel_y, tel_z = 10 * u.m, 0 * u.m, 10 * u.m
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = [
+        tel_x,
+        tel_y,
+        tel_z,
+    ]
+
+    pointing_vector, angles = simulator_instance._calibration_pointing_direction()
+
+    # Verify calculations - direction vector is [10, 0, 10]
+    expected_direction = np.array([10.0, 0.0, 10.0])
+    expected_norm = np.linalg.norm(expected_direction)  # sqrt(200) roughly 14.142
+    expected_pointing = np.round(expected_direction / expected_norm, 6).tolist()
+
+    assert pointing_vector == expected_pointing
+    assert len(angles) == 4  # tel_theta, tel_phi, source_theta, source_phi
+
+    # Verify the angles are calculated correctly
+    tel_theta, tel_phi, source_theta, source_phi = angles
+    assert abs(tel_theta - 135.0) < 0.1
+    assert abs(tel_phi - 180.0) < 0.1
+    assert abs(source_theta - 135.0) < 0.1
+    assert abs(source_phi + 180.0) < 0.1
+
+    # Verify model calls
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_with(
+        "array_element_position_ground"
+    )
+    simulator_instance.telescope_model.get_parameter_value_with_unit.assert_called_with(
+        "array_element_position_ground"
+    )
+
+
+def test__calibration_pointing_direction_with_custom_params(simulator_instance):
+    """Test _calibration_pointing_direction method with custom position parameters."""
+    import numpy as np
+
+    # Mock telescope position
+    tel_x, tel_y, tel_z = 5 * u.m, 5 * u.m, 0 * u.m
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = [
+        tel_x,
+        tel_y,
+        tel_z,
+    ]
+
+    # Call with custom calibration position parameters
+    custom_x = 0 * u.m
+    custom_y = 0 * u.m
+    custom_z = 5 * u.m
+
+    pointing_vector, angles = simulator_instance._calibration_pointing_direction(
+        x_cal=custom_x, y_cal=custom_y, z_cal=custom_z
+    )
+
+    # Verify calculations - direction vector is [5, 5, -5]
+    expected_direction = np.array([5.0, 5.0, -5.0])
+    expected_norm = np.linalg.norm(expected_direction)
+    expected_pointing = np.round(expected_direction / expected_norm, 6).tolist()
+
+    assert pointing_vector == expected_pointing
+    assert len(angles) == 4
+
+    # Verify calibration model was NOT called (custom params provided)
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
+    # But telescope model should still be called
+    simulator_instance.telescope_model.get_parameter_value_with_unit.assert_called_with(
+        "array_element_position_ground"
+    )
