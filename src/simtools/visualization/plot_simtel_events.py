@@ -14,6 +14,7 @@ from scipy import signal as _signal
 
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.visualization.visualize import save_figure
 
 __all__ = [
     "generate_and_save_plots",
@@ -837,18 +838,6 @@ def _plot_simtel_integrated_image(
     return fig
 
 
-def _save_png(fig, out_dir, stem, suffix, dpi):
-    """Save figure as PNG to out_dir.
-
-    Errors during saving are logged as warnings.
-    """
-    png_path = out_dir.joinpath(f"{stem}_{suffix}.png")
-    try:
-        fig.savefig(png_path, dpi=int(dpi), bbox_inches="tight")
-    except Exception as ex:  # pylint:disable=broad-except
-        _logger.warning("Failed to save PNG %s: %s", png_path, ex)
-
-
 def _make_output_paths(ioh, base, input_file):
     """Return (out_dir, pdf_path) based on base name and input file."""
     out_dir = ioh.get_output_directory(label=Path(__file__).stem)
@@ -913,7 +902,11 @@ def _collect_figures_for_file(
         if fig is not None:
             figures.append(fig)
             if save_pngs:
-                _save_png(fig, out_dir, base_stem, tag, dpi)
+                base_path = out_dir / f"{base_stem}_{tag}"
+                try:
+                    save_figure(fig, base_path, figure_format=["png"], dpi=int(dpi))
+                except Exception as ex:  # pylint:disable=broad-except
+                    _logger.warning("Failed to save PNG %s: %s", base_path.with_suffix(".png"), ex)
         else:
             _logger.warning("Plot '%s' returned no figure for %s", tag, filename)
 

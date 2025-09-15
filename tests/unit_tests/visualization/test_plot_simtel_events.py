@@ -600,7 +600,7 @@ def test__histogram_edges_zero_bins():  # pylint:disable=protected-access
     np.testing.assert_array_equal(edges, np.arange(-0.5, 5.5, 1.0))
 
 
-def test__make_output_paths_and__save_png(tmp_path):  # pylint:disable=protected-access
+def test__make_output_paths(tmp_path):  # pylint:disable=protected-access
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
@@ -610,13 +610,6 @@ def test__make_output_paths_and__save_png(tmp_path):  # pylint:disable=protected
     assert out_dir == tmp_path
     assert pdf_path.name == "base_in.pdf"
     assert pdf_path.suffix == ".pdf"
-
-    # save_png writes a file; use a tiny empty fig
-    fig = plt.figure()
-    sep._save_png(fig, out_dir, stem="stem", suffix="tag", dpi=72)
-    png = out_dir / "stem_tag.png"
-    assert png.exists()
-    plt.close(fig)
 
 
 def test__call_peak_timing_prefers_return_stats(monkeypatch):  # pylint:disable=protected-access
@@ -752,17 +745,6 @@ def test__format_integrated_title_variants():  # pylint:disable=protected-access
     assert "integrated signal (win 5)" in t
     t = sep._format_integrated_title("CT1", "flasher", half_width=3, mode="pedestal", offset=None)
     assert "integrated pedestal (win 7, offset 16)" in t
-
-
-def test__save_png_logs_warning_on_error(tmp_path, caplog):  # pylint:disable=protected-access
-    class BadFig:
-        def savefig(self, *a, **k):  # pylint:disable=unused-argument
-            raise RuntimeError("boom")
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        sep._save_png(BadFig(), tmp_path, stem="s", suffix="x", dpi=72)
-    assert any("Failed to save PNG" in r.message for r in caplog.records)
 
 
 def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):  # pylint:disable=protected-access
