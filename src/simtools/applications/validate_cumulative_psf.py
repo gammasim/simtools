@@ -136,7 +136,7 @@ def main():  # noqa: D103
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
 
-    tel_model, site_model = initialize_simulation_models(
+    tel_model, site_model, _ = initialize_simulation_models(
         label=label,
         db_config=db_config,
         site=args_dict["site"],
