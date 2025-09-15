@@ -479,6 +479,14 @@ def test_apply_changes_to_production_table_no_parameters():
     assert data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
+def test_apply_changes_to_production_table_type_error():
+    # Pass an unsupported type (e.g., int) to trigger TypeError
+    with pytest.raises(
+        TypeError, match="Unsupported data type <class 'int'> in production table update"
+    ):
+        model_repository._apply_changes_to_production_table(42, {}, "1.0.0", False, "1.0.0")
+
+
 def test_apply_changes_to_production_table_with_list_data():
     """Test applying changes when the production table contains a list."""
     data = [

@@ -239,38 +239,42 @@ def _apply_changes_to_production_table(
             )
         elif patch_update:
             return False
-
-    elif isinstance(data, list):
+        return True
+    if isinstance(data, list):
+        modified = False
         for item in data:
-            _apply_changes_to_production_table(
+            modified = _apply_changes_to_production_table(
                 item, changes, model_version, patch_update, base_model_version
             )
+        return modified
 
-    return True
+    raise TypeError(f"Unsupported data type {type(data)} in production table update")
 
 
-def _update_parameters(parameters, changes, table_name):
+def _update_parameters(table_parameters, changes, table_name):
     """
-    Create a new parameters dictionary containing only the parameters for the specific telescope.
+    Create a new parameters dictionary containing only the parameters for the specified table.
 
     Parameters
     ----------
+    table_parameters: dict
+        Parameters for the specific table.
     changes: dict
-        The changes to be applied, containing telescope and parameter information.
+        The changes to be applied, containing table and parameter information.
     table_name: str
-        The name of the production table (telescope) to filter parameters for.
+        The name of the production table to filter parameters for.
 
     Returns
     -------
     dict
-        Dictionary containing only the new/changed parameters for the specified telescope.
+        Dictionary containing only the new/changed parameters for the specified table.
     """
-    new_params = {table_name: parameters}
+    updated_parameters_dict = {table_name: table_parameters}
     for param, data in changes[table_name].items():
         version = data["version"]
         _logger.info(f"Setting '{table_name} - {param}' to version {version}")
-        new_params[table_name][param] = version
-    return new_params
+        updated_parameters_dict[table_name][param] = version
+    return updated_parameters_dict
 
 
 def _apply_changes_to_model_parameters(changes, model_parameters_dir):
