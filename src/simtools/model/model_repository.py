@@ -327,34 +327,27 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     try:
         latest_file = _get_latest_model_parameter_file(param_dir, param)
     except FileNotFoundError:
-        writer.ModelDataWriter.dump_model_parameter(
-            parameter_name=param,
-            value=param_data["value"],
-            instrument=telescope,
-            parameter_version=param_data["version"],
-            output_file=f"{param}-{param_data['version']}.json",
-            output_path=param_dir,
-            use_plain_output_path=True,
-            unit=param_data.get("unit"),
+        latest_file = None
+
+    if latest_file is not None:
+        json_data = ascii_handler.collect_data_from_file(latest_file)
+        param_data["version"] = _update_model_parameter_version(
+            json_data, param_data, param, telescope
         )
-        return
+        # important for e.g. nsb_pixel_rate
+        if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
+            param_data["value"] = [param_data["value"]] * len(json_data["value"])
 
-    json_data = ascii_handler.collect_data_from_file(latest_file)
-
-    json_data["parameter_version"] = _update_model_parameter_version(
-        json_data, param_data, param, telescope
+    writer.ModelDataWriter.dump_model_parameter(
+        parameter_name=param,
+        value=param_data["value"],
+        instrument=telescope,
+        parameter_version=param_data["version"],
+        output_file=f"{param}-{param_data['version']}.json",
+        output_path=param_dir,
+        use_plain_output_path=True,
+        unit=param_data.get("unit"),
     )
-    # important for e.g. nsb_pixel_rate
-    if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
-        json_data["value"] = [param_data["value"]] * len(json_data["value"])
-    else:
-        json_data["value"] = param_data["value"]
-
-    new_file_name = f"{param}-{param_data['version']}.json"
-    new_file_path = param_dir / new_file_name
-
-    ascii_handler.write_data_to_file(json_data, new_file_path, sort_keys=True)
-    _logger.info(f"Created model parameter file: {new_file_path}")
 
 
 def _get_latest_model_parameter_file(directory, parameter):
