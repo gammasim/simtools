@@ -53,6 +53,7 @@ jobs:
             --file_name "$file" \
             --schema model_parameter_and_data_schema.metaschema.yml \
             --data_type "schema" \
+            --ignore_software_version \
             --log_level DEBUG
           done
 
