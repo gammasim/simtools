@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for led_var_photons model parameter
+deprecated: true
+deprecation_note: "LED parameter not used."
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: led_var_photons
+description: |-
+  Variation of the average amplitude of the LEDs in front of each pixel,\
+  from pixel to pixel (not including the statistical event-to-event fluctuation).
+short_description: |-
+  Average amplitude variation of LED in front of each pixel.
+data:
+  - type: float64
+    unit: dimensionless
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 1.0
+instrument:
+  class: Calibration
+  type:
+    - ILLN
+    - ILLS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+  - name: simtools
+    version: "<0.21.0"

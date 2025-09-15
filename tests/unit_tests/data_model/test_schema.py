@@ -385,3 +385,9 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     with caplog.at_level(logging.WARNING):
         schema._validate_deprecation_and_version(combined_data)
     assert "Old version" in caplog.text
+
+    # Test 16: ignore_software_version=True should log warning and not raise
+    mismatch_data = {"simulation_software": [{"name": "simtools", "version": ">=2.0.0"}]}
+    with caplog.at_level(logging.WARNING):
+        schema._validate_deprecation_and_version(mismatch_data, ignore_software_version=True)
+    assert "does not match constraint" in caplog.text
