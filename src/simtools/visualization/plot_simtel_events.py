@@ -2,6 +2,7 @@
 """Plots for light emission (flasher/calibration) sim_telarray events."""
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -11,7 +12,12 @@ from ctapipe.io import EventSource
 from ctapipe.visualization import CameraDisplay
 from scipy import signal as _signal
 
+from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.visualization.plot_corsika_histograms import save_figs_to_pdf
+from simtools.visualization.visualize import save_figure
+
 __all__ = [
+    "generate_and_save_plots",
     "plot_simtel_event_image",
     "plot_simtel_integrated_pedestal_image",
     "plot_simtel_integrated_signal_image",
@@ -29,10 +35,45 @@ NO_R1_WAVEFORMS_MSG = "No R1 waveforms available in event"
 TIME_NS_LABEL = "time [ns]"
 R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 
+# Choices understood by the dispatcher used below
+PLOT_CHOICES = {
+    "event_image": "event_image",
+    "time_traces": "time_traces",
+    "waveform_matrix": "waveform_matrix",
+    "step_traces": "step_traces",
+    "integrated_signal_image": "integrated_signal_image",
+    "integrated_pedestal_image": "integrated_pedestal_image",
+    "peak_timing": "peak_timing",
+    "all": "all",
+}
 
-def _compute_integration_window(
-    peak_idx: int, n_samp: int, half_width: int, mode: str, offset: int | None
-) -> tuple[int, int]:
+
+def _get_event_source_and_r1_tel(filename, event_index=None, warn_context=None):
+    """Return (source, event, first_r1_tel_id) or None if unavailable.
+
+    Centralizes creation of EventSource, event selection, and first R1 tel-id lookup.
+
+    When no event exists, logs a standard warning. When the event has no R1 tel data,
+    logs either a contextual message ("Event has no R1 data for <context>") if
+    warn_context is provided, or the generic "First event has no R1 telescope data".
+    """
+    source = EventSource(filename, max_events=None)
+    event = _select_event_by_type(source)(event_index=event_index)
+    if not event:
+        _logger.warning("No event found in the file.")
+        return None
+
+    tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
+    if not tel_ids:
+        if warn_context:
+            _logger.warning("Event has no R1 data for %s", warn_context)
+        else:
+            _logger.warning("First event has no R1 telescope data")
+        return None
+    return source, event, int(tel_ids[0])
+
+
+def _compute_integration_window(peak_idx, n_samp, half_width, mode, offset):
     """Return [a, b) window bounds for integration for signal/pedestal modes."""
     hw = int(half_width)
     win_len = 2 * hw + 1
@@ -53,9 +94,7 @@ def _compute_integration_window(
     return a, b
 
 
-def _format_integrated_title(
-    tel_label: str, et_name: str, half_width: int, mode: str, offset: int | None
-) -> str:
+def _format_integrated_title(tel_label, et_name, half_width, mode, offset):
     win_len = 2 * int(half_width) + 1
     if mode == "signal":
         return f"{tel_label} integrated signal (win {win_len}) ({et_name})"
@@ -138,17 +177,10 @@ def plot_simtel_event_image(filename, distance=None, event_index=None):
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if no suitable event/image is available.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-    if not event:
-        _logger.warning("No event found in the file.")
+    prepared = _get_event_source_and_r1_tel(filename, event_index=event_index, warn_context=None)
+    if prepared is None:
         return None
-
-    tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if not tel_ids:
-        _logger.warning("First event has no R1 telescope data")
-        return None
-    tel_id = tel_ids[0]
+    source, event, tel_id = prepared
 
     calib = CameraCalibrator(subarray=source.subarray)
     calib(event)
@@ -198,9 +230,9 @@ def plot_simtel_event_image(filename, distance=None, event_index=None):
 
 def plot_simtel_time_traces(
     filename,
-    tel_id: int | None = None,
-    n_pixels: int = 3,
-    event_index: int | None = None,
+    tel_id=None,
+    n_pixels=3,
+    event_index=None,
 ):
     """
     Plot R1 time traces for a few pixels of one event.
@@ -221,15 +253,13 @@ def plot_simtel_time_traces(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        dl1_tel_ids = sorted(getattr(event.dl1, "tel", {}).keys())
-        tel_id = tel_id or dl1_tel_ids[0]
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="time traces plot"
+    )
+    if prepared is None:
+        return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     calib = CameraCalibrator(subarray=source.subarray)
     try:
@@ -273,10 +303,10 @@ def plot_simtel_time_traces(
 
 def plot_simtel_waveform_matrix(
     filename,
-    tel_id: int | None = None,
-    vmax: float | None = None,
-    event_index: int | None = None,
-    pixel_step: int | None = None,
+    tel_id=None,
+    vmax=None,
+    event_index=None,
+    pixel_step=None,
 ):
     """
     Create a pseudocolor image of R1 waveforms (sample index vs. pixel id).
@@ -299,15 +329,13 @@ def plot_simtel_waveform_matrix(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for waveform plot")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="waveform plot"
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -342,10 +370,10 @@ def plot_simtel_waveform_matrix(
 
 def plot_simtel_step_traces(
     filename,
-    tel_id: int | None = None,
-    pixel_step: int = 100,
-    max_pixels: int | None = None,
-    event_index: int | None = None,
+    tel_id=None,
+    pixel_step=100,
+    max_pixels=None,
+    event_index=None,
 ):
     """
     Plot step-style R1 traces for regularly sampled pixels (0, N, 2N, ...).
@@ -368,15 +396,13 @@ def plot_simtel_step_traces(
     matplotlib.figure.Figure | None
         The created figure, or ``None`` if R1 waveforms are unavailable.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for traces plot")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="traces plot"
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -583,13 +609,13 @@ def _draw_peak_hist(
 
 def plot_simtel_peak_timing(
     filename,
-    tel_id: int | None = None,
-    sum_threshold: float = 10.0,
-    peak_width: int = 8,
-    examples: int = 3,
-    timing_bins: int | None = None,
-    return_stats: bool = False,
-    event_index: int | None = None,
+    tel_id=None,
+    sum_threshold=10.0,
+    peak_width=8,
+    examples=3,
+    timing_bins=None,
+    return_stats=False,
+    event_index=None,
 ):
     """
     Peak finding per pixel; report mean/std of peak sample and plot a histogram.
@@ -620,15 +646,13 @@ def plot_simtel_peak_timing(
         ``return_stats`` is True, a tuple ``(fig, stats)`` is returned, where
         ``stats`` has keys ``{"considered", "found", "mean", "std"}``.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning("Event has no R1 data for peak timing plot")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context="peak timing plot"
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -718,15 +742,13 @@ def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=No
         ``n_samp`` are integers, and ``source``, ``event`` and ``tel_id`` are
         the ctapipe objects used. Returns ``None`` on failure.
     """
-    source = EventSource(filename, max_events=None)
-    event = _select_event_by_type(source)(event_index=event_index)
-
-    r1_tel_ids = sorted(getattr(event.r1, "tel", {}).keys())
-    if r1_tel_ids:
-        tel_id = tel_id or r1_tel_ids[0]
-    else:
-        _logger.warning(f"Event has no R1 data for {context_no_r1}")
+    prepared = _get_event_source_and_r1_tel(
+        filename, event_index=event_index, warn_context=context_no_r1
+    )
+    if prepared is None:
         return None
+    source, event, tel_id_default = prepared
+    tel_id = tel_id or tel_id_default
 
     waveforms = getattr(event.r1.tel.get(tel_id, None), "waveform", None)
     if waveforms is None:
@@ -742,9 +764,9 @@ def _prepare_waveforms_for_image(filename, tel_id, context_no_r1, event_index=No
 
 def plot_simtel_integrated_signal_image(
     filename,
-    tel_id: int | None = None,
-    half_width: int = 8,
-    event_index: int | None = None,
+    tel_id=None,
+    half_width=8,
+    event_index=None,
 ):
     """Plot camera image of integrated signal per pixel around the flasher peak."""
     return _plot_simtel_integrated_image(
@@ -758,10 +780,10 @@ def plot_simtel_integrated_signal_image(
 
 def plot_simtel_integrated_pedestal_image(
     filename,
-    tel_id: int | None = None,
-    half_width: int = 8,
-    offset: int = 16,
-    event_index: int | None = None,
+    tel_id=None,
+    half_width=8,
+    offset=16,
+    event_index=None,
 ):
     """Plot camera image of integrated pedestal per pixel away from the flasher peak."""
     return _plot_simtel_integrated_image(
@@ -776,11 +798,11 @@ def plot_simtel_integrated_pedestal_image(
 
 def _plot_simtel_integrated_image(
     filename,
-    tel_id: int | None,
-    half_width: int,
-    event_index: int | None,
-    mode: str,
-    offset: int | None = None,
+    tel_id,
+    half_width,
+    event_index,
+    mode,
+    offset=None,
 ):
     """Shared implementation for integrated signal/pedestal images.
 
@@ -814,3 +836,178 @@ def _plot_simtel_integrated_image(
     ax.set_axis_off()
     fig.tight_layout()
     return fig
+
+
+def _make_output_paths(ioh, base, input_file):
+    """Return (out_dir, pdf_path) based on base name and input file."""
+    out_dir = ioh.get_output_directory(label=Path(__file__).stem)
+    pdf_path = ioh.get_output_file(f"{base}_{input_file.stem}" if base else input_file.stem)
+    pdf_path = Path(f"{pdf_path}.pdf") if Path(pdf_path).suffix != ".pdf" else Path(pdf_path)
+    return out_dir, pdf_path
+
+
+def _call_peak_timing(
+    filename,
+    tel_id=None,
+    sum_threshold=10.0,
+    peak_width=8,
+    examples=3,
+    timing_bins=None,
+    event_index=None,
+):
+    """Call plot_simtel_peak_timing while tolerating older signature.
+
+    Returns a matplotlib Figure or None.
+    """
+    try:
+        fig_stats = plot_simtel_peak_timing(
+            filename,
+            tel_id=tel_id,
+            sum_threshold=sum_threshold,
+            peak_width=peak_width,
+            examples=examples,
+            timing_bins=timing_bins,
+            return_stats=True,
+            event_index=event_index,
+        )
+        return fig_stats[0] if isinstance(fig_stats, tuple) else fig_stats
+    except TypeError:
+        return plot_simtel_peak_timing(
+            filename,
+            tel_id=tel_id,
+            sum_threshold=sum_threshold,
+            peak_width=peak_width,
+            examples=examples,
+            timing_bins=timing_bins,
+            event_index=event_index,
+        )
+
+
+def _collect_figures_for_file(
+    filename,
+    plots,
+    args,
+    out_dir,
+    base_stem,
+    save_pngs,
+    dpi,
+):
+    """Generate selected plots for a single sim_telarray file.
+
+    Returns a list of figures. If ``save_pngs`` is True, also writes PNGs to ``out_dir``.
+    """
+    figures = []
+
+    def add(fig, tag):
+        if fig is not None:
+            figures.append(fig)
+            if save_pngs:
+                base_path = out_dir / f"{base_stem}_{tag}"
+                try:
+                    save_figure(fig, base_path, figure_format=["png"], dpi=int(dpi))
+                except Exception as ex:  # pylint:disable=broad-except
+                    _logger.warning("Failed to save PNG %s: %s", base_path.with_suffix(".png"), ex)
+        else:
+            _logger.warning("Plot '%s' returned no figure for %s", tag, filename)
+
+    plots_to_run = (
+        [
+            "event_image",
+            "time_traces",
+            "waveform_matrix",
+            "step_traces",
+            "integrated_signal_image",
+            "integrated_pedestal_image",
+            "peak_timing",
+        ]
+        if "all" in plots
+        else list(plots)
+    )
+
+    dispatch = {
+        "event_image": (
+            plot_simtel_event_image,
+            {"distance": None, "event_index": None},
+        ),
+        "time_traces": (
+            plot_simtel_time_traces,
+            {"tel_id": None, "n_pixels": 3, "event_index": None},
+        ),
+        "waveform_matrix": (
+            plot_simtel_waveform_matrix,
+            {"tel_id": None, "vmax": None, "event_index": None},
+        ),
+        "step_traces": (
+            plot_simtel_step_traces,
+            {"tel_id": None, "pixel_step": None, "max_pixels": None, "event_index": None},
+        ),
+        "integrated_signal_image": (
+            plot_simtel_integrated_signal_image,
+            {"tel_id": None, "half_width": 8, "event_index": None},
+        ),
+        "integrated_pedestal_image": (
+            plot_simtel_integrated_pedestal_image,
+            {"tel_id": None, "half_width": 8, "offset": 16, "event_index": None},
+        ),
+        "peak_timing": (
+            _call_peak_timing,
+            {
+                "tel_id": None,
+                "sum_threshold": 10.0,
+                "peak_width": 8,
+                "examples": 3,
+                "timing_bins": None,
+                "event_index": None,
+            },
+        ),
+    }
+
+    for plot_name in plots_to_run:
+        entry = dispatch.get(plot_name)
+        if entry is None:
+            _logger.warning("Unknown plot selection '%s'", plot_name)
+            continue
+        func, defaults = entry
+        kwargs = {k: args.get(k, v) for k, v in defaults.items()}
+        fig = func(filename, **kwargs)  # type: ignore[misc]
+        add(fig, plot_name)
+
+    return figures
+
+
+def generate_and_save_plots(
+    simtel_files,
+    plots,
+    args,
+    ioh,
+):
+    """Generate plots for files and save a multi-page PDF per input.
+
+    Also writes metadata JSON next to the PDF.
+    """
+    for simtel in simtel_files:
+        out_dir, pdf_path = _make_output_paths(ioh, args.get("output_file"), simtel)
+        figures = _collect_figures_for_file(
+            filename=simtel,
+            plots=plots,
+            args=args,
+            out_dir=out_dir,
+            base_stem=simtel.stem,
+            save_pngs=bool(args.get("save_pngs", False)),
+            dpi=int(args.get("dpi", 300)),
+        )
+
+        if not figures:
+            _logger.warning("No figures produced for %s", simtel)
+            continue
+
+        try:
+            save_figs_to_pdf(figures, pdf_path)
+            _logger.info("Saved PDF: %s", pdf_path)
+        except Exception as ex:  # pylint:disable=broad-except
+            _logger.error("Failed to save PDF %s: %s", pdf_path, ex)
+
+        try:
+            MetadataCollector.dump(args, pdf_path, add_activity_name=True)
+        except Exception as ex:  # pylint:disable=broad-except
+            _logger.warning("Failed to write metadata for %s: %s", pdf_path, ex)
