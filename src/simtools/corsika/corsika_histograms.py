@@ -17,12 +17,12 @@ from ctapipe.io import write_table
 from eventio import IACTFile
 
 from simtools import version
-from simtools.corsika import corsika_histograms_visualize as visualize
 from simtools.io import io_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.io.hdf5_handler import fill_hdf5_table
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
+from simtools.visualization import plot_corsika_histograms as visualize
 
 X_AXIS_STRING = "x axis"
 Y_AXIS_STRING = "y axis"

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-from simtools.corsika import corsika_histograms_visualize
+from simtools.visualization import plot_corsika_histograms
 
 # Ignore UserWarning (e.g., SciPy NumPy-version warning) at module level so pytest
 # does not treat it as an error during collection.
@@ -27,7 +27,7 @@ def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, capl
         "time_altitude",
         "num_photons_per_telescope",
     ]:
-        all_figs = corsika_histograms_visualize._kernel_plot_2d_photons(
+        all_figs = plot_corsika_histograms._kernel_plot_2d_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         assert np.size(all_figs) == 1
@@ -43,7 +43,7 @@ def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, capl
         "time_altitude",
         "num_photons_per_telescope",
     ]:
-        all_figs = corsika_histograms_visualize._kernel_plot_2d_photons(
+        all_figs = plot_corsika_histograms._kernel_plot_2d_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         for _, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
@@ -51,7 +51,7 @@ def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, capl
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError, match=r"This property does not exist. The valid entries"):
-            corsika_histograms_visualize._kernel_plot_2d_photons(
+            plot_corsika_histograms._kernel_plot_2d_photons(
                 corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
             )
     assert "This property does not exist. " in caplog.text
@@ -64,7 +64,7 @@ def test_plot_2ds(corsika_histograms_instance_set_histograms):
         "plot_2d_direction",
         "plot_2d_num_photons_per_telescope",
     ]:
-        _function = getattr(corsika_histograms_visualize, function_label)
+        _function = getattr(plot_corsika_histograms, function_label)
         figs = _function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
@@ -85,7 +85,7 @@ def test_kernel_plot_1d_photons(corsika_histograms_instance_set_histograms, capl
     ]
 
     for property_name in labels:
-        all_figs = corsika_histograms_visualize._kernel_plot_1d_photons(
+        all_figs = plot_corsika_histograms._kernel_plot_1d_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         assert np.size(all_figs) == 1
@@ -95,7 +95,7 @@ def test_kernel_plot_1d_photons(corsika_histograms_instance_set_histograms, capl
         individual_telescopes=True, telescope_indices=[0, 1, 2]
     )
     for property_name in labels:
-        all_figs = corsika_histograms_visualize._kernel_plot_1d_photons(
+        all_figs = plot_corsika_histograms._kernel_plot_1d_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         for i_hist, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
@@ -105,7 +105,7 @@ def test_kernel_plot_1d_photons(corsika_histograms_instance_set_histograms, capl
                 assert isinstance(all_figs[i_hist], plt.Figure)
     with caplog.at_level("ERROR"):
         with pytest.raises(ValueError, match=r"This property does not"):
-            corsika_histograms_visualize._kernel_plot_1d_photons(
+            plot_corsika_histograms._kernel_plot_1d_photons(
                 corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
             )
     assert "This property does not exist. " in caplog.text
@@ -121,19 +121,19 @@ def test_plot_1ds(corsika_histograms_instance_set_histograms):
         "plot_photon_per_event_distr",
         "plot_photon_per_telescope_distr",
     ]:
-        _function = getattr(corsika_histograms_visualize, function_label)
+        _function = getattr(plot_corsika_histograms, function_label)
         figs = _function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
 
 
 def test_plot_event_headers(corsika_histograms_instance_set_histograms):
-    fig = corsika_histograms_visualize.plot_1d_event_header_distribution(
+    fig = plot_corsika_histograms.plot_1d_event_header_distribution(
         corsika_histograms_instance_set_histograms, "total_energy"
     )
     assert isinstance(fig, plt.Figure)
 
-    fig = corsika_histograms_visualize.plot_2d_event_header_distribution(
+    fig = plot_corsika_histograms.plot_2d_event_header_distribution(
         corsika_histograms_instance_set_histograms, "zenith", "azimuth"
     )
     assert isinstance(fig, plt.Figure)
@@ -146,11 +146,11 @@ def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler
         "plot_photon_per_event_distr",
         "plot_photon_per_telescope_distr",
     ]:
-        _function = getattr(corsika_histograms_visualize, function_label)
+        _function = getattr(plot_corsika_histograms, function_label)
         figs = _function(corsika_histograms_instance_set_histograms)
         figs_list.append(figs)
     figs_list = np.array(figs_list).flatten()
-    corsika_histograms_visualize.save_figs_to_pdf(figs_list, output_file)
+    plot_corsika_histograms.save_figs_to_pdf(figs_list, output_file)
     assert output_file.exists()
 
 
@@ -161,7 +161,7 @@ def test_event_header_1d_dimensionless_and_log_toggle(corsika_histograms_instanc
         corsika_histograms_instance_set_histograms.event_information[key].value
         * u.dimensionless_unscaled
     )
-    fig = corsika_histograms_visualize.plot_1d_event_header_distribution(
+    fig = plot_corsika_histograms.plot_1d_event_header_distribution(
         corsika_histograms_instance_set_histograms, key, log_y=False
     )
     assert isinstance(fig, plt.Figure)
@@ -181,7 +181,7 @@ def test_event_header_2d_logz_false_and_dimensionless_labels(
         corsika_histograms_instance_set_histograms.event_information[key_y].value
         * u.dimensionless_unscaled
     )
-    fig = corsika_histograms_visualize.plot_2d_event_header_distribution(
+    fig = plot_corsika_histograms.plot_2d_event_header_distribution(
         corsika_histograms_instance_set_histograms, key_x, key_y, log_z=False
     )
     assert isinstance(fig, plt.Figure)
@@ -191,14 +191,14 @@ def test_build_and_export_all_photon_figures(
     corsika_histograms_instance_set_histograms, io_handler
 ):
     # Build a reduced set for speed
-    figs = corsika_histograms_visualize.build_all_photon_figures(
+    figs = plot_corsika_histograms.build_all_photon_figures(
         corsika_histograms_instance_set_histograms, test=True
     )
     assert isinstance(figs, np.ndarray)
     assert figs.size > 0
 
     # Export reduced set to a single PDF
-    pdf_path = corsika_histograms_visualize.export_all_photon_figures_pdf(
+    pdf_path = plot_corsika_histograms.export_all_photon_figures_pdf(
         corsika_histograms_instance_set_histograms, test=True
     )
     assert pdf_path.exists()
@@ -208,7 +208,7 @@ def test_derive_event_histograms_pdf_and_hdf5(
     corsika_histograms_instance_set_histograms, io_handler
 ):
     # 1D event histograms: create PDF and HDF5 outputs
-    pdf_1d = corsika_histograms_visualize.derive_event_1d_histograms(
+    pdf_1d = plot_corsika_histograms.derive_event_1d_histograms(
         corsika_histograms_instance_set_histograms,
         event_1d_header_keys=["total_energy", "zenith"],
         pdf=True,
@@ -219,7 +219,7 @@ def test_derive_event_histograms_pdf_and_hdf5(
     assert pdf_1d.exists()
 
     # 2D event histograms: create PDF and HDF5 outputs
-    pdf_2d = corsika_histograms_visualize.derive_event_2d_histograms(
+    pdf_2d = plot_corsika_histograms.derive_event_2d_histograms(
         corsika_histograms_instance_set_histograms,
         event_2d_header_keys=["zenith", "azimuth"],
         pdf=True,
@@ -235,7 +235,7 @@ def test_derive_event_2d_histograms_odd_keys_warning(
 ):
     with caplog.at_level(logging.WARNING):
         # Use odd number of keys and disable outputs to only exercise the warning path
-        result = corsika_histograms_visualize.derive_event_2d_histograms(
+        result = plot_corsika_histograms.derive_event_2d_histograms(
             corsika_histograms_instance_set_histograms,
             event_2d_header_keys=["zenith", "azimuth", "total_energy"],
             pdf=False,
@@ -248,7 +248,7 @@ def test_derive_event_2d_histograms_odd_keys_warning(
 
 def test_derive_event_1d_histograms_no_pdf_returns_none(corsika_histograms_instance_set_histograms):
     # pdf disabled -> function should return None regardless of hdf5 export
-    result = corsika_histograms_visualize.derive_event_1d_histograms(
+    result = plot_corsika_histograms.derive_event_1d_histograms(
         corsika_histograms_instance_set_histograms,
         event_1d_header_keys=["total_energy"],
         pdf=False,
@@ -259,7 +259,7 @@ def test_derive_event_1d_histograms_no_pdf_returns_none(corsika_histograms_insta
 
 
 def test_plot_2d_time_altitude_returns_figs(corsika_histograms_instance_set_histograms):
-    figs = corsika_histograms_visualize.plot_2d_time_altitude(
+    figs = plot_corsika_histograms.plot_2d_time_altitude(
         corsika_histograms_instance_set_histograms, log_z=True
     )
     assert isinstance(figs, list)

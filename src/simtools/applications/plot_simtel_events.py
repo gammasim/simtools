@@ -81,9 +81,9 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler
+from simtools.visualization.plot_corsika_histograms import save_figs_to_pdf
 from simtools.visualization.plot_simtel_events import (
     plot_simtel_event_image,
     plot_simtel_integrated_pedestal_image,
