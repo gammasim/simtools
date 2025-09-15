@@ -345,6 +345,24 @@ def test_create_new_parameter_entry_success(mock_collect_data, mock_get_latest, 
         assert data["value"] == pytest.approx(62.5)
 
 
+def test_create_new_parameter_entry_missing_telescope_dir(tmp_path):
+    """Test creation of a new parameter entry when telescope directory is missing."""
+    telescope = "NonExistentTelescope"
+    param = "dsum_threshold"
+    param_data = {"version": "4.0.0", "value": 62.5}
+    model_parameters_dir = tmp_path / "simulation-models" / "model_parameters"
+
+    # Don't create telescope directory to trigger the FileNotFoundError
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"Directory for telescope '{telescope}' does not exist in '{model_parameters_dir}'.",
+    ):
+        model_repository._create_new_parameter_entry(
+            telescope, param, param_data, model_parameters_dir
+        )
+
+
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
 def test_create_new_parameter_entry_missing_param_dir(mock_get_latest, tmp_path):
     """Test creation of a new parameter entry when parameter directory is missing."""
@@ -356,6 +374,7 @@ def test_create_new_parameter_entry_missing_param_dir(mock_get_latest, tmp_path)
     # Create telescope directory but not parameter directory
     telescope_dir = model_parameters_dir / telescope
     telescope_dir.mkdir(parents=True)
+    # Ensure parameter directory does not exist to trigger the FileNotFoundError
 
     with pytest.raises(
         FileNotFoundError,
@@ -433,9 +452,7 @@ def test_apply_changes_to_production_table_update_model_version():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
+    model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
     assert data["model_version"] == "6.5.0"
 
@@ -455,9 +472,7 @@ def test_apply_changes_to_production_table_update_parameters():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
+    model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
     # Only parameters for the matching production_table_name should be included
     assert data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
@@ -470,9 +485,7 @@ def test_apply_changes_to_production_table_no_parameters():
     changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
+    model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
     assert data["model_version"] == "6.5.0"
     # Parameters should now be created with only the matching telescope parameters
@@ -484,27 +497,7 @@ def test_apply_changes_to_production_table_type_error():
     with pytest.raises(
         TypeError, match="Unsupported data type <class 'int'> in production table update"
     ):
-        model_repository._apply_changes_to_production_table(42, {}, "1.0.0", False, "1.0.0")
-
-
-def test_apply_changes_to_production_table_with_list_data():
-    """Test applying changes when the production table contains a list."""
-    data = [
-        {
-            "model_version": "6.0.0",
-            "production_table_name": "MSTx-FlashCam",
-            "parameters": {"MSTx-FlashCam": {"dsum_threshold": "3.0.0"}},
-        }
-    ]
-    changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
-    model_version = "6.5.0"
-
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
-
-    assert data[0]["model_version"] == "6.5.0"
-    assert data[0]["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
+        model_repository._apply_changes_to_production_table(42, {}, "1.0.0", False)
 
 
 def test_apply_changes_to_production_tables(tmp_path):
@@ -543,7 +536,7 @@ def test_apply_changes_to_production_tables(tmp_path):
 
     # Apply changes from source to target
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table file is updated with changes
@@ -586,7 +579,7 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table file is updated in target
@@ -619,7 +612,7 @@ def test_apply_changes_to_production_tables_simple(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table file is updated in target
@@ -661,7 +654,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table files are updated in target
@@ -703,7 +696,6 @@ def test_generate_new_production_success(
         {"telescope": {"param": {"version": "1.0.0", "value": 42}}},
         "6.5.0",
         False,
-        "source",
     )
     mock_apply_model_changes.assert_called_once()
 
@@ -769,11 +761,8 @@ def test_apply_changes_to_production_table_patch_update():
     }
     changes = {"test_table": {"param1": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
-    base_model_version = "5.0.0"
 
-    result = model_repository._apply_changes_to_production_table(
-        data, changes, model_version, True, base_model_version
-    )
+    result = model_repository._apply_changes_to_production_table(data, changes, model_version, True)
 
     assert result is True  # Should return True when changes match
     assert data["model_version"] == "6.5.0"
@@ -786,7 +775,7 @@ def test_apply_changes_to_production_table_patch_update():
     }
 
     result_no_changes = model_repository._apply_changes_to_production_table(
-        data_no_changes, changes, model_version, True, base_model_version
+        data_no_changes, changes, model_version, True
     )
 
     assert result_no_changes is False  # Should return False when no changes apply
