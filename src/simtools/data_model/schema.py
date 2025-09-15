@@ -309,6 +309,8 @@ def _validate_deprecation_and_version(data, software_name="simtools"):
     ----------
     data: dict
         Data dictionary to validate.
+    software_name: str
+        Name of the software to check version against.
 
     Raises
     ------
