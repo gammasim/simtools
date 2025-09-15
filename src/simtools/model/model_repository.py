@@ -8,6 +8,8 @@ functions to interact with and verify the repository.
 import logging
 from pathlib import Path
 
+from packaging.version import parse as parse_version
+
 import simtools.data_model.model_data_writer as writer
 from simtools.io import ascii_handler
 from simtools.utils import names
@@ -144,6 +146,7 @@ def generate_new_production(args_dict):
     - copy of production tables from an existing base model version
     - update production tables with changes defined in a YAML file
     - generate new model parameter entries for changed parameters
+    - allows for full or patch updates
 
     Parameters
     ----------
@@ -296,12 +299,14 @@ def _apply_changes_to_model_parameters(changes, model_parameters_dir):
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
             if param_data.get("value") is not None:
-                _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
+                _create_new_model_parameter_entry(
+                    telescope, param, param_data, model_parameters_dir
+                )
 
 
-def _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir):
+def _create_new_model_parameter_entry(telescope, param, param_data, model_parameters_dir):
     """
-    Create new model parameter JSON file.
+    Create new model parameter entry in the model parameters directory.
 
     If a model parameter files exists, copy latest version and update the fields.
     Others generate new file using the model parameter schema.
@@ -331,12 +336,14 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
 
     if latest_file is not None:
         json_data = ascii_handler.collect_data_from_file(latest_file)
-        param_data["version"] = _update_model_parameter_version(
+        param_data["version"] = _check_for_major_version_jump(
             json_data, param_data, param, telescope
         )
         # important for e.g. nsb_pixel_rate
         if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
             param_data["value"] = [param_data["value"]] * len(json_data["value"])
+        # TODO - understand why this is needed
+        param_data["meta_parameter"] = json_data.get("meta_parameter", False)
 
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name=param,
@@ -347,6 +354,7 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
         output_path=param_dir,
         use_plain_output_path=True,
         unit=param_data.get("unit"),
+        meta_parameter=param_data.get("meta_parameter", False),
     )
 
 
@@ -380,21 +388,23 @@ def _get_latest_model_parameter_file(directory, parameter):
             f"No JSON files found for parameter '{parameter}' in directory '{directory}'."
         )
 
-    # Sort files by version number (assumes version is part of the filename)
-    def safe_parse_version(filename):
-        version_str = filename.stem.split("-")[-1]
-        parts = version_str.split(".")
-        return tuple(part.zfill(8) for part in parts)
+    def extract_version(path: Path):
+        # version is part after first '-'
+        return parse_version(path.stem.split("-", 1)[1])
 
-    files.sort(key=safe_parse_version)
-    return str(files[-1])
+    latest_file = max(files, key=extract_version)
+    return str(latest_file)
 
 
-def _update_model_parameter_version(json_data, param_data, param, telescope):
-    """Check for major version jump and print a warning if necessary."""
-    latest_version = int(json_data.get("parameter_version", "0").split(".")[0])
-    new_version = int(param_data["version"].split(".")[0])
-    if new_version > latest_version + 1:
+def _check_for_major_version_jump(json_data, param_data, param, telescope):
+    """
+    Check for major version jump and print a warning if necessary.
+
+    Generally a jump from e.g. '3.1.0' to '5.0.0' should be avoided.
+    """
+    latest_version = parse_version(json_data.get("parameter_version", "0"))
+    new_version = parse_version(param_data["version"])
+    if new_version.major > latest_version.major + 1:
         _logger.warning(
             f"Major version jump from {latest_version} to {new_version} "
             f"for parameter '{param}' in telescope '{telescope}'."
