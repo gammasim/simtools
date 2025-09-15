@@ -316,14 +316,11 @@ def _validate_deprecation_and_version(
     Parameters
     ----------
     data: dict
-        Data dictionary to validate.
+        Data dictionary to check.
     software_name: str
         Name of the software to check version against.
-
-    Raises
-    ------
-    ValueError
-        If version mismatches.
+    ignore_software_version: bool
+        If True, ignore software version check.
     """
     if not isinstance(data, dict):
         return
@@ -332,24 +329,27 @@ def _validate_deprecation_and_version(
         note = data.get("deprecation_note", "(no deprecation note provided)")
         _logger.warning(f"Data is deprecated. Note: {note}")
 
+    def check_version(sw):
+        constraint = sw.get("version")
+        if constraint is None:
+            return
+        constraint = constraint.strip()
+        spec = SpecifierSet(constraint, prereleases=True)
+        if Version(version.__version__) in spec:
+            _logger.debug(
+                f"Version {version.__version__} of {software_name} matches constraint {constraint}."
+            )
+        else:
+            msg = (
+                f"Version {version.__version__} of {software_name} "
+                f"does not match constraint {constraint}."
+            )
+            if ignore_software_version:
+                _logger.warning(f"{msg}, but version check is ignored.")
+                return
+            raise ValueError(msg)
+
     for sw in data.get("simulation_software", []):
         if sw.get("name") == software_name:
-            constraint = sw.get("version")
-            if constraint is None:
-                return
-            constraint = constraint.strip()
-            spec = SpecifierSet(constraint, prereleases=True)
-            if Version(version.__version__) in spec:
-                _logger.debug(
-                    f"Version {version.__version__} of "
-                    f"{software_name} matches constraint {constraint}."
-                )
-            else:
-                msg = (
-                    f"Version {version.__version__} of {software_name} "
-                    f"does not match constraint {constraint}."
-                )
-                if ignore_software_version:
-                    _logger.warning(f"{msg}, but version check is ignored.")
-                    return
-                raise ValueError(msg)
+            check_version(sw)
+            break
