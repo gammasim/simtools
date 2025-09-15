@@ -130,6 +130,7 @@ class CorsikaSimtelRunner:
                 run_command = simulator_array.make_run_command(
                     run_number=run_number,
                     input_file="-",  # instruct sim_telarray to take input from standard output
+                    weak_pointing=self._determine_pointing_option(self.label),
                 )
                 file.write(f"{run_command}")
                 file.write("\n")
