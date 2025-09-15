@@ -30,11 +30,11 @@ Support modules for running CORSIKA.
 
 ```
 
-## corsika_histograms_visualize
+## plot_corsika_histograms
 
 (corsika-histograms-visualize-1)=
 
 ```{eval-rst}
-.. automodule:: corsika.corsika_histograms_visualize
+.. automodule:: corsika.plot_corsika_histograms
    :members:
 ```
