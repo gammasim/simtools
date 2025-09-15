@@ -12,8 +12,8 @@ from ctapipe.io import EventSource
 from ctapipe.visualization import CameraDisplay
 from scipy import signal as _signal
 
-from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.visualization.plot_corsika_histograms import save_figs_to_pdf
 from simtools.visualization.visualize import save_figure
 
 __all__ = [
