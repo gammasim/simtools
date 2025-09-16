@@ -5,9 +5,7 @@ a gitlab repository ('SimulationModels'). This module provides service
 functions to interact with and verify the repository.
 """
 
-import json
 import logging
-import shutil
 from pathlib import Path
 
 from simtools.io import ascii_handler
@@ -136,9 +134,15 @@ def _get_model_parameter_file_path(
     )
 
 
-def copy_and_update_production_table(args_dict):
+def generate_new_production(args_dict):
     """
-    Copy and update simulation model production tables.
+    Generate a new production definition (production tables and model parameters).
+
+    The following steps are performed:
+
+    - copy of production tables from an existing base model version
+    - update production tables with changes defined in a YAML file
+    - generate new model parameter entries for changed parameters
 
     Parameters
     ----------
@@ -147,85 +151,134 @@ def copy_and_update_production_table(args_dict):
     """
     modifications = ascii_handler.collect_data_from_file(args_dict["modifications"])
     changes = modifications.get("changes", {})
+    base_model_version = args_dict["base_model_version"]
     model_version = modifications["model_version"]
 
     simulation_models_path = Path(args_dict["simulation_models_path"])
-    source_prod_table_path = (
-        simulation_models_path / "productions" / args_dict["source_prod_table_dir"]
-    )
-    target_prod_table_path = simulation_models_path / "productions" / model_version
+    source_path = simulation_models_path / "productions" / base_model_version
+    target_path = simulation_models_path / "productions" / model_version
     model_parameters_dir = simulation_models_path / "model_parameters"
+    patch_update = args_dict.get("patch_update", False)
 
-    _logger.info(
-        f"Copying production tables from {source_prod_table_path} to {target_prod_table_path}"
+    _logger.info(f"Copying production tables from {source_path} to {target_path}")
+
+    _apply_changes_to_production_tables(
+        source_path,
+        target_path,
+        changes,
+        model_version,
+        patch_update,
     )
 
-    if Path(target_prod_table_path).exists():
-        raise FileExistsError(
-            f"The target production table directory '{target_prod_table_path}' already exists."
-        )
-    shutil.copytree(source_prod_table_path, target_prod_table_path)
-
-    _apply_changes_to_production_tables(target_prod_table_path, changes, model_version)
-
-    for telescope, parameters in changes.items():
-        for param, param_data in parameters.items():
-            if param_data.get("value"):
-                _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
+    _apply_changes_to_model_parameters(changes, model_parameters_dir)
 
 
-def _apply_changes_to_production_tables(target_prod_table_path, changes, model_version):
-    """Apply changes to the production tables in the target directory."""
-    for file_path in Path(target_prod_table_path).rglob("*.json"):
-        if file_path.name.startswith("configuration"):
-            continue
+def _apply_changes_to_production_tables(
+    source_path, target_path, changes, model_version, patch_update
+):
+    """
+    Apply changes to production tables and write them to target directory.
+
+    Parameters
+    ----------
+    source_path: Path
+        Path to the source production tables.
+    target_path: Path
+        Path to the target production tables.
+    changes: dict
+        The changes to be applied.
+    model_version: str
+        The model version to be set in the JSON data.
+    patch_update: bool
+        Patch update, copy only tables for changed elements.
+    """
+    target_path.mkdir(parents=True, exist_ok=True)
+    for file_path in Path(source_path).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
-        _apply_changes_to_production_table(data, changes, model_version)
-        with file_path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, sort_keys=True)
-            f.write("\n")
+        write_to_disk = _apply_changes_to_production_table(
+            data, changes, model_version, patch_update
+        )
+        if write_to_disk:
+            ascii_handler.write_data_to_file(data, target_path / file_path.name, sort_keys=True)
 
 
-def _apply_changes_to_production_table(data, changes, model_version):
+def _apply_changes_to_production_table(data, changes, model_version, patch_update):
     """
     Recursively apply changes to the new production tables.
 
     Parameters
     ----------
-    data: dict or list
-        The JSON data to be updated.
+    data: dict
+        The data to be updated.
     changes: dict
         The changes to be applied.
     model_version: str
         The model version to be set in the JSON data.
+    patch_update: bool
+        Patch update, copy only tables for changed elements.
+
+    Returns
+    -------
+    bool
+        True if data was modified and should be written to disk (patch updates) and always
+        for full updates.
     """
     if isinstance(data, dict):
-        if "model_version" in data:
-            data["model_version"] = model_version
-        _update_parameters(data.get("parameters", {}), changes)
+        table_name = data["production_table_name"]
+        data["model_version"] = model_version
+        if table_name in changes:
+            data["parameters"] = _update_parameters(
+                {} if patch_update else data["parameters"].get(table_name, {}), changes, table_name
+            )
+        elif patch_update:
+            return False
+    else:
+        raise TypeError(f"Unsupported data type {type(data)} in production table update")
 
-    elif isinstance(data, list):
-        for item in data:
-            _apply_changes_to_production_table(item, changes, model_version)
+    return True
 
 
-def _update_parameters(params, changes):
-    """Update parameters in the given dictionary based on changes."""
-    for telescope, updates in changes.items():
-        if telescope not in params:
-            continue
-        for param, param_data in updates.items():
-            if param in params[telescope]:
-                old = params[telescope][param]
-                new = param_data["version"]
-                _logger.info(f"Updating '{telescope} - {param}' from {old} to {new}")
-                params[telescope][param] = new
-            else:
-                _logger.info(
-                    f"Adding new parameter '{telescope} - {param}' "
-                    f"with version {param_data['version']}"
-                )
-                params[telescope][param] = param_data["version"]
+def _update_parameters(table_parameters, changes, table_name):
+    """
+    Create a new parameters dictionary containing only the parameters for the specified table.
+
+    Parameters
+    ----------
+    table_parameters: dict
+        Parameters for the specific table.
+    changes: dict
+        The changes to be applied, containing table and parameter information.
+    table_name: str
+        The name of the production table to filter parameters for.
+
+    Returns
+    -------
+    dict
+        Dictionary containing only the new/changed parameters for the specified table.
+    """
+    updated_parameters_dict = {table_name: table_parameters}
+    for param, data in changes[table_name].items():
+        version = data["version"]
+        _logger.info(f"Setting '{table_name} - {param}' to version {version}")
+        updated_parameters_dict[table_name][param] = version
+    return updated_parameters_dict
+
+
+def _apply_changes_to_model_parameters(changes, model_parameters_dir):
+    """
+    Apply changes to model parameters by creating new parameter entries.
+
+    Parameters
+    ----------
+    changes: dict
+        The changes to be applied.
+    model_parameters_dir: str
+        Path to the model parameters directory.
+    """
+    for telescope, parameters in changes.items():
+        for param, param_data in parameters.items():
+            if param_data.get("value"):
+                _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir)
 
 
 def _create_new_parameter_entry(telescope, param, param_data, model_parameters_dir):
@@ -266,14 +319,16 @@ def _create_new_parameter_entry(telescope, param, param_data, model_parameters_d
     json_data["parameter_version"] = _update_model_parameter_version(
         json_data, param_data, param, telescope
     )
-    json_data["value"] = param_data["value"]
+    # important for e.g. nsb_pixel_rate
+    if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
+        json_data["value"] = [param_data["value"]] * len(json_data["value"])
+    else:
+        json_data["value"] = param_data["value"]
 
     new_file_name = f"{param}-{param_data['version']}.json"
     new_file_path = param_dir / new_file_name
 
-    with new_file_path.open("w", encoding="utf-8") as f:
-        json.dump(json_data, f, indent=4)
-        f.write("\n")
+    ascii_handler.write_data_to_file(json_data, new_file_path, sort_keys=True)
     _logger.info(f"Created new model parameter JSON file: {new_file_path}")
 
 
