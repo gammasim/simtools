@@ -34,5 +34,5 @@ Applications modifying database entries:
 Applications to manage the simulation model repository:
 
 * verify consistency and completeness of production tables and model parameters: [simtools-maintain-simulation-model-verify-production-tables](maintain_simulation_model_verify_production_tables)
-* generate a new simulation model production tables by copying existing table and apply modifications: [simtools-maintain-simulation-model-add-production-table](maintain_simulation_model_add_production_table)
+* generate a new simulation model production by copying existing table and apply modifications: [simtools-maintain-simulation-model-add-production](maintain_simulation_model_add_production)
 * compare two simulation model production directories and report differences: [simtools-maintain-simulation-model-compare-productions](maintain_simulation_model_compare_productions)
