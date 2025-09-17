@@ -852,8 +852,11 @@ class ReadParameters:
                 array_elements.append(design_model)
 
         for calibration_device in array_elements:
+            device_sites = names.get_site_from_array_element_name(calibration_device)
+            site = device_sites[0] if isinstance(device_sites, list) else device_sites
+
             all_parameter_data = self.db.get_model_parameters(
-                site=names.get_site_from_array_element_name(calibration_device),
+                site=site,
                 array_element_name=calibration_device,
                 collection="calibration_devices",
                 model_version=self.model_version,
@@ -893,6 +896,9 @@ class ReadParameters:
         new_output_path.mkdir(parents=True, exist_ok=True)
         self.output_path = new_output_path
         for calibration_device in array_elements:
-            self.site = names.get_site_from_array_element_name(calibration_device)
+            device_sites = names.get_site_from_array_element_name(calibration_device)
+            # parameters are site independent so just take the first site to read from db
+            site = device_sites[0] if isinstance(device_sites, list) else device_sites
+            self.site = site
             self.array_element = calibration_device
             self.produce_model_parameter_reports(collection="calibration_devices")
