@@ -6,6 +6,7 @@ from pathlib import Path
 import jsonschema
 import pytest
 import yaml
+from packaging.specifiers import InvalidSpecifier
 
 from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
@@ -367,6 +368,11 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     # Test 12: Version constraint with whitespace should be handled
     whitespace_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0  "}]}
     schema._validate_deprecation_and_version(whitespace_data)
+
+    # Test 12a: Version constraint with random parameter should be handled
+    invalid_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0-abc  "}]}
+    with pytest.raises(InvalidSpecifier, match=r"Invalid specifier: '>=1.0.0-abc'"):
+        schema._validate_deprecation_and_version(invalid_data)
 
     # Test 13: Custom software name parameter
     custom_sw_data = {"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}
