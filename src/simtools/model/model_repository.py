@@ -172,14 +172,13 @@ def generate_new_production(args_dict):
         changes,
         model_version,
         patch_update,
-        base_model_version,
     )
 
     _apply_changes_to_model_parameters(changes, model_parameters_dir)
 
 
 def _apply_changes_to_production_tables(
-    source_path, target_path, changes, model_version, patch_update, base_model_version
+    source_path, target_path, changes, model_version, patch_update
 ):
     """
     Apply changes to production tables and write them to target directory.
@@ -196,37 +195,31 @@ def _apply_changes_to_production_tables(
         The model version to be set in the JSON data.
     patch_update: bool
         Patch update, copy only tables for changed elements.
-    base_model_version: str
-        The base model version from which the production tables were copied.
     """
     target_path.mkdir(parents=True, exist_ok=True)
     for file_path in Path(source_path).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
         write_to_disk = _apply_changes_to_production_table(
-            data, changes, model_version, patch_update, base_model_version
+            data, changes, model_version, patch_update
         )
         if write_to_disk:
             ascii_handler.write_data_to_file(data, target_path / file_path.name, sort_keys=True)
 
 
-def _apply_changes_to_production_table(
-    data, changes, model_version, patch_update, base_model_version
-):
+def _apply_changes_to_production_table(data, changes, model_version, patch_update):
     """
     Recursively apply changes to the new production tables.
 
     Parameters
     ----------
-    data: dict or list
-        The JSON data to be updated.
+    data: dict
+        The data to be updated.
     changes: dict
         The changes to be applied.
     model_version: str
         The model version to be set in the JSON data.
     patch_update: bool
         Patch update, copy only tables for changed elements.
-    base_model_version: str
-        The base model version from which the production tables were copied.
 
     Returns
     -------
@@ -243,17 +236,13 @@ def _apply_changes_to_production_table(
             )
         elif patch_update:
             return False
-
-    elif isinstance(data, list):
-        for item in data:
-            _apply_changes_to_production_table(
-                item, changes, model_version, patch_update, base_model_version
-            )
+    else:
+        raise TypeError(f"Unsupported data type {type(data)} in production table update")
 
     return True
 
 
-def _update_parameters(parameters, changes, table_name):
+def _update_parameters(table_parameters, changes, table_name):
     """
     Create a new parameters dictionary for the production tables.
 
@@ -262,17 +251,19 @@ def _update_parameters(parameters, changes, table_name):
 
     Parameters
     ----------
+    table_parameters: dict
+        Parameters for the specific table.
     changes: dict
-        The changes to be applied, containing telescope and parameter information.
+        The changes to be applied, containing table and parameter information.
     table_name: str
-        The name of the production table (telescope) to filter parameters for.
+        The name of the production table to filter parameters for.
 
     Returns
     -------
     dict
-        Dictionary containing only the new/changed parameters for the specified telescope.
+        Dictionary containing only the new/changed parameters for the specified table.
     """
-    new_params = {table_name: parameters}
+    new_params = {table_name: table_parameters}
 
     for param, data in changes[table_name].items():
         if data.get("remove", False):

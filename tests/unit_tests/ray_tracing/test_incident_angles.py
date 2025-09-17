@@ -49,7 +49,8 @@ def mock_models(monkeypatch):
         lambda key: 2150.0 if key == "corsika_observation_level" else 0.0
     )
 
-    monkeypatch.setattr(ia, "initialize_simulation_models", lambda *a, **k: (tel, site))
+    dummy = object()
+    monkeypatch.setattr(ia, "initialize_simulation_models", lambda *a, **k: (tel, site, dummy))
     return SimpleNamespace(tel=tel, site=site)
 
 
