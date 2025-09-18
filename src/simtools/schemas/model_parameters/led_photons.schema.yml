@@ -1,22 +1,25 @@
 %YAML 1.2
 ---
-title: Schema for flasher_wavelength model parameter
+title: Schema for led_photons model parameter
+deprecated: true
+deprecation_note: "LED parameter not used."
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_wavelength
+name: led_photons
 description: |-
-  The wavelength of the light emitted from the flasher device.
-  All photons are emitted exactly with this wavelength.
+  The intensity of LEDs assumed to sit in the camera lid in front of each pixel \
+  (like originally HESS CT3) when simulating extra calibration-type events (with LED_EVENTS greater than zero).\
+  Typically this would be single-p.e. calibration events without NSB background.
 short_description: |-
-  Wavelength of flasher device.
+  LED intensity in the camera lid in front of each pixel.
 data:
   - type: float64
-    unit: "nm"
-    default: 400
+    unit: dimensionless
+    default: 4.0
     allowed_range:
-      min: 200
+      min: 0.05
 instrument:
   class: Calibration
   type:
@@ -31,6 +34,5 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
-    internal_parameter_name: laser_wavelength
   - name: simtools
-    version: ">=0.21.0"
+    version: "<0.21.0"

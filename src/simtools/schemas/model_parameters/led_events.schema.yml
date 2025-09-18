@@ -1,20 +1,22 @@
 %YAML 1.2
 ---
-title: Schema for flasher_angular_distribution_width model parameter
+title: Schema for led_events model parameter
+deprecated: true
+deprecation_note: "LED parameter not used."
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_angular_distribution_width
+name: led_events
 description: |-
-  Characteristic width of the flasher angular emission distribution.
-  This is the RMS for Gaussian distributions or the maximum half
-  opening angle for conical shapes.
+  If greater than zero than additional calibration-type events are simulated before \
+  the first shower events, assuming an independent LED in front of each pixel, \
+  taking this type of data with closed lid, i.e. without NSB.
 short_description: |-
-  Characteristic width of the flasher angular emission distribution.
+  Additional calibration-type events.
 data:
-  - type: float64
-    unit: "deg"
+  - type: int64
+    unit: dimensionless
     default: 0
     allowed_range:
       min: 0
@@ -31,5 +33,6 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
+  - name: sim_telarray
   - name: simtools
-    version: ">=0.21.0"
+    version: "<0.21.0"

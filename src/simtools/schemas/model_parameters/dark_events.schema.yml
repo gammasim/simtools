@@ -1,20 +1,20 @@
 %YAML 1.2
 ---
-title: Schema for flasher_angular_distribution_width model parameter
+title: Schema for dark_events model parameter
+deprecated: true
+deprecation_note: "Replaced by configuration parameter in corresponding application"
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_angular_distribution_width
+name: dark_events
 description: |-
-  Characteristic width of the flasher angular emission distribution.
-  This is the RMS for Gaussian distributions or the maximum half
-  opening angle for conical shapes.
+  Pedestal events at start of run with camera lid closed (completely dark, no NSB).
 short_description: |-
-  Characteristic width of the flasher angular emission distribution.
+  Pedestal events at start of run closed lid.
 data:
-  - type: float64
-    unit: "deg"
+  - type: int64
+    unit: dimensionless
     default: 0
     allowed_range:
       min: 0
@@ -31,5 +31,6 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
+  - name: sim_telarray
   - name: simtools
-    version: ">=0.21.0"
+    version: "<0.21.0"
