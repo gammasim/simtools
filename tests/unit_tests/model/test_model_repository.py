@@ -320,9 +320,7 @@ def test_apply_changes_to_production_table_update_model_version():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
+    model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
     assert data["model_version"] == "6.5.0"
 
@@ -342,9 +340,7 @@ def test_apply_changes_to_production_table_update_parameters():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
+    model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
     # Only parameters for the matching production_table_name should be included
     assert data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
@@ -357,9 +353,7 @@ def test_apply_changes_to_production_table_no_parameters():
     changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
+    model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
     assert data["model_version"] == "6.5.0"
     # Parameters should now be created with only the matching telescope parameters
@@ -378,12 +372,10 @@ def test_apply_changes_to_production_table_with_list_data():
     changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
-        data, changes, model_version, False, "6.0.0"
-    )
-
-    assert data[0]["model_version"] == "6.5.0"
-    assert data[0]["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
+    with pytest.raises(
+        TypeError, match="Unsupported data type <class 'list'> in production table update"
+    ):
+        model_repository._apply_changes_to_production_table(data, changes, model_version, False)
 
 
 def test_apply_changes_to_production_tables(tmp_path):
@@ -422,7 +414,7 @@ def test_apply_changes_to_production_tables(tmp_path):
 
     # Apply changes from source to target
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table file is updated with changes
@@ -465,7 +457,7 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table file is updated in target
@@ -498,7 +490,7 @@ def test_apply_changes_to_production_tables_simple(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table file is updated in target
@@ -540,7 +532,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False, "6.0.0"
+        source_prod_table_path, target_prod_table_path, changes, "6.5.0", False
     )
 
     # Verify the production table files are updated in target
@@ -582,7 +574,6 @@ def test_generate_new_production_success(
         {"telescope": {"param": {"version": "1.0.0", "value": 42}}},
         "6.5.0",
         False,
-        "source",
     )
     mock_apply_model_changes.assert_called_once()
 
@@ -619,11 +610,8 @@ def test_apply_changes_to_production_table_patch_update():
     }
     changes = {"test_table": {"param1": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
-    base_model_version = "5.0.0"
 
-    result = model_repository._apply_changes_to_production_table(
-        data, changes, model_version, True, base_model_version
-    )
+    result = model_repository._apply_changes_to_production_table(data, changes, model_version, True)
 
     assert result is True  # Should return True when changes match
     assert data["model_version"] == "6.5.0"
@@ -636,7 +624,7 @@ def test_apply_changes_to_production_table_patch_update():
     }
 
     result_no_changes = model_repository._apply_changes_to_production_table(
-        data_no_changes, changes, model_version, True, base_model_version
+        data_no_changes, changes, model_version, True
     )
 
     assert result_no_changes is False  # Should return False when no changes apply
