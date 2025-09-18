@@ -6,8 +6,6 @@ r"""
     This includes parameters mirror_reflection_random_angle, \
     mirror_align_random_horizontal and mirror_align_random_vertical.
 
-    The telescope zenith angle and the source distance can be set by command line arguments.
-
     The measured cumulative PSF should be provided by using the command line argument data. \
     A file name is expected, in which the file should contain 3 columns: radial distance in mm, \
     differential value of photon intensity and its integral value.
@@ -71,7 +69,7 @@ r"""
 
     Example
     -------
-    LSTN-01 6.0.0
+    --telescope LSTN-01 --model_version 6.0.0
 
 
 
@@ -89,15 +87,23 @@ r"""
         simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\
             --plot_all --test --rmsd_threshold 0.01 --learning_rate 0.001 \\
             --data tests/resources/PSFcurve_data_v2.ecsv \\
-            --write_psf_parameters 2>&1 | grep -E \
-                "(Initial RMSD|Accepted step|Step rejected|iteration)"
+            --write_psf_parameters
+
+    Run monte carlo analysis:
+
+    .. code-block:: console
+
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\
+            --plot_all --test --monte_carlo_analysis \\
+            --data tests/resources/PSFcurve_data_v2.ecsv \\
+            --write_psf_parameters
 
     The output is saved in simtools-output/derive_psf_parameters.
 
     Output files include:
 
     * Gradient descent progression log in psf_gradient_descent_[telescope].log
-    * Gradient descent convergence plots in gradient_descent_convergence_[telescope].pdf
+    * Gradient descent convergence plots in gradient_descent_convergence_[telescope].png
     * PSF progression plots showing evolution through iterations (if --plot_all is specified)
     * D80 vs off-axis angle plots (d80_vs_offaxis_cm.png, d80_vs_offaxis_deg.png)
     * Optimized simulation model parameter files (if --write_psf_parameters is specified)

@@ -1,13 +1,13 @@
 # %ECSV 1.0
 # ---
 # datatype:
-# - {name: radius_mm, unit: 'mm', datatype: float64, description: radial distance}
+# - {name: radius, unit: 'mm', datatype: float64, description: radial distance in millimeters}
 # - {name: differential_value, unit: '', datatype: float64, description: differential PSF value}
-# - {name: cumulative_psf, unit: '', datatype: float64, description: cumulative PSF value}
+# - {name: integral_value, unit: '', datatype: float64, description: integral PSF value}
 # meta: !!omap
 # - comments: ['PSF taken at Zd = ~20[deg], with Vega']
 # schema: astropy-2.0
-radius_mm differential_value cumulative_psf
+radius differential_value integral_value
 0.0 0.0 0.0
 1.1601550664045037 100531.63333333333 100531.63333333333
 2.3203101328090074 543254.5333333333 643786.1666666666

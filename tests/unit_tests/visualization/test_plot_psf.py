@@ -3,6 +3,7 @@
 import logging
 from unittest.mock import MagicMock, patch
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -39,11 +40,11 @@ def data_to_plot(sample_psf_data):
     return {"measured": sample_psf_data}
 
 
-def test__get_significance_level():
-    """Test p-value significance level classification."""
-    assert plot_psf._get_significance_level(0.1) == "GOOD"
-    assert plot_psf._get_significance_level(0.03) == "FAIR"
-    assert plot_psf._get_significance_level(0.005) == "POOR"
+def test_get_significance_label():
+    """Test p-value significance label classification."""
+    assert plot_psf.get_significance_label(0.1) == "GOOD"
+    assert plot_psf.get_significance_label(0.03) == "FAIR"
+    assert plot_psf.get_significance_label(0.005) == "POOR"
 
 
 @pytest.mark.parametrize(
@@ -186,11 +187,12 @@ def test_create_gradient_descent_convergence_plot(tmp_path):
     ]
     output_file = tmp_path / "convergence.png"
 
-    with patch("matplotlib.pyplot.savefig") as mock_save, patch("matplotlib.pyplot.close"):
+    with patch("matplotlib.pyplot.savefig") as mock_save:
         # Test RMSD mode
         plot_psf.create_gradient_descent_convergence_plot(
             gd_results, 0.01, output_file, use_ks_statistic=False
         )
+        plt.close("all")
         mock_save.assert_called_once()
 
         mock_save.reset_mock()
@@ -198,6 +200,7 @@ def test_create_gradient_descent_convergence_plot(tmp_path):
         plot_psf.create_gradient_descent_convergence_plot(
             gd_results, 0.01, output_file, use_ks_statistic=True
         )
+        plt.close("all")
         mock_save.assert_called_once()
 
 
@@ -229,11 +232,12 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
     )
     output_file = tmp_path / "monte_carlo"
 
-    with patch("matplotlib.pyplot.savefig") as mock_save, patch("matplotlib.pyplot.close"):
+    with patch("matplotlib.pyplot.savefig") as mock_save:
         # Test RMSD mode
         plot_psf.create_monte_carlo_uncertainty_plot(
             mc_results_rmsd, output_file, use_ks_statistic=False
         )
+        plt.close("all")
         assert mock_save.call_count == 2  # PDF and PNG
 
         mock_save.reset_mock()
@@ -241,6 +245,7 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
         plot_psf.create_monte_carlo_uncertainty_plot(
             mc_results_ks, output_file, use_ks_statistic=True
         )
+        plt.close("all")
         assert mock_save.call_count == 2
 
 
@@ -254,7 +259,6 @@ def test_create_d80_vs_offaxis_plot(sample_parameters, tmp_path):
     with (
         patch("simtools.visualization.plot_psf.RayTracing") as mock_ray_class,
         patch("matplotlib.pyplot.savefig") as mock_save,
-        patch("matplotlib.pyplot.close"),
         patch("numpy.linspace") as mock_linspace,
     ):
         mock_ray = MagicMock()
@@ -266,7 +270,60 @@ def test_create_d80_vs_offaxis_plot(sample_parameters, tmp_path):
         plot_psf.create_d80_vs_offaxis_plot(
             mock_telescope_model, mock_site_model, args_dict, sample_parameters, tmp_path
         )
+        plt.close("all")
 
         # Verify telescope parameters were applied and simulation was run
         mock_telescope_model.change_multiple_parameters.assert_called_once_with(**sample_parameters)
         assert mock_save.call_count >= 1  # At least one save call
+
+
+@pytest.mark.parametrize(
+    ("plot_all", "expected_result"),
+    [
+        (True, "not_none"),  # Should return PdfPages object
+        (False, None),  # Should return None
+    ],
+)
+def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
+    """Test PDF plotting setup with plot_all enabled and disabled."""
+    args_dict = {"plot_all": plot_all}
+
+    pdf_pages = plot_psf.setup_pdf_plotting(args_dict, tmp_path, "LSTN-01")
+
+    if expected_result == "not_none":
+        assert pdf_pages is not None
+        pdf_pages.close()
+    else:
+        assert pdf_pages is expected_result
+
+
+def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters):
+    """Test optimization plots creation with save_plots enabled and disabled."""
+    mock_telescope_model = MagicMock()
+    mock_telescope_model.name = "LSTN-01"
+    data_to_plot = {"measured": sample_psf_data}
+    gd_results = [(sample_parameters, 0.1, 0.8, 3.5, sample_psf_data)]
+
+    # Test with save_plots=True - should create plots
+    args_dict_with_plots = {"save_plots": True}
+    with (
+        patch("simtools.visualization.plot_psf.PdfPages") as mock_pdf,
+        patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
+    ):
+        mock_pdf_instance = MagicMock()
+        mock_pdf.return_value = mock_pdf_instance
+
+        plot_psf.create_optimization_plots(
+            args_dict_with_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
+        )
+
+        mock_pdf.assert_called_once()
+        mock_plot.assert_called_once()
+        mock_pdf_instance.close.assert_called_once()
+
+    # Test with save_plots=False - should return early without creating plots
+    args_dict_no_plots = {"save_plots": False}
+    result = plot_psf.create_optimization_plots(
+        args_dict_no_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
+    )
+    assert result is None
