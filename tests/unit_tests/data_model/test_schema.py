@@ -6,6 +6,7 @@ from pathlib import Path
 import jsonschema
 import pytest
 import yaml
+from packaging.specifiers import InvalidSpecifier
 
 from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
@@ -368,6 +369,11 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     whitespace_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0  "}]}
     schema._validate_deprecation_and_version(whitespace_data)
 
+    # Test 12a: Version constraint with random parameter should be handled
+    invalid_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0-abc  "}]}
+    with pytest.raises(InvalidSpecifier, match=r"Invalid specifier: '>=1.0.0-abc'"):
+        schema._validate_deprecation_and_version(invalid_data)
+
     # Test 13: Custom software name parameter
     custom_sw_data = {"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}
     schema._validate_deprecation_and_version(custom_sw_data, software_name="custom_tool")
@@ -385,3 +391,9 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     with caplog.at_level(logging.WARNING):
         schema._validate_deprecation_and_version(combined_data)
     assert "Old version" in caplog.text
+
+    # Test 16: ignore_software_version=True should log warning and not raise
+    mismatch_data = {"simulation_software": [{"name": "simtools", "version": ">=2.0.0"}]}
+    with caplog.at_level(logging.WARNING):
+        schema._validate_deprecation_and_version(mismatch_data, ignore_software_version=True)
+    assert "does not match constraint" in caplog.text

@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for led_photons model parameter
+deprecated: true
+deprecation_note: "LED parameter not used."
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: led_photons
+description: |-
+  The intensity of LEDs assumed to sit in the camera lid in front of each pixel \
+  (like originally HESS CT3) when simulating extra calibration-type events (with LED_EVENTS greater than zero).\
+  Typically this would be single-p.e. calibration events without NSB background.
+short_description: |-
+  LED intensity in the camera lid in front of each pixel.
+data:
+  - type: float64
+    unit: dimensionless
+    default: 4.0
+    allowed_range:
+      min: 0.05
+instrument:
+  class: Calibration
+  type:
+    - ILLN
+    - ILLS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+  - name: simtools
+    version: "<0.21.0"
