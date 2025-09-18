@@ -328,15 +328,19 @@ class ModelDataWriter:
         """
         Return parameter type from schema.
 
+        Reduce list of types to single type if all types are the same.
+
         Returns
         -------
         str
             Parameter type
         """
-        _parameter_type = []
-        for data in self.schema_dict["data"]:
-            _parameter_type.append(data["type"])
-        return _parameter_type if len(_parameter_type) > 1 else _parameter_type[0]
+        _parameter_type = [data["type"] for data in self.schema_dict["data"]]
+        return (
+            _parameter_type[0]
+            if all(t == _parameter_type[0] for t in _parameter_type)
+            else _parameter_type
+        )
 
     def _parameter_is_a_file(self):
         """
