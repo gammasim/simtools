@@ -1,5 +1,5 @@
 """
-PSF plotting functions for parameter optimization visualization.
+Optical PSF plotting functions for parameter optimization visualization.
 
 This module provides plotting functionality for PSF parameter optimization,
 including parameter comparison plots, convergence plots, and D80 vs off-axis plots.
@@ -10,6 +10,7 @@ import logging
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
@@ -24,13 +25,13 @@ MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
 OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
 
 
-def _get_significance_level(p_value):
-    """Get significance level description for p-value."""
-    if p_value > 0.05:
+def get_significance_label(p_value):
+    """Get significance label for p-value."""
+    if p_value > 0.05:  # null hypothesis not rejected at the 95% level
         return "GOOD"
-    if p_value > 0.01:
+    if p_value > 0.01:  # null hypothesis rejected at 95% but not at 99% level
         return "FAIR"
-    return "POOR"
+    return "POOR"  # null hypothesis rejected at 99% level
 
 
 def _format_metric_text(d80, metric, p_value=None, use_ks_statistic=False, second_metric=None):
@@ -67,7 +68,7 @@ def _format_metric_text(d80, metric, p_value=None, use_ks_statistic=False, secon
     elif use_ks_statistic:
         metric_text = f"KS stat = {metric:.6f}"
         if p_value is not None:
-            significance = _get_significance_level(p_value)
+            significance = get_significance_label(p_value)
             metric_text += f"\np-value = {p_value:.6f} ({significance})"
     else:
         metric_text = f"RMSD = {metric:.4f}"
@@ -595,3 +596,78 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         )
 
     plt.close("all")
+
+
+def setup_pdf_plotting(args_dict, output_dir, tel_model_name):
+    """
+    Set up PDF plotting for gradient descent optimization if requested.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary containing command-line arguments with plot_all flag.
+    output_dir : Path
+        Directory where the PDF file will be saved.
+    tel_model_name : str
+        Name of the telescope model for filename generation.
+
+    Returns
+    -------
+    PdfPages or None
+        PdfPages object for saving plots if plotting is requested, None otherwise.
+
+    Notes
+    -----
+    Creates a PDF file for saving cumulative PSF plots during gradient descent
+    optimization. Returns None if plotting is not requested via the plot_all flag.
+    """
+    if not args_dict.get("plot_all", False):
+        return None
+    pdf_filename = output_dir / f"psf_gradient_descent_plots_{tel_model_name}.pdf"
+    pdf_pages = PdfPages(pdf_filename)
+    logger.info(f"Creating cumulative PSF plots for each iteration (saving to {pdf_filename})")
+    return pdf_pages
+
+
+def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, output_dir):
+    """
+    Create optimization plots for all iterations if requested.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary containing command-line arguments with save_plots flag.
+    gd_results : list
+        List of (params, rmsd, _, d80, _) tuples from gradient descent optimization.
+    tel_model : TelescopeModel
+        Telescope model object for naming files.
+    data_to_plot : dict
+        Dictionary containing measured PSF data.
+    output_dir : Path
+        Directory where the PDF file will be saved.
+
+    Notes
+    -----
+    Creates a PDF file with plots for optimization iterations. Only creates plots
+    every 5 iterations plus the final iteration to avoid excessively large files.
+    Returns early if save_plots flag is not set.
+    """
+    if not args_dict.get("save_plots", False):
+        return
+
+    pdf_filename = output_dir.joinpath(f"psf_optimization_results_{tel_model.name}.pdf")
+    pdf_pages = PdfPages(pdf_filename)
+    logger.info(f"Creating PSF plots for each optimization iteration (saving to {pdf_filename})")
+
+    for i, (params, rmsd, _, d80, _) in enumerate(gd_results):
+        if i % 5 == 0 or i == len(gd_results) - 1:
+            create_psf_parameter_plot(
+                data_to_plot,
+                params,
+                d80,
+                rmsd,
+                is_best=(i == len(gd_results) - 1),
+                pdf_pages=pdf_pages,
+                use_ks_statistic=False,
+            )
+    pdf_pages.close()
