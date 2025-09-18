@@ -211,7 +211,7 @@ def _apply_changes_to_production_tables(
 
 def _apply_changes_to_production_table(data, changes, model_version, patch_update):
     """
-    Recursively apply changes to the new production tables.
+    Apply changes to the new production tables.
 
     Parameters
     ----------
@@ -234,9 +234,12 @@ def _apply_changes_to_production_table(data, changes, model_version, patch_updat
         table_name = data["production_table_name"]
         data["model_version"] = model_version
         if table_name in changes:
-            data["parameters"] = _update_parameters(
-                {} if patch_update else data["parameters"].get(table_name, {}), changes, table_name
+            parameters, deprecated = _update_parameters(
+                data.get("parameters", {}), changes, table_name
             )
+            data["parameters"] = parameters
+            if deprecated:
+                data["deprecated_parameters"] = deprecated
         elif patch_update:
             return False
     else:
@@ -263,20 +266,23 @@ def _update_parameters(table_parameters, changes, table_name):
 
     Returns
     -------
-    dict
+    dict, list
         Dictionary containing only the new/changed parameters for the specified table.
+        List of deprecated parameters.
     """
     new_params = {table_name: table_parameters}
+    deprecated_params = []
 
     for param, data in changes[table_name].items():
-        if data.get("remove", False):
+        if data.get("deprecated", False):
             _logger.info(f"Removing model parameter '{table_name} - {param}'")
+            deprecated_params.append(param)
         else:
             version = data["version"]
             _logger.info(f"Setting '{table_name} - {param}' to version {version}")
             new_params[table_name][param] = version
 
-    return new_params
+    return new_params, deprecated_params
 
 
 def _apply_changes_to_model_parameters(changes, simulation_models_path):

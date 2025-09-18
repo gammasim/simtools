@@ -128,6 +128,8 @@ def _read_production_tables(model_path):
     for table in model_dict.values():
         table["model_version"] = model_path.name
 
+    _remove_deprecated_model_parameters(model_dict)
+
     return model_dict
 
 
@@ -142,6 +144,7 @@ def _read_production_table(model_dict, file, model_name):
             "model_version": model_name,
             "parameters": {},
             "design_model": {},
+            "deprecated_parameters": [],
         },
     )
     parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
@@ -156,10 +159,10 @@ def _read_production_table(model_dict, file, model_name):
             model_dict[collection]["parameters"].setdefault(array_element, {}).update(
                 parameter_dict["parameters"][array_element]
             )
-
     except KeyError as exc:
         logger.error(f"KeyError: {exc}")
         raise
+
     try:
         model_dict[collection]["design_model"][array_element] = parameter_dict["design_model"][
             array_element
@@ -167,4 +170,32 @@ def _read_production_table(model_dict, file, model_name):
     except KeyError:
         pass
 
+    try:
+        model_dict[collection]["deprecated_parameters"] = parameter_dict["deprecated_parameters"]
+    except KeyError:
+        pass
+
     model_dict[collection]["model_version"] = model_name
+
+
+def _remove_deprecated_model_parameters(model_dict):
+    """
+    Remove any model parameters that are marked as deprecated.
+
+    Parameters
+    ----------
+    model_dict : dict
+        Dictionary containing the production tables for a specific model version.
+    """
+    for table in model_dict.values():
+        deprecated_parameters = table.get("deprecated_parameters", [])
+        if not deprecated_parameters:
+            continue
+
+        for params in table.get("parameters", {}).values():
+            for param in deprecated_parameters:
+                if param in params:
+                    logger.info(
+                        f"Deprecated parameter {param} in production table {table['collection']}"
+                    )
+                    del params[param]
