@@ -1,6 +1,8 @@
 %YAML 1.2
 ---
 title: Schema for led_pulse_sigtime model parameter
+deprecated: true
+deprecation_note: "Replaced by flasher_pulse_width and flasher_pulse_shape"
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -31,3 +33,5 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+  - name: simtools
+    version: "<0.21.0"

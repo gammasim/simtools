@@ -84,6 +84,11 @@ def _parse(label, description):
         help="Require exact data type for validation",
         action="store_true",
     )
+    config.parser.add_argument(
+        "--ignore_software_version",
+        help="Ignore software version check.",
+        action="store_true",
+    )
     return config.initialize(paths=False)
 
 
@@ -148,7 +153,9 @@ def validate_dict_using_schema(args_dict, logger):
         try:
             for data_dict in data:
                 schema.validate_dict_using_schema(
-                    data_dict, _get_schema_file_name(args_dict, data_dict)
+                    data_dict,
+                    _get_schema_file_name(args_dict, data_dict),
+                    ignore_software_version=args_dict.get("ignore_software_version", False),
                 )
         except Exception as exc:
             raise ValueError(f"Validation of file {file_name} failed") from exc

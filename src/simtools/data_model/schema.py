@@ -4,9 +4,12 @@ import logging
 from pathlib import Path
 
 import jsonschema
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 from referencing import Registry, Resource
 
 import simtools.utils.general as gen
+from simtools import version
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -92,7 +95,9 @@ def get_model_parameter_schema_version(schema_version=None):
     raise ValueError(f"Schema version {schema_version} not found in {MODEL_PARAMETER_METASCHEMA}.")
 
 
-def validate_dict_using_schema(data, schema_file=None, json_schema=None):
+def validate_dict_using_schema(
+    data, schema_file=None, json_schema=None, ignore_software_version=False
+):
     """
     Validate a data dictionary against a schema.
 
@@ -102,6 +107,10 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         dictionary to be validated
     schema_file (dict)
         schema used for validation
+    json_schema (dict)
+        schema used for validation
+    ignore_software_version: bool
+        If True, ignore software version check.
 
     Raises
     ------
@@ -114,6 +123,8 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         return None
     if json_schema is None:
         json_schema = load_schema(schema_file, get_schema_version_from_data(data))
+
+    _validate_deprecation_and_version(data, ignore_software_version)
 
     validator = jsonschema.Draft6Validator(
         schema=json_schema,
@@ -294,3 +305,51 @@ def _add_array_elements(key, schema):
 
     recursive_search(schema, key)
     return schema
+
+
+def _validate_deprecation_and_version(
+    data, software_name="simtools", ignore_software_version=False
+):
+    """
+    Check if data contains deprecated parameters or version mismatches.
+
+    Parameters
+    ----------
+    data: dict
+        Data dictionary to check.
+    software_name: str
+        Name of the software to check version against.
+    ignore_software_version: bool
+        If True, ignore software version check.
+    """
+    if not isinstance(data, dict):
+        return
+
+    if data.get("deprecated", False):
+        note = data.get("deprecation_note", "(no deprecation note provided)")
+        _logger.warning(f"Data is deprecated. Note: {note}")
+
+    def check_version(sw):
+        constraint = sw.get("version")
+        if constraint is None:
+            return
+        constraint = constraint.strip()
+        spec = SpecifierSet(constraint, prereleases=True)
+        if Version(version.__version__) in spec:
+            _logger.debug(
+                f"Version {version.__version__} of {software_name} matches constraint {constraint}."
+            )
+        else:
+            msg = (
+                f"Version {version.__version__} of {software_name} "
+                f"does not match constraint {constraint}."
+            )
+            if ignore_software_version:
+                _logger.warning(f"{msg}, but version check is ignored.")
+                return
+            raise ValueError(msg)
+
+    for sw in data.get("simulation_software", []):
+        if sw.get("name") == software_name:
+            check_version(sw)
+            break

@@ -663,6 +663,7 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
         sim_telarray_seeds=shower_array_simulator.sim_telarray_seeds,
         sequential=shower_array_simulator.args_dict.get("sequential", False),
         keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
+        calibration_config=None,
     )
 
 
@@ -689,7 +690,7 @@ def test_initialize_simulation_runner_with_calibration_simulator(
         sim_telarray_seeds=calibration_simulator.sim_telarray_seeds,
         sequential=calibration_simulator.args_dict.get("sequential", False),
         keep_seeds=calibration_simulator.args_dict.get("corsika_test_seeds", False),
-        calibration_runner_args=calibration_simulator.args_dict,
+        calibration_config=calibration_simulator.args_dict,
     )
 
 
@@ -749,12 +750,12 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
     mock_io_table_handler.write_tables.assert_not_called()
 
 
-def test_is_calibration_run(shower_simulator):
-    shower_simulator.run_mode = "nsb_only_pedestals"
-    assert shower_simulator._is_calibration_run() is True
+def test_is_calibration_run():
+    assert Simulator._is_calibration_run("nsb_only_pedestals") is True
+    assert Simulator._is_calibration_run(None) is False
+    assert Simulator._is_calibration_run("not_a_calibration_run") is False
 
-    shower_simulator.run_mode = None
-    assert shower_simulator._is_calibration_run() is False
 
-    shower_simulator.run_mode = "not_a_calibration_run"
-    assert shower_simulator._is_calibration_run() is False
+def test_get_calibration_device_types():
+    assert Simulator._get_calibration_device_types("direct_injection") == ["flat_fielding"]
+    assert Simulator._get_calibration_device_types("what_ever") == []

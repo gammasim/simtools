@@ -47,6 +47,23 @@ def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_pa
     )
 
 
+@pytest.fixture
+def corsika_simtel_runner_calibration(io_handler, corsika_config_mock_array_model, simtel_path):
+    """CorsikaSimtelRunner object."""
+    return CorsikaSimtelRunner(
+        corsika_config=corsika_config_mock_array_model,
+        simtel_path=simtel_path,
+        label="test-corsika-simtel-runner",
+        use_multipipe=True,
+        calibration_config={
+            "run_mode": "nsb_only_pedestals",
+            "number_of_events": 500,
+            "nsb_scaling_factor": 1.0,
+            "stars": "stars.txt",
+        },
+    )
+
+
 def test_corsika_simtel_runner(corsika_simtel_runner):
     assert isinstance(corsika_simtel_runner.corsika_runner, CorsikaRunner)
     assert isinstance(corsika_simtel_runner.simulator_array[0], SimulatorArray)
@@ -84,10 +101,14 @@ def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
         _ = corsika_simtel_runner.prepare_run_script(run_number="test")
 
 
-def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all):
-    corsika_simtel_runner._export_multipipe_script(run_number=1)
-    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
-        corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe")
+def test_export_multipipe_script(corsika_simtel_runner_calibration, simtel_command, show_all):
+    corsika_simtel_runner_calibration._export_multipipe_script(run_number=1)
+    script = Path(
+        corsika_simtel_runner_calibration.base_corsika_config.config_file_path.parent
+    ).joinpath(
+        corsika_simtel_runner_calibration.base_corsika_config.get_corsika_config_file_name(
+            "multipipe"
+        )
     )
 
     assert script.exists()
@@ -98,16 +119,13 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
         assert "-C telescope_phi=0" in script_content
         assert show_all in script_content
 
-    # calibration run scripts
-    corsika_simtel_runner.calibration_runner_args = {
-        "run_mode": "nsb_only_pedestals",
-        "number_of_events": 500,
-        "nsb_scaling_factor": 1.0,
-        "stars": "stars.txt",
-    }
-    corsika_simtel_runner._export_multipipe_script(run_number=1)
-    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
-        corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe")
+    corsika_simtel_runner_calibration._export_multipipe_script(run_number=1)
+    script = Path(
+        corsika_simtel_runner_calibration.base_corsika_config.config_file_path.parent
+    ).joinpath(
+        corsika_simtel_runner_calibration.base_corsika_config.get_corsika_config_file_name(
+            "multipipe"
+        )
     )
 
     assert script.exists()
