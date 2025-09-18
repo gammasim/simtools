@@ -43,3 +43,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: simtools
+    version: ">=0.21.0"

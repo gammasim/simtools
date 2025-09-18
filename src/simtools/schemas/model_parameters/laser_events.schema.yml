@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+title: Schema for laser_events model parameter
+deprecated: true
+deprecation_note: "Replaced by flasher_photons"
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: laser_events
+description: |-
+  Laser (or LED or other pulsed light source) events at start of run, before the first shower event.\
+  The assumed light source would typically be in the center of the dish and is assumed to illuminate all pixels uniformly.\
+  The camera lid is assumed to be open, i.e. events will also be subject to NSB.\
+  A value of zero means that the data will not contain any such events.
+short_description: |-
+  Laser events used for flat fielding at the start of the run.
+data:
+  - type: int64
+    unit: dimensionless
+    default: 0
+    allowed_range:
+      min: 0
+
+instrument:
+  class: Calibration
+  type:
+    - ILLN
+    - ILLS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+  - name: simtools
+    version: "<0.21.0"
