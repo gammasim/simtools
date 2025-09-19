@@ -44,6 +44,7 @@ Good practice:
 - sort tests in the testing module in the same sequence as the functions in the module.
 - unit tests need to be fast. Add `--durations=10` to pytest to see slow tests.
 - use mocking to avoid external dependencies (e.g., database connections, file I/O); see below
+- use the fixture `tmp_test_directory` to create a temporary test directory for file I/O tests. Do not use `tmp_path` or the `tempfile` module.
 
 ### Pytest fixtures
 

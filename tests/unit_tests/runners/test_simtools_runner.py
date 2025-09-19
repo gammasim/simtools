@@ -177,7 +177,7 @@ def test_read_application_configuration_empty_applications(
     assert isinstance(log_file, Path)
 
 
-def test_run_application_success(monkeypatch, mock_logger, tmp_path):
+def test_run_application_success(monkeypatch, mock_logger, tmp_test_directory):
     mock_result = mock.Mock()
     mock_result.stdout = MOCK_STDOUT_OUTPUT
     mock_result.stderr = MOCK_STDERR_OUTPUT
@@ -220,7 +220,7 @@ def test_run_application_failure(monkeypatch, mock_logger):
     mock_logger.error.assert_called_once_with("Error running application dummy_app: error occurred")
 
 
-def test_run_applications_runs_and_logs(monkeypatch, tmp_path):
+def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
     mock_logger = mock.Mock()
     mock_db_config = {"db": "config"}
@@ -236,7 +236,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_path):
         {"application": "app2", "run_application": False, "configuration": {"key": "value2"}},
         {"application": "app3", "run_application": True, "configuration": {"key": "value3"}},
     ]
-    log_file_path = tmp_path / "simtools.log"
+    log_file_path = tmp_test_directory / "simtools.log"
 
     # Patch _read_application_configuration
     monkeypatch.setattr(
@@ -277,7 +277,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_path):
     mock_logger.info.assert_any_call("Running application: app3")
 
 
-def test_run_applications_handles_run_application_exception(monkeypatch, tmp_path):
+def test_run_applications_handles_run_application_exception(monkeypatch, tmp_test_directory):
     mock_logger = mock.Mock()
     mock_db_config = {"db": "config"}
     mock_args_dict = {
@@ -289,7 +289,7 @@ def test_run_applications_handles_run_application_exception(monkeypatch, tmp_pat
     mock_configurations = [
         {"application": "app1", "run_application": True, "configuration": {"key": "value1"}}
     ]
-    log_file_path = tmp_path / "simtools.log"
+    log_file_path = tmp_test_directory / "simtools.log"
 
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",

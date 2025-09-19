@@ -57,9 +57,9 @@ def mock_tables():
 
 
 @pytest.fixture
-def mock_fits_file(mock_tables, tmp_path):
+def mock_fits_file(mock_tables, tmp_test_directory):
     """Create a mock FITS file with test data."""
-    test_file = tmp_path / "test.fits"
+    test_file = tmp_test_directory / "test.fits"
     shower_table, trigger_table, file_info_table = mock_tables
 
     shower_table.write(test_file, format="fits", overwrite=True)

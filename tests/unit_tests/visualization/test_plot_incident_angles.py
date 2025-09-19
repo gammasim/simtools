@@ -19,56 +19,56 @@ def _make_table(focal_vals, primary_vals=None, secondary_vals=None):
     return t
 
 
-def test_plot_incident_angles_dual_mirror(tmp_path, caplog):
+def test_plot_incident_angles_dual_mirror(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
     results = {
         0.0: _make_table([0.1, 0.2, 0.3], [1.0, 1.1, 1.2], [2.0, 2.2, 2.4]),
         1.0: _make_table([0.15, 0.25, 0.35], [1.5, 1.6, 1.7], [2.5, 2.6, 2.7]),
     }
-    pia.plot_incident_angles(results, tmp_path, "unit_LSTN-01")
-    out_dir = Path(tmp_path) / "plots"
+    pia.plot_incident_angles(results, tmp_test_directory, "unit_LSTN-01")
+    out_dir = Path(tmp_test_directory) / "plots"
     assert (out_dir / "incident_angles_multi_unit_LSTN-01.png").exists()
     assert (out_dir / "incident_angles_primary_multi_unit_LSTN-01.png").exists()
     assert (out_dir / "incident_angles_secondary_multi_unit_LSTN-01.png").exists()
 
 
-def test_plot_incident_angles_single_mirror(tmp_path, caplog):
+def test_plot_incident_angles_single_mirror(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
     results = {
         0.0: _make_table([0.1, 0.2, 0.3], [1.0, 1.1, 1.2]),
         1.0: _make_table([0.15, 0.25, 0.35], [1.5, 1.6, 1.7]),
     }
-    pia.plot_incident_angles(results, tmp_path, "single_SSTS-04")
-    out_dir = Path(tmp_path) / "plots"
+    pia.plot_incident_angles(results, tmp_test_directory, "single_SSTS-04")
+    out_dir = Path(tmp_test_directory) / "plots"
     assert (out_dir / "incident_angles_multi_single_SSTS-04.png").exists()
 
 
-def test_warning_empty_results_for_offset(tmp_path, caplog):
+def test_warning_empty_results_for_offset(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
     results = {0.0: QTable()}
-    pia.plot_incident_angles(results, tmp_path, "empty")
+    pia.plot_incident_angles(results, tmp_test_directory, "empty")
     msgs = [r.message for r in caplog.records]
     assert any("Empty results for off-axis=0.0" in m for m in msgs)
-    out_dir = Path(tmp_path) / "plots"
+    out_dir = Path(tmp_test_directory) / "plots"
     assert not any(out_dir.glob("incident_angles_multi_*.png"))
 
 
-def test_no_finite_focal_bins_none(tmp_path, caplog):
+def test_no_finite_focal_bins_none(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
     t = QTable()
     t["angle_incidence_focal"] = np.array([np.nan, np.nan]) * u.deg
     results = {0.0: t}
-    pia.plot_incident_angles(results, tmp_path, "nanfocal")
+    pia.plot_incident_angles(results, tmp_test_directory, "nanfocal")
     msgs = [r.message for r in caplog.records]
     assert any("No focal-surface incidence angle values to plot" in m for m in msgs)
-    out_dir = Path(tmp_path) / "plots"
+    out_dir = Path(tmp_test_directory) / "plots"
     assert not (out_dir / "incident_angles_multi_nanfocal.png").exists()
 
 
-def test_no_finite_nonfocal_bins_none(tmp_path, caplog):
+def test_no_finite_nonfocal_bins_none(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
     results = {0.0: _make_table(focal_vals=[0.1], primary_vals=[np.nan])}
-    out_dir = Path(tmp_path) / "plots"
+    out_dir = Path(tmp_test_directory) / "plots"
     pia._plot_component_angles(
         results_by_offset=results,
         column="angle_incidence_primary",
@@ -82,11 +82,11 @@ def test_no_finite_nonfocal_bins_none(tmp_path, caplog):
     assert not (out_dir / "should_not_exist.png").exists()
 
 
-def test_invalid_bin_edges_warning_with_monkeypatch(tmp_path, caplog, monkeypatch):
+def test_invalid_bin_edges_warning_with_monkeypatch(tmp_test_directory, caplog, monkeypatch):
     caplog.set_level(logging.WARNING)
     monkeypatch.setattr(pia.np, "floor", lambda x: np.nan)
     results = {0.0: _make_table(focal_vals=[0.1, 0.2], primary_vals=[1.0, 1.1])}
-    out_dir = Path(tmp_path) / "plots"
+    out_dir = Path(tmp_test_directory) / "plots"
     pia._plot_component_angles(
         results_by_offset=results,
         column="angle_incidence_primary",
@@ -131,21 +131,21 @@ def test_overlay_skips_missing_and_empty_columns(monkeypatch):
     plt.close(fig)
 
 
-def test_top_level_no_results_and_no_arrays(tmp_path, caplog):
+def test_top_level_no_results_and_no_arrays(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    pia.plot_incident_angles({}, tmp_path, "none")
+    pia.plot_incident_angles({}, tmp_test_directory, "none")
     msgs = [r.message for r in caplog.records]
     assert any("No results provided for multi-offset plot" in m for m in msgs)
     caplog.clear()
-    pia.plot_incident_angles({0.0: QTable()}, tmp_path, "empty2")
+    pia.plot_incident_angles({0.0: QTable()}, tmp_test_directory, "empty2")
     msgs = [r.message for r in caplog.records]
     assert any("Empty results for off-axis=0.0" in m for m in msgs)
 
 
-def test_primary_component_empty_does_not_emit_focal_empty_warning(tmp_path, caplog):
+def test_primary_component_empty_does_not_emit_focal_empty_warning(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
     results = {0.0: QTable()}
-    out_dir = Path(tmp_path) / "plots"
+    out_dir = Path(tmp_test_directory) / "plots"
     pia._plot_component_angles(
         results_by_offset=results,
         column="angle_incidence_primary",
@@ -159,12 +159,12 @@ def test_primary_component_empty_does_not_emit_focal_empty_warning(tmp_path, cap
     assert not (out_dir / "should_not_exist.png").exists()
 
 
-def test_plot_filters_nonfinite_values_and_succeeds(tmp_path):
+def test_plot_filters_nonfinite_values_and_succeeds(tmp_test_directory):
     t = QTable()
     t["angle_incidence_focal"] = np.array([np.nan, np.inf, -np.inf, 1.0, 2.0]) * u.deg
     results = {0.0: t}
-    pia.plot_incident_angles(results, tmp_path, "finite_filter")
-    out = Path(tmp_path) / "plots" / "incident_angles_multi_finite_filter.png"
+    pia.plot_incident_angles(results, tmp_test_directory, "finite_filter")
+    out = Path(tmp_test_directory) / "plots" / "incident_angles_multi_finite_filter.png"
     assert out.exists()
     assert out.stat().st_size > 0
 
@@ -178,7 +178,7 @@ def test_compute_bins_edges_follow_floor_ceil():
     assert len(bins) == 4
 
 
-def test_overlay_plots_offsets_in_sorted_order(tmp_path, monkeypatch):
+def test_overlay_plots_offsets_in_sorted_order(tmp_test_directory, monkeypatch):
     results = {
         1.0: _make_table([0.1, 0.2], [1.0, 1.1]),
         0.0: _make_table([0.2, 0.3], [1.2, 1.3]),
@@ -208,24 +208,24 @@ def test_overlay_plots_offsets_in_sorted_order(tmp_path, monkeypatch):
     assert first_labels == ["off-axis 0 deg", "off-axis 1 deg", "off-axis 2 deg"]
 
 
-def test_logger_injection_used_for_warnings(tmp_path, caplog):
+def test_logger_injection_used_for_warnings(tmp_test_directory, caplog):
     custom_logger = logging.getLogger("simtools.test.custom_logger")
     caplog.set_level(logging.WARNING, logger=custom_logger.name)
-    pia.plot_incident_angles({}, tmp_path, "nores", logger=custom_logger)
+    pia.plot_incident_angles({}, tmp_test_directory, "nores", logger=custom_logger)
     assert any(
         r.name == custom_logger.name and "No results provided" in r.message for r in caplog.records
     )
-    assert not (Path(tmp_path) / "plots").exists()
+    assert not (Path(tmp_test_directory) / "plots").exists()
 
 
-def test_invalid_edges_warning_for_focal_monkeypatch(tmp_path, caplog, monkeypatch):
+def test_invalid_edges_warning_for_focal_monkeypatch(tmp_test_directory, caplog, monkeypatch):
     caplog.set_level(logging.WARNING)
     monkeypatch.setattr(pia.np, "floor", lambda x: np.nan)
     t = _make_table([0.1, 0.2])
-    pia.plot_incident_angles({0.0: t}, tmp_path, "invfocal")
+    pia.plot_incident_angles({0.0: t}, tmp_test_directory, "invfocal")
     msgs = [r.message for r in caplog.records]
     assert any("Invalid bin edges for focal" in m for m in msgs)
-    assert not (Path(tmp_path) / "plots" / "incident_angles_multi_invfocal.png").exists()
+    assert not (Path(tmp_test_directory) / "plots" / "incident_angles_multi_invfocal.png").exists()
 
 
 def test_compute_bins_adjusts_when_vmax_equals_vmin():
@@ -239,9 +239,9 @@ def test_compute_bins_adjusts_when_vmax_equals_vmin():
     assert np.isclose(bins[1], 0.2)
 
 
-def test_plot_xy_heatmap_missing_columns_continue_and_warns(tmp_path, caplog):
+def test_plot_xy_heatmap_missing_columns_continue_and_warns(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "xy_missing_cols.png"
+    out_path = Path(tmp_test_directory) / "plots" / "xy_missing_cols.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     t = QTable()
     t["primary_hit_x"] = np.array([0.0]) * u.m  # y column missing, len>0
@@ -258,9 +258,9 @@ def test_plot_xy_heatmap_missing_columns_continue_and_warns(tmp_path, caplog):
     assert not out_path.exists()
 
 
-def test_plot_xy_heatmap_empty_after_mask_continue(tmp_path, caplog):
+def test_plot_xy_heatmap_empty_after_mask_continue(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "xy_empty_after_mask.png"
+    out_path = Path(tmp_test_directory) / "plots" / "xy_empty_after_mask.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     t = QTable()
     t["primary_hit_x"] = np.array([np.nan]) * u.m
@@ -278,8 +278,8 @@ def test_plot_xy_heatmap_empty_after_mask_continue(tmp_path, caplog):
     assert not out_path.exists()
 
 
-def test_plot_xy_heatmaps_per_offset_continue_paths(tmp_path):
-    out_dir = Path(tmp_path) / "plots"
+def test_plot_xy_heatmaps_per_offset_continue_paths(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
     out_dir.mkdir(parents=True, exist_ok=True)
     t_missing = QTable()  # triggers len==0 continue
     t_partial = QTable()
@@ -302,9 +302,11 @@ def test_plot_xy_heatmaps_per_offset_continue_paths(tmp_path):
     assert not any(out_dir.glob("incident_primary_xy_heatmap_off*_ut.png"))
 
 
-def test_plot_radius_histograms_early_returns_and_continues(tmp_path, caplog, monkeypatch):
+def test_plot_radius_histograms_early_returns_and_continues(
+    tmp_test_directory, caplog, monkeypatch
+):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "radius_none.png"
+    out_path = Path(tmp_test_directory) / "plots" / "radius_none.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     log = logging.getLogger(__name__)
     # 1) arrays empty -> early return
@@ -351,9 +353,9 @@ def test_plot_radius_histograms_early_returns_and_continues(tmp_path, caplog, mo
     assert not out_path.exists()
 
 
-def test_plot_radius_vs_angle_missing_columns_continue(tmp_path, caplog):
+def test_plot_radius_vs_angle_missing_columns_continue(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "radius_vs_angle_missing_cols.png"
+    out_path = Path(tmp_test_directory) / "plots" / "radius_vs_angle_missing_cols.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     t = QTable()
     # Include only radius column with one finite row, angle column missing
@@ -370,8 +372,8 @@ def test_plot_radius_vs_angle_missing_columns_continue(tmp_path, caplog):
     assert not out_path.exists()
 
 
-def test_plot_radius_histograms_primary(tmp_path):
-    out_dir = Path(tmp_path) / "plots"
+def test_plot_radius_histograms_primary(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = QTable()
     t1 = QTable()
@@ -389,8 +391,8 @@ def test_plot_radius_histograms_primary(tmp_path):
     assert (out_dir / "incident_radius_primary_multi_ut.png").exists()
 
 
-def test_plot_radius_vs_angle_primary(tmp_path):
-    out_dir = Path(tmp_path) / "plots"
+def test_plot_radius_vs_angle_primary(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = QTable()
     t0["primary_hit_radius"] = np.array([0.1, 0.2, 0.3]) * u.m
@@ -406,8 +408,8 @@ def test_plot_radius_vs_angle_primary(tmp_path):
     assert (out_dir / "incident_primary_radius_vs_angle_multi_ut.png").exists()
 
 
-def test_xy_heatmaps_per_offset_primary(tmp_path):
-    out_dir = Path(tmp_path) / "plots"
+def test_xy_heatmaps_per_offset_primary(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = QTable()
     t1 = QTable()
@@ -452,8 +454,8 @@ def test_iter_xy_valid_points_sorted_and_filtered():
     assert np.all(np.isfinite(y))
 
 
-def test_debug_plots_generate_expected_files(tmp_path):
-    out_dir = Path(tmp_path) / "plots"
+def test_debug_plots_generate_expected_files(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
     t0 = QTable()
     t0["angle_incidence_focal"] = np.array([0.1, 0.2, 0.3]) * u.deg
     t0["angle_incidence_primary"] = np.array([1.0, 1.1, 1.2]) * u.deg
@@ -465,7 +467,7 @@ def test_debug_plots_generate_expected_files(tmp_path):
     t0["secondary_hit_x"] = np.array([0.02, -0.02, 0.01]) * u.m
     t0["secondary_hit_y"] = np.array([0.03, 0.01, -0.02]) * u.m
     results = {0.0: t0}
-    pia.plot_incident_angles(results, tmp_path, "dbg", debug_plots=True)
+    pia.plot_incident_angles(results, tmp_test_directory, "dbg", debug_plots=True)
     assert (out_dir / "incident_radius_primary_multi_dbg.png").exists()
     assert (out_dir / "incident_radius_secondary_multi_dbg.png").exists()
     assert (out_dir / "incident_primary_radius_vs_angle_multi_dbg.png").exists()
@@ -495,9 +497,9 @@ def test_gather_radius_arrays_handles_units_and_errors(caplog):
     assert any("Skipping radius values for off-axis=3.0" in r.message for r in caplog.records)
 
 
-def test_plot_radius_vs_angle_warns_when_no_points(tmp_path, caplog):
+def test_plot_radius_vs_angle_warns_when_no_points(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "no_points.png"
+    out_path = Path(tmp_test_directory) / "plots" / "no_points.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # Table with finite but filtered out due to no matching columns
     t = QTable()
@@ -515,10 +517,10 @@ def test_plot_radius_vs_angle_warns_when_no_points(tmp_path, caplog):
     assert not out_path.exists()
 
 
-def test_plot_xy_heatmap_success_and_empty(tmp_path, caplog):
+def test_plot_xy_heatmap_success_and_empty(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_ok = Path(tmp_path) / "plots" / "xy_ok.png"
-    out_empty = Path(tmp_path) / "plots" / "xy_empty.png"
+    out_ok = Path(tmp_test_directory) / "plots" / "xy_ok.png"
+    out_empty = Path(tmp_test_directory) / "plots" / "xy_empty.png"
     out_ok.parent.mkdir(parents=True, exist_ok=True)
     t_ok = QTable()
     t_ok["primary_hit_x"] = np.array([0.0, 0.1, 0.2, np.nan]) * u.m
@@ -561,9 +563,9 @@ def test_gather_angle_arrays_ignores_none_and_logs_for_empty(caplog):
     assert any("Empty results for off-axis=1.0" in r.message for r in caplog.records)
 
 
-def test_plot_radius_vs_angle_with_missing_columns_warns(tmp_path, caplog):
+def test_plot_radius_vs_angle_with_missing_columns_warns(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "no_cols.png"
+    out_path = Path(tmp_test_directory) / "plots" / "no_cols.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     pia._plot_radius_vs_angle(
         {0.0: QTable()},
@@ -577,9 +579,9 @@ def test_plot_radius_vs_angle_with_missing_columns_warns(tmp_path, caplog):
     assert not out_path.exists()
 
 
-def test_plot_xy_heatmap_with_none_and_missing_warns(tmp_path, caplog):
+def test_plot_xy_heatmap_with_none_and_missing_warns(tmp_test_directory, caplog):
     caplog.set_level(logging.WARNING)
-    out_path = Path(tmp_path) / "plots" / "xy_none.png"
+    out_path = Path(tmp_test_directory) / "plots" / "xy_none.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     pia._plot_xy_heatmap(
         {0.0: None, 1.0: QTable()},
@@ -594,8 +596,8 @@ def test_plot_xy_heatmap_with_none_and_missing_warns(tmp_path, caplog):
     assert not out_path.exists()
 
 
-def test_plot_radius_histograms_covers_continue_lines(tmp_path):
-    out_path = Path(tmp_path) / "plots" / "radius_continue.png"
+def test_plot_radius_histograms_covers_continue_lines(tmp_test_directory):
+    out_path = Path(tmp_test_directory) / "plots" / "radius_continue.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     log = logging.getLogger(__name__)
     # One valid table to ensure bins are computed and plotting proceeds
