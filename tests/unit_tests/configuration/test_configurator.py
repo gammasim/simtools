@@ -33,17 +33,14 @@ def test_fill_from_command_line(configurator, args_dict):
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     assert args_dict == configurator.config
 
-    assert configurator._fill_from_command_line(arg_list=[], require_command_line=True) is None
+    # When require_command_line=True and no args provided, --help is added which causes SystemExit
+    with pytest.raises(SystemExit):
+        configurator._fill_from_command_line(arg_list=[], require_command_line=True)
 
     configurator._fill_from_command_line(arg_list=["--data_path", Path("abc")])
     _tmp_config = copy(dict(args_dict))
     _tmp_config["data_path"] = Path("abc")
     assert _tmp_config == configurator.config
-
-    # Note: Testing SystemExit from argparse errors is problematic in pytest environment
-    # as pytest may intercept sys.exit() calls. The core functionality is already tested
-    # by the positive test cases above, and argparse error handling is verified to work
-    # correctly (error messages are properly displayed in stderr).
 
     configurator._fill_from_command_line(arg_list=["--config", Path("abc")])
     assert configurator.config.get("config") == "abc"
