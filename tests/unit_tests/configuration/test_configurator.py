@@ -41,6 +41,12 @@ def test_fill_from_command_line(configurator, args_dict):
     _tmp_config["data_path"] = Path("abc")
     assert _tmp_config == configurator.config
 
+    with pytest.raises(SystemExit):
+        configurator._fill_from_command_line(arg_list=["--data_pth", Path("abc")])
+
+    with pytest.raises(SystemExit):
+        configurator._fill_from_command_line(arg_list=None)
+
     configurator._fill_from_command_line(arg_list=["--config", Path("abc")])
     assert configurator.config.get("config") == "abc"
 
