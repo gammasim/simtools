@@ -30,9 +30,9 @@ def create_json_file(tmp_test_directory):
 
 
 @pytest.fixture
-def create_yaml_file(tmp_path):
+def create_yaml_file(tmp_test_directory):
     def _create_yaml_file(file_name, content):
-        _file = tmp_path / file_name
+        _file = tmp_test_directory / file_name
         with open(_file, "w", encoding="utf-8") as f:
             yaml.dump(content, f)
         return _file
@@ -41,10 +41,10 @@ def create_yaml_file(tmp_path):
 
 
 @pytest.fixture
-def create_ecsv_file(tmp_path):
+def create_ecsv_file(tmp_test_directory):
     def _create_ecsv_file(file_name, content):
         table = Table(content)
-        file_path = tmp_path / file_name
+        file_path = tmp_test_directory / file_name
         table.write(file_path, format="ascii.ecsv")
         return file_path
 
