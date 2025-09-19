@@ -184,6 +184,12 @@ def _parse():
         help="Use KS statistic for monte carlo uncertainty analysis.",
         action="store_true",
     )
+    config.parser.add_argument(
+        "--fraction",
+        help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
+        type=float,
+        default=0.8,
+    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version", "parameter_version"],
