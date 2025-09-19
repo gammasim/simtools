@@ -81,3 +81,28 @@ def resolve_version_to_latest_patch(partial_version, available_versions):
         )
 
     return str(max(map(Version, candidates)))
+
+
+def semver_to_int(version_string):
+    """
+    Convert a semantic version string to an integer.
+
+    Parameters
+    ----------
+    version : str
+        Semantic version string (e.g., "6.0.2")
+
+    Returns
+    -------
+    int
+        Integer representation of the version (e.g., 60002 for "6.0.2")
+
+    """
+    try:
+        v = Version(version_string)
+    except InvalidVersion as exc:
+        raise ValueError(f"Invalid version: {version_string}") from exc
+
+    release = v.release + (0,) * (3 - len(v.release))
+    major, minor, patch = release[:3]
+    return major * 10000 + minor * 100 + patch

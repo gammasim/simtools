@@ -6,7 +6,7 @@ applications:
     telescope: SSTS-01
     off_axis_angles: 1.0
     number_of_photons: 10000
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     debug_plots: true
     calculate_primary_secondary_angles: true

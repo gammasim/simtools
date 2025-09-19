@@ -110,3 +110,11 @@ def test_resolve_version_to_latest_patch():
     partial_version = "6"
     with pytest.raises(ValueError, match=r"^Partial version must be major.minor"):
         version.resolve_version_to_latest_patch(partial_version, available_versions)
+
+
+def test_semver_to_int():
+    assert version.semver_to_int("6.1.1") == 60101
+    assert version.semver_to_int("6.1") == 60100
+
+    with pytest.raises(ValueError, match=r"Invalid version: not_a.version"):
+        version.semver_to_int("not_a.version")
