@@ -41,6 +41,15 @@ the visualization module.
    :members:
 ```
 
+## plot_corsika_histograms
+
+(corsika-histograms-visualize-1)=
+
+```{eval-rst}
+.. automodule:: visualization.plot_corsika_histograms
+   :members:
+```
+
 (plot-tables)=
 
 ## plot_tables
