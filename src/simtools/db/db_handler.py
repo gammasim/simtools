@@ -607,7 +607,9 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
-        # TODO why not here?
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection_name)
+        )
         try:
             return DatabaseHandler.production_table_cached[
                 self._cache_key(None, None, model_version, collection_name)
