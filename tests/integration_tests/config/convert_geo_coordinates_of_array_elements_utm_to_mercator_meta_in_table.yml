@@ -5,7 +5,7 @@ applications:
     export: mercator
     input: tests/resources/telescope_positions-North-utm.ecsv
     log_level: DEBUG
-    model_version: 6.0.0
+    model_version: 6.0
     output_file: test.ecsv
     output_path: simtools-output
     select_assets:

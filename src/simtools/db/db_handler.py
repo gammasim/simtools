@@ -277,7 +277,7 @@ class DatabaseHandler:
                     "Only one model version can be passed to get_model_parameter, not a list."
                 )
             model_version = resolve_version_to_latest_patch(
-                model_version, self._get_cached_model_versions(collection_name)
+                model_version, self.get_model_versions(collection_name)
             )
             production_table = self.read_production_table_from_mongo_db(
                 collection_name, model_version
@@ -326,7 +326,7 @@ class DatabaseHandler:
         """
         pars = {}
         model_version = resolve_version_to_latest_patch(
-            model_version, self._get_cached_model_versions(collection)
+            model_version, self.get_model_versions(collection)
         )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         array_element_list = self._get_array_element_list(
@@ -631,7 +631,7 @@ class DatabaseHandler:
 
     def get_model_versions(self, collection_name="telescopes"):
         """
-        Get list of model versions from the DB.
+        Get list of model versions from the DB with caching.
 
         Parameters
         ----------
@@ -643,10 +643,12 @@ class DatabaseHandler:
         list
             List of model versions
         """
-        collection = self.get_collection("production_tables", db_name=self.db_name)
-        return sorted(
-            {post["model_version"] for post in collection.find({"collection": collection_name})}
-        )
+        if collection_name not in DatabaseHandler.model_versions_cached:
+            collection = self.get_collection("production_tables", db_name=self.db_name)
+            DatabaseHandler.model_versions_cached[collection_name] = sorted(
+                {post["model_version"] for post in collection.find({"collection": collection_name})}
+            )
+        return DatabaseHandler.model_versions_cached[collection_name]
 
     def get_array_elements(self, model_version, collection="telescopes"):
         """
@@ -666,7 +668,7 @@ class DatabaseHandler:
             Sorted list of all array elements found in collection
         """
         model_version = resolve_version_to_latest_patch(
-            model_version, self._get_cached_model_versions(collection)
+            model_version, self.get_model_versions(collection)
         )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
@@ -691,7 +693,7 @@ class DatabaseHandler:
             Design model for a given array element.
         """
         model_version = resolve_version_to_latest_patch(
-            model_version, self._get_cached_model_versions(collection)
+            model_version, self.get_model_versions(collection)
         )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         try:
@@ -722,7 +724,7 @@ class DatabaseHandler:
             Sorted list of all array element names found in collection
         """
         model_version = resolve_version_to_latest_patch(
-            model_version, self._get_cached_model_versions(collection)
+            model_version, self.get_model_versions(collection)
         )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         all_array_elements = production_table["parameters"]
@@ -1031,26 +1033,6 @@ class DatabaseHandler:
         """Reset the cache for the parameters."""
         DatabaseHandler.model_parameters_cached.clear()
         DatabaseHandler.model_versions_cached.clear()
-
-    def _get_cached_model_versions(self, collection_name):
-        """
-        Get model versions for a collection with caching.
-
-        Parameters
-        ----------
-        collection_name : str
-            Collection name
-
-        Returns
-        -------
-        list
-            List of model versions
-        """
-        if collection_name not in DatabaseHandler.model_versions_cached:
-            DatabaseHandler.model_versions_cached[collection_name] = self.get_model_versions(
-                collection_name
-            )
-        return DatabaseHandler.model_versions_cached[collection_name]
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """

@@ -2,7 +2,7 @@
 applications:
 - application: simtools-validate-camera-efficiency
   configuration:
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     site: North
     telescope: LSTN-02
