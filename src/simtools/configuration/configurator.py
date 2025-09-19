@@ -168,7 +168,7 @@ class Configurator:
 
         return self.config, _db_dict
 
-    def _fill_from_command_line(self, arg_list=None, require_command_line=True):
+    def _fill_from_command_line(self, arg_list=None, require_command_line=False):
         """
         Fill configuration parameters from command line arguments.
 

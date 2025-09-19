@@ -68,12 +68,13 @@ def main():
         key, value = version_entry.split(": ", 1)
         version_dict[key] = value
 
-    ascii_handler.write_data_to_file(
-        data=version_dict,
-        output_file=io_handler_instance.get_output_file(
-            args_dict.get("output_file", "simtools_version.json"), label=label
-        ),
-    )
+    if not args_dict.get("output_file_from_default", False):
+        ascii_handler.write_data_to_file(
+            data=version_dict,
+            output_file=io_handler_instance.get_output_file(
+                args_dict.get("output_file", "simtools_version.json"), label=label
+            ),
+        )
 
 
 if __name__ == "__main__":

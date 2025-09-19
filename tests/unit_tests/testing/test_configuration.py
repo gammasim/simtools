@@ -229,7 +229,7 @@ def test_configure_without_configuration(tmp_test_directory, mocker):
 
     cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
 
-    expected_cmd = "python simtools/applications/test_app.py"
+    expected_cmd = "python simtools/applications/test_app.py --help"
     assert cmd == expected_cmd
     assert config_file_model_version is None
 
