@@ -224,6 +224,7 @@ def test_make_light_emission_script(
     mock_simulator,
     site_model_north,
     mock_output_path,
+    model_version,
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
@@ -238,7 +239,7 @@ def test_make_light_emission_script(
         " -s 300"
         " -p Gauss:0.0"
         " -a isotropic"
-        f" -A {mock_output_path}/model/6.0.0/"
+        f" -A {mock_output_path}/model/{model_version}/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
@@ -252,6 +253,7 @@ def test_make_light_emission_script_variable(
     mock_simulator_variable,
     site_model_north,
     mock_output_path,
+    model_version,
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
@@ -263,7 +265,7 @@ def test_make_light_emission_script_variable(
         " -z 100000.0"
         " -d 0,0,-1"
         " -n 100000000.0"
-        f" -A {mock_output_path}/model/6.0.0/"
+        f" -A {mock_output_path}/model/{model_version}/"
         f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )

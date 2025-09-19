@@ -5,7 +5,7 @@ applications:
     containment_fraction: 0.8
     log_level: DEBUG
     mirror_list: ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv
-    model_version: 6.0.0
+    model_version: 6.0
     output_file: test_derive_mirror_rnda_psf_mean.ecsv
     output_path: simtools-output
     psf_measurement_containment_mean: 1.4

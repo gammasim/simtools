@@ -11,8 +11,8 @@ applications:
     label: multiple_model_versions
     log_level: DEBUG
     model_version:
-    - 6.0.0
-    - 6.1.0
+    - 6.0
+    - 6.1
     nshow: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output

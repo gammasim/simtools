@@ -3,7 +3,7 @@ applications:
 - application: simtools-submit-array-layouts
   configuration:
     array_layouts: tests/resources/model_parameters/array_layouts-2.0.2.json
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     updated_parameter_version: 1.0.98
     use_plain_output_path: true

@@ -46,7 +46,7 @@ def main():  # noqa: D103
     ]
     requested = db.get_db_name(
         db_name=args_dict["db_name"],
-        model_version=args_dict.get("db_simulation_model_version"),
+        db_simulation_model_version=args_dict.get("db_simulation_model_version"),
         model_name=args_dict.get("db_simulation_model"),
     )
     if requested != "all" and requested not in databases:

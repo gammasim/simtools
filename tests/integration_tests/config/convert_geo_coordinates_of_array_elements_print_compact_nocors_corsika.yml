@@ -3,7 +3,7 @@ applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
     input: ./tests/resources/telescope_positions-North-utm.ecsv
-    model_version: 6.0.0
+    model_version: 6.0
     print: ground
   test_name: print_compact_nocors_ground
 schema_name: application_workflow.metaschema

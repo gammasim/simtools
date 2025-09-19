@@ -3,7 +3,7 @@ applications:
 - application: simtools-plot-array-layout
   configuration:
     array_layout_name: subsystem_lsts
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     site: North
   integration_tests:

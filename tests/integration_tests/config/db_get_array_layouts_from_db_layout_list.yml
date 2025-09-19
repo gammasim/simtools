@@ -7,7 +7,7 @@ applications:
     - MSTS
     - SSTS
     coordinate_system: ground
-    model_version: 6.0.0
+    model_version: 6.0
     output_file: array_layout_south_ground_from_list.ecsv
     output_path: simtools-output
     site: South
