@@ -118,7 +118,7 @@ def configure(config, tmp_test_directory, request):
         )
     else:
         config_file = None
-        config_string = "--help"
+        config_string = None
         config_file_model_version = None
 
     cmd = get_application_command(
