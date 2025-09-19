@@ -33,7 +33,6 @@ def test_fill_from_command_line(configurator, args_dict):
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     assert args_dict == configurator.config
 
-    # When require_command_line=True and no args provided, --help is added which causes SystemExit
     with pytest.raises(SystemExit):
         configurator._fill_from_command_line(arg_list=[], require_command_line=True)
 
