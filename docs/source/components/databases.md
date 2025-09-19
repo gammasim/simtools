@@ -45,11 +45,11 @@ SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 
 ## Browse the database
 
-The mongoDB database can be accessed via the command-line interface `mongo` or via a GUI tool like `Robo 3T` or `Studio 3T`.
+The MongoDB database can be accessed via the command-line interface `mongo` or via a GUI tool like `Robo 3T` or `Studio 3T`.
 
 ## Setup a local copy of the model parameter database
 
-The production version of model-parameter database is a mongoDB instance running on a server at DESY.
+The production version of model-parameter database is a MongoDB instance running on a server at DESY.
 For testing and development, it is recommend to work with a local copy of the database.
 The following scripts allow to setup and fill a local database running in a container.
 
@@ -63,7 +63,7 @@ Be careful of the settings described below to avoid accidental overwriting of th
 
 The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generates a local database instance in a container:
 
-* downloads a mongoDB docker image
+* downloads a MongoDB Docker image
 * starts a container with the image and initialize a new database
 * add a user with `readWrite` role
 * defines a container network called `simtools-mongo-network` (check with `podman network ls`)
@@ -72,7 +72,7 @@ The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generat
 
 #### Option 1 (preferred): Fill local database from model parameter repository
 
-The script `upload_from_model_repository_to_db.sh` uses the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) from the CTAO gitlab and
+The script `upload_from_model_repository_to_db.sh` uses the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) from the CTAO GitLab and
 uploads its contents to the local database instance.
 
 #### Option 2: Fill local database from remote DB dump
@@ -99,7 +99,7 @@ Modify the environment file `.env` to be used with a container:
 ```console
 # Environmental variables
 SIMTOOLS_DB_API_PORT=27017 # Port on the database server
-SIMTOOLS_DB_SERVER='simtools-mongodb'
+SIMTOOLS_DB_SERVER='simtools-MongoDB'
 SIMTOOLS_DB_API_USER='api' # username for database
 SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
@@ -120,5 +120,5 @@ cd /workdir/external/database_scripts
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
 
 :::{Danger}
-Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.
+Attention: this script removes all local Docker containers, images, and networks without awaiting confirmation.
 :::
