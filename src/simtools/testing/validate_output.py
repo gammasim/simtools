@@ -112,7 +112,6 @@ def _validate_output_path_and_file(config, integration_file_tests):
 
         output_file_path = Path(output_path) / file_test["file"]
         _logger.info(f"Checking path: {output_file_path}")
-        print("AAAA", output_file_path)
         try:
             assert output_file_path.exists()
         except AssertionError as exc:

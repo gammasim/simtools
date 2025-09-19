@@ -797,6 +797,9 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, moc
     model_version = "1.0.0"
     param = {"param1": "value1"}
 
+    # Mock get_model_versions to return the expected model version
+    mocker.patch.object(db, "get_model_versions", return_value=[model_version])
+
     # Test with cache hit
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
     cached_result = setup_production_table_cached("cache_key", model_version, param)
