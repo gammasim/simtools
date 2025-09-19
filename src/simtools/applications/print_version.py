@@ -39,7 +39,7 @@ def _parse(label, description, usage):
     """
     config = configurator.Configurator(label=label, description=description, usage=usage)
 
-    return config.initialize(db_config=True, output=True)
+    return config.initialize(db_config=True, output=True, require_command_line=False)
 
 
 def main():
