@@ -84,11 +84,19 @@ the visualization module.
    :members:
 ```
 
+## plot_psf
+
+```{eval-rst}
+.. automodule:: visualization.plot_psf
+   :members:
+```
+
 (plot-incident-angles)=
 
 ## plot_incident_angles
 
 ```{eval-rst}
 .. automodule:: visualization.plot_incident_angles
+
    :members:
 ```
