@@ -2,7 +2,7 @@
 applications:
 - application: simtools-derive-psf-parameters
   configuration:
-    data: ./tests/resources/PSFcurve_data_v2.txt
+    data: ./tests/resources/PSFcurve_data_v2.ecsv
     model_version: 6.0
     output_path: simtools-output/derive_psf_parameters/ray_tracing/
     site: North
