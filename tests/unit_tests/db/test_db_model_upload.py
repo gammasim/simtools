@@ -8,16 +8,6 @@ import pytest
 import simtools.db.db_model_upload as db_model_upload
 
 
-@pytest.fixture
-def iter_dir():
-    return "simtools.db.db_model_upload.Path.iterdir"
-
-
-@pytest.fixture
-def is_dir():
-    return "simtools.db.db_model_upload.Path.is_dir"
-
-
 @patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
 def test_add_values_from_json_to_db(mock_collect_data_from_file):
     mock_collect_data_from_file.return_value = {
@@ -42,8 +32,8 @@ def test_add_values_from_json_to_db(mock_collect_data_from_file):
 @patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
 def test_read_production_table(mock_collect_data_from_file):
     mock_collect_data_from_file.return_value = {
-        "parameters": {"LSTN-design": "param_value_1", "LSTN-01": "param_value_2"},
-        "design_model": {"LSTN-design": "design_value_1", "LSTN-01": "design_value_2"},
+        "parameters": {"LSTN-design": {"param1": "param_value_1"}},
+        "design_model": {"LSTN-design": "design_value_1"},
     }
     model_dict = {}
     file = Mock()
@@ -53,7 +43,7 @@ def test_read_production_table(mock_collect_data_from_file):
     db_model_upload._read_production_table(model_dict, file, model_name)
 
     assert "LSTN-design" in model_dict["telescopes"]["parameters"]
-    assert model_dict["telescopes"]["parameters"]["LSTN-design"] == "param_value_1"
+    assert model_dict["telescopes"]["parameters"]["LSTN-design"]["param1"] == "param_value_1"
     assert model_dict["telescopes"]["design_model"]["LSTN-design"] == "design_value_1"
 
     file.stem = "MSTx-NectarCam"
@@ -69,12 +59,10 @@ def test_read_production_table(mock_collect_data_from_file):
 
 
 @patch("simtools.db.db_model_upload._read_production_table")
-def test_add_production_tables_to_db(
-    mock_read_production_table, tmp_test_directory, caplog, iter_dir, is_dir
-):
+def test_add_production_tables_to_db(mock_read_production_table, tmp_test_directory, caplog):
     mock_db = Mock()
     input_path = Path(tmp_test_directory)
-    model_dir = input_path / "model_version_1"
+    model_dir = input_path / "1.0.0"
     model_dir.mkdir(parents=True, exist_ok=True)
     (model_dir / "file1.json").touch()
     (model_dir / "MSTS-02.json").touch()
@@ -88,8 +76,8 @@ def test_add_production_tables_to_db(
         }
     )
 
-    with patch(iter_dir, return_value=[model_dir]):
-        with patch(is_dir, return_value=True):
+    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
+        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
             db_model_upload.add_production_tables_to_db(input_path, mock_db)
 
     assert mock_read_production_table.call_count == 2
@@ -103,15 +91,33 @@ def test_add_production_tables_to_db(
     mock_read_production_table.side_effect = lambda model_dict, file, _: model_dict.update(
         {"telescopes": {"parameters": {}, "design_model": {}}}
     )
-    with caplog.at_level("INFO"):
-        db_model_upload.add_production_tables_to_db(input_path, mock_db)
-    assert "No production table for telescopes in model version model_version_1" in caplog.text
+    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
+        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
+            with caplog.at_level("INFO"):
+                db_model_upload.add_production_tables_to_db(input_path, mock_db)
+    assert "No production table for telescopes in model version 1.0.0" in caplog.text
+
+    # Test with info.yml file containing model_version_history
+    caplog.clear()
+    info_content = {"model_version_history": ["0.9.0", "0.8.0"]}
+    info_file = model_dir / "info.yml"
+    with open(info_file, "w") as f:
+        f.write('model_version_history: ["0.9.0", "0.8.0"]\n')
+
+    with patch(
+        "simtools.db.db_model_upload.ascii_handler.collect_data_from_file",
+        return_value=info_content,
+    ):
+        with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
+            with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
+                with caplog.at_level("INFO"):
+                    db_model_upload.add_production_tables_to_db(input_path, mock_db)
+    assert "model_version_history" in info_content
+    assert "Reading production tables from repository" in caplog.text
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
-def test_add_model_parameters_to_db(
-    mock_add_values_from_json_to_db, tmp_test_directory, iter_dir, is_dir
-):
+def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_directory):
     mock_db = Mock()
     input_path = Path(tmp_test_directory)
     array_element_dir = input_path / "LSTS-01"
@@ -119,8 +125,8 @@ def test_add_model_parameters_to_db(
     (array_element_dir / "num_gains-0.1.0.json").touch()
     (array_element_dir / "mirror_list-0.2.1.json").touch()
 
-    with patch(iter_dir, return_value=[array_element_dir]):
-        with patch(is_dir, return_value=True):
+    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[array_element_dir]):
+        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_any_call(
@@ -140,7 +146,7 @@ def test_add_model_parameters_to_db(
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
 def test_add_model_parameters_to_db_skip_files_collection(
-    mock_add_values_from_json_to_db, tmp_test_directory, iter_dir, is_dir
+    mock_add_values_from_json_to_db, tmp_test_directory
 ):
     mock_db = Mock()
     input_path = Path(tmp_test_directory)
@@ -148,8 +154,8 @@ def test_add_model_parameters_to_db_skip_files_collection(
     files_dir.mkdir(parents=True, exist_ok=True)
     (files_dir / "file1.json").touch()
 
-    with patch(iter_dir, return_value=[files_dir]):
-        with patch(is_dir, return_value=True):
+    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[files_dir]):
+        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_not_called()

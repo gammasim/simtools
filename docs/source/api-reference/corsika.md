@@ -29,12 +29,3 @@ Support modules for running CORSIKA.
    :members:
 
 ```
-
-## corsika_histograms_visualize
-
-(corsika-histograms-visualize-1)=
-
-```{eval-rst}
-.. automodule:: corsika.corsika_histograms_visualize
-   :members:
-```
