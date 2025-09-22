@@ -47,14 +47,37 @@ def test_get_significance_label():
     assert plot_psf.get_significance_label(0.005) == "POOR"
 
 
+def test__get_psf_diameter_label():
+    """Test PSF diameter label generation for different fractions and units."""
+    # Test D80 with cm
+    assert plot_psf._get_psf_diameter_label(0.8, "cm") == "D80 (cm)"
+
+    # Test D95 with degrees
+    assert plot_psf._get_psf_diameter_label(0.95, "degrees") == "D95 (degrees)"
+
+    # Test D90 without unit
+    assert plot_psf._get_psf_diameter_label(0.9, "") == "D90"
+
+    # Test default cm unit
+    assert plot_psf._get_psf_diameter_label(0.85) == "D85 (cm)"
+
+
 @pytest.mark.parametrize(
-    ("use_ks_statistic", "second_metric", "p_value"),
-    [(False, None, None), (True, None, 0.05), (False, 0.456, None), (False, 0.456, 0.05)],
+    ("use_ks_statistic", "second_metric", "p_value", "fraction"),
+    [
+        (False, None, None, 0.8),
+        (True, None, 0.05, 0.8),
+        (False, 0.456, None, 0.8),
+        (False, 0.456, 0.05, 0.95),
+    ],
 )
-def test__format_metric_text(use_ks_statistic, second_metric, p_value):
-    """Test metric text formatting for different modes."""
-    result = plot_psf._format_metric_text(3.5, 0.123, p_value, use_ks_statistic, second_metric)
-    assert "D80 = 3.50000 cm" in result
+def test__format_metric_text(use_ks_statistic, second_metric, p_value, fraction):
+    """Test metric text formatting for different modes and fractions."""
+    result = plot_psf._format_metric_text(
+        3.5, 0.123, fraction, p_value, use_ks_statistic, second_metric
+    )
+    expected_label = f"D{int(fraction * 100)}"
+    assert f"{expected_label} = 3.50000 cm" in result
     assert "0.123" in result
 
 
@@ -122,7 +145,7 @@ def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
         mock_pdf_pages = MagicMock()
 
         plot_psf.create_psf_parameter_plot(
-            data_to_plot, sample_parameters, 3.5, 0.123, True, mock_pdf_pages
+            data_to_plot, sample_parameters, 3.5, 0.123, True, mock_pdf_pages, fraction=0.8
         )
 
         mock_base.assert_called_once()
@@ -144,7 +167,15 @@ def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_
 
         # Test successful case
         plot_psf.create_detailed_parameter_plot(
-            sample_parameters, 0.123, 3.5, sample_psf_data, data_to_plot, True, mock_pdf_pages, 0.05
+            sample_parameters,
+            0.123,
+            3.5,
+            sample_psf_data,
+            data_to_plot,
+            True,
+            mock_pdf_pages,
+            fraction=0.8,
+            p_value=0.05,
         )
         mock_annotations.assert_called_once()
 
@@ -190,7 +221,7 @@ def test_create_gradient_descent_convergence_plot(tmp_path):
     with patch("matplotlib.pyplot.savefig") as mock_save:
         # Test RMSD mode
         plot_psf.create_gradient_descent_convergence_plot(
-            gd_results, 0.01, output_file, use_ks_statistic=False
+            gd_results, 0.01, output_file, fraction=0.8, use_ks_statistic=False
         )
         plt.close("all")
         mock_save.assert_called_once()
@@ -198,7 +229,7 @@ def test_create_gradient_descent_convergence_plot(tmp_path):
         mock_save.reset_mock()
         # Test KS statistic mode
         plot_psf.create_gradient_descent_convergence_plot(
-            gd_results, 0.01, output_file, use_ks_statistic=True
+            gd_results, 0.01, output_file, fraction=0.8, use_ks_statistic=True
         )
         plt.close("all")
         mock_save.assert_called_once()
@@ -235,7 +266,7 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
     with patch("matplotlib.pyplot.savefig") as mock_save:
         # Test RMSD mode
         plot_psf.create_monte_carlo_uncertainty_plot(
-            mc_results_rmsd, output_file, use_ks_statistic=False
+            mc_results_rmsd, output_file, fraction=0.8, use_ks_statistic=False
         )
         plt.close("all")
         assert mock_save.call_count == 2  # PDF and PNG
@@ -243,17 +274,22 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
         mock_save.reset_mock()
         # Test KS mode
         plot_psf.create_monte_carlo_uncertainty_plot(
-            mc_results_ks, output_file, use_ks_statistic=True
+            mc_results_ks, output_file, fraction=0.8, use_ks_statistic=True
         )
         plt.close("all")
         assert mock_save.call_count == 2
 
 
-def test_create_d80_vs_offaxis_plot(sample_parameters, tmp_path):
-    """Test D80 vs off-axis angle plot creation."""
+def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
+    """Test psf vs off-axis angle plot creation."""
     mock_telescope_model = MagicMock()
     mock_site_model = MagicMock()
-    args_dict = {"simtel_path": "/path/to/simtel", "zenith": 20.0, "src_distance": 10.0}
+    args_dict = {
+        "fraction": 0.8,
+        "simtel_path": "/path/to/simtel",
+        "zenith": 20,
+        "src_distance": 10,
+    }
 
     # Mock RayTracing and its methods
     with (
@@ -267,7 +303,7 @@ def test_create_d80_vs_offaxis_plot(sample_parameters, tmp_path):
         mock_ray.images.return_value[0].get_psf.return_value = 3.5
         mock_linspace.return_value = np.array([0, 1, 2])
 
-        plot_psf.create_d80_vs_offaxis_plot(
+        plot_psf.create_psf_vs_offaxis_plot(
             mock_telescope_model, mock_site_model, args_dict, sample_parameters, tmp_path
         )
         plt.close("all")
@@ -286,7 +322,7 @@ def test_create_d80_vs_offaxis_plot(sample_parameters, tmp_path):
 )
 def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
     """Test PDF plotting setup with plot_all enabled and disabled."""
-    args_dict = {"plot_all": plot_all}
+    args_dict = {"plot_all": plot_all, "fraction": 0.8}
 
     pdf_pages = plot_psf.setup_pdf_plotting(args_dict, tmp_path, "LSTN-01")
 
@@ -305,7 +341,7 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
     gd_results = [(sample_parameters, 0.1, 0.8, 3.5, sample_psf_data)]
 
     # Test with save_plots=True - should create plots
-    args_dict_with_plots = {"save_plots": True}
+    args_dict_with_plots = {"save_plots": True, "fraction": 0.8}
     with (
         patch("simtools.visualization.plot_psf.PdfPages") as mock_pdf,
         patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
@@ -322,7 +358,7 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
         mock_pdf_instance.close.assert_called_once()
 
     # Test with save_plots=False - should return early without creating plots
-    args_dict_no_plots = {"save_plots": False}
+    args_dict_no_plots = {"save_plots": False, "fraction": 0.8}
     result = plot_psf.create_optimization_plots(
         args_dict_no_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
     )
