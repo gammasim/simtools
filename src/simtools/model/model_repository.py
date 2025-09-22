@@ -196,21 +196,31 @@ def _apply_changes_to_production_tables(
     simulation_models_path: str
         Path to the simulation models repository.
     """
-    source_path = simulation_models_path / "productions" / base_model_version
-    target_path = simulation_models_path / "productions" / model_version
-    _logger.info(f"Production tables {update_type} from {source_path} to {target_path}")
+    source = simulation_models_path / "productions" / base_model_version
+    target = simulation_models_path / "productions" / model_version
+    _logger.info(f"Production tables {update_type} from {source} to {target}")
+    target.mkdir(parents=True, exist_ok=True)
 
-    target_path.mkdir(parents=True, exist_ok=True)
-    for file_path in Path(source_path).rglob("*.json"):
+    # load existing tables
+    tables = {}
+    for file_path in Path(source).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
-        write_to_disk = _apply_changes_to_production_table(
-            data, changes, model_version, update_type == "patch_update"
-        )
-        if write_to_disk:
-            ascii_handler.write_data_to_file(data, target_path / file_path.name, sort_keys=True)
+        if not isinstance(data, dict):
+            raise TypeError(f"Unsupported data type {type(data)} in {file_path}")
+        tables[data["production_table_name"]] = data
+
+    # placeholder for new tables
+    for table_name in changes:
+        tables.setdefault(table_name, {})
+
+    for table_name, data in tables.items():
+        if _apply_changes_to_production_table(
+            table_name, data, changes, model_version, update_type == "patch_update"
+        ):
+            ascii_handler.write_data_to_file(data, target / f"{table_name}.json", sort_keys=True)
 
 
-def _apply_changes_to_production_table(data, changes, model_version, patch_update):
+def _apply_changes_to_production_table(table_name, data, changes, model_version, patch_update):
     """
     Apply changes to a single production table.
 
@@ -231,21 +241,15 @@ def _apply_changes_to_production_table(data, changes, model_version, patch_updat
         True if data was modified and should be written to disk (patch updates) and always
         for full updates.
     """
-    if isinstance(data, dict):
-        table_name = data["production_table_name"]
-        data["model_version"] = model_version
-        if table_name in changes:
-            table_parameters = (
-                {} if patch_update else data.get("parameters", {}).get(table_name, {})
-            )
-            parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
-            data["parameters"] = parameters
-            if deprecated:
-                data["deprecated_parameters"] = deprecated
-        elif patch_update:
-            return False
-    else:
-        raise TypeError(f"Unsupported data type {type(data)} in production table update")
+    data["model_version"] = model_version
+    if table_name in changes:
+        table_parameters = {} if patch_update else data.get("parameters", {}).get(table_name, {})
+        parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
+        data["parameters"] = parameters
+        if deprecated:
+            data["deprecated_parameters"] = deprecated
+    elif patch_update:
+        return False
 
     return True
 
@@ -326,9 +330,8 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     """
     telescope_dir = simulation_models_path / "model_parameters" / telescope
     if not telescope_dir.exists():
-        raise FileNotFoundError(
-            f"Directory for telescope '{telescope}' does not exist in '{telescope_dir}'."
-        )
+        _logger.info(f"Create directory for array element '{telescope}': '{telescope_dir}'.")
+        telescope_dir.mkdir(parents=True, exist_ok=True)
 
     param_dir = telescope_dir / param
     try:
@@ -344,7 +347,6 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         # important for e.g. nsb_pixel_rate
         if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
             param_data["value"] = [param_data["value"]] * len(json_data["value"])
-        # TODO - understand why this is needed
         param_data["meta_parameter"] = json_data.get("meta_parameter", False)
 
     writer.ModelDataWriter.dump_model_parameter(
