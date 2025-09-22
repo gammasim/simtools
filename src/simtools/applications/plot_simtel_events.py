@@ -81,87 +81,8 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
-from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler
-from simtools.visualization.plot_simtel_events import (
-    plot_simtel_event_image,
-    plot_simtel_integrated_pedestal_image,
-    plot_simtel_integrated_signal_image,
-    plot_simtel_peak_timing,
-    plot_simtel_step_traces,
-    plot_simtel_time_traces,
-    plot_simtel_waveform_matrix,
-)
-
-PLOT_CHOICES = {
-    "event_image": "event_image",
-    "time_traces": "time_traces",
-    "waveform_matrix": "waveform_matrix",
-    "step_traces": "step_traces",
-    "integrated_signal_image": "integrated_signal_image",
-    "integrated_pedestal_image": "integrated_pedestal_image",
-    "peak_timing": "peak_timing",
-    "all": "all",
-}
-
-
-def _call_peak_timing(
-    filename,
-    *,
-    tel_id=None,
-    sum_threshold=10.0,
-    peak_width=8,
-    examples=3,
-    timing_bins=None,
-    event_index=None,
-):
-    """Call ``plot_simtel_peak_timing`` and support optional ``return_stats``.
-
-    Parameters
-    ----------
-    filename : pathlib.Path or str
-        Path to the input simtel file.
-    tel_id : int, optional
-        Telescope ID to visualize.
-    sum_threshold : float, default 10.0
-        Minimum pixel sum to consider a pixel.
-    peak_width : int, default 8
-        Expected peak width in samples.
-    examples : int, default 3
-        Number of example traces to draw.
-    timing_bins : int or None, optional
-        Number of bins for timing histogram (contiguous if not set).
-    event_index : int or None, optional
-        0-based index of the event to plot; default is the first event.
-
-    Returns
-    -------
-    object or None
-        The matplotlib Figure if available, otherwise ``None``.
-    """
-    try:
-        fig_stats = plot_simtel_peak_timing(
-            filename,
-            tel_id=tel_id,
-            sum_threshold=sum_threshold,
-            peak_width=peak_width,
-            examples=examples,
-            timing_bins=timing_bins,
-            return_stats=True,
-            event_index=event_index,
-        )
-        return fig_stats[0] if isinstance(fig_stats, tuple) else fig_stats
-    except TypeError:
-        return plot_simtel_peak_timing(
-            filename,
-            tel_id=tel_id,
-            sum_threshold=sum_threshold,
-            peak_width=peak_width,
-            examples=examples,
-            timing_bins=timing_bins,
-            event_index=event_index,
-        )
+from simtools.visualization.plot_simtel_events import PLOT_CHOICES, generate_and_save_plots
 
 
 def _parse(label: str):
@@ -186,7 +107,6 @@ def _parse(label: str):
         default=["event_image"],
         choices=sorted(PLOT_CHOICES),
     )
-    # common plotting options
     config.parser.add_argument("--tel_id", type=int, default=None, help="Telescope ID")
     config.parser.add_argument(
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
@@ -237,7 +157,6 @@ def _parse(label: str):
         default=None,
         help="0-based index of the event to plot; default is the first event",
     )
-    # outputs
     config.parser.add_argument(
         "--output_file",
         type=str,
@@ -257,123 +176,6 @@ def _parse(label: str):
     return config.initialize(db_config=False, require_command_line=True)
 
 
-def _save_png(fig, out_dir: Path, stem: str, suffix: str, dpi: int):
-    """Save ``fig`` as a PNG into ``out_dir`` using ``stem`` and ``suffix``.
-
-    Errors during saving are logged as warnings and otherwise ignored.
-    """
-    png_path = out_dir.joinpath(f"{stem}_{suffix}.png")
-    try:
-        fig.savefig(png_path, dpi=dpi, bbox_inches="tight")
-    except Exception as ex:  # pylint:disable=broad-except
-        logging.getLogger(__name__).warning("Failed to save PNG %s: %s", png_path, ex)
-
-
-def _make_output_paths(
-    ioh: io_handler.IOHandler, base: str | None, input_file: Path
-) -> tuple[Path, Path]:
-    """Return (out_dir, pdf_path) based on base and input_file."""
-    out_dir = ioh.get_output_directory(label=Path(__file__).stem)
-    if base:
-        pdf_path = ioh.get_output_file(f"{base}_{input_file.stem}")
-    else:
-        pdf_path = ioh.get_output_file(input_file.stem)
-    pdf_path = Path(f"{pdf_path}.pdf") if pdf_path.suffix != ".pdf" else Path(pdf_path)
-    return out_dir, pdf_path
-
-
-def _collect_figures_for_file(
-    filename: Path,
-    plots: list[str],
-    args: dict,
-    out_dir: Path,
-    base_stem: str,
-    save_pngs: bool,
-    dpi: int,
-):
-    """Generate the selected plots for a single sim_telarray file.
-
-    Returns a list of figures. If ``save_pngs`` is True, also writes PNGs to
-    ``out_dir`` using ``base_stem`` for filenames.
-    """
-    logger = logging.getLogger(__name__)
-    figures: list[object] = []
-
-    def add(fig, tag: str):
-        if fig is not None:
-            figures.append(fig)
-            if save_pngs:
-                _save_png(fig, out_dir, base_stem, tag, dpi)
-        else:
-            logger.warning("Plot '%s' returned no figure for %s", tag, filename)
-
-    plots_to_run = (
-        [
-            "event_image",
-            "time_traces",
-            "waveform_matrix",
-            "step_traces",
-            "integrated_signal_image",
-            "integrated_pedestal_image",
-            "peak_timing",
-        ]
-        if "all" in plots
-        else list(plots)
-    )
-
-    # function name -> (callable, defaults)
-    dispatch: dict[str, tuple[object, dict[str, object]]] = {
-        "event_image": (
-            plot_simtel_event_image,
-            {"distance": None, "event_index": None},
-        ),
-        "time_traces": (
-            plot_simtel_time_traces,
-            {"tel_id": None, "n_pixels": 3, "event_index": None},
-        ),
-        "waveform_matrix": (
-            plot_simtel_waveform_matrix,
-            {"tel_id": None, "vmax": None, "event_index": None},
-        ),
-        "step_traces": (
-            plot_simtel_step_traces,
-            {"tel_id": None, "pixel_step": None, "max_pixels": None, "event_index": None},
-        ),
-        "integrated_signal_image": (
-            plot_simtel_integrated_signal_image,
-            {"tel_id": None, "half_width": 8, "event_index": None},
-        ),
-        "integrated_pedestal_image": (
-            plot_simtel_integrated_pedestal_image,
-            {"tel_id": None, "half_width": 8, "offset": 16, "event_index": None},
-        ),
-        "peak_timing": (
-            _call_peak_timing,
-            {
-                "tel_id": None,
-                "sum_threshold": 10.0,
-                "peak_width": 8,
-                "examples": 3,
-                "timing_bins": None,
-                "event_index": None,
-            },
-        ),
-    }
-
-    for plot_name in plots_to_run:
-        entry = dispatch.get(plot_name)
-        if entry is None:
-            logger.warning("Unknown plot selection '%s'", plot_name)
-            continue
-        func, defaults = entry
-        # Build kwargs with user args overriding defaults
-        kwargs = {k: args.get(k, v) for k, v in defaults.items()}
-        fig = func(filename, **kwargs)  # type: ignore[misc]
-        add(fig, plot_name)
-
-    return figures
-
-
 def main():
     """Generate plots from sim_telarray files."""
     label = Path(__file__).stem
@@ -383,38 +185,10 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args.get("log_level", "INFO")))
 
     ioh = io_handler.IOHandler()
-
     simtel_files = [Path(p).expanduser() for p in gen.ensure_iterable(args["simtel_files"])]
     plots = list(gen.ensure_iterable(args.get("plots")))
 
-    for simtel in simtel_files:
-        out_dir, pdf_path = _make_output_paths(ioh, args.get("output_file"), simtel)
-        figures = _collect_figures_for_file(
-            filename=simtel,
-            plots=plots,
-            args=args,
-            out_dir=out_dir,
-            base_stem=simtel.stem,
-            save_pngs=bool(args.get("save_pngs", False)),
-            dpi=int(args.get("dpi", 300)),
-        )
-
-        if not figures:
-            logger.warning("No figures produced for %s", simtel)
-            continue
-
-        # Save a multipage PDF
-        try:
-            save_figs_to_pdf(figures, pdf_path)
-            logger.info("Saved PDF: %s", pdf_path)
-        except Exception as ex:  # pylint:disable=broad-except
-            logger.error("Failed to save PDF %s: %s", pdf_path, ex)
-
-        # Dump run metadata alongside PDF
-        try:
-            MetadataCollector.dump(args, pdf_path, add_activity_name=True)
-        except Exception as ex:  # pylint:disable=broad-except
-            logger.warning("Failed to write metadata for %s: %s", pdf_path, ex)
+    generate_and_save_plots(simtel_files=simtel_files, plots=plots, args=args, ioh=ioh)
 
 
 if __name__ == "__main__":
