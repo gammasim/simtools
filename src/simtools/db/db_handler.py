@@ -18,6 +18,7 @@ from simtools.data_model import validate_data
 from simtools.io import ascii_handler, io_handler
 from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
+from simtools.version import resolve_version_to_latest_patch
 
 __all__ = ["DatabaseHandler"]
 
@@ -72,6 +73,11 @@ class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.
 
+    Note the two types of version variables used in this class:
+
+    - db_simulation_model_version (from mongo_db_config): version of the simulation model database
+    - model_version (from production_tables): version of the model contained in the database
+
     Parameters
     ----------
     mongo_db_config: dict
@@ -83,6 +89,7 @@ class DatabaseHandler:
     db_client = None
     production_table_cached = {}
     model_parameters_cached = {}
+    model_versions_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """Initialize the DatabaseHandler class."""
@@ -96,7 +103,7 @@ class DatabaseHandler:
         self._find_latest_simulation_model_db()
         self.db_name = (
             self.get_db_name(
-                model_version=self.mongo_db_config.get("db_simulation_model_version"),
+                db_simulation_model_version=self.mongo_db_config.get("db_simulation_model_version"),
                 model_name=self.mongo_db_config.get("db_simulation_model"),
             )
             if self.mongo_db_config
@@ -110,15 +117,15 @@ class DatabaseHandler:
             with lock:
                 DatabaseHandler.db_client = self._open_mongo_db()
 
-    def get_db_name(self, db_name=None, model_version=None, model_name=None):
+    def get_db_name(self, db_name=None, db_simulation_model_version=None, model_name=None):
         """Build DB name from configuration."""
         if db_name:
             return db_name
-        if model_version and model_name:
-            return f"{model_name}-{model_version.replace('.', '-')}"
-        if model_version or model_name:
+        if db_simulation_model_version and model_name:
+            return f"{model_name}-{db_simulation_model_version.replace('.', '-')}"
+        if db_simulation_model_version or model_name:
             return None
-        return None if (model_version or model_name) else self.db_name
+        return None if (db_simulation_model_version or model_name) else self.db_name
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
@@ -269,6 +276,9 @@ class DatabaseHandler:
                 raise ValueError(
                     "Only one model version can be passed to get_model_parameter, not a list."
                 )
+            model_version = resolve_version_to_latest_patch(
+                model_version, self.get_model_versions(collection_name)
+            )
             production_table = self.read_production_table_from_mongo_db(
                 collection_name, model_version
             )
@@ -315,6 +325,9 @@ class DatabaseHandler:
         dict containing the parameters
         """
         pars = {}
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         array_element_list = self._get_array_element_list(
             array_element_name, site, production_table, collection
@@ -361,6 +374,11 @@ class DatabaseHandler:
     def _get_parameter_for_model_version(
         self, array_element, model_version, site, collection, production_table
     ):
+        """
+        Get parameters for a specific model version and array element.
+
+        Uses caching wherever possible.
+        """
         cache_key, cache_dict = self._read_cache(
             DatabaseHandler.model_parameters_cached,
             names.validate_site_name(site) if site else None,
@@ -589,6 +607,9 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection_name)
+        )
         try:
             return DatabaseHandler.production_table_cached[
                 self._cache_key(None, None, model_version, collection_name)
@@ -612,7 +633,7 @@ class DatabaseHandler:
 
     def get_model_versions(self, collection_name="telescopes"):
         """
-        Get list of model versions from the DB.
+        Get list of model versions from the DB with caching.
 
         Parameters
         ----------
@@ -624,10 +645,12 @@ class DatabaseHandler:
         list
             List of model versions
         """
-        collection = self.get_collection("production_tables", db_name=self.db_name)
-        return sorted(
-            {post["model_version"] for post in collection.find({"collection": collection_name})}
-        )
+        if collection_name not in DatabaseHandler.model_versions_cached:
+            collection = self.get_collection("production_tables", db_name=self.db_name)
+            DatabaseHandler.model_versions_cached[collection_name] = sorted(
+                {post["model_version"] for post in collection.find({"collection": collection_name})}
+            )
+        return DatabaseHandler.model_versions_cached[collection_name]
 
     def get_array_elements(self, model_version, collection="telescopes"):
         """
@@ -646,6 +669,9 @@ class DatabaseHandler:
         list
             Sorted list of all array elements found in collection
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
 
@@ -668,6 +694,9 @@ class DatabaseHandler:
         str
             Design model for a given array element.
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         try:
             return production_table["design_model"][array_element_name]
@@ -696,6 +725,9 @@ class DatabaseHandler:
         list
             Sorted list of all array element names found in collection
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         all_array_elements = production_table["parameters"]
         return sorted(
@@ -846,6 +878,7 @@ class DatabaseHandler:
         self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
         DatabaseHandler.production_table_cached.clear()
+        DatabaseHandler.model_versions_cached.clear()
 
     def add_new_parameter(
         self,
@@ -1001,6 +1034,7 @@ class DatabaseHandler:
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
         DatabaseHandler.model_parameters_cached.clear()
+        DatabaseHandler.model_versions_cached.clear()
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """
