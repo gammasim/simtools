@@ -15,16 +15,17 @@ from matplotlib.backends.backend_pdf import PdfPages
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
-logger = logging.getLogger(__name__)
-
 # Constants
-RADIUS_CM = "Radius [cm]"
+RADIUS = "Radius [cm]"
 CUMULATIVE_PSF = "Cumulative PSF"
 MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
 OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
+DEFAULT_FRACTION = 0.8  # Default PSF containment fraction
+
+logger = logging.getLogger(__name__)
 
 
-def _get_psf_diameter_label(fraction, unit="cm"):
+def get_psf_diameter_label(fraction, unit="cm"):
     """
     Generate PSF diameter label based on containment fraction.
 
@@ -56,7 +57,12 @@ def get_significance_label(p_value):
 
 
 def _format_metric_text(
-    psf_diameter, metric, fraction=0.8, p_value=None, use_ks_statistic=False, second_metric=None
+    psf_diameter,
+    metric,
+    fraction=DEFAULT_FRACTION,
+    p_value=None,
+    use_ks_statistic=False,
+    second_metric=None,
 ):
     """
     Format metric text for display in plots.
@@ -81,7 +87,7 @@ def _format_metric_text(
     str
         Formatted metric text
     """
-    psf_label = _get_psf_diameter_label(fraction, unit="")
+    psf_label = get_psf_diameter_label(fraction, unit="")
     psf_text = f"{psf_label} = {psf_diameter:.5f} cm"
 
     # Create metric text based on the optimization method
@@ -180,7 +186,7 @@ def _add_plot_annotations(
     psf_diameter,
     metric,
     is_best,
-    fraction=0.8,
+    fraction=DEFAULT_FRACTION,
     p_value=None,
     use_ks_statistic=False,
     second_metric=None,
@@ -237,7 +243,7 @@ def create_psf_parameter_plot(
     metric,
     is_best,
     pdf_pages,
-    fraction=0.8,
+    fraction=DEFAULT_FRACTION,
     p_value=None,
     use_ks_statistic=False,
     second_metric=None,
@@ -295,7 +301,7 @@ def create_detailed_parameter_plot(
     data_to_plot,
     is_best,
     pdf_pages,
-    fraction=0.8,
+    fraction=DEFAULT_FRACTION,
     p_value=None,
 ):
     """
@@ -352,7 +358,9 @@ def create_detailed_parameter_plot(
     plt.clf()
 
 
-def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pages, fraction=0.8):
+def create_parameter_progression_plots(
+    results, best_pars, data_to_plot, pdf_pages, fraction=DEFAULT_FRACTION
+):
     """
     Create plots for all parameter sets showing optimization progression.
 
@@ -393,7 +401,7 @@ def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pag
 
 
 def create_gradient_descent_convergence_plot(
-    gd_results, threshold, output_file, fraction=0.8, use_ks_statistic=False
+    gd_results, threshold, output_file, fraction=DEFAULT_FRACTION, use_ks_statistic=False
 ):
     """
     Create convergence plot during gradient descent.
@@ -426,7 +434,7 @@ def create_gradient_descent_convergence_plot(
     psf_diameters = [r[3] for r in gd_results]
 
     metric_name = "KS Statistic" if use_ks_statistic else "RMSD"
-    psf_label = _get_psf_diameter_label(fraction)
+    psf_label = get_psf_diameter_label(fraction)
 
     # Plot optimization metric progression
     ax1.plot(iterations, metrics, "b.-", linewidth=2, markersize=6)
@@ -441,7 +449,7 @@ def create_gradient_descent_convergence_plot(
     ax2.plot(iterations, psf_diameters, "g.-", linewidth=2, markersize=6)
     ax2.set_xlabel("Iteration")
     ax2.set_ylabel(psf_label)
-    ax2.set_title(f"Gradient Descent Convergence - {_get_psf_diameter_label(fraction, unit='')}")
+    ax2.set_title(f"Gradient Descent Convergence - {get_psf_diameter_label(fraction, unit='')}")
     ax2.grid(True, alpha=0.3)
 
     # Plot p-value progression if available and using KS statistic
@@ -470,7 +478,7 @@ def create_gradient_descent_convergence_plot(
 
 
 def create_monte_carlo_uncertainty_plot(
-    mc_results, output_file, fraction=0.8, use_ks_statistic=False
+    mc_results, output_file, fraction=DEFAULT_FRACTION, use_ks_statistic=False
 ):
     """
     Create uncertainty analysis plots showing optimization metric and p-value distributions.
@@ -515,7 +523,7 @@ def create_monte_carlo_uncertainty_plot(
 
     # Metric histogram (KS statistic or RMSD)
     metric_name = "KS Statistic" if is_ks_mode else "RMSD"
-    psf_label = _get_psf_diameter_label(fraction)
+    psf_label = get_psf_diameter_label(fraction)
 
     ax1.hist(metric_values, bins=20, alpha=0.7, color="blue", edgecolor="black")
     ax1.axvline(
@@ -573,7 +581,7 @@ def create_monte_carlo_uncertainty_plot(
     ax3.axvline(mean_psf_diameter + std_psf_diameter, color="orange", linestyle=":", alpha=0.7)
     ax3.set_xlabel(psf_label)
     ax3.set_ylabel("Counts")
-    ax3.set_title(f"{_get_psf_diameter_label(fraction, unit='')} Distribution")
+    ax3.set_title(f"{get_psf_diameter_label(fraction, unit='')} Distribution")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
 
@@ -625,9 +633,9 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     output_dir : Path
         Output directory for saving plots.
     """
-    fraction = args_dict.get("fraction", 0.8)
-    psf_label_cm = _get_psf_diameter_label(fraction, unit="cm")
-    psf_label_deg = _get_psf_diameter_label(fraction, unit="degrees")
+    fraction = args_dict.get("fraction", DEFAULT_FRACTION)
+    psf_label_cm = get_psf_diameter_label(fraction, unit="cm")
+    psf_label_deg = get_psf_diameter_label(fraction, unit="degrees")
 
     logger.info(f"Creating {psf_label_cm} vs off-axis angle plot with best parameters...")
 
@@ -679,7 +687,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         plt.grid(True, alpha=0.3)
 
         # Create dynamic file name based on fraction
-        psf_identifier = _get_psf_diameter_label(fraction, unit="").lower()  # e.g., "d80", "d95"
+        psf_identifier = get_psf_diameter_label(fraction, unit="").lower()  # e.g., "d80", "d95"
         unit_suffix = "cm" if "_cm" in key else "deg"
         plot_file_name = f"{tel_model.name}_best_params_{psf_identifier}_{unit_suffix}.png"
         plot_file = output_dir.joinpath(plot_file_name)
@@ -747,7 +755,7 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
     if not args_dict.get("save_plots", False):
         return
 
-    fraction = args_dict.get("fraction", 0.8)
+    fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     pdf_filename = output_dir.joinpath(f"psf_optimization_results_{tel_model.name}.pdf")
     pdf_pages = PdfPages(pdf_filename)
     logger.info(f"Creating PSF plots for each optimization iteration (saving to {pdf_filename})")

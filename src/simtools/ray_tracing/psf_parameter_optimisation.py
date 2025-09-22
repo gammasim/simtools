@@ -21,31 +21,15 @@ from simtools.data_model import model_data_writer as writer
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.visualization import plot_psf
+from simtools.visualization.plot_psf import DEFAULT_FRACTION, get_psf_diameter_label
 
 logger = logging.getLogger(__name__)
+
 
 # Constants
 RADIUS = "Radius"
 CUMULATIVE_PSF = "Cumulative PSF"
 KS_STATISTIC_NAME = "KS statistic"
-
-
-def _get_psf_diameter_label(fraction):
-    """
-    Generate PSF diameter label based on containment fraction.
-
-    Parameters
-    ----------
-    fraction : float
-        Containment fraction (e.g., 0.8 for D80, 0.95 for D95)
-
-    Returns
-    -------
-    str
-        Label string (e.g., "D80", "D95")
-    """
-    percentage = int(fraction * 100)
-    return f"D{percentage}"
 
 
 def _create_log_header_and_format_value(title, tel_model, additional_info=None, value=None):
@@ -123,7 +107,7 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True, use_rx=False)
     im = ray.images()[0]
-    fraction = args_dict.get("fraction", 0.8)
+    fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     return im.get_psf(fraction=fraction), im
 
 
@@ -198,7 +182,7 @@ def run_psf_simulation(
             metric,
             is_best,
             pdf_pages,
-            fraction=args_dict.get("fraction", 0.8),
+            fraction=args_dict.get("fraction", DEFAULT_FRACTION),
             p_value=p_value,
             use_ks_statistic=use_ks_statistic,
         )
@@ -249,7 +233,7 @@ def load_and_process_data(args_dict):
 
 
 def write_tested_parameters_to_file(
-    results, best_pars, best_psf_diameter, output_dir, tel_model, fraction=0.8
+    results, best_pars, best_psf_diameter, output_dir, tel_model, fraction=DEFAULT_FRACTION
 ):
     """
     Write optimization results and tested parameters to a log file.
@@ -276,7 +260,7 @@ def write_tested_parameters_to_file(
         Path to the created log file.
     """
     param_file = output_dir.joinpath(f"psf_optimization_{tel_model.name}.log")
-    psf_label = _get_psf_diameter_label(fraction)
+    psf_label = get_psf_diameter_label(fraction)
 
     with open(param_file, "w", encoding="utf-8") as f:
         header = _create_log_header_and_format_value(
@@ -685,7 +669,7 @@ def _create_step_plot(
         new_metric,
         False,
         pdf_pages,
-        fraction=args_dict.get("fraction", 0.8),
+        fraction=args_dict.get("fraction", DEFAULT_FRACTION),
         p_value=new_p_value,
         use_ks_statistic=False,
     )
@@ -730,7 +714,7 @@ def _create_final_plot(
         best_rmsd,
         True,
         pdf_pages,
-        fraction=args_dict.get("fraction", 0.8),
+        fraction=args_dict.get("fraction", DEFAULT_FRACTION),
         p_value=best_p_value,
         use_ks_statistic=False,
         second_metric=best_ks_stat,
@@ -927,20 +911,20 @@ def _write_iteration_entry(
     use_ks_statistic,
     metric_name,
     total_iterations,
-    fraction=0.8,
+    fraction=DEFAULT_FRACTION,
 ):
     """Write a single iteration entry."""
     status = "FINAL" if iteration == total_iterations - 1 else f"ITER-{iteration:02d}"
 
     if use_ks_statistic and p_value is not None:
         significance = plot_psf.get_significance_label(p_value)
-        label = _get_psf_diameter_label(fraction)
+        label = get_psf_diameter_label(fraction)
         f.write(
             f"[{status}] Iteration {iteration}: KS_stat={metric:.6f}, "
             f"p_value={p_value:.6f} ({significance}), {label}={psf_diameter:.6f} cm\n"
         )
     else:
-        label = _get_psf_diameter_label(fraction)
+        label = get_psf_diameter_label(fraction)
         f.write(
             f"[{status}] Iteration {iteration}: {metric_name}={metric:.6f}, "
             f"{label}={psf_diameter:.6f} cm\n"
@@ -952,14 +936,14 @@ def _write_iteration_entry(
 
 
 def _write_optimization_summary(
-    f, gd_results, best_pars, best_psf_diameter, metric_name, fraction=0.8
+    f, gd_results, best_pars, best_psf_diameter, metric_name, fraction=DEFAULT_FRACTION
 ):
     """Write optimization summary section."""
     f.write("OPTIMIZATION SUMMARY:\n")
     best_metric_from_results = min(metric for _, metric, _, _, _ in gd_results)
     f.write(f"Best {metric_name.lower()}: {best_metric_from_results:.6f}\n")
 
-    label = _get_psf_diameter_label(fraction)
+    label = get_psf_diameter_label(fraction)
     f.write(
         f"Best {label}: {best_psf_diameter:.6f} cm\n"
         if best_psf_diameter is not None
@@ -977,7 +961,7 @@ def write_gradient_descent_log(
     output_dir,
     tel_model,
     use_ks_statistic=False,
-    fraction=0.8,
+    fraction=DEFAULT_FRACTION,
 ):
     """
     Write gradient descent optimization progression to a log file.
@@ -1142,7 +1126,7 @@ def analyze_monte_carlo_error(
 
 
 def write_monte_carlo_analysis(
-    mc_results, output_dir, tel_model, use_ks_statistic=False, fraction=0.8
+    mc_results, output_dir, tel_model, use_ks_statistic=False, fraction=DEFAULT_FRACTION
 ):
     """
     Write Monte Carlo uncertainty analysis results to a log file.
@@ -1181,7 +1165,7 @@ def write_monte_carlo_analysis(
     file_suffix = "ks" if use_ks_statistic else "rmsd"
     mc_file = output_dir.joinpath(f"monte_carlo_{file_suffix}_analysis_{tel_model.name}.log")
 
-    psf_label = _get_psf_diameter_label(fraction)
+    psf_label = get_psf_diameter_label(fraction)
 
     with open(mc_file, "w", encoding="utf-8") as f:
         header = _create_log_header_and_format_value(
@@ -1268,12 +1252,16 @@ def _handle_monte_carlo_analysis(
     mc_results = analyze_monte_carlo_error(tel_model, site_model, args_dict, data_to_plot, radius)
     if mc_results[0] is not None:
         mc_file = write_monte_carlo_analysis(
-            mc_results, output_dir, tel_model, use_ks_statistic, args_dict.get("fraction", 0.8)
+            mc_results,
+            output_dir,
+            tel_model,
+            use_ks_statistic,
+            args_dict.get("fraction", DEFAULT_FRACTION),
         )
         logger.info(f"Monte Carlo analysis results written to {mc_file}")
         mc_plot_file = output_dir.joinpath(f"monte_carlo_uncertainty_{tel_model.name}.pdf")
         plot_psf.create_monte_carlo_uncertainty_plot(
-            mc_results, mc_plot_file, args_dict.get("fraction", 0.8), use_ks_statistic
+            mc_results, mc_plot_file, args_dict.get("fraction", DEFAULT_FRACTION), use_ks_statistic
         )
     return True
 
@@ -1322,7 +1310,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         gd_results,
         threshold,
         convergence_plot_file,
-        args_dict.get("fraction", 0.8),
+        args_dict.get("fraction", DEFAULT_FRACTION),
         use_ks_statistic,
     )
 
@@ -1333,7 +1321,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         output_dir,
         tel_model,
         use_ks_statistic,
-        args_dict.get("fraction", 0.8),
+        args_dict.get("fraction", DEFAULT_FRACTION),
     )
     logger.info(f"\nGradient descent progression written to {param_file}")
 
