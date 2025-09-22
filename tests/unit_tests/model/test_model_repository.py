@@ -557,6 +557,24 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
     assert updated_data_2["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
 
 
+def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
+    """Test error handling when JSON file contains non-dict data."""
+    # Create source directory with a malformed JSON file
+    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path.mkdir(parents=True)
+
+    # Create a JSON file with list data instead of dict
+    malformed_file = source_prod_table_path / "malformed.json"
+    malformed_file.write_text('["not", "a", "dict"]')
+
+    changes = {"test_table": {"param1": {"version": "4.0.0", "value": 42}}}
+
+    with pytest.raises(TypeError, match="Unsupported data type .* in .*malformed.json"):
+        model_repository._apply_changes_to_production_tables(
+            changes, "6.0.0", "6.5.0", "full_update", tmp_path
+        )
+
+
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._apply_changes_to_model_parameters")
@@ -613,6 +631,19 @@ def test_generate_new_production_no_changes(
     mock_apply_model_changes.assert_called_once_with({}, args_dict["simulation_models_path"])
 
 
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+def test_generate_new_production_empty_version_history(mock_collect_data, tmp_path):
+    """Test error handling when model_version_history is empty."""
+    mock_collect_data.return_value = {
+        "model_version": "6.5.0",
+        "model_version_history": [],  # Empty list should trigger IndexError
+        "changes": {},
+    }
+
+    with pytest.raises(IndexError, match="Base model version not found in"):
+        model_repository.generate_new_production("fake_modifications.yml", str(tmp_path))
+
+
 def test_apply_changes_to_production_table_patch_update():
     """Test patch update behavior with matching changes."""
     data = {
@@ -642,6 +673,31 @@ def test_apply_changes_to_production_table_patch_update():
     )
 
     assert result_no_changes is False  # Should return False when no changes apply
+
+
+def test_apply_changes_to_production_table_with_deprecated_parameters():
+    """Test that deprecated_parameters are set when there are deprecated changes."""
+    data = {
+        "model_version": "6.0.0",
+        "production_table_name": "test_table",
+        "parameters": {"test_table": {"param1": "1.0.0"}},
+    }
+    changes = {
+        "test_table": {
+            "param1": {"version": "2.0.0", "value": 42},
+            "param_to_remove": {"version": "1.0.0", "deprecated": True},
+        }
+    }
+    model_version = "6.5.0"
+
+    result = model_repository._apply_changes_to_production_table(
+        "test_table", data, changes, model_version, False
+    )
+
+    assert result is True
+    assert data["model_version"] == "6.5.0"
+    assert "deprecated_parameters" in data
+    assert "param_to_remove" in data["deprecated_parameters"]
 
 
 @patch("simtools.model.model_repository._create_new_model_parameter_entry")
