@@ -89,7 +89,7 @@ def semver_to_int(version_string):
 
     Parameters
     ----------
-    version : str
+    version_string : str
         Semantic version string (e.g., "6.0.2")
 
     Returns
