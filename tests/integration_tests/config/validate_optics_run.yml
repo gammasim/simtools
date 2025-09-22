@@ -3,7 +3,7 @@ applications:
 - application: simtools-validate-optics
   configuration:
     max_offset: 1.0
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     site: North
     src_distance: 11.0

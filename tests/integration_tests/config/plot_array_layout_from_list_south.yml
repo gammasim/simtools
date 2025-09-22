@@ -7,7 +7,7 @@ applications:
     - MSTS
     - SSTS
     axes_range: 1200.0
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
   integration_tests:
   - output_file: array_layout_list_South_ground.png

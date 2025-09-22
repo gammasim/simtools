@@ -2,7 +2,7 @@
 applications:
 - application: simtools-docs-produce-array-element-report
   configuration:
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output/reports/productions/
     site: North
     telescope: LSTN-01
