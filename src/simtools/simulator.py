@@ -20,6 +20,7 @@ from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
+from simtools.version import semver_to_int
 
 __all__ = [
     "InvalidRunsToSimulateError",
@@ -166,10 +167,6 @@ class Simulator:
         """
         if seed:
             return int(seed.split(",")[0].strip())
-
-        def semver_to_int(version: str):
-            major, minor, patch = map(int, version.split("."))
-            return major * 10000 + minor * 100 + patch
 
         seed = semver_to_int(model_version) * 10000000
         seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
