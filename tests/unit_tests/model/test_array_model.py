@@ -198,7 +198,7 @@ def test_model_version_setter_with_valid_list(array_model):
         am.model_version = ["6.0.0", "7.0.0"]
 
 
-def test_pack_model_files(array_model, io_handler, tmp_path):
+def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
     mock_tarfile = MagicMock()
     mock_tarfile_open = MagicMock()
     # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
@@ -220,7 +220,9 @@ def test_pack_model_files(array_model, io_handler, tmp_path):
     ):
         archive_path = array_model.pack_model_files()
 
-        assert archive_path == mock_output_dir.joinpath("model", "6.0.0", "model_files.tar.gz")
+        assert archive_path == mock_output_dir.joinpath(
+            "model", model_version, "model_files.tar.gz"
+        )
         assert mock_tarfile.add.call_count == 2
 
     mock_rglob = MagicMock(return_value=[])
