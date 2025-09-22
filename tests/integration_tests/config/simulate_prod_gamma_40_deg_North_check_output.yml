@@ -37,17 +37,17 @@ applications:
       file: gamma_run000001_za40deg_azm180deg_North_alpha_6.0_check_output.simtel.zst
       path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:
-      5.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-5.0_test.cfg
-      6.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg
+      "5.0": tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-5.0_test.cfg
+      "6.0": tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg
   - test_simtel_cfg_files:
-      5.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-5.0_test.cfg
-      6.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-6.0_test.cfg
+      "5.0": tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-5.0_test.cfg
+      "6.0": tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-6.0_test.cfg
   - test_simtel_cfg_files:
-      5.0: tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-5.0_test.cfg
-      6.0: tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-6.0_test.cfg
+      "5.0": tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-5.0_test.cfg
+      "6.0": tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-6.0_test.cfg
   - test_simtel_cfg_files:
-      5.0: tests/resources/sim_telarray_configurations/CTA-alpha-North-5.0_test.cfg
-      6.0: tests/resources/sim_telarray_configurations/CTA-alpha-North-6.0_test.cfg
+      "5.0": tests/resources/sim_telarray_configurations/CTA-Alpha-North-5.0_test.cfg
+      "6.0": tests/resources/sim_telarray_configurations/CTA-Alpha-North-6.0_test.cfg
   test_name: gamma_40_deg_north_check_output
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
