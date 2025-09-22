@@ -2,7 +2,7 @@
 applications:
 - application: simtools-docs-produce-calibration-reports
   configuration:
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output/reports/productions/
     use_plain_output_path: true
   integration_tests:
