@@ -196,7 +196,7 @@ class DataValidator:
                     f"Error validating dictionary using {self.schema_file_name}"
                 ) from ex
 
-        if len(value_as_list) == 1 and not isinstance(value_as_list[0], dict):
+        if len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
         else:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
