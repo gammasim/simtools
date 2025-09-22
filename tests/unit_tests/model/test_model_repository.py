@@ -281,8 +281,8 @@ def test_get_latest_model_parameter_file_unsorted_versions(mock_path):
     assert result == str(mock_file_2)
 
 
-def test_update_parameters_new_function():
-    """Test the new _update_parameters function."""
+def test_update_parameters_dict_new_function():
+    """Test the new _update_parameters_dict function."""
     existing_params = {"dsum_threshold": "3.0.0"}
     changes = {
         "MSTx-FlashCam": {
@@ -293,7 +293,7 @@ def test_update_parameters_new_function():
     }
     table_name = "MSTx-FlashCam"
 
-    result = model_repository._update_parameters(existing_params, changes, table_name)
+    result = model_repository._update_parameters_dict(existing_params, changes, table_name)
 
     assert "MSTx-FlashCam" in result
     assert result["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
@@ -325,7 +325,7 @@ def test_apply_changes_to_production_table_update_model_version():
     assert data["model_version"] == "6.5.0"
 
 
-def test_apply_changes_to_production_table_update_parameters():
+def test_apply_changes_to_production_table_update_parameters_dict():
     """Test updating parameters in the production table."""
     data = {
         "production_table_name": "MSTx-FlashCam",
