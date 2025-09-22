@@ -4,7 +4,6 @@ PSF parameter optimisation and fitting routines for mirror alignment and reflect
 This module provides functions for loading PSF data, generating random parameter sets,
 running PSF simulations, calculating RMSD, and finding the best-fit parameters for a given
 telescope model.
-
 PSF (Point Spread Function) describes how a point source of light is spread out by the
 optical system, and RMSD (Root Mean Squared Deviation) is used as the optimization metric
 to quantify the difference between measured and simulated PSF curves.
@@ -14,206 +13,87 @@ import logging
 from collections import OrderedDict
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
+from astropy.table import Table
+from scipy import stats
 
 from simtools.data_model import model_data_writer as writer
-from simtools.model import model_utils
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
-from simtools.visualization import visualize
+from simtools.visualization import plot_psf
 
 logger = logging.getLogger(__name__)
 
 # Constants
-RADIUS_CM = "Radius [cm]"
+RADIUS = "Radius"
 CUMULATIVE_PSF = "Cumulative PSF"
-
-MRRA_RANGE_DEFAULT = 0.004  # Mirror reflection random angle range
-MRF_RANGE_DEFAULT = 0.1  # Mirror reflection fraction range
-MRRA2_RANGE_DEFAULT = 0.03  # Second mirror reflection random angle range
-MAR_RANGE_DEFAULT = 0.005  # Mirror alignment random range
-MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
-OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
+KS_STATISTIC_NAME = "KS statistic"
 
 
-def load_psf_data(data_file):
-    """
-    Load data from a text file containing cumulative PSF measurements.
+def _create_log_header_and_format_value(title, tel_model, additional_info=None, value=None):
+    """Create log header and format parameter values."""
+    if value is not None:  # Format value mode
+        if isinstance(value, list):
+            return "[" + ", ".join([f"{v:.6f}" for v in value]) + "]"
+        if isinstance(value, int | float):
+            return f"{value:.6f}"
+        return str(value)
 
-    Parameters
-    ----------
-    data_file : str
-        Name of the data file with the measured cumulative PSF.
-        Expected format:
-        Column 0: radial distance in mm
-        Column 2: cumulative PSF values
-
-    Returns
-    -------
-    numpy.ndarray
-        Loaded and processed data with radius in cm and normalized cumulative PSF.
-    """
-    d_type = {"names": (RADIUS_CM, CUMULATIVE_PSF), "formats": ("f8", "f8")}
-    data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
-    data[RADIUS_CM] *= 0.1  # Convert from mm to cm
-    data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))  # Normalize to max = 1.0
-    return data
+    # Create header mode
+    header_lines = [f"# {title}", f"# Telescope: {tel_model.name}"]
+    if additional_info:
+        for key, val in additional_info.items():
+            header_lines.append(f"# {key}: {val}")
+    header_lines.extend(["#" + "=" * 65, ""])
+    return "\n".join(header_lines) + "\n"
 
 
 def calculate_rmsd(data, sim):
-    """Calculate Root Mean Squared Deviation to be used as metric to find the best parameters."""
+    """Calculate RMSD between measured and simulated cumulative PSF curves."""
     return np.sqrt(np.mean((data - sim) ** 2))
 
 
-def add_parameters(
-    all_parameters,
-    mirror_reflection,
-    mirror_align,
-    mirror_reflection_fraction=0.15,
-    mirror_reflection_2=0.035,
-):
-    """
-    Transform and add parameters to the all_parameters list.
-
-    Parameters
-    ----------
-    mirror_reflection : float
-        The random angle of mirror reflection.
-    mirror_align : float
-        The random angle for mirror alignment (both horizontal and vertical).
-    mirror_reflection_fraction : float, optional
-        The fraction of the mirror reflection. Default is 0.15.
-    mirror_reflection_2 : float, optional
-        A secondary random angle for mirror reflection. Default is 0.035.
-
-    Returns
-    -------
-    None
-        Updates the all_parameters list in place.
-    """
-    pars = {
-        "mirror_reflection_random_angle": [
-            mirror_reflection,
-            mirror_reflection_fraction,
-            mirror_reflection_2,
-        ],
-        "mirror_align_random_horizontal": [mirror_align, 28.0, 0.0, 0.0],
-        "mirror_align_random_vertical": [mirror_align, 28.0, 0.0, 0.0],
-    }
-    all_parameters.append(pars)
+def calculate_ks_statistic(data, sim):
+    """Calculate the KS statistic between measured and simulated cumulative PSF curves."""
+    return stats.ks_2samp(data, sim)
 
 
 def get_previous_values(tel_model):
     """
-    Retrieve previous parameter values from the telescope model.
+    Retrieve current PSF parameter values from the telescope model.
 
     Parameters
     ----------
     tel_model : TelescopeModel
-        Telescope model object.
+        Telescope model object containing parameter configurations.
 
     Returns
     -------
-    tuple
-        Tuple containing the previous values of mirror_reflection_random_angle (first entry),
-        mirror_reflection_fraction, second entry), mirror_reflection_random_angle (third entry),
-        and mirror_align_random_horizontal/vertical.
+    dict
+        Dictionary containing current values of PSF optimization parameters:
+        - 'mirror_reflection_random_angle': Random reflection angle parameters
+        - 'mirror_align_random_horizontal': Horizontal alignment parameters
+        - 'mirror_align_random_vertical': Vertical alignment parameters
     """
-    split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
-    mrra_0, mfr_0, mrra2_0 = split_par[0], split_par[1], split_par[2]
-    mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
-    logger.debug(
-        "Previous parameter values:\n"
-        f"MRRA = {mrra_0!s}\n"
-        f"MRF = {mfr_0!s}\n"
-        f"MRRA2 = {mrra2_0!s}\n"
-        f"MAR = {mar_0!s}\n"
-    )
-    return mrra_0, mfr_0, mrra2_0, mar_0
-
-
-def generate_random_parameters(
-    all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, tel_model
-):
-    """
-    Generate random parameters for tuning.
-
-    The parameter ranges around the previous values are configurable via module constants.
-
-    Parameters
-    ----------
-    all_parameters : list
-        List to store all parameter sets.
-    n_runs : int
-        Number of random parameter combinations to test.
-    args_dict : dict
-        Dictionary containing parsed command-line arguments.
-    mrra_0 : float
-        Initial value of mirror_reflection_random_angle.
-    mfr_0 : float
-        Initial value of mirror_reflection_fraction.
-    mrra2_0 : float
-        Initial value of the second mirror_reflection_random_angle.
-    mar_0 : float
-        Initial value of mirror_align_random_horizontal/vertical.
-    tel_model : TelescopeModel
-        Telescope model object to check if it's a dual mirror telescope.
-    """
-    if args_dict["fixed"]:
-        logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
-
-    is_dual_mirror = model_utils.is_two_mirror_telescope(tel_model.name)
-    if is_dual_mirror:
-        mar_fixed_value = 0.0
-    else:
-        mar_fixed_value = None
-
-    for _ in range(n_runs):
-        mrra_range = MRRA_RANGE_DEFAULT if not args_dict["fixed"] else 0
-        mrf_range = MRF_RANGE_DEFAULT
-        mrra2_range = MRRA2_RANGE_DEFAULT
-        mar_range = MAR_RANGE_DEFAULT
-        rng = np.random.default_rng(seed=args_dict.get("random_seed"))
-        mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
-        mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
-        mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
-
-        # Set mar to 0 for dual mirror telescopes, otherwise use random value
-        if mar_fixed_value is not None:
-            mar = mar_fixed_value
-        else:
-            mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
-
-        add_parameters(all_parameters, mrra, mar, mrf, mrra2)
+    return {
+        "mirror_reflection_random_angle": tel_model.get_parameter_value(
+            "mirror_reflection_random_angle"
+        ),
+        "mirror_align_random_horizontal": tel_model.get_parameter_value(
+            "mirror_align_random_horizontal"
+        ),
+        "mirror_align_random_vertical": tel_model.get_parameter_value(
+            "mirror_align_random_vertical"
+        ),
+    }
 
 
 def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
-    """
-    Run a ray tracing simulation with the given telescope parameters.
-
-    Parameters
-    ----------
-    tel_model : TelescopeModel
-        Telescope model object.
-    site_model : SiteModel
-        Site model object.
-    args_dict : dict
-        Dictionary containing parsed command-line arguments.
-    pars : dict
-        Parameter set dictionary.
-
-    Returns
-    -------
-    tuple
-        (d80, simulated_data) - D80 value and simulated data from ray tracing.
-    """
-    if pars is not None:
-        tel_model.change_multiple_parameters(**pars)
-    else:
+    """Run a ray tracing simulation with the given telescope parameters."""
+    if pars is None:
         raise ValueError("No best parameters found")
 
+    tel_model.change_multiple_parameters(**pars)
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
@@ -225,424 +105,174 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True, use_rx=False)
     im = ray.images()[0]
-    d80 = im.get_psf()
-
-    return d80, im
-
-
-def _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_pages):
-    """
-    Create a plot for PSF simulation results.
-
-    Parameters
-    ----------
-    data_to_plot : dict
-        Data dictionary for plotting.
-    pars : dict
-        Parameter set dictionary.
-    d80 : float
-        D80 value.
-    rmsd : float
-        RMSD value.
-    is_best : bool
-        Whether this is the best parameter set.
-    pdf_pages : PdfPages
-        PDF pages object for saving plots.
-    """
-    fig = visualize.plot_1d(
-        data_to_plot,
-        plot_difference=True,
-        no_markers=True,
-    )
-    ax = fig.get_axes()[0]
-    ax.set_ylim(0, 1.05)
-    ax.set_ylabel(CUMULATIVE_PSF)
-
-    title_prefix = "* " if is_best else ""
-    ax.set_title(
-        f"{title_prefix}refl_rnd = "
-        f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
-        f"align_rnd = {pars['mirror_align_random_vertical'][0]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][1]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][2]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][3]:.5f}"
-    )
-
-    d80_color = "red" if is_best else "black"
-    d80_weight = "bold" if is_best else "normal"
-    d80_text = f"D80 = {d80:.5f} cm"
-
-    ax.text(
-        0.5,
-        0.3,
-        f"{d80_text}\nRMSD = {rmsd:.4f}",
-        verticalalignment="center",
-        horizontalalignment="left",
-        transform=ax.transAxes,
-        color=d80_color,
-        weight=d80_weight,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "yellow", "alpha": 0.7}
-        if is_best
-        else None,
-    )
-
-    if is_best:
-        fig.text(
-            0.02,
-            0.02,
-            "* Best parameter set (lowest RMSD)",
-            fontsize=8,
-            style="italic",
-            color="red",
-        )
-
-    pdf_pages.savefig(fig, bbox_inches="tight")
-    plt.clf()
+    return im.get_psf(), im
 
 
 def run_psf_simulation(
     tel_model,
-    site_model,
+    site,
     args_dict,
     pars,
     data_to_plot,
     radius,
     pdf_pages=None,
     is_best=False,
-    return_simulated_data=False,
+    use_ks_statistic=False,
 ):
     """
-    Run the simulation for one set of parameters and return D80, RMSD.
+    Run PSF simulation for given parameters and calculate optimization metric.
 
     Parameters
     ----------
     tel_model : TelescopeModel
-        Telescope model object.
-    site_model : SiteModel
-        Site model object.
+        Telescope model object to be configured with the test parameters.
+    site : Site
+        Site model object with environmental conditions.
     args_dict : dict
-        Dictionary containing parsed command-line arguments.
+        Dictionary containing simulation configuration arguments.
     pars : dict
-        Parameter set dictionary.
+        Dictionary of parameter values to test in the simulation.
     data_to_plot : dict
-        Data dictionary for plotting.
+        Dictionary containing measured PSF data under "measured" key.
     radius : array-like
-        Radius data.
+        Radius values in cm for PSF evaluation.
     pdf_pages : PdfPages, optional
-        PDF pages object for plotting. If None, no plotting is done.
+        PDF pages object for saving plots (default: None).
     is_best : bool, optional
-        Whether this is the best parameter set for highlighting in plots.
-    return_simulated_data : bool, optional
-        If True, returns simulated data as third element in return tuple.
+        Flag indicating if this is the best parameter set (default: False).
+    use_ks_statistic : bool, optional
+        If True, use KS statistic as metric; if False, use RMSD (default: False).
 
     Returns
     -------
-    tuple
-        (d80, rmsd) if return_simulated_data=False
-        (d80, rmsd, simulated_data) if return_simulated_data=True
+    tuple of (float, float, float or None, array)
+        - d80: D80 diameter of the simulated PSF in cm
+        - metric: RMSD or KS statistic value
+        - p_value: p-value from KS test (None if using RMSD)
+        - simulated_data: Structured array with simulated cumulative PSF data
     """
-    d80, im = _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars)
+    d80, im = _run_ray_tracing_simulation(tel_model, site, args_dict, pars)
 
     if radius is None:
         raise ValueError("Radius data is not available.")
 
     simulated_data = im.get_cumulative_data(radius * u.cm)
-    rmsd = calculate_rmsd(data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF])
+
+    if use_ks_statistic:
+        ks_statistic, p_value = calculate_ks_statistic(
+            data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF]
+        )
+        metric = ks_statistic
+    else:
+        metric = calculate_rmsd(
+            data_to_plot["measured"][CUMULATIVE_PSF], simulated_data[CUMULATIVE_PSF]
+        )
+        p_value = None
 
     # Handle plotting if requested
     if pdf_pages is not None and args_dict.get("plot_all", False):
         data_to_plot["simulated"] = simulated_data
-        _create_psf_simulation_plot(data_to_plot, pars, d80, rmsd, is_best, pdf_pages)
+        plot_psf.create_psf_parameter_plot(
+            data_to_plot,
+            pars,
+            d80,
+            metric,
+            is_best,
+            pdf_pages,
+            p_value=p_value,
+            use_ks_statistic=use_ks_statistic,
+        )
         del data_to_plot["simulated"]
 
-    return (d80, rmsd, simulated_data) if return_simulated_data else (d80, rmsd)
+    return d80, metric, p_value, simulated_data
 
 
 def load_and_process_data(args_dict):
     """
-    Load and process data if specified in the command-line arguments.
+    Load and process PSF measurement data from ECSV file.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary containing command-line arguments with 'data' and 'model_path' keys.
 
     Returns
     -------
-    - data_to_plot: OrderedDict containing loaded and processed data.
-    - radius: Radius data from loaded data (if available).
+    tuple of (OrderedDict, array)
+        - data_dict: OrderedDict with "measured" key containing structured array
+          of radius and cumulative PSF data
+        - radius: Array of radius values in cm
+
+    Raises
+    ------
+    FileNotFoundError
+        If no data file is specified in args_dict.
     """
-    data_to_plot = OrderedDict()
-    radius = None
-    if args_dict["data"] is not None:
-        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
-        data_to_plot["measured"] = load_psf_data(data_file)
-        radius = data_to_plot["measured"][RADIUS_CM]
-    return data_to_plot, radius
+    if args_dict["data"] is None:
+        raise FileNotFoundError("No data file specified for PSF optimization.")
 
+    data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+    table = Table.read(data_file, format="ascii.ecsv")
 
-def _create_plot_for_parameters(pars, rmsd, d80, simulated_data, data_to_plot, is_best, pdf_pages):
-    """
-    Create a single plot for a parameter set.
+    radius_column = next((col for col in table.colnames if "radius" in col.lower()), None)
+    integral_psf_column = next((col for col in table.colnames if "integral" in col.lower()), None)
 
-    Parameters
-    ----------
-    pars : dict
-        Parameter set dictionary
-    rmsd : float
-        RMSD value for this parameter set
-    d80 : float
-        D80 value for this parameter set
-    simulated_data : array
-        Simulated data for plotting
-    data_to_plot : dict
-        Data dictionary for plotting
-    is_best : bool
-        Whether this is the best parameter set
-    pdf_pages : PdfPages
-        PDF pages object to save the plot
-    """
-    original_simulated = data_to_plot.get("simulated")
-    data_to_plot["simulated"] = simulated_data
+    # Create structured array with converted data
+    d_type = {"names": (RADIUS, CUMULATIVE_PSF), "formats": ("f8", "f8")}
+    data = np.zeros(len(table), dtype=d_type)
 
-    fig = visualize.plot_1d(
-        data_to_plot,
-        plot_difference=True,
-        no_markers=True,
-    )
-    ax = fig.get_axes()[0]
-    ax.set_ylim(0, 1.05)
-    ax.set_ylabel(CUMULATIVE_PSF)
+    data[RADIUS] = table[radius_column].to(u.cm).value
+    data[CUMULATIVE_PSF] = table[integral_psf_column]
+    data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))  # Normalize to max = 1.0
 
-    title_prefix = "* " if is_best else ""
-
-    ax.set_title(
-        f"{title_prefix}reflection = "
-        f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
-        f"align_vertical = {pars['mirror_align_random_vertical'][0]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][1]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][2]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][3]:.5f}\n"
-        f"align_horizontal = {pars['mirror_align_random_horizontal'][0]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][1]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][2]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][3]:.5f}"
-    )
-
-    d80_color = "red" if is_best else "black"
-    d80_weight = "bold" if is_best else "normal"
-
-    ax.text(
-        0.5,
-        0.3,
-        f"D80 = {d80:.5f} cm\nRMSD = {rmsd:.4f}",
-        verticalalignment="center",
-        horizontalalignment="left",
-        transform=ax.transAxes,
-        color=d80_color,
-        weight=d80_weight,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "yellow", "alpha": 0.7}
-        if is_best
-        else None,
-    )
-
-    if is_best:
-        fig.text(
-            0.02,
-            0.02,
-            "* Best parameter set (lowest RMSD)",
-            fontsize=8,
-            style="italic",
-            color="red",
-        )
-
-    pdf_pages.savefig(fig, bbox_inches="tight")
-    plt.clf()
-
-    if original_simulated is not None:
-        data_to_plot["simulated"] = original_simulated
-
-
-def _create_all_plots(results, best_pars, data_to_plot, pdf_pages):
-    """
-    Create plots for all parameter sets if requested.
-
-    Parameters
-    ----------
-    results : list
-        List of (pars, rmsd, d80, simulated_data) tuples
-    best_pars : dict
-        Best parameter set for highlighting
-    data_to_plot : dict
-        Data dictionary for plotting
-    pdf_pages : PdfPages
-        PDF pages object to save plots
-    """
-    logger.info("Creating plots for all parameter sets...")
-
-    for i, (pars, rmsd, d80, simulated_data) in enumerate(results):
-        is_best = pars is best_pars
-        logger.info(f"Creating plot {i + 1}/{len(results)}{' (BEST)' if is_best else ''}")
-
-        _create_plot_for_parameters(
-            pars, rmsd, d80, simulated_data, data_to_plot, is_best, pdf_pages
-        )
-
-
-def find_best_parameters(
-    all_parameters, tel_model, site_model, args_dict, data_to_plot, radius, pdf_pages=None
-):
-    """
-    Find the best parameters by running simulations for all parameter sets.
-
-    Loop over all parameter sets, run the simulation, compute RMSD,
-    and return the best parameters and their RMSD.
-    """
-    best_rmsd = float("inf")
-    best_pars = None
-    best_d80 = None
-    results = []  # Store (pars, rmsd, d80, simulated_data)
-
-    logger.info(f"Running {len(all_parameters)} simulations...")
-
-    for i, pars in enumerate(all_parameters):
-        try:
-            logger.info(f"Running simulation {i + 1}/{len(all_parameters)}")
-            d80, rmsd, simulated_data = run_psf_simulation(
-                tel_model,
-                site_model,
-                args_dict,
-                pars,
-                data_to_plot,
-                radius,
-                return_simulated_data=True,
-                pdf_pages=None,
-            )
-        except (ValueError, RuntimeError) as e:
-            logger.warning(f"Simulation failed for parameters {pars}: {e}")
-            continue
-
-        results.append((pars, rmsd, d80, simulated_data))
-        if rmsd < best_rmsd:
-            best_rmsd = rmsd
-            best_pars = pars
-            best_d80 = d80
-
-    logger.info(f"Best RMSD found: {best_rmsd:.5f}")
-
-    # Create all plots if requested
-    if pdf_pages is not None and args_dict.get("plot_all", False) and results:
-        _create_all_plots(results, best_pars, data_to_plot, pdf_pages)
-
-    return best_pars, best_d80, results
-
-
-def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
-    """
-    Create D80 vs off-axis angle plot using the best parameters.
-
-    Parameters
-    ----------
-    tel_model : TelescopeModel
-        Telescope model object.
-    site_model : SiteModel
-        Site model object.
-    args_dict : dict
-        Dictionary containing parsed command-line arguments.
-    best_pars : dict
-        Best parameter set.
-    output_dir : Path
-        Output directory for saving plots.
-    """
-    logger.info("Creating D80 vs off-axis angle plot with best parameters...")
-
-    # Apply best parameters to telescope model
-    tel_model.change_multiple_parameters(**best_pars)
-
-    # Create off-axis angle array
-    max_offset = args_dict.get("max_offset", MAX_OFFSET_DEFAULT)
-    offset_steps = args_dict.get("offset_steps", OFFSET_STEPS_DEFAULT)
-    off_axis_angles = np.linspace(
-        0,
-        max_offset,
-        int(max_offset / offset_steps) + 1,
-    )
-
-    ray = RayTracing(
-        telescope_model=tel_model,
-        site_model=site_model,
-        simtel_path=args_dict["simtel_path"],
-        zenith_angle=args_dict["zenith"] * u.deg,
-        source_distance=args_dict["src_distance"] * u.km,
-        off_axis_angle=off_axis_angles * u.deg,
-    )
-
-    logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
-    ray.simulate(test=args_dict.get("test", False), force=True)
-    ray.analyze(force=True)
-
-    for key in ["d80_cm", "d80_deg"]:
-        plt.figure(figsize=(10, 6), tight_layout=True)
-
-        ray.plot(key, marker="o", linestyle="-", color="blue", linewidth=2, markersize=6)
-
-        plt.title(
-            f"PSF D80 vs Off-axis Angle - {tel_model.name}\n"
-            f"Best Parameters: \n"
-            f"reflection=[{best_pars['mirror_reflection_random_angle'][0]:.4f},"
-            f"{best_pars['mirror_reflection_random_angle'][1]:.4f},"
-            f"{best_pars['mirror_reflection_random_angle'][2]:.4f}],\n"
-            f"align_horizontal={best_pars['mirror_align_random_horizontal'][0]:.4f}\n"
-            f"align_vertical={best_pars['mirror_align_random_vertical'][0]:.4f}\n"
-        )
-        plt.xlabel("Off-axis Angle (degrees)")
-        plt.ylabel("D80 (cm)" if key == "d80_cm" else "D80 (degrees)")
-        plt.ylim(bottom=0)
-        plt.xticks(rotation=45)
-        plt.xlim(0, max_offset)
-        plt.grid(True, alpha=0.3)
-
-        plot_file_name = f"tune_psf_{tel_model.name}_best_params_{key}.pdf"
-        plot_file = output_dir.joinpath(plot_file_name)
-        visualize.save_figure(plt, plot_file, log_title=f"D80 vs off-axis ({key})")
-
-    plt.close("all")
+    return OrderedDict([("measured", data)]), data[RADIUS]
 
 
 def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, tel_model):
     """
-    Write all tested parameters and their metrics to a text file.
+    Write optimization results and tested parameters to a log file.
 
     Parameters
     ----------
     results : list
-        List of (pars, rmsd, d80, simulated_data) tuples
+        List of tuples containing (parameters, ks_statistic, p_value, d80, simulated_data)
+        for each tested parameter set.
     best_pars : dict
-        Best parameter set
+        Dictionary containing the best parameter values found.
     best_d80 : float
-        Best D80 value
+        D80 diameter in cm for the best parameter set.
     output_dir : Path
-        Output directory path
+        Directory where the log file will be written.
     tel_model : TelescopeModel
-        Telescope model object for filename generation
+        Telescope model object for naming the output file.
+
+    Returns
+    -------
+    Path
+        Path to the created log file.
     """
     param_file = output_dir.joinpath(f"psf_optimization_{tel_model.name}.log")
     with open(param_file, "w", encoding="utf-8") as f:
-        f.write("# PSF Parameter Optimization Log\n")
-        f.write(f"# Telescope: {tel_model.name}\n")
-        f.write(f"# Total parameter sets tested: {len(results)}\n")
-        f.write("#" + "=" * 60 + "\n\n")
+        header = _create_log_header_and_format_value(
+            "PSF Parameter Optimization Log",
+            tel_model,
+            {"Total parameter sets tested": len(results)},
+        )
+        f.write(header)
 
         f.write("PARAMETER TESTING RESULTS:\n")
-        for i, (pars, rmsd, d80, _) in enumerate(results):
-            is_best = pars is best_pars
-            status = "BEST" if is_best else "TESTED"
-            f.write(f"[{status}] Set {i + 1:03d}: RMSD={rmsd:.5f}, D80={d80:.5f} cm\n")
+        for i, (pars, ks_statistic, p_value, d80, _) in enumerate(results):
+            status = "BEST" if pars is best_pars else "TESTED"
+            f.write(
+                f"[{status}] Set {i + 1:03d}: KS_stat={ks_statistic:.5f}, "
+                f"p_value={p_value:.5f}, D80={d80:.5f} cm\n"
+            )
             for par, value in pars.items():
                 f.write(f"    {par}: {value}\n")
             f.write("\n")
 
         f.write("OPTIMIZATION SUMMARY:\n")
-        f.write(f"Best RMSD: {min(result[1] for result in results):.5f}\n")
+        f.write(f"Best KS statistic: {min(result[1] for result in results):.5f}\n")
         f.write(f"Best D80: {best_d80:.5f} cm\n")
         f.write("\nOPTIMIZED PARAMETERS:\n")
         for par, value in best_pars.items():
@@ -651,21 +281,8 @@ def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, te
 
 
 def _add_units_to_psf_parameters(best_pars):
-    """
-    Add proper astropy units to PSF parameters based on their schemas.
-
-    Parameters
-    ----------
-    best_pars : dict
-        Dictionary with PSF parameter names as keys and values as lists
-
-    Returns
-    -------
-    dict
-        Dictionary with same keys but values converted to astropy quantities with units
-    """
+    """Add astropy units to PSF parameters based on their schemas."""
     psf_pars_with_units = {}
-
     for param_name, param_values in best_pars.items():
         if param_name == "mirror_reflection_random_angle":
             psf_pars_with_units[param_name] = [
@@ -682,111 +299,928 @@ def _add_units_to_psf_parameters(best_pars):
             ]
         else:
             psf_pars_with_units[param_name] = param_values
-
     return psf_pars_with_units
 
 
-def export_psf_parameters(best_pars, tel_model, parameter_version, output_dir):
+def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
     """
-    Export PSF parameters as simulation model parameter files.
+    Export optimized PSF parameters as simulation model parameter files.
 
     Parameters
     ----------
     best_pars : dict
-        Best parameter set
-    tel_model : TelescopeModel
-        Telescope model object
+        Dictionary containing the optimized parameter values.
+    telescope : str
+        Telescope name for the parameter files.
     parameter_version : str
-        Parameter version string
+        Version string for the parameter files.
     output_dir : Path
-        Output directory path
+        Base directory for parameter file output.
+
+    Notes
+    -----
+    Creates individual JSON files for each optimized parameter with
+    units. Files are saved in the format:
+    {output_dir}/{telescope}/{parameter_name}-{parameter_version}.json
+
+    Raises
+    ------
+    ValueError, KeyError, OSError
+        If parameter export fails due to invalid values, missing keys, or file I/O errors.
     """
     try:
-        logger.info("Exporting best PSF parameters as simulation model parameter files")
         psf_pars_with_units = _add_units_to_psf_parameters(best_pars)
-        parameter_output_path = output_dir / tel_model.name
+        parameter_output_path = output_dir.parent / telescope
         for parameter_name, parameter_value in psf_pars_with_units.items():
             writer.ModelDataWriter.dump_model_parameter(
                 parameter_name=parameter_name,
                 value=parameter_value,
-                instrument=tel_model.name,
+                instrument=telescope,
                 parameter_version=parameter_version,
                 output_file=f"{parameter_name}-{parameter_version}.json",
                 output_path=parameter_output_path,
                 use_plain_output_path=True,
             )
         logger.info(f"simulation model parameter files exported to {output_dir}")
-    except ImportError as e:
-        logger.warning(f"Could not export simulation parameters: {e}")
+
     except (ValueError, KeyError, OSError) as e:
         logger.error(f"Error exporting simulation parameters: {e}")
 
 
-def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
+def _calculate_param_gradient(
+    tel_model,
+    site_model,
+    args_dict,
+    current_params,
+    data_to_plot,
+    radius,
+    current_rmsd,
+    param_name,
+    param_values,
+    epsilon,
+    use_ks_statistic,
+):
     """
-    Run the complete PSF parameter optimization workflow.
+    Calculate numerical gradient for a single parameter using finite differences.
 
-    This function consolidates the main optimization logic to make the application lighter.
+    The gradient is calculated using forward finite differences:
+    gradient = (f(x + epsilon) - f(x)) / epsilon
 
     Parameters
     ----------
     tel_model : TelescopeModel
-        Telescope model object
+        The telescope model object containing the current parameter configuration.
     site_model : SiteModel
-        Site model object
+        The site model object with environmental conditions.
     args_dict : dict
-        Dictionary containing parsed command-line arguments
-    output_dir : Path
-        Output directory path
+        Dictionary containing simulation arguments and configuration options.
+    current_params : dict
+        Dictionary of current parameter values for all optimization parameters.
+    data_to_plot : dict
+        Dictionary containing measured PSF data with "measured" key.
+    radius : array-like
+        Radius values in cm for PSF evaluation.
+    current_rmsd : float
+        Current RMSD at the current parameter configuration.
+    param_name : str
+        Name of the parameter for which to calculate the gradient.
+    param_values : float or list
+        Current value(s) of the parameter. Can be a single value or list of values.
+    epsilon : float
+        Small perturbation value for finite difference calculation.
+    use_ks_statistic : bool
+        If True, calculate gradient with respect to KS statistic; if False, use RMSD.
 
     Returns
     -------
-    None
-        All results are saved to files and printed to console
+    float or list
+        Gradient value(s) for the parameter. Returns a single float if param_values
+        is a single value, or a list of gradients if param_values is a list.
+
+    If a simulation fails during gradient calculation, a gradient of 0.0 is assigned
+    for that component to ensure the optimization can continue.
     """
-    # Generate parameter sets
-    all_parameters = []
-    mrra_0, mfr_0, mrra2_0, mar_0 = get_previous_values(tel_model)
+    param_gradients = []
+    values_list = param_values if isinstance(param_values, list) else [param_values]
 
-    n_runs = args_dict.get("n_runs")
-    generate_random_parameters(
-        all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, tel_model
-    )
+    for i, value in enumerate(values_list):
+        perturbed_params = {
+            k: v.copy() if isinstance(v, list) else v for k, v in current_params.items()
+        }
 
-    data_to_plot, radius = load_and_process_data(args_dict)
+        if isinstance(param_values, list):
+            perturbed_params[param_name][i] = value + epsilon
+        else:
+            perturbed_params[param_name] = value + epsilon
 
-    # Preparing figure name and PDF pages for plotting
-    plot_file_name = "_".join(("tune_psf", tel_model.name + ".pdf"))
-    plot_file = output_dir.joinpath(plot_file_name)
-    pdf_pages = PdfPages(plot_file)
+        try:
+            _, perturbed_rmsd, _, _ = run_psf_simulation(
+                tel_model,
+                site_model,
+                args_dict,
+                perturbed_params,
+                data_to_plot,
+                radius,
+                pdf_pages=None,
+                is_best=False,
+                use_ks_statistic=use_ks_statistic,
+            )
+            param_gradients.append((perturbed_rmsd - current_rmsd) / epsilon)
+        except (ValueError, RuntimeError):
+            param_gradients.append(0.0)
 
-    # Find best parameters
-    best_pars, best_d80, results = find_best_parameters(
-        all_parameters, tel_model, site_model, args_dict, data_to_plot, radius, pdf_pages
-    )
+    return param_gradients[0] if not isinstance(param_values, list) else param_gradients
 
-    plt.close()
-    pdf_pages.close()
 
-    # Write all tested parameters and their metrics to a file
-    param_file = write_tested_parameters_to_file(
-        results, best_pars, best_d80, output_dir, tel_model
-    )
-    print(f"\nParameter results written to {param_file}")
+def calculate_gradient(
+    tel_model,
+    site_model,
+    args_dict,
+    current_params,
+    data_to_plot,
+    radius,
+    current_rmsd,
+    epsilon=0.0005,
+    use_ks_statistic=False,
+):
+    """
+    Calculate numerical gradients for all optimization parameters.
 
-    # Automatically create D80 vs off-axis angle plot for best parameters
-    create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
-    print("D80 vs off-axis angle plots created successfully")
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object for simulations.
+    site_model : SiteModel
+        Site model object with environmental conditions.
+    args_dict : dict
+        Dictionary containing simulation configuration arguments.
+    current_params : dict
+        Dictionary of current parameter values for all optimization parameters.
+    data_to_plot : dict
+        Dictionary containing measured PSF data.
+    radius : array-like
+        Radius values in cm for PSF evaluation.
+    current_rmsd : float
+        Current RMSD or KS statistic value.
+    epsilon : float, optional
+        Perturbation value for finite difference calculation (default: 0.0005).
+    use_ks_statistic : bool, optional
+        If True, calculate gradients for KS statistic; if False, use RMSD (default: False).
 
-    print("\nBest parameters:")
-    for par, value in best_pars.items():
-        print(f"{par} = {value}")
+    Returns
+    -------
+    dict
+        Dictionary mapping parameter names to their gradient values.
+        For parameters with multiple components, gradients are returned as lists.
+    """
+    gradients = {}
 
-    # Export best parameters as simulation model parameter files (if flag is provided)
-    if args_dict.get("write_psf_parameters", False):
-        export_psf_parameters(
-            best_pars,
+    for param_name, param_values in current_params.items():
+        gradients[param_name] = _calculate_param_gradient(
             tel_model,
-            args_dict.get("parameter_version", "0.0.0"),
-            output_dir.parent,
+            site_model,
+            args_dict,
+            current_params,
+            data_to_plot,
+            radius,
+            current_rmsd,
+            param_name,
+            param_values,
+            epsilon,
+            use_ks_statistic,
+        )
+
+    return gradients
+
+
+def apply_gradient_step(current_params, gradients, learning_rate):
+    """
+    Apply gradient descent step to update parameters.
+
+    Parameters
+    ----------
+    current_params : dict
+        Dictionary of current parameter values.
+    gradients : dict
+        Dictionary of gradient values for each parameter.
+    learning_rate : float
+        Step size for the gradient descent update.
+
+    Returns
+    -------
+    dict
+        Dictionary of updated parameter values after applying the gradient step.
+    """
+    new_params = {}
+    for param_name, param_values in current_params.items():
+        param_gradients = gradients[param_name]
+
+        if isinstance(param_values, list):
+            new_params[param_name] = [
+                value - learning_rate * gradient
+                for value, gradient in zip(param_values, param_gradients)
+            ]
+        else:
+            new_params[param_name] = param_values - learning_rate * param_gradients
+
+    return new_params
+
+
+def _perform_gradient_step_with_retries(
+    tel_model,
+    site_model,
+    args_dict,
+    current_params,
+    current_metric,
+    data_to_plot,
+    radius,
+    learning_rate,
+    max_retries=3,
+):
+    """
+    Attempt gradient descent step with adaptive learning rate reduction on rejection.
+
+    The learning rate reduction strategy follows these rules:
+    - If step is rejected: learning_rate *= 0.7
+    - If attempt number < number of max retries then try again
+    - If learning_rate drops below 1e-5: reset to 0.001
+    - If all retries fail: returns None values with step_accepted=False
+
+    This adaptive approach helps navigate local minima and ensures robust convergence
+    by automatically adjusting the step size based on optimization progress.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object containing the current parameter configuration.
+    site_model : SiteModel
+        Site model object with environmental conditions for ray tracing simulations.
+    args_dict : dict
+        Dictionary containing simulation configuration arguments and settings.
+    current_params : dict
+        Dictionary of current parameter values for all optimization parameters.
+    current_metric : float
+        Current optimization metric value (RMSD or KS statistic) to improve upon.
+    data_to_plot : dict
+        Dictionary containing measured PSF data under "measured" key for comparison.
+    radius : array-like
+        Radius values in cm for PSF evaluation and comparison.
+    learning_rate : float
+        Initial learning rate for the gradient descent step.
+    max_retries : int, optional
+        Maximum number of attempts with learning rate reduction (default: 3).
+
+    Returns
+    -------
+    tuple of (dict, float, float, float or None, array, bool, float)
+        - new_params: Updated parameter dictionary if step accepted, None if rejected
+        - new_d80: D80 diameter in cm for new parameters, None if step rejected
+        - new_metric: New optimization metric value, None if step rejected
+        - new_p_value: p-value from KS test if applicable, None otherwise
+        - new_simulated_data: Simulated PSF data array, None if step rejected
+        - step_accepted: Boolean indicating if any step was accepted
+        - final_learning_rate: Learning rate after potential reductions
+
+    """
+    current_lr = learning_rate
+
+    for attempt in range(max_retries):
+        try:
+            gradients = calculate_gradient(
+                tel_model,
+                site_model,
+                args_dict,
+                current_params,
+                data_to_plot,
+                radius,
+                current_metric,
+                use_ks_statistic=False,
+            )
+            new_params = apply_gradient_step(current_params, gradients, current_lr)
+
+            new_d80, new_metric, new_p_value, new_simulated_data = run_psf_simulation(
+                tel_model,
+                site_model,
+                args_dict,
+                new_params,
+                data_to_plot,
+                radius,
+                pdf_pages=None,
+                is_best=False,
+                use_ks_statistic=False,
+            )
+
+            if new_metric < current_metric:
+                return (
+                    new_params,
+                    new_d80,
+                    new_metric,
+                    new_p_value,
+                    new_simulated_data,
+                    True,
+                    current_lr,
+                )
+
+            logger.info(
+                f"Step rejected (RMSD {current_metric:.6f} -> {new_metric:.6f}), "
+                f"reducing learning rate {current_lr:.6f} -> {current_lr * 0.7:.6f}"
+            )
+            current_lr *= 0.7
+
+            if current_lr < 1e-5:
+                current_lr = 0.001
+
+        except (ValueError, RuntimeError, KeyError) as e:
+            logger.warning(f"Simulation failed on attempt {attempt + 1}: {e}")
+            continue
+
+    return None, None, None, None, None, False, current_lr
+
+
+def _create_step_plot(
+    pdf_pages,
+    args_dict,
+    data_to_plot,
+    current_params,
+    new_d80,
+    new_metric,
+    new_p_value,
+    new_simulated_data,
+):
+    """Create plot for an accepted gradient step."""
+    if pdf_pages is None or not args_dict.get("plot_all", False) or new_simulated_data is None:
+        return
+
+    data_to_plot["simulated"] = new_simulated_data
+    plot_psf.create_psf_parameter_plot(
+        data_to_plot,
+        current_params,
+        new_d80,
+        new_metric,
+        False,
+        pdf_pages,
+        p_value=new_p_value,
+        use_ks_statistic=False,
+    )
+    del data_to_plot["simulated"]
+
+
+def _create_final_plot(
+    pdf_pages, tel_model, site_model, args_dict, best_params, data_to_plot, radius, best_d80
+):
+    """Create final plot for best parameters."""
+    if pdf_pages is None or best_params is None:
+        return
+
+    logger.info("Creating final plot for best parameters with both RMSD and KS statistic...")
+    _, best_ks_stat, best_p_value, best_simulated_data = run_psf_simulation(
+        tel_model,
+        site_model,
+        args_dict,
+        best_params,
+        data_to_plot,
+        radius,
+        pdf_pages=None,
+        is_best=False,
+        use_ks_statistic=True,
+    )
+    best_rmsd = calculate_rmsd(
+        data_to_plot["measured"][CUMULATIVE_PSF], best_simulated_data[CUMULATIVE_PSF]
+    )
+
+    data_to_plot["simulated"] = best_simulated_data
+    plot_psf.create_psf_parameter_plot(
+        data_to_plot,
+        best_params,
+        best_d80,
+        best_rmsd,
+        True,
+        pdf_pages,
+        p_value=best_p_value,
+        use_ks_statistic=False,
+        second_metric=best_ks_stat,
+    )
+    del data_to_plot["simulated"]
+    pdf_pages.close()
+    logger.info("Cumulative PSF plots saved")
+
+
+def run_gradient_descent_optimization(
+    tel_model,
+    site_model,
+    args_dict,
+    data_to_plot,
+    radius,
+    rmsd_threshold,
+    learning_rate,
+    output_dir,
+):
+    """
+    Run gradient descent optimization to minimize PSF fitting metric.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object to be optimized.
+    site_model : SiteModel
+        Site model object with environmental conditions.
+    args_dict : dict
+        Dictionary containing simulation configuration arguments.
+    data_to_plot : dict
+        Dictionary containing measured PSF data under "measured" key.
+    radius : array-like
+        Radius values in cm for PSF evaluation.
+    rmsd_threshold : float
+        Convergence threshold for RMSD improvement.
+    learning_rate : float
+        Initial learning rate for gradient descent steps.
+    output_dir : Path
+        Directory for saving optimization plots and results.
+
+    Returns
+    -------
+    tuple of (dict, float, list)
+        - best_params: Dictionary of optimized parameter values
+        - best_d80: D80 diameter in cm for the best parameters
+        - results: List of (params, metric, p_value, d80, simulated_data) for each iteration
+
+    Returns None values if optimization fails or no measurement data is provided.
+    """
+    if data_to_plot is None or radius is None:
+        logger.error("No PSF measurement data provided. Cannot run optimization.")
+        return None, None, []
+
+    current_params = get_previous_values(tel_model)
+    pdf_pages = plot_psf.setup_pdf_plotting(args_dict, output_dir, tel_model.name)
+    results = []
+
+    # Evaluate initial parameters
+    current_d80, current_metric, current_p_value, simulated_data = run_psf_simulation(
+        tel_model,
+        site_model,
+        args_dict,
+        current_params,
+        data_to_plot,
+        radius,
+        pdf_pages=pdf_pages if args_dict.get("plot_all", False) else None,
+        is_best=False,
+        use_ks_statistic=False,
+    )
+
+    results.append(
+        (current_params.copy(), current_metric, current_p_value, current_d80, simulated_data)
+    )
+    best_metric, best_params, best_d80 = current_metric, current_params.copy(), current_d80
+
+    logger.info(f"Initial RMSD: {current_metric:.6f}, D80: {current_d80:.6f} cm")
+
+    iteration = 0
+    max_total_iterations = 100
+
+    while iteration < max_total_iterations:
+        if current_metric <= rmsd_threshold:
+            logger.info(
+                f"Optimization converged: RMSD {current_metric:.6f} <= "
+                f"threshold {rmsd_threshold:.6f}"
+            )
+            break
+
+        iteration += 1
+        logger.info(f"Gradient descent iteration {iteration}")
+
+        step_result = _perform_gradient_step_with_retries(
+            tel_model,
+            site_model,
+            args_dict,
+            current_params,
+            current_metric,
+            data_to_plot,
+            radius,
+            learning_rate,
+        )
+        (
+            new_params,
+            new_d80,
+            new_metric,
+            new_p_value,
+            new_simulated_data,
+            step_accepted,
+            learning_rate,
+        ) = step_result
+
+        if not step_accepted or new_params is None:
+            learning_rate *= 2.0
+            logger.info(f"No step accepted, increasing learning rate to {learning_rate:.6f}")
+            continue
+
+        # Step was accepted - update state
+        current_params, current_metric, current_d80 = new_params, new_metric, new_d80
+        results.append(
+            (current_params.copy(), current_metric, None, current_d80, new_simulated_data)
+        )
+
+        if current_metric < best_metric:
+            best_metric, best_params, best_d80 = current_metric, current_params.copy(), current_d80
+
+        _create_step_plot(
+            pdf_pages,
+            args_dict,
+            data_to_plot,
+            current_params,
+            new_d80,
+            new_metric,
+            new_p_value,
+            new_simulated_data,
+        )
+        logger.info(f"  Accepted step: improved to {new_metric:.6f}")
+
+    _create_final_plot(
+        pdf_pages, tel_model, site_model, args_dict, best_params, data_to_plot, radius, best_d80
+    )
+    return best_params, best_d80, results
+
+
+def _write_log_interpretation(f, use_ks_statistic):
+    """Write interpretation section for the log file."""
+    if use_ks_statistic:
+        f.write(
+            "P-VALUE INTERPRETATION:\n  p > 0.05: Distributions are statistically similar "
+            "(good fit)\n"
+            "  p < 0.05: Distributions are significantly different (poor fit)\n"
+            "  p < 0.01: Very significant difference (very poor fit)\n\n"
+        )
+    else:
+        f.write(
+            "RMSD INTERPRETATION:\n  Lower RMSD values indicate better agreement between "
+            "measured and simulated PSF curves\n\n"
+        )
+
+
+def _write_iteration_entry(
+    f, iteration, pars, metric, p_value, d80, use_ks_statistic, metric_name, total_iterations
+):
+    """Write a single iteration entry."""
+    status = "FINAL" if iteration == total_iterations - 1 else f"ITER-{iteration:02d}"
+
+    if use_ks_statistic and p_value is not None:
+        significance = plot_psf.get_significance_label(p_value)
+        f.write(
+            f"[{status}] Iteration {iteration}: KS_stat={metric:.6f}, "
+            f"p_value={p_value:.6f} ({significance}), D80={d80:.6f} cm\n"
+        )
+    else:
+        f.write(f"[{status}] Iteration {iteration}: {metric_name}={metric:.6f}, D80={d80:.6f} cm\n")
+
+    for par, value in pars.items():
+        f.write(f"    {par}: {_create_log_header_and_format_value(None, None, None, value)}\n")
+    f.write("\n")
+
+
+def _write_optimization_summary(f, gd_results, best_pars, best_d80, metric_name):
+    """Write optimization summary section."""
+    f.write("OPTIMIZATION SUMMARY:\n")
+    best_metric_from_results = min(metric for _, metric, _, _, _ in gd_results)
+    f.write(f"Best {metric_name.lower()}: {best_metric_from_results:.6f}\n")
+    f.write(f"Best D80: {best_d80:.6f} cm\n" if best_d80 is not None else "Best D80: N/A\n")
+    f.write(f"Total iterations: {len(gd_results)}\n\nFINAL OPTIMIZED PARAMETERS:\n")
+    for par, value in best_pars.items():
+        f.write(f"{par}: {_create_log_header_and_format_value(None, None, None, value)}\n")
+
+
+def write_gradient_descent_log(
+    gd_results, best_pars, best_d80, output_dir, tel_model, use_ks_statistic=False
+):
+    """
+    Write gradient descent optimization progression to a log file.
+
+    Parameters
+    ----------
+    gd_results : list
+        List of tuples containing (params, metric, p_value, d80, simulated_data)
+        for each optimization iteration.
+    best_pars : dict
+        Dictionary containing the best parameter values found.
+    best_d80 : float
+        D80 diameter in cm for the best parameter set.
+    output_dir : Path
+        Directory where the log file will be written.
+    tel_model : TelescopeModel
+        Telescope model object for naming the output file.
+    use_ks_statistic : bool, optional
+        If True, log KS statistic values; if False, log RMSD values (default: False).
+
+    Returns
+    -------
+    Path
+        Path to the created log file.
+    """
+    metric_name = "KS Statistic" if use_ks_statistic else "RMSD"
+    file_suffix = "ks" if use_ks_statistic else "rmsd"
+    param_file = output_dir.joinpath(f"psf_gradient_descent_{file_suffix}_{tel_model.name}.log")
+
+    with open(param_file, "w", encoding="utf-8") as f:
+        header = _create_log_header_and_format_value(
+            f"PSF Parameter Optimization - Gradient Descent Progression ({metric_name})",
+            tel_model,
+            {"Total iterations": len(gd_results)},
+        )
+        f.write(header)
+
+        f.write(
+            "GRADIENT DESCENT PROGRESSION:\n(Each entry shows the parameters chosen "
+            "at each iteration)\n\n"
+        )
+        _write_log_interpretation(f, use_ks_statistic)
+
+        for iteration, (pars, metric, p_value, d80, _) in enumerate(gd_results):
+            _write_iteration_entry(
+                f,
+                iteration,
+                pars,
+                metric,
+                p_value,
+                d80,
+                use_ks_statistic,
+                metric_name,
+                len(gd_results),
+            )
+
+        _write_optimization_summary(f, gd_results, best_pars, best_d80, metric_name)
+
+    return param_file
+
+
+def analyze_monte_carlo_error(
+    tel_model, site_model, args_dict, data_to_plot, radius, n_simulations=500
+):
+    """
+    Analyze Monte Carlo uncertainty in PSF optimization metrics.
+
+    Runs multiple simulations with the same parameters to quantify the
+    statistical uncertainty in the optimization metric due to Monte Carlo
+    noise in the ray tracing simulations. Returns None values if no
+    measurement data is provided or all simulations fail.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object with current parameter configuration.
+    site_model : SiteModel
+        Site model object with environmental conditions.
+    args_dict : dict
+        Dictionary containing simulation configuration arguments.
+    data_to_plot : dict
+        Dictionary containing measured PSF data under "measured" key.
+    radius : array-like
+        Radius values in cm for PSF evaluation.
+    n_simulations : int, optional
+        Number of Monte Carlo simulations to run (default: 500).
+
+    Returns
+    -------
+    tuple of (float, float, list, float, float, list, float, float, list)
+        - mean_metric: Mean RMSD or KS statistic value
+        - std_metric: Standard deviation of metric values
+        - metric_values: List of all metric values from simulations
+        - mean_p_value: Mean p-value (None if using RMSD)
+        - std_p_value: Standard deviation of p-values (None if using RMSD)
+        - p_values: List of all p-values from simulations
+        - mean_d80: Mean D80 diameter in cm
+        - std_d80: Standard deviation of D80 values
+        - d80_values: List of all D80 values from simulations
+    """
+    if data_to_plot is None or radius is None:
+        logger.error("No PSF measurement data provided. Cannot analyze Monte Carlo error.")
+        return None, None, []
+
+    initial_params = get_previous_values(tel_model)
+    for param_name, param_values in initial_params.items():
+        logger.info(f"  {param_name}: {param_values}")
+
+    use_ks_statistic = args_dict.get("ks_statistic", False)
+    metric_values, p_values, d80_values = [], [], []
+
+    for i in range(n_simulations):
+        try:
+            d80, metric, p_value, _ = run_psf_simulation(
+                tel_model,
+                site_model,
+                args_dict,
+                initial_params,
+                data_to_plot,
+                radius,
+                use_ks_statistic=use_ks_statistic,
+            )
+            metric_values.append(metric)
+            d80_values.append(d80)
+            p_values.append(p_value)
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"WARNING: Simulation {i + 1} failed: {e}")
+
+    if not metric_values:
+        logger.error("All Monte Carlo simulations failed.")
+        return None, None, [], None, None, []
+
+    mean_metric, std_metric = np.mean(metric_values), np.std(metric_values, ddof=1)
+    mean_d80, std_d80 = np.mean(d80_values), np.std(d80_values, ddof=1)
+
+    if use_ks_statistic:
+        valid_p_values = [p for p in p_values if p is not None]
+        mean_p_value = np.mean(valid_p_values) if valid_p_values else None
+        std_p_value = np.std(valid_p_values, ddof=1) if valid_p_values else None
+    else:
+        mean_p_value = std_p_value = None
+
+    return (
+        mean_metric,
+        std_metric,
+        metric_values,
+        mean_p_value,
+        std_p_value,
+        p_values,
+        mean_d80,
+        std_d80,
+        d80_values,
+    )
+
+
+def write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statistic=False):
+    """
+    Write Monte Carlo uncertainty analysis results to a log file.
+
+    Parameters
+    ----------
+    mc_results : tuple
+        Tuple of Monte Carlo analysis results from analyze_monte_carlo_error().
+    output_dir : Path
+        Directory where the log file will be written.
+    tel_model : TelescopeModel
+        Telescope model object for naming the output file.
+    use_ks_statistic : bool, optional
+        If True, analyze KS statistic results; if False, analyze RMSD results (default: False).
+
+    Returns
+    -------
+    Path
+        Path to the created log file.
+    """
+    (
+        mean_metric,
+        std_metric,
+        metric_values,
+        mean_p_value,
+        std_p_value,
+        p_values,
+        mean_d80,
+        std_d80,
+        d80_values,
+    ) = mc_results
+
+    metric_name = "KS Statistic" if use_ks_statistic else "RMSD"
+    file_suffix = "ks" if use_ks_statistic else "rmsd"
+    mc_file = output_dir.joinpath(f"monte_carlo_{file_suffix}_analysis_{tel_model.name}.log")
+
+    with open(mc_file, "w", encoding="utf-8") as f:
+        header = _create_log_header_and_format_value(
+            f"Monte Carlo {metric_name} Error Analysis",
+            tel_model,
+            {"Number of simulations": len(metric_values)},
+        )
+        f.write(header)
+
+        f.write(
+            f"MONTE CARLO SIMULATION RESULTS:\nNumber of successful simulations: "
+            f"{len(metric_values)}\n\n"
+        )
+        f.write(f"{metric_name.upper()} STATISTICS:\n")
+        f.write(
+            f"Mean {metric_name.lower()}: {mean_metric:.6f}\n"
+            f"Standard deviation: {std_metric:.6f}\n"
+            f"Minimum {metric_name.lower()}: {min(metric_values):.6f}\n"
+            f"Maximum {metric_name.lower()}: {max(metric_values):.6f}\n"
+            f"Relative error: {(std_metric / mean_metric) * 100:.2f}%\n\n"
+        )
+
+        if use_ks_statistic and mean_p_value is not None:
+            valid_p_values = [p for p in p_values if p is not None]
+            f.write(
+                f"P-VALUE STATISTICS:\nMean p-value: {mean_p_value:.6f}\n"
+                f"Standard deviation: {std_p_value:.6f}\n"
+                f"Minimum p-value: {min(valid_p_values):.6f}\n"
+                f"Maximum p-value: {max(valid_p_values):.6f}\n"
+                f"Relative error: {(std_p_value / mean_p_value) * 100:.2f}%\n"
+            )
+
+            good_fits = sum(1 for p in valid_p_values if p > 0.05)
+            fair_fits = sum(1 for p in valid_p_values if 0.01 < p <= 0.05)
+            poor_fits = sum(1 for p in valid_p_values if p <= 0.01)
+            f.write(
+                f"Good fits (p > 0.05): {good_fits}/{len(valid_p_values)} "
+                f"({100 * good_fits / len(valid_p_values):.1f}%)\n"
+                f"Fair fits (0.01 < p <= 0.05): {fair_fits}/{len(valid_p_values)} "
+                f"({100 * fair_fits / len(valid_p_values):.1f}%)\n"
+                f"Poor fits (p <= 0.01): {poor_fits}/{len(valid_p_values)} "
+                f"({100 * poor_fits / len(valid_p_values):.1f}%)\n\n"
+            )
+
+        f.write(
+            f"D80 STATISTICS:\nMean D80: {mean_d80:.6f} cm\n"
+            f"Standard deviation: {std_d80:.6f} cm\n"
+            f"Minimum D80: {min(d80_values):.6f} cm\n"
+            f"Maximum D80: {max(d80_values):.6f} cm\n"
+            f"Relative error: {(std_d80 / mean_d80) * 100:.2f}%\n\n"
+        )
+
+        f.write("INDIVIDUAL SIMULATION RESULTS:\n")
+        for i, (metric_val, p_value, d80) in enumerate(zip(metric_values, p_values, d80_values)):
+            if use_ks_statistic and p_value is not None:
+                if p_value > 0.05:
+                    significance = "GOOD"
+                elif p_value > 0.01:
+                    significance = "FAIR"
+                else:
+                    significance = "POOR"
+                f.write(
+                    f"Simulation {i + 1:2d}: {metric_name}={metric_val:.6f}, "
+                    f"p_value={p_value:.6f} ({significance}), D80={d80:.6f} cm\n"
+                )
+            else:
+                f.write(
+                    f"Simulation {i + 1:2d}: {metric_name}={metric_val:.6f}, D80={d80:.6f} cm\n"
+                )
+
+    return mc_file
+
+
+def _handle_monte_carlo_analysis(
+    tel_model, site_model, args_dict, data_to_plot, radius, output_dir, use_ks_statistic
+):
+    """Handle Monte Carlo analysis if requested."""
+    if not args_dict.get("monte_carlo_analysis", False):
+        return False
+
+    mc_results = analyze_monte_carlo_error(tel_model, site_model, args_dict, data_to_plot, radius)
+    if mc_results[0] is not None:
+        mc_file = write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statistic)
+        logger.info(f"Monte Carlo analysis results written to {mc_file}")
+        mc_plot_file = output_dir.joinpath(f"monte_carlo_uncertainty_{tel_model.name}.pdf")
+        plot_psf.create_monte_carlo_uncertainty_plot(mc_results, mc_plot_file, use_ks_statistic)
+    return True
+
+
+def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
+    """Run the complete PSF parameter optimization workflow using gradient descent."""
+    data_to_plot, radius = load_and_process_data(args_dict)
+    use_ks_statistic = args_dict.get("ks_statistic", False)
+
+    if _handle_monte_carlo_analysis(
+        tel_model, site_model, args_dict, data_to_plot, radius, output_dir, use_ks_statistic
+    ):
+        return
+
+    # Run gradient descent optimization
+    threshold = args_dict.get("rmsd_threshold")
+    learning_rate = args_dict.get("learning_rate")
+
+    best_pars, best_d80, gd_results = run_gradient_descent_optimization(
+        tel_model,
+        site_model,
+        args_dict,
+        data_to_plot,
+        radius,
+        rmsd_threshold=threshold,
+        learning_rate=learning_rate,
+        output_dir=output_dir,
+    )
+
+    # Check if optimization was successful
+    if not gd_results or best_pars is None:
+        logger.error("Gradient descent optimization failed. No valid results found.")
+        if radius is None:
+            logger.error(
+                "Possible cause: No PSF measurement data provided. "
+                "Use --data argument to provide PSF data."
+            )
+        return
+
+    plot_psf.create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, output_dir)
+
+    convergence_plot_file = output_dir.joinpath(
+        f"gradient_descent_convergence_{tel_model.name}.png"
+    )
+    plot_psf.create_gradient_descent_convergence_plot(
+        gd_results, threshold, convergence_plot_file, use_ks_statistic
+    )
+
+    param_file = write_gradient_descent_log(
+        gd_results, best_pars, best_d80, output_dir, tel_model, use_ks_statistic
+    )
+    logger.info(f"\nGradient descent progression written to {param_file}")
+
+    plot_psf.create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
+
+    if args_dict.get("write_psf_parameters", False):
+        logger.info("Exporting best parameters as model files...")
+        export_psf_parameters(
+            best_pars, args_dict.get("telescope"), args_dict.get("parameter_version"), output_dir
         )
