@@ -867,7 +867,7 @@ def test_parse_telescope_indices_none(corsika_dummy_input, tmp_path):
         assert ch.parse_telescope_indices(None) is None
 
 
-def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path):
+def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path, io_handler):
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
         mock.patch.object(CorsikaHistograms, "_initialize_header"),
@@ -877,7 +877,7 @@ def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path):
         assert np.array_equal(indices, np.array([1, 2, 3]))
 
 
-def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path):
+def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path, io_handler):
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
         mock.patch.object(CorsikaHistograms, "_initialize_header"),
@@ -887,7 +887,7 @@ def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path):
             ch.parse_telescope_indices(["a", "2"])
 
 
-def test_should_overwrite(corsika_dummy_input, tmp_path):
+def test_should_overwrite(corsika_dummy_input, tmp_path, io_handler):
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
         mock.patch.object(CorsikaHistograms, "_initialize_header"),
@@ -901,7 +901,7 @@ def test_should_overwrite(corsika_dummy_input, tmp_path):
         assert ch.should_overwrite(False, None, None) is False
 
 
-def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
+def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path, io_handler):
     # Mock heavy operations inside pipeline
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
@@ -941,7 +941,7 @@ def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
             assert out["pdf_photons"].name == "photons.pdf"
 
 
-def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_path):
+def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_path, io_handler):
     # Cover event1d/event2d branches and write_hdf5 path, including overwrite flag logic
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
