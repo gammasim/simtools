@@ -159,6 +159,7 @@ def generate_new_production(modifications, simulation_models_path):
     modifications = ascii_handler.collect_data_from_file(modifications)
     model_version_history = modifications.get("model_version_history", [])
     try:
+        # oldest version is the base version
         base_model_version = sorted(set(model_version_history), key=Version, reverse=False)[0]
     except IndexError as exc:
         raise IndexError(f"Base model version not found in {modifications}") from exc
@@ -211,7 +212,7 @@ def _apply_changes_to_production_tables(
 
 def _apply_changes_to_production_table(data, changes, model_version, patch_update):
     """
-    Apply changes to the new production tables.
+    Apply changes to a single production table.
 
     Parameters
     ----------
@@ -234,9 +235,10 @@ def _apply_changes_to_production_table(data, changes, model_version, patch_updat
         table_name = data["production_table_name"]
         data["model_version"] = model_version
         if table_name in changes:
-            parameters, deprecated = _update_parameters(
-                data.get("parameters", {}), changes, table_name
+            table_parameters = (
+                {} if patch_update else data.get("parameters", {}).get(table_name, {})
             )
+            parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
             data["parameters"] = parameters
             if deprecated:
                 data["deprecated_parameters"] = deprecated
@@ -248,7 +250,7 @@ def _apply_changes_to_production_table(data, changes, model_version, patch_updat
     return True
 
 
-def _update_parameters(table_parameters, changes, table_name):
+def _update_parameters_dict(table_parameters, changes, table_name):
     """
     Create a new parameters dictionary for the production tables.
 
