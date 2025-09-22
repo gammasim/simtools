@@ -281,8 +281,6 @@ class ModelDataWriter:
         """
         Read schema dict for given parameter name and version.
 
-        TODO - schema_version and model_parameter_schema_version are confusingly similar.
-
         Parameters
         ----------
         parameter_name: str
