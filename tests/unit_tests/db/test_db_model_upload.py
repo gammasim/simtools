@@ -160,3 +160,46 @@ def test_add_model_parameters_to_db_skip_files_collection(
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_not_called()
+
+
+def test_remove_deprecated_model_parameters():
+    model_dict = {
+        "telescopes": {
+            "collection": "telescopes",
+            "model_version": "1.0.0",
+            "parameters": {
+                "LSTN-01": {
+                    "param1": "value1",
+                    "deprecated_param": "deprecated_value",
+                    "param2": "value2",
+                },
+                "MSTS-01": {"param3": "value3", "deprecated_param": "another_deprecated_value"},
+            },
+            "design_model": {"LSTN-01": "LST"},
+            "deprecated_parameters": ["deprecated_param"],
+        },
+        "sites": {
+            "collection": "sites",
+            "model_version": "1.0.0",
+            "parameters": {"North": {"altitude": "2147m", "old_param": "old_value"}},
+            "deprecated_parameters": ["old_param"],
+        },
+        "configuration": {
+            "collection": "configuration",
+            "model_version": "1.0.0",
+            "parameters": {"config_param": "config_value"},
+        },
+    }
+
+    db_model_upload._remove_deprecated_model_parameters(model_dict)
+
+    assert "deprecated_param" not in model_dict["telescopes"]["parameters"]["LSTN-01"]
+    assert "deprecated_param" not in model_dict["telescopes"]["parameters"]["MSTS-01"]
+    assert "param1" in model_dict["telescopes"]["parameters"]["LSTN-01"]
+    assert "param2" in model_dict["telescopes"]["parameters"]["LSTN-01"]
+    assert "param3" in model_dict["telescopes"]["parameters"]["MSTS-01"]
+
+    assert "old_param" not in model_dict["sites"]["parameters"]["North"]
+    assert "altitude" in model_dict["sites"]["parameters"]["North"]
+
+    assert "config_param" in model_dict["configuration"]["parameters"]
