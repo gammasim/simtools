@@ -85,6 +85,7 @@ def test_add_production_tables_to_db(mock_read_production_table, tmp_test_direct
         production_table={
             "parameters": {"MSTS-02": "param_value"},
             "design_model": {"MSTS-02": "MSTx-FlashCam"},
+            "model_version": "1.0.0",
         },
     )
 
