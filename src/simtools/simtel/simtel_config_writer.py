@@ -166,6 +166,9 @@ class SimtelConfigWriter:
             Model parameters in sim_telarray format including flasher parameters.
 
         """
+        if "flasher_pulse_shape" not in parameters and "flasher_pulse_width" not in parameters:
+            return simtel_par
+
         mapping = {
             "gauss": "laser_pulse_sigtime",
             "tophat": "laser_pulse_twidth",
