@@ -571,7 +571,7 @@ def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
 
     with pytest.raises(TypeError, match="Unsupported data type .* in .*malformed.json"):
         model_repository._apply_changes_to_production_tables(
-            changes, "6.0.0", "6.5.0", "full_update", tmp_path
+            changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
         )
 
 
