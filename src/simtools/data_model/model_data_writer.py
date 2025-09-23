@@ -281,6 +281,8 @@ class ModelDataWriter:
         """
         Read schema dict for given parameter name and version.
 
+        Use newest schema version if schema_version is None.
+
         Parameters
         ----------
         parameter_name: str

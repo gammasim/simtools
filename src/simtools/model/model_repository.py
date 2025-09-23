@@ -259,7 +259,7 @@ def _update_parameters_dict(table_parameters, changes, table_name):
     Create a new parameters dictionary for the production tables.
 
     Include only changes relevant to the specific telescope.
-    Do not include parameters if 'remove' flag is set to True.
+    Do not include parameters if 'deprecated' flag is set to True.
 
     Parameters
     ----------
