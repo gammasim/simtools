@@ -41,7 +41,7 @@ def main():  # noqa: D103
     label_name = "reports"
     args, db_config = _parse(label_name)
     io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory(label=label_name, sub_dir="parameters")
+    output_path = io_handler_instance.get_output_directory(sub_dir="parameters")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))

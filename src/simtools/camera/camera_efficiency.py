@@ -47,7 +47,7 @@ class CameraEfficiency:
             config_data["telescope"],
             config_data["model_version"],
         )
-        self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
+        self.output_dir = self.io_handler.get_output_directory(sub_dir="plots")
 
         self._results = None
         self._has_results = False
@@ -102,7 +102,6 @@ class CameraEfficiency:
             )
 
             _file[label] = self.io_handler.get_output_directory(
-                label=self.label,
                 sub_dir="camera_efficiency",
             ).joinpath(file_name)
         return _file

@@ -68,16 +68,13 @@ def test_write_array_layouts(
     args_dict = {
         "site": "north",
         "output_path": test_path,
-        "use_plain_output_path": True,
         "updated_parameter_version": "v1",
     }
     db_config = {"test": "config"}
 
     write_array_layouts(array_layouts, args_dict, db_config)
 
-    mock_io_handler.return_value.set_paths.assert_called_once_with(
-        output_path=test_path, use_plain_output_path=True
-    )
+    mock_io_handler.return_value.set_paths.assert_called_once_with(output_path=test_path)
     mock_io_handler.return_value.get_output_file.assert_called_once_with("array-layouts-v1.json")
 
     mock_model_data_writer.dump_model_parameter.assert_called_once_with(
@@ -86,7 +83,6 @@ def test_write_array_layouts(
         instrument="north",
         parameter_version="v1",
         output_file=test_output,
-        use_plain_output_path=True,
         db_config={"test": "config"},
     )
 

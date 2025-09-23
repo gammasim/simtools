@@ -154,10 +154,7 @@ def write_array_layouts(array_layouts, args_dict, db_config):
     _logger.info(f"Writing updated array layouts to the database for site {site}.")
 
     io_handler_instance = io_handler.IOHandler()
-    io_handler_instance.set_paths(
-        output_path=args_dict["output_path"],
-        use_plain_output_path=args_dict["use_plain_output_path"],
-    )
+    io_handler_instance.set_paths(output_path=args_dict["output_path"])
     output_file = io_handler_instance.get_output_file(
         f"array-layouts-{args_dict['updated_parameter_version']}.json"
     )
@@ -168,7 +165,6 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         instrument=site,
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
-        use_plain_output_path=args_dict["use_plain_output_path"],
         db_config=db_config,
     )
     MetadataCollector.dump(

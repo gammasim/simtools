@@ -88,7 +88,7 @@ def main():  # noqa: D103
         args_dict["input_files"], [".hdf5", ".gz"]
     )
 
-    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_path = io_handler.IOHandler().get_output_directory()
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     table_handler.merge_tables(

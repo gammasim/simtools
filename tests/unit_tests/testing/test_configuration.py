@@ -164,7 +164,6 @@ def test_prepare_test_options_with_output_path(tmp_test_directory, tmp_config_st
     with open(config_file, encoding="utf-8") as file:
         written_config = yaml.safe_load(file)
     assert written_config["output_path"] == str(tmp_test_directory / "results")
-    assert written_config["use_plain_output_path"] is True
 
 
 def test_prepare_test_options_with_data_directory(tmp_test_directory, tmp_config_string):
@@ -200,7 +199,6 @@ def test_prepare_test_options_with_full_config(tmp_test_directory, tmp_config_st
         written_config = yaml.safe_load(file)
     assert written_config["model_version"] == "v2.0"
     assert written_config["output_path"] == str(tmp_test_directory / "results")
-    assert written_config["use_plain_output_path"] is True
     assert written_config["data_directory"] == str(tmp_test_directory / "data")
 
 

@@ -103,12 +103,6 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "--use_plain_output_path",
-            help="use plain output path (without the tool name and dates)",
-            action="store_true",
-            required=False,
-        )
-        _job_group.add_argument(
             "--model_path",
             help="path pointing towards simulation model file directory",
             type=Path,

@@ -298,7 +298,7 @@ class ArrayModel:
         """
         if self._config_file_directory is None:
             self._config_file_directory = self.io_handler.get_model_configuration_directory(
-                self.label, self.model_version
+                sub_dir=self.label, model_version=self.model_version
             )
         return self._config_file_directory
 

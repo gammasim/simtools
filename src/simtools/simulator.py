@@ -583,9 +583,7 @@ class Simulator:
     def save_file_lists(self):
         """Save files lists for output and log files."""
         for file_type in ["simtel_output", "log", "corsika_log", "hist"]:
-            file_name = self.io_handler.get_output_directory(label=self.label).joinpath(
-                f"{file_type}_files.txt"
-            )
+            file_name = self.io_handler.get_output_directory().joinpath(f"{file_type}_files.txt")
             file_list = self.get_file_list(file_type=file_type)
             if all(element is not None for element in file_list) and len(file_list) > 0:
                 self.logger.info(f"Saving list of {file_type} files to {file_name}")
@@ -646,9 +644,7 @@ class Simulator:
         directory_for_grid_upload = (
             Path(directory_for_grid_upload)
             if directory_for_grid_upload
-            else self.io_handler.get_output_directory(label=self.label).joinpath(
-                "directory_for_grid_upload"
-            )
+            else self.io_handler.get_output_directory().joinpath("directory_for_grid_upload")
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 

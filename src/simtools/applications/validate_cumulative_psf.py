@@ -134,7 +134,7 @@ def main():  # noqa: D103
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
+    output_dir = _io_handler.get_output_directory(sub_dir="application-plots")
 
     tel_model, site_model = initialize_simulation_models(
         label=label,

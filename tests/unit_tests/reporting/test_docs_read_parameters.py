@@ -99,7 +99,7 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
 
 def test_produce_model_parameter_reports(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(label="reports", sub_dir="parameters")
+    output_path = io_handler.get_output_directory(sub_dir="parameters")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_model_parameter_reports()
@@ -315,9 +315,7 @@ def test__group_model_versions_by_parameter_version(io_handler, db_config):
 
 def test__compare_parameter_across_versions(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = io_handler.get_output_directory(sub_dir=f"parameters/{args['telescope']}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     mock_data = {
@@ -398,9 +396,7 @@ def test__compare_parameter_across_versions(io_handler, db_config):
 def test__compare_parameter_across_versions_empty_param_dict(io_handler, db_config):
     """Test _compare_parameter_across_versions with empty parameter dictionaries."""
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = io_handler.get_output_directory(sub_dir=f"parameters/{args['telescope']}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     # Test data with empty parameter dictionary for version 5.0.0
@@ -864,7 +860,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
         "simulation_software": "sim_telarray",
     }
     output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"productions/{args.get('model_version')}"
+        sub_dir=f"productions/{args.get('model_version')}"
     )
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 

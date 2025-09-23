@@ -604,7 +604,7 @@ def test__make_output_paths(tmp_path):
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+    ioh.set_paths(output_path=tmp_path)
 
     out_dir, pdf_path = sep._make_output_paths(ioh, base="base", input_file=Path("in.simtel"))
     assert out_dir == tmp_path
@@ -674,7 +674,7 @@ def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+    ioh.set_paths(output_path=tmp_path)
     simtel_files = [tmp_path / "input.simtel.zst"]
 
     # Stub collector to return one fig
@@ -751,7 +751,7 @@ def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+    ioh.set_paths(output_path=tmp_path)
 
     # Force get_output_file to return a path with .pdf already
     monkeypatch.setattr(ioh, "get_output_file", lambda name: tmp_path / "given.pdf")
@@ -806,7 +806,7 @@ def test_generate_and_save_plots_empty_and_error_paths(tmp_path, monkeypatch, ca
     from simtools.io.io_handler import IOHandler
 
     ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path, use_plain_output_path=True)
+    ioh.set_paths(output_path=tmp_path)
     simtel_files = [tmp_path / "input.simtel.zst"]
 
     # Case 1: no figures -> warning and skip saving

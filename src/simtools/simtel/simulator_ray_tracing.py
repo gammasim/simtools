@@ -61,7 +61,7 @@ class SimulatorRayTracing(SimtelRunner):
         self.label = label if label is not None else self.telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
-        self._base_directory = self.io_handler.get_output_directory(self.label, "ray_tracing")
+        self._base_directory = self.io_handler.get_output_directory("ray_tracing")
 
         self.config = (
             self._config_to_namedtuple(config_data)

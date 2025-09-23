@@ -204,7 +204,6 @@ def main():  # noqa: D103
     logger.setLevel(get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
     tel_model, site_model = initialize_simulation_models(
         label=label,
         db_config=db_config,
@@ -213,7 +212,12 @@ def main():  # noqa: D103
         model_version=args_dict["model_version"],
     )
 
-    psf_opt.run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir)
+    psf_opt.run_psf_optimization_workflow(
+        tel_model,
+        site_model,
+        args_dict,
+        _io_handler.get_output_directory(sub_dir="application-plots"),
+    )
 
 
 if __name__ == "__main__":

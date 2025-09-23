@@ -109,7 +109,6 @@ def main():  # noqa: D103
         parameter_version=args_dict["parameter_version"],
         output_file=args_dict["output_file"],
         output_path=args_dict.get("output_path"),
-        use_plain_output_path=args_dict.get("use_plain_output_path"),
     )
     logger.info(f"Validated parameter: {_json_dict}")
 
