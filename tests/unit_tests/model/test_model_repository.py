@@ -541,7 +541,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", tmp_path
+        changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
     )
 
     # Verify the production table files are updated in target
