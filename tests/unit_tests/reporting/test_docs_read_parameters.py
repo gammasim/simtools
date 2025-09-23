@@ -303,7 +303,7 @@ def test__group_model_versions_by_parameter_version(io_handler, db_config):
                 "value": "4.5",
                 "parameter_version": "1.0.0",
                 "file_flag": False,
-                "model_version": "6.0.0, 5.0.0",
+                "model_version": "5.0.0, 6.0.0",
             }
         ],
     }
@@ -385,7 +385,7 @@ def test__compare_parameter_across_versions(io_handler, db_config):
         ],
     )
     qe_comparison = comparison_data.get("quantum_efficiency")
-    assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "6.0.0, 5.0.0"
+    assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "5.0.0, 6.0.0"
 
     position_comparison = comparison_data.get("array_element_position_ground")
     assert position_comparison[0]["model_version"] != position_comparison[1]["model_version"]
