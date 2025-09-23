@@ -193,7 +193,7 @@ def _apply_changes_to_production_tables(
         The model version to be set in the JSON data.
     update_type: str
         Update mode, either 'full_update' or 'patch_update'.
-    simulation_models_path: str
+    simulation_models_path: Path
         Path to the simulation models repository.
     """
     source = simulation_models_path / "productions" / base_model_version

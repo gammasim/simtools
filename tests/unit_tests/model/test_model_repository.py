@@ -423,7 +423,7 @@ def test_apply_changes_to_production_tables(tmp_path):
 
     # Apply changes from source to target
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
+        changes, "6.0.0", "6.5.0", "full_update", tmp_path
     )
 
     # Verify the production table file is updated with changes
@@ -466,7 +466,7 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
+        changes, "6.0.0", "6.5.0", "full_update", tmp_path
     )
 
     # Verify the production table file is updated in target
@@ -499,7 +499,7 @@ def test_apply_changes_to_production_tables_simple(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
+        changes, "6.0.0", "6.5.0", "full_update", tmp_path
     )
 
     # Verify the production table file is updated in target
@@ -541,7 +541,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
+        changes, "6.0.0", "6.5.0", "full_update", tmp_path
     )
 
     # Verify the production table files are updated in target
@@ -571,7 +571,7 @@ def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
 
     with pytest.raises(TypeError, match="Unsupported data type .* in .*malformed.json"):
         model_repository._apply_changes_to_production_tables(
-            changes, "6.0.0", "6.5.0", "full_update", str(tmp_path)
+            changes, "6.0.0", "6.5.0", "full_update", tmp_path
         )
 
 
