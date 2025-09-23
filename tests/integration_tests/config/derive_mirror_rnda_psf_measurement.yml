@@ -4,7 +4,7 @@ applications:
   configuration:
     containment_fraction: 0.8
     log_level: DEBUG
-    model_version: 6.0.0
+    model_version: 6.0
     output_file: test_derive_mirror_rnda_psf_measurement.ecsv
     output_path: simtools-output
     psf_measurement: ./tests/resources/MLTdata-preproduction.ecsv

@@ -16,6 +16,7 @@ from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
+from simtools.version import sort_versions
 from simtools.visualization import plot_pixels, plot_tables
 
 logger = logging.getLogger()
@@ -265,7 +266,7 @@ class ReadParameters:
                     "value": data["value"],
                     "parameter_version": param_version,
                     "file_flag": data["file_flag"],
-                    "model_version": ", ".join(data["model_versions"]),
+                    "model_version": ", ".join(sort_versions(data["model_versions"])),
                 }
                 for param_version, data in version_grouped.items()
             ]

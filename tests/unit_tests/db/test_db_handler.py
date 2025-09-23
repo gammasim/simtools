@@ -619,7 +619,7 @@ def test_get_collections(db, db_config, fs_files):
     assert "telescopes" in collections
 
     db_name = db.get_db_name(
-        model_version=db_config["db_simulation_model_version"],
+        db_simulation_model_version=db_config["db_simulation_model_version"],
         model_name=db_config["db_simulation_model"],
     )
     collections_from_name = db.get_collections(db_name)
@@ -796,6 +796,9 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, moc
     collection_name = "telescopes"
     model_version = "1.0.0"
     param = {"param1": "value1"}
+
+    # Mock get_model_versions to return the expected model version
+    mocker.patch.object(db, "get_model_versions", return_value=[model_version])
 
     # Test with cache hit
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
@@ -1534,14 +1537,16 @@ def test_get_ecsv_file_as_astropy_table(mocker, db):
 def test_get_db_name(db):
     """Test _get_db_name with valid configuration."""
     assert (
-        db.get_db_name(model_version="v1.0.0", model_name="SimulationModel")
+        db.get_db_name(db_simulation_model_version="v1.0.0", model_name="SimulationModel")
         == "SimulationModel-v1-0-0"
     )
-    assert db.get_db_name(model_version="v1.0.0") is None
+    assert db.get_db_name(db_simulation_model_version="v1.0.0") is None
     assert db.get_db_name(model_name="SimulationModel") is None
     assert db.get_db_name() is not None
     assert db.get_db_name(db_name="test_db") == "test_db"
     assert (
-        db.get_db_name(db_name="test_db", model_version="v1.0.0", model_name="SimulationModel")
+        db.get_db_name(
+            db_name="test_db", db_simulation_model_version="v1.0.0", model_name="SimulationModel"
+        )
         == "test_db"
     )

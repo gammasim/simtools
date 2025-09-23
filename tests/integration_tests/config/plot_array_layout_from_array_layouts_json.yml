@@ -3,7 +3,7 @@ applications:
 - application: simtools-plot-array-layout
   configuration:
     array_layout_parameter_file: tests/resources/model_parameters/array_layouts-2.0.2.json
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
   integration_tests:
   - output_file: array_layout_subsystem_msts_North_ground.png

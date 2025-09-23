@@ -7,7 +7,7 @@ applications:
     - alpha
     event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
     loss_fraction: 0.001
-    model_version: 6.0.0
+    model_version: 6.0
     output_file: corsika_simulation_limits_lookup.ecsv
     output_path: simtools-output
     plot_histograms: true
