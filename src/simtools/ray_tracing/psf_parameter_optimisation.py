@@ -21,8 +21,10 @@ from simtools.data_model import model_data_writer as writer
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.visualization import plot_psf
+from simtools.visualization.plot_psf import DEFAULT_FRACTION, get_psf_diameter_label
 
 logger = logging.getLogger(__name__)
+
 
 # Constants
 RADIUS = "Radius"
@@ -105,7 +107,8 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True, use_rx=False)
     im = ray.images()[0]
-    return im.get_psf(), im
+    fraction = args_dict.get("fraction", DEFAULT_FRACTION)
+    return im.get_psf(fraction=fraction), im
 
 
 def run_psf_simulation(
@@ -146,12 +149,12 @@ def run_psf_simulation(
     Returns
     -------
     tuple of (float, float, float or None, array)
-        - d80: D80 diameter of the simulated PSF in cm
+        - psf_diameter: PSF containment diameter of the simulated PSF in cm
         - metric: RMSD or KS statistic value
         - p_value: p-value from KS test (None if using RMSD)
         - simulated_data: Structured array with simulated cumulative PSF data
     """
-    d80, im = _run_ray_tracing_simulation(tel_model, site, args_dict, pars)
+    psf_diameter, im = _run_ray_tracing_simulation(tel_model, site, args_dict, pars)
 
     if radius is None:
         raise ValueError("Radius data is not available.")
@@ -175,16 +178,17 @@ def run_psf_simulation(
         plot_psf.create_psf_parameter_plot(
             data_to_plot,
             pars,
-            d80,
+            psf_diameter,
             metric,
             is_best,
             pdf_pages,
+            fraction=args_dict.get("fraction", DEFAULT_FRACTION),
             p_value=p_value,
             use_ks_statistic=use_ks_statistic,
         )
         del data_to_plot["simulated"]
 
-    return d80, metric, p_value, simulated_data
+    return psf_diameter, metric, p_value, simulated_data
 
 
 def load_and_process_data(args_dict):
@@ -228,23 +232,27 @@ def load_and_process_data(args_dict):
     return OrderedDict([("measured", data)]), data[RADIUS]
 
 
-def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, tel_model):
+def write_tested_parameters_to_file(
+    results, best_pars, best_psf_diameter, output_dir, tel_model, fraction=DEFAULT_FRACTION
+):
     """
     Write optimization results and tested parameters to a log file.
 
     Parameters
     ----------
     results : list
-        List of tuples containing (parameters, ks_statistic, p_value, d80, simulated_data)
+        List of tuples containing (parameters, ks_statistic, p_value, psf_diameter, simulated_data)
         for each tested parameter set.
     best_pars : dict
         Dictionary containing the best parameter values found.
-    best_d80 : float
-        D80 diameter in cm for the best parameter set.
+    best_psf_diameter : float
+        PSF containment diameter in cm for the best parameter set.
     output_dir : Path
         Directory where the log file will be written.
     tel_model : TelescopeModel
         Telescope model object for naming the output file.
+    fraction : float, optional
+        PSF containment fraction for labeling (default: 0.8).
 
     Returns
     -------
@@ -252,6 +260,8 @@ def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, te
         Path to the created log file.
     """
     param_file = output_dir.joinpath(f"psf_optimization_{tel_model.name}.log")
+    psf_label = get_psf_diameter_label(fraction)
+
     with open(param_file, "w", encoding="utf-8") as f:
         header = _create_log_header_and_format_value(
             "PSF Parameter Optimization Log",
@@ -261,11 +271,11 @@ def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, te
         f.write(header)
 
         f.write("PARAMETER TESTING RESULTS:\n")
-        for i, (pars, ks_statistic, p_value, d80, _) in enumerate(results):
+        for i, (pars, ks_statistic, p_value, psf_diameter, _) in enumerate(results):
             status = "BEST" if pars is best_pars else "TESTED"
             f.write(
                 f"[{status}] Set {i + 1:03d}: KS_stat={ks_statistic:.5f}, "
-                f"p_value={p_value:.5f}, D80={d80:.5f} cm\n"
+                f"p_value={p_value:.5f}, {psf_label}={psf_diameter:.5f} cm\n"
             )
             for par, value in pars.items():
                 f.write(f"    {par}: {value}\n")
@@ -273,7 +283,7 @@ def write_tested_parameters_to_file(results, best_pars, best_d80, output_dir, te
 
         f.write("OPTIMIZATION SUMMARY:\n")
         f.write(f"Best KS statistic: {min(result[1] for result in results):.5f}\n")
-        f.write(f"Best D80: {best_d80:.5f} cm\n")
+        f.write(f"Best {psf_label}: {best_psf_diameter:.5f} cm\n")
         f.write("\nOPTIMIZED PARAMETERS:\n")
         for par, value in best_pars.items():
             f.write(f"{par}: {value}\n")
@@ -574,7 +584,7 @@ def _perform_gradient_step_with_retries(
     -------
     tuple of (dict, float, float, float or None, array, bool, float)
         - new_params: Updated parameter dictionary if step accepted, None if rejected
-        - new_d80: D80 diameter in cm for new parameters, None if step rejected
+        - new_psf_diameter: PSF containment diameter in cm for new parameters, None if step rejected
         - new_metric: New optimization metric value, None if step rejected
         - new_p_value: p-value from KS test if applicable, None otherwise
         - new_simulated_data: Simulated PSF data array, None if step rejected
@@ -598,7 +608,7 @@ def _perform_gradient_step_with_retries(
             )
             new_params = apply_gradient_step(current_params, gradients, current_lr)
 
-            new_d80, new_metric, new_p_value, new_simulated_data = run_psf_simulation(
+            new_psf_diameter, new_metric, new_p_value, new_simulated_data = run_psf_simulation(
                 tel_model,
                 site_model,
                 args_dict,
@@ -613,7 +623,7 @@ def _perform_gradient_step_with_retries(
             if new_metric < current_metric:
                 return (
                     new_params,
-                    new_d80,
+                    new_psf_diameter,
                     new_metric,
                     new_p_value,
                     new_simulated_data,
@@ -642,7 +652,7 @@ def _create_step_plot(
     args_dict,
     data_to_plot,
     current_params,
-    new_d80,
+    new_psf_diameter,
     new_metric,
     new_p_value,
     new_simulated_data,
@@ -655,10 +665,11 @@ def _create_step_plot(
     plot_psf.create_psf_parameter_plot(
         data_to_plot,
         current_params,
-        new_d80,
+        new_psf_diameter,
         new_metric,
         False,
         pdf_pages,
+        fraction=args_dict.get("fraction", DEFAULT_FRACTION),
         p_value=new_p_value,
         use_ks_statistic=False,
     )
@@ -666,7 +677,14 @@ def _create_step_plot(
 
 
 def _create_final_plot(
-    pdf_pages, tel_model, site_model, args_dict, best_params, data_to_plot, radius, best_d80
+    pdf_pages,
+    tel_model,
+    site_model,
+    args_dict,
+    best_params,
+    data_to_plot,
+    radius,
+    best_psf_diameter,
 ):
     """Create final plot for best parameters."""
     if pdf_pages is None or best_params is None:
@@ -692,10 +710,11 @@ def _create_final_plot(
     plot_psf.create_psf_parameter_plot(
         data_to_plot,
         best_params,
-        best_d80,
+        best_psf_diameter,
         best_rmsd,
         True,
         pdf_pages,
+        fraction=args_dict.get("fraction", DEFAULT_FRACTION),
         p_value=best_p_value,
         use_ks_statistic=False,
         second_metric=best_ks_stat,
@@ -741,8 +760,9 @@ def run_gradient_descent_optimization(
     -------
     tuple of (dict, float, list)
         - best_params: Dictionary of optimized parameter values
-        - best_d80: D80 diameter in cm for the best parameters
-        - results: List of (params, metric, p_value, d80, simulated_data) for each iteration
+        - best_psf_diameter: PSF containment diameter in cm for the best parameters
+        - results: List of (params, metric, p_value, psf_diameter, simulated_data)
+          for each iteration
 
     Returns None values if optimization fails or no measurement data is provided.
     """
@@ -755,7 +775,7 @@ def run_gradient_descent_optimization(
     results = []
 
     # Evaluate initial parameters
-    current_d80, current_metric, current_p_value, simulated_data = run_psf_simulation(
+    current_psf_diameter, current_metric, current_p_value, simulated_data = run_psf_simulation(
         tel_model,
         site_model,
         args_dict,
@@ -768,11 +788,21 @@ def run_gradient_descent_optimization(
     )
 
     results.append(
-        (current_params.copy(), current_metric, current_p_value, current_d80, simulated_data)
+        (
+            current_params.copy(),
+            current_metric,
+            current_p_value,
+            current_psf_diameter,
+            simulated_data,
+        )
     )
-    best_metric, best_params, best_d80 = current_metric, current_params.copy(), current_d80
+    best_metric, best_params, best_psf_diameter = (
+        current_metric,
+        current_params.copy(),
+        current_psf_diameter,
+    )
 
-    logger.info(f"Initial RMSD: {current_metric:.6f}, D80: {current_d80:.6f} cm")
+    logger.info(f"Initial RMSD: {current_metric:.6f}, PSF diameter: {current_psf_diameter:.6f} cm")
 
     iteration = 0
     max_total_iterations = 100
@@ -800,7 +830,7 @@ def run_gradient_descent_optimization(
         )
         (
             new_params,
-            new_d80,
+            new_psf_diameter,
             new_metric,
             new_p_value,
             new_simulated_data,
@@ -814,20 +844,28 @@ def run_gradient_descent_optimization(
             continue
 
         # Step was accepted - update state
-        current_params, current_metric, current_d80 = new_params, new_metric, new_d80
+        current_params, current_metric, current_psf_diameter = (
+            new_params,
+            new_metric,
+            new_psf_diameter,
+        )
         results.append(
-            (current_params.copy(), current_metric, None, current_d80, new_simulated_data)
+            (current_params.copy(), current_metric, None, current_psf_diameter, new_simulated_data)
         )
 
         if current_metric < best_metric:
-            best_metric, best_params, best_d80 = current_metric, current_params.copy(), current_d80
+            best_metric, best_params, best_psf_diameter = (
+                current_metric,
+                current_params.copy(),
+                current_psf_diameter,
+            )
 
         _create_step_plot(
             pdf_pages,
             args_dict,
             data_to_plot,
             current_params,
-            new_d80,
+            new_psf_diameter,
             new_metric,
             new_p_value,
             new_simulated_data,
@@ -835,9 +873,16 @@ def run_gradient_descent_optimization(
         logger.info(f"  Accepted step: improved to {new_metric:.6f}")
 
     _create_final_plot(
-        pdf_pages, tel_model, site_model, args_dict, best_params, data_to_plot, radius, best_d80
+        pdf_pages,
+        tel_model,
+        site_model,
+        args_dict,
+        best_params,
+        data_to_plot,
+        radius,
+        best_psf_diameter,
     )
-    return best_params, best_d80, results
+    return best_params, best_psf_diameter, results
 
 
 def _write_log_interpretation(f, use_ks_statistic):
@@ -857,38 +902,66 @@ def _write_log_interpretation(f, use_ks_statistic):
 
 
 def _write_iteration_entry(
-    f, iteration, pars, metric, p_value, d80, use_ks_statistic, metric_name, total_iterations
+    f,
+    iteration,
+    pars,
+    metric,
+    p_value,
+    psf_diameter,
+    use_ks_statistic,
+    metric_name,
+    total_iterations,
+    fraction=DEFAULT_FRACTION,
 ):
     """Write a single iteration entry."""
     status = "FINAL" if iteration == total_iterations - 1 else f"ITER-{iteration:02d}"
 
     if use_ks_statistic and p_value is not None:
         significance = plot_psf.get_significance_label(p_value)
+        label = get_psf_diameter_label(fraction)
         f.write(
             f"[{status}] Iteration {iteration}: KS_stat={metric:.6f}, "
-            f"p_value={p_value:.6f} ({significance}), D80={d80:.6f} cm\n"
+            f"p_value={p_value:.6f} ({significance}), {label}={psf_diameter:.6f} cm\n"
         )
     else:
-        f.write(f"[{status}] Iteration {iteration}: {metric_name}={metric:.6f}, D80={d80:.6f} cm\n")
+        label = get_psf_diameter_label(fraction)
+        f.write(
+            f"[{status}] Iteration {iteration}: {metric_name}={metric:.6f}, "
+            f"{label}={psf_diameter:.6f} cm\n"
+        )
 
     for par, value in pars.items():
         f.write(f"    {par}: {_create_log_header_and_format_value(None, None, None, value)}\n")
     f.write("\n")
 
 
-def _write_optimization_summary(f, gd_results, best_pars, best_d80, metric_name):
+def _write_optimization_summary(
+    f, gd_results, best_pars, best_psf_diameter, metric_name, fraction=DEFAULT_FRACTION
+):
     """Write optimization summary section."""
     f.write("OPTIMIZATION SUMMARY:\n")
     best_metric_from_results = min(metric for _, metric, _, _, _ in gd_results)
     f.write(f"Best {metric_name.lower()}: {best_metric_from_results:.6f}\n")
-    f.write(f"Best D80: {best_d80:.6f} cm\n" if best_d80 is not None else "Best D80: N/A\n")
+
+    label = get_psf_diameter_label(fraction)
+    f.write(
+        f"Best {label}: {best_psf_diameter:.6f} cm\n"
+        if best_psf_diameter is not None
+        else f"Best {label}: N/A\n"
+    )
     f.write(f"Total iterations: {len(gd_results)}\n\nFINAL OPTIMIZED PARAMETERS:\n")
     for par, value in best_pars.items():
         f.write(f"{par}: {_create_log_header_and_format_value(None, None, None, value)}\n")
 
 
 def write_gradient_descent_log(
-    gd_results, best_pars, best_d80, output_dir, tel_model, use_ks_statistic=False
+    gd_results,
+    best_pars,
+    best_psf_diameter,
+    output_dir,
+    tel_model,
+    use_ks_statistic=False,
+    fraction=DEFAULT_FRACTION,
 ):
     """
     Write gradient descent optimization progression to a log file.
@@ -896,18 +969,20 @@ def write_gradient_descent_log(
     Parameters
     ----------
     gd_results : list
-        List of tuples containing (params, metric, p_value, d80, simulated_data)
+        List of tuples containing (params, metric, p_value, psf_diameter, simulated_data)
         for each optimization iteration.
     best_pars : dict
         Dictionary containing the best parameter values found.
-    best_d80 : float
-        D80 diameter in cm for the best parameter set.
+    best_psf_diameter : float
+        PSF containment diameter in cm for the best parameter set.
     output_dir : Path
         Directory where the log file will be written.
     tel_model : TelescopeModel
         Telescope model object for naming the output file.
     use_ks_statistic : bool, optional
         If True, log KS statistic values; if False, log RMSD values (default: False).
+    fraction : float, optional
+        PSF containment fraction for labeling (default: 0.8).
 
     Returns
     -------
@@ -932,20 +1007,23 @@ def write_gradient_descent_log(
         )
         _write_log_interpretation(f, use_ks_statistic)
 
-        for iteration, (pars, metric, p_value, d80, _) in enumerate(gd_results):
+        for iteration, (pars, metric, p_value, psf_diameter, _) in enumerate(gd_results):
             _write_iteration_entry(
                 f,
                 iteration,
                 pars,
                 metric,
                 p_value,
-                d80,
+                psf_diameter,
                 use_ks_statistic,
                 metric_name,
                 len(gd_results),
+                fraction,
             )
 
-        _write_optimization_summary(f, gd_results, best_pars, best_d80, metric_name)
+        _write_optimization_summary(
+            f, gd_results, best_pars, best_psf_diameter, metric_name, fraction
+        )
 
     return param_file
 
@@ -985,9 +1063,9 @@ def analyze_monte_carlo_error(
         - mean_p_value: Mean p-value (None if using RMSD)
         - std_p_value: Standard deviation of p-values (None if using RMSD)
         - p_values: List of all p-values from simulations
-        - mean_d80: Mean D80 diameter in cm
-        - std_d80: Standard deviation of D80 values
-        - d80_values: List of all D80 values from simulations
+        - mean_psf_diameter: Mean PSF containment diameter in cm
+        - std_psf_diameter: Standard deviation of PSF diameter values
+        - psf_diameter_values: List of all PSF diameter values from simulations
     """
     if data_to_plot is None or radius is None:
         logger.error("No PSF measurement data provided. Cannot analyze Monte Carlo error.")
@@ -998,11 +1076,11 @@ def analyze_monte_carlo_error(
         logger.info(f"  {param_name}: {param_values}")
 
     use_ks_statistic = args_dict.get("ks_statistic", False)
-    metric_values, p_values, d80_values = [], [], []
+    metric_values, p_values, psf_diameter_values = [], [], []
 
     for i in range(n_simulations):
         try:
-            d80, metric, p_value, _ = run_psf_simulation(
+            psf_diameter, metric, p_value, _ = run_psf_simulation(
                 tel_model,
                 site_model,
                 args_dict,
@@ -1012,7 +1090,7 @@ def analyze_monte_carlo_error(
                 use_ks_statistic=use_ks_statistic,
             )
             metric_values.append(metric)
-            d80_values.append(d80)
+            psf_diameter_values.append(psf_diameter)
             p_values.append(p_value)
         except (ValueError, RuntimeError) as e:
             logger.warning(f"WARNING: Simulation {i + 1} failed: {e}")
@@ -1022,7 +1100,10 @@ def analyze_monte_carlo_error(
         return None, None, [], None, None, []
 
     mean_metric, std_metric = np.mean(metric_values), np.std(metric_values, ddof=1)
-    mean_d80, std_d80 = np.mean(d80_values), np.std(d80_values, ddof=1)
+    mean_psf_diameter, std_psf_diameter = (
+        np.mean(psf_diameter_values),
+        np.std(psf_diameter_values, ddof=1),
+    )
 
     if use_ks_statistic:
         valid_p_values = [p for p in p_values if p is not None]
@@ -1038,13 +1119,15 @@ def analyze_monte_carlo_error(
         mean_p_value,
         std_p_value,
         p_values,
-        mean_d80,
-        std_d80,
-        d80_values,
+        mean_psf_diameter,
+        std_psf_diameter,
+        psf_diameter_values,
     )
 
 
-def write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statistic=False):
+def write_monte_carlo_analysis(
+    mc_results, output_dir, tel_model, use_ks_statistic=False, fraction=DEFAULT_FRACTION
+):
     """
     Write Monte Carlo uncertainty analysis results to a log file.
 
@@ -1058,6 +1141,8 @@ def write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statist
         Telescope model object for naming the output file.
     use_ks_statistic : bool, optional
         If True, analyze KS statistic results; if False, analyze RMSD results (default: False).
+    fraction : float, optional
+        PSF containment fraction for labeling (default: 0.8).
 
     Returns
     -------
@@ -1071,14 +1156,16 @@ def write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statist
         mean_p_value,
         std_p_value,
         p_values,
-        mean_d80,
-        std_d80,
-        d80_values,
+        mean_psf_diameter,
+        std_psf_diameter,
+        psf_diameter_values,
     ) = mc_results
 
     metric_name = "KS Statistic" if use_ks_statistic else "RMSD"
     file_suffix = "ks" if use_ks_statistic else "rmsd"
     mc_file = output_dir.joinpath(f"monte_carlo_{file_suffix}_analysis_{tel_model.name}.log")
+
+    psf_label = get_psf_diameter_label(fraction)
 
     with open(mc_file, "w", encoding="utf-8") as f:
         header = _create_log_header_and_format_value(
@@ -1124,15 +1211,17 @@ def write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statist
             )
 
         f.write(
-            f"D80 STATISTICS:\nMean D80: {mean_d80:.6f} cm\n"
-            f"Standard deviation: {std_d80:.6f} cm\n"
-            f"Minimum D80: {min(d80_values):.6f} cm\n"
-            f"Maximum D80: {max(d80_values):.6f} cm\n"
-            f"Relative error: {(std_d80 / mean_d80) * 100:.2f}%\n\n"
+            f"{psf_label} STATISTICS:\nMean {psf_label}: {mean_psf_diameter:.6f} cm\n"
+            f"Standard deviation: {std_psf_diameter:.6f} cm\n"
+            f"Minimum {psf_label}: {min(psf_diameter_values):.6f} cm\n"
+            f"Maximum {psf_label}: {max(psf_diameter_values):.6f} cm\n"
+            f"Relative error: {(std_psf_diameter / mean_psf_diameter) * 100:.2f}%\n\n"
         )
 
         f.write("INDIVIDUAL SIMULATION RESULTS:\n")
-        for i, (metric_val, p_value, d80) in enumerate(zip(metric_values, p_values, d80_values)):
+        for i, (metric_val, p_value, psf_diameter) in enumerate(
+            zip(metric_values, p_values, psf_diameter_values)
+        ):
             if use_ks_statistic and p_value is not None:
                 if p_value > 0.05:
                     significance = "GOOD"
@@ -1142,11 +1231,12 @@ def write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statist
                     significance = "POOR"
                 f.write(
                     f"Simulation {i + 1:2d}: {metric_name}={metric_val:.6f}, "
-                    f"p_value={p_value:.6f} ({significance}), D80={d80:.6f} cm\n"
+                    f"p_value={p_value:.6f} ({significance}), {psf_label}={psf_diameter:.6f} cm\n"
                 )
             else:
                 f.write(
-                    f"Simulation {i + 1:2d}: {metric_name}={metric_val:.6f}, D80={d80:.6f} cm\n"
+                    f"Simulation {i + 1:2d}: {metric_name}={metric_val:.6f}, "
+                    f"{psf_label}={psf_diameter:.6f} cm\n"
                 )
 
     return mc_file
@@ -1161,10 +1251,18 @@ def _handle_monte_carlo_analysis(
 
     mc_results = analyze_monte_carlo_error(tel_model, site_model, args_dict, data_to_plot, radius)
     if mc_results[0] is not None:
-        mc_file = write_monte_carlo_analysis(mc_results, output_dir, tel_model, use_ks_statistic)
+        mc_file = write_monte_carlo_analysis(
+            mc_results,
+            output_dir,
+            tel_model,
+            use_ks_statistic,
+            args_dict.get("fraction", DEFAULT_FRACTION),
+        )
         logger.info(f"Monte Carlo analysis results written to {mc_file}")
         mc_plot_file = output_dir.joinpath(f"monte_carlo_uncertainty_{tel_model.name}.pdf")
-        plot_psf.create_monte_carlo_uncertainty_plot(mc_results, mc_plot_file, use_ks_statistic)
+        plot_psf.create_monte_carlo_uncertainty_plot(
+            mc_results, mc_plot_file, args_dict.get("fraction", DEFAULT_FRACTION), use_ks_statistic
+        )
     return True
 
 
@@ -1182,7 +1280,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     threshold = args_dict.get("rmsd_threshold")
     learning_rate = args_dict.get("learning_rate")
 
-    best_pars, best_d80, gd_results = run_gradient_descent_optimization(
+    best_pars, best_psf_diameter, gd_results = run_gradient_descent_optimization(
         tel_model,
         site_model,
         args_dict,
@@ -1209,15 +1307,25 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         f"gradient_descent_convergence_{tel_model.name}.png"
     )
     plot_psf.create_gradient_descent_convergence_plot(
-        gd_results, threshold, convergence_plot_file, use_ks_statistic
+        gd_results,
+        threshold,
+        convergence_plot_file,
+        args_dict.get("fraction", DEFAULT_FRACTION),
+        use_ks_statistic,
     )
 
     param_file = write_gradient_descent_log(
-        gd_results, best_pars, best_d80, output_dir, tel_model, use_ks_statistic
+        gd_results,
+        best_pars,
+        best_psf_diameter,
+        output_dir,
+        tel_model,
+        use_ks_statistic,
+        args_dict.get("fraction", DEFAULT_FRACTION),
     )
     logger.info(f"\nGradient descent progression written to {param_file}")
 
-    plot_psf.create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
+    plot_psf.create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
 
     if args_dict.get("write_psf_parameters", False):
         logger.info("Exporting best parameters as model files...")

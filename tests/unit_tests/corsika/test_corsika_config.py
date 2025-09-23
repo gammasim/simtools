@@ -524,12 +524,12 @@ def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handle
         corsika_config_mock_array_model.get_corsika_config_file_name("foobar")
 
 
-def test_set_output_file_and_directory(corsika_config_mock_array_model):
+def test_set_output_file_and_directory(corsika_config_mock_array_model, model_version):
     cc = corsika_config_mock_array_model
     output_file = cc.set_output_file_and_directory()
     assert str(output_file) == (
-        "proton_runXXXXXX_za020deg_azm000deg_cone0-10_South_test_layout"
-        "_6.0.0_test-corsika-config.zst"
+        "proton_runXXXXXX_za020deg_azm000deg_cone0-10_South_test_layout_"
+        f"{model_version}_test-corsika-config.zst"
     )
     assert isinstance(cc.config_file_path, pathlib.Path)
 

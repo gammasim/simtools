@@ -418,7 +418,7 @@ def test_validate_metadata(array_simulator, mocker, caplog):
     mocker.patch("simtools.simulator.assert_sim_telarray_metadata")
     with caplog.at_level(logging.WARNING):
         array_simulator.validate_metadata()
-    assert "No sim_telarray file found for model version 6.0.0:" in caplog.text
+    assert "No sim_telarray file found for model version" in caplog.text
 
 
 def test_pack_for_register_with_multiple_versions(
