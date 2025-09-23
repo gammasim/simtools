@@ -97,9 +97,9 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
         )
 
 
-def test_produce_model_parameter_reports(io_handler, db_config):
+def test_produce_model_parameter_reports(db_config, tmp_path):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(label="reports", sub_dir="parameters")
+    output_path = tmp_path
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_model_parameter_reports()
@@ -108,13 +108,13 @@ def test_produce_model_parameter_reports(io_handler, db_config):
     assert file_path.exists()
 
 
-def test__convert_to_md(telescope_model_lst, io_handler, db_config):
+def test__convert_to_md(telescope_model_lst, db_config, tmp_path):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
+    output_path = tmp_path
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
     parameter_name = "pm_photoelectron_spectrum"
 
@@ -123,9 +123,8 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
         read_parameters._convert_to_md(parameter_name, "1.0.0", "invalid-file.dat")
 
     # testing with valid file
-    new_file = read_parameters._convert_to_md(
-        parameter_name, "1.0.0", "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
-    )
+    valid_file = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(valid_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
@@ -140,17 +139,15 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     assert line_count == 30
 
     # Compare to actual first 30 lines of input file
-    input_path = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
-    with input_path.open("r", encoding="utf-8") as original_file:
+    with valid_file.open("r", encoding="utf-8") as original_file:
         expected_lines = original_file.read().splitlines()[:30]
         expected_block = "\n".join(expected_lines)
 
     assert code_block.strip() == expected_block.strip()
 
     # testing with non-utf-8 file
-    new_file = read_parameters._convert_to_md(
-        parameter_name, "1.0.0", "tests/resources/example_non_utf-8_file.lis"
-    )
+    non_utf_file = Path("tests/resources/example_non_utf-8_file.lis")
+    new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(non_utf_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
@@ -313,11 +310,9 @@ def test__group_model_versions_by_parameter_version(io_handler, db_config):
     assert result == expected
 
 
-def test__compare_parameter_across_versions(io_handler, db_config):
+def test__compare_parameter_across_versions(tmp_path, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = tmp_path
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     mock_data = {
@@ -384,14 +379,31 @@ def test__compare_parameter_across_versions(io_handler, db_config):
             "none_valued_param",
         ],
     )
+
+    # Find quantum_efficiency comparison entry for parameter_version == "1.0.0"
     qe_comparison = comparison_data.get("quantum_efficiency")
-    assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "5.0.0, 6.0.0"
+    qe_versions = [
+        entry["model_version"] for entry in qe_comparison if entry["parameter_version"] == "1.0.0"
+    ]
+    # Should be a single entry with model_version "5.0.0, 6.0.0"
+    assert any("5.0.0" in v and "6.0.0" in v for v in qe_versions)
 
     position_comparison = comparison_data.get("array_element_position_ground")
+    # Should have two entries with different model_version values
+    assert len(position_comparison) == 2
     assert position_comparison[0]["model_version"] != position_comparison[1]["model_version"]
-    assert position_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
+    # Find entry for parameter_version == "2.0.0"
+    pos_versions = [
+        entry["model_version"]
+        for entry in position_comparison
+        if entry["parameter_version"] == "2.0.0"
+    ]
+    assert pos_versions == ["6.0.0"]
 
-    assert len(comparison_data.get("only_prod6_param")) == 1
+    only_prod6_param = comparison_data.get("only_prod6_param")
+    assert len(only_prod6_param) == 1
+    assert only_prod6_param[0]["model_version"] == "6.0.0"
+
     assert "none_valued_param" not in comparison_data
 
 
