@@ -7,6 +7,21 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.21.0](https://github.com/gammasim/simtools/releases/tag/v0.21.0) - 2025-09-23
+
+### Bugfixes
+
+- Fix output file error when running application `simtools-print-version`. ([#1774](https://github.com/gammasim/simtools/pull/1774))
+- Bugfix in configuring hard-stereo array triggers (`hard_stereo` should be `hardstereo` in `array_trigger.dat`). ([#1780](https://github.com/gammasim/simtools/pull/1780))
+
+### New Features
+
+- Implemented gradient descent minimisation for psf parameter optimisation, KS statistic as a sanity check, and monte carlo error on the simulated psf. ([#1717](https://github.com/gammasim/simtools/pull/1717))
+- Add functionality to work with delta-type production tables of the simulation model for patch updates. ([#1758](https://github.com/gammasim/simtools/pull/1758))
+- Automatic retrieval of the latest patch version for the simulation model.
+  Allow `--model_version=6.0` being resolved to the newest version. ([#1768](https://github.com/gammasim/simtools/pull/1768))
+
+
 ## [v0.20.0](https://github.com/gammasim/simtools/releases/tag/v0.20.0) - 2025-09-12
 
 ### Bugfixes
