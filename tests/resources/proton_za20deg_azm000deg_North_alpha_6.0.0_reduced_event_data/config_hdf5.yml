@@ -6,7 +6,6 @@ applications:
     input: tests/resources/*proton*North_alpha_*.simtel.zst
     output_path: simtools-output
     output_file: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-    use_plain_output_path: true
     max_files: 2
     print_dataset_information: 5
   integration_tests:
