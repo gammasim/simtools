@@ -217,6 +217,7 @@ def _apply_changes_to_production_tables(
         if _apply_changes_to_production_table(
             table_name, data, changes, model_version, update_type == "patch_update"
         ):
+            data["production_table_name"] = table_name
             ascii_handler.write_data_to_file(data, target / f"{table_name}.json", sort_keys=True)
 
 
