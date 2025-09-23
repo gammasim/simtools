@@ -7,7 +7,6 @@ applications:
     parameter_version: 1.0.0
     plot_type: refractive_index_vs_altitude
     site: North
-    use_plain_output_path: true
   integration_tests:
   - output_file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
   - output_file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png

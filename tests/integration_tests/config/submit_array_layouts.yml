@@ -6,7 +6,6 @@ applications:
     model_version: 6.0
     output_path: simtools-output
     updated_parameter_version: 1.0.98
-    use_plain_output_path: true
   integration_tests:
   - output_file: array-layouts-1.0.98.json
   - output_file: array-layouts-1.0.98.submit_array_layouts.meta.yml

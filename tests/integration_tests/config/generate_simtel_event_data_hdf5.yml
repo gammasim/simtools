@@ -7,7 +7,6 @@ applications:
     output_file: output_file.hdf5
     output_path: simtools-output
     print_dataset_information: 5
-    use_plain_output_path: true
   integration_tests:
   - output_file: output_file.hdf5
   - output_file: output_file.meta.yml

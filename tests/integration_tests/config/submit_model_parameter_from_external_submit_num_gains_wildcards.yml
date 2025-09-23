@@ -8,7 +8,6 @@ applications:
     parameter: num_gains
     parameter_version: 0.1.0
     site: North
-    use_plain_output_path: true
     value: 2
   test_name: submit_num_gains_wildcards
 schema_name: application_workflow.metaschema

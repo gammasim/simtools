@@ -5,7 +5,6 @@ applications:
     output_file: single_pe_data
     output_path: simtools-output
     plot_config: tests/resources/plot_single_pe_config_from_ecsv_file.yml
-    use_plain_output_path: true
   integration_tests:
   - output_file: single_pe_data.pdf
   - output_file: single_pe_data.png

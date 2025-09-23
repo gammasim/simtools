@@ -8,7 +8,6 @@ applications:
     parameter: focus_offset
     parameter_version: 0.1.0
     site: North
-    use_plain_output_path: true
     value: 6.55 cm, 0.0 deg, 0.0, 0.0
   test_name: submit_focus_offset
   test_use_case: UC-150-2.1.1
