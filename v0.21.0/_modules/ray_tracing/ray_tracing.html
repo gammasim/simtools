@@ -1,0 +1,1191 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ray_tracing.ray_tracing &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=c4f92b34"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/ray_tracing/ray_tracing';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.21.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ray_tracing.ray_tracing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for ray_tracing.ray_tracing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Ray tracing simulations and analysis.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">tan</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.io.ascii</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_telescope_transmission</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.psf_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">PSFImage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorRayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;RayTracing&quot;</span><span class="p">]</span>
+
+<span class="n">INVALID_KEY_TO_PLOT</span> <span class="o">=</span> <span class="s2">&quot;Invalid key to plot&quot;</span>
+
+
+<div class="viewcode-block" id="RayTracing">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RayTracing</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ray tracing simulations and analysis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    telescope_model: TelescopeModel</span>
+<span class="sd">        telescope model</span>
+<span class="sd">    site_model: SiteModel</span>
+<span class="sd">        site model</span>
+<span class="sd">    simtel_path: str (or Path)</span>
+<span class="sd">        Location of sim_telarray installation.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        label used for output file naming.</span>
+<span class="sd">    zenith_angle: astropy.units.Quantity</span>
+<span class="sd">        Zenith angle.</span>
+<span class="sd">    off_axis_angle: list of astropy.units.Quantity</span>
+<span class="sd">        Off-axis angles.</span>
+<span class="sd">    source_distance: astropy.units.Quantity</span>
+<span class="sd">        Source distance.</span>
+<span class="sd">    single_mirror_mode: bool</span>
+<span class="sd">        Single mirror mode flag.</span>
+<span class="sd">    use_random_focal_length: bool</span>
+<span class="sd">        Use random focal length flag.</span>
+<span class="sd">    random_focal_length_seed: int</span>
+<span class="sd">        Seed for the random number generator used for focal length variation.</span>
+<span class="sd">    mirror_numbers: list, str</span>
+<span class="sd">        List of mirror numbers (or &#39;all&#39;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">YLABEL</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;d80_cm&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$D_</span><span class="si">{80}</span><span class="s2">$&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;d80_deg&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$D_</span><span class="si">{80}</span><span class="s2">$&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;eff_area&quot;</span><span class="p">:</span> <span class="s2">&quot;Eff. mirror area&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;eff_flen&quot;</span><span class="p">:</span> <span class="s2">&quot;Eff. focal length&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">telescope_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="mf">20.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="mf">10.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+        <span class="n">single_mirror_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_random_focal_length</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">random_focal_length_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mirror_numbers</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize RayTracing class.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initializing RayTracing class </span><span class="si">{</span><span class="n">single_mirror_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simtel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">label</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">off_axis_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">off_axis_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="o">=</span> <span class="n">single_mirror_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_random_focal_length</span> <span class="o">=</span> <span class="n">use_random_focal_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_focal_length_seed</span> <span class="o">=</span> <span class="n">random_focal_length_seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mirrors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_mirror_configuration</span><span class="p">(</span><span class="n">source_distance</span><span class="p">,</span> <span class="n">mirror_numbers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;ray_tracing&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;ray_tracing&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.ecsv&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of RayTracing class.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;RayTracing(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_mirror_configuration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_distance</span><span class="p">,</span>
+        <span class="n">mirror_numbers</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize mirror configuration.</span>
+
+<span class="sd">        Note the difference between single mirror mode and nominal mode.</span>
+<span class="sd">        In single mirror mode, a &#39;mirror&#39; is a mirror panel.</span>
+<span class="sd">        In nominal mode, a &#39;mirror&#39; is a telescope.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_distance: astropy.units.Quantity</span>
+<span class="sd">            Source distance.</span>
+<span class="sd">        mirror_numbers: list, str</span>
+<span class="sd">            List of mirror numbers (or &#39;all&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing mirror numbers, focal lengths, and source distances.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># initialize a mirror as a mirror panel</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_single_mirror_mode</span><span class="p">(</span><span class="n">mirror_numbers</span><span class="p">)</span>
+        <span class="c1"># initialize a mirror as a telescope optical system</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="mi">0</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="n">source_distance</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;km&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="s2">&quot;focal_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;focal_length&quot;</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_single_mirror_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_numbers</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize single mirror mode.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mirror_numbers: list, str</span>
+<span class="sd">            List of mirror numbers (or &#39;all&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing mirror numbers, focal lengths, and source distances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Single mirror mode is activated - &quot;</span>
+            <span class="s2">&quot;source distance is being recalculated to 2 * focal length &quot;</span>
+            <span class="s2">&quot; (this is not correct for dual-mirror telescopes).&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">mirror_numbers</span><span class="p">:</span>
+            <span class="n">mirror_numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">mirrors</span><span class="o">.</span><span class="n">number_of_mirrors</span><span class="p">))</span>
+        <span class="n">mirrors</span> <span class="o">=</span> <span class="p">{</span><span class="n">mirror</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;focal_length&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span> <span class="k">for</span> <span class="n">mirror</span> <span class="ow">in</span> <span class="n">mirror_numbers</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">mirror</span> <span class="ow">in</span> <span class="n">mirror_numbers</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_focal_length</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">mirrors</span><span class="o">.</span><span class="n">get_single_mirror_parameters</span><span class="p">(</span>
+                <span class="n">mirror</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_focal_length</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">_focal_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-3</span><span class="p">):</span>
+                <span class="n">_focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mirror_panel_focal_length</span><span class="p">()</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_focal_length</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">_focal_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-3</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Focal length is invalid (NaN or close to zero)&quot;</span><span class="p">)</span>
+            <span class="n">mirrors</span><span class="p">[</span><span class="n">mirror</span><span class="p">][</span><span class="s2">&quot;focal_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_focal_length</span>
+            <span class="n">mirrors</span><span class="p">[</span><span class="n">mirror</span><span class="p">][</span><span class="s2">&quot;source_distance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">_focal_length</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;km&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">return</span> <span class="n">mirrors</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_mirror_panel_focal_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return mirror panel focal length with possible random addition.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Focal length.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_focal_length&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_random_focal_length</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_focal_length_seed</span><span class="p">)</span>
+            <span class="n">_random_focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_random_focal_length</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">_focal_length</span> <span class="o">+=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">_random_focal_length</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_focal_length</span> <span class="o">+=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                    <span class="n">low</span><span class="o">=-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">_random_focal_length</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">_random_focal_length</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_focal_length</span>
+
+<div class="viewcode-block" id="RayTracing.simulate">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.simulate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate RayTracing using SimulatorRayTracing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        test: bool</span>
+<span class="sd">            Test flag will make it faster by simulating much fewer photons.</span>
+<span class="sd">        force: bool</span>
+<span class="sd">            Force flag will remove existing files and simulate again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">this_off_axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">mirror_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirrors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Simulating RayTracing for off_axis=</span><span class="si">{</span><span class="n">this_off_axis</span><span class="si">}</span><span class="s2">, mirror=</span><span class="si">{</span><span class="n">mirror_number</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimulatorRayTracing</span><span class="p">(</span>
+                    <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_path</span><span class="p">,</span>
+                    <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
+                    <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
+                    <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
+                    <span class="n">config_data</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+                        <span class="s2">&quot;off_axis_angle&quot;</span><span class="p">:</span> <span class="n">this_off_axis</span><span class="p">,</span>
+                        <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="n">mirror_data</span><span class="p">[</span><span class="s2">&quot;source_distance&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;single_mirror_mode&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">,</span>
+                        <span class="s2">&quot;use_random_focal_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_random_focal_length</span><span class="p">,</span>
+                        <span class="s2">&quot;mirror_numbers&quot;</span><span class="p">:</span> <span class="n">mirror_number</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">force_simulate</span><span class="o">=</span><span class="n">force</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">simtel</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">)</span>
+
+                <span class="n">photons_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span>
+                        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;photons&quot;</span><span class="p">,</span>
+                        <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.lis&quot;</span><span class="p">,</span>
+                        <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">this_off_axis</span><span class="p">,</span>
+                        <span class="n">mirror_number</span><span class="o">=</span><span class="n">mirror_number</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using gzip to compress the photons file </span><span class="si">{</span><span class="n">photons_file</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">photons_file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+                        <span class="n">photons_file</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">photons_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">+</span> <span class="s2">&quot;.gz&quot;</span><span class="p">),</span> <span class="s2">&quot;wb&quot;</span>
+                    <span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+                        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfileobj</span><span class="p">(</span><span class="n">f_in</span><span class="p">,</span> <span class="n">f_out</span><span class="p">)</span>
+                <span class="n">photons_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RayTracing.analyze">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.analyze">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_rx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">no_tel_transmission</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">containment_fraction</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ray tracing analysis.</span>
+
+<span class="sd">        Involves the following: read simtel files, compute PSFs and eff areas, store the</span>
+<span class="sd">        results in _results.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        export: bool</span>
+<span class="sd">            If True, results will be exported to a file automatically. Alternatively,</span>
+<span class="sd">            export_results function can be used.</span>
+<span class="sd">        force: bool</span>
+<span class="sd">            If True, existing results files will be removed and analysis will be done again.</span>
+<span class="sd">        use_rx: bool</span>
+<span class="sd">            If True, calculations are done using the rx binary provided by sim_telarray. If False,</span>
+<span class="sd">            calculations are done internally, by the module psf_analysis.</span>
+<span class="sd">        no_tel_transmission: bool</span>
+<span class="sd">            If True, the telescope transmission is not applied.</span>
+<span class="sd">        containment_fraction: float</span>
+<span class="sd">            Containment fraction for PSF containment calculation. Allowed values are in the</span>
+<span class="sd">            interval [0,1]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">do_analyze</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">force</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">do_analyze</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_results</span><span class="p">()</span>
+
+        <span class="n">tel_transmission_pars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_transmission_params</span><span class="p">(</span><span class="n">no_tel_transmission</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_off_axis_and_mirror</span><span class="p">(</span>
+            <span class="n">tel_transmission_pars</span><span class="p">,</span>
+            <span class="n">do_analyze</span><span class="p">,</span>
+            <span class="n">use_rx</span><span class="p">,</span>
+            <span class="n">containment_fraction</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">do_analyze</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store_results</span><span class="p">(</span><span class="n">_rows</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_off_axis_and_mirror</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tel_transmission_pars</span><span class="p">,</span>
+        <span class="n">do_analyze</span><span class="p">,</span>
+        <span class="n">use_rx</span><span class="p">,</span>
+        <span class="n">containment_fraction</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process off-axis angles and mirrors for RayTracing analysis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        all_mirrors: list</span>
+<span class="sd">            List of mirror numbers to analyze.</span>
+<span class="sd">        focal_length: float</span>
+<span class="sd">            Focal length of the telescope.</span>
+<span class="sd">        tel_transmission_pars: list</span>
+<span class="sd">            Telescope transmission parameters.</span>
+<span class="sd">        do_analyze: bool</span>
+<span class="sd">            Flag indicating whether to perform analysis or not.</span>
+<span class="sd">        use_rx: bool</span>
+<span class="sd">            Flag indicating whether to use the RX method for analysis.</span>
+<span class="sd">        containment_fraction: float</span>
+<span class="sd">            Containment fraction for PSF containment calculation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of results for each combination of off-axis angle and mirror.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">this_off_axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">mirror_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirrors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzing RayTracing for off_axis=</span><span class="si">{</span><span class="n">this_off_axis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">photons_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;photons&quot;</span><span class="p">,</span> <span class="s2">&quot;.lis&quot;</span><span class="p">,</span> <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">this_off_axis</span><span class="p">,</span> <span class="n">mirror_number</span><span class="o">=</span><span class="n">mirror_number</span>
+                    <span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;.gz&quot;</span>
+                <span class="p">)</span>
+
+                <span class="n">tel_transmission</span> <span class="o">=</span> <span class="n">compute_telescope_transmission</span><span class="p">(</span>
+                    <span class="n">tel_transmission_pars</span><span class="p">,</span> <span class="n">this_off_axis</span>
+                <span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_psf_image</span><span class="p">(</span>
+                    <span class="n">photons_file</span><span class="p">,</span>
+                    <span class="n">mirror_data</span><span class="p">[</span><span class="s2">&quot;focal_length&quot;</span><span class="p">],</span>
+                    <span class="n">this_off_axis</span><span class="p">,</span>
+                    <span class="n">containment_fraction</span><span class="p">,</span>
+                    <span class="n">use_rx</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">do_analyze</span><span class="p">:</span>
+                    <span class="n">_current_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyze_image</span><span class="p">(</span>
+                        <span class="n">image</span><span class="p">,</span>
+                        <span class="n">this_off_axis</span><span class="p">,</span>
+                        <span class="n">containment_fraction</span><span class="p">,</span>
+                        <span class="n">tel_transmission</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+                        <span class="n">_current_results</span> <span class="o">+=</span> <span class="p">(</span><span class="n">mirror_number</span><span class="p">,)</span>
+
+                    <span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_current_results</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_rows</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_telescope_transmission_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_tel_transmission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get telescope transmission parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        no_tel_transmission: bool</span>
+<span class="sd">            Flag indicating whether to apply telescope transmission or not.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Telescope transmission parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">no_tel_transmission</span>
+            <span class="k">else</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_psf_image</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">photons_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">,</span> <span class="n">this_off_axis</span><span class="p">,</span> <span class="n">containment_fraction</span><span class="p">,</span> <span class="n">use_rx</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create PSF image from photons file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        photons_file: Path</span>
+<span class="sd">            Path to the photons file.</span>
+<span class="sd">        focal_length: float</span>
+<span class="sd">            Focal length of the telescope.</span>
+<span class="sd">        this_off_axis: float</span>
+<span class="sd">            Off-axis angle.</span>
+<span class="sd">        containment_fraction: float</span>
+<span class="sd">            Containment fraction for PSF containment calculation.</span>
+<span class="sd">        use_rx: bool</span>
+<span class="sd">            Flag indicating whether to use the RX method for analysis.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        PSFImage</span>
+<span class="sd">            PSF image object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">PSFImage</span><span class="p">(</span>
+            <span class="n">focal_length</span><span class="o">=</span><span class="n">focal_length</span><span class="p">,</span>
+            <span class="n">containment_fraction</span><span class="o">=</span><span class="n">containment_fraction</span><span class="p">,</span>
+            <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_path</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">process_photon_list</span><span class="p">(</span><span class="n">photons_file</span><span class="p">,</span> <span class="n">use_rx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="p">[</span><span class="n">this_off_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_analyze_image</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">,</span>
+        <span class="n">this_off_axis</span><span class="p">,</span>
+        <span class="n">containment_fraction</span><span class="p">,</span>
+        <span class="n">tel_transmission</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze PSF image.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image: PSFImage</span>
+<span class="sd">            PSF image object.</span>
+<span class="sd">        photons_file: Path</span>
+<span class="sd">            Path to the photons file.</span>
+<span class="sd">        this_off_axis: float</span>
+<span class="sd">            Off-axis angle.</span>
+<span class="sd">        cm_to_deg: float</span>
+<span class="sd">            Conversion factor from centimeters to degrees.</span>
+<span class="sd">        containment_fraction: float</span>
+<span class="sd">            Containment fraction for PSF containment calculation.</span>
+<span class="sd">        tel_transmission: float</span>
+<span class="sd">            Telescope transmission factor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Tuple containing analyzed results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="s2">&quot;cm&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="s2">&quot;deg&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">get_effective_area</span><span class="p">(</span><span class="n">tel_transmission</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">this_off_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">image</span><span class="o">.</span><span class="n">centroid_x</span> <span class="o">/</span> <span class="n">tan</span><span class="p">(</span><span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_store_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_rows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store analysis results.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        _rows: list</span>
+<span class="sd">            List of rows containing analysis results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Off-axis angle&quot;</span><span class="p">]</span>
+        <span class="n">_columns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">YLABEL</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+            <span class="n">_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;mirror_number&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">_rows</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">_columns</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RayTracing.export_results">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.export_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export results to a csv file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting results to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No results to export&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read existing results file and store it in _results.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ecsv&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RayTracing.plot">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">d80</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot key vs off-axis angle and save the figure in pdf.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key: str</span>
+<span class="sd">            d80_cm, d80_deg, eff_area or eff_flen</span>
+<span class="sd">        save: bool</span>
+<span class="sd">            If True, figure will be saved.</span>
+<span class="sd">        d80: float</span>
+<span class="sd">            d80 for cumulative PSF plot.</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            kwargs for plt.plot</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If key is not among the valid options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> vs off-axis angle&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">plot</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_table</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;Off-axis angle&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">YLABEL</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">no_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">plot_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span>
+                <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;ray_tracing&quot;</span><span class="p">,</span>
+                <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.pdf&quot;</span><span class="p">,</span>
+                <span class="n">extra_label</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plot_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving fig in </span><span class="si">{</span><span class="n">plot_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_file</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">off_axis_key</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">image_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span>
+                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;ray_tracing&quot;</span><span class="p">,</span>
+                    <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">off_axis_key</span><span class="p">,</span>
+                    <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.pdf&quot;</span><span class="p">,</span>
+                    <span class="n">extra_label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;image_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">image_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">image_file_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving PSF image to </span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">image</span><span class="o">.</span><span class="n">plot_image</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">image_file</span><span class="p">)</span>
+
+                <span class="n">image_cumulative_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span>
+                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;ray_tracing&quot;</span><span class="p">,</span>
+                    <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">off_axis_key</span><span class="p">,</span>
+                    <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.pdf&quot;</span><span class="p">,</span>
+                    <span class="n">extra_label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;cumulative_psf_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">image_cumulative_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                    <span class="n">image_cumulative_file_name</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving cumulative PSF to </span><span class="si">{</span><span class="n">image_cumulative_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">image</span><span class="o">.</span><span class="n">plot_cumulative</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">image_cumulative_file</span><span class="p">,</span> <span class="n">d80</span><span class="o">=</span><span class="n">d80</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RayTracing.plot_histogram">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot_histogram">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot histogram of key.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key: str</span>
+<span class="sd">            d80_cm, d80_deg, eff_area or eff_flen</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            kwargs for plt.hist</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If key is not among the valid options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+<div class="viewcode-block" id="RayTracing.get_mean">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.get_mean">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get mean value of key.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key: str</span>
+<span class="sd">            d80_cm, d80_deg, eff_area or eff_flen</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Mean value of key.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If key is not among the valid options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+<div class="viewcode-block" id="RayTracing.get_std_dev">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.get_std_dev">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_std_dev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get std dev of key.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key: str</span>
+<span class="sd">            d80_cm, d80_deg, eff_area or eff_flen</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Std deviation of key.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If key is not among the valid options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+<div class="viewcode-block" id="RayTracing.images">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get list of PSFImages.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List of PSFImages</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">this_off_axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span> <span class="ow">and</span> <span class="n">this_off_axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="p">:</span>
+                <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="p">[</span><span class="n">this_off_axis</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No image found&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">images</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_file_name</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">off_axis_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mirror_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_label</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate file name for output files.&quot;&quot;&quot;</span>
+        <span class="n">file_type_prefix</span> <span class="o">=</span> <span class="n">file_type</span> <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;ray_tracing&quot;</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;ray_tracing_</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">names</span><span class="o">.</span><span class="n">generate_file_name</span><span class="p">(</span>
+            <span class="n">file_type</span><span class="o">=</span><span class="n">file_type_prefix</span><span class="p">,</span>
+            <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">,</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">source_distance</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirrors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;source_distance&quot;</span><span class="p">],</span>
+            <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">off_axis_angle</span><span class="p">,</span>
+            <span class="n">mirror_number</span><span class="o">=</span><span class="n">mirror_number</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">extra_label</span><span class="o">=</span><span class="n">extra_label</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

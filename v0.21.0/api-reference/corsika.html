@@ -1,0 +1,1761 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CORSIKA &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=c4f92b34"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/corsika';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Model" href="data_model.html" />
+    <link rel="prev" title="Configuration" href="configuration_module.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.21.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">CORSIKA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">CORSIKA</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="corsika">
+<span id="id1"></span><h1>CORSIKA<a class="headerlink" href="#corsika" title="Link to this heading">#</a></h1>
+<p>Support modules for running CORSIKA.</p>
+<section id="corsika-config">
+<h2>corsika_config<a class="headerlink" href="#corsika-config" title="Link to this heading">#</a></h2>
+<p id="module-corsika.corsika_config"><span id="corsika-config-1"></span>CORSIKA configuration.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">CorsikaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy_simulations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the CORSIKA air shower simulation software.</p>
+<p>Follows closely the CORSIKA definitions and output format (see CORSIKA manual).</p>
+<p>The configuration is set as a dict corresponding to the command line configuration groups
+(especially simulation_software, simulation configuration, simulation parameters).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>array_model</strong><span class="classifier">ArrayModel</span></dt><dd><p>Array model.</p>
+</dd>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Configuration dictionary.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>label</strong><span class="classifier">str</span></dt><dd><p>Instance label.</p>
+</dd>
+<dt><strong>dummy_simulations</strong><span class="classifier">bool</span></dt><dd><p>If True, the configuration is generated for dummy simulations
+(e.g., sim_telarray requires for some run modes a valid CORSIKA input file).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match">
+<span class="sig-name descname"><span class="pre">assert_corsika_configurations_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_versions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.assert_corsika_configurations_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match" title="Link to this definition">#</a></dt>
+<dd><p>Assert that CORSIKA configurations match across all model versions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_versions</strong><span class="classifier">list</span></dt><dd><p>List of model versions to check.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict, optional</span></dt><dd><p>Database configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidCorsikaInputError</dt><dd><p>If CORSIKA parameters are not identical across all model versions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">
+<span class="sig-name descname"><span class="pre">fill_corsika_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.fill_corsika_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration" title="Link to this definition">#</a></dt>
+<dd><p>Fill CORSIKA configuration.</p>
+<p>Dictionary keys are CORSIKA parameter names.
+Values are converted to CORSIKA-consistent units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Configuration dictionary.</p>
+</dd>
+<dt><strong>db_config: dict</strong></dt><dd><p>Database configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with CORSIKA parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.generate_corsika_input_file">
+<span class="sig-name descname"><span class="pre">generate_corsika_input_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_test_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.generate_corsika_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file" title="Link to this definition">#</a></dt>
+<dd><p>Generate a CORSIKA input file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>use_multipipe: bool</strong></dt><dd><p>Whether to set the CORSIKA Inputs file to pipe
+the output directly to sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.get_config_parameter">
+<span class="sig-name descname"><span class="pre">get_config_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.get_config_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.get_config_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Get value of CORSIKA configuration parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP …).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Value(s) of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>When par_name is not a valid parameter name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.get_corsika_config_file_name">
+<span class="sig-name descname"><span class="pre">get_corsika_config_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.get_corsika_config_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.get_corsika_config_file_name" title="Link to this definition">#</a></dt>
+<dd><p>Get a CORSIKA config style file name for various configuration file types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_type: str</strong></dt><dd><p>The type of file (determines the file suffix).
+Choices are config_tmp, config or output_generic.</p>
+</dd>
+<dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><dl class="simple">
+<dt>for file_type=”config_tmp”:</dt><dd><p>Return CORSIKA input file name for one specific run.
+This is the input file after being pre-processed by sim_telarray (pfp).</p>
+</dd>
+<dt>for file_type=”config”:</dt><dd><p>Return generic CORSIKA config input file name.</p>
+</dd>
+<dt>for file_type=”output_generic”</dt><dd><p>Return generic file name for the TELFIL option in the CORSIKA inputs file.</p>
+</dd>
+<dt>for file_type=”multipipe”</dt><dd><p>Return multipipe “file name” for the TELFIL option in the CORSIKA inputs file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If file_type is unknown or if the run number is not given for file_type==config_tmp.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.get_corsika_telescope_list">
+<span class="sig-name descname"><span class="pre">get_corsika_telescope_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.get_corsika_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.get_corsika_telescope_list" title="Link to this definition">#</a></dt>
+<dd><p>List of telescope positions in the format required for the CORSIKA input file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>str</dt><dd><p>Piece of text to be added to the CORSIKA input file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.primary">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">primary</span></span><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.primary" title="Link to this definition">#</a></dt>
+<dd><p>Primary particle name.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.primary_particle">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">primary_particle</span></span><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.primary_particle" title="Link to this definition">#</a></dt>
+<dd><p>Primary particle.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.run_number">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_number</span></span><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.run_number" title="Link to this definition">#</a></dt>
+<dd><p>Set run number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.set_output_file_and_directory">
+<span class="sig-name descname"><span class="pre">set_output_file_and_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.set_output_file_and_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.set_output_file_and_directory" title="Link to this definition">#</a></dt>
+<dd><p>Set output file names and directories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>use_multipipe: bool</strong></dt><dd><p>Whether to set the CORSIKA Inputs file to pipe
+the output directly to sim_telarray. Defines directory names.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Output file name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.validate_run_number">
+<span class="sig-name descname"><span class="pre">validate_run_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.validate_run_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.validate_run_number" title="Link to this definition">#</a></dt>
+<dd><p>Validate run number and return it. Return run number from configuration if None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>Run number.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If run_number is not a valid value (&lt; 1 or &gt; 999999).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="corsika.corsika_config.InvalidCorsikaInputError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">InvalidCorsikaInputError</span></span><a class="reference internal" href="../_modules/corsika/corsika_config.html#InvalidCorsikaInputError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.InvalidCorsikaInputError" title="Link to this definition">#</a></dt>
+<dd><p>Exception for invalid corsika input.</p>
+</dd></dl>
+
+</section>
+<section id="module-corsika.primary_particle">
+<span id="primary-particle"></span><h2>primary_particle<a class="headerlink" href="#module-corsika.primary_particle" title="Link to this heading">#</a></h2>
+<p>Primary particle definition.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.primary_particle.</span></span><span class="sig-name descname"><span class="pre">PrimaryParticle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_id_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/primary_particle.html#PrimaryParticle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle" title="Link to this definition">#</a></dt>
+<dd><p>Primary particle definition using CORSIKA7, eventio, or PDG ID.</p>
+<p>Uses a dictionary to map particle common names to CORSIKA7 IDs.
+Particles not found in the dictionary are searched in the PDG particle database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>particle_id_type</strong><span class="classifier">str</span></dt><dd><p>Type of the primary particle ID (‘corsika7_id’, ‘common_name’, or ‘pdg_id’).</p>
+</dd>
+<dt><strong>particle_id</strong><span class="classifier">int or str</span></dt><dd><p>The actual ID of the primary particle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.corsika7_id">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">corsika7_id</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.corsika7_id" title="Link to this definition">#</a></dt>
+<dd><p>CORSIKA7 ID of the primary particle.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.eventio_id">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eventio_id</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.eventio_id" title="Link to this definition">#</a></dt>
+<dd><p>EventIO ID of the primary particle.</p>
+<p>0 (gamma), 1(e-), 2(mu-), 100*A+Z for nucleons and nuclei, negative for antimatter.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.name" title="Link to this definition">#</a></dt>
+<dd><p>Common name of the primary particle.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.particle_names">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">particle_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/primary_particle.html#PrimaryParticle.particle_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.particle_names" title="Link to this definition">#</a></dt>
+<dd><p>Primary particles including common names, CORSIKA7 IDs, and PDG IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary of particle names, CORSIKA7 IDs, and PDG IDs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.pdg_id">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pdg_id</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.pdg_id" title="Link to this definition">#</a></dt>
+<dd><p>PDG ID of the primary particle.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle.pdg_name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pdg_name</span></span><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle.pdg_name" title="Link to this definition">#</a></dt>
+<dd><p>PDG name of the primary particle.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="corsika-histograms">
+<h2>corsika_histograms<a class="headerlink" href="#corsika-histograms" title="Link to this heading">#</a></h2>
+<p id="module-corsika.corsika_histograms"><span id="corsika-histograms-1"></span>Extract Cherenkov photons information from a CORSIKA IACT file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">CorsikaHistograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdf5_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms" title="Link to this definition">#</a></dt>
+<dd><p>Extracts the Cherenkov photons information from a CORSIKA IACT file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_file: str or Path</strong></dt><dd><p>CORSIKA IACT file provided by the CORSIKA simulation.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
+</dd>
+<dt><strong>output_path: str</strong></dt><dd><p>Path where to save the output of the class methods.</p>
+</dd>
+<dt><strong>hdf5_file_name: str</strong></dt><dd><p>HDF5 file name for histogram storage.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>FileNotFoundError:</dt><dd><p>if the input file given does not exist.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.corsika_version">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">corsika_version</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.corsika_version" title="Link to this definition">#</a></dt>
+<dd><p>Get the version of the CORSIKA IACT file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>float:</dt><dd><p>The version of CORSIKA used to produce the CORSIKA IACT file given by self.input_file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.dict_1d_distributions">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dict_1d_distributions</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.dict_1d_distributions" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary to label the 1D distributions according to the class methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict:</dt><dd><p>The dictionary with information about the 1D distributions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.dict_2d_distributions">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dict_2d_distributions</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.dict_2d_distributions" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary to label the 2D distributions according to the class methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict:</dt><dd><p>The dictionary with information about the 2D distributions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram">
+<span class="sig-name descname"><span class="pre">event_1d_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.event_1d_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Create a histogram for the all events using key as parameter.</p>
+<p>Valid keys are stored in self.all_event_keys (CORSIKA defined).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>The information from which to build the histogram, e.g. total_energy, zenith or
+first_interaction_height.</p>
+</dd>
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>Edges of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError:</dt><dd><p>If key is not valid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.event_2d_histogram">
+<span class="sig-name descname"><span class="pre">event_2d_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.event_2d_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.event_2d_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Create a 2D histogram for the all events using key_1 and key_2 as parameters.</p>
+<p>Valid keys are stored in self.all_event_keys (CORSIKA defined).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key_1: str</strong></dt><dd><p>The information from which to build the histogram, e.g. total_energy, zenith or
+first_interaction_height.</p>
+</dd>
+<dt><strong>key_2: str</strong></dt><dd><p>The information from which to build the histogram, e.g. total_energy, zenith or
+first_interaction_height.</p>
+</dd>
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>x Edges of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>y Edges of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError:</dt><dd><p>If at least one of the keys is not valid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.event_azimuth_angles">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">event_azimuth_angles</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.event_azimuth_angles" title="Link to this definition">#</a></dt>
+<dd><p>Get the azimuth angles of the simulated events in astropy units of degrees.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.Quantity</dt><dd><p>The azimuth angles for each event, usually in degrees.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.event_energies">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">event_energies</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.event_energies" title="Link to this definition">#</a></dt>
+<dd><p>Get the energy of the simulated events in astropy units of TeV.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.Quantity</dt><dd><p>The total energies of the incoming particles for each event, usually in TeV.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.event_first_interaction_heights">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">event_first_interaction_heights</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.event_first_interaction_heights" title="Link to this definition">#</a></dt>
+<dd><p>Get the height of the first interaction in astropy units of km.</p>
+<p>If negative, tracking starts at margin of atmosphere,
+see TSTART in the CORSIKA 7 user guide.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.Quantity</dt><dd><p>The first interaction height for each event, usually in km.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.event_zenith_angles">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">event_zenith_angles</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.event_zenith_angles" title="Link to this definition">#</a></dt>
+<dd><p>Get the zenith angles of the simulated events in astropy units of degrees.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.Quantity</dt><dd><p>The zenith angles for each event.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.export_event_header_1d_histogram">
+<span class="sig-name descname"><span class="pre">export_event_header_1d_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_header_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.export_event_header_1d_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.export_event_header_1d_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Export ‘event_header_element’ from CORSIKA to hd5 for a 1D histogram.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>event_header_element: str</strong></dt><dd><p>The key to the CORSIKA event header element.
+Possible choices are stored in ‘self.all_event_keys’.</p>
+</dd>
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+<dt><strong>overwrite: bool</strong></dt><dd><p>If True overwrites the histograms already saved in the hdf5 file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.export_event_header_2d_histogram">
+<span class="sig-name descname"><span class="pre">export_event_header_2d_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_header_element_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.export_event_header_2d_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.export_event_header_2d_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Export event_header of a 2D histogram to a hdf5 file.</p>
+<p>Searches the 2D histogram for the key ‘event_header_element_1’ and
+‘event_header_element_2’from the CORSIKA event header.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>event_header_element_1: str</strong></dt><dd><p>The key to the CORSIKA event header element.</p>
+</dd>
+<dt><strong>event_header_element_2: str</strong></dt><dd><p>The key to the CORSIKA event header element.
+Possible choices for ‘event_header_element_1’ and ‘event_header_element_2’ are stored
+in ‘self.all_event_keys’.</p>
+</dd>
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+<dt><strong>overwrite: bool</strong></dt><dd><p>If True overwrites the histograms already saved in the hdf5 file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.export_histograms">
+<span class="sig-name descname"><span class="pre">export_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.export_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.export_histograms" title="Link to this definition">#</a></dt>
+<dd><p>Export the histograms to hdf5 files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>overwrite: bool</strong></dt><dd><p>If True overwrites the histograms already saved in the hdf5 file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_2d_num_photons_distr">
+<span class="sig-name descname"><span class="pre">get_2d_num_photons_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_2d_num_photons_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_num_photons_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the distribution of Cherenkov photons per event per telescope.</p>
+<p>It returns the 2D array accounting for the events from the telescopes given
+by self.telescope_indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>An array that counts the telescopes in self.telescope_indices</p>
+</dd>
+<dt>numpy.array</dt><dd><p>Number of photons per event per telescope in self.telescope_indices.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_density_distr">
+<span class="sig-name descname"><span class="pre">get_2d_photon_density_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_2d_photon_density_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_density_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get 2D histograms of position of the Cherenkov photons on the ground.</p>
+<p>It returns the photon density per square meter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The values of the histogram, usually in $m^{-2}$</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The x bin edges of the density/count histograms in x, usually in meters.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The y bin edges of the density/count histograms in y, usually in meters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_direction_distr">
+<span class="sig-name descname"><span class="pre">get_2d_photon_direction_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_2d_photon_direction_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_direction_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get 2D histograms of incoming direction of the Cherenkov photons on the ground.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The x bin edges of the direction histograms in cos(x).</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The y bin edges of the direction histograms in cos(y)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_position_distr">
+<span class="sig-name descname"><span class="pre">get_2d_photon_position_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_2d_photon_position_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_position_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get 2D histograms of position of the Cherenkov photons on the ground.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The x bin edges of the count histograms in x, usually in meters.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The y bin edges of the count histograms in y, usually in meters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_time_altitude_distr">
+<span class="sig-name descname"><span class="pre">get_2d_photon_time_altitude_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_2d_photon_time_altitude_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_time_altitude_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get 2D histograms of the time and altitude of the photon production.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The x bin edges of the time_altitude histograms, usually in ns.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The y bin edges of the time_altitude histograms, usually in km.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_event_parameter_info">
+<span class="sig-name descname"><span class="pre">get_event_parameter_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_event_parameter_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_event_parameter_info" title="Link to this definition">#</a></dt>
+<dd><p>Get specific information (i.e. any parameter) of the events.</p>
+<p>The parameter is passed through the key word parameter.
+Available options are to be found under self.all_event_keys.
+The unit of the parameter, if any, is given according to the CORSIKA version
+(please see user guide in this case).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter: str</strong></dt><dd><p>The parameter of interest. Available options are to be found under
+self.all_event_keys.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.Quantity</dt><dd><p>The array with the event information as required by the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError:</dt><dd><p>If parameter is not valid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_num_photons_per_event_distr">
+<span class="sig-name descname"><span class="pre">get_num_photons_per_event_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_num_photons_per_event_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_num_photons_per_event_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the distribution of photons per event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>Number of photons per event.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_num_photons_per_telescope_distr">
+<span class="sig-name descname"><span class="pre">get_num_photons_per_telescope_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_num_photons_per_telescope_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_num_photons_per_telescope_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the distribution of photons per telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>Number of photons per telescope.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_photon_altitude_distr">
+<span class="sig-name descname"><span class="pre">get_photon_altitude_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_photon_altitude_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_altitude_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the emission altitude of the Cherenkov photons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The bin edges of the photon altitude histograms in km.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_photon_density_distr">
+<span class="sig-name descname"><span class="pre">get_photon_density_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_photon_density_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_density_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the photon density distribution on the ground in relation to the center of the array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins of the radial distribution.</p>
+</dd>
+<dt><strong>max_dist: float</strong></dt><dd><p>Maximum distance to consider in the 1D histogram (in meters).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.array</dt><dd><p>The density distribution of the 1D histogram with size = int(max_dist/bin_size),
+usually in $m^{-2}$.</p>
+</dd>
+<dt>np.array</dt><dd><p>The bin edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1,
+usually in meter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_photon_radial_distr">
+<span class="sig-name descname"><span class="pre">get_photon_radial_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_photon_radial_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_radial_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the phton radial distribution on the ground in relation to the center of the array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins of the radial distribution.</p>
+</dd>
+<dt><strong>max_dist: float</strong></dt><dd><p>Maximum distance to consider in the 1D histogram (in meters).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.array</dt><dd><p>The counts of the 1D histogram with size = int(max_dist/bin_size).</p>
+</dd>
+<dt>np.array</dt><dd><p>The bin edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1,
+usually in meter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_photon_time_of_emission_distr">
+<span class="sig-name descname"><span class="pre">get_photon_time_of_emission_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_photon_time_of_emission_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_time_of_emission_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get the distribution of the emitted time of the Cherenkov photons.</p>
+<p>The clock starts when the particle crosses the top of the atmosphere (CORSIKA-defined) if
+self.event_first_interaction_heights is positive or at first interaction if otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The counts of the histogram.</p>
+</dd>
+<dt>numpy.array</dt><dd><p>The bin edges of the time histograms in ns.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_photon_wavelength_distr">
+<span class="sig-name descname"><span class="pre">get_photon_wavelength_distr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_photon_wavelength_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_wavelength_distr" title="Link to this definition">#</a></dt>
+<dd><p>Get histograms with the wavelengths of the photon bunches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.array</dt><dd><p>The counts of the wavelength histogram.</p>
+</dd>
+<dt>np.array</dt><dd><p>The bin edges of the wavelength histogram in nanometers.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.get_run_info">
+<span class="sig-name descname"><span class="pre">get_run_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.get_run_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.get_run_info" title="Link to this definition">#</a></dt>
+<dd><p>Get specific information (i.e. any parameter) of the run.</p>
+<p>The parameter is passed through the key word parameter.
+Available options are to be found under self.all_run_keys.
+The unit of the parameter, if any, is given according to the CORSIKA version
+(please see user guide in this case).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter: str</strong></dt><dd><p>The parameter of interest. Available options are to be found under
+self.all_run_keys.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>KeyError:</dt><dd><p>If parameter is not valid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.hdf5_file_name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hdf5_file_name</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.hdf5_file_name" title="Link to this definition">#</a></dt>
+<dd><p>Property for the hdf5 file name.</p>
+<p>The idea of this property is to allow setting (or changing) the name of the hdf5 file
+even after creating the class instance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.header">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">header</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.header" title="Link to this definition">#</a></dt>
+<dd><p>Get the run header.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict:</dt><dd><p>The run header.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.hist_config">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hist_config</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.hist_config" title="Link to this definition">#</a></dt>
+<dd><p>The configuration of the histograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict:</dt><dd><p>the dictionary with the histogram configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.hist_config_to_yaml">
+<span class="sig-name descname"><span class="pre">hist_config_to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.hist_config_to_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.hist_config_to_yaml" title="Link to this definition">#</a></dt>
+<dd><p>Save the histogram configuration dictionary to a yaml file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>Name of the output file, in which to save the histogram configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.individual_telescopes">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">individual_telescopes</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.individual_telescopes" title="Link to this definition">#</a></dt>
+<dd><p>Return the individual telescopes as property.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.magnetic_field">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">magnetic_field</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.magnetic_field" title="Link to this definition">#</a></dt>
+<dd><p>Get the Earth magnetic field from the events header in astropy units of microT.</p>
+<p>A tuple with Earth’s magnetic field in the x and z directions are returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.Quantity</dt><dd><p>The Earth magnetic field in the x direction used for each event.</p>
+</dd>
+<dt>astropy.Quantity</dt><dd><p>The Earth magnetic field in the z direction used for each event.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_photons_per_event</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event" title="Link to this definition">#</a></dt>
+<dd><p>Get the the number of photons per events.</p>
+<p>Includes the telescopes indicated by self.telescope_indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.array</dt><dd><p>Number of photons per event.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event_per_telescope">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_photons_per_event_per_telescope</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event_per_telescope" title="Link to this definition">#</a></dt>
+<dd><p>The number of photons per event per telescope.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.num_photons_per_telescope">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_photons_per_telescope</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_telescope" title="Link to this definition">#</a></dt>
+<dd><p>The number of photons per event, considering the telescopes given by self.telescope_indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.array</dt><dd><p>Number of photons per telescope.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.parse_telescope_indices">
+<span class="sig-name descname"><span class="pre">parse_telescope_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices_arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.parse_telescope_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.parse_telescope_indices" title="Link to this definition">#</a></dt>
+<dd><p>Return telescope indices as ndarray[int] or None.</p>
+<p>Accepts None, a sequence of strings/ints. Raises ValueError on invalid input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.read_event_information">
+<span class="sig-name descname"><span class="pre">read_event_information</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.read_event_information"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.read_event_information" title="Link to this definition">#</a></dt>
+<dd><p>Read the information about the events from their headers and save as a class instance.</p>
+<p>The main information can also be fetched individually through the functions below.
+For the remaining information (such as px, py, pz), use this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.run_export_pipeline">
+<span class="sig-name descname"><span class="pre">run_export_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_telescopes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices_arg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_pdf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_hdf5</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event1d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.run_export_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.run_export_pipeline" title="Link to this definition">#</a></dt>
+<dd><p>Run the full histogram export pipeline and return output artifact paths.</p>
+<p>Returns a dict with optional keys: pdf_photons, pdf_event1d, pdf_event2d.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.set_histograms">
+<span class="sig-name descname"><span class="pre">set_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.set_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.set_histograms" title="Link to this definition">#</a></dt>
+<dd><p>Create and fill Cherenkov photons histograms using information from the CORSIKA IACT file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_indices: int or list of int</strong></dt><dd><p>The indices of the specific telescopes to be inspected.</p>
+</dd>
+<dt><strong>individual_telescopes: bool</strong></dt><dd><p>if False, the histograms are supposed to be filled for all telescopes. Default is False.
+if True, one histogram is set for each telescope separately.</p>
+</dd>
+<dt><strong>hist_config:</strong></dt><dd><p>yaml file with the configuration parameters to create the histograms. For the correct
+format, please look at the docstring of _create_histogram_default_config.
+Alternatively, it can be a dictionary with the configuration parameters to create
+the histograms.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list: list of boost_histogram.Histogram instances.</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>AttributeError:</dt><dd><p>if event has not photon saved.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.should_overwrite">
+<span class="sig-name descname"><span class="pre">should_overwrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">write_hdf5</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event1d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.should_overwrite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.should_overwrite" title="Link to this definition">#</a></dt>
+<dd><p>Return True if output HDF5 exists and any writing flag is requested.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.telescope_indices">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">telescope_indices</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.telescope_indices" title="Link to this definition">#</a></dt>
+<dd><p>The telescope index (or indices), which are considered for the production of the histograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list:</dt><dd><p>The indices of the telescopes of interest.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.telescope_positions">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">telescope_positions</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.telescope_positions" title="Link to this definition">#</a></dt>
+<dd><p>The telescope positions found in the CORSIKA output file.</p>
+<p>It does not depend on the telescope_indices attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>x, y and z positions of the telescopes and their radius according to the CORSIKA
+spherical representation of the telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.total_num_photons">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_num_photons</span></span><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.total_num_photons" title="Link to this definition">#</a></dt>
+<dd><p>The total number of photons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>float</dt><dd><p>Total number photons.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.HistogramNotCreatedError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">HistogramNotCreatedError</span></span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#HistogramNotCreatedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.HistogramNotCreatedError" title="Link to this definition">#</a></dt>
+<dd><p>Exception for histogram not created.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="configuration_module.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Configuration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="data_model.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Data Model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-config">corsika_config</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.assert_corsika_configurations_match()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.fill_corsika_configuration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.generate_corsika_input_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_config_parameter"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_config_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_corsika_config_file_name"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_corsika_config_file_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_corsika_telescope_list"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_corsika_telescope_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.primary"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.primary</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.primary_particle"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.primary_particle</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.run_number"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.run_number</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.set_output_file_and_directory"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.set_output_file_and_directory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.validate_run_number"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.validate_run_number()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.InvalidCorsikaInputError"><code class="docutils literal notranslate"><span class="pre">InvalidCorsikaInputError</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-corsika.primary_particle">primary_particle</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.corsika7_id"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.corsika7_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.eventio_id"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.eventio_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.name"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.particle_names"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.particle_names()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.pdg_id"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.pdg_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.primary_particle.PrimaryParticle.pdg_name"><code class="docutils literal notranslate"><span class="pre">PrimaryParticle.pdg_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-histograms">corsika_histograms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.corsika_version"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.corsika_version</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.dict_1d_distributions"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.dict_1d_distributions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.dict_2d_distributions"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.dict_2d_distributions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.event_1d_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.event_2d_histogram"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.event_2d_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.event_azimuth_angles"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.event_azimuth_angles</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.event_energies"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.event_energies</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.event_first_interaction_heights"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.event_first_interaction_heights</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.event_zenith_angles"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.event_zenith_angles</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.export_event_header_1d_histogram"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.export_event_header_1d_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.export_event_header_2d_histogram"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.export_event_header_2d_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.export_histograms"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.export_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_num_photons_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_2d_num_photons_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_density_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_2d_photon_density_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_direction_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_2d_photon_direction_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_position_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_2d_photon_position_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_time_altitude_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_2d_photon_time_altitude_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_event_parameter_info"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_event_parameter_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_num_photons_per_event_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_num_photons_per_event_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_num_photons_per_telescope_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_num_photons_per_telescope_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_altitude_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_photon_altitude_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_density_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_photon_density_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_radial_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_photon_radial_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_time_of_emission_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_photon_time_of_emission_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_photon_wavelength_distr"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_photon_wavelength_distr()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.get_run_info"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.get_run_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.hdf5_file_name"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.hdf5_file_name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.header"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.header</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.hist_config"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.hist_config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.hist_config_to_yaml"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.hist_config_to_yaml()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.individual_telescopes"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.individual_telescopes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.magnetic_field"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.magnetic_field</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.num_photons_per_event</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event_per_telescope"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.num_photons_per_event_per_telescope</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_telescope"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.num_photons_per_telescope</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.parse_telescope_indices"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.parse_telescope_indices()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.read_event_information"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.read_event_information()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.run_export_pipeline"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.run_export_pipeline()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.set_histograms"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.set_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.should_overwrite"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.should_overwrite()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.telescope_indices"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.telescope_indices</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.telescope_positions"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.telescope_positions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.total_num_photons"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.total_num_photons</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.HistogramNotCreatedError"><code class="docutils literal notranslate"><span class="pre">HistogramNotCreatedError</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api-reference/corsika.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
