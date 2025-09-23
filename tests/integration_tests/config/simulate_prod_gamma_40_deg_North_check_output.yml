@@ -46,8 +46,8 @@ applications:
       "5.0": tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-5.0_test.cfg
       "6.0": tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-6.0_test.cfg
   - test_simtel_cfg_files:
-      "5.0": tests/resources/sim_telarray_configurations/CTA-Alpha-North-5.0_test.cfg
-      "6.0": tests/resources/sim_telarray_configurations/CTA-Alpha-North-6.0_test.cfg
+      "5.0": tests/resources/sim_telarray_configurations/CTA-alpha-North-5.0_test.cfg
+      "6.0": tests/resources/sim_telarray_configurations/CTA-alpha-North-6.0_test.cfg
   test_name: gamma_40_deg_north_check_output
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
