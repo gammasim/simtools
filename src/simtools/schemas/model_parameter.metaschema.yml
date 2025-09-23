@@ -51,20 +51,24 @@ definitions:
                 - South
         description: "Associated CTAO site."
       type:
-        type: string
         description: "Data type"
-        enum:
-          - boolean
-          - dict
-          - double
-          - file
-          - float64
-          - int
-          - int64
-          - string
-          - uint
-          - uint32
-          - uint64
+        oneOf:
+          - type: string
+            enum: &data_types
+              - boolean
+              - dict
+              - double
+              - file
+              - float64
+              - int
+              - int64
+              - string
+              - uint
+              - uint32
+              - uint64
+          - type: array
+            items:
+              enum: *data_types
       unit:
         anyOf:
           - type: string
