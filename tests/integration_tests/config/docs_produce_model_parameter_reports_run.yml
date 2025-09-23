@@ -2,7 +2,7 @@
 applications:
 - application: simtools-docs-produce-model-parameter-reports
   configuration:
-    output_path: simtools-output/reports/parameters/
+    output_path: simtools-output/reports/
     site: North
     telescope: LSTN-01
   integration_tests:

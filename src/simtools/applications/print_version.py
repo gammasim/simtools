@@ -72,7 +72,7 @@ def main():
         ascii_handler.write_data_to_file(
             data=version_dict,
             output_file=io_handler_instance.get_output_file(
-                args_dict.get("output_file", "simtools_version.json"), label=label
+                args_dict.get("output_file", "simtools_version.json")
             ),
         )
 

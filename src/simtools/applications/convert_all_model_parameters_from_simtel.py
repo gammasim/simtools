@@ -233,8 +233,7 @@ def read_and_export_parameters(args_dict, logger):
             parameter_version=args_dict["parameter_version"],
             output_file=io_handler.get_output_file(
                 f"{_parameter}-{args_dict['parameter_version']}.json",
-                label=f"{args_dict['telescope']}",
-                sub_dir=f"{_parameter}",
+                sub_dir=[f"{args_dict['telescope']}", f"{_parameter}"],
             ),
         )
 

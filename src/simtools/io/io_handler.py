@@ -61,18 +61,20 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         Parameters
         ----------
-        label: str
-            Instance label.
-        sub_dir: str
+        sub_dir: str or list of str, optional
             Name of the subdirectory (ray_tracing, model etc)
 
         Returns
         -------
         Path
         """
-        return self._mkdir(
-            Path(self.output_path) if sub_dir is None else Path(self.output_path).joinpath(sub_dir)
-        )
+        if sub_dir is None:
+            path = Path(self.output_path)
+        elif isinstance(sub_dir, list | tuple):
+            path = Path(self.output_path).joinpath(*sub_dir)
+        else:
+            path = Path(self.output_path).joinpath(sub_dir)
+        return self._mkdir(path)
 
     def _mkdir(self, path):
         """Create a directory and return path."""
@@ -91,7 +93,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         ----------
         files_name: str
             File name.
-        sub_dir: str
+        sub_dir: sub_dir: str or list of str, optional
             Name of the subdirectory (ray_tracing, model etc)
 
         Returns
