@@ -182,8 +182,8 @@ def mock_simulator_variable(
 
 
 @pytest.fixture
-def mock_output_path(label, io_handler):
-    return io_handler.get_output_directory(label)
+def mock_output_path(io_handler):
+    return io_handler.get_output_directory()
 
 
 @pytest.fixture

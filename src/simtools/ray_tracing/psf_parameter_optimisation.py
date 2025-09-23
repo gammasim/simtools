@@ -349,7 +349,6 @@ def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
                 parameter_version=parameter_version,
                 output_file=f"{parameter_name}-{parameter_version}.json",
                 output_path=parameter_output_path,
-                use_plain_output_path=True,
             )
         logger.info(f"simulation model parameter files exported to {output_dir}")
 

@@ -89,7 +89,6 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
 def test_dump(args_dict, io_handler):
     empty_table = Table()
 
-    args_dict["use_plain_output_path"] = True
     args_dict["output_file"] = "test_file.ecsv"
     args_dict["skip_output_validation"] = True
     writer.ModelDataWriter().dump(
@@ -179,7 +178,6 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         parameter_version=parameter_version,
         output_file="num_gains.json",
         output_path=tmp_test_directory,
-        use_plain_output_path=True,
     )
     assert (Path(tmp_test_directory) / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
@@ -194,7 +192,6 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         parameter_version=parameter_version,
         output_file="array_element_position_utm.json",
         output_path=tmp_test_directory,
-        use_plain_output_path=True,
         metadata_input_dict={"name": "test_metadata"},
     )
     assert (Path(tmp_test_directory) / "array_element_position_utm.json").is_file()
@@ -211,7 +208,6 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         parameter_version=parameter_version,
         output_file="focus_offset.json",
         output_path=tmp_test_directory,
-        use_plain_output_path=True,
     )
     assert position_dict["value"][0] == pytest.approx(6.55)
     assert position_dict["value"][1] == pytest.approx(0.0)
@@ -228,7 +224,6 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
             parameter_version=parameter_version,
             output_file=num_gains_name + ".json",
             output_path=tmp_test_directory,
-            use_plain_output_path=True,
             db_config=db_config,
         )
         mock_db_check.assert_called_once_with(

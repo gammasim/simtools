@@ -286,7 +286,7 @@ def main():  # noqa: D103
     io_handler_instance = io_handler.IOHandler()
     args_dict, _ = _parse(label, description)
 
-    output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
+    output_path = io_handler_instance.get_output_directory(sub_dir="application-plots")
 
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()

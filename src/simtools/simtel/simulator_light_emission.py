@@ -77,7 +77,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         # IO
         self.io_handler = io_handler.IOHandler()
-        self.output_directory = self.io_handler.get_output_directory(self.label)
+        self.output_directory = self.io_handler.get_output_directory()
 
         self.number_events = self.light_emission_config["number_events"]
 
@@ -350,7 +350,7 @@ class SimulatorLightEmission(SimtelRunner):
         )
 
         config_directory = self.io_handler.get_model_configuration_directory(
-            label=self.label, model_version=self._site_model.model_version
+            model_version=self._site_model.model_version
         )
         telpos_file = self._write_telpos_file()
 

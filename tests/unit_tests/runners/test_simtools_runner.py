@@ -71,7 +71,6 @@ def test_replace_placeholders_in_configuration_replaces_string():
     )
     assert result["input_file"] == "LSTN-01/workflow/data.txt"
     assert result["other_key"] == "no_placeholder"
-    assert result["use_plain_output_path"] is True
     assert result["output_path"] == str(output_path)
 
 
@@ -86,7 +85,6 @@ def test_replace_placeholders_in_configuration_replaces_in_list():
     assert result["files"][1] == "WF/b.txt"
     assert result["files"][2] == 42
     assert result["files"][3] is None
-    assert result["use_plain_output_path"] is True
     assert result["output_path"] == str(output_path)
 
 
@@ -99,7 +97,6 @@ def test_replace_placeholders_in_configuration_no_placeholder():
     )
     assert result["key"] == "value"
     assert result["list"] == ["item1", "item2"]
-    assert result["use_plain_output_path"] is True
     assert result["output_path"] == str(output_path)
 
 
@@ -110,7 +107,6 @@ def test_replace_placeholders_in_configuration_empty_config():
     result = simtools_runner._replace_placeholders_in_configuration(
         config.copy(), output_path, setting_workflow
     )
-    assert result["use_plain_output_path"] is True
     assert result["output_path"] == str(output_path)
 
 

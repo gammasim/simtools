@@ -116,7 +116,7 @@ def write_results(results, args_dict):
     """
     table = _create_results_table(results, args_dict["loss_fraction"])
 
-    output_dir = io_handler.IOHandler().get_output_directory("corsika_limits")
+    output_dir = io_handler.IOHandler().get_output_directory()
     output_file = output_dir / args_dict["output_file"]
 
     table.write(output_file, format="ascii.ecsv", overwrite=True)

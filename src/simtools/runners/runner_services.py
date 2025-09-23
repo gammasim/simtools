@@ -90,7 +90,7 @@ class RunnerServices:
         dict
             Dictionary containing paths requires for simulation configuration.
         """
-        self.directory["output"] = io_handler.IOHandler().get_output_directory(self.label)
+        self.directory["output"] = io_handler.IOHandler().get_output_directory(sub_dir=self.label)
         _logger.debug(f"Creating output dir {self.directory['output']}")
         for dir_name in ["sub_scripts", "sub_logs"]:
             self.directory[dir_name] = self.directory["output"].joinpath(dir_name)

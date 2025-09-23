@@ -120,7 +120,6 @@ def main():  # noqa: D103
         parameter_version=args_dict["parameter_version"],
         output_file=Path(args_dict["parameter"] + "-" + args_dict["parameter_version"] + ".json"),
         output_path=output_path,
-        use_plain_output_path=args_dict.get("use_plain_output_path"),
         metadata_input_dict=args_dict,
         db_config=db_config if args_dict.get("check_parameter_version") else None,
     )

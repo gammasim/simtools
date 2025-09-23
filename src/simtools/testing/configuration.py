@@ -190,8 +190,6 @@ def _prepare_test_options(config, output_path, model_version=None):
     for key in ["output_path", "data_directory", "pack_for_grid_register"]:
         if key in config:
             config[key] = str(Path(output_path).joinpath(config[key]))
-            if key == "output_path":
-                config["use_plain_output_path"] = True
 
     _logger.info(f"Writing config file: {tmp_config_file}")
     ascii_handler.write_data_to_file(data=config, output_file=tmp_config_file, sort_keys=False)

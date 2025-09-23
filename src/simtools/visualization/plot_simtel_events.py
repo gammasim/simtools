@@ -840,7 +840,7 @@ def _plot_simtel_integrated_image(
 
 def _make_output_paths(ioh, base, input_file):
     """Return (out_dir, pdf_path) based on base name and input file."""
-    out_dir = ioh.get_output_directory(label=Path(__file__).stem)
+    out_dir = ioh.get_output_directory()
     pdf_path = ioh.get_output_file(f"{base}_{input_file.stem}" if base else input_file.stem)
     pdf_path = Path(f"{pdf_path}.pdf") if Path(pdf_path).suffix != ".pdf" else Path(pdf_path)
     return out_dir, pdf_path

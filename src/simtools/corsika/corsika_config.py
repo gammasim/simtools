@@ -714,7 +714,7 @@ class CorsikaConfig:
         """
         sub_dir = "corsika_sim_telarray" if use_multipipe else "corsika"
         config_file_name = self.get_corsika_config_file_name(file_type="config")
-        file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
+        file_directory = self.io_handler.get_output_directory(sub_dir=sub_dir)
         self._logger.debug(f"Creating directory {file_directory}")
         file_directory.mkdir(parents=True, exist_ok=True)
         self.config_file_path = file_directory.joinpath(config_file_name)

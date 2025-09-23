@@ -67,7 +67,7 @@ class CorsikaHistograms:
             raise FileNotFoundError
 
         self.io_handler = io_handler.IOHandler()
-        _default_output_path = self.io_handler.get_output_directory(self.label, "corsika")
+        _default_output_path = self.io_handler.get_output_directory("corsika")
 
         if output_path is None:
             self.output_path = _default_output_path

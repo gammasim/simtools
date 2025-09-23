@@ -17,68 +17,35 @@ test_file = "test-file.txt"
 
 def test_get_output_directory(args_dict, io_handler):
     # default adding label
-    assert io_handler.get_output_directory(label="test-io-handler") == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/"
-    )
+    assert io_handler.get_output_directory() == Path(f"{args_dict['output_path']}/output/")
 
     # label and subdirectory
-    assert io_handler.get_output_directory(label="test-io-handler", sub_dir="model") == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model"
+    assert io_handler.get_output_directory(sub_dir="model") == Path(
+        f"{args_dict['output_path']}/output/model/"
     )
 
     # path ends with '-output' - no additional 'output' is added
     io_handler_copy = copy.deepcopy(io_handler)
     io_handler_copy.output_path = Path(f"{args_dict['output_path']}/unittest-output")
-    assert io_handler_copy.get_output_directory(label="test-io-handler", sub_dir="model") == Path(
-        f"{args_dict['output_path']}/unittest-output/test-io-handler/model"
+    assert io_handler_copy.get_output_directory(sub_dir="model") == Path(
+        f"{args_dict['output_path']}/unittest-output/model"
     )
 
     # FileNotFoundError
     with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
         with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
-            io_handler.get_output_directory(label="test-io-handler", sub_dir="model")
-
-
-def test_get_output_directory_plain_output_path(args_dict, io_handler):
-    # all following tests: plain_path tests
-    io_handler.use_plain_output_path = True
-
-    # plain path (label has no effect), no subdirectories
-    assert io_handler.get_output_directory(label="test-io-handler") == Path(
-        f"{args_dict['output_path']}/output"
-    )
-
-    # plain path, label has no effect, with sub directory as dir_type != 'simtools-result'
-    assert io_handler.get_output_directory(label="test-io-handler", sub_dir="model") == Path(
-        f"{args_dict['output_path']}/output"
-    )
+            io_handler.get_output_directory(sub_dir="model")
 
 
 def test_get_output_file(args_dict, io_handler):
-    assert io_handler.get_output_file(file_name=test_file, label="test-io-handler") == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/{test_file}"
+    assert io_handler.get_output_file(file_name=test_file) == Path(
+        f"{args_dict['output_path']}/output/{test_file}"
     )
 
     assert io_handler.get_output_file(
         file_name=test_file,
-        label="test-io-handler",
-    ) == Path(f"{args_dict['output_path']}/output/simtools-output/test-io-handler/{test_file}")
-
-    assert io_handler.get_output_file(
-        file_name=test_file,
-        label="test-io-handler",
-        sub_dir="model",
-    ) == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model/{test_file}"
-    )
-
-    assert io_handler.get_output_file(
-        file_name=test_file,
-        label="test-io-handler",
-        sub_dir="model",
-    ) == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model/{test_file}"
-    )
+        sub_dir="test-io-handler",
+    ) == Path(f"{args_dict['output_path']}/output/test-io-handler/{test_file}")
 
 
 def test_get_data_file(args_dict, io_handler):
@@ -105,18 +72,16 @@ def test_get_model_configuration_directory(args_dict, io_handler):
     label = "test-io-handler"
 
     # Test directory creation
-    expected_path = Path(
-        f"{args_dict['output_path']}/output/simtools-output/{label}/model/{model_version}"
-    )
+    expected_path = Path(f"{args_dict['output_path']}/output/{label}/model/{model_version}")
     assert (
-        io_handler.get_model_configuration_directory(label=label, model_version=model_version)
+        io_handler.get_model_configuration_directory(sub_dir=label, model_version=model_version)
         == expected_path
     )
 
     # Test FileNotFoundError
     with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
         with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
-            io_handler.get_model_configuration_directory(label=label, model_version=model_version)
+            io_handler.get_model_configuration_directory(sub_dir=label, model_version=model_version)
 
 
 def test_mkdir(io_handler):
