@@ -91,10 +91,10 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 
 ### Use the local database instance
 
-This requires the following changes to the settings of the environmental variables in `.env` for access from outside a container:
+This requires the following changes to the settings of the environment variables in `.env` for access from outside a container:
 
 ```console
-# Environmental variables
+# Environment variables
 SIMTOOLS_DB_API_PORT=27017 # Port on the database server
 SIMTOOLS_DB_SERVER='localhost'
 SIMTOOLS_DB_API_USER='api' # username for database
@@ -116,7 +116,7 @@ podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-netw
 For completeness, here the full `.env` file to be used with a container:
 
 ```console
-# Environmental variables
+# Environment variables
 SIMTOOLS_DB_API_PORT=27017 # Port on the database server
 SIMTOOLS_DB_SERVER='simtools-mongodb'
 SIMTOOLS_DB_API_USER='api' # username for database
