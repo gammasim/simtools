@@ -454,7 +454,8 @@ class SimulatorLightEmission(SimtelRunner):
         """
         Calculate distance between focal plane and calibration device.
 
-        For flasher-type light sources.
+        For flasher-type light sources. Flasher position is given in mirror coordinates,
+        with positive z pointing towards the camera, so the distance is focal_length - flasher_z.
 
         Returns
         -------
@@ -462,7 +463,7 @@ class SimulatorLightEmission(SimtelRunner):
             Distance between calibration device and focal plane.
         """
         distance = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
-        distance += self.calibration_model.get_parameter_value_with_unit("flasher_position")[2].to(
+        distance -= self.calibration_model.get_parameter_value_with_unit("flasher_position")[2].to(
             u.m
         )
         return distance
