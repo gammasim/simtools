@@ -17,9 +17,9 @@ def sample_psf_data():
     """Create sample PSF data for testing."""
     radius = np.linspace(0, 10, 21)
     cumulative = np.linspace(0, 1, 21)
-    dtype = {"names": (plot_psf.RADIUS_CM, plot_psf.CUMULATIVE_PSF), "formats": ("f8", "f8")}
+    dtype = {"names": (plot_psf.RADIUS, plot_psf.CUMULATIVE_PSF), "formats": ("f8", "f8")}
     data = np.empty(21, dtype=dtype)
-    data[plot_psf.RADIUS_CM] = radius
+    data[plot_psf.RADIUS] = radius
     data[plot_psf.CUMULATIVE_PSF] = cumulative
     return data
 
@@ -47,19 +47,19 @@ def test_get_significance_label():
     assert plot_psf.get_significance_label(0.005) == "POOR"
 
 
-def test__get_psf_diameter_label():
+def test_get_psf_diameter_label():
     """Test PSF diameter label generation for different fractions and units."""
     # Test D80 with cm
-    assert plot_psf._get_psf_diameter_label(0.8, "cm") == "D80 (cm)"
+    assert plot_psf.get_psf_diameter_label(0.8, "cm") == "D80 (cm)"
 
     # Test D95 with degrees
-    assert plot_psf._get_psf_diameter_label(0.95, "degrees") == "D95 (degrees)"
+    assert plot_psf.get_psf_diameter_label(0.95, "degrees") == "D95 (degrees)"
 
     # Test D90 without unit
-    assert plot_psf._get_psf_diameter_label(0.9, "") == "D90"
+    assert plot_psf.get_psf_diameter_label(0.9, "") == "D90"
 
     # Test default cm unit
-    assert plot_psf._get_psf_diameter_label(0.85) == "D85 (cm)"
+    assert plot_psf.get_psf_diameter_label(0.85) == "D85 (cm)"
 
 
 @pytest.mark.parametrize(
