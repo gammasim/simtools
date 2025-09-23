@@ -47,6 +47,7 @@ def mock_args_dict():
         "monte_carlo_analysis": False,
         "rmsd_threshold": 0.01,
         "simtel_path": "/path/to/simtel",
+        "fraction": 0.8,
     }
 
 
@@ -96,7 +97,7 @@ def sample_mc_results():
         [0.75, 0.8, 0.85],  # mean_p_value, std_p_value, p_values
         3.5,
         0.1,
-        [3.4, 3.5, 3.6],  # mean_d80, std_d80, d80_values
+        [3.4, 3.5, 3.6],  # mean_psf, std_psf, psf_values
     )
 
 
@@ -206,7 +207,7 @@ def test_load_and_process_data(mock_args_dict, data_file, should_raise_error):
 
 
 @pytest.mark.parametrize(
-    ("pars", "should_raise_error", "expected_d80"),
+    ("pars", "should_raise_error", "expected_psf_diameter"),
     [
         # Normal case with parameters
         ({"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}, False, 5.0),
@@ -222,7 +223,7 @@ def test__run_ray_tracing_simulation(
     mock_args_dict,
     pars,
     should_raise_error,
-    expected_d80,
+    expected_psf_diameter,
 ):
     """Test ray tracing simulation execution with normal parameters and error cases."""
     if should_raise_error:
@@ -235,15 +236,15 @@ def test__run_ray_tracing_simulation(
         # Create mock ray tracing instance with proper return values
         mock_instance = MagicMock()
         mock_images = [MagicMock()]
-        mock_images[0].get_psf.return_value = expected_d80
+        mock_images[0].get_psf.return_value = expected_psf_diameter
         mock_images[0].get_cumulative_data.return_value = MagicMock()
         mock_instance.images.return_value = mock_images
         mock_rt.return_value = mock_instance
 
-        d80, _ = psf_opt._run_ray_tracing_simulation(
+        psf_diameter, _ = psf_opt._run_ray_tracing_simulation(
             mock_telescope_model, mock_site_model, mock_args_dict, pars
         )
-        assert d80 == pytest.approx(expected_d80)
+        assert psf_diameter == pytest.approx(expected_psf_diameter)
         mock_telescope_model.change_multiple_parameters.assert_called_once_with(**pars)
 
 
@@ -500,7 +501,7 @@ def test_apply_gradient_step():
         # Set up mocks to return improved results
         mock_grad.return_value = {"mirror_reflection_random_angle": [0.001]}
         mock_step.return_value = {"mirror_reflection_random_angle": [0.004]}
-        mock_sim.return_value = (8.0, 4.5, 0.9, {"data": "test"})  # Better metric and D80
+        mock_sim.return_value = (8.0, 4.5, 0.9, {"data": "test"})  # Better metric and PSF diameter
 
         result = psf_opt._perform_gradient_step_with_retries(
             None,
@@ -521,7 +522,7 @@ def test__create_step_plot(sample_data):
     """Test creating step plot for optimization iteration."""
     data_to_plot = {"measured": sample_data}
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-    args_dict = {"plot_all": True}
+    args_dict = {"plot_all": True, "fraction": 0.8}
 
     with (
         patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
@@ -537,10 +538,11 @@ def test__create_step_plot(sample_data):
         mock_plot.assert_called_once_with(
             data_to_plot,
             current_params,
-            3.5,  # new_d80
+            3.5,  # new_psf_diameter
             0.1,  # new_metric
             False,  # is_best
             mock_pages,  # pdf_pages
+            fraction=0.8,
             p_value=0.8,
             use_ks_statistic=False,
         )
@@ -616,10 +618,11 @@ def test__create_final_plot(mock_telescope_model, mock_site_model, mock_args_dic
         mock_plot.assert_called_once_with(
             data_to_plot,
             best_params,
-            3.5,  # best_d80
+            3.5,  # best_psf_diameter
             0.05,  # best_rmsd from mock
             True,  # is_best
             mock_pages,  # pdf_pages
+            fraction=0.8,
             p_value=0.9,  # p_value from mock_sim
             use_ks_statistic=False,
             second_metric=0.08,  # ks_stat from mock_sim
@@ -679,7 +682,7 @@ def test_run_gradient_descent_optimization(
             ({"mirror_reflection_random_angle": [0.004, 0.16, 0.028]}, 0.05, 0.9, 3.2, sample_data)
         ]
 
-        best_pars, best_d80, gd_results = psf_opt.run_gradient_descent_optimization(
+        best_pars, best_psf_diameter, gd_results = psf_opt.run_gradient_descent_optimization(
             mock_telescope_model,
             mock_site_model,
             mock_args_dict,
@@ -690,7 +693,7 @@ def test_run_gradient_descent_optimization(
             output_dir=TEST_OUTPUT_DIR,
         )
         assert "mirror_reflection_random_angle" in best_pars
-        assert isinstance(best_d80, float)
+        assert isinstance(best_psf_diameter, float)
         assert len(gd_results) > 0
 
 
@@ -821,7 +824,7 @@ def test_analyze_monte_carlo_error(
         patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # d80, metric, p_value, data
+        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # psf_diameter, metric, p_value, data
 
         result = psf_opt.analyze_monte_carlo_error(
             mock_telescope_model,
@@ -998,7 +1001,7 @@ def test_analyze_monte_carlo_error_with_ks_statistic(
         patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # d80, metric, p_value, data
+        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # psf_diameter, metric, p_value, data
 
         result = psf_opt.analyze_monte_carlo_error(
             mock_telescope_model,
@@ -1072,7 +1075,7 @@ def test_write_monte_carlo_analysis(
         p_values,  # p-value stats
         3.5,
         0.1,
-        [3.4, 3.5, 3.6],  # mean_d80, std_d80, d80_values
+        [3.4, 3.5, 3.6],  # mean_psf, std_psf, psf_values
     )
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -1269,7 +1272,7 @@ def test_run_psf_optimization_workflow_complete_success_path(
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"
         ) as mock_log,
-        patch("simtools.visualization.plot_psf.create_d80_vs_offaxis_plot") as mock_d80_plot,
+        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot") as mock_psf_plot,
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters"
         ) as mock_export,
@@ -1293,7 +1296,7 @@ def test_run_psf_optimization_workflow_complete_success_path(
         mock_plots.assert_called_once()
         mock_conv_plot.assert_called_once()
         mock_log.assert_called_once()
-        mock_d80_plot.assert_called_once()
+        mock_psf_plot.assert_called_once()
         mock_export.assert_called_once_with(best_pars, "LSTN-01", "1.0.0", TEST_OUTPUT_DIR)
 
 
