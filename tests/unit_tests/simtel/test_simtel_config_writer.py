@@ -154,6 +154,9 @@ def test_convert_model_parameters_to_simtel_format(
     with open(Path(model_path) / value) as f:
         content = f.read()
         assert "Trigger 1 of 1" in content
+        assert "hardstereo" in content
+        assert "minsep" in content
+        assert "width" in content
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
