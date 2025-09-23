@@ -14,7 +14,6 @@ applications:
     site: South
     telescope: MSTx-FlashCam
     test: true
-    use_plain_output_path: true
     use_random_focal_length: false
   integration_tests:
   - output_file: test_derive_mirror_rnda_psf_no_tuning.ecsv

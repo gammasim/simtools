@@ -5,7 +5,6 @@ applications:
     output_path: simtools-output/reports/parameters/
     site: North
     telescope: LSTN-01
-    use_plain_output_path: true
   integration_tests:
   - output_file: LSTN-01/quantum_efficiency.md
   test_name: run

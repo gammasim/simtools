@@ -9,7 +9,6 @@ applications:
     output_path: simtools-output
     step_size: 0.02
     use_norm_spe: true
-    use_plain_output_path: true
   integration_tests:
   - output_file: test_single_pe_lst.dat
   - output_file: test_single_pe_lst.ecsv
