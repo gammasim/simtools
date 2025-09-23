@@ -232,7 +232,7 @@ class DataValidator:
         else:
             self._check_data_type(np.array(value).dtype, index, value)
 
-        if self.data_dict.get("type") not in ("string", "dict", "file"):
+        if self._get_data_description(index).get("type", None) not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
             value, unit = self._check_and_convert_units(value, unit, index)
             for range_type in ("allowed_range", "required_range"):
