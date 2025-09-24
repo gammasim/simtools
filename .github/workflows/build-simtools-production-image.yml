@@ -28,18 +28,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
         with:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
+            autoconf.tar.gz
           retention-days: 1
 
   build-corsika-simtelarray:
@@ -64,10 +65,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: corsika-simtelarray-package-${{ matrix.version.simtel_version }}
           path: ./downloaded-artifacts
@@ -75,6 +76,7 @@ jobs:
       - name: Rename corsika simtel package file
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+          mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -98,7 +100,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ env.LABELS }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-${{ env.LABELS }}
           flavor: latest=true
 
       - name: Build and push image
@@ -133,6 +135,8 @@ jobs:
           - {simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67', hadronic_model: 'qgs2', avx_instruction: 'no_opt'}
           - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'no_opt'}
           - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'avx2'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'avx512f'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'sse4'}
           - {simtel_version: '250304', corsika_version: '78000', bernlohr_version: '1.69', hadronic_model: 'qgs3', avx_instruction: 'no_opt'}
           - {simtel_version: '250304', corsika_version: '78000', bernlohr_version: '1.69', hadronic_model: 'qgs3', avx_instruction: 'avx2'}
         production:
@@ -145,10 +149,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: corsika-simtelarray-package-${{ matrix.version.simtel_version }}
           path: ./downloaded-artifacts
@@ -156,6 +160,7 @@ jobs:
       - name: Rename corsika-simtel-package files and set build branch
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+          mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
@@ -197,9 +202,9 @@ jobs:
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-            GITLAB_TOKEN_CORSIKA_OPT_PATCHES=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
-          push:
-            ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+          secrets: |
+            gitlab_token=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
+          push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-prod-opt
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-prod
@@ -249,7 +254,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -259,9 +264,11 @@ jobs:
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Create environment file (local DB)
         run: |
@@ -271,6 +278,7 @@ jobs:
             echo "SIMTOOLS_DB_API_PW=password"
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
+            echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
             echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
           } > .env
 
@@ -279,12 +287,13 @@ jobs:
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
           cd database_scripts/
-          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
 
       - name: Integration tests
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
           SIMTOOLS_DB_SERVER: 'mongodb'
         run: |
           source /workdir/env/bin/activate

@@ -2,7 +2,7 @@
 applications:
 - application: simtools-generate-regular-arrays
   configuration:
-    model_version: 6.0.0
+    model_version: 6.0
     output_file: generate_regular_arrays.ecsv
     output_path: simtools-output
     site: South

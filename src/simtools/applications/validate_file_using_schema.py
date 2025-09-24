@@ -40,6 +40,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
+from simtools.io import ascii_handler
 
 
 def _parse(label, description):
@@ -81,6 +82,11 @@ def _parse(label, description):
     config.parser.add_argument(
         "--require_exact_data_type",
         help="Require exact data type for validation",
+        action="store_true",
+    )
+    config.parser.add_argument(
+        "--ignore_software_version",
+        help="Ignore software version check.",
         action="store_true",
     )
     return config.initialize(paths=False)
@@ -140,14 +146,19 @@ def validate_dict_using_schema(args_dict, logger):
         args_dict.get("file_directory"), args_dict.get("file_name")
     ):
         try:
-            data = gen.collect_data_from_file(file_name=file_name)
+            data = ascii_handler.collect_data_from_file(file_name=file_name)
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Error reading schema file from {file_name}") from exc
         data = data if isinstance(data, list) else [data]
-        for data_dict in data:
-            schema.validate_dict_using_schema(
-                data_dict, _get_schema_file_name(args_dict, data_dict)
-            )
+        try:
+            for data_dict in data:
+                schema.validate_dict_using_schema(
+                    data_dict,
+                    _get_schema_file_name(args_dict, data_dict),
+                    ignore_software_version=args_dict.get("ignore_software_version", False),
+                )
+        except Exception as exc:
+            raise ValueError(f"Validation of file {file_name} failed") from exc
         logger.info(f"Successful validation of file {file_name}")
 
 

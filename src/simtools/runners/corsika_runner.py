@@ -4,7 +4,7 @@ import logging
 import stat
 from pathlib import Path
 
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.runners.runner_services import RunnerServices
 
 __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfigError"]

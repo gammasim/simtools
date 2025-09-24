@@ -4,7 +4,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.utils.general as gen
+from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
 )
@@ -31,7 +31,9 @@ def test_fits_file_2():
 
 @pytest.fixture
 def metric():
-    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yml")
+    return ascii_handler.collect_data_from_file(
+        "tests/resources/production_simulation_config_metrics.yml"
+    )
 
 
 def test_initialization(test_fits_file, metric):
@@ -78,7 +80,8 @@ def test_missing_file():
 
 
 def test_calculate_production_statistics(test_fits_file, metric):
-    """Test the calculation of production statistics for a specific grid point using ProductionStatisticsHandler."""
+    """Test the calculation of production statistics for a specific grid point
+    using ProductionStatisticsHandler."""
 
     evaluator = StatisticalUncertaintyEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
@@ -206,7 +209,8 @@ def test_compute_efficiency_and_uncertainties(test_fits_file, metric):
         f"Expected efficiencies {expected_efficiencies}, but got {efficiencies}"
     )
     assert np.allclose(relative_uncertainties, expected_relative_uncertainties, atol=1e-2), (
-        f"Expected relative uncertainties {expected_relative_uncertainties}, but got {relative_uncertainties}"
+        f"Expected relative uncertainties {expected_relative_uncertainties}, "
+        f"but got {relative_uncertainties}"
     )
 
     with pytest.raises(

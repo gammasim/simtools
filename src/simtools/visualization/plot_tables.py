@@ -10,11 +10,13 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
 from simtools.db import db_handler
-from simtools.io_operations import legacy_data_handler
+from simtools.io import ascii_handler, legacy_data_handler
 from simtools.visualization import visualize
 
+_logger = logging.getLogger(__name__)
 
-def plot(config, output_file, db_config=None):
+
+def plot(config, output_file, db_config=None, data_path=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -26,8 +28,10 @@ def plot(config, output_file, db_config=None):
         Output file.
     db_config: dict, optional
         Database configuration dictionary for accessing the model parameter database.
+    data_path: Path or str, optional
+        Path to the data files (optional). Expect all files to be in the same directory.
     """
-    data = read_table_data(config, db_config)
+    data = read_table_data(config, db_config, data_path)
 
     fig = visualize.plot_1d(
         data,
@@ -38,7 +42,7 @@ def plot(config, output_file, db_config=None):
     return output_file
 
 
-def read_table_data(config, db_config):
+def read_table_data(config, db_config, data_path=None):
     """
     Read table data from file or parameter database.
 
@@ -46,6 +50,10 @@ def read_table_data(config, db_config):
     ----------
     config: dict
         Configuration dictionary for plotting.
+    db_config: dict
+        Database configuration dictionary for accessing the model parameter database.
+    data_path: Path or str, optional
+        Path to the data files (optional). Expect all files to be in the same directory.
 
     Returns
     -------
@@ -58,36 +66,55 @@ def read_table_data(config, db_config):
         if "parameter" in _config:
             table = _read_table_from_model_database(_config, db_config)
         elif "file_name" in _config:
+            file_name = (
+                _config["file_name"]
+                if data_path is None or _config.get("ignore_table_data_path", False)
+                else Path(data_path) / _config["file_name"]
+            )
+            _logger.info(f"Reading tabular data from {file_name}")
             if "legacy" in _config.get("type", ""):
-                table = legacy_data_handler.read_legacy_data_as_table(
-                    _config["file_name"], _config["type"]
-                )
+                table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
             else:
-                table = Table.read(_config["file_name"], format="ascii.ecsv")
+                table = Table.read(file_name, format="ascii.ecsv")
         else:
             raise ValueError("No table data defined in configuration.")
 
-        if _config.get("normalize_y"):
-            table[_config["column_y"]] = (
-                table[_config["column_y"]] / table[_config["column_y"]].max()
-            )
-        if _config.get("select_values"):
-            table = _select_values_from_table(
-                table,
-                _config["select_values"]["column_name"],
-                _config["select_values"]["value"],
-            )
-        label = _config.get("label", f"{_config.get('column_x')} vs {_config.get('column_y')}")
-        data[label] = gen.get_structure_array_from_table(
-            table,
-            [
-                _config["column_x"],
-                _config["column_y"],
-                _config.get("column_x_err"),
-                _config.get("column_y_err"),
-            ],
-        )
+        data[_get_plotting_label(_config, data)] = _process_table_data(table, _config)
+
     return data
+
+
+def _get_plotting_label(config, data):
+    """Get a label for plotting based on the configuration."""
+    label = config.get("label", f"{config.get('column_x')} vs {config.get('column_y')}")
+    if label in data:
+        index = 1
+        while f"{label} ({index})" in data:
+            index += 1
+        label = f"{label} ({index})"
+    return label
+
+
+def _process_table_data(table, _config):
+    """Process table data based on configuration."""
+    if _config.get("normalize_y"):
+        table[_config["column_y"]] = table[_config["column_y"]] / table[_config["column_y"]].max()
+    if _config.get("select_values"):
+        table = _select_values_from_table(
+            table,
+            _config["select_values"]["column_name"],
+            _config["select_values"]["value"],
+        )
+
+    return gen.get_structure_array_from_table(
+        table,
+        [
+            _config["column_x"],
+            _config["column_y"],
+            _config.get("column_x_err"),
+            _config.get("column_y_err"),
+        ],
+    )
 
 
 def _read_table_from_model_database(table_config, db_config):
@@ -183,7 +210,7 @@ def generate_plot_configurations(
 
     # Get schema configuration
     schema = gen.change_dict_keys_case(
-        gen.collect_data_from_file(
+        ascii_handler.collect_data_from_file(
             file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
         )
     )

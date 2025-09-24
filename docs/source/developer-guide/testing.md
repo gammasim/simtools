@@ -2,7 +2,7 @@
 
 Automatic code testing is absolutely essential for the development of simtools. It ensures that the code is working as expected and that new features do not break existing functionality.
 
-```{important}
+```{note}
 Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.
 ```
 
@@ -13,49 +13,56 @@ The testing should be done at two levels:
 
 The [pytest](https://docs.pytest.org) framework is used for testing.
 The test modules are located in
-[simtools/tests](https://github.com/gammasim/simtools/tree/main/tests) separated
+[./tests](https://github.com/gammasim/simtools/tree/main/tests) separated
 by unit and integration tests.
 
-:::{important}
+:::{hint}
 The rule should be that any discovered bug or issue should trigger the implementation of tests which reproduce the issue and prevent it from reoccurring.
 :::
 
-## Pytest fixtures
-
-General service functions for tests (e.g., DB connection) are defined as `pytest.fixtures` in
-[conftest.py](https://github.com/gammasim/simtools/blob/main/tests/conftest.py).
-This should be used to avoid duplication.
-
-Define fixtures as local as possible: fixtures which are used in a single test module should be defined at the top of the the same module.
-
-All fixtures can be listed with:
-
-```bash
-pytest --fixtures
-```
-
-Fixtures should therefore include a docstring.
-
 ## Unit tests
 
-Unit tests should be written for every module and function and should test the result of individual functions ("units").
-It is recommended to write unit tests in parallel with the modules to assure that the code is testable.
-
 ```{important}
-The simtools project aims for a high test coverage.
-Code lines without coverage should be the exception and the aim should be to achieve a coverage close to 100%
-(the CTAO quality requirements aim for a coverage of at least 80%).
+**Every function and module in the `simtools` library code must have at least one test.**
+No library function should be left untested — **tests are mandatory, not optional.** (Application code is excluded from this requirement; see the developer guidelines for details.)
+```
+
+Unit tests should verify the behavior of individual functions ("units").
+Write tests in parallel with code development to ensure modules are testable from the start.
+
+```{note}
+The `simtools` project aims for **very high test coverage**.
+Uncovered lines must be the rare exception. The project mandates at least 90% coverage as a minimum threshold, but developers are encouraged to aim for coverage as close to 100% as possible.
 ```
 
 Check the test coverage with `pytest -n auto --cov-report-html  tests/unit_tests/ tests/integration_tests/`.
-Coverage reports can be accessed through the `htmlcov/index.html` file.
+Coverage reports can be accessed using a browser through the `htmlcov/index.html` file.
 
 Good practice:
 
 - at least one test for every function in a module clearly testing the function's behavior (including edge cases).
 - sort tests in the testing module in the same sequence as the functions in the module.
-- unit tests need to be fast.
+- unit tests need to be fast. Add `--durations=10` to pytest to see slow tests.
 - use mocking to avoid external dependencies (e.g., database connections, file I/O); see below
+- use the fixture `tmp_test_directory` to create a temporary test directory for file I/O tests. Do not use `tmp_path` or the `tempfile` module.
+
+### Pytest fixtures
+
+Shared utilities for tests (e.g., DB connections) are provided as `pytest.fixtures` in
+[conftest.py](https://github.com/gammasim/simtools/blob/main/tests/conftest.py). Use these to avoid duplication.
+
+- Define fixtures as locally as possible:
+  - If used only in a single test module, place them at the top of that module.
+  - If reused across modules, put them in `conftest.py`.
+
+- List all available fixtures with:
+
+```bash
+pytest --fixtures
+```
+
+- Fixtures defined in [conftest.py](https://github.com/gammasim/simtools/blob/main/tests/conftest.py) must have a docstring;
+- Local fixtures should include a docstring if it aids readability.
 
 ### Mocking
 
@@ -71,6 +78,26 @@ The `mock` module is used to replace parts of the system under test and make ass
     ) as mock_read:
         simtel_table_reader.read_simtel_table("atmospheric_transmission", "test_file")
         mock_read.assert_called_once()
+```
+
+### Assertion of floats and astropy quantities
+
+When asserting floating point values, use `pytest.approx()` to avoid issues with precision:
+
+```python
+def test_floating_point_comparison():
+    assert 0.1 + 0.2 == pytest.approx(0.3)
+```
+
+`pytest.approx(expected, rel=None, abs=None, nan_ok=False)`.
+
+Use `astropy.tests.helper` for testing astropy quantities:
+
+```python
+from astropy.tests.helper import assert_quantity_allclose
+
+def test_astropy_quantity_comparison():
+    assert_quantity_allclose(0.1 * u.m, 0.1 * u.m)
 ```
 
 ## Integration tests

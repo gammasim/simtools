@@ -10,6 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
@@ -95,6 +96,8 @@ class SimtelConfigWriter:
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
+        simtel_par = self._get_parameters_for_sim_telarray(parameters, config_file_path)
+
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
@@ -103,21 +106,85 @@ class SimtelConfigWriter:
             file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
             file.write("#endif\n\n")
 
-            for par, value in parameters.items():
-                simtel_name, value = self._convert_model_parameters_to_simtel_format(
-                    names.get_simulation_software_name_from_parameter_name(
-                        par, software_name="sim_telarray"
-                    ),
-                    value["value"],
-                    config_file_path,
-                    None,
-                )
-                if simtel_name:
-                    file.write(f"{simtel_name} = {self._get_value_string_for_simtel(value)}\n")
-            if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
-                file.write("stars = none\n")
+            for simtel_name, simtel_value in simtel_par.items():
+                file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
             for meta in self._get_sim_telarray_metadata("telescope", parameters, telescope_name):
                 file.write(f"{meta}\n")
+
+    def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
+        """
+        Convert parameter dictionary to sim_telarray configuration file format.
+
+        Accounts for differences between the data models for sim_telarray configuration
+        and the simulation models.
+
+        Parameters
+        ----------
+        parameters: dict
+            Model parameters.
+        config_file_path: str or Path
+            Path of the file to write on.
+
+        Returns
+        -------
+        dict
+            Model parameters in sim_telarray format.
+        """
+        simtel_par = {}
+        for par, value in parameters.items():
+            simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
+                names.get_simulation_software_name_from_parameter_name(
+                    par, software_name="sim_telarray"
+                ),
+                value["value"],
+                config_file_path,
+                None,
+            )
+            if simtel_name:
+                simtel_par[simtel_name] = simtel_value
+        if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
+            simtel_par["stars"] = None
+
+        return self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par)
+
+    def _get_flasher_parameters_for_sim_telarray(self, parameters, simtel_par):
+        """
+        Combine flasher pulse time parameters into a single parameter.
+
+        Takes into account that sim_telarray expects a single parameter with a specific name.
+
+        Parameters
+        ----------
+        parameters: dict
+            Model parameters.
+        simtel_par: dict
+            Model parameters in sim_telarray format.
+
+        Returns
+        -------
+        dict
+            Model parameters in sim_telarray format including flasher parameters.
+
+        """
+        if "flasher_pulse_shape" not in parameters and "flasher_pulse_width" not in parameters:
+            return simtel_par
+
+        mapping = {
+            "gauss": "laser_pulse_sigtime",
+            "tophat": "laser_pulse_twidth",
+            "exponential": "laser_pulse_exptime",
+        }
+
+        shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
+        width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
+
+        simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
+        if shape in mapping:
+            simtel_par[mapping[shape]] = width
+        else:
+            self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
+
+        return simtel_par
 
     def _get_value_string_for_simtel(self, value):
         """
@@ -141,7 +208,7 @@ class SimtelConfigWriter:
         return value
 
     def _get_sim_telarray_metadata(
-        self, config_type, model_parameters, telescope_model_name, sim_telarray_seeds=None
+        self, config_type, model_parameters, telescope_model_name, additional_metadata=None
     ):
         """
         Return sim_telarray metadata.
@@ -154,8 +221,8 @@ class SimtelConfigWriter:
             Model parameters dictionary.
         telescope_model_name: str
             Name of the telescope model
-        sim_telarray_seeds: dict
-            Dictionary with configuration for sim_telarray random instrument setup.
+        additional_metadata: dict
+            Dictionary with additional metadata to include using 'set'.
 
         Returns
         -------
@@ -196,12 +263,10 @@ class SimtelConfigWriter:
 
         self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
 
-        if sim_telarray_seeds and sim_telarray_seeds.get("random_instrument_instances"):
-            meta_parameters.append(f"{prefix} set instrument_seed={sim_telarray_seeds['seed']}")
-            meta_parameters.append(
-                f"{prefix} set instrument_instances="
-                f"{sim_telarray_seeds['random_instrument_instances']}"
-            )
+        if additional_metadata:
+            for key, value in additional_metadata.items():
+                if value:
+                    meta_parameters.append(f"{prefix} set {key}={value}")
 
         return meta_parameters
 
@@ -223,7 +288,7 @@ class SimtelConfigWriter:
                 meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
     def write_array_config_file(
-        self, config_file_path, telescope_model, site_model, sim_telarray_seeds=None
+        self, config_file_path, telescope_model, site_model, additional_metadata=None
     ):
         """
         Write the sim_telarray config file for an array of telescopes.
@@ -236,8 +301,8 @@ class SimtelConfigWriter:
             Dictionary of TelescopeModel's instances as used by the ArrayModel instance.
         site_model: Site model
             Site model.
-        sim_telarray_seeds: dict
-            Dictionary with configuration for sim_telarray random instrument setup.
+        additional_metadata: dict
+            Dictionary with additional metadata to include.
         """
         config_file_directory = Path(config_file_path).parent
         with open(config_file_path, "w", encoding="utf-8") as file:
@@ -262,7 +327,7 @@ class SimtelConfigWriter:
                 site_model.parameters,
                 config_file_directory,
                 telescope_model,
-                sim_telarray_seeds,
+                additional_metadata,
             )
 
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -284,8 +349,8 @@ class SimtelConfigWriter:
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
 
-        if sim_telarray_seeds and sim_telarray_seeds.get("random_instrument_instances"):
-            self._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
+        if additional_metadata and additional_metadata.get("random_instrument_instances"):
+            self._write_random_seeds_file(additional_metadata, config_file_directory)
 
     def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
         """
@@ -404,7 +469,9 @@ class SimtelConfigWriter:
             "simtools_model_production_version": self._model_version,
         }
         try:
-            build_opts = gen.collect_data_from_file(Path(self._simtel_path) / "build_opts.yml")
+            build_opts = ascii_handler.collect_data_from_file(
+                Path(self._simtel_path) / "build_opts.yml"
+            )
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
         except (FileNotFoundError, TypeError):
@@ -415,7 +482,7 @@ class SimtelConfigWriter:
             file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
-        self, file, site_parameters, model_path, telescope_model, sim_telarray_seeds=None
+        self, file, site_parameters, model_path, telescope_model, additional_metadata=None
     ):
         """
         Write site parameters.
@@ -430,8 +497,8 @@ class SimtelConfigWriter:
             Path to the model for writing of additional files.
         telescope_model: dict of TelescopeModel
             Telescope models.
-        sim_telarray_seeds: dict
-            Dictionary with configuration for sim_telarray random instrument setup.
+        additional_metadata: dict
+            Dictionary with additional metadata to include.
         """
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
@@ -446,7 +513,7 @@ class SimtelConfigWriter:
             if simtel_name is not None:
                 file.write(f"{self.TAB}{simtel_name} = {value}\n")
         for meta in self._get_sim_telarray_metadata(
-            "site", site_parameters, self._telescope_model_name, sim_telarray_seeds
+            "site", site_parameters, self._telescope_model_name, additional_metadata
         ):
             file.write(f"{self.TAB}{meta}\n")
         file.write("\n")
@@ -506,13 +573,15 @@ class SimtelConfigWriter:
 
         trigger_lines = {}
         for tel_type, tel_list in trigger_per_telescope_type.items():
-            trigger_dict = self._get_array_triggers_for_telescope_type(array_triggers, tel_type)
+            trigger_dict = self._get_array_triggers_for_telescope_type(
+                array_triggers, tel_type, len(tel_list)
+            )
             trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
             trigger_lines[tel_type] += ", ".join(map(str, tel_list))
             width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
             trigger_lines[tel_type] += f" width {width}"
             if trigger_dict.get("hard_stereo"):
-                trigger_lines[tel_type] += " hard_stereo"
+                trigger_lines[tel_type] += " hardstereo"
             if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
                 min_sep = trigger_dict["min_separation"]["value"] * u.Unit(
                     trigger_dict["min_separation"]["unit"]
@@ -526,7 +595,9 @@ class SimtelConfigWriter:
 
         return array_triggers_file
 
-    def _get_array_triggers_for_telescope_type(self, array_triggers, telescope_type):
+    def _get_array_triggers_for_telescope_type(
+        self, array_triggers, telescope_type, num_telescopes_of_type
+    ):
         """
         Get array trigger for a specific telescope type.
 
@@ -536,14 +607,19 @@ class SimtelConfigWriter:
             Array trigger definitions.
         telescope_type: str
             Telescope type.
+        num_telescopes_of_type: int
+            Number of telescopes of the specified type.
 
         Returns
         -------
         dict
             Array trigger for the telescope type.
         """
+        suffix = "_array"
+        if num_telescopes_of_type == 1:
+            suffix = "_single_telescope"
         for trigger_dict in array_triggers:
-            if trigger_dict["name"] == telescope_type + "_array":
+            if trigger_dict["name"] == telescope_type + suffix:
                 return trigger_dict
         return None
 

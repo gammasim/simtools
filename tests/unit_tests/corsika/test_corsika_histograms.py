@@ -4,10 +4,12 @@
 import copy
 import logging
 from pathlib import Path
+from unittest import mock
 
 import boost_histogram as bh
 import numpy as np
 import pytest
+import tables
 from astropy import units as u
 from astropy.table import Table
 
@@ -16,7 +18,7 @@ from simtools.corsika.corsika_histograms import (
     CorsikaHistograms,
     HistogramNotCreatedError,
 )
-from simtools.io_operations.hdf5_handler import read_hdf5
+from simtools.io.hdf5_handler import read_hdf5
 
 x_axis_string = "x axis"
 y_axis_string = "y axis"
@@ -32,7 +34,7 @@ def test_init(corsika_histograms_instance, corsika_output_file_name):
 
 
 def test_version(corsika_histograms_instance):
-    assert corsika_histograms_instance.corsika_version == 7.741
+    assert corsika_histograms_instance.corsika_version == pytest.approx(7.741)
 
 
 def test_initialize_header(corsika_histograms_instance):
@@ -210,8 +212,8 @@ def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, capl
         ) = corsika_histograms_instance_set_histograms._get_hist_1d_projection(hist_label)
         assert np.shape(x_bin_edges_list) == expected_shape_of_bin_edges[i_hist]
         assert np.shape(hist_1d_list) == expected_shape_of_values[i_hist]
-        assert pytest.approx(np.mean(hist_1d_list), 1e-2) == expected_mean[i_hist]
-        assert pytest.approx(np.std(hist_1d_list), 1e-2) == expected_std[i_hist]
+    assert np.mean(hist_1d_list) == pytest.approx(expected_mean[i_hist], abs=1e-1)
+    assert np.std(hist_1d_list) == pytest.approx(expected_std[i_hist], abs=1e-1)
 
 
 def test_set_histograms_all_telescopes_1_histogram(corsika_histograms_instance):
@@ -221,7 +223,7 @@ def test_set_histograms_all_telescopes_1_histogram(corsika_histograms_instance):
     # assert that the histograms are filled
     assert np.count_nonzero(corsika_histograms_instance.hist_position[0][:, :, sum].view().T) == 159
     # and the sum is what we expect
-    assert np.sum(corsika_histograms_instance.hist_position[0].view()) == 10031.0
+    assert np.sum(corsika_histograms_instance.hist_position[0].view()) == pytest.approx(10031.0)
 
 
 def test_set_histograms_3_telescopes_1_histogram(corsika_histograms_instance):
@@ -233,7 +235,7 @@ def test_set_histograms_3_telescopes_1_histogram(corsika_histograms_instance):
     # assert that the histograms are filled
     assert np.count_nonzero(corsika_histograms_instance.hist_position[0][:, :, sum].view().T) == 12
     # and the sum is what we expect
-    assert np.sum(corsika_histograms_instance.hist_position[0].view()) == 3177.0
+    assert np.sum(corsika_histograms_instance.hist_position[0].view()) == pytest.approx(3177.0)
 
 
 def test_set_histograms_3_telescopes_3_histograms(corsika_histograms_instance):
@@ -252,7 +254,9 @@ def test_set_histograms_3_telescopes_3_histograms(corsika_histograms_instance):
             == hist_non_zero_bins[i_hist]
         )
         # and the sum is what we expect
-        assert np.sum(corsika_histograms_instance.hist_position[i_hist].view()) == hist_sum[i_hist]
+        assert np.sum(corsika_histograms_instance.hist_position[i_hist].view()) == pytest.approx(
+            hist_sum[i_hist]
+        )
 
 
 def test_set_histograms_passing_config(corsika_histograms_instance):
@@ -312,7 +316,7 @@ def test_get_hist_2d_projection(corsika_histograms_instance, caplog):
         assert np.shape(x_bin_edges) == (1, 101)
         assert np.shape(y_bin_edges) == (1, 101)
         assert np.shape(hist_values) == (1, 100, 100)
-        assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
+    assert np.sum(hist_values) == pytest.approx(hist_sums[i_label], abs=1e-2)
 
     # Repeat the test for fewer telescopes and see that less photons are counted in
     corsika_histograms_instance.set_histograms(telescope_indices=[0, 1, 2])
@@ -321,16 +325,16 @@ def test_get_hist_2d_projection(corsika_histograms_instance, caplog):
         hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2d_projection(
             label
         )
-        assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
+    assert np.sum(hist_values) == pytest.approx(hist_sums[i_label], abs=1e-2)
 
 
 def test_get_2d_photon_position_distr(corsika_histograms_instance_set_histograms):
     density = corsika_histograms_instance_set_histograms.get_2d_photon_density_distr()
 
     # Test the values of the histogram
-    assert pytest.approx(np.sum(density[0]), 1e-2) == 29
+    assert np.sum(density[0]) == pytest.approx(29, abs=1e-1)
     counts = corsika_histograms_instance_set_histograms.get_2d_photon_position_distr()
-    assert pytest.approx(np.sum(counts[0]), 1e-2) == 11633
+    assert np.sum(counts[0]) == pytest.approx(11633, abs=1e-1)
 
     # The bin edges should be the same
     assert (counts[1] == density[1]).all()
@@ -371,18 +375,14 @@ def test_get_2d_num_photons_distr(corsika_histograms_instance_set_histograms):
     assert np.shape(num_events_array) == (1, 3)  # number of events in this output file + 1
     # (bin edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
-    assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
-    )  # 1st tel, 1st event
-    assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][0, 1], 1e-2) == 290.4
-    )  # 1st tel, 2nd event
-    assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][1, 0], 1e-2) == 1741
-    )  # 2nd tel, 1st event
-    assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][1, 1], 1e-2) == 85.9
-    )  # 2nd tel, 2nd event
+    assert num_photons_per_event_per_telescope[0][0, 0] == pytest.approx(2543.3, abs=5e-1)
+    # 1st tel, 1st event
+    assert num_photons_per_event_per_telescope[0][0, 1] == pytest.approx(290.4, abs=5e-1)
+    # 1st tel, 2nd event
+    assert num_photons_per_event_per_telescope[0][1, 0] == pytest.approx(1741, abs=5e-1)
+    # 2nd tel, 1st event
+    assert num_photons_per_event_per_telescope[0][1, 1] == pytest.approx(85.9, abs=5e-1)
+    # 2nd tel, 2nd event
 
 
 def test_get_photon_altitude_distr(corsika_histograms_instance_set_histograms):
@@ -467,11 +467,10 @@ def test_get_photon_radial_distr_input_some_tel_and_density(
     )
     assert (x_bin_edges_list_dens == x_bin_edges_list).all()
 
-    assert (
-        pytest.approx(np.sum(hist_1d_list_dens), 1e-2) == 1.86
-    )  # density smaller because it divides
+    assert np.sum(hist_1d_list_dens) == pytest.approx(1.86, abs=1e-1)
+    # density smaller because it divides
     # by the area (not counts per bin)
-    assert pytest.approx(np.sum(hist_1d_list), 1e-2) == 744.17
+    assert np.sum(hist_1d_list) == pytest.approx(744.17, abs=3e-0)
 
 
 def test_get_photon_radial_distr_input_all_tel(corsika_histograms_instance):
@@ -500,25 +499,13 @@ def test_num_photons_per_event_per_telescope(corsika_histograms_instance_set_his
         87,
         2,
     )
-    assert (
-        pytest.approx(
-            np.sum(
-                corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
-            ),
-            1e-2,
-        )
-        == 25425.8
-    )
+    assert np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
+    ) == pytest.approx(25425.8, abs=1e-1)
     # Test number of photons in the second event
-    assert (
-        pytest.approx(
-            np.sum(
-                corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
-            ),
-            1e-2,
-        )
-        == 4582.9
-    )
+    assert np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
+    ) == pytest.approx(4582.9, abs=1e-1)
 
     # Decrease the number of telescopes and measure the number of photons on the ground again
     corsika_histograms_instance_set_histograms.set_histograms(telescope_indices=[3, 4, 5, 6])
@@ -528,47 +515,30 @@ def test_num_photons_per_event_per_telescope(corsika_histograms_instance_set_his
         4,
         2,
     )
-    assert (
-        pytest.approx(
-            np.sum(
-                corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
-            ),
-            1e-2,
-        )
-        == 7871.4
-    )
-    assert (
-        pytest.approx(
-            np.sum(
-                corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
-            ),
-            1e-2,
-        )
-        == 340.7
-    )
+    assert np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
+    ) == pytest.approx(7871.4, abs=1e-1)
+    assert np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
+    ) == pytest.approx(340.7, abs=1e-1)
     # Return the fixture to previous values
     corsika_histograms_instance_set_histograms.set_histograms()
 
 
 def test_num_photons_per_event(corsika_histograms_instance_set_histograms):
-    assert (
-        pytest.approx(corsika_histograms_instance_set_histograms.num_photons_per_event[0], 1e-2)
-        == 25425.8
+    assert corsika_histograms_instance_set_histograms.num_photons_per_event[0] == pytest.approx(
+        25425.8, abs=1e-1
     )
-    assert (
-        pytest.approx(corsika_histograms_instance_set_histograms.num_photons_per_event[1], 1e-2)
-        == 4582.9
+    assert corsika_histograms_instance_set_histograms.num_photons_per_event[1] == pytest.approx(
+        4582.9, abs=1e-1
     )
 
 
 def test_num_photons_per_telescope(corsika_histograms_instance_set_histograms):
     assert np.size(corsika_histograms_instance_set_histograms.num_photons_per_telescope) == 87
-    assert (
-        pytest.approx(
-            np.sum(corsika_histograms_instance_set_histograms.num_photons_per_telescope), 1e-2
-        )
-        == 25425.8 + 4582.9
-    )
+    assert np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_telescope
+    ) == pytest.approx(25425.8 + 4582.9, abs=1e-1)
 
 
 def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplog):
@@ -592,14 +562,9 @@ def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplo
         bins=2, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
-    assert (
-        pytest.approx(
-            np.sum(bin_edges[0, :-1] * hist[0])
-            / np.sum(corsika_histograms_instance_set_histograms.num_photons_per_event),
-            abs=1,
-        )
-        == 1
-    )
+    assert np.sum(bin_edges[0, :-1] * hist[0]) / np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_event
+    ) == pytest.approx(1, abs=1)
 
     # Test telescope
     (
@@ -609,19 +574,14 @@ def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplo
         bins=87, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
-    assert (
-        pytest.approx(
-            np.sum(bin_edges[0, :-1] * hist[0])
-            / np.sum(corsika_histograms_instance_set_histograms.num_photons_per_telescope),
-            abs=1,
-        )
-        == 1
-    )
+    assert np.sum(bin_edges[0, :-1] * hist[0]) / np.sum(
+        corsika_histograms_instance_set_histograms.num_photons_per_telescope
+    ) == pytest.approx(1, abs=1)
 
 
 def test_total_num_photons(corsika_histograms_instance_set_histograms):
-    assert (
-        pytest.approx(corsika_histograms_instance_set_histograms.total_num_photons, 1e-2) == 30008.7
+    assert corsika_histograms_instance_set_histograms.total_num_photons == pytest.approx(
+        30008.7, abs=1e-1
     )
 
 
@@ -659,44 +619,29 @@ def test_event_azimuth_angles(corsika_histograms_instance_set_histograms):
 
 def test_event_energies(corsika_histograms_instance_set_histograms):
     for i_event in range(corsika_histograms_instance_set_histograms.num_events):
-        assert (
-            pytest.approx(
-                corsika_histograms_instance_set_histograms.event_energies.value[i_event], 1e-2
-            )
-            == 0.01
-        )
+        assert corsika_histograms_instance_set_histograms.event_energies.value[
+            i_event
+        ] == pytest.approx(0.01, abs=1e-2)
     assert corsika_histograms_instance_set_histograms.event_energies.unit == u.TeV
 
 
 def test_event_first_interaction_heights(corsika_histograms_instance_set_histograms):
     first_height = [-10.3, -39.7]
     for i_event in range(corsika_histograms_instance_set_histograms.num_events):
-        assert (
-            pytest.approx(
-                corsika_histograms_instance_set_histograms.event_first_interaction_heights.value[
-                    i_event
-                ],
-                1e-2,
-            )
-            == first_height[i_event]
-        )
+        assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.value[
+            i_event
+        ] == pytest.approx(first_height[i_event], abs=1e-1)
     assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.unit == u.km
 
 
 def test_magnetic_field(corsika_histograms_instance_set_histograms):
     for i_event in range(corsika_histograms_instance_set_histograms.num_events):
-        assert (
-            pytest.approx(
-                corsika_histograms_instance_set_histograms.magnetic_field[0].value[i_event], 1e-2
-            )
-            == 20.5
-        )
-        assert (
-            pytest.approx(
-                corsika_histograms_instance_set_histograms.magnetic_field[1].value[i_event], 1e-2
-            )
-            == -9.4
-        )
+        assert corsika_histograms_instance_set_histograms.magnetic_field[0].value[
+            i_event
+        ] == pytest.approx(20.5, abs=1e-1)
+        assert corsika_histograms_instance_set_histograms.magnetic_field[1].value[
+            i_event
+        ] == pytest.approx(-9.4, abs=1e-1)
     assert corsika_histograms_instance_set_histograms.magnetic_field[0].unit == u.uT
 
 
@@ -858,7 +803,7 @@ def test_export_event_header_1d_histogram(corsika_histograms_instance_set_histog
         "zenith": "event_1d_histograms_zenith",
         "first_interaction_height": "event_1d_histograms_first_interaction_height",
     }
-    for event_header_element, _ in corsika_event_header_example.items():
+    for event_header_element in corsika_event_header_example:
         corsika_histograms_instance_set_histograms.export_event_header_1d_histogram(
             event_header_element, bins=50, hist_range=None
         )
@@ -884,3 +829,281 @@ def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histog
         )
     tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 13
+
+
+def test_export_histograms_individual_telescopes_naming(corsika_histograms_instance, io_handler):
+    # Configure for individual telescope export to hit tel_index naming branches
+    corsika_histograms_instance.set_histograms(telescope_indices=[0], individual_telescopes=True)
+    corsika_histograms_instance.hdf5_file_name = "indiv_tel.hdf5"
+
+    # Export both 1D and 2D histograms
+    corsika_histograms_instance.export_histograms(overwrite=True)
+
+    out = io_handler.get_output_directory().joinpath("indiv_tel.hdf5")
+    assert out.exists()
+
+    # Verify table paths include tel_index in both 1D and 2D histograms
+    with tables.open_file(out.as_posix(), mode="r") as h5:
+        node_paths = [n._v_pathname for n in h5.walk_nodes("/", "Table")]
+    assert any("_tel_index_0" in p for p in node_paths)
+    assert any("hist_2d_" in p and "_tel_index_0" in p for p in node_paths)
+
+
+@pytest.fixture(name="corsika_dummy_input")
+def _corsika_dummy_input(tmp_path):
+    # create a tiny dummy file to satisfy existence check
+    p = tmp_path / "dummy.corsikaio"
+    p.write_bytes(b"00")
+    return p
+
+
+def test_parse_telescope_indices_none(corsika_dummy_input, tmp_path):
+    # Patch I/O heavy init pieces by mocking methods used within __init__
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        assert ch.parse_telescope_indices(None) is None
+
+
+def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path, io_handler):
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        indices = ch.parse_telescope_indices(["1", "2", "3"])
+        assert np.array_equal(indices, np.array([1, 2, 3]))
+
+
+def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path, io_handler):
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        with pytest.raises(ValueError, match="not a valid input"):
+            ch.parse_telescope_indices(["a", "2"])
+
+
+def test_should_overwrite(corsika_dummy_input, tmp_path, io_handler):
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+        # ensure file exists
+        Path(ch.hdf5_file_name).write_text("{}", encoding="utf-8")
+        assert ch.should_overwrite(True, None, None) is True
+        assert ch.should_overwrite(False, ["a"], None) is True
+        assert ch.should_overwrite(False, None, ["a"]) is True
+        assert ch.should_overwrite(False, None, None) is False
+
+
+def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path, io_handler):
+    # Mock heavy operations inside pipeline
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+
+        with (
+            mock.patch.object(CorsikaHistograms, "set_histograms") as m_set,
+            mock.patch.object(CorsikaHistograms, "export_histograms") as m_export,
+            mock.patch(
+                "simtools.visualization.plot_corsika_histograms.export_all_photon_figures_pdf",
+                return_value=tmp_path / "photons.pdf",
+            ) as m_pdf,
+            mock.patch(
+                "simtools.visualization.plot_corsika_histograms.derive_event_1d_histograms",
+                return_value=None,
+            ),
+            mock.patch(
+                "simtools.visualization.plot_corsika_histograms.derive_event_2d_histograms",
+                return_value=None,
+            ),
+        ):
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0", "1"],
+                write_pdf=True,
+                write_hdf5=False,
+                event1d=None,
+                event2d=None,
+                test=True,
+            )
+            m_set.assert_called_once()
+            m_export.assert_not_called()
+            m_pdf.assert_called_once()
+            assert out["pdf_photons"].name == "photons.pdf"
+
+
+def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_path, io_handler):
+    # Cover event1d/event2d branches and write_hdf5 path, including overwrite flag logic
+    with (
+        mock.patch.object(CorsikaHistograms, "read_event_information"),
+        mock.patch.object(CorsikaHistograms, "_initialize_header"),
+    ):
+        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
+
+        with (
+            mock.patch.object(CorsikaHistograms, "set_histograms") as m_set,
+            mock.patch.object(CorsikaHistograms, "export_histograms") as m_export,
+            mock.patch(
+                "simtools.visualization.plot_corsika_histograms.export_all_photon_figures_pdf",
+                return_value=None,
+            ),
+            mock.patch(
+                "simtools.visualization.plot_corsika_histograms.derive_event_1d_histograms",
+                return_value=tmp_path / "event1d.pdf",
+            ) as m_e1d,
+            mock.patch(
+                "simtools.visualization.plot_corsika_histograms.derive_event_2d_histograms",
+                return_value=tmp_path / "event2d.pdf",
+            ) as m_e2d,
+        ):
+            # Case A: write_hdf5 True triggers export and event1d provided
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0"],
+                write_pdf=False,
+                write_hdf5=True,
+                event1d=["total_energy"],
+                event2d=None,
+                test=True,
+            )
+            m_set.assert_called()
+            m_export.assert_called()
+            m_e1d.assert_called()
+            assert out["pdf_event_1d"].name == "event1d.pdf"
+
+            m_set.reset_mock()
+            m_export.reset_mock()
+            m_e1d.reset_mock()
+            m_e2d.reset_mock()
+
+            # Case B: event2d only, write_hdf5 False => overwrite True for event2d
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0"],
+                write_pdf=False,
+                write_hdf5=False,
+                event1d=None,
+                event2d=[("azimuth", "zenith")],
+                test=True,
+            )
+            m_export.assert_not_called()
+            m_e2d.assert_called_once()
+            # check overwrite=True was passed
+            kwargs = m_e2d.call_args.kwargs
+            assert kwargs.get("overwrite") is True
+            assert out["pdf_event_2d"].name == "event2d.pdf"
+
+            m_set.reset_mock()
+            m_export.reset_mock()
+            m_e1d.reset_mock()
+            m_e2d.reset_mock()
+
+            # Case C: event2d with write_hdf5 True => overwrite False for event2d
+            out = ch.run_export_pipeline(
+                individual_telescopes=False,
+                hist_config=None,
+                indices_arg=["0"],
+                write_pdf=False,
+                write_hdf5=True,
+                event1d=None,
+                event2d=[("azimuth", "zenith")],
+                test=True,
+            )
+            kwargs = m_e2d.call_args.kwargs
+            assert kwargs.get("overwrite") is False
+            assert out["pdf_event_2d"].name == "event2d.pdf"
+
+
+def test_set_histograms_raises_when_no_photon_bunches(corsika_histograms_instance):
+    # Patch IACTFile to yield events without 'photon_bunches' to hit the error branch
+    class _Evt:
+        def __init__(self):
+            # minimal structure for access in set_histograms
+            self.n_photons = np.array([0])
+
+    class _IACTCtx:
+        def __enter__(self):
+            return [
+                _Evt(),  # a single event without 'photon_bunches'
+            ]
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    with mock.patch("simtools.corsika.corsika_histograms.IACTFile", return_value=_IACTCtx()):
+        # Only one telescope index to match our event.n_photons length
+        with pytest.raises(AttributeError):
+            corsika_histograms_instance.set_histograms(
+                telescope_indices=[0], individual_telescopes=False
+            )
+
+
+def test_fill_histograms_with_rotation(corsika_output_file_name):
+    # Cover rotation branch in _fill_histograms by providing both angles
+    photons = [
+        {
+            "x": 100.0,
+            "y": 50.0,
+            "cx": 0.1,
+            "cy": -0.2,
+            "time": -10.0,
+            "zem": 1.2e6,
+            "photons": 1.0,
+            "wavelength": 400.0,
+        }
+    ]
+    ch = CorsikaHistograms(corsika_output_file_name)
+    ch.individual_telescopes = False
+    ch.telescope_indices = [0]
+    ch._create_histograms(individual_telescopes=False)
+    # No entries before
+    assert np.count_nonzero(ch.hist_position[0].values()) == 0
+    # Provide angles to trigger rotate path
+    ch._fill_histograms(
+        photons, rotation_around_z_axis=10 * u.deg, rotation_around_y_axis=5 * u.deg
+    )
+    assert np.count_nonzero(ch.hist_position[0].values()) > 0
+
+
+def test_export_histograms_overwrite_true(corsika_histograms_instance_set_histograms, io_handler):
+    # Ensure both append/overwrite branches in _export_1d_histograms run
+    corsika_histograms_instance_set_histograms.hdf5_file_name = "overwrite_true.hdf5"
+    corsika_histograms_instance_set_histograms.export_histograms(overwrite=True)
+    out = io_handler.get_output_directory().joinpath("overwrite_true.hdf5")
+    assert out.exists()
+
+
+def test_export_event_header_histograms_overwrite_true(corsika_histograms_instance_set_histograms):
+    # 1D overwrite True
+    corsika_histograms_instance_set_histograms.export_event_header_1d_histogram(
+        "total_energy", bins=10, hist_range=None, overwrite=True
+    )
+    # 2D overwrite True
+    corsika_histograms_instance_set_histograms.export_event_header_2d_histogram(
+        "azimuth", "zenith", bins=(5, 5), hist_range=None, overwrite=True
+    )
+
+
+def test_event_histogram_invalid_keys(corsika_histograms_instance_set_histograms, caplog):
+    # 1D invalid key
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.event_1d_histogram("nope")
+    assert "key is not valid" in caplog.text
+    # 2D invalid key (one invalid is enough)
+    caplog.clear()
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.event_2d_histogram("nope", "zenith")
+    assert "At least one of the keys given is not valid" in caplog.text

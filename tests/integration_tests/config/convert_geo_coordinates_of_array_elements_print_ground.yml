@@ -4,7 +4,7 @@ applications:
   configuration:
     input: tests/resources/telescope_positions-North-ground.ecsv
     log_level: DEBUG
-    model_version: 6.0.0
+    model_version: 6.0
     print: ground
   test_name: print_ground
 schema_name: application_workflow.metaschema

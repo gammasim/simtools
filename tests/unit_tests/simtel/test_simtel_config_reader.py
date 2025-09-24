@@ -7,6 +7,7 @@ from unittest import mock
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.simtel.simtel_config_reader import SimtelConfigReader, get_list_of_simtel_parameters
@@ -270,7 +271,7 @@ def test_add_units(config_reader_num_gains):
     # Test single string unit
     _config.schema_dict = {"data": [{"unit": "m"}]}
     assert _config._add_units(5) == 5 * u.m
-    assert _config._add_units(5.0) == 5.0 * u.m
+    assert_quantity_allclose(_config._add_units(5.0), 5.0 * u.m)
     # Test integer preservation
     result = _config._add_units(5)
     assert np.issubdtype(result.value.dtype, np.integer)
@@ -282,7 +283,7 @@ def test_add_units(config_reader_num_gains):
     assert isinstance(result, np.ndarray)
     assert isinstance(result[0], u.Quantity)
     assert result[0].unit == u.m
-    assert result[1] == 2.0  # dimensionless stays as is
+    assert result[1] == pytest.approx(2.0)  # dimensionless stays as is
     assert result[2].unit == u.deg
 
     # Test return None for invalid cases

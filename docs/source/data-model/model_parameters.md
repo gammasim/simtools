@@ -30,7 +30,7 @@ Two types of schema definitions need to be distinguished:
 1. **Meta schema:** The meta schema defines the structure of the model parameter file. It is a multi-document YAML file including several schema versions. The meta schema is used to validate the model parameter files. The `schema_version` field is used to identify the correct meta schema.
 2. **Model parameter schema:** The model parameter schema defines the properties of the model parameter. It is a human-readable YAML file that describes the model parameter in detail. The `model_parameter_schema_version` field is used to identify the correct model parameter schema (optional field; default value is `0.1.0`).
 
-The metaschema [model_parameter.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml) defines the json data structure used for model parameters. This meta schema defines e.g., that `parameter` must be a string or `file` a boolean. No additional properties are allowed.
+The metaschema [model_parameter.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml) defines the JSON data structure used for model parameters. This meta schema defines e.g., that `parameter` must be a string or `file` a boolean. No additional properties are allowed.
 
 Model parameter schemas are defined in YAML format and located in the [src/simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/src/simtools/schemas/model_parameters) directory. Each schema file specifies fields such as `name`, `type`, `format`, `units`, and applicable telescopes.  Schemas also include metadata on default values, validation rules, data sources, and links to relevant simulation software.  Model parameter descriptions are primarily derived from the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/), ensuring alignment with its definitions and conventions.
 
@@ -73,7 +73,7 @@ simulation_software:
   - name: sim_telarray
 ```
 
-Model parameter schema files follow the fixed meta schema (see `meta_schema`, `meta_schema_url`, and `meta_schema_version` fields in above example and [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml)).
+Model parameter schema files follow the fixed meta schema (see `meta_schema`, `meta_schema_url`, and `meta_schema_version` fields in above example and [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml)).
 
 ## Valid Keys
 

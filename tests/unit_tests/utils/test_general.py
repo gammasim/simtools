@@ -1,23 +1,24 @@
 #!/usr/bin/python3
 
 import datetime
-import gzip
 import logging
 import os
 import time
 from copy import copy
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-import yaml
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
+KEY2_ADDED = "['key2']: added in second object"
+KEY1_REMOVED = "['key1']: removed in second object"
+KEY2_REMOVED = "['key2']: removed in second object"
+
 
 url_desy = "https://www.desy.de"
 url_simtools_main = "https://github.com/gammasim/simtools/"
@@ -25,107 +26,6 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
 test_data = "Test data"
-
-
-def test_collect_dict_data(io_handler) -> None:
-    dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
-    test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
-    if not Path(test_yaml_file).exists():
-        with open(test_yaml_file, "w") as output:
-            yaml.dump(dict_for_yaml, output, sort_keys=False)
-
-    d2 = gen.collect_data_from_file(test_yaml_file)
-    assert "k3" in d2.keys()
-    assert d2["k4"] == ["bla", 2]
-
-    _lines = gen.collect_data_from_file("tests/resources/test_file.list")
-    assert len(_lines) == 2
-
-    # astropy-type yaml file
-    _file = "tests/resources/corsikaConfigTest_astropy_headers.yml"
-    _dict = gen.collect_data_from_file(_file)
-    assert isinstance(_dict, dict)
-    assert len(_dict) > 0
-
-    # file with several documents
-    _list = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
-    assert isinstance(_list, list)
-    assert len(_list) > 0
-
-    # file with several documents - get first document
-    _dict = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 0)
-    assert _dict["schema_version"] != "0.1.0"
-
-    with pytest.raises(gen.InvalidConfigDataError, match=FAILED_TO_READ_FILE_ERROR):
-        gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 999)
-
-    # document type not supported
-    with pytest.raises(TypeError, match=FAILED_TO_READ_FILE_ERROR):
-        gen.collect_data_from_file(
-            "tests/resources/run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
-        )
-
-
-def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
-    """Test error handling in collect_data_from_file."""
-    # Create an invalid YAML file
-    test_file = io_handler.get_output_file(file_name="invalid.yml")
-    with open(test_file, "w") as f:
-        f.write("invalid: {\n")  # Invalid YAML syntax
-
-    # Test with invalid YAML file
-    with pytest.raises(Exception, match=FAILED_TO_READ_FILE_ERROR):
-        gen.collect_data_from_file(test_file)
-
-    # Test with invalid JSON file
-    test_json = io_handler.get_output_file(file_name="invalid.json")
-    with open(test_json, "w") as f:
-        f.write("{invalid json")
-
-    with pytest.raises(Exception, match=r"^JSONDecodeError"):
-        gen.collect_data_from_file(test_json)
-
-    # Test with unsupported file extension
-    test_unsupported = io_handler.get_output_file(file_name="test.xyz")
-    with open(test_unsupported, "w") as f:
-        f.write("some content")
-
-    with pytest.raises(TypeError, match=r"^Failed to read"):
-        gen.collect_data_from_file(test_unsupported)
-
-
-def test_collect_dict_from_url(io_handler) -> None:
-    _file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    _reference_dict = gen.collect_data_from_file(_file)
-
-    _file = "src/simtools/schemas/model_parameters/num_gains.schema.yml"
-
-    _url = url_simtools
-    _url_dict = gen.collect_data_from_http(_url + _file)
-
-    assert _reference_dict == _url_dict
-
-    _dict = gen.collect_data_from_file(_url + _file)
-    assert isinstance(_dict, dict)
-    assert len(_dict) > 0
-
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
-    with pytest.raises(FileNotFoundError):
-        gen.collect_data_from_http(_url + _file)
-
-    # yaml file with astropy header
-    _url = url_simtools
-    _url_dict = gen.collect_data_from_http(
-        _url + "tests/resources/corsikaConfigTest_astropy_headers.yml"
-    )
-    assert isinstance(_url_dict, dict)
-    assert len(_dict) > 0
-
-    # simple list
-    _url = url_simtools
-    _url_list = gen.collect_data_from_http(_url + "tests/resources/test_file.list")
-    assert isinstance(_url_list, list)
-    assert len(_url_list) == 2
 
 
 def test_program_is_executable(caplog) -> None:
@@ -236,50 +136,6 @@ def test_set_default_kwargs() -> None:
     assert out_kwargs == {"a": 1, "b": 2, "c": 3, "d": 4}
 
 
-def test_collect_final_lines(tmp_test_directory) -> None:
-    """
-    Test the collect_final_lines function.
-    """
-
-    # Test with no file.
-    with pytest.raises(FileNotFoundError):
-        gen.collect_final_lines("no_such_file.txt", 10)
-
-    # Test with empty file.
-    _file = tmp_test_directory / "empty_file.txt"
-    Path(_file).touch()
-    assert gen.collect_final_lines(_file, 10) == ""
-
-    # Test with one line file.
-    _file = tmp_test_directory / "one_line_file.txt"
-    with open(_file, "w") as f:
-        f.write("Line 1")
-    assert gen.collect_final_lines(_file, 1) == "Line 1"
-
-    # In the following tests the \n in the output are removed, but in the actual print statements,
-    # where the original function is used, they are still present in the string representation.
-
-    # Test with multiple lines file.
-    _file = tmp_test_directory / "multiple_lines_file.txt"
-    with open(_file, "w") as f:
-        f.write("Line 1\nLine 2\nLine 3")
-    assert gen.collect_final_lines(_file, 2) == "Line 2Line 3"
-
-    # Test with file with n_lines lines.
-    _file = tmp_test_directory / "n_lines_file.txt"
-    with open(_file, "w") as f:
-        for i in range(10):
-            f.write(f"Line {i}\n")
-        f.write("Line 10")
-    assert gen.collect_final_lines(_file, 3) == "Line 8Line 9Line 10"
-
-    # Test with file compressed in gzip.
-    _file = tmp_test_directory / "compressed_file.txt.gz"
-    with gzip.open(_file, "wb") as f:
-        f.write(b"Line 1\nLine 2\nLine 3")
-    assert gen.collect_final_lines(_file, 2) == "Line 2Line 3"
-
-
 def test_log_level_from_user() -> None:
     """
     Test get_log_level_from_user() function.
@@ -297,27 +153,6 @@ def test_log_level_from_user() -> None:
         gen.get_log_level_from_user(None)
     with pytest.raises(ValueError, match=r"^'True' is not a logging level"):
         gen.get_log_level_from_user(True)
-
-
-def test_copy_as_list() -> None:
-    """
-    Test the copy_as_list function.
-    """
-
-    # Test with a string.
-    assert gen.copy_as_list("str") == ["str"]
-
-    # Test with a list.
-    assert gen.copy_as_list([1, 2, 3]) == [1, 2, 3]
-
-    # Test with a tuple.
-    assert gen.copy_as_list((1, 2, 3)) == [1, 2, 3]
-
-    # Test with a dictionary (probably not really a useful case, but should test anyway).
-    assert gen.copy_as_list({"a": 1, "b": 2}) == ["a", "b"]
-
-    # Test with a non-iterable object.
-    assert gen.copy_as_list(123) == [123]
 
 
 def test_find_file_in_current_directory(tmp_test_directory) -> None:
@@ -407,41 +242,6 @@ def test_url_exists(caplog):
     assert "URL None" in caplog.text
 
 
-def test_collect_data_dict_from_json():
-    _file = "tests/resources/reference_point_altitude.json"
-    data = gen.collect_data_from_file(_file)
-    assert len(data) == 6
-    assert data["unit"] == "m"
-
-
-def test_collect_data_from_http():
-    _file = "src/simtools/schemas/model_parameters/num_gains.schema.yml"
-    url = url_simtools
-
-    data = gen.collect_data_from_http(url + _file)
-    assert isinstance(data, dict)
-
-    _file = "tests/resources/reference_point_altitude.json"
-    data = gen.collect_data_from_http(url + _file)
-    assert isinstance(data, dict)
-
-    _file = (
-        "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
-    )
-    with pytest.raises(TypeError):
-        gen.collect_data_from_http(url + _file)
-
-    url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
-    with pytest.raises(FileNotFoundError):
-        gen.collect_data_from_http(url + _file)
-
-
-def test_join_url_or_path():
-    assert gen.join_url_or_path(url_desy, "test") == "https://www.desy.de/test"
-    assert gen.join_url_or_path(url_desy, "test", "test") == "https://www.desy.de/test/test"
-    assert gen.join_url_or_path("/Volume/fs01", "CTA") == Path("/Volume/fs01").joinpath("CTA")
-
-
 def test_change_dict_keys_case(caplog) -> None:
     # note that entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
@@ -475,42 +275,6 @@ def test_change_dict_keys_case(caplog) -> None:
         with pytest.raises(AttributeError):
             gen.change_dict_keys_case([2], False)
     assert "Input is not a proper dictionary" in caplog.text
-
-
-def test_sort_arrays() -> None:
-    """
-    Test the sort_arrays function.
-    """
-
-    # Test with no arguments.
-    args = []
-    new_args = gen.sort_arrays(*args)
-    assert not new_args
-
-    # Test with one argument.
-    args = [list(range(10))]
-    new_args = gen.sort_arrays(*args)
-    assert new_args == [list(range(10))]
-
-    # Test with multiple arguments.
-    args = [list(range(10)), list(range(10, 20))]
-    new_args = gen.sort_arrays(*args)
-    assert new_args == [list(range(10)), list(range(10, 20))]
-
-    # Test with arguments of different lengths.
-    args = [list(range(10)), list(range(5))]
-    new_args = gen.sort_arrays(*args)
-    assert new_args == [list(range(10)), list(range(5))]
-
-    # Test with arguments that are not arrays.
-    args = [1, 2, 3]
-    with pytest.raises(TypeError):
-        gen.sort_arrays(*args)
-
-    # Test with the input array not in the right order.
-    args = [list(reversed(range(10)))]
-    new_args = gen.sort_arrays(*args)
-    assert new_args == [list(range(10))]
 
 
 @pytest.mark.parametrize(
@@ -639,7 +403,7 @@ def test_convert_list_to_string():
 def test_convert_string_to_list():
     t_1 = gen.convert_string_to_list("1 2 3 4")
     assert len(t_1) == 4
-    assert pytest.approx(t_1[1]) == 2.0
+    assert pytest.approx(t_1[1]) == pytest.approx(2.0)
     assert isinstance(t_1[1], float)
 
     t_int = gen.convert_string_to_list("1 2 3 4", False)
@@ -649,10 +413,10 @@ def test_convert_string_to_list():
 
     t_2 = gen.convert_string_to_list("0.1 0.2 0.3 0.4")
     assert len(t_2) == 4
-    assert pytest.approx(t_2[1]) == 0.2
+    assert pytest.approx(t_2[1]) == pytest.approx(0.2)
 
     t_3 = gen.convert_string_to_list("0.1")
-    assert pytest.approx(t_3[0]) == 0.1
+    assert pytest.approx(t_3[0]) == pytest.approx(0.1)
 
     bla_bla = "bla bla"
     assert gen.convert_string_to_list("bla_bla") == "bla_bla"
@@ -666,44 +430,6 @@ def test_convert_string_to_list():
     # import for list of dimensionless entries in database
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
-
-
-def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
-    """
-    Test the read_file_encoded_in_utf_or_latin function.
-    """
-
-    # Test with a UTF-8 encoded file.
-    utf8_file = tmp_test_directory / "utf8_file.txt"
-    utf8_content = "This is a UTF-8 encoded file.\n"
-    with open(utf8_file, "w", encoding="utf-8") as file:
-        file.write(utf8_content)
-    lines = gen.read_file_encoded_in_utf_or_latin(utf8_file)
-    assert lines == [utf8_content]
-    assert gen.is_utf8_file(utf8_file) is True
-
-    # Test with a Latin-1 encoded file.
-    latin1_file = tmp_test_directory / "latin1_file.txt"
-    latin1_content = "This is a Latin-1 encoded file with latin character ñ.\n"
-    with open(latin1_file, "w", encoding="latin-1") as file:
-        file.write(latin1_content)
-    with caplog.at_level(logging.DEBUG):
-        lines = gen.read_file_encoded_in_utf_or_latin(latin1_file)
-        assert lines == [latin1_content]
-    assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
-    assert gen.is_utf8_file(latin1_file) is False
-
-    # I could not find a way to create a file that cannot be decoded with Latin-1
-    # and raises a UnicodeDecodeError. I left the raise statement in the function
-    # in case we ever encounter such a file, but I cannot test it here.
-
-    # Test with a non-existent file.
-    non_existent_file = tmp_test_directory / "non_existent_file.txt"
-    with pytest.raises(FileNotFoundError):
-        gen.read_file_encoded_in_utf_or_latin(non_existent_file)
-
-    with pytest.raises(FileNotFoundError):
-        gen.is_utf8_file(non_existent_file)
 
 
 def test_get_structure_array_from_table():
@@ -920,3 +646,231 @@ def test_is_valid_boolean_type():
     assert not gen._is_valid_boolean_type(np.int32, None)
     assert not gen._is_valid_boolean_type(np.float32, None)
     assert not gen._is_valid_boolean_type(np.str_, None)
+
+
+def test_remove_key_from_dict():
+    # Test with a simple dictionary
+    input_data = {"key1": "value1", "key2": "value2", "key_to_remove": "value3"}
+    expected_output = {"key1": "value1", "key2": "value2"}
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+    # Test with a nested dictionary
+    input_data = {
+        "key1": {"nested_key1": "value1", "key_to_remove": "value2"},
+        "key2": "value3",
+        "key_to_remove": "value4",
+    }
+    expected_output = {"key1": {"nested_key1": "value1"}, "key2": "value3"}
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+    # Test with a list of dictionaries
+    input_data = [
+        {"key1": "value1", "key_to_remove": "value2"},
+        {"key2": "value3", "key_to_remove": "value4"},
+    ]
+    expected_output = [{"key1": "value1"}, {"key2": "value3"}]
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+    # Test with a deeply nested structure
+    input_data = {
+        "key1": [
+            {"nested_key1": {"key_to_remove": "value1", "key3": "value2"}},
+            {"key_to_remove": "value3"},
+        ],
+        "key2": {"key_to_remove": "value4", "key4": "value5"},
+    }
+    expected_output = {
+        "key1": [{"nested_key1": {"key3": "value2"}}, {}],
+        "key2": {"key4": "value5"},
+    }
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+    # Test with no matching keys
+    input_data = {"key1": "value1", "key2": "value2"}
+    expected_output = {"key1": "value1", "key2": "value2"}
+    assert gen.remove_key_from_dict(input_data, "non_existent_key") == expected_output
+
+    # Test with an empty dictionary
+    input_data = {}
+    expected_output = {}
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+    # Test with an empty list
+    input_data = []
+    expected_output = []
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+    # Test with a list containing non-dictionary elements
+    input_data = ["value1", {"key_to_remove": "value2"}, "value3"]
+    expected_output = ["value1", {}, "value3"]
+    assert gen.remove_key_from_dict(input_data, "key_to_remove") == expected_output
+
+
+def test_find_differences_dict():
+    # Test with two identical dictionaries
+    obj1 = {"key1": "value1", "key2": "value2"}
+    obj2 = {"key1": "value1", "key2": "value2"}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == []
+
+    # Test with a key added in obj2
+    obj1 = {"key1": "value1"}
+    obj2 = {"key1": "value1", "key2": "value2"}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == [KEY2_ADDED]
+
+    # Test with a key removed in obj2
+    obj1 = {"key1": "value1", "key2": "value2"}
+    obj2 = {"key1": "value1"}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == [KEY2_REMOVED]
+
+    # Test with nested dictionaries
+    obj1 = {"key1": {"nested_key1": "value1"}}
+    obj2 = {"key1": {"nested_key1": "value2"}}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == ["['key1']['nested_key1']: value changed from value1 to value2"]
+
+    # Test with a key added in a nested dictionary
+    obj1 = {"key1": {"nested_key1": "value1"}}
+    obj2 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == ["['key1']['nested_key2']: added in second object"]
+
+    # Test with a key removed in a nested dictionary
+    obj1 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
+    obj2 = {"key1": {"nested_key1": "value1"}}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == ["['key1']['nested_key2']: removed in second object"]
+
+    # Test with completely different dictionaries
+    obj1 = {"key1": "value1"}
+    obj2 = {"key2": "value2"}
+    diffs = []
+    gen._find_differences_dict(obj1, obj2, "", diffs)
+    assert diffs == [KEY1_REMOVED, KEY2_ADDED]
+
+
+def test_find_differences_in_json_objects():
+    # Test with identical dictionaries
+    obj1 = {"key1": "value1", "key2": "value2"}
+    obj2 = {"key1": "value1", "key2": "value2"}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == []
+
+    # Test with different types
+    obj1 = {"key1": "value1"}
+    obj2 = ["value1"]
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [": type changed from dict to list"]
+
+    # Test with a key added in obj2
+    obj1 = {"key1": "value1"}
+    obj2 = {"key1": "value1", "key2": "value2"}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [KEY2_ADDED]
+
+    # Test with a key removed in obj2
+    obj1 = {"key1": "value1", "key2": "value2"}
+    obj2 = {"key1": "value1"}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [KEY2_REMOVED]
+
+    # Test with nested dictionaries
+    obj1 = {"key1": {"nested_key1": "value1"}}
+    obj2 = {"key1": {"nested_key1": "value2"}}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [
+        "['key1']['nested_key1']: value changed from value1 to value2"
+    ]
+
+    # Test with a key added in a nested dictionary
+    obj1 = {"key1": {"nested_key1": "value1"}}
+    obj2 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [
+        "['key1']['nested_key2']: added in second object"
+    ]
+
+    # Test with a key removed in a nested dictionary
+    obj1 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
+    obj2 = {"key1": {"nested_key1": "value1"}}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [
+        "['key1']['nested_key2']: removed in second object"
+    ]
+
+    # Test with lists of different lengths
+    obj1 = [1, 2, 3]
+    obj2 = [1, 2]
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [": list length changed from 3 to 2"]
+
+    # Test with lists containing different values
+    obj1 = [1, 2, 3]
+    obj2 = [1, 4, 3]
+    assert gen.find_differences_in_json_objects(obj1, obj2) == ["[1]: value changed from 2 to 4"]
+
+    # Test with completely different structures
+    obj1 = {"key1": "value1"}
+    obj2 = {"key2": "value2"}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [KEY1_REMOVED, KEY2_ADDED]
+
+    # Test with deeply nested structures
+    obj1 = {"key1": {"nested_key1": {"deep_key": "value1"}}}
+    obj2 = {"key1": {"nested_key1": {"deep_key": "value2"}}}
+    assert gen.find_differences_in_json_objects(obj1, obj2) == [
+        "['key1']['nested_key1']['deep_key']: value changed from value1 to value2"
+    ]
+
+
+def test_ensure_iterable():
+    assert gen.ensure_iterable(None) == []
+    assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
+    assert gen.ensure_iterable(5) == [5]
+    assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
+
+
+@patch("tarfile.open")
+def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
+    tar_file_name = tmp_test_directory / "test_archive.tar.gz"
+    # Do not actually create directories or files; mock filesystem interactions
+    base_dir = tmp_test_directory / "base"
+
+    # Paths for files (not created on disk)
+    file1 = base_dir / "file1.txt"
+    file2 = base_dir / "file2.txt"
+
+    # Patch Path.is_file and Path.resolve to avoid touching the filesystem
+    orig_is_file = Path.is_file
+    orig_resolve = Path.resolve
+
+    def is_file_side(self):
+        # Only report our two test files as files
+        if str(self) in (str(file1), str(file2)):
+            return True
+        return orig_is_file(self)
+
+    def resolve_side(self, *args, **kwargs):
+        # For our test files, return the path itself (tmp_test_directory paths are absolute)
+        if str(self) in (str(file1), str(file2)):
+            return self
+        return orig_resolve(self, *args, **kwargs)
+
+    from unittest.mock import patch as _patch
+
+    patch_is_file = _patch.object(Path, "is_file", new=is_file_side)
+    patch_resolve = _patch.object(Path, "resolve", new=resolve_side)
+
+    mock_tar = MagicMock()
+    mock_tarfile_open.return_value.__enter__.return_value = mock_tar
+
+    # Call the function with Path methods patched
+    with patch_is_file, patch_resolve:
+        gen.pack_tar_file(tar_file_name, [file1, file2])
+
+    # Verify tarfile.open was called correctly
+    mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
+    mock_tar.add.assert_any_call(file1, arcname="file1.txt")
+    mock_tar.add.assert_any_call(file2, arcname="file2.txt")
+
+    with pytest.raises(ValueError, match="Unsafe file path"):
+        gen.pack_tar_file(tar_file_name, ["unsafe_file"])

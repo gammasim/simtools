@@ -32,7 +32,7 @@ def test_decode_with_unicode_error(caplog):
     assert "key2" in result
     assert result["key1"] == "value1"
     assert result["key2"] == " invalid utf8"
-    assert "Failed to decode metadata with encoding utf-8" in caplog.text
+    assert "Unable to decode metadata with encoding utf-8" in caplog.text
 
 
 def test_read_sim_telarray_metadata(sim_telarray_file_gamma):

@@ -20,6 +20,7 @@ def args_dict():
         "zenith_angle": 20 * u.deg,
         "energy_range": [1 * u.GeV, 10 * u.GeV],
         "core_scatter": [0, 100 * u.m],
+        "view_cone": [0 * u.deg, 10 * u.deg],
         "label": "test_label",
         "simulation_software": "simtools",
         "model_version": "v1.0",
@@ -27,7 +28,7 @@ def args_dict():
         "array_layout_name": "test_layout",
         "primary": "gamma",
         "nshow": 1000,
-        "run_number_offset": 0,
+        "run_number_offset": 1,
         "run_number": 1,
         "number_of_runs": 10,
         "log_level": "INFO",
@@ -59,6 +60,8 @@ def test_get_submit_script(args_dict):
     e_range_high = args_dict["energy_range"][1].to(u.GeV).value
     core_scatter_low = args_dict["core_scatter"][0]
     core_scatter_high = args_dict["core_scatter"][1].to(u.m).value
+    view_cone_low = args_dict["view_cone"][0].to(u.deg).value
+    view_cone_high = args_dict["view_cone"][1].to(u.deg).value
 
     expected_script = f"""#!/usr/bin/env bash
 
@@ -79,6 +82,7 @@ simtools-simulate-prod \\
     --nshow {args_dict["nshow"]} \\
     --energy_range "{e_range_low} GeV {e_range_high} GeV" \\
     --core_scatter "{core_scatter_low} {core_scatter_high} m" \\
+    --view_cone "{view_cone_low} deg {view_cone_high} deg" \\
     --run_number $((process_id)) \\
     --run_number_offset {args_dict["run_number_offset"]} \\
     --number_of_runs 1 \\

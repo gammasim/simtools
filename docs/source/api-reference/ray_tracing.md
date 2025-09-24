@@ -2,7 +2,16 @@
 
 # Ray Tracing
 
-The ray-tracing modules handle ray tracing simulations, PSF analysis and I/O.
+The ray-tracing modules handle ray tracing simulations, incident angle calculations, PSF analysis and I/O.
+
+(incidentanglesmodule)=
+
+## incident_angles
+
+```{eval-rst}
+.. automodule:: ray_tracing.incident_angles
+   :members:
+```
 
 (raytracingmodule)=
 
@@ -19,6 +28,15 @@ The ray-tracing modules handle ray tracing simulations, PSF analysis and I/O.
 
 ```{eval-rst}
 .. automodule:: ray_tracing.psf_analysis
+   :members:
+```
+
+(psfparameteroptimisationmodule)=
+
+## psf_parameter_optimisation
+
+```{eval-rst}
+.. automodule:: ray_tracing.psf_parameter_optimisation
    :members:
 ```
 

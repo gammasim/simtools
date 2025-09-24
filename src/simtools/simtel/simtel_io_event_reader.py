@@ -5,11 +5,11 @@ from dataclasses import dataclass, field
 
 import astropy.units as u
 import numpy as np
-from astropy.coordinates import AltAz, angular_separation
-from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
+from astropy.coordinates import angular_separation
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io_operations import io_table_handler
+from simtools.io import table_handler
+from simtools.utils.geometry import solid_angle, transform_ground_to_shower_coordinates
 
 
 @dataclass
@@ -28,6 +28,7 @@ class ShowerEventData:
     x_core_shower: list[np.float64] = field(default_factory=list)
     y_core_shower: list[np.float64] = field(default_factory=list)
     core_distance_shower: list[np.float64] = field(default_factory=list)
+    angular_distance: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -52,6 +53,7 @@ class SimtelIOEventDataReader:
         self.telescope_list = telescope_list
 
         self.data_sets = self.read_table_list(event_data_file)
+        self.reduced_file_info = None
 
     def read_table_list(self, event_data_file):
         """
@@ -71,14 +73,21 @@ class SimtelIOEventDataReader:
         list
             List of dictionaries containing the data from the tables.
         """
-        dataset_dict = io_table_handler.read_table_list(
+        dataset_dict = table_handler.read_table_list(
             event_data_file,
             ["SHOWERS", "TRIGGERS", "FILE_INFO"],
             include_indexed_tables=True,
         )
 
         data_sets = []
-        for i in range(len(dataset_dict["SHOWERS"])):
+        try:
+            sorted_indices = sorted(
+                range(len(dataset_dict["SHOWERS"])),
+                key=lambda i: int(dataset_dict["SHOWERS"][i].split("_")[-1]),
+            )
+        except (ValueError, AttributeError):
+            sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
+        for i in sorted_indices:
             data_sets.append(
                 {
                     "SHOWERS": dataset_dict["SHOWERS"][i],
@@ -110,16 +119,27 @@ class SimtelIOEventDataReader:
             if table[col].unit:
                 setattr(shower_data, f"{col}_unit", table[col].unit)
 
-        shower_data.x_core_shower, shower_data.y_core_shower = (
-            self._transform_to_shower_coordinates(
+        shower_data.x_core_shower, shower_data.y_core_shower, _ = (
+            transform_ground_to_shower_coordinates(
                 shower_data.x_core,
                 shower_data.y_core,
+                0.0,
                 shower_data.shower_azimuth,
                 shower_data.shower_altitude,
             )
         )
-        shower_data.core_distance_shower = np.sqrt(
-            shower_data.x_core_shower**2 + shower_data.y_core_shower**2
+        shower_data.core_distance_shower = np.hypot(
+            shower_data.x_core_shower, shower_data.y_core_shower
+        )
+        shower_data.angular_distance = (
+            angular_separation(
+                shower_data.shower_azimuth * u.deg,
+                shower_data.shower_altitude * u.deg,
+                self.reduced_file_info["azimuth"],
+                (90.0 * u.deg - self.reduced_file_info["zenith"]),
+            )
+            .to(u.deg)
+            .value
         )
 
         return shower_data
@@ -191,7 +211,7 @@ class SimtelIOEventDataReader:
                 & (shower_data.event_id == tr_event_id)
                 & (shower_data.file_id == tr_file_id)
             )
-            matched_idx = np.where(mask)[0]
+            matched_idx = np.nonzero(mask)[0]
             if len(matched_idx) == 1:
                 matched_indices.append(matched_idx[0])
             else:
@@ -233,9 +253,12 @@ class SimtelIOEventDataReader:
         def get_name(key):
             return table_name_map.get(key, key)
 
-        tables = io_table_handler.read_tables(
+        tables = table_handler.read_tables(
             event_data_file,
             table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
+        )
+        self.reduced_file_info = self.get_reduced_simulation_file_info(
+            tables[get_name("FILE_INFO")]
         )
 
         shower_data = self._table_to_shower_data(tables[get_name("SHOWERS")])
@@ -298,36 +321,6 @@ class SimtelIOEventDataReader:
 
         return filtered_triggered_data, filtered_triggered_shower_data
 
-    def _transform_to_shower_coordinates(self, x_core, y_core, shower_azimuth, shower_altitude):
-        """
-        Transform core positions from ground coordinates to shower coordinates.
-
-        Parameters
-        ----------
-        x_core : np.ndarray
-            Core x positions in ground coordinates.
-        y_core : np.ndarray
-            Core y positions in ground coordinates.
-        shower_azimuth : np.ndarray
-            Shower azimuth angles in deg.
-        shower_altitude : np.ndarray
-            Shower altitude angles in deg.
-
-        Returns
-        -------
-        tuple
-            Core positions in shower coordinates (x, y).
-        """
-        ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=np.zeros_like(x_core) * u.m)
-        shower_frame = ground.transform_to(
-            TiltedGroundFrame(
-                pointing_direction=AltAz(
-                    az=np.deg2rad(shower_azimuth) * u.rad, alt=np.deg2rad(shower_altitude) * u.rad
-                )
-            )
-        )
-        return shower_frame.x.value, shower_frame.y.value
-
     def get_reduced_simulation_file_info(self, simulation_file_info):
         """
         Return reduced simulation file info assuming single-valued parameters.
@@ -384,4 +377,31 @@ class SimtelIOEventDataReader:
                 value = value * simulation_file_info[key].unit
             reduced_info[key] = value
 
+        reduced_info["solid_angle"] = solid_angle(
+            angle_min=reduced_info.get("viewcone_min", 0.0 * u.rad),
+            angle_max=reduced_info.get("viewcone_max", 0.0 * u.rad),
+        )
+        reduced_info["scatter_area"] = self.scatter_area(
+            core_scatter_min=reduced_info.get("core_scatter_min", 0.0 * u.m),
+            core_scatter_max=reduced_info.get("core_scatter_max", 0.0 * u.m),
+        )
+
         return reduced_info
+
+    def scatter_area(self, core_scatter_min, core_scatter_max):
+        """
+        Calculate the scatter area of the core.
+
+        Parameters
+        ----------
+        core_scatter_min : astropy.units.Quantity
+            Minimum core scatter radius.
+        core_scatter_max : astropy.units.Quantity
+            Maximum core scatter radius.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Scatter area.
+        """
+        return np.pi * (core_scatter_max**2 - core_scatter_min**2)

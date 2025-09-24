@@ -10,7 +10,7 @@ import pytest
 from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
-import simtools.io_operations.io_handler
+import simtools.io.io_handler
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -50,7 +50,7 @@ def data_path():
 @pytest.fixture
 def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
-    tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
+    tmp_io_handler = simtools.io.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
         data_path=data_path,
@@ -72,6 +72,7 @@ def _mock_settings_env_vars(tmp_test_directory):
             "SIMTOOLS_DB_API_PORT": "42",
             "SIMTOOLS_DB_SERVER": "abc@def.de",
             "SIMTOOLS_DB_SIMULATION_MODEL": "sim_model",
+            "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": "v0.0.0",
         },
         clear=True,
     ):
@@ -145,6 +146,7 @@ def db_config():
         "db_api_authentication_database",
         "db_server",
         "db_simulation_model",
+        "db_simulation_model_version",
     )
     for _para in _db_para:
         if _para not in mongo_db_config:
@@ -168,7 +170,7 @@ def pytest_addoption(parser):
 @pytest.fixture
 def model_version():
     """Simulation model version used in tests."""
-    return "6.0.0"
+    return "6.0"
 
 
 @pytest.fixture
@@ -372,12 +374,34 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
 
-    corsika_config = CorsikaConfig(
-        array_model=array_model,
-        label="test-corsika-config",
-        args_dict=corsika_config_data,
-        db_config=db_config,
-    )
+    # Avoid DB access by mocking ModelParameter inside CorsikaConfig for fixture creation
+    with mock.patch("simtools.corsika.corsika_config.ModelParameter") as mp:
+        mp_instance = mp.return_value
+        mp_instance.get_simulation_software_parameters.return_value = {
+            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+            "corsika_cherenkov_photon_wavelength_range": {
+                "value": [240.0, 1000.0],
+                "unit": "nm",
+            },
+            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+            "corsika_particle_kinetic_energy_cutoff": {
+                "value": [0.3, 0.1, 0.020, 0.020],
+                "unit": "GeV",
+            },
+            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
+            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+            "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
+            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+        }
+
+        corsika_config = CorsikaConfig(
+            array_model=array_model,
+            label="test-corsika-config",
+            args_dict=corsika_config_data,
+            db_config=db_config,
+        )
+
     corsika_config.run_number = 1
     corsika_config.array_model.site = "South"
     return corsika_config
@@ -447,11 +471,10 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
             "model_version": model_version,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
+            "simtel_path": simtel_path,
         },
         db_config=db_config,
-        simtel_path=simtel_path,
         label="validate_camera_efficiency",
-        test=True,
     )
 
 

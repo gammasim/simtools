@@ -4,6 +4,7 @@ import logging
 import stat
 from pathlib import Path
 
+import simtools.utils.general as gen
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.simtel.simulator_array import SimulatorArray
 
@@ -32,6 +33,8 @@ class CorsikaSimtelRunner:
         Use multipipe to run CORSIKA and sim_telarray.
     sim_telarray_seeds : dict
         Dictionary with configuration for sim_telarray random instrument setup.
+    calibration_config : dict
+        Configuration for the calibration of the sim_telarray data.
     """
 
     def __init__(
@@ -43,11 +46,10 @@ class CorsikaSimtelRunner:
         use_multipipe=False,
         sim_telarray_seeds=None,
         sequential=False,
+        calibration_config=None,
     ):
         self._logger = logging.getLogger(__name__)
-        self.corsika_config = (
-            corsika_config if isinstance(corsika_config, list) else [corsika_config]
-        )
+        self.corsika_config = gen.ensure_iterable(corsika_config)
         # the base corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations.
         self.base_corsika_config = self.corsika_config[0]
@@ -75,6 +77,7 @@ class CorsikaSimtelRunner:
                     label=label,
                     use_multipipe=use_multipipe,
                     sim_telarray_seeds=sim_telarray_seeds,
+                    calibration_config=calibration_config,
                 )
             )
 

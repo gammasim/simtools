@@ -1,0 +1,16 @@
+---
+applications:
+- application: simtools-derive-trigger-rates
+  configuration:
+    array_layout_name:
+    - 1lst
+    - alpha
+    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    model_version: 6.0
+    output_path: simtools-output
+    plot_histograms: true
+    site: North
+    use_plain_output_path: true
+  test_name: protons_short
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

@@ -6,13 +6,12 @@ The versions of simtools, the DB, sim_telarray, and CORSIKA are printed.
 
 """
 
-import json
 import logging
 from pathlib import Path
 
 from simtools import dependencies, version
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 
 
@@ -40,7 +39,7 @@ def _parse(label, description, usage):
     """
     config = configurator.Configurator(label=label, description=description, usage=usage)
 
-    return config.initialize(db_config=True, output=True)
+    return config.initialize(db_config=True, output=True, require_command_line=False)
 
 
 def main():
@@ -66,15 +65,16 @@ def main():
 
     version_list = version_string.strip().split("\n")
     for version_entry in version_list:
-        key, value = version_entry.split(": ")
+        key, value = version_entry.split(": ", 1)
         version_dict[key] = value
 
-    with open(
-        io_handler_instance.get_output_file(args_dict["output_file"], label=label),
-        "w",
-        encoding="utf-8",
-    ) as f:
-        json.dump(version_dict, f, indent=4)
+    if not args_dict.get("output_file_from_default", False):
+        ascii_handler.write_data_to_file(
+            data=version_dict,
+            output_file=io_handler_instance.get_output_file(
+                args_dict.get("output_file", "simtools_version.json"), label=label
+            ),
+        )
 
 
 if __name__ == "__main__":

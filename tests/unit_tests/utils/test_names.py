@@ -106,7 +106,7 @@ def test_instrument_class_key_to_db_collection():
 def test_get_collection_name_from_parameter_name():
     assert "telescopes" == names.get_collection_name_from_parameter_name("num_gains")
     assert "sites" == names.get_collection_name_from_parameter_name("atmospheric_profile")
-    assert "calibration_devices" == names.get_collection_name_from_parameter_name("laser_photons")
+    assert "calibration_devices" == names.get_collection_name_from_parameter_name("flasher_photons")
     assert "configuration_sim_telarray" == names.get_collection_name_from_parameter_name(
         "iobuf_maximum"
     )
@@ -634,7 +634,7 @@ def test_get_common_identifier_from_array_element_name():
 
 
 def test_get_array_element_name_from_common_identifier():
-    id_to_name, _ = names.array_element_common_identifiers()
+    _, _ = names.array_element_common_identifiers()
 
     # Check some known identifiers
     assert names.get_array_element_name_from_common_identifier(1) == "LSTN-01"

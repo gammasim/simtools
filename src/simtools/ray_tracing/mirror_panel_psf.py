@@ -70,7 +70,7 @@ class MirrorPanelPSF:
         site_model : SiteModel
             The site model.
         """
-        tel_model, site_model = initialize_simulation_models(
+        tel_model, site_model, _ = initialize_simulation_models(
             label=label,
             db_config=db_config,
             site=self.args_dict["site"],
@@ -233,6 +233,7 @@ class MirrorPanelPSF:
                 else "all"
             ),
             use_random_focal_length=self.args_dict["use_random_focal_length"],
+            random_focal_length_seed=self.args_dict.get("random_focal_length_seed"),
         )
         ray.simulate(test=self.args_dict["test"], force=True)  # force has to be True, always
         ray.analyze(force=True)

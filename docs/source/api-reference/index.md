@@ -14,7 +14,7 @@ corsika
 data_model
 dependencies
 db_handler
-io_operations
+io
 job_execution
 array_layout
 mc_model
@@ -25,6 +25,7 @@ runners
 sim_telarray
 simulators
 testing
+trigger
 utils
 visualization
 ```

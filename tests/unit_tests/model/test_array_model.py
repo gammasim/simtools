@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from astropy import units as u
@@ -176,7 +178,7 @@ def test_get_all_array_elements_of_type(array_model, io_handler):
 def test_update_array_element_position(array_model_from_list):
     am = array_model_from_list
     assert "LSTN-01" in am.array_elements
-    assert "LSTN-01" in am.telescope_model
+    assert "LSTN-01" in am.telescope_models
     assert am.array_elements["LSTN-01"] is None
 
 
@@ -194,3 +196,158 @@ def test_model_version_setter_with_valid_list(array_model):
 
     with pytest.raises(ValueError, match=error_message):
         am.model_version = ["6.0.0", "7.0.0"]
+
+
+def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
+    mock_tarfile = MagicMock()
+    mock_tarfile_open = MagicMock()
+    # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
+    mock_cm = MagicMock()
+    mock_cm.__enter__.return_value = mock_tarfile
+    # ensure exiting the context calls close() on the mock tarfile to match real behavior
+    mock_cm.__exit__.side_effect = lambda *args: mock_tarfile.close()
+    mock_tarfile_open.return_value = mock_cm
+    # Return files under the mocked config directory so relative_to(base) works
+    mock_output_dir = tmp_path / "output" / "directory"
+    mock_rglob = MagicMock(return_value=[mock_output_dir / "file1", mock_output_dir / "file2"])
+    mock_get_output_directory = MagicMock(return_value=mock_output_dir)
+
+    with (
+        patch("tarfile.open", mock_tarfile_open),
+        patch("pathlib.Path.rglob", mock_rglob),
+        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
+        patch("pathlib.Path.is_file", return_value=True),
+    ):
+        archive_path = array_model.pack_model_files()
+
+        assert archive_path == mock_output_dir.joinpath(
+            "model", model_version, "model_files.tar.gz"
+        )
+        assert mock_tarfile.add.call_count == 2
+
+    mock_rglob = MagicMock(return_value=[])
+    with (
+        patch("tarfile.open", mock_tarfile_open),
+        patch("pathlib.Path.rglob", mock_rglob),
+        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
+    ):
+        assert array_model.pack_model_files() is None
+
+
+def test_get_additional_simtel_metadata(array_model, caplog, mocker):
+    array_model_cp = copy.deepcopy(array_model)
+    array_model_cp.sim_telarray_seeds = {"seeds": 1234}
+    mocker.patch.object(array_model_cp.site_model, "get_nsb_integrated_flux", return_value=42.0)
+
+    assert "nsb_integrated_flux" in array_model_cp._get_additional_simtel_metadata()
+    assert "seeds" in array_model_cp._get_additional_simtel_metadata()
+
+
+def test_build_calibration_models():
+    """Test _build_calibration_models method with mocked dependencies."""
+    from unittest.mock import Mock
+
+    from simtools.model.array_model import ArrayModel
+
+    # Create a mock array model instance
+    array_model = Mock(spec=ArrayModel)
+    array_model._build_calibration_models = ArrayModel._build_calibration_models
+
+    # Mock telescope model
+    telescope_model = Mock()
+    telescope_model.get_calibration_device_name = Mock()
+
+    # Mock site model
+    site_model = Mock()
+    site_model.site = "North"
+
+    # Test case 1: No calibration device types provided
+    result = array_model._build_calibration_models(array_model, telescope_model, site_model, None)
+    assert result == {}
+
+    # Test case 2: Empty calibration device types list
+    result = array_model._build_calibration_models(array_model, telescope_model, site_model, [])
+    assert result == {}
+
+    # Test case 3: Calibration device types provided but device name not found
+    telescope_model.get_calibration_device_name.return_value = None
+    result = array_model._build_calibration_models(
+        array_model, telescope_model, site_model, ["flasher"]
+    )
+    assert result == {}
+    telescope_model.get_calibration_device_name.assert_called_with("flasher")
+
+    # Test case 4: Calibration device types provided and device names found
+    def mock_device_name(device_type):
+        return f"device_{device_type}" if device_type in ["flasher", "illuminator"] else None
+
+    telescope_model.get_calibration_device_name.side_effect = mock_device_name
+
+    # Mock the CalibrationModel constructor
+    with patch("simtools.model.array_model.CalibrationModel") as mock_calibration_model:
+        mock_calibration_instance = Mock()
+        mock_calibration_model.return_value = mock_calibration_instance
+
+        # Set up array model attributes for CalibrationModel initialization
+        array_model.mongo_db_config = {"test": "config"}
+        array_model.model_version = "6.0.0"
+        array_model.label = "test_label"
+
+        result = array_model._build_calibration_models(
+            array_model, telescope_model, site_model, ["flasher", "illuminator", "nonexistent"]
+        )
+
+        # Should create calibration models for flasher and illuminator, but not nonexistent
+        assert len(result) == 2
+        assert "device_flasher" in result
+        assert "device_illuminator" in result
+        assert result["device_flasher"] == mock_calibration_instance
+        assert result["device_illuminator"] == mock_calibration_instance
+
+        # Check that CalibrationModel was called twice with correct parameters
+        assert mock_calibration_model.call_count == 2
+
+
+def test_export_all_simtel_config_files():
+    """Test export_all_simtel_config_files method calls both export methods when needed."""
+    from unittest.mock import Mock
+
+    array_model = Mock()
+    array_model._telescope_model_files_exported = False
+    array_model._array_model_file_exported = False
+
+    ArrayModel.export_all_simtel_config_files(array_model)
+
+    array_model.export_simtel_telescope_config_files.assert_called_once()
+    array_model.export_sim_telarray_config_file.assert_called_once()
+
+
+def test_build_telescope_models():
+    """Test _build_telescope_models method with mocked dependencies."""
+    from unittest.mock import Mock, patch
+
+    array_model = Mock()
+    array_model.model_version = "6.0.0"
+    array_model.mongo_db_config = {"test": "config"}
+    array_model.label = "test"
+
+    site_model = Mock()
+    site_model.site = "North"
+
+    array_elements = {"LSTN-01": None, "non_telescope": None}
+
+    with (
+        patch(
+            "simtools.model.array_model.names.get_collection_name_from_array_element_name"
+        ) as mock_names,
+        patch("simtools.model.array_model.TelescopeModel") as mock_tel_model,
+    ):
+        mock_names.side_effect = lambda name: "telescopes" if name == "LSTN-01" else "other"
+
+        telescope_models, _ = ArrayModel._build_telescope_models(
+            array_model, site_model, array_elements, None
+        )
+
+        assert "LSTN-01" in telescope_models
+        assert "non_telescope" not in telescope_models
+        mock_tel_model.assert_called_once()

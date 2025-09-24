@@ -5,9 +5,6 @@
 In this section you find the reference documentation of the modules contained in
 the visualization module.
 
-- {ref}`visualize <visualizationvisualize>`
-- {ref}`legend_handlers <visualizationlegendhandlers>`
-
 (visualizationvisualize)=
 
 ## visualize
@@ -44,6 +41,15 @@ the visualization module.
    :members:
 ```
 
+## plot_corsika_histograms
+
+(corsika-histograms-visualize-1)=
+
+```{eval-rst}
+.. automodule:: visualization.plot_corsika_histograms
+   :members:
+```
+
 (plot-tables)=
 
 ## plot_tables
@@ -57,5 +63,40 @@ the visualization module.
 
 ```{eval-rst}
 .. automodule:: visualization.plot_pixels
+   :members:
+```
+
+(visualization-plot-simtel_events)=
+
+## plot_simtel_events
+
+```{eval-rst}
+.. automodule:: visualization.plot_simtel_events
+   :members:
+```
+
+(visualization-plot-simtel_event_histograms)=
+
+## plot_simtel_event_histograms
+
+```{eval-rst}
+.. automodule:: visualization.plot_simtel_event_histograms
+   :members:
+```
+
+## plot_psf
+
+```{eval-rst}
+.. automodule:: visualization.plot_psf
+   :members:
+```
+
+(plot-incident-angles)=
+
+## plot_incident_angles
+
+```{eval-rst}
+.. automodule:: visualization.plot_incident_angles
+
    :members:
 ```

@@ -11,11 +11,11 @@
 # - DL3013: ignore warnings about installing non-specific versions with microdnf)
 # - SC1091: ignore warning about not being able to source the bashrc
 ARG BUILD_OPT="prod6-baseline"
-ARG HADRONIC_MODEL="qgs2"
-ARG SIMTEL_VERSION="240927"
-ARG CORSIKA_VERSION="77550"
-ARG BERNLOHR_VERSION="1.68"
-FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${SIMTEL_VERSION}-corsika-${CORSIKA_VERSION}-bernlohr-${BERNLOHR_VERSION}-${BUILD_OPT}-${HADRONIC_MODEL}:latest
+ARG HADRONIC_MODEL="qgs3"
+ARG SIMTEL_VERSION="250304"
+ARG CORSIKA_VERSION="78000"
+ARG BERNLOHR_VERSION="1.69"
+FROM ghcr.io/gammasim/simtools-sim-telarray-${SIMTEL_VERSION}-corsika-${CORSIKA_VERSION}-bernlohr-${BERNLOHR_VERSION}-${BUILD_OPT}-${HADRONIC_MODEL}:latest
 WORKDIR /workdir
 ARG PYTHON_VERSION="3.12"
 
@@ -26,7 +26,7 @@ RUN microdnf update -y && microdnf install -y \
 
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
     python${PYTHON_VERSION} -m venv env && \
-    source env/bin/activate && \
+    . env/bin/activate && \
     pip install --no-cache-dir -U pip && \
     pip install --no-cache-dir toml-to-requirements && \
     toml-to-req --toml-file pyproject.toml --optional-lists dev,doc,tests && \

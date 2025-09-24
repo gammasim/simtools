@@ -4,6 +4,9 @@
 import logging
 from pathlib import Path
 
+import numpy as np
+from astropy import units as u
+
 from simtools.model.model_parameter import ModelParameter
 
 __all__ = ["SiteModel"]
@@ -160,3 +163,25 @@ class SiteModel(ModelParameter):
             },
             dest=model_directory,
         )
+
+    def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
+        """
+        Get the integrated flux for the NSB (Night Sky Background) model.
+
+        Returns
+        -------
+        float
+            Integrated flux value.
+        """
+        table = self.db.get_ecsv_file_as_astropy_table(
+            file_name=self.get_parameter_value("nsb_spectrum")
+        )
+        table.sort("wavelength")
+        wl = table["wavelength"].quantity.to(u.nm)
+        rate = table["differential photon rate"].quantity.to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
+        mask = (wl >= wavelength_min) & (wl <= wavelength_max)
+        integral_cm2 = np.trapezoid(rate[mask], wl[mask])
+        self._logger.debug(
+            f"NSB integral between {wavelength_min} and {wavelength_max}: {integral_cm2}"
+        )
+        return integral_cm2.value

@@ -16,6 +16,7 @@ PATH_TO_OUTPUT = "/path/to/output"
 PATCH_TO_VALIDATE_CFG = "simtools.testing.validate_output._validate_simtel_cfg_files"
 PATH_CFG_6 = "/path/to/simtel_cfg_6.0.0.cfg"
 PATH_CFG_7 = "/path/to/simtel_cfg_7.0.0.cfg"
+TEST_PARAM_JSON = "test_param.json"
 
 
 @pytest.fixture
@@ -29,9 +30,9 @@ def create_json_file(tmp_test_directory):
 
 
 @pytest.fixture
-def create_yaml_file(tmp_path):
+def create_yaml_file(tmp_test_directory):
     def _create_yaml_file(file_name, content):
-        _file = tmp_path / file_name
+        _file = tmp_test_directory / file_name
         with open(_file, "w", encoding="utf-8") as f:
             yaml.dump(content, f)
         return _file
@@ -40,10 +41,10 @@ def create_yaml_file(tmp_path):
 
 
 @pytest.fixture
-def create_ecsv_file(tmp_path):
+def create_ecsv_file(tmp_test_directory):
     def _create_ecsv_file(file_name, content):
         table = Table(content)
-        file_path = tmp_path / file_name
+        file_path = tmp_test_directory / file_name
         table.write(file_path, format="ascii.ecsv")
         return file_path
 
@@ -91,6 +92,11 @@ def mock_validate_reference_output_file(mocker):
 @pytest.fixture
 def mock_validate_simtel_cfg_files(mocker):
     return mocker.patch(PATCH_TO_VALIDATE_CFG)
+
+
+@pytest.fixture
+def mock_validate_model_parameter_json_file(mocker):
+    return mocker.patch("simtools.testing.validate_output._validate_model_parameter_json_file")
 
 
 @pytest.fixture
@@ -370,12 +376,20 @@ def test_validate_application_output_with_reference_output_file(
     mock_validate_output_path_and_file,
     mock_validate_reference_output_file,
     mock_validate_simtel_cfg_files,
+    mock_validate_model_parameter_json_file,
 ):
     config = {
         "configuration": {"output_path": output_path},
         "integration_tests": [
             {"reference_output_file": test_path},
-            {"test_simtel_cfg_files": {"6.0.0": test_path}},
+            {
+                "test_simtel_cfg_files": {"6.0.0": test_path},
+                "model_parameter_validation": {
+                    "reference_parameter_name": "test_param",
+                    "parameter_file": "test_param-0.0.99.json",
+                    "tolerance": 1.0e-5,
+                },
+            },
         ],
     }
 
@@ -390,6 +404,7 @@ def test_validate_application_output_with_reference_output_file(
 
     validate_output.validate_application_output(config, "6.0.0")
     mock_validate_simtel_cfg_files.assert_called_once()
+    mock_validate_model_parameter_json_file.assert_called_once()
 
 
 def test_validate_application_output_with_assertion_error(output_path):
@@ -433,8 +448,8 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg")
-    file2 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg")
+    file1 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg")
+    file2 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg")
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 
@@ -560,3 +575,92 @@ def test_test_simtel_cfg_files_no_test_simtel_cfg_files(mocker):
     validate_output._test_simtel_cfg_files(config, integration_test, None, None)
 
     mock_validate_simtel_cfg_files.assert_not_called()
+
+
+def test_validate_model_parameter_json_file(mocker, output_path):
+    mock_db_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
+    mock_collect_data_from_file = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mock_compare_value = mocker.patch(
+        "simtools.testing.validate_output._compare_value_from_parameter_dict"
+    )
+
+    mock_db_instance = mock_db_handler.return_value
+    mock_db_instance.get_model_parameter.return_value = {
+        "reference_param": {"value": [1.0, 2.0, 3.0]}
+    }
+    mock_collect_data_from_file.return_value = {"value": [1.0, 2.0, 3.0]}
+
+    config = {
+        "configuration": {
+            "output_path": output_path,
+            "telescope": "test_telescope",
+            "model_version": "1.0.0",
+            "site": "test_site",
+        }
+    }
+    model_parameter_validation = {
+        "reference_parameter_name": "reference_param",
+        "parameter_file": TEST_PARAM_JSON,
+        "tolerance": 1.0e-5,
+    }
+
+    validate_output._validate_model_parameter_json_file(
+        config, model_parameter_validation, db_config=None
+    )
+
+    mock_db_handler.assert_called_once_with(mongo_db_config=None)
+    mock_db_instance.get_model_parameter.assert_called_once_with(
+        parameter="reference_param",
+        site="test_site",
+        array_element_name="test_telescope",
+        model_version="1.0.0",
+    )
+    mock_collect_data_from_file.assert_called_once_with(
+        Path(output_path) / "test_telescope" / TEST_PARAM_JSON
+    )
+    mock_compare_value.assert_called_once_with([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], 1.0e-5)
+
+
+def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
+    mock_db_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
+    mock_collect_data_from_file = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mock_compare_value = mocker.patch(
+        "simtools.testing.validate_output._compare_value_from_parameter_dict", return_value=False
+    )
+
+    mock_db_instance = mock_db_handler.return_value
+    mock_db_instance.get_model_parameter.return_value = {
+        "reference_param": {"value": [1.0, 2.0, 3.0]}
+    }
+    mock_collect_data_from_file.return_value = {"value": [1.1, 2.1, 3.1]}
+
+    config = {
+        "configuration": {
+            "output_path": output_path,
+            "telescope": "test_telescope",
+            "model_version": "1.0.0",
+            "site": "test_site",
+        }
+    }
+    model_parameter_validation = {
+        "reference_parameter_name": "reference_param",
+        "parameter_file": TEST_PARAM_JSON,
+        "tolerance": 1.0e-5,
+    }
+
+    with pytest.raises(AssertionError):
+        validate_output._validate_model_parameter_json_file(
+            config, model_parameter_validation, db_config=None
+        )
+
+    mock_db_handler.assert_called_once_with(mongo_db_config=None)
+    mock_db_instance.get_model_parameter.assert_called_once_with(
+        parameter="reference_param",
+        site="test_site",
+        array_element_name="test_telescope",
+        model_version="1.0.0",
+    )
+    mock_collect_data_from_file.assert_called_once_with(
+        Path(output_path) / "test_telescope" / TEST_PARAM_JSON
+    )
+    mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5)

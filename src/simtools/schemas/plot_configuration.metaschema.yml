@@ -99,6 +99,9 @@ definitions:
       file_name:
         type: string
         description: "Path to the data file."
+      ignore_table_data_path:
+        type: boolean
+        description: "Ignore table data path from command line."
       type:
         type: string
         description: "Type of data file."

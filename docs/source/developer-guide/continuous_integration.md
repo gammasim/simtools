@@ -2,6 +2,23 @@
 
 The simtools continuous integration tests, lints, and builds code, documentation and binaries. The CI is based on GitHub Actions and defined in the `.github/workflows` directory. This page documents the simtools CI workflows.
 
+## Summary
+
+| Workflow | PR | PR (path filter) | PR (types) | release | schedule |
+|---|---:|---:|---:|---:|---:|
+| `CI-docs` | x | - | opened, ready_for_review | x | - |
+| `CI-linter` | x | - | opened, synchronize | - | nightly |
+| `CI-unittests` | x | `docs/**`, `tests/integration_tests/**` |  opened, synchronize | x | nightly |
+| `CI-integrationtests` | x |  `docs/**`, `tests/unit_tests/**` | opened, synchronize | x | nightly |
+| `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - |
+| `CI-software-update` | - | - | - | - | monthly |
+| `build-simtools-production-image` | x | `docker/Dockerfile-simtelarray`, `docker/Dockerfile-prod-opt` | - | x | weekly (no deploy) |
+| `build-simtools-dev-image` | x | `docker/Dockerfile-dev` | - | x | weekly (no deploy) |
+| `changelog` | x | - | opened, labeled, unlabeled, ready_for_review | - | - |
+| `pypi` | - | - | - | x | - |
+
+All workflows can be triggered manually (`workflow_dispatch`).
+
 ## Units tests
 
 Unit tests are testing the code on a module and function level, see the [unit tests](testing.md#unit-tests) documentation for more details.
@@ -12,7 +29,7 @@ There is a scheduled run of unit tests over the main branch each night, which in
 
 :::{important}
 Simtools uses the CTAO sonar quality gates for code quality. Passing those gates is a requirement for merging code into the main branch.
-See the [simtools sonar project page](https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w) for the current status.
+See the [simtools sonar project page](https://sonar-ctao.zeuthen.desy.de/dashboard?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14) for the current status.
 :::
 
 ## Integration tests
@@ -31,7 +48,7 @@ Consistent code style is enforced by running the following linters:
 - linting of pyproject.toml
 - linting of CITATION.cff
 - running pylint on the code
-- linting docker files using [hadolint](https://github.com/hadolint/hadolint)
+- linting Docker files using [hadolint](https://github.com/hadolint/hadolint)
 - validate env files
 - check for natural language
 

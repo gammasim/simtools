@@ -100,7 +100,6 @@ def get_telescope_patch(name, x, y, radius):
     patch : Patch
         Circle or rectangle patch.
     """
-    tel_obj = leg_h.TelescopeHandler()
     tel_type = names.get_array_element_type_from_name(name)
     x, y, r = x.to(u.m), y.to(u.m), radius.to(u.m)
 
@@ -110,14 +109,14 @@ def get_telescope_patch(name, x, y, radius):
             width=r.value,
             height=r.value,
             fill=False,
-            color=tel_obj.colors_dict[tel_type],
+            color=leg_h.get_telescope_config(tel_type)["color"],
         )
 
     return mpatches.Circle(
         (x.value, y.value),
         radius=r.value,
         fill=tel_type.startswith("MST"),
-        color=tel_obj.colors_dict[tel_type],
+        color=leg_h.get_telescope_config(tel_type)["color"],
     )
 
 
@@ -221,12 +220,25 @@ def update_legend(ax, telescopes):
     counts = Counter(types)
 
     objs, labels = [], []
-    for t in names.get_list_of_array_element_types():
-        if counts[t]:
-            objs.append(leg_h.all_telescope_objects[t]())
-            labels.append(f"{t} ({counts[t]})")
+    handler_map = {}
 
-    handler_map = {k: v() for k, v in leg_h.legend_handler_map.items()}
+    for telescope_type in names.get_list_of_array_element_types():
+        if counts[telescope_type]:
+            objs.append(telescope_type)
+            labels.append(f"{telescope_type} ({counts[telescope_type]})")
+
+            class BaseLegendHandlerWrapper:  # pylint: disable=R0903
+                """Wrapper for BaseLegendHandler to use in legend."""
+
+                def __init__(self, tel_type):
+                    self.tel_type = tel_type
+
+                def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+                    handler = leg_h.BaseLegendHandler(self.tel_type)
+                    return handler.legend_artist(legend, orig_handle, fontsize, handlebox)
+
+            handler_map[telescope_type] = BaseLegendHandlerWrapper(telescope_type)
+
     ax.legend(objs, labels, handler_map=handler_map, prop={"size": 11}, loc="best")
 
 

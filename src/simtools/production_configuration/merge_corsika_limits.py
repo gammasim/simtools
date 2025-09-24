@@ -11,7 +11,7 @@ from astropy.table import unique, vstack
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 _logger = logging.getLogger(__name__)
 

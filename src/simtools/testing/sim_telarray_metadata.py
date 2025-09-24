@@ -35,19 +35,19 @@ def assert_sim_telarray_metadata(file, array_model):
     if sim_telarray_seed_mismatch:
         site_parameter_mismatch.append(sim_telarray_seed_mismatch)
 
-    if len(telescope_meta) != len(array_model.telescope_model):
+    if len(telescope_meta) != len(array_model.telescope_models):
         raise ValueError(
             f"Number of telescopes in sim_telarray file ({len(telescope_meta)}) does not match "
-            f"number of telescopes in array model ({len(array_model.telescope_model)})"
+            f"number of telescopes in array model ({len(array_model.telescope_models)})"
         )
 
-    for telescope_name in array_model.telescope_model.keys():
+    for telescope_name in array_model.telescope_models.keys():
         if not get_sim_telarray_telescope_id(telescope_name, file):
             raise ValueError(f"Telescope {telescope_name} not found in sim_telarray file metadata")
 
     telescope_parameter_mismatch = [
         _assert_model_parameters(telescope_meta[i], model)
-        for i, model in enumerate(array_model.telescope_model.values(), start=1)
+        for i, model in enumerate(array_model.telescope_models.values(), start=1)
     ]
 
     # ensure printout of all mismatches, not only those found first

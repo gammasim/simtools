@@ -102,13 +102,13 @@ def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_mod
 def test_position(telescope_model_lst, caplog):
     tel_model = telescope_model_lst
     xyz = tel_model.position(coordinate_system="ground")
-    assert pytest.approx(xyz[0].value) == -70.91
-    assert pytest.approx(xyz[1].value) == -52.35
-    assert pytest.approx(xyz[2].value) == 45.0
+    assert xyz[0].value == pytest.approx(-70.91)
+    assert xyz[1].value == pytest.approx(-52.35)
+    assert xyz[2].value == pytest.approx(45.0)
     utm_xyz = tel_model.position(coordinate_system="utm")
-    assert pytest.approx(utm_xyz[0].value) == 217659.6
-    assert pytest.approx(utm_xyz[1].value) == 3184995.1
-    assert pytest.approx(utm_xyz[2].value) == 2185.0
+    assert utm_xyz[0].value == pytest.approx(217659.6)
+    assert utm_xyz[1].value == pytest.approx(3184995.1)
+    assert utm_xyz[2].value == pytest.approx(2185.0)
     with caplog.at_level("ERROR"):
         with pytest.raises(InvalidModelParameterError):
             tel_model.position(coordinate_system="invalid")
@@ -306,7 +306,7 @@ def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
 
     with patch("astropy.io.ascii.read", return_value=fake_table):
         result = telescope_model_lst.get_on_axis_eff_optical_area()
-        assert result == 123.4
+        assert result == pytest.approx(123.4)
 
 
 def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
@@ -320,3 +320,36 @@ def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
     with patch("astropy.io.ascii.read", return_value=fake_table):
         with pytest.raises(ValueError, match="^No value for the on-axis"):
             telescope_model_lst.get_on_axis_eff_optical_area()
+
+
+def test_get_calibration_device_name():
+    """Test get_calibration_device_name method with mocked get_parameter_value."""
+    from simtools.model.telescope_model import TelescopeModel
+
+    # Create a mock telescope model instance
+    telescope_model = Mock(spec=TelescopeModel)
+    telescope_model.get_calibration_device_name = TelescopeModel.get_calibration_device_name
+
+    # Test case 1: Parameter exists and device type found
+    mock_devices = {"flasher": "my_flasher_device", "illuminator": "my_illuminator_device"}
+    telescope_model.get_parameter_value = Mock(return_value=mock_devices)
+
+    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
+    assert result == "my_flasher_device"
+    telescope_model.get_parameter_value.assert_called_with("calibration_devices")
+
+    # Test case 2: Parameter exists but device type not found
+    result = telescope_model.get_calibration_device_name(telescope_model, "nonexistent_device")
+    assert result is None
+
+    # Test case 3: Parameter exists but is None
+    telescope_model.get_parameter_value = Mock(return_value=None)
+    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
+    assert result is None
+
+    # Test case 4: Parameter does not exist (InvalidModelParameterError raised)
+    telescope_model.get_parameter_value = Mock(
+        side_effect=InvalidModelParameterError("Parameter not found")
+    )
+    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
+    assert result is None

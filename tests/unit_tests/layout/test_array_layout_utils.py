@@ -7,11 +7,16 @@ import pytest
 
 import simtools.layout.array_layout_utils as cta_array_layouts
 from simtools.layout.array_layout_utils import (
+    get_array_elements_from_db_for_layouts,
     get_array_layouts_from_file,
     get_array_layouts_from_parameter_file,
     merge_array_layouts,
     write_array_layouts,
 )
+
+# Constants for patch paths
+PATCH_ASCII_COLLECT_FILE = "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_file"
+PATCH_SITEMODEL = "simtools.layout.array_layout_utils.SiteModel"
 
 
 @pytest.fixture
@@ -207,30 +212,38 @@ def test_get_ctao_layouts_per_site(mock_names):
 
 def test_retrieve_ctao_array_layouts_from_url():
     """Test retrieving array layouts from URL."""
-    with patch("simtools.layout.array_layout_utils.gen") as mock_gen:
+    with (
+        patch("simtools.layout.array_layout_utils.gen") as mock_gen,
+        patch(
+            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_http"
+        ) as mock_ascii_handler,
+    ):
         mock_gen.is_url.return_value = True
+        mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
 
         cta_array_layouts.retrieve_ctao_array_layouts(
             site="north", repository_url="https://test.com", branch_name="test-branch"
         )
 
         mock_gen.is_url.assert_called_once_with("https://test.com")
-        mock_gen.collect_data_from_http.assert_called_with(
-            url="https://test.com/test-branch/subarray-ids.json"
-        )
+        mock_ascii_handler.assert_called_with(url="https://test.com/test-branch/subarray-ids.json")
 
 
 def test_retrieve_ctao_array_layouts_from_file(test_path):
     """Test retrieving array layouts from local file."""
-    with patch("simtools.layout.array_layout_utils.gen") as mock_gen:
+    with (
+        patch("simtools.layout.array_layout_utils.gen") as mock_gen,
+        patch(PATCH_ASCII_COLLECT_FILE) as mock_ascii_handler,
+    ):
         mock_gen.is_url.return_value = False
+        mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
 
         cta_array_layouts.retrieve_ctao_array_layouts(
             site="north", repository_url=test_path, branch_name="test-branch"
         )
 
         mock_gen.is_url.assert_called_once_with(test_path)
-        mock_gen.collect_data_from_file.assert_called()
+        assert mock_ascii_handler.call_count == 2
 
 
 def test_validate_array_layouts_with_db_valid():
@@ -344,7 +357,7 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
         "site": "north",
     }
     mocker.patch(
-        "simtools.layout.array_layout_utils.gen.collect_data_from_file",
+        PATCH_ASCII_COLLECT_FILE,
         return_value=fake_data,
     )
     fake_table = ["tel1", "tel2"]
@@ -384,9 +397,9 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
     fake_data = {
         "site": "north",
     }
-    # Patch gen.collect_data_from_file to return fake_data without the "value" key.
+    # Patch ascii_handler.collect_data_from_file to return fake_data without the "value" key.
     mocker.patch(
-        "simtools.layout.array_layout_utils.gen.collect_data_from_file",
+        PATCH_ASCII_COLLECT_FILE,
         return_value=fake_data,
     )
 
@@ -441,7 +454,7 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     fake_layout_names = ["layout1", "layout2"]
 
     # Patch SiteModel so that get_list_of_array_layouts returns our fake_layout_names.
-    mock_site_model = mocker.patch("simtools.layout.array_layout_utils.SiteModel")
+    mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance_site = MagicMock()
     instance_site.get_list_of_array_layouts.return_value = fake_layout_names
     mock_site_model.return_value = instance_site
@@ -675,3 +688,50 @@ def test_get_array_layout_dict_with_telescope_list(mock_array_model):
 
     # Check result
     assert result == {"name": "list", "site": site, "array_elements": fake_table}
+
+
+def test_read_array_layouts_from_db_specific_layouts(mocker):
+    """Test _read_array_layouts_from_db with specific layout names."""
+    mock_site_model = mocker.patch(PATCH_SITEMODEL)
+    instance = mock_site_model.return_value
+    instance.get_array_elements_for_layout.side_effect = (
+        lambda name: [1, 2] if name == "LST" else [3, 4]
+    )
+
+    layouts = ["LST", "MST"]
+    site = "North"
+    model_version = "v1.0.0"
+    db_config = {"host": "localhost"}
+
+    result = get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config)
+
+    assert result == {"LST": [1, 2], "MST": [3, 4]}
+    mock_site_model.assert_called_once_with(
+        site=site, model_version=model_version, mongo_db_config=db_config
+    )
+    assert instance.get_array_elements_for_layout.call_count == 2
+    instance.get_array_elements_for_layout.assert_any_call("LST")
+    instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+def test_read_array_layouts_from_db_all_layouts(mocker):
+    """Test _read_array_layouts_from_db with 'all' layouts."""
+    mock_site_model = mocker.patch("simtools.layout.array_layout_utils.SiteModel")
+    instance = mock_site_model.return_value
+    instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
+    instance.get_array_elements_for_layout.side_effect = (
+        lambda name: [10, 20] if name == "LST" else [30, 40]
+    )
+
+    layouts = ["all"]
+    site = "South"
+    model_version = "v2.0.0"
+    db_config = {"host": "db"}
+
+    result = get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config)
+
+    assert result == {"LST": [10, 20], "MST": [30, 40]}
+    instance.get_list_of_array_layouts.assert_called_once()
+    assert instance.get_array_elements_for_layout.call_count == 2
+    instance.get_array_elements_for_layout.assert_any_call("LST")
+    instance.get_array_elements_for_layout.assert_any_call("MST")
