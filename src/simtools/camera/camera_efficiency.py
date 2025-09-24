@@ -299,7 +299,7 @@ class CameraEfficiency:
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
-        table = astropy.io.ascii.read(str(self._file["results"]), format="basic")
+        table = astropy.io.ascii.read(self._file["results"], format="basic")
         self._results = table
         self._has_results = True
 
