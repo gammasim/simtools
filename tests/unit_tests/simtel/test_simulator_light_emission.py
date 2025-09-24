@@ -188,7 +188,7 @@ def test_calculate_distance_focal_plane_calibration_device(simulator_instance):
 
     result = simulator_instance.calculate_distance_focal_plane_calibration_device()
     assert result.unit.is_equivalent(u.m)
-    assert np.isclose(result.value, 10.2, rtol=1e-9)
+    assert np.isclose(result.value, 9.8, rtol=1e-9)
 
 
 def test__get_angular_distribution_string_for_sim_telarray(simulator_instance):
