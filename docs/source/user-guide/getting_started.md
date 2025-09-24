@@ -129,7 +129,7 @@ SIMTOOLS_DB_API_USER=<username>
 SIMTOOLS_DB_API_PW=<password>
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 # Name of the simulation model database
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-v0-7-0'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-v0-7-0'
 # Path to the sim_telarray installation
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 # User name of the user running the application
