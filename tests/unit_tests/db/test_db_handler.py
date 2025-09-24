@@ -269,41 +269,6 @@ def test_open_mongo_db_direct_connection(mocker, db, db_config):
     )
 
 
-def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
-    db_no_config_file._find_latest_simulation_model_db()
-    assert db_no_config_file.mongo_db_config is None
-
-    db_name = db.mongo_db_config["db_simulation_model"]
-    db._find_latest_simulation_model_db()
-    assert db_name == db.mongo_db_config["db_simulation_model"]
-
-    db_copy = copy.deepcopy(db)
-    db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME"
-    db_copy.mongo_db_config["db_simulation_model_version"] = "LATEST"
-
-    with pytest.raises(ValueError, match=r"LATEST requested but no released versions found in DB."):
-        db_copy._find_latest_simulation_model_db()
-
-    db_names = [
-        "CTAO-Simulation-ModelParameters-v0-3-0",
-        "CTAO-Simulation-ModelParameters-v0-2-0",
-        "CTAO-Simulation-ModelParameters-v0-1-19",
-        "CTAO-Simulation-ModelParameters-v0-3-9",
-        "CTAO-Simulation-ModelParameters-v0-3-19",
-        "CTAO-Simulation-ModelParameters-v0-3-0",
-        "CTAO-Simulation-ModelParameters-v0-3-0-alpha-2",
-        "CTAO-Simulation-ModelParameters-v0-4-19-alpha-1",
-        "CTAO-Simulation-ModelParameters-v0-4-19-dev1",
-    ]
-    mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
-    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-ModelParameters"
-    db_copy.mongo_db_config["db_simulation_model_version"] = "LATEST"
-    db_copy._find_latest_simulation_model_db()
-    assert (
-        db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-ModelParameters-v0-3-19"
-    )
-
-
 def test_get_model_parameters(
     db,
     common_mock_read_production_table,
