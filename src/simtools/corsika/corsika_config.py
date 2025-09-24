@@ -563,8 +563,9 @@ class CorsikaConfig:
         if self.is_file_updated:
             self._logger.debug(f"CORSIKA input file already updated: {self.config_file_path}")
             return self.config_file_path
-        _output_generic_file_name = self.set_output_file_and_directory(use_multipipe=use_multipipe)
         self._logger.info(f"Exporting CORSIKA input file to {self.config_file_path}")
+        _output_generic_file_name = self.set_output_file_and_directory(use_multipipe=use_multipipe)
+        self._logger.info(f"Output generic file name: {_output_generic_file_name}")
 
         with open(self.config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
@@ -712,13 +713,10 @@ class CorsikaConfig:
         str
             Output file name.
         """
-        sub_dir = "corsika_sim_telarray" if use_multipipe else "corsika"
-        config_file_name = self.get_corsika_config_file_name(file_type="config")
-        file_directory = self.io_handler.get_output_directory(sub_dir=sub_dir)
-        self._logger.debug(f"Creating directory {file_directory}")
-        file_directory.mkdir(parents=True, exist_ok=True)
-        self.config_file_path = file_directory.joinpath(config_file_name)
-
+        self.config_file_path = self.io_handler.get_output_file(
+            file_name=self.get_corsika_config_file_name(file_type="config"),
+            sub_dir="corsika_sim_telarray" if use_multipipe else "corsika",
+        )
         return self.get_corsika_config_file_name(file_type="output_generic")
 
     def _write_seeds(self, file, use_test_seeds=False):
