@@ -80,12 +80,12 @@ class IncidentAnglesCalculator:
             config_data["site"],
             config_data["telescope"],
         )
-        self.telescope_model, self.site_model = initialize_simulation_models(
-            self.label,
-            db_config,
-            config_data["site"],
-            config_data["telescope"],
-            config_data["model_version"],
+        self.telescope_model, self.site_model, _ = initialize_simulation_models(
+            label=self.label,
+            db_config=db_config,
+            site=config_data["site"],
+            telescope_name=config_data["telescope"],
+            model_version=config_data["model_version"],
         )
 
     def _label_suffix(self):
@@ -110,7 +110,7 @@ class IncidentAnglesCalculator:
             Table containing at least the ``angle_incidence_focal`` column
             and, when configured, primary/secondary angles and hit geometry.
         """
-        self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
+        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
 
         photons_file, stars_file, log_file = self._prepare_psf_io_files()
         run_script = self._write_run_script(photons_file, stars_file, log_file)

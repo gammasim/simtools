@@ -827,7 +827,7 @@ class DatabaseHandler:
         """
         db_name = db_name or self.db_name
         collection = self.get_collection("production_tables", db_name=db_name or self.db_name)
-        self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
+        self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
         collection.insert_one(production_table)
         DatabaseHandler.production_table_cached.clear()
         DatabaseHandler.model_versions_cached.clear()

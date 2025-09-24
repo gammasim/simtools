@@ -114,8 +114,8 @@ class CorsikaConfig:
             return {}
 
         self.is_file_updated = False
-        self.azimuth_angle = int(args_dict["azimuth_angle"].to("deg").value)
-        self.zenith_angle = args_dict["zenith_angle"].to("deg").value
+        self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
+        self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
 
         self._logger.debug(
             f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
@@ -748,7 +748,7 @@ class CorsikaConfig:
             Piece of text to be added to the CORSIKA input file.
         """
         corsika_input_list = ""
-        for telescope_name, telescope in self.array_model.telescope_model.items():
+        for telescope_name, telescope in self.array_model.telescope_models.items():
             positions = telescope.get_parameter_value_with_unit("array_element_position_ground")
             corsika_input_list += "TELESCOPE"
             for pos in positions:

@@ -70,7 +70,7 @@ class MirrorPanelPSF:
         site_model : SiteModel
             The site model.
         """
-        tel_model, site_model = initialize_simulation_models(
+        tel_model, site_model, _ = initialize_simulation_models(
             label=label,
             db_config=db_config,
             site=self.args_dict["site"],

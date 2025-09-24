@@ -7,11 +7,11 @@ to production tables and model parameters as provided in a YAML file (see the ex
 
 Two main use cases are covered by this script:
 
-1. full_update: Create a complete new set of production tables (e.g. for new major or minor
+1. full update: Create a complete new set of production tables (e.g. for new major or minor
    versions of the simulation models). This will copy all production tables from the source
    directory and apply the modifications to the tables that are listed in the modifications file.
 
-2. patch_update: Create a set of new production tables including the changes defined in the
+2. patch update: Create a set of new production tables including the changes defined in the
    modifications file. No unmodified tables are copied. For new production tables with patch
    modifications, the key-value pair 'base_model_version: <base_model version>' is added.
 
@@ -27,9 +27,7 @@ The following example applies a patch update with changes defined in a YAML file
 
     simtools-maintain-simulation-model-add-new-production \\
         --simulation_models_path ../simulation-models-dev/simulation-models/ \\
-        --base_model_version 6.0.0 \\
-        --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml \\
-        --patch_update
+        --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml
 
 """
 
@@ -58,35 +56,10 @@ def _parse(label, description):
         help="Path to the simulation models repository.",
     )
     config.parser.add_argument(
-        "--base_model_version",
-        type=str,
-        required=True,
-        help="Base model version (which is the source production table subdirectory to copy from).",
-    )
-    config.parser.add_argument(
         "--modifications",
         type=str,
         required=True,
         help="File containing the list of changes to apply.",
-    )
-    update_group = config.parser.add_mutually_exclusive_group(required=True)
-    update_group.add_argument(
-        "--full_update",
-        action="store_true",
-        default=False,
-        help=(
-            "Create a full new set of production tables by copying all tables from the "
-            "base version and applying the modifications to the relevant tables."
-        ),
-    )
-    update_group.add_argument(
-        "--patch_update",
-        action="store_true",
-        default=False,
-        help=(
-            "Create a new set of production tables including only the changes defined in the "
-            "modifications file. No unmodified tables are copied."
-        ),
     )
 
     return config.initialize(db_config=False, output=False)
@@ -98,7 +71,10 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    model_repository.generate_new_production(args_dict)
+    model_repository.generate_new_production(
+        modifications=args_dict["modifications"],
+        simulation_models_path=Path(args_dict["simulation_models_path"]),
+    )
 
 
 if __name__ == "__main__":
