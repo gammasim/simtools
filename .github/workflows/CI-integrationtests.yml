@@ -112,8 +112,7 @@ jobs:
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
           cd database_scripts/
-          # TODO temporary from branch for testing of flasher parameters
-          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} flasher-models-by-changes
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
 
       - name: Integration tests
         shell: bash -l {0}
