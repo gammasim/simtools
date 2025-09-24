@@ -418,7 +418,7 @@ def test_validate_metadata(array_simulator, mocker, caplog):
     mocker.patch("simtools.simulator.assert_sim_telarray_metadata")
     with caplog.at_level(logging.WARNING):
         array_simulator.validate_metadata()
-    assert "No sim_telarray file found for model version 6.0.0:" in caplog.text
+    assert "No sim_telarray file found for model version" in caplog.text
 
 
 def test_pack_for_register_with_multiple_versions(
@@ -498,24 +498,26 @@ def test_pack_for_register_with_multiple_versions(
         )
 
 
-def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_path):
+def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_test_directory):
     original_content = b"Original CORSIKA log content."
     expected_content = "Original CORSIKA log content."
     helper_test_copy_corsika_log_file(
-        array_simulator, mocker, tmp_path, original_content, expected_content
+        array_simulator, mocker, tmp_test_directory, original_content, expected_content
     )
 
 
-def test_copy_corsika_log_file_for_all_versions_with_non_unicode(array_simulator, mocker, tmp_path):
+def test_copy_corsika_log_file_for_all_versions_with_non_unicode(
+    array_simulator, mocker, tmp_test_directory
+):
     original_content = b"Valid line 1\nValid line 2\nInvalid line \x80\x81\n"
     expected_content = "Valid line 1\nValid line 2\nInvalid line"
     helper_test_copy_corsika_log_file(
-        array_simulator, mocker, tmp_path, original_content, expected_content
+        array_simulator, mocker, tmp_test_directory, original_content, expected_content
     )
 
 
 def helper_test_copy_corsika_log_file(
-    array_simulator, mocker, tmp_path, original_content, expected_content
+    array_simulator, mocker, tmp_test_directory, original_content, expected_content
 ):
     """
     Helper function to test _copy_corsika_log_file_for_all_versions.
@@ -526,7 +528,7 @@ def helper_test_copy_corsika_log_file(
         The simulator instance.
     mocker: pytest-mocker
         The mocker instance for mocking objects.
-    tmp_path: Path
+    tmp_test_directory: Path
         Temporary directory for creating test files.
     original_content: bytes
         The content to write to the original log file.
@@ -540,7 +542,7 @@ def helper_test_copy_corsika_log_file(
     ]
 
     # Create a temporary directory for log files
-    original_log_dir = tmp_path / "logs"
+    original_log_dir = tmp_test_directory / "logs"
     original_log_dir.mkdir()
 
     # Create a mock original log file

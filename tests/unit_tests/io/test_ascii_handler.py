@@ -213,10 +213,10 @@ def test_json_numpy_encoder():
         encoder.default("abc")
 
 
-def test_write_to_yaml(tmp_path):
+def test_write_to_yaml(tmp_test_directory):
     """Test the _write_to_yaml function."""
     test_data = {"key1": "value1", "key2": [1, 2, 3], "key3": {"nested_key": "nested_value"}}
-    output_file = tmp_path / "test_output.yaml"
+    output_file = tmp_test_directory / "test_output.yaml"
 
     # Test writing YAML file
     ascii_handler._write_to_yaml(test_data, output_file, sort_keys=False)
@@ -228,7 +228,7 @@ def test_write_to_yaml(tmp_path):
     assert loaded_data == test_data
 
     # Test writing YAML file with sorted keys
-    sorted_output_file = tmp_path / "test_output_sorted.yaml"
+    sorted_output_file = tmp_test_directory / "test_output_sorted.yaml"
     ascii_handler._write_to_yaml(test_data, sorted_output_file, sort_keys=True)
     assert sorted_output_file.exists()
 
@@ -238,10 +238,10 @@ def test_write_to_yaml(tmp_path):
     assert list(loaded_data_sorted.keys()) == sorted(test_data.keys())
 
 
-def test_write_to_json(tmp_path):
+def test_write_to_json(tmp_test_directory):
     """Test the _write_to_json function."""
     test_data = {"key1": "value1", "key2": [1, 2, 3], "key3": {"nested_key": "nested_value"}}
-    output_file = tmp_path / "test_output.json"
+    output_file = tmp_test_directory / "test_output.json"
 
     # Test writing JSON file
     ascii_handler._write_to_json(test_data, output_file, sort_keys=False, numpy_types=False)
@@ -253,7 +253,7 @@ def test_write_to_json(tmp_path):
     assert loaded_data == test_data
 
     # Test writing JSON file with sorted keys
-    sorted_output_file = tmp_path / "test_output_sorted.json"
+    sorted_output_file = tmp_test_directory / "test_output_sorted.json"
     ascii_handler._write_to_json(test_data, sorted_output_file, sort_keys=True, numpy_types=False)
     assert sorted_output_file.exists()
 
@@ -264,7 +264,7 @@ def test_write_to_json(tmp_path):
 
     # Test writing JSON file with numpy types
     numpy_data = {"array": np.array([1, 2, 3]), "float": np.float64(3.14), "int": np.int64(42)}
-    numpy_output_file = tmp_path / "test_numpy_output.json"
+    numpy_output_file = tmp_test_directory / "test_numpy_output.json"
     ascii_handler._write_to_json(numpy_data, numpy_output_file, sort_keys=False, numpy_types=True)
     assert numpy_output_file.exists()
 
@@ -278,10 +278,10 @@ def test_write_to_json(tmp_path):
     }
 
 
-def test_write_data_to_file_json(tmp_path):
+def test_write_data_to_file_json(tmp_test_directory):
     """Test write_data_to_file for JSON files."""
     test_data = {"key1": "value1", "key2": [1, 2, 3]}
-    output_file = tmp_path / "test_output.json"
+    output_file = tmp_test_directory / "test_output.json"
 
     ascii_handler.write_data_to_file(test_data, output_file, sort_keys=False, numpy_types=False)
     assert output_file.exists()
@@ -291,10 +291,10 @@ def test_write_data_to_file_json(tmp_path):
     assert loaded_data == test_data
 
 
-def test_write_data_to_file_yaml(tmp_path):
+def test_write_data_to_file_yaml(tmp_test_directory):
     """Test write_data_to_file for YAML files."""
     test_data = {"key1": "value1", "key2": [1, 2, 3]}
-    output_file = tmp_path / "test_output.yaml"
+    output_file = tmp_test_directory / "test_output.yaml"
 
     ascii_handler.write_data_to_file(test_data, output_file, sort_keys=False, numpy_types=False)
     assert output_file.exists()
@@ -304,10 +304,10 @@ def test_write_data_to_file_yaml(tmp_path):
     assert loaded_data == test_data
 
 
-def test_write_data_to_file_invalid_extension(tmp_path):
+def test_write_data_to_file_invalid_extension(tmp_test_directory):
     """Test write_data_to_file with unsupported file extension."""
     test_data = {"key1": "value1"}
-    output_file = tmp_path / "test_output.txt"
+    output_file = tmp_test_directory / "test_output.txt"
 
     with pytest.raises(ValueError, match="Unsupported file type"):
         ascii_handler.write_data_to_file(test_data, output_file)

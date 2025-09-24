@@ -3,7 +3,7 @@ applications:
 - application: simtools-generate-array-config
   configuration:
     array_layout_name: test_layout
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     site: North
   test_name: run

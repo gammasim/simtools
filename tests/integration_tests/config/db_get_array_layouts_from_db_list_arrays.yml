@@ -3,7 +3,7 @@ applications:
 - application: simtools-db-get-array-layouts-from-db
   configuration:
     list_available_layouts: true
-    model_version: 6.0.0
+    model_version: 6.0
     site: North
   test_name: list_arrays
 schema_name: application_workflow.metaschema
