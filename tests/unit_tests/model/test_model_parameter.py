@@ -386,10 +386,38 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     add_model = copy.deepcopy(telescope_model_lst)
     add_model._parameters = {"test_param": "test_value"}
 
-    telescope_copy.write_sim_telarray_config_file(additional_model=add_model)
+    telescope_copy.write_sim_telarray_config_file(additional_models=add_model)
     assert mock_export.call_count == 2  # Called for both models
     mock_load_writer.assert_called_once()
     assert telescope_copy.parameters.get("test_param") == "test_value"
     mock_writer.write_telescope_config_file.assert_called_once()
 
     mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)
+
+
+def test_add_additional_models(telescope_model_lst, mocker):
+    """Test _add_additional_models method."""
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    # Test case 1: None input
+    telescope_copy._add_additional_models(None)
+    # Should not change anything
+
+    # Test case 2: Single model
+    mock_model = mocker.Mock()
+    mock_model.parameters = {"new_param": "new_value"}
+    mock_model.export_model_files = mocker.Mock()
+
+    telescope_copy._add_additional_models(mock_model)
+    assert "new_param" in telescope_copy.parameters
+    assert telescope_copy.parameters["new_param"] == "new_value"
+    mock_model.export_model_files.assert_called_once()
+
+    # Test case 3: Dictionary of models
+    mock_model2 = mocker.Mock()
+    mock_model2.parameters = {"param2": "value2"}
+    mock_model2.export_model_files = mocker.Mock()
+
+    models_dict = {"model1": mock_model, "model2": mock_model2}
+    telescope_copy._add_additional_models(models_dict)
+    assert telescope_copy.parameters["param2"] == "value2"

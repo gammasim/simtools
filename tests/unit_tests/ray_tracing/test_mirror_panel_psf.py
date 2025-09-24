@@ -64,7 +64,7 @@ def mock_mirror_panel_psf(
     mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
 ):
     with patch(mock_telescope_model_string) as mock_init_models, patch(mock_find_file_string):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
         db_config = {"db": "config"}
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict, db_config)
@@ -80,7 +80,7 @@ def test_define_telescope_model(
         patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string) as mock_find_file,
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
 
         args_dict["mirror_list"] = None
         args_dict["random_focal_length"] = None
@@ -106,7 +106,7 @@ def test_define_telescope_model(
         patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string) as mock_find_file,
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
 
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
         args_dict["model_path"] = "tests/resources"
@@ -138,7 +138,7 @@ def test_define_telescope_model_test_errors(
         patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string),
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
         db_config = {"db": "config"}
         label = "test_label"
 
@@ -203,7 +203,7 @@ def test_run_simulations_and_analysis(
         patch(mock_find_file_string),
         patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
         db_config = {"db": "config"}
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)

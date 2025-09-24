@@ -29,6 +29,12 @@ definitions:
       meta_schema_version:
         type: string
         description: "version of meta schema applied to this file (semver)"
+      deprecated:
+        type: boolean
+        description: "indicates if this parameter is deprecated"
+      deprecation_note:
+        type: string
+        description: "notes about deprecation"
       name:
         type: string
         description: "name of model parameter"
