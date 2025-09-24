@@ -135,7 +135,7 @@ class ModelDataWriter:
         db_config: dict
             Database configuration. If not None, check if parameter with the same version exists.
         unit: str
-            Unit of the parameter value (if applicable and value is not an astropy Quantity).
+            Unit of the parameter value (if applicable and value is not of type astropy Quantity).
 
         Returns
         -------
@@ -296,16 +296,17 @@ class ModelDataWriter:
             Schema dictionary.
         """
         schema_file = schema.get_model_parameter_schema_file(parameter_name)
-        schema_dict = ascii_handler.collect_data_from_file(schema_file)
-        if isinstance(schema_dict, list):
+        schemas = ascii_handler.collect_data_from_file(schema_file)
+        if isinstance(schemas, list):
             if schema_version is None:
-                return self._find_highest_schema_version(schema_dict), schema_file
-            for entry in schema_dict:
+                return self._find_highest_schema_version(schemas), schema_file
+            for entry in schemas:
                 if entry.get("schema_version") == schema_version:
                     return entry, schema_file
         else:
-            return schema_dict, schema_file
-        return {}, schema_file
+            return schemas, schema_file
+
+        raise ValueError(f"Schema version {schema_version} not found for {parameter_name}")
 
     def _find_highest_schema_version(self, schema_list):
         """
@@ -321,7 +322,10 @@ class ModelDataWriter:
         dict
             Schema dictionary with highest schema_version.
         """
-        valid_entries = [entry for entry in schema_list if "schema_version" in entry]
+        try:
+            valid_entries = [entry for entry in schema_list if "schema_version" in entry]
+        except TypeError as exc:
+            raise TypeError("No valid schema versions found in the list.") from exc
         return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
 
     def _get_parameter_type(self):
@@ -332,7 +336,7 @@ class ModelDataWriter:
 
         Returns
         -------
-        str
+        str or list[str]
             Parameter type
         """
         _parameter_type = [data["type"] for data in self.schema_dict["data"]]

@@ -180,22 +180,18 @@ def _read_production_table(model_dict, file, model_name):
 
 def _remove_deprecated_model_parameters(model_dict):
     """
-    Remove any model parameters that are marked as deprecated.
+    Remove deprecated parameters from all tables in a model dictionary.
 
     Parameters
     ----------
     model_dict : dict
-        Dictionary containing the production tables for a specific model version.
+        Production tables for a specific model version.
     """
     for table in model_dict.values():
-        deprecated_parameters = table.get("deprecated_parameters", [])
-        if not deprecated_parameters:
-            continue
-
         for params in table.get("parameters", {}).values():
-            for param in deprecated_parameters:
+            for param in table.get("deprecated_parameters", []):
                 if param in params:
                     logger.info(
                         f"Deprecated parameter {param} in production table {table['collection']}"
                     )
-                    del params[param]
+                    params.pop(param)

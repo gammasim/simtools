@@ -430,6 +430,9 @@ def test_find_highest_schema_version():
     result = w1._find_highest_schema_version(schema_list_mixed)
     assert result["schema_version"] == "2.0.0"
 
+    with pytest.raises(TypeError, match="No valid schema versions found in the list."):
+        w1._find_highest_schema_version(None)
+
 
 def test_read_schema_dict(tmp_test_directory):
     w1 = writer.ModelDataWriter()
@@ -481,5 +484,5 @@ def test_read_schema_dict(tmp_test_directory):
             {"schema_version": "2.0.0", "data": []},
         ]
         mock_schema_file.return_value = Path("test_param.schema.yml")
-        schema_dict, schema_file = w1._read_schema_dict("test_param", "3.0.0")
-        assert schema_dict == {}
+        with pytest.raises(ValueError, match="Schema version 3.0.0 not found for test_param"):
+            w1._read_schema_dict("test_param", "3.0.0")
