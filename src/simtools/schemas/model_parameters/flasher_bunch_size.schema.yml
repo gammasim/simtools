@@ -1,0 +1,31 @@
+%YAML 1.2
+---
+title: Schema for flasher_bunch_size model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: flasher_bunch_size
+description: |-
+  Photons per bunch for flasher.
+data:
+  - type: float64
+    unit: dimensionless
+    default: 1.
+    allowed_range:
+      min: 1.
+instrument:
+  class: Calibration
+  type:
+    - ILLN
+    - ILLS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: simtools
+    version: ">=0.21.0"
