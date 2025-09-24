@@ -208,7 +208,7 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
     mock_cm.__exit__.side_effect = lambda *args: mock_tarfile.close()
     mock_tarfile_open.return_value = mock_cm
     # Return files under the mocked config directory so relative_to(base) works
-    mock_output_dir = tmp_path / "output" / "directory"
+    mock_output_dir = tmp_path / "output" / "directory" / "model" / model_version
     mock_rglob = MagicMock(return_value=[mock_output_dir / "file1", mock_output_dir / "file2"])
     mock_get_output_directory = MagicMock(return_value=mock_output_dir)
 
@@ -220,9 +220,7 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
     ):
         archive_path = array_model.pack_model_files()
 
-        assert archive_path == mock_output_dir.joinpath(
-            "model", model_version, "model_files.tar.gz"
-        )
+        assert archive_path == mock_output_dir.joinpath("model_files.tar.gz")
         assert mock_tarfile.add.call_count == 2
 
     mock_rglob = MagicMock(return_value=[])

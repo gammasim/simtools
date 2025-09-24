@@ -216,7 +216,7 @@ def main():  # noqa: D103
         tel_model,
         site_model,
         args_dict,
-        _io_handler.get_output_directory(sub_dir="application-plots"),
+        _io_handler.get_output_directory(),
     )
 
 
