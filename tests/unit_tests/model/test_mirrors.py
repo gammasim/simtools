@@ -11,9 +11,8 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def mirror_template_ecsv(io_handler):
-    mirror_list_file = io_handler.get_input_data_file(
+    mirror_list_file = io_handler.get_test_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
-        test=True,
     )
     logger.info(f"Using mirror list {mirror_list_file}")
     return Mirrors(mirror_list_file)
@@ -21,9 +20,8 @@ def mirror_template_ecsv(io_handler):
 
 @pytest.fixture
 def mirror_template_simtel(io_handler):
-    mirror_list_file = io_handler.get_input_data_file(
+    mirror_list_file = io_handler.get_test_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat",
-        test=True,
     )
     logger.info(f"Using mirror list with simtel format {mirror_list_file}")
     return Mirrors(mirror_list_file)
@@ -31,9 +29,8 @@ def mirror_template_simtel(io_handler):
 
 @pytest.fixture
 def mirror_table_template(io_handler):
-    mirror_list_file = io_handler.get_input_data_file(
+    mirror_list_file = io_handler.get_test_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
-        test=True,
     )
     logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
@@ -47,9 +44,8 @@ def write_tmp_mirror_list(io_handler, tmp_test_directory, incomplete_mirror_tabl
             format="ascii.ecsv",
             overwrite=True,
         )
-    return io_handler.get_input_data_file(
+    return io_handler.get_test_data_file(
         file_name=f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
-        test=True,
     )
 
 
@@ -137,9 +133,8 @@ def test_read_mirror_list_from_ecsv_empty(io_handler, tmp_test_directory, mirror
 
 
 def test_read_mirror_list_from_ecsv_no_db(io_handler):
-    mirror_list_file = io_handler.get_input_data_file(
+    mirror_list_file = io_handler.get_test_data_file(
         file_name="MLTdata-preproduction.ecsv",
-        test=True,
     )
     logger.info(f"Using mirror list {mirror_list_file}")
     with pytest.raises(TypeError):
