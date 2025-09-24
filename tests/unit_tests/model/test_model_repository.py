@@ -640,7 +640,7 @@ def test_generate_new_production_empty_version_history(mock_collect_data, tmp_pa
         "changes": {},
     }
 
-    with pytest.raises(IndexError, match="Base model version not found in"):
+    with pytest.raises(ValueError, match="Base model version not found in"):
         model_repository.generate_new_production("fake_modifications.yml", str(tmp_path))
 
 

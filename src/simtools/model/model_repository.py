@@ -160,9 +160,9 @@ def generate_new_production(modifications, simulation_models_path):
     model_version_history = modifications.get("model_version_history", [])
     try:
         # oldest version is the base version
-        base_model_version = sorted(set(model_version_history), key=Version, reverse=False)[0]
-    except IndexError as exc:
-        raise IndexError(f"Base model version not found in {modifications}") from exc
+        base_model_version = min(set(model_version_history), key=Version)
+    except ValueError as exc:
+        raise ValueError(f"Base model version not found in {modifications}") from exc
     model_version = modifications["model_version"]
     changes = modifications.get("changes", {})
 
@@ -217,6 +217,7 @@ def _apply_changes_to_production_tables(
         if _apply_changes_to_production_table(
             table_name, data, changes, model_version, update_type == "patch_update"
         ):
+            _logger.info(f"Writing updated production table '{table_name}'")
             data["production_table_name"] = table_name
             ascii_handler.write_data_to_file(data, target / f"{table_name}.json", sort_keys=True)
 
@@ -234,13 +235,13 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
     model_version: str
         The model version to be set in the JSON data.
     patch_update: bool
-        Patch update, copy only tables for changed elements.
+        True if patch update (modify only changed parameters), False for full update.
 
     Returns
     -------
     bool
-        True if data was modified and should be written to disk (patch updates) and always
-        for full updates.
+        True if data was modified and should be written to disk (patch updates);
+        always True for full updates.
     """
     data["model_version"] = model_version
     if table_name in changes:
@@ -316,7 +317,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     Create new model parameter entry in the model parameters directory.
 
     If a model parameter files exists, copy latest version and update the fields.
-    Others generate new file using the model parameter schema.
+    Otherwise generate new file using the model parameter schema.
 
     Parameters
     ----------
