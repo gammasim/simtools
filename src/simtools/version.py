@@ -106,3 +106,25 @@ def semver_to_int(version_string):
     release = v.release + (0,) * (3 - len(v.release))
     major, minor, patch = release[:3]
     return major * 10000 + minor * 100 + patch
+
+
+def sort_versions(version_list, reverse=False):
+    """
+    Sort a list of semantic version strings.
+
+    Parameters
+    ----------
+    version_list : list of str
+        List of semantic version strings (e.g., ["5.0.0", "6.0.2", "5.1.0"])
+    reverse : bool, optional
+        Sort in descending order if True (default False)
+
+    Returns
+    -------
+    list of str
+        Sorted list of version strings.
+    """
+    try:
+        return [str(v) for v in sorted(map(Version, version_list), reverse=reverse)]
+    except InvalidVersion as exc:
+        raise ValueError(f"Invalid version in list: {version_list}") from exc
