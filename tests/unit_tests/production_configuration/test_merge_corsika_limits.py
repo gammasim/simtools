@@ -51,14 +51,14 @@ def create_test_table(
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
-def test_merge_tables(mock_read_table, tmp_path):
+def test_merge_tables(mock_read_table, tmp_test_directory):
     """Test merging multiple CORSIKA limit tables."""
     table1 = create_test_table(20, 0, "dark", "layout1")
     table2 = create_test_table(40, 0, "dark", "layout1")
     table3 = create_test_table(20, 180, "moon", "layout2")
     mock_read_table.side_effect = [table1, table2, table3]
 
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2, LIMITS_FILE_3]
     merged_table = merger.merge_tables(input_files)
 
@@ -75,7 +75,7 @@ def test_merge_tables(mock_read_table, tmp_path):
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
-def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
+def test_merge_tables_with_duplicates(mock_read_table, tmp_test_directory):
     """Test merging CORSIKA limit tables with duplicate grid points."""
     # Create test tables with a duplicate grid point
     table1 = create_test_table(20, 0, "dark", "layout1")
@@ -86,7 +86,7 @@ def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
     # No change to lower_energy_limit to ensure values are consistent
     mock_read_table.side_effect = [table1, table2, duplicate]
 
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2, LIMITS_FILE_3]
     merged_table = merger.merge_tables(input_files)
 
@@ -108,14 +108,14 @@ def test_merge_tables_with_duplicates(mock_read_table, tmp_path):
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
-def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
+def test_merge_tables_different_loss_fractions(mock_read_table, tmp_test_directory):
     """Test merging tables with different loss fraction values."""
     # Create test tables with different loss fractions
     table1 = create_test_table(20, 0, "dark", "layout1", loss_fraction=1e-6)
     table2 = create_test_table(40, 0, "dark", "layout1", loss_fraction=2e-6)
     mock_read_table.side_effect = [table1, table2]
 
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
     merged_table = merger.merge_tables(input_files)
 
@@ -126,7 +126,7 @@ def test_merge_tables_different_loss_fractions(mock_read_table, tmp_path):
     assert "loss_fraction" not in merged_table.meta
 
 
-def test_check_grid_completeness(tmp_path):
+def test_check_grid_completeness(tmp_test_directory):
     """Test checking grid completeness."""
     # Create test tables
     tables = [
@@ -144,7 +144,7 @@ def test_check_grid_completeness(tmp_path):
         "nsb_level": ["dark"],
         "array_name": ["layout1"],  # Changed from layouts to array_names
     }
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
 
     # Test with incomplete grid
     is_complete, result = merger.check_grid_completeness(merged_table, grid_definition)
@@ -169,7 +169,7 @@ def test_check_grid_completeness(tmp_path):
 
 
 @patch("matplotlib.pyplot.savefig")
-def test_plot_grid_coverage(mock_savefig, tmp_path):
+def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
     """Test generating grid coverage plots."""
     table = vstack(
         [
@@ -183,7 +183,7 @@ def test_plot_grid_coverage(mock_savefig, tmp_path):
         "nsb_level": ["dark"],
         "array_name": ["layout1"],
     }
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
 
     # Test plotting with grid definition
     output_files = merger.plot_grid_coverage(table, grid_definition)
@@ -198,7 +198,7 @@ def test_plot_grid_coverage(mock_savefig, tmp_path):
 
 
 @patch("matplotlib.pyplot.savefig")
-def test_plot_limits(mock_savefig, tmp_path):
+def test_plot_limits(mock_savefig, tmp_test_directory):
     """Test generating limit plots."""
     table = vstack(
         [
@@ -207,18 +207,18 @@ def test_plot_limits(mock_savefig, tmp_path):
             create_test_table(20, 0, "moon", "layout1"),
         ]
     )
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     output_files = merger.plot_limits(table)
 
     assert len(output_files) == 1
     mock_savefig.assert_called_once()
 
 
-def test_write_merged_table(tmp_path):
+def test_write_merged_table(tmp_test_directory):
     """Test writing the merged table to file."""
     table = create_test_table(20, 0, "dark", "layout1")
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
-    output_file = tmp_path / "merged_limits.ecsv"
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
+    output_file = tmp_test_directory / "merged_limits.ecsv"
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
     grid_completeness = {
         "is_complete": True,
@@ -239,40 +239,40 @@ def test_write_merged_table(tmp_path):
         mock_dump.assert_called_once()
 
 
-def test_read_file_list(tmp_path):
+def test_read_file_list(tmp_test_directory):
     """Test reading a list of files from a text file."""
     # Create a test file with a list of files
-    file_list_path = tmp_path / "file_list.txt"
+    file_list_path = tmp_test_directory / "file_list.txt"
     with open(file_list_path, "w", encoding="utf-8") as f:
         f.write("# This is a comment\n")
         f.write("\n")  # Empty line
-        f.write(f"{tmp_path}/file1.ecsv\n")
-        f.write(f"{tmp_path}/file2.ecsv\n")
+        f.write(f"{tmp_test_directory}/file1.ecsv\n")
+        f.write(f"{tmp_test_directory}/file2.ecsv\n")
         f.write("  # Another comment\n")
-        f.write(f"{tmp_path}/file3.ecsv  \n")  # With trailing whitespace
+        f.write(f"{tmp_test_directory}/file3.ecsv  \n")  # With trailing whitespace
 
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     files = merger.read_file_list(file_list_path)
 
     assert len(files) == 3
-    assert files[0] == Path(f"{tmp_path}/file1.ecsv")
-    assert files[1] == Path(f"{tmp_path}/file2.ecsv")
-    assert files[2] == Path(f"{tmp_path}/file3.ecsv")
+    assert files[0] == Path(f"{tmp_test_directory}/file1.ecsv")
+    assert files[1] == Path(f"{tmp_test_directory}/file2.ecsv")
+    assert files[2] == Path(f"{tmp_test_directory}/file3.ecsv")
 
     # Test with non-existent file
     with pytest.raises(FileNotFoundError):
-        merger.read_file_list(tmp_path / "non_existent.txt")
+        merger.read_file_list(tmp_test_directory / "non_existent.txt")
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
-def test_merge_tables_with_inconsistent_duplicates(mock_read_table, tmp_path):
+def test_merge_tables_with_inconsistent_duplicates(mock_read_table, tmp_test_directory):
     """Test merging tables with inconsistent duplicate grid points."""
     table1 = create_test_table(20, 0, "dark", "layout1", lower_energy_limit=0.01)
     # Duplicate with a different value
     table2 = create_test_table(20, 0, "dark", "layout1", lower_energy_limit=0.02)
     mock_read_table.side_effect = [table1, table2]
 
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
 
     # Should always raise an error for inconsistent values
@@ -281,14 +281,14 @@ def test_merge_tables_with_inconsistent_duplicates(mock_read_table, tmp_path):
 
 
 @patch("simtools.production_configuration.merge_corsika_limits.data_reader.read_table_from_file")
-def test_merge_tables_with_consistent_duplicates(mock_read_table, tmp_path):
+def test_merge_tables_with_consistent_duplicates(mock_read_table, tmp_test_directory):
     """Test merging tables with consistent duplicate grid points."""
     table1 = create_test_table(20, 0, "dark", "layout1")
     # Exact same table
     table2 = create_test_table(20, 0, "dark", "layout1")
     mock_read_table.side_effect = [table1, table2]
 
-    merger = CorsikaMergeLimits(output_dir=tmp_path)
+    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
     input_files = [LIMITS_FILE_1, LIMITS_FILE_2]
 
     # Should merge without error

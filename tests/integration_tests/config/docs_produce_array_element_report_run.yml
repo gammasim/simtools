@@ -8,7 +8,7 @@ applications:
     telescope: LSTN-01
     use_plain_output_path: true
   integration_tests:
-  - output_file: 6.0.0/LSTN-01.md
+  - output_file: 6.0/LSTN-01.md
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema

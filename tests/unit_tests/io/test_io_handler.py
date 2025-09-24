@@ -119,9 +119,9 @@ def test_get_model_configuration_directory(args_dict, io_handler):
             io_handler.get_model_configuration_directory(label=label, model_version=model_version)
 
 
-def test_mkdir(io_handler):
+def test_mkdir(io_handler, tmp_test_directory):
     # Test successful directory creation
-    test_path = Path("tests/tmp/test-dir")
+    test_path = Path(tmp_test_directory / "new_test_dir")
     created_path = io_handler._mkdir(test_path)
     assert created_path == test_path.absolute()
     assert test_path.exists()
