@@ -1,6 +1,7 @@
 """A collection of functions related to geometrical transformations."""
 
 import logging
+import math
 
 import astropy.units as u
 import numpy as np
@@ -236,3 +237,36 @@ def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth
     z_s = -sz * x + cz * z
 
     return x_s, y_s, z_s
+
+
+def fiducial_radius_from_shape(width, shape):
+    """
+    Calculate minimum radius including different geometrical shapes.
+
+    Assumes definition of shapes as in 'camera_body_shape' model parameter:
+
+    - circle: shape = 0, width is diameter
+    - hexagon: shape = 1 or 3, width is flat-to-flat distance
+    - square: shape = 2, width is side length
+
+    Parameters
+    ----------
+    width : float
+        Characteristic width
+    shape : int
+        Geometrical shape parameter
+
+    Returns
+    -------
+    float
+        Minimum fiducial radius
+    """
+    if shape == 0:
+        return width / 2.0
+    if shape == 2:
+        return width / math.sqrt(2.0)
+    if shape in (1, 3):
+        return width / math.sqrt(3.0)
+    raise ValueError(
+        f"Unknown shape value {shape}. Valid values are: 0 (circle), 1 or 3 (hexagon), 2 (square)."
+    )
