@@ -498,24 +498,26 @@ def test_pack_for_register_with_multiple_versions(
         )
 
 
-def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_path):
+def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_test_directory):
     original_content = b"Original CORSIKA log content."
     expected_content = "Original CORSIKA log content."
     helper_test_copy_corsika_log_file(
-        array_simulator, mocker, tmp_path, original_content, expected_content
+        array_simulator, mocker, tmp_test_directory, original_content, expected_content
     )
 
 
-def test_copy_corsika_log_file_for_all_versions_with_non_unicode(array_simulator, mocker, tmp_path):
+def test_copy_corsika_log_file_for_all_versions_with_non_unicode(
+    array_simulator, mocker, tmp_test_directory
+):
     original_content = b"Valid line 1\nValid line 2\nInvalid line \x80\x81\n"
     expected_content = "Valid line 1\nValid line 2\nInvalid line"
     helper_test_copy_corsika_log_file(
-        array_simulator, mocker, tmp_path, original_content, expected_content
+        array_simulator, mocker, tmp_test_directory, original_content, expected_content
     )
 
 
 def helper_test_copy_corsika_log_file(
-    array_simulator, mocker, tmp_path, original_content, expected_content
+    array_simulator, mocker, tmp_test_directory, original_content, expected_content
 ):
     """
     Helper function to test _copy_corsika_log_file_for_all_versions.
@@ -526,7 +528,7 @@ def helper_test_copy_corsika_log_file(
         The simulator instance.
     mocker: pytest-mocker
         The mocker instance for mocking objects.
-    tmp_path: Path
+    tmp_test_directory: Path
         Temporary directory for creating test files.
     original_content: bytes
         The content to write to the original log file.
@@ -540,7 +542,7 @@ def helper_test_copy_corsika_log_file(
     ]
 
     # Create a temporary directory for log files
-    original_log_dir = tmp_path / "logs"
+    original_log_dir = tmp_test_directory / "logs"
     original_log_dir.mkdir()
 
     # Create a mock original log file
@@ -663,6 +665,7 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
         sim_telarray_seeds=shower_array_simulator.sim_telarray_seeds,
         sequential=shower_array_simulator.args_dict.get("sequential", False),
         keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
+        calibration_config=None,
     )
 
 
@@ -689,7 +692,7 @@ def test_initialize_simulation_runner_with_calibration_simulator(
         sim_telarray_seeds=calibration_simulator.sim_telarray_seeds,
         sequential=calibration_simulator.args_dict.get("sequential", False),
         keep_seeds=calibration_simulator.args_dict.get("corsika_test_seeds", False),
-        calibration_runner_args=calibration_simulator.args_dict,
+        calibration_config=calibration_simulator.args_dict,
     )
 
 
@@ -749,12 +752,12 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
     mock_io_table_handler.write_tables.assert_not_called()
 
 
-def test_is_calibration_run(shower_simulator):
-    shower_simulator.run_mode = "nsb_only_pedestals"
-    assert shower_simulator._is_calibration_run() is True
+def test_is_calibration_run():
+    assert Simulator._is_calibration_run("nsb_only_pedestals") is True
+    assert Simulator._is_calibration_run(None) is False
+    assert Simulator._is_calibration_run("not_a_calibration_run") is False
 
-    shower_simulator.run_mode = None
-    assert shower_simulator._is_calibration_run() is False
 
-    shower_simulator.run_mode = "not_a_calibration_run"
-    assert shower_simulator._is_calibration_run() is False
+def test_get_calibration_device_types():
+    assert Simulator._get_calibration_device_types("direct_injection") == ["flat_fielding"]
+    assert Simulator._get_calibration_device_types("what_ever") == []

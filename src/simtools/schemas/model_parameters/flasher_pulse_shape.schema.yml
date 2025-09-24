@@ -1,0 +1,32 @@
+%YAML 1.2
+---
+title: Schema for flasher_pulse_shape model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: flasher_pulse_shape
+description: |-
+  Flasher pulse shape.
+data:
+  - type: string
+    default: Gauss
+    allowed_values:
+      - Gauss
+      - TopHat
+      - Exponential
+instrument:
+  class: Calibration
+  type:
+    - ILLN
+    - ILLS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: simtools
+    version: ">=0.21.0"
