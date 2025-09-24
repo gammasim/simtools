@@ -310,7 +310,7 @@ class ModelParameter:
             return
 
         self._config_file_directory = self.io_handler.get_model_configuration_directory(
-            sub_dir=self.label, model_version=self.model_version
+            model_version=self.model_version
         )
 
         # Setting file name and the location
