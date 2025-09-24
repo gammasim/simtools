@@ -126,7 +126,7 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(sub_dir="application-plots")
+    output_dir = _io_handler.get_output_directory()
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=label,

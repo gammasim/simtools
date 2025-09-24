@@ -47,7 +47,7 @@ class CameraEfficiency:
             site=config_data["site"],
             telescope_name=config_data["telescope"],
         )
-        self.output_dir = self.io_handler.get_output_directory(sub_dir="plots")
+        self.output_dir = self.io_handler.get_output_directory()
 
         self._results = None
         self._has_results = False
@@ -101,9 +101,7 @@ class CameraEfficiency:
                 label=self.label,
             )
 
-            _file[label] = self.io_handler.get_output_directory(
-                sub_dir="camera_efficiency",
-            ).joinpath(file_name)
+            _file[label] = self.io_handler.get_output_directory().joinpath(file_name)
         return _file
 
     def simulate(self):
@@ -301,7 +299,7 @@ class CameraEfficiency:
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
-        table = astropy.io.ascii.read(self._file["results"], format="basic")
+        table = astropy.io.ascii.read(str(self._file["results"]), format="basic")
         self._results = table
         self._has_results = True
 
