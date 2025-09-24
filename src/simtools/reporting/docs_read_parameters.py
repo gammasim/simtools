@@ -174,32 +174,31 @@ class ReadParameters:
         markdown_output_file = output_data_path / output_file_name
 
         if not markdown_output_file.exists():
-          outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
-          outpath.mkdir(parents=True, exist_ok=True)
+            outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+            outpath.mkdir(parents=True, exist_ok=True)
 
-          plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
-          # Write markdown file using the stored path
-          file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+            plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
+            # Write markdown file using the stored path
+            file_contents = ascii_handler.read_file_encoded_in_utf_or_latin(input_file)
 
+            with markdown_output_file.open("w", encoding="utf-8") as outfile:
+                outfile.write(f"# {input_file.stem}\n")
 
-          with markdown_output_file.open("w", encoding="utf-8") as outfile:
-              outfile.write(f"# {input_file.stem}\n")
+                for plot_name in plot_names:
+                    outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
 
-              for plot_name in plot_names:
-                  outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
-
-              outfile.write(
-                  "\n\nThe full file can be found in the Simulation Model repository [here]"
-                  "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                  "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                  f"model_parameters/Files/{input_file.name}).\n\n"
-              )
-              outfile.write("\n\n")
-              outfile.write("The first 30 lines of the file are:\n")
-              outfile.write("```\n")
-              first_30_lines = "".join(file_contents[:30])
-              outfile.write(first_30_lines)
-              outfile.write("\n```")
+                outfile.write(
+                    "\n\nThe full file can be found in the Simulation Model repository [here]"
+                    "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                    "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                    f"model_parameters/Files/{input_file.name}).\n\n"
+                )
+                outfile.write("\n\n")
+                outfile.write("The first 30 lines of the file are:\n")
+                outfile.write("```\n")
+                first_30_lines = "".join(file_contents[:30])
+                outfile.write(first_30_lines)
+                outfile.write("\n```")
 
         return relative_path
 
@@ -610,65 +609,80 @@ class ReadParameters:
 
             description = parameter_descriptions.get("description")
             with output_filename.open("w", encoding="utf-8") as file:
-                # Write header
-                file.write(
-                    f"# {parameter}\n\n"
-                    f"**Telescope**: {self.array_element}\n\n"
-                    f"**Description**: {description}\n\n"
-                    "\n"
-                )
+                # Write header and table
+                self._write_parameter_header(file, parameter, description)
+                self._write_table_rows(file, parameter, comparison_data)
 
-                # Write table header
-                file.write(
-                    "| Parameter Version      | Model Version(s)      "
-                    "| Value                |\n"
-                    "|------------------------|--------------------"
-                    "|----------------------|\n"
-                )
-
-                # Write table rows
-                for item in comparison_data.get(parameter):
-                    file.write(
-                        f"| {item['parameter_version']} |"
-                        f" {item['model_version']} |"
-                        f"{item['value']} |\n"
-                    )
-
-                file.write("\n")
-
+                # If entries reference files, write the image/plot section
                 if comparison_data.get(parameter)[0]["file_flag"]:
-                    outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
-                    latest_parameter_version = max(
-                        comparison_data.get(parameter),
-                        key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
-                    )["parameter_version"]
+                    self._write_file_flag_section(file, parameter, comparison_data)
 
-                    all_model_versions = []
-                    for item in comparison_data.get(parameter):
-                        model_versions = item["model_version"].split(", ")
-                        all_model_versions.extend(model_versions)
+    def _write_parameter_header(self, file, parameter, description):
+        """Write the markdown header for a parameter file."""
+        file.write(
+            f"# {parameter}\n\n"
+            f"**Telescope**: {self.array_element}\n\n"
+            f"**Description**: {description}\n\n"
+            "\n"
+        )
 
-                    latest_model_version = max(
-                        all_model_versions, key=lambda x: tuple(map(int, x.split(".")))
-                    )
+    def _write_table_rows(self, file, parameter, comparison_data):
+        """Write the comparison table header and rows for a parameter."""
+        # Write table header
+        file.write(
+            "| Parameter Version      | Model Version(s)      "
+            "| Value                |\n"
+            "|------------------------|--------------------"
+            "|----------------------|\n"
+        )
 
-                    tel = self._get_telescope_identifier(latest_model_version)
+        # Write table rows
+        for item in comparison_data.get(parameter):
+            file.write(
+                f"| {item['parameter_version']} | {item['model_version']} |{item['value']} |\n"
+            )
 
-                    file.write("The latest parameter version is plotted below.\n\n")
+        file.write("\n")
 
-                    if parameter != "camera_config_file":
-                        plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
-                        file.write(f"![Parameter plot.]({outpath}/{plot_name}.png)")
-                    else:
-                        for item in comparison_data.get(parameter):
-                            if latest_model_version in item["model_version"].split(", "):
-                                latest_value = item["value"]
-                                break
+    def _write_file_flag_section(self, file, parameter, comparison_data):
+        """Write image/plot references when parameter entries include files."""
+        outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+        latest_parameter_version = max(
+            comparison_data.get(parameter),
+            key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
+        )["parameter_version"]
 
-                        # Extract filename from markdown link and change suffix to .png
-                        match = re.search(r"\[([^\]]+)\]", latest_value)
-                        filename_png = Path(match.group(1)).with_suffix(".png").name
-                        file.write(f"![Camera configuration plot.]({outpath}/{filename_png})")
+        all_model_versions = []
+        for item in comparison_data.get(parameter):
+            model_versions = item["model_version"].split(", ")
+            all_model_versions.extend(model_versions)
+
+        latest_model_version = max(all_model_versions, key=lambda x: tuple(map(int, x.split("."))))
+        tel = self._get_telescope_identifier(latest_model_version)
+
+        file.write("The latest parameter version is plotted below.\n\n")
+
+        if parameter != "camera_config_file":
+            plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
+            file.write(f"![Parameter plot.]({outpath}/{plot_name}.png)")
+            return
+
+        # camera_config_file: find latest value and convert markdown link to png filename
+        latest_value = None
+        for item in comparison_data.get(parameter):
+            if latest_model_version in item["model_version"].split(", "):
+                latest_value = item["value"]
+                break
+
+        if latest_value is None:
+            return
+
+        match = re.search(r"\[([^\]]+)\]", latest_value)
+        if not match:
+            return
+
+        filename_png = Path(match.group(1)).with_suffix(".png").name
+        file.write(f"![Camera configuration plot.]({outpath}/{filename_png})")
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
@@ -854,16 +868,7 @@ class ReadParameters:
 
     def produce_calibration_reports(self):
         """Write calibration reports."""
-        calibration_array_elements = self.db.get_array_elements(
-            self.model_version, collection="calibration_devices"
-        )
-        array_elements = calibration_array_elements.copy()
-        for element in calibration_array_elements:
-            design_model = self.db.get_design_model(
-                self.model_version, element, "calibration_devices"
-            )
-            if design_model and design_model not in array_elements:
-                array_elements.append(design_model)
+        array_elements = self._collect_calibration_array_elements()
 
         for calibration_device in array_elements:
             device_sites = names.get_site_from_array_element_name(calibration_device)
@@ -884,28 +889,70 @@ class ReadParameters:
                 self.model_version, calibration_device, "calibration_devices"
             )
 
-            with output_filename.open("w", encoding="utf-8") as file:
-                file.write(f"# {calibration_device}\n")
+            self._write_single_calibration_report(
+                output_filename, calibration_device, data, design_model
+            )
+
+        # produce parameter comparison reports (site-independent)
+        self._generate_model_parameter_reports_for_devices(array_elements)
+
+    def _collect_calibration_array_elements(self):
+        """Return a list of calibration devices including their design models."""
+        calibration_array_elements = self.db.get_array_elements(
+            self.model_version, collection="calibration_devices"
+        )
+        array_elements = calibration_array_elements.copy()
+        for element in calibration_array_elements:
+            design_model = self.db.get_design_model(
+                self.model_version, element, "calibration_devices"
+            )
+            if design_model and design_model not in array_elements:
+                array_elements.append(design_model)
+        return array_elements
+
+    def _write_single_calibration_report(
+        self, output_filename, calibration_device, data, design_model
+    ):
+        """Write a single calibration device markdown report file."""
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(f"# {calibration_device}\n")
+            file.write("\n\n")
+
+            if not names.is_design_type(calibration_device):
+                file.write(
+                    f"The design model can be found here: [{design_model}]({design_model}.md).\n\n"
+                )
+                file.write(
+                    "Parameters shown in ***bold and italics*** are specific"
+                    " to each array element.\n"
+                    "Parameters without emphasis are inherited from the design model.\n"
+                )
                 file.write("\n\n")
 
-                if not names.is_design_type(calibration_device):
-                    file.write(
-                        "The design model can be found here: "
-                        f"[{design_model}]"
-                        f"({design_model}.md).\n\n"
-                    )
-                    file.write(
-                        "Parameters shown in ***bold and italics*** are specific"
-                        " to each array element.\n"
-                        "Parameters without emphasis are inherited from the design model.\n"
-                    )
-                    file.write("\n\n")
+            for class_name, group in groupby(data, key=lambda x: x[0]):
+                group = sorted(group, key=lambda x: x[1])
+                file.write(f"## {class_name}\n\n")
+                # Transform parameter display names for human-readable report
+                display_group = []
+                for row in group:
+                    param = row[1]
+                    # Preserve markdown emphasis (***param***) if present
+                    if isinstance(param, str) and param.startswith("***") and param.endswith("***"):
+                        inner = param.strip("*")
+                        new_inner = inner.replace("_", " ")
+                        new_param = f"***{new_inner}***"
+                    elif isinstance(param, str):
+                        new_param = param.replace("_", " ")
+                    else:
+                        new_param = param
 
-                for class_name, group in groupby(data, key=lambda x: x[0]):
-                    group = sorted(group, key=lambda x: x[1])
-                    file.write(f"## {class_name}\n\n")
-                    self._write_to_file(group, file)
+                    new_row = [row[0], new_param, row[2], row[3], row[4], row[5]]
+                    display_group.append(new_row)
 
+                self._write_to_file(display_group, file)
+
+    def _generate_model_parameter_reports_for_devices(self, array_elements):
+        """Create model-parameter comparison reports for calibration devices."""
         new_output_path = Path(self.output_path).parent.parent / "parameters"
         new_output_path.mkdir(parents=True, exist_ok=True)
         self.output_path = new_output_path
