@@ -53,7 +53,6 @@ def io_handler(tmp_test_directory, data_path):
     tmp_io_handler = simtools.io.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
-        data_path=data_path,
         model_path=str(tmp_test_directory) + "/model",
     )
     return tmp_io_handler
