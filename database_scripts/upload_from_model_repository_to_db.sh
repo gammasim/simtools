@@ -53,6 +53,11 @@ if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
       echo "Operation aborted."
       exit 1
   fi
+  read -r -p "Let me ask again: do you really want to upload to remote DB $SIMTOOLS_DB_SERVER? Type 'yes' to confirm: " user_input
+  if [ "$user_input" != "yes" ]; then
+      echo "Operation aborted."
+      exit 1
+  fi
 fi
 
 
