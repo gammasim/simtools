@@ -6,7 +6,7 @@
 
 SIMTOOLS_NETWORK="simtools-mongo-network"
 CONTAINER_NAME="simtools-mongodb"
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-v0-3-0'  # Name of the database to be created
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-v0-3-0'  # Name of the database to be created
 
 # Check if podman is available, if not use docker
 if command -v podman &> /dev/null; then
