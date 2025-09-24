@@ -12,13 +12,11 @@ description: |-
 data:
   - type: dict
     json_schema:
-      type: array
-      items:
-        type: object
-        additionalProperties:
-          type: string
-          default: null
-          description: "Calibration device name"
+      type: object
+      additionalProperties:
+        type: string
+        default: null
+        description: "Calibration device name"
 instrument:
   class: Camera
   type:

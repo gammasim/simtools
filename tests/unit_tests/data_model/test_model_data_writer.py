@@ -392,3 +392,97 @@ def test_check_db_for_existing_parameter():
             site=names.get_site_from_array_element_name(instrument),
             array_element_name=instrument,
         )
+
+
+def test_find_highest_schema_version():
+    w1 = writer.ModelDataWriter()
+
+    # Test with single entry
+    schema_list_single = [{"schema_version": "1.0.0", "data": []}]
+    result = w1._find_highest_schema_version(schema_list_single)
+    assert result["schema_version"] == "1.0.0"
+
+    # Test with multiple entries - semantic versioning
+    schema_list_multiple = [
+        {"schema_version": "1.0.0", "data": []},
+        {"schema_version": "2.1.0", "data": []},
+        {"schema_version": "1.5.0", "data": []},
+    ]
+    result = w1._find_highest_schema_version(schema_list_multiple)
+    assert result["schema_version"] == "2.1.0"
+
+    # Test with patch versions
+    schema_list_patches = [
+        {"schema_version": "1.0.1", "data": []},
+        {"schema_version": "1.0.0", "data": []},
+        {"schema_version": "1.0.2", "data": []},
+    ]
+    result = w1._find_highest_schema_version(schema_list_patches)
+    assert result["schema_version"] == "1.0.2"
+
+    # Test with mixed entries (some without schema_version)
+    schema_list_mixed = [
+        {"data": []},
+        {"schema_version": "1.0.0", "data": []},
+        {"other_field": "value"},
+        {"schema_version": "2.0.0", "data": []},
+    ]
+    result = w1._find_highest_schema_version(schema_list_mixed)
+    assert result["schema_version"] == "2.0.0"
+
+    with pytest.raises(TypeError, match="No valid schema versions found in the list."):
+        w1._find_highest_schema_version(None)
+
+
+def test_read_schema_dict(tmp_test_directory):
+    w1 = writer.ModelDataWriter()
+
+    # Test with non-existent parameter
+    with pytest.raises(FileNotFoundError):
+        w1._read_schema_dict("non_existent_parameter", None)
+
+    # Test with existing parameter (num_gains)
+    schema_dict, schema_file = w1._read_schema_dict("num_gains", None)
+    assert isinstance(schema_dict, dict)
+    assert "data" in schema_dict
+    assert schema_file.name == "num_gains.schema.yml"
+
+    # Test with specific schema version (mock list scenario)
+    with (
+        patch("simtools.io.ascii_handler.collect_data_from_file") as mock_collect,
+        patch("simtools.data_model.schema.get_model_parameter_schema_file") as mock_schema_file,
+    ):
+        mock_collect.return_value = [
+            {"schema_version": "1.0.0", "data": []},
+            {"schema_version": "2.0.0", "data": []},
+        ]
+        mock_schema_file.return_value = Path("test_param.schema.yml")
+        schema_dict, schema_file = w1._read_schema_dict("test_param", "1.0.0")
+        assert schema_dict["schema_version"] == "1.0.0"
+
+    # Test with list and no schema version specified (should get highest version)
+    with (
+        patch("simtools.io.ascii_handler.collect_data_from_file") as mock_collect,
+        patch("simtools.data_model.schema.get_model_parameter_schema_file") as mock_schema_file,
+    ):
+        mock_collect.return_value = [
+            {"schema_version": "1.0.0", "data": []},
+            {"schema_version": "2.0.0", "data": []},
+            {"schema_version": "1.5.0", "data": []},
+        ]
+        mock_schema_file.return_value = Path("test_param.schema.yml")
+        schema_dict, schema_file = w1._read_schema_dict("test_param", None)
+        assert schema_dict["schema_version"] == "2.0.0"
+
+    # Test with list but no matching version
+    with (
+        patch("simtools.io.ascii_handler.collect_data_from_file") as mock_collect,
+        patch("simtools.data_model.schema.get_model_parameter_schema_file") as mock_schema_file,
+    ):
+        mock_collect.return_value = [
+            {"schema_version": "1.0.0", "data": []},
+            {"schema_version": "2.0.0", "data": []},
+        ]
+        mock_schema_file.return_value = Path("test_param.schema.yml")
+        with pytest.raises(ValueError, match="Schema version 3.0.0 not found for test_param"):
+            w1._read_schema_dict("test_param", "3.0.0")
