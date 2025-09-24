@@ -123,8 +123,8 @@ def _get_schema_file_name(args_dict, data_dict=None):
     return schema_file
 
 
-def _get_json_file_list(file_directory=None, file_name=None):
-    """Return list of json files in a directory."""
+def _get_json_file_list(file_directory=None, file_name="*.json"):
+    """Return list of files in a directory."""
     file_list = []
     if file_directory is not None:
         file_list = list(Path(file_directory).rglob(file_name))
