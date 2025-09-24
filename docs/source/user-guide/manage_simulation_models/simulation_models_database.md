@@ -20,7 +20,7 @@ Applications to retrieve values or information from the database:
 ```{danger}
 The following sections describe functionality which might impact the simulation model database for all users.
 Generally, model values should not be changed without a merge request in the [simulation models repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.)
-Tests should be done using a sandbox database before applying this to the production databases.
+Tests should be done using a local database before applying this to the production databases.
 ```
 
 Applications modifying database entries:

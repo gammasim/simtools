@@ -204,7 +204,7 @@ def main():  # noqa: D103
     logger.setLevel(get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    tel_model, site_model = initialize_simulation_models(
+    tel_model, site_model, _ = initialize_simulation_models(
         label=label,
         db_config=db_config,
         site=args_dict["site"],

@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
@@ -100,6 +101,8 @@ class ModelDataWriter:
         output_path=None,
         metadata_input_dict=None,
         db_config=None,
+        unit=None,
+        meta_parameter=False,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -122,6 +125,8 @@ class ModelDataWriter:
             Input to metadata collector.
         db_config: dict
             Database configuration. If not None, check if parameter with the same version exists.
+        unit: str
+            Unit of the parameter value (if applicable and value is not of type astropy Quantity).
 
         Returns
         -------
@@ -150,7 +155,13 @@ class ModelDataWriter:
             )
 
         _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, parameter_version, unique_id
+            parameter_name,
+            value,
+            instrument,
+            parameter_version,
+            unique_id,
+            unit=unit,
+            meta_parameter=meta_parameter,
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
@@ -200,6 +211,8 @@ class ModelDataWriter:
         parameter_version,
         unique_id=None,
         schema_version=None,
+        unit=None,
+        meta_parameter=False,
     ):
         """
         Get validated parameter dictionary.
@@ -216,6 +229,12 @@ class ModelDataWriter:
             Version of the parameter.
         schema_version: str
             Version of the schema.
+        unique_id: str
+            Unique ID of the parameter set (from metadata).
+        unit: str
+            Unit of the parameter value (if applicable and value is not an astropy Quantity).
+        meta_parameter: bool
+            Setting for meta parameter flag.
 
         Returns
         -------
@@ -223,10 +242,10 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        schema_file = schema.get_model_parameter_schema_file(parameter_name)
-        self.schema_dict = ascii_handler.collect_data_from_file(schema_file)
+        self.schema_dict, schema_file = self._read_schema_dict(parameter_name, schema_version)
 
-        value, unit = value_conversion.split_value_and_unit(value)
+        if unit is None:
+            value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
@@ -239,10 +258,8 @@ class ModelDataWriter:
             "unit": unit,
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
-            "meta_parameter": False,
-            "model_parameter_schema_version": self.schema_dict.get(
-                "model_parameter_schema_version", "0.1.0"
-            ),
+            "meta_parameter": meta_parameter,
+            "model_parameter_schema_version": self.schema_dict.get("schema_version", "0.1.0"),
         }
         return self.validate_and_transform(
             product_data_dict=data_dict,
@@ -250,19 +267,74 @@ class ModelDataWriter:
             is_model_parameter=True,
         )
 
+    def _read_schema_dict(self, parameter_name, schema_version):
+        """
+        Read schema dict for given parameter name and version.
+
+        Use newest schema version if schema_version is None.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        schema_version: str
+            Schema version.
+
+        Returns
+        -------
+        dict
+            Schema dictionary.
+        """
+        schema_file = schema.get_model_parameter_schema_file(parameter_name)
+        schemas = ascii_handler.collect_data_from_file(schema_file)
+        if isinstance(schemas, list):
+            if schema_version is None:
+                return self._find_highest_schema_version(schemas), schema_file
+            for entry in schemas:
+                if entry.get("schema_version") == schema_version:
+                    return entry, schema_file
+        else:
+            return schemas, schema_file
+
+        raise ValueError(f"Schema version {schema_version} not found for {parameter_name}")
+
+    def _find_highest_schema_version(self, schema_list):
+        """
+        Find entry with highest schema_version in a list of schema dicts.
+
+        Parameters
+        ----------
+        schema_list: list
+            List of schema dictionaries.
+
+        Returns
+        -------
+        dict
+            Schema dictionary with highest schema_version.
+        """
+        try:
+            valid_entries = [entry for entry in schema_list if "schema_version" in entry]
+        except TypeError as exc:
+            raise TypeError("No valid schema versions found in the list.") from exc
+        return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
+
     def _get_parameter_type(self):
         """
         Return parameter type from schema.
 
+        Reduce list of types to single type if all types are the same.
+
         Returns
         -------
-        str
+        str or list[str]
             Parameter type
         """
-        _parameter_type = []
-        for data in self.schema_dict["data"]:
-            _parameter_type.append(data["type"])
-        return _parameter_type if len(_parameter_type) > 1 else _parameter_type[0]
+        _parameter_type = [data["type"] for data in self.schema_dict["data"]]
+        return (
+            _parameter_type[0]
+            if all(t == _parameter_type[0] for t in _parameter_type)
+            else _parameter_type
+        )
 
     def _parameter_is_a_file(self):
         """
@@ -389,7 +461,7 @@ class ModelDataWriter:
         ascii_handler.write_data_to_file(
             data=data_dict,
             output_file=self.io_handler.get_output_file(file_name),
-            sort_keys=False,
+            sort_keys=True,
             numpy_types=True,
         )
 

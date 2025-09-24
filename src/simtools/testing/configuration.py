@@ -184,6 +184,10 @@ def _prepare_test_options(config, output_path, model_version=None):
 
     tmp_config_file = output_path / "tmp_config.yml"
     config_file_model_version = config.get("model_version")
+    if isinstance(config_file_model_version, list):
+        config_file_model_version = [str(item) for item in config_file_model_version]
+    elif config_file_model_version is not None:
+        config_file_model_version = str(config_file_model_version)
     if model_version and "model_version" in config:
         config.update({"model_version": model_version})
 
