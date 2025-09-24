@@ -118,3 +118,28 @@ def test_semver_to_int():
 
     with pytest.raises(ValueError, match=r"Invalid version: not_a.version"):
         version.semver_to_int("not_a.version")
+
+
+def test_sort_versions():
+    version_list = ["5.0.0", "6.0.2", "5.1.0", "6.0.0", "5.0.1"]
+
+    # Test ascending order (default)
+    result = version.sort_versions(version_list)
+    expected = ["5.0.0", "5.0.1", "5.1.0", "6.0.0", "6.0.2"]
+    assert result == expected
+
+    # Test descending order
+    result = version.sort_versions(version_list, reverse=True)
+    expected = ["6.0.2", "6.0.0", "5.1.0", "5.0.1", "5.0.0"]
+    assert result == expected
+
+    # Test empty list
+    assert version.sort_versions([]) == []
+
+    # Test single version
+    assert version.sort_versions(["1.0.0"]) == ["1.0.0"]
+
+    # Test invalid version
+    invalid_versions = ["1.0.0", "not_a_version", "2.0.0"]
+    with pytest.raises(ValueError, match=r"Invalid version in list"):
+        version.sort_versions(invalid_versions)
