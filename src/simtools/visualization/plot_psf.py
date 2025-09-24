@@ -2,7 +2,7 @@
 Optical PSF plotting functions for parameter optimization visualization.
 
 This module provides plotting functionality for PSF parameter optimization,
-including parameter comparison plots, convergence plots, and D80 vs off-axis plots.
+including parameter comparison plots, convergence plots, and PSF diameter vs off-axis plots.
 """
 
 import logging
@@ -15,14 +15,36 @@ from matplotlib.backends.backend_pdf import PdfPages
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
-logger = logging.getLogger(__name__)
-
 # Constants
-RADIUS_CM = "Radius [cm]"
+RADIUS = "Radius [cm]"
 CUMULATIVE_PSF = "Cumulative PSF"
-D80_CM_LABEL = "D80 (cm)"
 MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
 OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
+DEFAULT_FRACTION = 0.8  # Default PSF containment fraction
+
+logger = logging.getLogger(__name__)
+
+
+def get_psf_diameter_label(fraction, unit="cm"):
+    """
+    Generate PSF diameter label based on containment fraction.
+
+    Parameters
+    ----------
+    fraction : float
+        PSF containment fraction (e.g., 0.8 for D80, 0.95 for D95)
+    unit : str, optional
+        Unit for the label (default: "cm")
+
+    Returns
+    -------
+    str
+        Formatted PSF diameter label (e.g., "D80 (cm)", "D95 (cm)", "D95")
+    """
+    percentage = int(fraction * 100)
+    if unit:
+        return f"D{percentage} ({unit})"
+    return f"D{percentage}"
 
 
 def get_significance_label(p_value):
@@ -34,16 +56,25 @@ def get_significance_label(p_value):
     return "POOR"  # null hypothesis rejected at 99% level
 
 
-def _format_metric_text(d80, metric, p_value=None, use_ks_statistic=False, second_metric=None):
+def _format_metric_text(
+    psf_diameter,
+    metric,
+    fraction=DEFAULT_FRACTION,
+    p_value=None,
+    use_ks_statistic=False,
+    second_metric=None,
+):
     """
     Format metric text for display in plots.
 
     Parameters
     ----------
-    d80 : float
-        D80 value
+    psf_diameter : float
+        PSF diameter value
     metric : float
         Primary metric value (RMSD or KS statistic)
+    fraction : float, optional
+        PSF containment fraction (default: 0.8)
     p_value : float, optional
         P-value from KS test
     use_ks_statistic : bool
@@ -56,7 +87,8 @@ def _format_metric_text(d80, metric, p_value=None, use_ks_statistic=False, secon
     str
         Formatted metric text
     """
-    d80_text = f"D80 = {d80:.5f} cm"
+    psf_label = get_psf_diameter_label(fraction, unit="")
+    psf_text = f"{psf_label} = {psf_diameter:.5f} cm"
 
     # Create metric text based on the optimization method
     if second_metric is not None:
@@ -73,7 +105,7 @@ def _format_metric_text(d80, metric, p_value=None, use_ks_statistic=False, secon
     else:
         metric_text = f"RMSD = {metric:.4f}"
 
-    return f"{d80_text}\n{metric_text}"
+    return f"{psf_text}\n{metric_text}"
 
 
 def _create_base_plot_figure(data_to_plot, simulated_data=None):
@@ -129,8 +161,8 @@ def _build_parameter_title(pars, is_best):
 
 def _add_metric_text_box(ax, metrics_text, is_best):
     """Add metric text box to plot."""
-    d80_color = "red" if is_best else "black"
-    d80_weight = "bold" if is_best else "normal"
+    psf_color = "red" if is_best else "black"
+    psf_weight = "bold" if is_best else "normal"
 
     ax.text(
         0.5,
@@ -139,8 +171,8 @@ def _add_metric_text_box(ax, metrics_text, is_best):
         verticalalignment="center",
         horizontalalignment="left",
         transform=ax.transAxes,
-        color=d80_color,
-        weight=d80_weight,
+        color=psf_color,
+        weight=psf_weight,
         bbox={"boxstyle": "round,pad=0.3", "facecolor": "yellow", "alpha": 0.7}
         if is_best
         else None,
@@ -148,7 +180,16 @@ def _add_metric_text_box(ax, metrics_text, is_best):
 
 
 def _add_plot_annotations(
-    ax, fig, pars, d80, metric, is_best, p_value=None, use_ks_statistic=False, second_metric=None
+    ax,
+    fig,
+    pars,
+    psf_diameter,
+    metric,
+    is_best,
+    fraction=DEFAULT_FRACTION,
+    p_value=None,
+    use_ks_statistic=False,
+    second_metric=None,
 ):
     """
     Add title, text annotations, and best parameter indicators to plot.
@@ -161,12 +202,14 @@ def _add_plot_annotations(
         The plot figure
     pars : dict
         Parameter set dictionary
-    d80 : float
-        D80 value
+    psf_diameter : float
+        PSF diameter value
     metric : float
         Primary metric value
     is_best : bool
         Whether this is the best parameter set
+    fraction : float, optional
+        PSF containment fraction (default: 0.8)
     p_value : float, optional
         P-value from KS test
     use_ks_statistic : bool
@@ -177,7 +220,9 @@ def _add_plot_annotations(
     title = _build_parameter_title(pars, is_best)
     ax.set_title(title)
 
-    metrics_text = _format_metric_text(d80, metric, p_value, use_ks_statistic, second_metric)
+    metrics_text = _format_metric_text(
+        psf_diameter, metric, fraction, p_value, use_ks_statistic, second_metric
+    )
     _add_metric_text_box(ax, metrics_text, is_best)
 
     if is_best:
@@ -194,10 +239,11 @@ def _add_plot_annotations(
 def create_psf_parameter_plot(
     data_to_plot,
     pars,
-    d80,
+    psf_diameter,
     metric,
     is_best,
     pdf_pages,
+    fraction=DEFAULT_FRACTION,
     p_value=None,
     use_ks_statistic=False,
     second_metric=None,
@@ -211,14 +257,16 @@ def create_psf_parameter_plot(
         Data dictionary for plotting.
     pars : dict
         Parameter set dictionary.
-    d80 : float
-        D80 value.
+    psf_diameter : float
+        PSF diameter value.
     metric : float
         RMSD value (if use_ks_statistic=False) or KS statistic (if use_ks_statistic=True).
     is_best : bool
         Whether this is the best parameter set.
     pdf_pages : PdfPages
         PDF pages object for saving plots.
+    fraction : float, optional
+        PSF containment fraction (default: 0.8).
     p_value : float, optional
         P-value from KS test (only used when use_ks_statistic=True).
     use_ks_statistic : bool, optional
@@ -229,7 +277,16 @@ def create_psf_parameter_plot(
     fig, ax = _create_base_plot_figure(data_to_plot)
 
     _add_plot_annotations(
-        ax, fig, pars, d80, metric, is_best, p_value, use_ks_statistic, second_metric
+        ax,
+        fig,
+        pars,
+        psf_diameter,
+        metric,
+        is_best,
+        fraction,
+        p_value,
+        use_ks_statistic,
+        second_metric,
     )
 
     pdf_pages.savefig(fig, bbox_inches="tight")
@@ -237,7 +294,15 @@ def create_psf_parameter_plot(
 
 
 def create_detailed_parameter_plot(
-    pars, ks_statistic, d80, simulated_data, data_to_plot, is_best, pdf_pages, p_value=None
+    pars,
+    ks_statistic,
+    psf_diameter,
+    simulated_data,
+    data_to_plot,
+    is_best,
+    pdf_pages,
+    fraction=DEFAULT_FRACTION,
+    p_value=None,
 ):
     """
     Create a detailed plot for a parameter set showing all parameter values.
@@ -248,8 +313,8 @@ def create_detailed_parameter_plot(
         Parameter set dictionary
     ks_statistic : float
         KS statistic value for this parameter set
-    d80 : float
-        D80 value for this parameter set
+    psf_diameter : float
+        PSF diameter value for this parameter set
     simulated_data : array
         Simulated data for plotting
     data_to_plot : dict
@@ -258,6 +323,8 @@ def create_detailed_parameter_plot(
         Whether this is the best parameter set
     pdf_pages : PdfPages
         PDF pages object to save the plot
+    fraction : float, optional
+        PSF containment fraction (default: 0.8)
     p_value : float, optional
         P-value from KS test for statistical significance
     """
@@ -278,9 +345,10 @@ def create_detailed_parameter_plot(
         ax,
         fig,
         pars,
-        d80,
+        psf_diameter,
         ks_statistic,
         is_best,
+        fraction,
         p_value,
         use_ks_statistic=True,
         second_metric=None,
@@ -290,24 +358,28 @@ def create_detailed_parameter_plot(
     plt.clf()
 
 
-def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pages):
+def create_parameter_progression_plots(
+    results, best_pars, data_to_plot, pdf_pages, fraction=DEFAULT_FRACTION
+):
     """
     Create plots for all parameter sets showing optimization progression.
 
     Parameters
     ----------
     results : list
-        List of (pars, ks_statistic, p_value, d80, simulated_data) tuples
+        List of (pars, ks_statistic, p_value, psf_diameter, simulated_data) tuples
     best_pars : dict
         Best parameter set for highlighting
     data_to_plot : dict
         Data dictionary for plotting
     pdf_pages : PdfPages
         PDF pages object to save plots
+    fraction : float, optional
+        PSF containment fraction (default: 0.8)
     """
     logger.info("Creating plots for all parameter sets...")
 
-    for i, (pars, ks_statistic, p_value, d80, simulated_data) in enumerate(results):
+    for i, (pars, ks_statistic, p_value, psf_diameter, simulated_data) in enumerate(results):
         if simulated_data is None:
             logger.warning(f"No simulated data for iteration {i}, skipping plot")
             continue
@@ -316,24 +388,34 @@ def create_parameter_progression_plots(results, best_pars, data_to_plot, pdf_pag
         logger.info(f"Creating plot {i + 1}/{len(results)}{' (BEST)' if is_best else ''}")
 
         create_detailed_parameter_plot(
-            pars, ks_statistic, d80, simulated_data, data_to_plot, is_best, pdf_pages, p_value
+            pars,
+            ks_statistic,
+            psf_diameter,
+            simulated_data,
+            data_to_plot,
+            is_best,
+            pdf_pages,
+            fraction,
+            p_value,
         )
 
 
 def create_gradient_descent_convergence_plot(
-    gd_results, threshold, output_file, use_ks_statistic=False
+    gd_results, threshold, output_file, fraction=DEFAULT_FRACTION, use_ks_statistic=False
 ):
     """
-    Create convergence plot showing optimization metric and D80 progression during gradient descent.
+    Create convergence plot during gradient descent.
 
     Parameters
     ----------
     gd_results : list
-        List of (params, metric, p_value, d80, simulated_data) tuples from gradient descent
+        List of (params, metric, p_value, psf_diameter, simulated_data) tuples from gradient descent
     threshold : float
         Optimization metric threshold used for convergence
     output_file : Path
         Output file path for saving the plot
+    fraction : float, optional
+        PSF containment fraction for labeling (default: 0.8)
     use_ks_statistic : bool
         Whether to use KS statistic or RMSD labels and titles
     """
@@ -349,9 +431,10 @@ def create_gradient_descent_convergence_plot(
 
     iterations = list(range(len(gd_results)))
     metrics = [r[1] for r in gd_results]
-    d80s = [r[3] for r in gd_results]
+    psf_diameters = [r[3] for r in gd_results]
 
     metric_name = "KS Statistic" if use_ks_statistic else "RMSD"
+    psf_label = get_psf_diameter_label(fraction)
 
     # Plot optimization metric progression
     ax1.plot(iterations, metrics, "b.-", linewidth=2, markersize=6)
@@ -362,11 +445,11 @@ def create_gradient_descent_convergence_plot(
     ax1.grid(True, alpha=0.3)
     ax1.legend()
 
-    # Plot D80 progression
-    ax2.plot(iterations, d80s, "g.-", linewidth=2, markersize=6)
+    # Plot PSF diameter progression
+    ax2.plot(iterations, psf_diameters, "g.-", linewidth=2, markersize=6)
     ax2.set_xlabel("Iteration")
-    ax2.set_ylabel(D80_CM_LABEL)
-    ax2.set_title("Gradient Descent Convergence - D80")
+    ax2.set_ylabel(psf_label)
+    ax2.set_title(f"Gradient Descent Convergence - {get_psf_diameter_label(fraction, unit='')}")
     ax2.grid(True, alpha=0.3)
 
     # Plot p-value progression if available and using KS statistic
@@ -394,7 +477,9 @@ def create_gradient_descent_convergence_plot(
     logger.info(f"Convergence plot saved to {output_file}")
 
 
-def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statistic=False):
+def create_monte_carlo_uncertainty_plot(
+    mc_results, output_file, fraction=DEFAULT_FRACTION, use_ks_statistic=False
+):
     """
     Create uncertainty analysis plots showing optimization metric and p-value distributions.
 
@@ -402,9 +487,11 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
     ----------
     mc_results : tuple
         Results from Monte Carlo analysis: (mean_metric, std_metric, metric_values,
-        mean_p, std_p, p_values, mean_d80, std_d80, d80_values)
+        mean_p, std_p, p_values, mean_psf_diameter, std_psf_diameter, psf_diameter_values)
     output_file : Path
         Output file path for saving the plot
+    fraction : float, optional
+        PSF containment fraction for labeling (default: 0.8)
     use_ks_statistic : bool, optional
         Whether KS statistic mode is being used (affects filename suffix)
     """
@@ -415,9 +502,9 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         mean_p_value,
         _,  # std_p_value (unused)
         p_values,
-        mean_d80,
-        std_d80,
-        d80_values,
+        mean_psf_diameter,
+        std_psf_diameter,
+        psf_diameter_values,
     ) = mc_results
 
     logger.info("Creating Monte Carlo uncertainty analysis plot...")
@@ -431,11 +518,13 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         # KS mode: 2x2 layout with all 4 plots
         _, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10), tight_layout=True)
     else:
-        # RMSD mode: 1x2 layout with only metric and D80 plots
+        # RMSD mode: 1x2 layout with only metric and PSF diameter plots
         _, (ax1, ax3) = plt.subplots(1, 2, figsize=(12, 5), tight_layout=True)
 
     # Metric histogram (KS statistic or RMSD)
     metric_name = "KS Statistic" if is_ks_mode else "RMSD"
+    psf_label = get_psf_diameter_label(fraction)
+
     ax1.hist(metric_values, bins=20, alpha=0.7, color="blue", edgecolor="black")
     ax1.axvline(
         mean_metric, color="red", linestyle="--", linewidth=2, label=f"Mean: {mean_metric:.6f}"
@@ -473,22 +562,26 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
         ax2.legend()
         ax2.grid(True, alpha=0.3)
 
-    # D80 histogram
-    ax3.hist(d80_values, bins=20, alpha=0.7, color="green", edgecolor="black")
+    # PSF diameter histogram
+    ax3.hist(psf_diameter_values, bins=20, alpha=0.7, color="green", edgecolor="black")
     ax3.axvline(
-        mean_d80, color="red", linestyle="--", linewidth=2, label=f"Mean: {mean_d80:.4f} cm"
+        mean_psf_diameter,
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label=f"Mean: {mean_psf_diameter:.4f} cm",
     )
     ax3.axvline(
-        mean_d80 - std_d80,
+        mean_psf_diameter - std_psf_diameter,
         color="orange",
         linestyle=":",
         alpha=0.7,
-        label=f"$\\sigma$: {std_d80:.4f} cm",
+        label=f"$\\sigma$: {std_psf_diameter:.4f} cm",
     )
-    ax3.axvline(mean_d80 + std_d80, color="orange", linestyle=":", alpha=0.7)
-    ax3.set_xlabel(D80_CM_LABEL)
+    ax3.axvline(mean_psf_diameter + std_psf_diameter, color="orange", linestyle=":", alpha=0.7)
+    ax3.set_xlabel(psf_label)
     ax3.set_ylabel("Counts")
-    ax3.set_title("D80 Distribution")
+    ax3.set_title(f"{get_psf_diameter_label(fraction, unit='')} Distribution")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
 
@@ -523,9 +616,9 @@ def create_monte_carlo_uncertainty_plot(mc_results, output_file, use_ks_statisti
     logger.info(f"Monte Carlo uncertainty plot saved to {png_file}")
 
 
-def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
+def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
     """
-    Create D80 vs off-axis angle plot using the best parameters.
+    Create PSF diameter vs off-axis angle plot using the best parameters.
 
     Parameters
     ----------
@@ -540,7 +633,11 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     output_dir : Path
         Output directory for saving plots.
     """
-    logger.info("Creating D80 vs off-axis angle plot with best parameters...")
+    fraction = args_dict.get("fraction", DEFAULT_FRACTION)
+    psf_label_cm = get_psf_diameter_label(fraction, unit="cm")
+    psf_label_deg = get_psf_diameter_label(fraction, unit="degrees")
+
+    logger.info(f"Creating {psf_label_cm} vs off-axis angle plot with best parameters...")
 
     # Apply best parameters to telescope model
     tel_model.change_multiple_parameters(**best_pars)
@@ -583,16 +680,19 @@ def create_d80_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         )
         plt.title(parameters_text)
         plt.xlabel("Off-axis Angle (degrees)")
-        plt.ylabel(D80_CM_LABEL if key == "d80_cm" else "D80 (degrees)")
+        plt.ylabel(psf_label_cm if "_cm" in key else psf_label_deg)
         plt.ylim(bottom=0)
         plt.xticks(rotation=45)
         plt.xlim(0, max_offset)
         plt.grid(True, alpha=0.3)
 
-        plot_file_name = f"{tel_model.name}_best_params_{key}.png"
+        # Create dynamic file name based on fraction
+        psf_identifier = get_psf_diameter_label(fraction, unit="").lower()  # e.g., "d80", "d95"
+        unit_suffix = "cm" if "_cm" in key else "deg"
+        plot_file_name = f"{tel_model.name}_best_params_{psf_identifier}_{unit_suffix}.png"
         plot_file = output_dir.joinpath(plot_file_name)
         visualize.save_figure(
-            plt, plot_file, figure_format=["png"], log_title=f"D80 vs off-axis ({key})"
+            plt, plot_file, figure_format=["png"], log_title=f"{psf_label_cm} vs off-axis ({key})"
         )
 
     plt.close("all")
@@ -638,7 +738,7 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
     args_dict : dict
         Dictionary containing command-line arguments with save_plots flag.
     gd_results : list
-        List of (params, rmsd, _, d80, _) tuples from gradient descent optimization.
+        List of (params, rmsd, _, psf_diameter, _) tuples from gradient descent optimization.
     tel_model : TelescopeModel
         Telescope model object for naming files.
     data_to_plot : dict
@@ -655,19 +755,21 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
     if not args_dict.get("save_plots", False):
         return
 
+    fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     pdf_filename = output_dir.joinpath(f"psf_optimization_results_{tel_model.name}.pdf")
     pdf_pages = PdfPages(pdf_filename)
     logger.info(f"Creating PSF plots for each optimization iteration (saving to {pdf_filename})")
 
-    for i, (params, rmsd, _, d80, _) in enumerate(gd_results):
+    for i, (params, rmsd, _, psf_diameter, _) in enumerate(gd_results):
         if i % 5 == 0 or i == len(gd_results) - 1:
             create_psf_parameter_plot(
                 data_to_plot,
                 params,
-                d80,
+                psf_diameter,
                 rmsd,
                 is_best=(i == len(gd_results) - 1),
                 pdf_pages=pdf_pages,
+                fraction=fraction,
                 use_ks_statistic=False,
             )
     pdf_pages.close()

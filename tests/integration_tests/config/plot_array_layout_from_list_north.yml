@@ -6,9 +6,10 @@ applications:
     - LSTN-01
     - MSTN
     axes_range: 500.0
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     show_labels: true
+    log_level: DEBUG
   integration_tests:
   - output_file: array_layout_list_North_ground.pdf
   - output_file: array_layout_list_North_ground.png

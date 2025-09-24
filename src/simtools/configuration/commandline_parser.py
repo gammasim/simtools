@@ -21,7 +21,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
     Wrapper around standard python argparse.ArgumentParser.
 
-    Command line arguments should be given in snake_case, e.g.  input_meta.
+    Command line arguments should be given in snake_case, e.g. 'input_meta'.
 
     Parameters
     ----------
