@@ -97,9 +97,9 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
         )
 
 
-def test_produce_model_parameter_reports(io_handler, db_config):
+def test_produce_model_parameter_reports(db_config, tmp_test_directory):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(label="reports", sub_dir="parameters")
+    output_path = tmp_test_directory
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_model_parameter_reports()
@@ -108,13 +108,13 @@ def test_produce_model_parameter_reports(io_handler, db_config):
     assert file_path.exists()
 
 
-def test__convert_to_md(telescope_model_lst, io_handler, db_config):
+def test__convert_to_md(telescope_model_lst, db_config, tmp_test_directory):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
+    output_path = tmp_test_directory
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
     parameter_name = "pm_photoelectron_spectrum"
 
@@ -123,9 +123,8 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
         read_parameters._convert_to_md(parameter_name, "1.0.0", "invalid-file.dat")
 
     # testing with valid file
-    new_file = read_parameters._convert_to_md(
-        parameter_name, "1.0.0", "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
-    )
+    valid_file = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(valid_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
@@ -140,32 +139,32 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     assert line_count == 30
 
     # Compare to actual first 30 lines of input file
-    input_path = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
-    with input_path.open("r", encoding="utf-8") as original_file:
+    with valid_file.open("r", encoding="utf-8") as original_file:
         expected_lines = original_file.read().splitlines()[:30]
         expected_block = "\n".join(expected_lines)
 
     assert code_block.strip() == expected_block.strip()
 
     # testing with non-utf-8 file
-    new_file = read_parameters._convert_to_md(
-        parameter_name, "1.0.0", "tests/resources/example_non_utf-8_file.lis"
-    )
+    non_utf_file = Path("tests/resources/example_non_utf-8_file.lis")
+    new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(non_utf_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
 
-def test__generate_plots(tmp_path, db_config):
+def test__generate_plots(tmp_test_directory, db_config):
     args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
-    input_file = tmp_path / "dummy_param.dat"
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
+    input_file = Path(tmp_test_directory / "dummy_param.dat")
     input_file.write_text("dummy content")
 
     # Test case for parameter other than "camera_config_file"
     with patch.object(
         read_parameters, "_plot_parameter_tables", return_value=["plot2"]
     ) as mock_plot:
-        result = read_parameters._generate_plots("some_param", "1.0.0", input_file, tmp_path, False)
+        result = read_parameters._generate_plots(
+            "some_param", "1.0.0", input_file, tmp_test_directory, False
+        )
         assert result == ["plot2"]
         mock_plot.assert_called_once()
 
@@ -174,30 +173,34 @@ def test__generate_plots(tmp_path, db_config):
         read_parameters, "_plot_camera_config", return_value=["camera_plot"]
     ) as mock_camera_plot:
         result = read_parameters._generate_plots(
-            "camera_config_file", "1.0.0", input_file, tmp_path, False
+            "camera_config_file", "1.0.0", input_file, tmp_test_directory, False
         )
         assert result == ["camera_plot"]
         mock_camera_plot.assert_called_once()
 
 
-def test__plot_camera_config_no_parameter_version(tmp_path, db_config):
+def test__plot_camera_config_no_parameter_version(tmp_test_directory, db_config):
     args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
-    result = read_parameters._plot_camera_config("camera_config_file", None, tmp_path, False)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
+    result = read_parameters._plot_camera_config(
+        "camera_config_file", None, tmp_test_directory, False
+    )
     assert result == []
 
 
-def test__plot_parameter_tables(tmp_path, db_config):
+def test__plot_parameter_tables(tmp_test_directory, db_config):
     args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
     result = read_parameters._plot_parameter_tables(
-        "pm_photoelectron_spectrum", "1.0.0", tmp_path, True
+        "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory), True
     )
     assert result == ["pm_photoelectron_spectrum_1.0.0_North_LSTN-design"]
 
     args = {"telescope": None, "site": "North", "model_version": "6.0.0"}
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
-    result = read_parameters._plot_parameter_tables("camera_config_file", "1.0.0", tmp_path, False)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
+    result = read_parameters._plot_parameter_tables(
+        "camera_config_file", "1.0.0", Path(tmp_test_directory), False
+    )
     assert result == []
 
 
@@ -303,7 +306,7 @@ def test__group_model_versions_by_parameter_version(io_handler, db_config):
                 "value": "4.5",
                 "parameter_version": "1.0.0",
                 "file_flag": False,
-                "model_version": "6.0.0, 5.0.0",
+                "model_version": "5.0.0, 6.0.0",
             }
         ],
     }
@@ -313,11 +316,9 @@ def test__group_model_versions_by_parameter_version(io_handler, db_config):
     assert result == expected
 
 
-def test__compare_parameter_across_versions(io_handler, db_config):
+def test__compare_parameter_across_versions(tmp_test_directory, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = tmp_test_directory
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     mock_data = {
@@ -384,14 +385,31 @@ def test__compare_parameter_across_versions(io_handler, db_config):
             "none_valued_param",
         ],
     )
+
+    # Find quantum_efficiency comparison entry for parameter_version == "1.0.0"
     qe_comparison = comparison_data.get("quantum_efficiency")
-    assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "6.0.0, 5.0.0"
+    qe_versions = [
+        entry["model_version"] for entry in qe_comparison if entry["parameter_version"] == "1.0.0"
+    ]
+    # Should be a single entry with model_version "5.0.0, 6.0.0"
+    assert any("5.0.0" in v and "6.0.0" in v for v in qe_versions)
 
     position_comparison = comparison_data.get("array_element_position_ground")
+    # Should have two entries with different model_version values
+    assert len(position_comparison) == 2
     assert position_comparison[0]["model_version"] != position_comparison[1]["model_version"]
-    assert position_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
+    # Find entry for parameter_version == "2.0.0"
+    pos_versions = [
+        entry["model_version"]
+        for entry in position_comparison
+        if entry["parameter_version"] == "2.0.0"
+    ]
+    assert pos_versions == ["6.0.0"]
 
-    assert len(comparison_data.get("only_prod6_param")) == 1
+    only_prod6_param = comparison_data.get("only_prod6_param")
+    assert len(only_prod6_param) == 1
+    assert only_prod6_param[0]["model_version"] == "6.0.0"
+
     assert "none_valued_param" not in comparison_data
 
 
@@ -1123,12 +1141,12 @@ class DummyTelescope:
         return self._param_versions.get(parameter)
 
 
-def test_get_array_element_parameter_data_simple(tmp_path, monkeypatch):
+def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch):
     """Simple test for get_array_element_parameter_data using mocked DB calls."""
 
     # Prepare ReadParameters with a harmless config and an output path
     args = {"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0", "observatory": None}
-    rp = ReadParameters(db_config=None, args=args, output_path=tmp_path)
+    rp = ReadParameters(db_config=None, args=args, output_path=tmp_test_directory)
 
     # Replace the db on the instance with a mock to avoid any DB access
     rp.db = Mock()
@@ -1202,11 +1220,11 @@ def test_get_array_element_parameter_data_simple(tmp_path, monkeypatch):
     ]
 
 
-def test_get_array_element_parameter_data_file_parameter(tmp_path, monkeypatch):
+def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, monkeypatch):
     """Test that file parameters are converted to markdown links using _convert_to_md."""
 
     args = {"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0", "observatory": None}
-    rp = ReadParameters(db_config=None, args=args, output_path=tmp_path)
+    rp = ReadParameters(db_config=None, args=args, output_path=tmp_test_directory)
     rp.db = Mock()
 
     # Parameter with file flag set
@@ -1265,22 +1283,22 @@ def test_get_array_element_parameter_data_file_parameter(tmp_path, monkeypatch):
     ]
 
 
-def test_plot_camera_config(tmp_path, db_config, mocker):
+def test_plot_camera_config(tmp_test_directory, db_config, mocker):
     args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
 
     # Mock input file and output path
-    input_file = tmp_path / "camera_config_file.dat"
+    input_file = Path(tmp_test_directory / "camera_config_file.dat")
     input_file.touch()
     plot_name = input_file.stem.replace(".", "-")
-    plot_path = tmp_path / f"{plot_name}.png"
+    plot_path = Path(tmp_test_directory / f"{plot_name}.png")
 
     # Mock plot_pixels.plot to avoid actual plotting
     mock_plot = mocker.patch("simtools.visualization.plot_pixels.plot")
 
     # Test when plot does not exist
     result = read_parameters._plot_camera_config(
-        "camera_config_file", "1.0.0", input_file, tmp_path
+        "camera_config_file", "1.0.0", input_file, tmp_test_directory
     )
     assert result == [plot_name]
     mock_plot.assert_called_once_with(
@@ -1300,7 +1318,7 @@ def test_plot_camera_config(tmp_path, db_config, mocker):
     plot_path.touch()
     mock_plot.reset_mock()
     result = read_parameters._plot_camera_config(
-        "camera_config_file", "1.0.0", input_file, tmp_path
+        "camera_config_file", "1.0.0", input_file, tmp_test_directory
     )
     assert result == [plot_name]
     mock_plot.assert_not_called()

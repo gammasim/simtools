@@ -69,7 +69,7 @@ def get_model_parameter_schema_file(parameter):
 
 def get_model_parameter_schema_version(schema_version=None):
     """
-    Validate  and return schema versions.
+    Validate and return schema versions.
 
     If no schema_version is given, the most recent version is provided.
 
