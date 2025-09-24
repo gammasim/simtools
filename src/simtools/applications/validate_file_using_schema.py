@@ -123,7 +123,7 @@ def _get_schema_file_name(args_dict, data_dict=None):
     return schema_file
 
 
-def _get_json_file_list(file_directory=None, file_name="*.json"):
+def _get_file_list(file_directory=None, file_name="*.json"):
     """Return list of files in a directory."""
     file_list = []
     if file_directory is not None:
@@ -145,9 +145,7 @@ def validate_dict_using_schema(args_dict, logger):
     the metadata section of the data dictionary.
 
     """
-    for file_name in _get_json_file_list(
-        args_dict.get("file_directory"), args_dict.get("file_name")
-    ):
+    for file_name in _get_file_list(args_dict.get("file_directory"), args_dict.get("file_name")):
         try:
             data = ascii_handler.collect_data_from_file(file_name=file_name)
         except FileNotFoundError as exc:
@@ -169,7 +167,7 @@ def validate_data_files(args_dict, logger):
     """Validate data files."""
     if args_dict.get("file_directory") is not None:
         tmp_args_dict = {}
-        for file_name in _get_json_file_list(args_dict.get("file_directory")):
+        for file_name in _get_file_list(args_dict.get("file_directory")):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
             schema_file = schema.get_model_parameter_schema_file(f"{parameter_name}")
