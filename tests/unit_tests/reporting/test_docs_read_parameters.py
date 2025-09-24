@@ -416,9 +416,7 @@ def test__compare_parameter_across_versions(tmp_test_directory, db_config):
 def test__compare_parameter_across_versions_empty_param_dict(io_handler, db_config):
     """Test _compare_parameter_across_versions with empty parameter dictionaries."""
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = io_handler.get_output_directory(sub_dir=f"parameters/{args['telescope']}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     # Test data with empty parameter dictionary for version 5.0.0
@@ -882,7 +880,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
         "simulation_software": "sim_telarray",
     }
     output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"productions/{args.get('model_version')}"
+        sub_dir=f"productions/{args.get('model_version')}"
     )
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
