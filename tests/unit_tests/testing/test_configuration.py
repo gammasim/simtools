@@ -149,6 +149,23 @@ def test_prepare_test_options_with_model_version(tmp_test_directory, tmp_config_
     assert written_config["model_version"] == "v2.0"
 
 
+def test_prepare_test_options_with_model_version_list(tmp_test_directory, tmp_config_string):
+    config = {"model_version": ["v1.0", "v1.1"]}
+    model_version = "v2.0"
+
+    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
+        config, tmp_test_directory, model_version
+    )
+
+    assert config_file == tmp_test_directory / tmp_config_string
+    assert config_string is None
+    assert config_file_model_version == ["v1.0", "v1.1"]
+
+    with open(config_file, encoding="utf-8") as file:
+        written_config = yaml.safe_load(file)
+    assert written_config["model_version"] == "v2.0"
+
+
 def test_prepare_test_options_with_output_path(tmp_test_directory, tmp_config_string):
     config = {"output_path": "results"}
     model_version = None

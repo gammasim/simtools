@@ -86,13 +86,16 @@ def add_production_tables_to_db(input_path, db):
     input_path = Path(input_path)
     logger.info(f"Reading production tables from repository path {input_path}")
 
-    for model in filter(Path.is_dir, input_path.iterdir()):
+    for model in sorted(filter(Path.is_dir, input_path.iterdir())):
         logger.info(f"Reading production tables for model version {model.name}")
         model_dict = _read_production_tables(model)
 
         for collection, data in model_dict.items():
             if data["parameters"]:
-                logger.info(f"Adding production table for {collection} to the database")
+                logger.info(
+                    f"Adding production table for {collection} "
+                    f"(model version {model.name}) to the database"
+                )
                 db.add_production_table(production_table=data)
             else:
                 logger.info(f"No production table for {collection} in model version {model.name}")
@@ -103,7 +106,7 @@ def _read_production_tables(model_path):
     Read production tables from a directory.
 
     Take into account that some productions include patch updates only. Read in this cases
-    the base models first.
+    all models from the model version history, starting with the earliest one.
 
     Parameters
     ----------
@@ -121,6 +124,12 @@ def _read_production_tables(model_path):
         for file in sorted((model_path.parent / model).rglob("*json")):
             _read_production_table(model_dict, file, model)
 
+    # ensure that the for patch updates the model version is set correctly
+    for table in model_dict.values():
+        table["model_version"] = model_path.name
+
+    _remove_deprecated_model_parameters(model_dict)
+
     return model_dict
 
 
@@ -135,10 +144,14 @@ def _read_production_table(model_dict, file, model_name):
             "model_version": model_name,
             "parameters": {},
             "design_model": {},
+            "deprecated_parameters": [],
         },
     )
     parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
-    logger.debug(f"Reading production table for {array_element} (collection {collection})")
+    logger.debug(
+        f"Reading production table for {array_element} "
+        f"(model_version {model_name}, collection {collection})"
+    )
     try:
         if array_element in ("configuration_corsika", "configuration_sim_telarray"):
             model_dict[collection]["parameters"] = parameter_dict["parameters"]
@@ -146,10 +159,10 @@ def _read_production_table(model_dict, file, model_name):
             model_dict[collection]["parameters"].setdefault(array_element, {}).update(
                 parameter_dict["parameters"][array_element]
             )
-
     except KeyError as exc:
         logger.error(f"KeyError: {exc}")
         raise
+
     try:
         model_dict[collection]["design_model"][array_element] = parameter_dict["design_model"][
             array_element
@@ -157,4 +170,28 @@ def _read_production_table(model_dict, file, model_name):
     except KeyError:
         pass
 
+    try:
+        model_dict[collection]["deprecated_parameters"] = parameter_dict["deprecated_parameters"]
+    except KeyError:
+        pass
+
     model_dict[collection]["model_version"] = model_name
+
+
+def _remove_deprecated_model_parameters(model_dict):
+    """
+    Remove deprecated parameters from all tables in a model dictionary.
+
+    Parameters
+    ----------
+    model_dict : dict
+        Production tables for a specific model version.
+    """
+    for table in model_dict.values():
+        for params in table.get("parameters", {}).values():
+            for param in table.get("deprecated_parameters", []):
+                if param in params:
+                    logger.info(
+                        f"Deprecated parameter {param} in production table {table['collection']}"
+                    )
+                    params.pop(param)

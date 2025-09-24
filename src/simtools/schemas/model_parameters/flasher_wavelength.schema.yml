@@ -13,7 +13,7 @@ short_description: |-
   Wavelength of flasher device.
 data:
   - type: float64
-    unit: "nm"
+    unit: nm
     default: 400
     allowed_range:
       min: 200

@@ -30,11 +30,6 @@ def config_data():
 
 
 @pytest.fixture
-def tmp_output_dir(tmp_path):
-    return tmp_path
-
-
-@pytest.fixture
 def mock_models(monkeypatch):
     tel = MagicMock()
     tel.name = "LST-1"
@@ -55,12 +50,12 @@ def mock_models(monkeypatch):
 
 
 @pytest.fixture
-def calculator(mock_models, config_data, tmp_output_dir):
+def calculator(mock_models, config_data, tmp_test_directory):
     return IncidentAnglesCalculator(
         simtel_path=Path("/simtel"),
         db_config={"db": "config"},
         config_data=config_data,
-        output_dir=tmp_output_dir,
+        output_dir=tmp_test_directory,
         label="test-label",
     )
 
@@ -77,7 +72,7 @@ def test_initialization(calculator, config_data):
     assert calculator.results_dir.is_dir()
 
 
-def test_run_produces_results(monkeypatch, calculator, tmp_output_dir):
+def test_run_produces_results(monkeypatch, calculator, tmp_test_directory):
     # Avoid external run
     monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
 
@@ -144,7 +139,7 @@ def test_run_for_offsets_restores_label_and_collects(monkeypatch, calculator):
     assert calculator.label == base_label  # restored
 
 
-def test_label_suffix_includes_noninteger_off_axis(monkeypatch, calculator, tmp_output_dir):
+def test_label_suffix_includes_noninteger_off_axis(monkeypatch, calculator, tmp_test_directory):
     # Avoid running external tool
     monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
 
@@ -171,11 +166,11 @@ def test_write_run_script_perfect_mirror_flags(calculator):
     assert "-C telescope_random_angle=0" in txt
 
 
-def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp_output_dir):
-    script = tmp_output_dir / "fail.sh"
+def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp_test_directory):
+    script = tmp_test_directory / "fail.sh"
     script.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
     script.chmod(0o755)
-    log_file = tmp_output_dir / "run.log"
+    log_file = tmp_test_directory / "run.log"
 
     def _raise(*a, **k):
         raise subprocess.CalledProcessError(1, "cmd")
@@ -186,7 +181,7 @@ def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp
         calculator._run_script(script, log_file)
 
 
-def test_save_results_no_data_logs_warning(caplog, calculator, tmp_output_dir):
+def test_save_results_no_data_logs_warning(caplog, calculator, tmp_test_directory):
     calculator.results = QTable()  # empty
     caplog.set_level(logging.WARNING, logger=ia.__name__)
     calculator._save_results()
@@ -209,9 +204,9 @@ def test_save_results_success(caplog, calculator):
     assert table_file.with_suffix(".meta.yml").exists()
 
 
-def test_compute_incidence_angles_parsing(calculator, tmp_path):
+def test_compute_incidence_angles_parsing(calculator, tmp_test_directory):
     # Create a photons file with mixed content
-    pfile = tmp_path / "mixed.lis"
+    pfile = tmp_test_directory / "mixed.lis"
     lines = [
         "# comment line\n",
         "\n",
@@ -271,7 +266,7 @@ def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
 ## Removed _attach_results_metadata test (method removed)
 
 
-def test_primary_valueerror_results_in_nan(calculator, tmp_path):
+def test_primary_valueerror_results_in_nan(calculator, tmp_test_directory):
     # Build one valid line with focal=1.0, primary=bad (ValueError), secondary=2.0
     # Ensure we also include X,Y on primary (cols 29,30) to avoid radius parsing errors
     parts = ["0"] * 25 + ["1.0"]  # focal at col 26
@@ -280,7 +275,7 @@ def test_primary_valueerror_results_in_nan(calculator, tmp_path):
     parts[29] = "0.0"  # y cm (col 30)
     parts.append("bad")  # primary at col 32 -> ValueError
     parts += ["0", "0", "0", "2.0"]  # pad cols 33-35, secondary at col 36
-    pfile = tmp_path / "one.lis"
+    pfile = tmp_test_directory / "one.lis"
     pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
@@ -288,7 +283,7 @@ def test_primary_valueerror_results_in_nan(calculator, tmp_path):
     assert math.isclose(out["angle_incidence_secondary_deg"][0], 2.0, rel_tol=0.0, abs_tol=1e-12)
 
 
-def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
+def test_secondary_valueerror_results_in_nan(calculator, tmp_test_directory):
     # Build one valid line with focal=1.0, primary=3.0, secondary=bad (ValueError)
     parts = ["0"] * 25 + ["1.0"]  # focal at col 26
     parts += ["0", "0", "0", "0", "0"]  # pad cols 27-31
@@ -296,7 +291,7 @@ def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
     parts[29] = "0.0"  # y cm (col 30)
     parts.append("3.0")  # primary at col 32
     parts += ["0", "0", "0", "bad"]  # pad cols 33-35 and secondary=bad at col 36
-    pfile = tmp_path / "one2.lis"
+    pfile = tmp_test_directory / "one2.lis"
     pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
@@ -304,10 +299,10 @@ def test_secondary_valueerror_results_in_nan(calculator, tmp_path):
     assert math.isnan(out["angle_incidence_secondary_deg"][0])
 
 
-def test_header_driven_column_detection(calculator, tmp_path):
+def test_header_driven_column_detection(calculator, tmp_test_directory):
     # Provide header lines that define custom column positions (1-based):
     # focal=30, primary=34, secondary=38
-    pfile = tmp_path / "header.lis"
+    pfile = tmp_test_directory / "header.lis"
     header_lines = [
         "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]\n",
         "# Column 34: Angle of incidence onto primary mirror [deg]\n",
@@ -348,9 +343,9 @@ def test_match_header_column_variants():
     assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) is None
 
 
-def test_find_column_indices_reflection_headers(calculator, tmp_path):
+def test_find_column_indices_reflection_headers(calculator, tmp_test_directory):
     # Build a file that declares reflection point columns for primary and secondary
-    pfile = tmp_path / "refl_headers.lis"
+    pfile = tmp_test_directory / "refl_headers.lis"
     header_lines = [
         "# Column 10: X reflection point on primary mirror [cm]\n",
         "# Column 11: Y reflection point on primary mirror [cm]\n",
@@ -368,9 +363,9 @@ def test_find_column_indices_reflection_headers(calculator, tmp_path):
     assert idx["sec_y"] == 12
 
 
-def test_compute_with_header_driven_reflection_points_values(calculator, tmp_path):
+def test_compute_with_header_driven_reflection_points_values(calculator, tmp_test_directory):
     # Provide both angle and reflection point headers and a single data line
-    pfile = tmp_path / "full_headers_values.lis"
+    pfile = tmp_test_directory / "full_headers_values.lis"
     header_lines = [
         "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]\n",
         "# Column 34: Angle of incidence onto primary mirror [deg]\n",
@@ -405,12 +400,12 @@ def test_compute_with_header_driven_reflection_points_values(calculator, tmp_pat
     assert out["secondary_hit_radius_m"] == pytest.approx([((3.0**2 + 4.0**2) ** 0.5) / 100.0])
 
 
-def test_compute_angles_skips_primary_secondary_when_disabled(tmp_path):
+def test_compute_angles_skips_primary_secondary_when_disabled(tmp_test_directory):
     # Minimal targeted test for the early return when primary/secondary are disabled
     calc = object.__new__(IncidentAnglesCalculator)
     calc.calculate_primary_secondary_angles = False
 
-    pfile = tmp_path / "angles.lis"
+    pfile = tmp_test_directory / "angles.lis"
     parts = ["0"] * 25 + ["42.5"]  # focal at col 26
     pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
 
@@ -421,7 +416,7 @@ def test_compute_angles_skips_primary_secondary_when_disabled(tmp_path):
     assert "angle_incidence_secondary_deg" not in out
 
 
-def test_primary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
+def test_primary_hit_geometry_nan_when_missing_coords(calculator, tmp_test_directory):
     # focal valid; missing/invalid primary x/y should yield NaNs for radius and coords
     parts = ["0"] * 25 + ["42.0"]  # focal at col 26
     # pad cols 27-31, then invalidate prim_x (col 29, idx 28) and prim_y (col 30, idx 29)
@@ -431,7 +426,7 @@ def test_primary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
     # primary and secondary angles present to avoid other issues
     parts.append("1.0")  # primary at 32
     parts += ["0", "0", "0", "2.0"]  # secondary at 36
-    pfile = tmp_path / "prim_nan.lis"
+    pfile = tmp_test_directory / "prim_nan.lis"
     pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
@@ -442,7 +437,7 @@ def test_primary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
     assert math.isnan(out["primary_hit_y_m"][0])
 
 
-def test_secondary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
+def test_secondary_hit_geometry_nan_when_missing_coords(calculator, tmp_test_directory):
     # focal valid; missing/invalid secondary x/y should yield NaNs for secondary radius/coords
     parts = ["0"] * 25 + ["42.0"]  # focal at col 26
     parts += ["0", "0", "0", "0", "0"]  # pad 27-31
@@ -451,7 +446,7 @@ def test_secondary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
     parts.append("1.0")  # primary at 32
     # secondary x/y (cols 33/34) will be invalid strings
     parts += ["badx", "bady", "0", "2.0"]  # pad cols and secondary=2.0 at col 36
-    pfile = tmp_path / "sec_nan.lis"
+    pfile = tmp_test_directory / "sec_nan.lis"
     pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
@@ -462,8 +457,8 @@ def test_secondary_hit_geometry_nan_when_missing_coords(calculator, tmp_path):
     assert math.isnan(out["secondary_hit_y_m"][0])
 
 
-def test_iter_data_rows_skips_comments_and_blank(tmp_path):
-    p = tmp_path / "rows.lis"
+def test_iter_data_rows_skips_comments_and_blank(tmp_test_directory):
+    p = tmp_test_directory / "rows.lis"
     p.write_text("""# header line\n\n1 2 3\n  # another comment\n4 5 6\n""", encoding="utf-8")
     rows = list(IncidentAnglesCalculator._iter_data_rows(p))
     assert rows == [
@@ -599,9 +594,9 @@ def test_append_primary_secondary_angles_direct():
     assert math.isnan(secondary[0])
 
 
-def test_find_column_indices_defaults(calculator, tmp_path):
+def test_find_column_indices_defaults(calculator, tmp_test_directory):
     # No header lines -> defaults (0-based): focal=25; others present only when flag True
-    pfile = tmp_path / "no_headers.lis"
+    pfile = tmp_test_directory / "no_headers.lis"
     pfile.write_text("0 1 2 3\n", encoding="utf-8")
 
     idx = calculator._find_column_indices(pfile)
@@ -615,9 +610,9 @@ def test_find_column_indices_defaults(calculator, tmp_path):
     assert idx["sec_y"] == 33
 
 
-def test_find_column_indices_header_overrides(calculator, tmp_path):
+def test_find_column_indices_header_overrides(calculator, tmp_test_directory):
     # Header provides custom 1-based columns for angles and reflection points
-    pfile = tmp_path / "headers_all.lis"
+    pfile = tmp_test_directory / "headers_all.lis"
     header = "\n".join(
         [
             "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]",
@@ -642,13 +637,13 @@ def test_find_column_indices_header_overrides(calculator, tmp_path):
     assert idx["sec_y"] == 12
 
 
-def test_find_column_indices_ignores_mirror_when_disabled(tmp_path):
+def test_find_column_indices_ignores_mirror_when_disabled(tmp_test_directory):
     # Even with headers present, when calculate_primary_secondary_angles is False,
     # only 'focal' should be returned/overridden.
     calc = object.__new__(IncidentAnglesCalculator)
     calc.calculate_primary_secondary_angles = False
 
-    pfile = tmp_path / "headers_disabled.lis"
+    pfile = tmp_test_directory / "headers_disabled.lis"
     header = "\n".join(
         [
             "# Column 26: Angle of incidence at focal surface, with respect to the optical axis [deg]",
@@ -712,7 +707,7 @@ def test_label_suffix_returns_expected_format(calculator):
     assert s.endswith("off0")
 
 
-def test_append_values_only_focal_when_disabled(tmp_path):
+def test_append_values_only_focal_when_disabled(tmp_test_directory):
     # Minimal test to check early return after focal append
     calc = object.__new__(IncidentAnglesCalculator)
     calc.calculate_primary_secondary_angles = False

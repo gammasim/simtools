@@ -319,9 +319,9 @@ def test_sim_telarray_random_seeds():
     assert len(seeds) == number
 
 
-def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text):
+def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, file_has_text):
     # Create a mock file to write to
-    test_file = tmp_path / "test_simtools_params.txt"
+    test_file = tmp_test_directory / "test_simtools_params.txt"
     with open(test_file, "w") as f:
         simtel_config_writer._write_simtools_parameters(f)
 
@@ -335,11 +335,11 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text
     )
 
     # Test with simtel_path and build_opts.yml
-    build_opts_file = tmp_path / "build_opts.yml"
+    build_opts_file = tmp_test_directory / "build_opts.yml"
     with open(build_opts_file, "w") as f:
         f.write("build_date: 2023-01-01\nversion: 1.0.0")
 
-    simtel_config_writer._simtel_path = tmp_path
+    simtel_config_writer._simtel_path = tmp_test_directory
     with open(test_file, "w") as f:
         simtel_config_writer._write_simtools_parameters(f)
 
@@ -348,7 +348,7 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text
     assert file_has_text(test_file, "metaparam global set simtools_version = 1.0.0")
 
     # Test with invalid simtel_path
-    simtel_config_writer._simtel_path = tmp_path / "nonexistent"
+    simtel_config_writer._simtel_path = tmp_test_directory / "nonexistent"
     with open(test_file, "w") as f:
         simtel_config_writer._write_simtools_parameters(f)
     # Should still write basic parameters without build_opts
@@ -356,7 +356,7 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_path, file_has_text
     assert file_has_text(test_file, "metaparam global set simtools_version")
 
 
-def test_write_single_mirror_list_file(simtel_config_writer, tmp_path, file_has_text):
+def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory, file_has_text):
     mirror_number = 1
     mirrors = mock.Mock()
     mirrors.get_single_mirror_parameters.return_value = (
@@ -366,7 +366,7 @@ def test_write_single_mirror_list_file(simtel_config_writer, tmp_path, file_has_
         16.0 * u.m,
         0,
     )
-    single_mirror_list_file = tmp_path / "single_mirror_list.dat"
+    single_mirror_list_file = tmp_test_directory / "single_mirror_list.dat"
 
     simtel_config_writer.write_single_mirror_list_file(
         mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
@@ -430,13 +430,26 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
     """Test _get_flasher_parameters_for_sim_telarray with missing parameters and existing ones."""
     simtel_par = {"existing_param": "existing_value"}
 
+    result = simtel_config_writer._get_flasher_parameters_for_sim_telarray({}, simtel_par)
+
+    assert result == simtel_par
+
+    simtel_par = {"existing_param": "existing_value"}
+
+    parameters = {
+        "flasher_pulse_width": {"value": 0.0},
+        "flasher_pulse_shape": {"value": "bad_shape"},
+    }
+
     with caplog.at_level(logging.WARNING):
-        result = simtel_config_writer._get_flasher_parameters_for_sim_telarray({}, simtel_par)
+        result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(
+            parameters, simtel_par
+        )
+
+    assert "Flasher pulse shape 'bad_shape' without width definition" in caplog.text
 
     # All flasher parameters should be 0.0, existing parameter preserved
     assert all(
         result[key] == pytest.approx(0.0)
         for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
     )
-    assert result["existing_param"] == "existing_value"
-    assert "Flasher pulse shape '' without width definition" in caplog.text
