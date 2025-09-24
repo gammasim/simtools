@@ -18,9 +18,7 @@ definitions:
         type: string
         description: Name of the production table.
       model_version:
-        type: string
-        description: Model version.
-        pattern: '^\d+\.\d+\.\d+$'
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
       parameters:
         type: object
         description: Model parameters.
@@ -28,12 +26,9 @@ definitions:
           type: object
           description: Model parameter.
           additionalProperties:
-            type: string
-            description: Parameter version (semantical versioning).
-            pattern: '^\d+\.\d+\.\d+$'
+            $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
         propertyNames:
-          description: Allowed parameter name patterns.
-          pattern: '^([A-Za-z](ST|LL|CT|SF)[N,S,x]-\d{2,3}|[A-Za-z](ST|LL|CT|SF)[N,S,x]-(design|FlashCam|NectarCam)|OBS-(North|South)|Dummy-Telescope)$'
+          $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
       design_model:
         type: object
         description: Design models.
