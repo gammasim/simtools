@@ -2,7 +2,6 @@
 
 import copy
 import subprocess
-import tempfile
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
@@ -82,9 +81,9 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
 @patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.dump")
 @patch("builtins.open", new_callable=MagicMock)
 def test_write_single_pe_spectrum(
-    mock_open, mock_dump, mock_get_output_directory, spe_spectrum, tmp_path
+    mock_open, mock_dump, mock_get_output_directory, spe_spectrum, tmp_test_directory
 ):
-    mock_get_output_directory.return_value = tmp_path / "output" / "directory"
+    mock_get_output_directory.return_value = tmp_test_directory / "output" / "directory"
     mock_open.return_value.__enter__.return_value = MagicMock()
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
@@ -99,7 +98,7 @@ def test_write_single_pe_spectrum(
     tmp_spe_spectrum.write_single_pe_spectrum()
 
     mock_open.assert_called_once_with(
-        (tmp_path / "output" / "directory" / "output_file.dat"), "w", encoding="utf-8"
+        (tmp_test_directory / "output" / "directory" / "output_file.dat"), "w", encoding="utf-8"
     )
     mock_dump.assert_called_once()
 
@@ -108,9 +107,18 @@ def test_write_single_pe_spectrum(
 @patch(
     "simtools.camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum._get_input_data"
 )
-def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_spectrum, spe_data):
-    with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmpfile:
-        tmpfile.write(spe_data)
+def test_derive_spectrum_norm_spe(
+    mock_get_input_data, mock_subprocess_run, spe_spectrum, spe_data, tmp_test_directory
+):
+    tmpfile_path = tmp_test_directory / "test_spe_data.txt"
+    tmpfile_path.write_text(spe_data, encoding="utf-8")
+
+    # Create a mock file object that behaves like the NamedTemporaryFile
+    class MockTempFile:
+        def __init__(self, path):
+            self.name = str(path)
+
+    tmpfile = MockTempFile(tmpfile_path)
     # first call to _get_input_data returns tmpfile, second call None
     mock_get_input_data.side_effect = [tmpfile, None]
     mock_subprocess_run.return_value.stdout = spe_data
