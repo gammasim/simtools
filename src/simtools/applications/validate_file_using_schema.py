@@ -61,12 +61,15 @@ def _parse(label, description):
 
     """
     config = configurator.Configurator(label=label, description=description)
-    group = config.parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--file_name", help="File to be validated")
-    group.add_argument(
+    config.parser.add_argument(
+        "--file_name",
+        help="File to be validated (full path or name pattern, e.g., '*.json')",
+        default="*.json",
+    )
+    config.parser.add_argument(
         "--file_directory",
         help=(
-            "Directory with json files to be validated. "
+            "Directory with files to be validated. "
             "If no schema file is provided, the assumption is that model "
             "parameters are validated and the schema files are taken from "
             f"{MODEL_PARAMETER_SCHEMA_PATH}."
@@ -124,7 +127,7 @@ def _get_json_file_list(file_directory=None, file_name=None):
     """Return list of json files in a directory."""
     file_list = []
     if file_directory is not None:
-        file_list = list(Path(file_directory).rglob("*.json"))
+        file_list = list(Path(file_directory).rglob(file_name))
         if not file_list:
             raise FileNotFoundError(f"No files found in {file_directory}")
     elif file_name is not None:
