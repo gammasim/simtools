@@ -462,11 +462,11 @@ class SimulatorLightEmission(SimtelRunner):
         astropy.units.Quantity
             Distance between calibration device and focal plane.
         """
-        distance = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
-        distance -= self.calibration_model.get_parameter_value_with_unit("flasher_position")[2].to(
+        focal_length = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
+        flasher_z = self.calibration_model.get_parameter_value_with_unit("flasher_position")[2].to(
             u.m
         )
-        return distance
+        return focal_length - flasher_z
 
     def _get_angular_distribution_string_for_sim_telarray(self):
         """
