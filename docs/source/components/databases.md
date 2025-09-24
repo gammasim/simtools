@@ -40,7 +40,7 @@ SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for database: ask the responsible 
 SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible person
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
@@ -99,7 +99,7 @@ SIMTOOLS_DB_API_USER='api' # username for database
 SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
 ```
 
 For using simtools inside a container:
@@ -121,7 +121,7 @@ SIMTOOLS_DB_API_USER='api' # username for database
 SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
@@ -129,7 +129,7 @@ Fill the model parameter database from the model repository (parameters must mat
 
 ```console
 cd /workdir/external/database_scripts
-./upload_from_model_repository_to_db.sh CTAO-Simulation-ModelParameters v20.9.0
+./upload_from_model_repository_to_db.sh CTAO-Simulation-Model v20.9.0
 ```
 
 ### Purge the local database instance
