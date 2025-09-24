@@ -12,8 +12,7 @@ definitions:
   SimulationModelsInfo:
     properties:
       model_version:
-        type: string
-        description: The version of the CTAO model.
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
       model_update:
         type: string
         description: The type of update for the model version.
@@ -24,13 +23,21 @@ definitions:
         type: array
         description: A list of previous model versions.
         items:
-          type: string
+          $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
       description:
         type: string
         description: A detailed description of the model changes.
       changes:
         type: object
         description: A map of design names to their parameter changes.
+        propertyNames:
+          $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+        additionalProperties:
+          type: object
+          additionalProperties:
+            anyOf:
+              - $ref: '#/$defs/ParameterValue'
+              - $ref: '#/$defs/DeprecatedParameter'
     required:
       - model_version
       - model_update
@@ -53,7 +60,7 @@ $defs:
     type: object
     properties:
       version:
-        type: string
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
       value:
         oneOf:
           - type: string
@@ -62,8 +69,10 @@ $defs:
           - type: array
           - type: object
       unit:
-        type: string
+        oneOf:
+          - type: string
+          - type: array
+          - type: "null"
     required:
       - version
-      - value
     additionalProperties: false
