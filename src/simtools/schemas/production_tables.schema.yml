@@ -33,13 +33,18 @@ definitions:
             pattern: '^\d+\.\d+\.\d+$'
         propertyNames:
           description: Allowed parameter name patterns.
-          pattern: '^([A-Za-z](ST|LL|CT)[N,S,x]-\d{2,3}|[A-Za-z](ST|LL|CT)[N,S,x]-(design|FlashCam|NectarCam)|OBS-(North|South)|Dummy-Telescope)$'
+          pattern: '^([A-Za-z](ST|LL|CT|SF)[N,S,x]-\d{2,3}|[A-Za-z](ST|LL|CT|SF)[N,S,x]-(design|FlashCam|NectarCam)|OBS-(North|South)|Dummy-Telescope)$'
       design_model:
         type: object
         description: Design models.
         additionalProperties:
           type: string
           description: Design model of a telescope
+      deprecated_parameters:
+        type: array
+        description: List of deprecated parameters.
+        items:
+          type: string
     required:
       - production_table_name
       - model_version

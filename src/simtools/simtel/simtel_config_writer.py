@@ -96,6 +96,8 @@ class SimtelConfigWriter:
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
+        simtel_par = self._get_parameters_for_sim_telarray(parameters, config_file_path)
+
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
@@ -104,21 +106,85 @@ class SimtelConfigWriter:
             file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
             file.write("#endif\n\n")
 
-            for par, value in parameters.items():
-                simtel_name, value = self._convert_model_parameters_to_simtel_format(
-                    names.get_simulation_software_name_from_parameter_name(
-                        par, software_name="sim_telarray"
-                    ),
-                    value["value"],
-                    config_file_path,
-                    None,
-                )
-                if simtel_name:
-                    file.write(f"{simtel_name} = {self._get_value_string_for_simtel(value)}\n")
-            if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
-                file.write("stars = none\n")
+            for simtel_name, simtel_value in simtel_par.items():
+                file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
             for meta in self._get_sim_telarray_metadata("telescope", parameters, telescope_name):
                 file.write(f"{meta}\n")
+
+    def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
+        """
+        Convert parameter dictionary to sim_telarray configuration file format.
+
+        Accounts for differences between the data models for sim_telarray configuration
+        and the simulation models.
+
+        Parameters
+        ----------
+        parameters: dict
+            Model parameters.
+        config_file_path: str or Path
+            Path of the file to write on.
+
+        Returns
+        -------
+        dict
+            Model parameters in sim_telarray format.
+        """
+        simtel_par = {}
+        for par, value in parameters.items():
+            simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
+                names.get_simulation_software_name_from_parameter_name(
+                    par, software_name="sim_telarray"
+                ),
+                value["value"],
+                config_file_path,
+                None,
+            )
+            if simtel_name:
+                simtel_par[simtel_name] = simtel_value
+        if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
+            simtel_par["stars"] = None
+
+        return self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par)
+
+    def _get_flasher_parameters_for_sim_telarray(self, parameters, simtel_par):
+        """
+        Combine flasher pulse time parameters into a single parameter.
+
+        Takes into account that sim_telarray expects a single parameter with a specific name.
+
+        Parameters
+        ----------
+        parameters: dict
+            Model parameters.
+        simtel_par: dict
+            Model parameters in sim_telarray format.
+
+        Returns
+        -------
+        dict
+            Model parameters in sim_telarray format including flasher parameters.
+
+        """
+        if "flasher_pulse_shape" not in parameters and "flasher_pulse_width" not in parameters:
+            return simtel_par
+
+        mapping = {
+            "gauss": "laser_pulse_sigtime",
+            "tophat": "laser_pulse_twidth",
+            "exponential": "laser_pulse_exptime",
+        }
+
+        shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
+        width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
+
+        simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
+        if shape in mapping:
+            simtel_par[mapping[shape]] = width
+        else:
+            self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
+
+        return simtel_par
 
     def _get_value_string_for_simtel(self, value):
         """
