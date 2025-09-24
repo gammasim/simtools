@@ -61,12 +61,15 @@ def _parse(label, description):
 
     """
     config = configurator.Configurator(label=label, description=description)
-    group = config.parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--file_name", help="File to be validated")
-    group.add_argument(
+    config.parser.add_argument(
+        "--file_name",
+        help="File to be validated (full path or name pattern, e.g., '*.json')",
+        default="*.json",
+    )
+    config.parser.add_argument(
         "--file_directory",
         help=(
-            "Directory with json files to be validated. "
+            "Directory with files to be validated. "
             "If no schema file is provided, the assumption is that model "
             "parameters are validated and the schema files are taken from "
             f"{MODEL_PARAMETER_SCHEMA_PATH}."
@@ -120,11 +123,11 @@ def _get_schema_file_name(args_dict, data_dict=None):
     return schema_file
 
 
-def _get_json_file_list(file_directory=None, file_name=None):
-    """Return list of json files in a directory."""
+def _get_file_list(file_directory=None, file_name="*.json"):
+    """Return list of files in a directory."""
     file_list = []
     if file_directory is not None:
-        file_list = list(Path(file_directory).rglob("*.json"))
+        file_list = list(Path(file_directory).rglob(file_name))
         if not file_list:
             raise FileNotFoundError(f"No files found in {file_directory}")
     elif file_name is not None:
@@ -142,9 +145,7 @@ def validate_dict_using_schema(args_dict, logger):
     the metadata section of the data dictionary.
 
     """
-    for file_name in _get_json_file_list(
-        args_dict.get("file_directory"), args_dict.get("file_name")
-    ):
+    for file_name in _get_file_list(args_dict.get("file_directory"), args_dict.get("file_name")):
         try:
             data = ascii_handler.collect_data_from_file(file_name=file_name)
         except FileNotFoundError as exc:
@@ -166,7 +167,7 @@ def validate_data_files(args_dict, logger):
     """Validate data files."""
     if args_dict.get("file_directory") is not None:
         tmp_args_dict = {}
-        for file_name in _get_json_file_list(args_dict.get("file_directory")):
+        for file_name in _get_file_list(args_dict.get("file_directory")):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
             schema_file = schema.get_model_parameter_schema_file(f"{parameter_name}")
