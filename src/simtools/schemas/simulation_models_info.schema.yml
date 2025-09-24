@@ -1,0 +1,78 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimulationModelsInfo'
+title: Production and simulation model information schema
+description: Schema for validating 'info.yml' files used to update CTAO simulation models.
+schema_version: 0.1.0
+schema_name: simulation_models_info.metaschema
+type: object
+additionalProperties: false
+
+definitions:
+  SimulationModelsInfo:
+    properties:
+      model_version:
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      model_update:
+        type: string
+        description: The type of update for the model version.
+        enum:
+          - patch_update
+          - full_update
+      model_version_history:
+        type: array
+        description: A list of previous model versions.
+        items:
+          $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      description:
+        type: string
+        description: A detailed description of the model changes.
+      changes:
+        type: object
+        description: A map of design names to their parameter changes.
+        propertyNames:
+          $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+        additionalProperties:
+          type: object
+          additionalProperties:
+            anyOf:
+              - $ref: '#/$defs/ParameterValue'
+              - $ref: '#/$defs/DeprecatedParameter'
+    required:
+      - model_version
+      - model_update
+      - model_version_history
+      - description
+      - changes
+
+$defs:
+  DeprecatedParameter:
+    type: object
+    properties:
+      deprecated:
+        type: boolean
+        const: true
+    required:
+      - deprecated
+    additionalProperties: false
+
+  ParameterValue:
+    type: object
+    properties:
+      version:
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      value:
+        oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          - type: array
+          - type: object
+      unit:
+        oneOf:
+          - type: string
+          - type: array
+          - type: "null"
+    required:
+      - version
+    additionalProperties: false
