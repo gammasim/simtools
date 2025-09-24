@@ -57,9 +57,9 @@ def mock_results():
 
 
 @pytest.fixture
-def hdf5_file_name(tmp_path):
+def hdf5_file_name(tmp_test_directory):
     """Create temporary HDF5 file name."""
-    return str(tmp_path / "test_file.h5")
+    return str(tmp_test_directory / "test_file.h5")
 
 
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
@@ -127,10 +127,10 @@ def test_process_file(mocker):
     mock_histograms.fill.assert_called_once()
 
 
-def test_write_results(mocker, mock_args_dict, mock_results, tmp_path):
+def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory):
     """Test write_results function."""
     mock_io = mocker.patch("simtools.io.io_handler.IOHandler")
-    mock_io.return_value.get_output_directory.return_value = tmp_path
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
 
     mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
 
@@ -376,7 +376,7 @@ def test_process_file_with_mocked_histograms(mocker):
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
 
 
-def test_process_file_with_plot_histograms(mocker, tmp_path):
+def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
@@ -389,7 +389,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_path):
     mock_io_handler = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
-    mock_io_handler.return_value.get_output_directory.return_value = tmp_path
+    mock_io_handler.return_value.get_output_directory.return_value = tmp_test_directory
 
     mocker.patch(
         COMPUTE_LOWER_ENERGY_LIMIT_PATH,
@@ -420,7 +420,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_path):
     args, kwargs = mock_plot.call_args
     # First positional argument should be the histograms instance
     assert args[0] is mock_histograms.histograms
-    assert kwargs["output_path"] == tmp_path
+    assert kwargs["output_path"] == tmp_test_directory
     assert kwargs["limits"] == {
         "lower_energy_limit": 1.0 * u.TeV,
         "upper_radius_limit": 100.0 * u.m,

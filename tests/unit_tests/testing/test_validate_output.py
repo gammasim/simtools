@@ -30,9 +30,9 @@ def create_json_file(tmp_test_directory):
 
 
 @pytest.fixture
-def create_yaml_file(tmp_path):
+def create_yaml_file(tmp_test_directory):
     def _create_yaml_file(file_name, content):
-        _file = tmp_path / file_name
+        _file = tmp_test_directory / file_name
         with open(_file, "w", encoding="utf-8") as f:
             yaml.dump(content, f)
         return _file
@@ -41,10 +41,10 @@ def create_yaml_file(tmp_path):
 
 
 @pytest.fixture
-def create_ecsv_file(tmp_path):
+def create_ecsv_file(tmp_test_directory):
     def _create_ecsv_file(file_name, content):
         table = Table(content)
-        file_path = tmp_path / file_name
+        file_path = tmp_test_directory / file_name
         table.write(file_path, format="ascii.ecsv")
         return file_path
 
@@ -448,8 +448,8 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg")
-    file2 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg")
+    file1 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg")
+    file2 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg")
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 

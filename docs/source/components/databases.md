@@ -89,23 +89,7 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 
 ### Upload to and download from the local database instance
 
-This requires the following changes to the settings of the environment variables in `.env` for access from outside a container:
-
-```console
-# Environment variables
-SIMTOOLS_DB_API_PORT=27017 # Port on the database server
-SIMTOOLS_DB_SERVER='localhost'
-SIMTOOLS_DB_API_USER='api' # username for database
-SIMTOOLS_DB_API_PW='password' # Password for database
-SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
-```
-
-For using simtools inside a container:
-
-* set the `SIMTOOLS_DB_SERVER` in the `.env` file to SIMTOOLS_DB_SERVER='simtools-mongodb'.
-* connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g,:
+Startup a container and connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g,:
 
 ```bash
 podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
