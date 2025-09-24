@@ -2,7 +2,6 @@
 
 import io
 import logging
-import re
 from collections import defaultdict
 from pathlib import Path
 from threading import Lock
@@ -11,7 +10,6 @@ import gridfs
 import jsonschema
 from astropy.table import Table
 from bson.objectid import ObjectId
-from packaging.version import Version
 from pymongo import MongoClient
 
 from simtools.data_model import validate_data
@@ -100,7 +98,6 @@ class DatabaseHandler:
         self.list_of_collections = {}
 
         self._set_up_connection()
-        self._find_latest_simulation_model_db()
         self.db_name = (
             self.get_db_name(
                 db_simulation_model_version=self.mongo_db_config.get("db_simulation_model_version"),
@@ -170,51 +167,6 @@ class DatabaseHandler:
             tlsallowinvalidhostnames=True,
             tlsallowinvalidcertificates=True,
         )
-
-    def _find_latest_simulation_model_db(self):
-        """
-        Find the latest released version of the simulation model and update the DB config.
-
-        This is indicated by "LATEST" to the simulation model data base version.
-        Only released versions are considered, pre-releases are ignored.
-
-        Raises
-        ------
-        ValueError
-            If the "LATEST" version is requested but no versions are found in the DB.
-
-        """
-        try:
-            db_simulation_model_version = self.mongo_db_config["db_simulation_model_version"]
-            db_simulation_model = self.mongo_db_config["db_simulation_model"]
-            if db_simulation_model_version != "LATEST":
-                return
-        except TypeError:  # db_simulation_model_version is None
-            return
-
-        list_of_db_names = self.db_client.list_database_names()
-        filtered_list_of_db_names = [
-            s for s in list_of_db_names if s.startswith(db_simulation_model)
-        ]
-        pattern = re.compile(rf"{re.escape(db_simulation_model)}-v(\d+)-(\d+)-(\d+)(?:-(.+))?$")
-
-        versioned_strings = []
-        for s in filtered_list_of_db_names:
-            m = pattern.match(s)
-            if m:
-                # skip pre-releases (have suffix)
-                if m.group(4) is None:
-                    version_str = f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
-                    versioned_strings.append((s, Version(version_str)))
-
-        if versioned_strings:
-            latest_string, _ = max(versioned_strings, key=lambda x: x[1])
-            self.mongo_db_config["db_simulation_model"] = latest_string
-            self._logger.info(
-                f"Updated the DB simulation model to the latest version {latest_string}"
-            )
-        else:
-            raise ValueError("LATEST requested but no released versions found in DB.")
 
     def generate_compound_indexes(self, db_name=None):
         """

@@ -10,7 +10,7 @@ Updates to the simulation models should be done via merge requests to the [CTAO 
 
 ## Simulation Models Database
 
-The name of the model parameter database needs to be indicated by `$SIMTOOLS_DB_SIMULATION_MODEL` environmental variable and defined e.g., in the `.env` file. Use `CTAO-Simulation-ModelParameters-LATEST` to use the latest version of the CTAO simulation model database (simtools will replace `LATEST` with the latest version number).
+The name and version of the model parameter database needs to be indicated by `$SIMTOOLS_DB_SIMULATION_MODEL` and `$DB_SIMULATION_MODEL_VERSION` environmental variables and defined e.g., in the `.env` file.
 
 Collections:
 
@@ -39,7 +39,8 @@ SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongodatabaseDB serve
 SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for database: ask the responsible person
 SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible person
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-LATEST'
+SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
@@ -97,13 +98,13 @@ podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-netw
 Modify the environment file `.env` to be used with a container:
 
 ```console
-# Environmental variables
+# Environment variables
 SIMTOOLS_DB_API_PORT=27017 # Port on the database server
 SIMTOOLS_DB_SERVER='simtools-MongoDB'
 SIMTOOLS_DB_API_USER='api' # username for database
 SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v20.9.0'
+SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
