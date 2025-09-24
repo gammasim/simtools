@@ -8,6 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -68,8 +69,8 @@ class Simulator:
         self.db_config = db_config
 
         self.simulation_software = self.args_dict.get("simulation_software", "corsika_sim_telarray")
-        self.run_mode = self.args_dict.get("run_mode")
         self.logger.debug(f"Init Simulator {self.simulation_software}")
+        self.run_mode = args_dict.get("run_mode", None)
 
         self.io_handler = io_handler.IOHandler()
 
@@ -141,6 +142,9 @@ class Simulator:
                     "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
                 },
                 simtel_path=self.args_dict.get("simtel_path", None),
+                calibration_device_types=self._get_calibration_device_types(
+                    self.args_dict.get("run_mode")
+                ),
             )
             for version in versions
         ]
@@ -166,8 +170,8 @@ class Simulator:
 
         seed = semver_to_int(model_version) * 10000000
         seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
-        seed = seed + (int)(self.args_dict["zenith_angle"].value) * 1000
-        return seed + (int)(self.args_dict["azimuth_angle"].value)
+        seed = seed + (int)(self.args_dict.get("zenith_angle", 0.0 * u.deg).value) * 1000
+        return seed + (int)(self.args_dict.get("azimuth_angle", 0.0 * u.deg).value)
 
     def _initialize_run_list(self):
         """
@@ -257,7 +261,7 @@ class Simulator:
                     label=self.label,
                     args_dict=self.args_dict,
                     db_config=self.db_config,
-                    dummy_simulations=self._is_calibration_run(),
+                    dummy_simulations=self._is_calibration_run(self.run_mode),
                 )
             )
         return (
@@ -296,8 +300,9 @@ class Simulator:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = self.args_dict.get("sequential", False)
-            if self._is_calibration_run():
-                runner_args["calibration_runner_args"] = self.args_dict
+            runner_args["calibration_config"] = (
+                self.args_dict if self._is_calibration_run(self.run_mode) else None
+            )
 
         return runner_class(**runner_args)
 
@@ -749,13 +754,43 @@ class Simulator:
 
             corsika_log_files.append(str(new_log))
 
-    def _is_calibration_run(self):
+    @staticmethod
+    def _is_calibration_run(run_mode):
         """
         Check if this simulation is a calibration run.
+
+        Parameters
+        ----------
+        run_mode: str
+            Run mode of the simulation.
 
         Returns
         -------
         bool
             True if it is a calibration run, False otherwise.
         """
-        return self.run_mode in ["pedestals", "dark_pedestals", "nsb_only_pedestals", "flasher"]
+        return run_mode in [
+            "pedestals",
+            "dark_pedestals",
+            "nsb_only_pedestals",
+            "direct_injection",
+        ]
+
+    @staticmethod
+    def _get_calibration_device_types(run_mode):
+        """
+        Get the list of calibration device types based on the run mode.
+
+        Parameters
+        ----------
+        run_mode: str
+            Run mode of the simulation.
+
+        Returns
+        -------
+        list
+            List of calibration device types.
+        """
+        if run_mode == "direct_injection":
+            return ["flat_fielding"]
+        return []

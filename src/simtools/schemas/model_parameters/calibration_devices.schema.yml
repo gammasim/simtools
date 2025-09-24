@@ -1,0 +1,37 @@
+---
+title: Schema for calibration_devices model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: calibration_devices
+description: |-
+  List of calibration device types and names associated with a telescopes.
+  Allows to assign to a given telescope e.g., a set of devices used for flatfielding
+  or photo-electron calibration.
+data:
+  - type: dict
+    json_schema:
+      type: object
+      additionalProperties:
+        type: string
+        default: null
+        description: "Calibration device name"
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTx-NectarCam
+    - MSTx-FlashCam
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: simtools
