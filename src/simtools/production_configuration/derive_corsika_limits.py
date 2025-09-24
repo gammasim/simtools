@@ -3,14 +3,15 @@
 import datetime
 import logging
 
+import astropy.units as u
 import numpy as np
 from astropy.table import Column, Table
 
-import simtools.utils.general as gen
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io_operations import io_handler
-from simtools.model.site_model import SiteModel
-from simtools.production_configuration.corsika_limit_calculator import LimitCalculator
+from simtools.io import ascii_handler, io_handler
+from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
+from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
@@ -27,14 +28,14 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
         Database configuration dictionary.
     """
     if args_dict.get("array_layout_name"):
-        telescope_configs = _read_array_layouts_from_db(
+        telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
             args_dict.get("site"),
             args_dict.get("model_version"),
             db_config,
         )
     else:
-        telescope_configs = gen.collect_data_from_file(args_dict["telescope_ids"])[
+        telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[
             "telescope_configs"
         ]
 
@@ -60,6 +61,8 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     """
     Compute limits for a given event data file and telescope configuration.
 
+    Compute limits for energy, radial distance, and viewcone.
+
     Parameters
     ----------
     file_path : str
@@ -78,11 +81,24 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     dict
         Dictionary containing the computed limits and metadata.
     """
-    calculator = LimitCalculator(file_path, array_name=array_name, telescope_list=telescope_ids)
-    limits = calculator.compute_limits(loss_fraction)
+    histograms = SimtelIOEventHistograms(
+        file_path, array_name=array_name, telescope_list=telescope_ids
+    )
+    histograms.fill()
+
+    limits = {
+        "lower_energy_limit": compute_lower_energy_limit(histograms, loss_fraction),
+        "upper_radius_limit": compute_upper_radius_limit(histograms, loss_fraction),
+        "viewcone_radius": compute_viewcone(histograms, loss_fraction),
+    }
 
     if plot_histograms:
-        calculator.plot_data(io_handler.IOHandler().get_output_directory())
+        plot_simtel_event_histograms.plot(
+            histograms.histograms,
+            output_path=io_handler.IOHandler().get_output_directory(),
+            limits=limits,
+            array_name=array_name,
+        )
 
     return limits
 
@@ -200,29 +216,150 @@ def _create_table_columns(cols, columns, units):
     return table_cols
 
 
-def _read_array_layouts_from_db(layouts, site, model_version, db_config):
+def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
     """
-    Read array layouts from the database.
+    Compute the limits based on the loss fraction.
+
+    Add or subtract one bin to be on the safe side of the limit.
 
     Parameters
     ----------
-    layouts : list[str]
-        List of layout names to read. If "all", read all available layouts.
-    site : str
-        Site name for the array layouts.
-    model_version : str
-        Model version for the array layouts.
-    db_config : dict
-        Database configuration dictionary.
+    hist : np.ndarray
+        1D histogram array.
+    bin_edges : np.ndarray
+        Array of bin edges.
+    loss_fraction : float
+        Fraction of events to be lost.
+    limit_type : str, optional
+        Type of limit ('lower' or 'upper'). Default is 'lower'.
 
     Returns
     -------
-    dict
-        Dictionary mapping layout names to telescope IDs.
+    float
+        Bin edge value corresponding to the threshold.
     """
-    site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
-    layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
-    layout_dict = {}
-    for layout_name in layout_names:
-        layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
-    return layout_dict
+    total_events = np.sum(hist)
+    threshold = (1 - loss_fraction) * total_events
+    if limit_type == "upper":
+        cum = np.cumsum(hist)
+        idx = np.searchsorted(cum, threshold) + 1
+        return bin_edges[min(idx, len(bin_edges) - 1)]
+    if limit_type == "lower":
+        cum = np.cumsum(hist[::-1])
+        idx = np.searchsorted(cum, threshold) + 1
+        return bin_edges[max(len(bin_edges) - 1 - idx, 0)]
+    raise ValueError("limit_type must be 'lower' or 'upper'")
+
+
+def compute_lower_energy_limit(histograms, loss_fraction):
+    """
+    Compute the lower energy limit in TeV based on the event loss fraction.
+
+    Parameters
+    ----------
+    histograms : SimtelIOEventHistograms
+        Histograms.
+    loss_fraction : float
+        Fraction of events to be lost.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Lower energy limit.
+    """
+    energy_min = (
+        _compute_limits(
+            histograms.histograms["energy"]["histogram"],
+            histograms.energy_bins,
+            loss_fraction,
+            limit_type="lower",
+        )
+        * u.TeV
+    )
+
+    return _is_close(
+        energy_min,
+        histograms.file_info["energy_min"].to("TeV")
+        if "energy_min" in histograms.file_info
+        else None,
+        "Lower energy limit is equal to the minimum energy of",
+    )
+
+
+def _is_close(value, reference, warning_text):
+    """Check if the value is close to the reference value and log a warning if so."""
+    if reference is not None and np.isclose(value.value, reference.value, rtol=1.0e-2):
+        _logger.warning(f"{warning_text} {value}.")
+    return value
+
+
+def compute_upper_radius_limit(histograms, loss_fraction):
+    """
+    Compute the upper radial distance based on the event loss fraction.
+
+    Parameters
+    ----------
+    histograms : SimtelIOEventHistograms
+        Histograms.
+    loss_fraction : float
+        Fraction of events to be lost.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Upper radial distance in m.
+    """
+    radius_limit = (
+        _compute_limits(
+            histograms.histograms["core_distance"]["histogram"],
+            histograms.core_distance_bins,
+            loss_fraction,
+            limit_type="upper",
+        )
+        * u.m
+    )
+    return _is_close(
+        radius_limit,
+        histograms.file_info["core_scatter_max"].to("m")
+        if "core_scatter_max" in histograms.file_info
+        else None,
+        "Upper radius limit is equal to the maximum core scatter distance of",
+    )
+
+
+def compute_viewcone(histograms, loss_fraction):
+    """
+    Compute the viewcone based on the event loss fraction.
+
+    The shower IDs of triggered events are used to create a mask for the
+    azimuth and altitude of the triggered events. A mapping is created
+    between the triggered events and the simulated events using the shower IDs.
+
+    Parameters
+    ----------
+    histograms : SimtelIOEventHistograms
+        Histograms.
+    loss_fraction : float
+        Fraction of events to be lost.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Viewcone radius in degrees.
+    """
+    viewcone_limit = (
+        _compute_limits(
+            histograms.histograms["angular_distance"]["histogram"],
+            histograms.view_cone_bins,
+            loss_fraction,
+            limit_type="upper",
+        )
+        * u.deg
+    )
+    return _is_close(
+        viewcone_limit,
+        histograms.file_info["viewcone_max"].to("deg")
+        if "viewcone_max" in histograms.file_info
+        else None,
+        "Upper viewcone limit is equal to the maximum viewcone distance of",
+    )

@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import general as gen
 from simtools.utils import names
+from simtools.version import sort_versions
 from simtools.visualization import plot_pixels, plot_tables
 
 logger = logging.getLogger()
@@ -173,32 +173,33 @@ class ReadParameters:
         relative_path = f"_data_files/{output_file_name}"
         markdown_output_file = output_data_path / output_file_name
 
-        # if not markdown_output_file.exists():
-        outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
-        outpath.mkdir(parents=True, exist_ok=True)
+        if not markdown_output_file.exists():
+          outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+          outpath.mkdir(parents=True, exist_ok=True)
 
-        plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
-        # Write markdown file using the stored path
-        file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
+          plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
+          # Write markdown file using the stored path
+          file_contents = gen.read_file_encoded_in_utf_or_latin(input_file)
 
-        with markdown_output_file.open("w", encoding="utf-8") as outfile:
-            outfile.write(f"# {input_file.stem}\n")
 
-            for plot_name in plot_names:
-                outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
+          with markdown_output_file.open("w", encoding="utf-8") as outfile:
+              outfile.write(f"# {input_file.stem}\n")
 
-            outfile.write(
-                "\n\nThe full file can be found in the Simulation Model repository [here]"
-                "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                f"model_parameters/Files/{input_file.name}).\n\n"
-            )
-            outfile.write("\n\n")
-            outfile.write("The first 30 lines of the file are:\n")
-            outfile.write("```\n")
-            first_30_lines = "".join(file_contents[:30])
-            outfile.write(first_30_lines)
-            outfile.write("\n```")
+              for plot_name in plot_names:
+                  outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
+
+              outfile.write(
+                  "\n\nThe full file can be found in the Simulation Model repository [here]"
+                  "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                  "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                  f"model_parameters/Files/{input_file.name}).\n\n"
+              )
+              outfile.write("\n\n")
+              outfile.write("The first 30 lines of the file are:\n")
+              outfile.write("```\n")
+              first_30_lines = "".join(file_contents[:30])
+              outfile.write(first_30_lines)
+              outfile.write("\n```")
 
         return relative_path
 
@@ -248,7 +249,7 @@ class ReadParameters:
                     "value": data["value"],
                     "parameter_version": param_version,
                     "file_flag": data["file_flag"],
-                    "model_version": ", ".join(data["model_versions"]),
+                    "model_version": ", ".join(sort_versions(data["model_versions"])),
                 }
                 for param_version, data in version_grouped.items()
             ]
@@ -395,7 +396,7 @@ class ReadParameters:
             if not names.is_design_type(telescope_model.name) and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
-                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                if not self.is_markdown_link(value):
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
@@ -808,7 +809,7 @@ class ReadParameters:
             if not names.is_design_type(array_element) and matching_instrument:
                 parameter = f"***{parameter}***"
                 parameter_version = f"***{parameter_version}***"
-                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                if not self.is_markdown_link(value):
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
@@ -835,6 +836,22 @@ class ReadParameters:
 
         return data
 
+    def is_markdown_link(self, value):
+        """
+        Return True if the string is a Markdown-style link: [text](target).
+
+        Parameters
+        ----------
+        value : str
+            The string to check.
+
+        Returns
+        -------
+        bool
+            True if the string is a Markdown link, False otherwise.
+        """
+        return bool(re.fullmatch(r"\[[^\]]*\]\([^)]+\)", value.strip()))
+
     def produce_calibration_reports(self):
         """Write calibration reports."""
         calibration_array_elements = self.db.get_array_elements(
@@ -849,8 +866,11 @@ class ReadParameters:
                 array_elements.append(design_model)
 
         for calibration_device in array_elements:
+            device_sites = names.get_site_from_array_element_name(calibration_device)
+            site = device_sites[0] if isinstance(device_sites, list) else device_sites
+
             all_parameter_data = self.db.get_model_parameters(
-                site=names.get_site_from_array_element_name(calibration_device),
+                site=site,
                 array_element_name=calibration_device,
                 collection="calibration_devices",
                 model_version=self.model_version,
@@ -890,6 +910,9 @@ class ReadParameters:
         new_output_path.mkdir(parents=True, exist_ok=True)
         self.output_path = new_output_path
         for calibration_device in array_elements:
-            self.site = names.get_site_from_array_element_name(calibration_device)
+            device_sites = names.get_site_from_array_element_name(calibration_device)
+            # parameters are site independent so just take the first site to read from db
+            site = device_sites[0] if isinstance(device_sites, list) else device_sites
+            self.site = site
             self.array_element = calibration_device
             self.produce_model_parameter_reports(collection="calibration_devices")

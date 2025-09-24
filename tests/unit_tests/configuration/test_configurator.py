@@ -14,7 +14,7 @@ from simtools.configuration.configurator import (
     Configurator,
     InvalidConfigurationParameterError,
 )
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 logger = logging.getLogger()
 
@@ -214,6 +214,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_api_port"] = 42
     args_dict["db_server"] = "abc@def.de"
     args_dict["db_simulation_model"] = "sim_model"
+    args_dict["db_simulation_model_version"] = "v0.0.0"
 
     # remove user defined parameters from comparison (depends on environment)
     expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
@@ -227,7 +228,7 @@ def test_initialize_output(configurator):
     configurator.parser.initialize_output_arguments()
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
-    # outputfile for testing
+    # output file for testing
     configurator.config["test"] = True
     configurator._initialize_output()
     assert configurator.config["output_file"] == "TEST.ecsv"
@@ -341,6 +342,7 @@ def test_get_db_parameters():
         "db_api_user": None,
         "db_server": None,
         "db_simulation_model": None,
+        "db_simulation_model_version": None,
     }
 
     # filled with one entry only

@@ -4,6 +4,8 @@ import sys
 
 import pytest
 
+import simtools.version as version
+
 
 @pytest.fixture
 def simtools_version():
@@ -77,3 +79,67 @@ def test_both_imports_fail(
         "Could not determine simtools version; this indicates a broken installation."
     )
     assert __version__ == "0.0.0"
+
+
+def test_resolve_version_to_latest_patch():
+    available_versions = ["5.0.0", "5.0.1", "6.0.0", "6.0.1", "6.0.2", "6.1.0"]
+
+    partial_version = "6.0.0"
+    assert version.resolve_version_to_latest_patch(partial_version, available_versions) == "6.0.0"
+
+    partial_version = "6.0"
+    assert version.resolve_version_to_latest_patch(partial_version, available_versions) == "6.0.2"
+
+    partial_version = "5.0"
+    assert version.resolve_version_to_latest_patch(partial_version, available_versions) == "5.0.1"
+
+    partial_version = "6.1"
+    assert version.resolve_version_to_latest_patch(partial_version, available_versions) == "6.1.0"
+
+    partial_version = "7.1"
+    with pytest.raises(ValueError, match=r"^No versions found matching"):
+        version.resolve_version_to_latest_patch(partial_version, available_versions)
+
+    with pytest.raises(ValueError, match=r"^No versions found matching"):
+        version.resolve_version_to_latest_patch(partial_version, [])
+
+    partial_version = "not_a.version"
+    with pytest.raises(ValueError, match=r"^Invalid version string"):
+        version.resolve_version_to_latest_patch(partial_version, available_versions)
+
+    partial_version = "6"
+    with pytest.raises(ValueError, match=r"^Partial version must be major.minor"):
+        version.resolve_version_to_latest_patch(partial_version, available_versions)
+
+
+def test_semver_to_int():
+    assert version.semver_to_int("6.1.1") == 60101
+    assert version.semver_to_int("6.1") == 60100
+
+    with pytest.raises(ValueError, match=r"Invalid version: not_a.version"):
+        version.semver_to_int("not_a.version")
+
+
+def test_sort_versions():
+    version_list = ["5.0.0", "6.0.2", "5.1.0", "6.0.0", "5.0.1"]
+
+    # Test ascending order (default)
+    result = version.sort_versions(version_list)
+    expected = ["5.0.0", "5.0.1", "5.1.0", "6.0.0", "6.0.2"]
+    assert result == expected
+
+    # Test descending order
+    result = version.sort_versions(version_list, reverse=True)
+    expected = ["6.0.2", "6.0.0", "5.1.0", "5.0.1", "5.0.0"]
+    assert result == expected
+
+    # Test empty list
+    assert version.sort_versions([]) == []
+
+    # Test single version
+    assert version.sort_versions(["1.0.0"]) == ["1.0.0"]
+
+    # Test invalid version
+    invalid_versions = ["1.0.0", "not_a_version", "2.0.0"]
+    with pytest.raises(ValueError, match=r"Invalid version in list"):
+        version.sort_versions(invalid_versions)

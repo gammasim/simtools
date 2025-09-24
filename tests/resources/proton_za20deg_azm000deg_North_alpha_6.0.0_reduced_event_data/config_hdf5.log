@@ -1,21 +1,44 @@
-shower_id event_id file_id   simulated_energy         x_core             y_core          shower_azimuth    shower_altitude   area_weight
-                                   TeV                  m                  m                  rad                rad
---------- -------- ------- ------------------- ------------------- ------------------ ------------------- ------------------ -----------
-        1      100       0 0.13630607724189758  488.83758544921875 -901.1865844726562 0.21440187096595764 1.2973511219024658         1.0
-      ...      ...     ...                 ...                 ...                ...                 ...                ...         ...
-       50     5018       1 0.13051897287368774 -376.92730712890625  602.1163940429688 0.43577733635902405  1.313159465789795         1.0
-       50     5019       1 0.13051897287368774  1459.1942138671875   -1061.2099609375 0.43577733635902405  1.313159465789795         1.0
+INFO::generate_simtel_event_data(l179)::main::Loading input files from: tests/resources/*proton*North_alpha_*.simtel.zst
+INFO::simtel_io_event_writer(l114)::process_files::Processing file 1/2: tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l96)::__init__::Found zstd compressed file
+INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l96)::__init__::Found zstd compressed file
+INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l96)::__init__::Found zstd compressed file
+INFO::simtel_io_event_writer(l157)::_process_mc_run_header::Shower reuse factor: 20 (viewcone: [ 0. 10.])
+INFO::simtel_io_event_writer(l114)::process_files::Processing file 2/2: tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l96)::__init__::Found zstd compressed file
+INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l96)::__init__::Found zstd compressed file
+INFO::base(l62)::__init__::Opening new file tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst
+INFO::base(l96)::__init__::Found zstd compressed file
+INFO::simtel_io_event_writer(l157)::_process_mc_run_header::Shower reuse factor: 20 (viewcone: [ 0. 10.])
+INFO::table_handler(l268)::write_tables::Writing table SHOWERS of length 2000 to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+INFO::table_handler(l268)::write_tables::Writing table TRIGGERS of length 4 to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+INFO::table_handler(l268)::write_tables::Writing table FILE_INFO of length 2 to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+WARNING::metadata_collector(l361)::_read_input_metadata_from_file::Metadata extraction from sim_telarray files is not supported yet.
+WARNING::metadata_collector(l361)::_read_input_metadata_from_file::Metadata extraction from sim_telarray files is not supported yet.
+WARNING::metadata_collector(l212)::get_data_model_schema_file_name::No schema file found.
+INFO::metadata_collector(l166)::write::Writing metadata to /workdir/external/simtools/simtools-output/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.meta.yml
+shower_id event_id file_id   simulated_energy        x_core              y_core         shower_azimuth    shower_altitude  area_weight
+                                   TeV                 m                   m                 deg                deg
+--------- -------- ------- ------------------- ------------------ ------------------- ------------------ ----------------- -----------
+        1      100       0 0.13630607724189758 488.83758544921875  -901.1865844726562 12.284322326057836 74.33274383157367         1.0
+      ...      ...     ...                 ...                ...                 ...                ...               ...         ...
+       50     5018       1 0.04144638776779175     -667.091796875    354.245849609375 357.17113690899015 62.63562140619829         1.0
+       50     5019       1 0.04144638776779175  1942.809326171875 -250.50546264648438 357.17113690899015 62.63562140619829         1.0
 Length = 2000 rows
-shower_id event_id file_id   array_altitude   array_azimuth                  telescope_list
-                                  rad              rad
---------- -------- ------- ------------------ ------------- -----------------------------------------------
-       31     3107       0 1.2217304706573486           0.0                                 MSTN-01,MSTN-03
-      ...      ...     ...                ...           ...                                             ...
-       42     4211       1  1.221730351448059           0.0 LSTN-01,LSTN-02,LSTN-04,MSTN-01,MSTN-07,MSTN-15
-       42     4214       1  1.221730351448059           0.0                         LSTN-04,MSTN-04,MSTN-15
-Length = 8 rows
-                                        file_name                                         file_id particle_id energy_min energy_max viewcone_min viewcone_max core_scatter_min core_scatter_max   zenith  azimuth nsb_level
+shower_id event_id file_id   array_altitude  array_azimuth      telescope_list     telescope_list_common_id
+                                  deg             deg
+--------- -------- ------- ----------------- ------------- ----------------------- ------------------------
+       36     3606       0 69.99999237060547           0.0 LSTN-01,LSTN-02,MSTN-01                    1,2,5
+       46     4606       0 69.99999237060547           0.0         MSTN-01,MSTN-02                      5,6
+       36     3606       1 69.99999237060547           0.0 LSTN-01,LSTN-02,MSTN-01                    1,2,5
+       46     4606       1 69.99999237060547           0.0         MSTN-01,MSTN-02                      5,6
+                                        file_name                                         file_id particle_id energy_min energy_max viewcone_min viewcone_max core_scatter_min core_scatter_max   zenith  azimuth      nsb_level
                                                                                                                  TeV        TeV         deg          deg             m                m            deg      deg
------------------------------------------------------------------------------------------ ------- ----------- ---------- ---------- ------------ ------------ ---------------- ---------------- --------- ------- ---------
-tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       0          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0       1.0
-tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       1          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0       1.0
+----------------------------------------------------------------------------------------- ------- ----------- ---------- ---------- ------------ ------------ ---------------- ---------------- --------- ------- -------------------
+tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       0          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0 0.24053832149999996
+tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst       1          14       0.03      600.0          0.0         10.0              0.0           2000.0 20.000008     0.0 0.24053832149999996

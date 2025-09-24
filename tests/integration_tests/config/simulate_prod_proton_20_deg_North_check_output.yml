@@ -4,14 +4,14 @@ applications:
   configuration:
     array_layout_name: alpha
     azimuth_angle: South
-    core_scatter: 20 500 m
+    core_scatter: 5 500 m
     corsika_test_seeds: true
     data_directory: simtools-data
-    energy_range: 200 GeV 800 GeV
+    energy_range: 200 GeV 500 GeV
     label: check_output
     log_level: DEBUG
-    model_version: 6.0.0
-    nshow: 10
+    model_version: 6.0
+    nshow: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output
     primary: proton
@@ -23,7 +23,7 @@ applications:
     zenith_angle: 20
   integration_tests:
   - test_output_files:
-    - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.0_check_output.log_hist.tar.gz
+    - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0_check_output.log_hist.tar.gz
       path_descriptor: pack_for_grid_register
     - expected_output:
         pe_sum:
@@ -35,7 +35,7 @@ applications:
         trigger_time:
         - 0
         - 50
-      file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.0_check_output.simtel.zst
+      file: proton_run000001_za20deg_azm180deg_North_alpha_6.0_check_output.simtel.zst
       path_descriptor: pack_for_grid_register
   test_name: proton_20_deg_north_check_output
 schema_name: application_workflow.metaschema

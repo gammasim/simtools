@@ -4,9 +4,12 @@ import logging
 from pathlib import Path
 
 import jsonschema
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 from referencing import Registry, Resource
 
 import simtools.utils.general as gen
+from simtools import version
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -14,6 +17,7 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers
+from simtools.io import ascii_handler
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
@@ -37,7 +41,7 @@ def get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PAT
     parameters = []
     for schema_file in schema_files:
         # reading parameter 'name' only - first document in schema file should be ok
-        schema_dict = gen.collect_data_from_file(file_name=schema_file, yaml_document=0)
+        schema_dict = ascii_handler.collect_data_from_file(file_name=schema_file, yaml_document=0)
         parameters.append(schema_dict.get("name"))
     return parameters, schema_files
 
@@ -65,7 +69,7 @@ def get_model_parameter_schema_file(parameter):
 
 def get_model_parameter_schema_version(schema_version=None):
     """
-    Validate  and return schema versions.
+    Validate and return schema versions.
 
     If no schema_version is given, the most recent version is provided.
 
@@ -80,7 +84,7 @@ def get_model_parameter_schema_version(schema_version=None):
         Schema version.
 
     """
-    schemas = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
+    schemas = ascii_handler.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
 
     if schema_version is None and schemas:
         return schemas[0].get("schema_version")
@@ -91,7 +95,9 @@ def get_model_parameter_schema_version(schema_version=None):
     raise ValueError(f"Schema version {schema_version} not found in {MODEL_PARAMETER_METASCHEMA}.")
 
 
-def validate_dict_using_schema(data, schema_file=None, json_schema=None):
+def validate_dict_using_schema(
+    data, schema_file=None, json_schema=None, ignore_software_version=False
+):
     """
     Validate a data dictionary against a schema.
 
@@ -101,6 +107,10 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         dictionary to be validated
     schema_file (dict)
         schema used for validation
+    json_schema (dict)
+        schema used for validation
+    ignore_software_version: bool
+        If True, ignore software version check.
 
     Raises
     ------
@@ -113,6 +123,8 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         return None
     if json_schema is None:
         json_schema = load_schema(schema_file, get_schema_version_from_data(data))
+
+    _validate_deprecation_and_version(data, ignore_software_version)
 
     validator = jsonschema.Draft6Validator(
         schema=json_schema,
@@ -139,7 +151,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
 def _retrieve_yaml_schema_from_uri(uri):
     """Load schema from a file URI."""
     path = SCHEMA_PATH / Path(uri.removeprefix("file:/"))
-    contents = gen.collect_data_from_file(file_name=path)
+    contents = ascii_handler.collect_data_from_file(file_name=path)
     return Resource.from_contents(contents)
 
 
@@ -194,7 +206,7 @@ def load_schema(schema_file=None, schema_version="latest"):
 
     for path in (schema_file, SCHEMA_PATH / schema_file):
         try:
-            schema = gen.collect_data_from_file(file_name=path)
+            schema = ascii_handler.collect_data_from_file(file_name=path)
             break
         except FileNotFoundError:
             continue
@@ -293,3 +305,51 @@ def _add_array_elements(key, schema):
 
     recursive_search(schema, key)
     return schema
+
+
+def _validate_deprecation_and_version(
+    data, software_name="simtools", ignore_software_version=False
+):
+    """
+    Check if data contains deprecated parameters or version mismatches.
+
+    Parameters
+    ----------
+    data: dict
+        Data dictionary to check.
+    software_name: str
+        Name of the software to check version against.
+    ignore_software_version: bool
+        If True, ignore software version check.
+    """
+    if not isinstance(data, dict):
+        return
+
+    if data.get("deprecated", False):
+        note = data.get("deprecation_note", "(no deprecation note provided)")
+        _logger.warning(f"Data is deprecated. Note: {note}")
+
+    def check_version(sw):
+        constraint = sw.get("version")
+        if constraint is None:
+            return
+        constraint = constraint.strip()
+        spec = SpecifierSet(constraint, prereleases=True)
+        if Version(version.__version__) in spec:
+            _logger.debug(
+                f"Version {version.__version__} of {software_name} matches constraint {constraint}."
+            )
+        else:
+            msg = (
+                f"Version {version.__version__} of {software_name} "
+                f"does not match constraint {constraint}."
+            )
+            if ignore_software_version:
+                _logger.warning(f"{msg}, but version check is ignored.")
+                return
+            raise ValueError(msg)
+
+    for sw in data.get("simulation_software", []):
+        if sw.get("name") == software_name:
+            check_version(sw)
+            break

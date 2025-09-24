@@ -2,11 +2,20 @@
 applications:
 - application: simtools-validate-camera-efficiency
   configuration:
-    model_version: 6.0.0
+    model_version: 6.0
     output_path: simtools-output
     site: North
     telescope: LSTN-02
+    zenith_angle: 0.
+    parameter_version: 0.0.99
+    write_reference_nsb_rate_as_parameter: true
+    use_plain_output_path: true
     log_level: debug
+  integration_tests:
+  - model_parameter_validation:
+      parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
+      reference_parameter_name: nsb_pixel_rate
+      tolerance: 1.e-1
   test_name: LSTN
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

@@ -32,7 +32,7 @@ def test_plot(mock_read_table_data, mock_visualize):
 
     plot_tables.plot(config, output_file)
 
-    mock_read_table_data.assert_called_once_with(config, None)
+    mock_read_table_data.assert_called_once_with(config, None, None)
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
 
@@ -207,7 +207,9 @@ def test_read_table_and_normalize():
     config = {
         "tables": [
             {
-                "file_name": "tests/resources//SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv",
+                "file_name": (
+                    "tests/resources//SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
+                ),
                 "type": "legacy_lst_single_pe",
                 "label": "test_table",
                 "column_x": "amplitude",
@@ -218,7 +220,7 @@ def test_read_table_and_normalize():
     }
     data = plot_tables.read_table_data(config, None)
     assert isinstance(data, dict)
-    assert data["test_table"]["response"].max() == 1.0
+    assert data["test_table"]["response"].max() == pytest.approx(1.0)
 
 
 @pytest.mark.parametrize(
@@ -330,8 +332,19 @@ def test_generate_output_file_name(
     assert result == expected
 
 
-def test_generate_plot_configurations(tmp_test_directory, db_config):
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
+def test_generate_plot_configurations(
+    mock_collect_data, mock_read_table, tmp_test_directory, db_config
+):
+    # Mock the table data
+    mock_table = Table()
+    mock_table["time"] = [1.0, 2.0, 3.0]
+    mock_table["amplitude"] = [0.1, 0.2, 0.3]
+    mock_read_table.return_value = mock_table
+
     # Test with parameter that has no plot configuration
+    mock_collect_data.return_value = {}
     assert (
         plot_tables.generate_plot_configurations(
             parameter="num_gains",
@@ -344,6 +357,13 @@ def test_generate_plot_configurations(tmp_test_directory, db_config):
         )
         is None
     )
+
+    # Mock schema for atmospheric_profile
+    mock_collect_data.return_value = {
+        "plot_configuration": [
+            {"type": "profile_plot", "tables": [{"column_x": "time", "column_y": "amplitude"}]}
+        ]
+    }
 
     # Test with parameter that has plot configuration and no telescope
     configs, output_files = plot_tables.generate_plot_configurations(
@@ -359,6 +379,13 @@ def test_generate_plot_configurations(tmp_test_directory, db_config):
     for _file in output_files:
         assert "atmospheric_profile" in str(_file)
 
+    # Mock schema for fadc_pulse_shape
+    mock_collect_data.return_value = {
+        "plot_configuration": [
+            {"type": "fadc_pulse_shape", "tables": [{"column_x": "time", "column_y": "amplitude"}]}
+        ]
+    }
+
     # Test with specific plot type
     configs, output_files = plot_tables.generate_plot_configurations(
         parameter="fadc_pulse_shape",
@@ -373,7 +400,7 @@ def test_generate_plot_configurations(tmp_test_directory, db_config):
     assert "tables" in configs[0]
     assert configs[0]["tables"][0]["column_x"] == "time"
 
-    # Test with non-existent plot type - should return None instead of raising ValueError
+    # Test with non-existent plot type should return None
     result = plot_tables.generate_plot_configurations(
         parameter="fadc_pulse_shape",
         parameter_version="1.0.0",
@@ -386,7 +413,39 @@ def test_generate_plot_configurations(tmp_test_directory, db_config):
     assert result is None
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.collect_data_from_file")
+def test_get_plotting_label_unique_label():
+    config = {"label": "unique_label", "column_x": "x", "column_y": "y"}
+    data = {}
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "unique_label"
+
+
+def test_get_plotting_label_default_label():
+    config = {"column_x": "x", "column_y": "y"}
+    data = {}
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "x vs y"
+
+
+def test_get_plotting_label_duplicate_label():
+    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
+    data = {"duplicate_label": "data"}
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "duplicate_label (1)"
+
+
+def test_get_plotting_label_multiple_duplicates():
+    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
+    data = {
+        "duplicate_label": "data",
+        "duplicate_label (1)": "data",
+        "duplicate_label (2)": "data",
+    }
+    result = plot_tables._get_plotting_label(config, data)
+    assert result == "duplicate_label (3)"
+
+
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_read_table, mock_collect_data, tmp_test_directory, db_config
@@ -423,7 +482,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_collect_data.return_value = mock_schema
 
     # Test with valid configuration
-    configs, output_files = plot_tables.generate_plot_configurations(
+    configs, _ = plot_tables.generate_plot_configurations(
         parameter="test_parameter",
         parameter_version="1.0.0",
         site="South",

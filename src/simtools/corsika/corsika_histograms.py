@@ -17,11 +17,12 @@ from ctapipe.io import write_table
 from eventio import IACTFile
 
 from simtools import version
-from simtools.io_operations import io_handler
-from simtools.io_operations.hdf5_handler import fill_hdf5_table
-from simtools.utils.general import collect_data_from_file
+from simtools.io import io_handler
+from simtools.io.ascii_handler import collect_data_from_file
+from simtools.io.hdf5_handler import fill_hdf5_table
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
+from simtools.visualization import plot_corsika_histograms as visualize
 
 X_AXIS_STRING = "x axis"
 Y_AXIS_STRING = "y axis"
@@ -110,6 +111,86 @@ class CorsikaHistograms:
 
         self.read_event_information()
         self._initialize_header()
+
+    def parse_telescope_indices(self, indices_arg):
+        """Return telescope indices as ndarray[int] or None.
+
+        Accepts None, a sequence of strings/ints. Raises ValueError on invalid input.
+        """
+        if indices_arg is None:
+            return None
+        try:
+            return np.array(indices_arg).astype(int)
+        except ValueError as exc:
+            msg = (
+                f"{indices_arg} not a valid input. Please use integer numbers for telescope_indices"
+            )
+            self._logger.error(msg)
+            raise ValueError(msg) from exc
+
+    def should_overwrite(
+        self, write_hdf5: bool, event1d: list | None, event2d: list | None
+    ) -> bool:
+        """Return True if output HDF5 exists and any writing flag is requested."""
+        exists = Path(self.hdf5_file_name).exists()
+        if exists and (write_hdf5 or bool(event1d) or bool(event2d)):
+            self._logger.warning(
+                f"Output hdf5 file {self.hdf5_file_name} already exists. Overwriting it."
+            )
+            return True
+        return False
+
+    def run_export_pipeline(
+        self,
+        *,
+        individual_telescopes: bool,
+        hist_config,
+        indices_arg,
+        write_pdf: bool,
+        write_hdf5: bool,
+        event1d: list | None,
+        event2d: list | None,
+        test: bool = False,
+    ) -> dict:
+        """Run the full histogram export pipeline and return output artifact paths.
+
+        Returns a dict with optional keys: pdf_photons, pdf_event1d, pdf_event2d.
+        """
+        outputs: dict[str, Path | None] = {
+            "pdf_photons": None,
+            "pdf_event_1d": None,
+            "pdf_event_2d": None,
+        }
+
+        indices = self.parse_telescope_indices(indices_arg)
+        overwrite = self.should_overwrite(write_hdf5, event1d, event2d)
+
+        self.set_histograms(
+            telescope_indices=indices,
+            individual_telescopes=individual_telescopes,
+            hist_config=hist_config,
+        )
+
+        if write_pdf:
+            pdf_path = visualize.export_all_photon_figures_pdf(self, test=test)
+            outputs["pdf_photons"] = pdf_path
+        if write_hdf5:
+            self.export_histograms(overwrite=overwrite)
+
+        if event1d is not None:
+            outputs["pdf_event_1d"] = visualize.derive_event_1d_histograms(
+                self, event1d, pdf=write_pdf, hdf5=write_hdf5, overwrite=not write_hdf5
+            )
+        if event2d is not None:
+            outputs["pdf_event_2d"] = visualize.derive_event_2d_histograms(
+                self,
+                event2d,
+                pdf=write_pdf,
+                hdf5=write_hdf5,
+                overwrite=not (write_hdf5 or bool(event1d)),
+            )
+
+        return outputs
 
     @property
     def hdf5_file_name(self):
@@ -752,8 +833,9 @@ class CorsikaHistograms:
             elif label == "time_altitude":
                 mini_hist = self.hist_time_altitude[i_telescope]
                 hist_values.append(self.hist_time_altitude[i_telescope].view().T)
-            x_bin_edges.append(mini_hist.axes.edges[0].flatten())
-            y_bin_edges.append(mini_hist.axes.edges[1].flatten())
+            if mini_hist is not None:
+                x_bin_edges.append(mini_hist.axes.edges[0].flatten())
+                y_bin_edges.append(mini_hist.axes.edges[1].flatten())
 
         return np.array(hist_values), np.array(x_bin_edges), np.array(y_bin_edges)
 

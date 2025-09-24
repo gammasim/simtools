@@ -2,7 +2,7 @@
 repos:
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.12.1
+  rev: v0.12.11
   hooks:
   - id: ruff
     args: ["--fix"]
@@ -23,7 +23,7 @@ repos:
       ]
 # https://github.com/pre-commit/pre-commit-hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
@@ -70,7 +70,7 @@ repos:
       ]
 # towncrier
 - repo: https://github.com/twisted/towncrier
-  rev: 24.8.0
+  rev: 25.8.0
   hooks:
   - id: towncrier-update
     files: $docs/changes/

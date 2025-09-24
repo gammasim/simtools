@@ -158,7 +158,7 @@ def test_interpolated_limits(grid_gen):
         assert isinstance(point["viewcone"], Quantity)
 
 
-def test_serialize_grid_points_with_output_file(grid_gen, tmp_path, caplog):
+def test_serialize_grid_points_with_output_file(grid_gen, tmp_test_directory, caplog):
     """Test serialize_grid_points when an output file is provided."""
     grid_points = [
         {
@@ -179,12 +179,7 @@ def test_serialize_grid_points_with_output_file(grid_gen, tmp_path, caplog):
         },
     ]
 
-    cleaned_points = grid_gen.serialize_grid_points(grid_points)
-    assert isinstance(cleaned_points, str)  # JSON string
-    assert '"zenith_angle"' in cleaned_points
-    assert '"energy_threshold"' in cleaned_points
-
-    output_file = tmp_path / "grid_output.json"
+    output_file = tmp_test_directory / "grid_output.json"
     with caplog.at_level(logging.INFO):
         grid_gen.serialize_grid_points(grid_points, output_file=output_file)
     assert output_file.exists()

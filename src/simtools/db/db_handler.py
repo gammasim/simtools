@@ -1,5 +1,6 @@
 """Module to handle interaction with DB."""
 
+import io
 import logging
 import re
 from collections import defaultdict
@@ -8,14 +9,16 @@ from threading import Lock
 
 import gridfs
 import jsonschema
+from astropy.table import Table
 from bson.objectid import ObjectId
 from packaging.version import Version
 from pymongo import MongoClient
 
 from simtools.data_model import validate_data
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.simtel import simtel_table_reader
-from simtools.utils import general, names, value_conversion
+from simtools.utils import names, value_conversion
+from simtools.version import resolve_version_to_latest_patch
 
 __all__ = ["DatabaseHandler"]
 
@@ -50,14 +53,30 @@ jsonschema_db_dict = {
             "type": "string",
             "description": "Name of simulation model database",
         },
+        "db_simulation_model_version": {
+            "type": "string",
+            "description": "Version of simulation model database",
+        },
     },
-    "required": ["db_server", "db_api_port", "db_api_user", "db_api_pw", "db_simulation_model"],
+    "required": [
+        "db_server",
+        "db_api_port",
+        "db_api_user",
+        "db_api_pw",
+        "db_simulation_model",
+        "db_simulation_model_version",
+    ],
 }
 
 
 class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.
+
+    Note the two types of version variables used in this class:
+
+    - db_simulation_model_version (from mongo_db_config): version of the simulation model database
+    - model_version (from production_tables): version of the model contained in the database
 
     Parameters
     ----------
@@ -70,6 +89,7 @@ class DatabaseHandler:
     db_client = None
     production_table_cached = {}
     model_parameters_cached = {}
+    model_versions_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """Initialize the DatabaseHandler class."""
@@ -81,6 +101,14 @@ class DatabaseHandler:
 
         self._set_up_connection()
         self._find_latest_simulation_model_db()
+        self.db_name = (
+            self.get_db_name(
+                db_simulation_model_version=self.mongo_db_config.get("db_simulation_model_version"),
+                model_name=self.mongo_db_config.get("db_simulation_model"),
+            )
+            if self.mongo_db_config
+            else None
+        )
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
@@ -88,6 +116,16 @@ class DatabaseHandler:
             lock = Lock()
             with lock:
                 DatabaseHandler.db_client = self._open_mongo_db()
+
+    def get_db_name(self, db_name=None, db_simulation_model_version=None, model_name=None):
+        """Build DB name from configuration."""
+        if db_name:
+            return db_name
+        if db_simulation_model_version and model_name:
+            return f"{model_name}-{db_simulation_model_version.replace('.', '-')}"
+        if db_simulation_model_version or model_name:
+            return None
+        return None if (db_simulation_model_version or model_name) else self.db_name
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
@@ -137,8 +175,7 @@ class DatabaseHandler:
         """
         Find the latest released version of the simulation model and update the DB config.
 
-        This is indicated by adding "LATEST" to the name of the simulation model database
-        (field "db_simulation_model" in the database configuration dictionary).
+        This is indicated by "LATEST" to the simulation model data base version.
         Only released versions are considered, pre-releases are ignored.
 
         Raises
@@ -148,27 +185,27 @@ class DatabaseHandler:
 
         """
         try:
+            db_simulation_model_version = self.mongo_db_config["db_simulation_model_version"]
             db_simulation_model = self.mongo_db_config["db_simulation_model"]
-            if not db_simulation_model.endswith("LATEST"):
+            if db_simulation_model_version != "LATEST":
                 return
-        except TypeError:  # db_simulation_model is None
+        except TypeError:  # db_simulation_model_version is None
             return
 
-        prefix = db_simulation_model.replace("LATEST", "")
         list_of_db_names = self.db_client.list_database_names()
-        filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
-        versioned_strings = []
-        version_pattern = re.compile(
-            rf"{re.escape(prefix)}v?(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
-        )
+        filtered_list_of_db_names = [
+            s for s in list_of_db_names if s.startswith(db_simulation_model)
+        ]
+        pattern = re.compile(rf"{re.escape(db_simulation_model)}-v(\d+)-(\d+)-(\d+)(?:-(.+))?$")
 
+        versioned_strings = []
         for s in filtered_list_of_db_names:
-            match = version_pattern.search(s)
-            # A version is considered a pre-release if it contains a '-' character (re group 4)
-            if match and match.group(4) is None:
-                version_str = match.group(1) + "." + match.group(2) + "." + match.group(3)
-                version = Version(version_str)
-                versioned_strings.append((s, version))
+            m = pattern.match(s)
+            if m:
+                # skip pre-releases (have suffix)
+                if m.group(4) is None:
+                    version_str = f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+                    versioned_strings.append((s, Version(version_str)))
 
         if versioned_strings:
             latest_string, _ = max(versioned_strings, key=lambda x: x[1])
@@ -177,7 +214,29 @@ class DatabaseHandler:
                 f"Updated the DB simulation model to the latest version {latest_string}"
             )
         else:
-            raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
+            raise ValueError("LATEST requested but no released versions found in DB.")
+
+    def generate_compound_indexes(self, db_name=None):
+        """
+        Generate compound indexes for the MongoDB collections.
+
+        Indexes based on the typical query patterns.
+        """
+        db_name = db_name or self.db_name
+        collection_names = [
+            "telescopes",
+            "sites",
+            "configuration_sim_telarray",
+            "configuration_corsika",
+            "calibration_devices",
+        ]
+        for collection_name in collection_names:
+            db_collection = self.get_collection(collection_name, db_name=db_name)
+            db_collection.create_index(
+                [("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]
+            )
+        db_collection = self.get_collection("production_tables", db_name=db_name)
+        db_collection.create_index([("collection", 1), ("model_version", 1)])
 
     def get_model_parameter(
         self,
@@ -217,6 +276,9 @@ class DatabaseHandler:
                 raise ValueError(
                     "Only one model version can be passed to get_model_parameter, not a list."
                 )
+            model_version = resolve_version_to_latest_patch(
+                model_version, self.get_model_versions(collection_name)
+            )
             production_table = self.read_production_table_from_mongo_db(
                 collection_name, model_version
             )
@@ -263,6 +325,9 @@ class DatabaseHandler:
         dict containing the parameters
         """
         pars = {}
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         array_element_list = self._get_array_element_list(
             array_element_name, site, production_table, collection
@@ -309,6 +374,11 @@ class DatabaseHandler:
     def _get_parameter_for_model_version(
         self, array_element, model_version, site, collection, production_table
     ):
+        """
+        Get parameters for a specific model version and array element.
+
+        Uses caching wherever possible.
+        """
         cache_key, cache_dict = self._read_cache(
             DatabaseHandler.model_parameters_cached,
             names.validate_site_name(site) if site else None,
@@ -333,24 +403,23 @@ class DatabaseHandler:
         )
         return DatabaseHandler.model_parameters_cached[cache_key]
 
-    def get_collection(self, db_name, collection_name):
+    def get_collection(self, collection_name, db_name=None):
         """
         Get a collection from the DB.
 
         Parameters
         ----------
-        db_name: str
-            Name of the DB.
         collection_name: str
             Name of the collection.
+        db_name: str
+            Name of the DB.
 
         Returns
         -------
         pymongo.collection.Collection
             The collection from the DB.
-
         """
-        db_name = self._get_db_name(db_name)
+        db_name = db_name or self.db_name
         return DatabaseHandler.db_client[db_name][collection_name]
 
     def get_collections(self, db_name=None, model_collections_only=False):
@@ -370,7 +439,7 @@ class DatabaseHandler:
             List of collection names
 
         """
-        db_name = db_name or self._get_db_name()
+        db_name = db_name or self.db_name
         if db_name not in self.list_of_collections:
             self.list_of_collections[db_name] = DatabaseHandler.db_client[
                 db_name
@@ -451,7 +520,7 @@ class DatabaseHandler:
         file_id: dict of GridOut._id
             Dict of database IDs of files.
         """
-        db_name = self._get_db_name(db_name)
+        db_name = db_name or self.db_name
 
         if file_names:
             file_names = [file_names] if not isinstance(file_names, list) else file_names
@@ -467,8 +536,8 @@ class DatabaseHandler:
             if Path(dest).joinpath(file_name).exists():
                 instance_ids[file_name] = "file exists"
             else:
-                file_path_instance = self._get_file_mongo_db(self._get_db_name(), file_name)
-                self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file_path_instance)
+                file_path_instance = self._get_file_mongo_db(db_name, file_name)
+                self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
                 instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
         return instance_ids
 
@@ -509,8 +578,7 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
-        db_name = self._get_db_name()
-        collection = self.get_collection(db_name, collection_name)
+        collection = self.get_collection(collection_name, db_name=self.db_name)
         posts = list(collection.find(query))
         if not posts:
             raise ValueError(
@@ -539,6 +607,9 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection_name)
+        )
         try:
             return DatabaseHandler.production_table_cached[
                 self._cache_key(None, None, model_version, collection_name)
@@ -547,7 +618,7 @@ class DatabaseHandler:
             pass
 
         query = {"model_version": model_version, "collection": collection_name}
-        collection = self.get_collection(self._get_db_name(), "production_tables")
+        collection = self.get_collection("production_tables", db_name=self.db_name)
         post = collection.find_one(query)
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
@@ -562,7 +633,7 @@ class DatabaseHandler:
 
     def get_model_versions(self, collection_name="telescopes"):
         """
-        Get list of model versions from the DB.
+        Get list of model versions from the DB with caching.
 
         Parameters
         ----------
@@ -574,10 +645,12 @@ class DatabaseHandler:
         list
             List of model versions
         """
-        collection = self.get_collection(self._get_db_name(), "production_tables")
-        return sorted(
-            {post["model_version"] for post in collection.find({"collection": collection_name})}
-        )
+        if collection_name not in DatabaseHandler.model_versions_cached:
+            collection = self.get_collection("production_tables", db_name=self.db_name)
+            DatabaseHandler.model_versions_cached[collection_name] = sorted(
+                {post["model_version"] for post in collection.find({"collection": collection_name})}
+            )
+        return DatabaseHandler.model_versions_cached[collection_name]
 
     def get_array_elements(self, model_version, collection="telescopes"):
         """
@@ -596,6 +669,9 @@ class DatabaseHandler:
         list
             Sorted list of all array elements found in collection
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
 
@@ -618,6 +694,9 @@ class DatabaseHandler:
         str
             Design model for a given array element.
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         try:
             return production_table["design_model"][array_element_name]
@@ -646,6 +725,9 @@ class DatabaseHandler:
         list
             Sorted list of all array element names found in collection
         """
+        model_version = resolve_version_to_latest_patch(
+            model_version, self.get_model_versions(collection)
+        )
         production_table = self.read_production_table_from_mongo_db(collection, model_version)
         all_array_elements = production_table["parameters"]
         return sorted(
@@ -751,27 +833,57 @@ class DatabaseHandler:
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
 
-    def add_production_table(self, db_name, production_table):
+    def get_ecsv_file_as_astropy_table(self, file_name, db_name=None):
+        """
+        Read contents of an ECSV file from the database and return it as an Astropy Table.
+
+        Files are not written to disk.
+
+        Parameters
+        ----------
+        file_name: str
+            The name of the ECSV file.
+        db_name: str
+            The name of the database.
+
+        Returns
+        -------
+        astropy.table.Table
+            The contents of the ECSV file as an Astropy Table.
+        """
+        db = DatabaseHandler.db_client[db_name or self.db_name]
+        fs = gridfs.GridFSBucket(db)
+
+        buf = io.BytesIO()
+        try:
+            fs.download_to_stream_by_name(file_name, buf)
+        except gridfs.errors.NoFile as exc:
+            raise FileNotFoundError(f"ECSV file '{file_name}' not found in DB.") from exc
+        buf.seek(0)
+        return Table.read(buf.getvalue().decode("utf-8"), format="ascii.ecsv")
+
+    def add_production_table(self, production_table, db_name=None):
         """
         Add a production table to the DB.
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB.
         production_table: dict
             The production table to add to the DB.
+        db_name: str
+            the name of the DB.
         """
-        db_name = self._get_db_name(db_name)
-        collection = self.get_collection(db_name, "production_tables")
-        self._logger.debug(f"Adding production for {production_table.get('collection')} to to DB")
+        db_name = db_name or self.db_name
+        collection = self.get_collection("production_tables", db_name=db_name or self.db_name)
+        self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
         collection.insert_one(production_table)
         DatabaseHandler.production_table_cached.clear()
+        DatabaseHandler.model_versions_cached.clear()
 
     def add_new_parameter(
         self,
-        db_name,
         par_dict,
+        db_name=None,
         collection_name="telescopes",
         file_prefix=None,
     ):
@@ -783,10 +895,10 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
         par_dict: dict
             dictionary with parameter data
+        db_name: str
+            the name of the DB
         collection_name: str
             The name of the collection to add a parameter to.
         file_prefix: str or Path
@@ -794,8 +906,8 @@ class DatabaseHandler:
         """
         par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
 
-        db_name = self._get_db_name(db_name)
-        collection = self.get_collection(db_name, collection_name)
+        db_name = db_name or self.db_name
+        collection = self.get_collection(collection_name, db_name=db_name)
 
         par_dict["value"], _base_unit, _ = value_conversion.get_value_unit_type(
             value=par_dict["value"], unit_str=par_dict.get("unit", None)
@@ -810,7 +922,7 @@ class DatabaseHandler:
                     f"corresponding to the {par_dict['parameter']} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(par_dict["value"])
-            if not general.is_utf8_file(file_path):
+            if not ascii_handler.is_utf8_file(file_path):
                 raise ValueError(f"File is not UTF-8 encoded: {file_path}")
             files_to_add_to_db.add(f"{file_path}")
 
@@ -825,22 +937,6 @@ class DatabaseHandler:
 
         self._reset_parameter_cache()
 
-    def _get_db_name(self, db_name=None):
-        """
-        Return database name. If not provided, return the default database name.
-
-        Parameters
-        ----------
-        db_name: str
-            Database name
-
-        Returns
-        -------
-        str
-            Database name
-        """
-        return self.mongo_db_config["db_simulation_model"] if db_name is None else db_name
-
     def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
         Insert a file to the DB.
@@ -853,7 +949,7 @@ class DatabaseHandler:
             the name of the DB
         **kwargs (optional): keyword arguments for file creation.
             The full list of arguments can be found in, \
-            https://docs.mongodb.com/manual/core/gridfs/#the-files-collection
+            https://www.mongodb.com/docs/manual/core/gridfs/
             mostly these are unnecessary though.
 
         Returns
@@ -863,7 +959,7 @@ class DatabaseHandler:
             "newly created DB GridOut._id.
 
         """
-        db_name = self._get_db_name(db_name)
+        db_name = db_name or self.db_name
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
 
@@ -938,6 +1034,7 @@ class DatabaseHandler:
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
         DatabaseHandler.model_parameters_cached.clear()
+        DatabaseHandler.model_versions_cached.clear()
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """

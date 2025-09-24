@@ -38,7 +38,7 @@ import logging
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 
 
 def _parse():
@@ -65,29 +65,17 @@ def main():  # noqa: D103
     _io_handler = io_handler.IOHandler()
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    available_dbs = [
-        db_config["db_simulation_model"],
-    ]
-    file_id = {}
-    for db_name in available_dbs:
-        try:
-            file_id = db.export_model_files(
-                db_name=db_name,
-                dest=_io_handler.get_output_directory(),
-                file_names=args_dict["file_name"],
-            )
-            logger.info(
-                f"Got file {args_dict['file_name']} from DB {db_name} "
-                f"and saved into {_io_handler.get_output_directory()}"
-            )
-            break
-        except FileNotFoundError:
-            continue
-
-    for key, value in file_id.items():
-        if value is None:
-            logger.error(f"The file {key} was not found in any of the available DBs.")
-            raise FileNotFoundError
+    file_id = db.export_model_files(
+        dest=_io_handler.get_output_directory(),
+        file_names=args_dict["file_name"],
+    )
+    if file_id is None:
+        logger.error(f"The file {args_dict['file_name']} was not found in {db.db_name}.")
+        raise FileNotFoundError
+    logger.info(
+        f"Got file {args_dict['file_name']} from DB {db.db_name} "
+        f"and saved into {_io_handler.get_output_directory()}"
+    )
 
 
 if __name__ == "__main__":

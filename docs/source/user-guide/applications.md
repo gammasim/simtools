@@ -49,7 +49,7 @@ Parameters with the same functionality are named consistently the same among all
 :glob: true
 :maxdepth: 1
 
-simtools-calculate-trigger-rate <applications/simtools-calculate-trigger-rate>
+simtools-calculate-incident-angles <applications/simtools-calculate-incident-angles>
 simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
@@ -59,11 +59,13 @@ simtools-db-add-value-from-json-to-db <applications/simtools-db-add-value-from-j
 simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layouts-from-db>
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
 simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
+simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
@@ -72,19 +74,24 @@ simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
-simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
+simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
+simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
+simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
+simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-print-version <applications/simtools-print-version>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
-simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
+simtools-simulate-flasher <applications/simtools-simulate-flasher>
+simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
+simtools-simulate-pedestals <applications/simtools-simulate-pedestals>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
@@ -95,4 +102,3 @@ simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
-simtools-verify-simulation-model-production-tables <applications/simtools-verify-simulation-model-production-tables>

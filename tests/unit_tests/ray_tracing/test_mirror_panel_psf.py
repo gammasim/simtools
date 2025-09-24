@@ -64,7 +64,7 @@ def mock_mirror_panel_psf(
     mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
 ):
     with patch(mock_telescope_model_string) as mock_init_models, patch(mock_find_file_string):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
         db_config = {"db": "config"}
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict, db_config)
@@ -80,7 +80,7 @@ def test_define_telescope_model(
         patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string) as mock_find_file,
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
 
         args_dict["mirror_list"] = None
         args_dict["random_focal_length"] = None
@@ -106,7 +106,7 @@ def test_define_telescope_model(
         patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string) as mock_find_file,
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
 
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
         args_dict["model_path"] = "tests/resources"
@@ -138,7 +138,7 @@ def test_define_telescope_model_test_errors(
         patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string),
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
         db_config = {"db": "config"}
         label = "test_label"
 
@@ -203,7 +203,7 @@ def test_run_simulations_and_analysis(
         patch(mock_find_file_string),
         patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
     ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site")
+        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
         db_config = {"db": "config"}
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
@@ -212,7 +212,7 @@ def test_run_simulations_and_analysis(
         mock_ray_instance.get_mean.return_value = 0.5 * u.cm
         mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
 
-        mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
+        mirror_panel_psf.run_simulations_and_analysis(rnda)
 
 
 def test_print_results(mock_mirror_panel_psf, capsys):
@@ -242,7 +242,7 @@ def test_get_starting_value_from_args(mock_mirror_panel_psf, caplog):
     mirror_psf.args_dict["rnda"] = 0.5
     with caplog.at_level("INFO"):
         rnda_start = mirror_psf._get_starting_value()
-    assert rnda_start == 0.5
+    assert rnda_start == pytest.approx(0.5)
     assert "Start value for mirror_reflection_random_angle: 0.5 deg" in caplog.text
 
 
@@ -252,7 +252,7 @@ def test_get_starting_value_from_model(mock_mirror_panel_psf, caplog):
     mirror_psf.telescope_model.get_parameter_value = lambda key: [0.3]
     with caplog.at_level("INFO"):
         rnda_start = mirror_psf._get_starting_value()
-    assert rnda_start == 0.3
+    assert rnda_start == pytest.approx(0.3)
     assert "Start value for mirror_reflection_random_angle: 0.3 deg" in caplog.text
 
 
@@ -270,8 +270,8 @@ def test_derive_random_reflection_angle_no_tuning(
         mirror_psf.derive_random_reflection_angle()
 
         mock_run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
-        assert mirror_psf.mean_d80 == 0.5
-        assert mirror_psf.sig_d80 == 0.1
+        assert mirror_psf.mean_d80 == pytest.approx(0.5)
+        assert mirror_psf.sig_d80 == pytest.approx(0.1)
 
 
 def test_derive_random_reflection_angle_with_tuning(
@@ -294,8 +294,8 @@ def test_derive_random_reflection_angle_with_tuning(
 
         mock_optimize.assert_called_once()
         mock_run_simulations.assert_called_once_with(mirror_psf.rnda_opt, save_figures=False)
-        assert mirror_psf.mean_d80 == 0.5
-        assert mirror_psf.sig_d80 == 0.1
+        assert mirror_psf.mean_d80 == pytest.approx(0.5)
+        assert mirror_psf.sig_d80 == pytest.approx(0.1)
 
 
 def test_optimize_reflection_angle(mock_mirror_panel_psf, mock_run_simulations_and_analysis_string):

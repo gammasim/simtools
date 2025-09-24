@@ -108,7 +108,7 @@ import matplotlib.pyplot as plt
 import simtools.layout.array_layout_utils as layout_utils
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
+from simtools.io import io_handler
 from simtools.visualization import visualize
 from simtools.visualization.plot_array_layout import plot_array_layout
 

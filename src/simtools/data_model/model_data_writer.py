@@ -1,38 +1,19 @@
 """Model data writer module."""
 
-import json
 import logging
 from pathlib import Path
 
-import astropy.units as u
-import numpy as np
+import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
 
 __all__ = ["ModelDataWriter"]
-
-
-class JsonNumpyEncoder(json.JSONEncoder):
-    """Convert numpy to python types as accepted by json.dump."""
-
-    def default(self, o):
-        if isinstance(o, np.floating):
-            return float(o)
-        if isinstance(o, np.integer):
-            return int(o)
-        if isinstance(o, np.ndarray):
-            return o.tolist()
-        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
-            return str(o) if o != u.dimensionless_unscaled else None
-        if np.issubdtype(type(o), np.bool_):
-            return bool(o)
-        return super().default(o)
 
 
 class ModelDataWriter:
@@ -127,6 +108,8 @@ class ModelDataWriter:
         use_plain_output_path=False,
         metadata_input_dict=None,
         db_config=None,
+        unit=None,
+        meta_parameter=False,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -151,6 +134,8 @@ class ModelDataWriter:
             Input to metadata collector.
         db_config: dict
             Database configuration. If not None, check if parameter with the same version exists.
+        unit: str
+            Unit of the parameter value (if applicable and value is not of type astropy Quantity).
 
         Returns
         -------
@@ -180,7 +165,13 @@ class ModelDataWriter:
             )
 
         _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, parameter_version, unique_id
+            parameter_name,
+            value,
+            instrument,
+            parameter_version,
+            unique_id,
+            unit=unit,
+            meta_parameter=meta_parameter,
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
@@ -230,6 +221,8 @@ class ModelDataWriter:
         parameter_version,
         unique_id=None,
         schema_version=None,
+        unit=None,
+        meta_parameter=False,
     ):
         """
         Get validated parameter dictionary.
@@ -246,6 +239,12 @@ class ModelDataWriter:
             Version of the parameter.
         schema_version: str
             Version of the schema.
+        unique_id: str
+            Unique ID of the parameter set (from metadata).
+        unit: str
+            Unit of the parameter value (if applicable and value is not an astropy Quantity).
+        meta_parameter: bool
+            Setting for meta parameter flag.
 
         Returns
         -------
@@ -253,10 +252,10 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        schema_file = schema.get_model_parameter_schema_file(parameter_name)
-        self.schema_dict = gen.collect_data_from_file(schema_file)
+        self.schema_dict, schema_file = self._read_schema_dict(parameter_name, schema_version)
 
-        value, unit = value_conversion.split_value_and_unit(value)
+        if unit is None:
+            value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
@@ -269,10 +268,8 @@ class ModelDataWriter:
             "unit": unit,
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
-            "meta_parameter": False,
-            "model_parameter_schema_version": self.schema_dict.get(
-                "model_parameter_schema_version", "0.1.0"
-            ),
+            "meta_parameter": meta_parameter,
+            "model_parameter_schema_version": self.schema_dict.get("schema_version", "0.1.0"),
         }
         return self.validate_and_transform(
             product_data_dict=data_dict,
@@ -280,19 +277,74 @@ class ModelDataWriter:
             is_model_parameter=True,
         )
 
+    def _read_schema_dict(self, parameter_name, schema_version):
+        """
+        Read schema dict for given parameter name and version.
+
+        Use newest schema version if schema_version is None.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        schema_version: str
+            Schema version.
+
+        Returns
+        -------
+        dict
+            Schema dictionary.
+        """
+        schema_file = schema.get_model_parameter_schema_file(parameter_name)
+        schemas = ascii_handler.collect_data_from_file(schema_file)
+        if isinstance(schemas, list):
+            if schema_version is None:
+                return self._find_highest_schema_version(schemas), schema_file
+            for entry in schemas:
+                if entry.get("schema_version") == schema_version:
+                    return entry, schema_file
+        else:
+            return schemas, schema_file
+
+        raise ValueError(f"Schema version {schema_version} not found for {parameter_name}")
+
+    def _find_highest_schema_version(self, schema_list):
+        """
+        Find entry with highest schema_version in a list of schema dicts.
+
+        Parameters
+        ----------
+        schema_list: list
+            List of schema dictionaries.
+
+        Returns
+        -------
+        dict
+            Schema dictionary with highest schema_version.
+        """
+        try:
+            valid_entries = [entry for entry in schema_list if "schema_version" in entry]
+        except TypeError as exc:
+            raise TypeError("No valid schema versions found in the list.") from exc
+        return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
+
     def _get_parameter_type(self):
         """
         Return parameter type from schema.
 
+        Reduce list of types to single type if all types are the same.
+
         Returns
         -------
-        str
+        str or list[str]
             Parameter type
         """
-        _parameter_type = []
-        for data in self.schema_dict["data"]:
-            _parameter_type.append(data["type"])
-        return _parameter_type if len(_parameter_type) > 1 else _parameter_type[0]
+        _parameter_type = [data["type"] for data in self.schema_dict["data"]]
+        return (
+            _parameter_type[0]
+            if all(t == _parameter_type[0] for t in _parameter_type)
+            else _parameter_type
+        )
 
     def _parameter_is_a_file(self):
         """
@@ -415,15 +467,13 @@ class ModelDataWriter:
             if data writing was not successful.
         """
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
-        try:
-            self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
-            with open(self.io_handler.get_output_file(file_name), "w", encoding="UTF-8") as file:
-                json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
-                file.write("\n")
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(
-                f"Error writing model data to {self.io_handler.get_output_file(file_name)}"
-            ) from exc
+        self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
+        ascii_handler.write_data_to_file(
+            data=data_dict,
+            output_file=self.io_handler.get_output_file(file_name),
+            sort_keys=True,
+            numpy_types=True,
+        )
 
     @staticmethod
     def prepare_data_dict_for_writing(data_dict):
@@ -432,6 +482,7 @@ class ModelDataWriter:
 
         Ensure sim_telarray style lists as strings 'type' and 'unit' entries.
         Replace "None" with "null" for unit field.
+        Replace list of equal units with single unit string.
 
         Parameters
         ----------
@@ -452,6 +503,8 @@ class ModelDataWriter:
                     unit.replace("None", "null") if isinstance(unit, str) else unit
                     for unit in data_dict["unit"]
                 ]
+                if all(u == data_dict["unit"][0] for u in data_dict["unit"]):
+                    data_dict["unit"] = data_dict["unit"][0]
         except KeyError:
             pass
         return data_dict

@@ -7,7 +7,7 @@ import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
-from simtools.io_operations import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.utils import names
@@ -36,17 +36,19 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
     _logger.info(f"Retrieving array layouts from {repository_url} on branch {branch_name}.")
 
     if gen.is_url(repository_url):
-        array_element_ids = gen.collect_data_from_http(
+        array_element_ids = ascii_handler.collect_data_from_http(
             url=f"{repository_url}/{branch_name}/array-element-ids.json"
         )
-        sub_arrays = gen.collect_data_from_http(
+        sub_arrays = ascii_handler.collect_data_from_http(
             url=f"{repository_url}/{branch_name}/subarray-ids.json"
         )
     else:
-        array_element_ids = gen.collect_data_from_file(
+        array_element_ids = ascii_handler.collect_data_from_file(
             Path(repository_url) / "array-element-ids.json"
         )
-        sub_arrays = gen.collect_data_from_file(Path(repository_url) / "subarray-ids.json")
+        sub_arrays = ascii_handler.collect_data_from_file(
+            Path(repository_url) / "subarray-ids.json"
+        )
 
     return _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
 
@@ -232,7 +234,7 @@ def get_array_layouts_from_parameter_file(
     list
         List of dictionaries containing array layout names and their elements.
     """
-    array_layouts = gen.collect_data_from_file(file_path)
+    array_layouts = ascii_handler.collect_data_from_file(file_path)
     try:
         value = array_layouts["value"]
     except KeyError as exc:
@@ -280,11 +282,7 @@ def get_array_layouts_from_db(
     """
     layout_names = []
     if layout_name:
-        layout_names.append(
-            layout_name[0]
-            if isinstance(layout_name, list) and len(layout_name) == 1
-            else layout_name
-        )
+        layout_names = gen.ensure_iterable(layout_name)
     else:
         site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
         layout_names = site_model.get_list_of_array_layouts()
@@ -392,3 +390,39 @@ def _get_array_layout_dict(
             coordinate_system=coordinate_system
         ),
     }
+
+
+def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config):
+    """
+    Get list of array elements from the database for given list of layout names.
+
+    Structure of the returned dictionary::
+
+        {
+            "layout_name_1": [telescope_id_1, telescope_id_2, ...],
+            "layout_name_2": [telescope_id_3, telescope_id_4, ...],
+            ...
+        }
+
+    Parameters
+    ----------
+    layouts : list[str]
+        List of layout names to read. If "all", read all available layouts.
+    site : str
+        Site name for the array layouts.
+    model_version : str
+        Model version for the array layouts.
+    db_config : dict
+        Database configuration dictionary.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping layout names to telescope IDs.
+    """
+    site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
+    layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
+    layout_dict = {}
+    for layout_name in layout_names:
+        layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
+    return layout_dict

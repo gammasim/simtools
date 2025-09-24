@@ -1,17 +1,16 @@
 ---
-CTA_SIMPIPE:
-  APPLICATIONS:
-  - APPLICATION: simtools-generate-simtel-event-data
-    TEST_NAME: hdf5
-    CONFIGURATION:
-      INPUT: 'tests/resources/*proton*North_alpha_*.simtel.zst'
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-      USE_PLAIN_OUTPUT_PATH: true
-      MAX_FILES: 2
-      PRINT_DATASET_INFORMATION: 5
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-    - OUTPUT_FILE: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.meta.yml
-SCHEMA_NAME: application_workflow.metaschema
-SCHEMA_VERSION: 0.3.0
+applications:
+- application: simtools-generate-simtel-event-data
+  test_name: hdf5
+  configuration:
+    input: tests/resources/*proton*North_alpha_*.simtel.zst
+    output_path: simtools-output
+    output_file: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    use_plain_output_path: true
+    max_files: 2
+    print_dataset_information: 5
+  integration_tests:
+  - output_file: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+  - output_file: proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.meta.yml
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

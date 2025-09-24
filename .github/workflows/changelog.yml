@@ -4,9 +4,9 @@ name: Changelog
 # from: https://github.com/cta-observatory/ctapipe/blob/main/.github/workflows/changelog.yml
 
 on:
+  workflow_dispatch:
   pull_request:
-    # should also be re-run when changing labels
-    types: [opened, reopened, labeled, unlabeled, synchronize, ready_for_review]
+    types: [opened, labeled, unlabeled, ready_for_review]
     branches:
       - 'main'
 
@@ -19,7 +19,7 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 

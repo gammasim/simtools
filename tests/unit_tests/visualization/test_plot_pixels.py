@@ -7,6 +7,7 @@ import astropy.units as u
 import matplotlib.patches as mpatches
 import numpy as np
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 from matplotlib.figure import Figure
 
 from simtools.visualization import plot_pixels
@@ -71,7 +72,7 @@ def test__create_patch():
     patch = plot_pixels._create_patch(x, y, diameter, 0)
     assert isinstance(patch, mpatches.Circle)
     assert patch.center == (x, y)
-    assert patch.radius == diameter / 2
+    assert patch.radius == pytest.approx(diameter / 2)
 
     # Test hexagonal pixel flat-x (shape=1)
     patch = plot_pixels._create_patch(x, y, diameter, 1)
@@ -84,8 +85,8 @@ def test__create_patch():
     patch = plot_pixels._create_patch(x, y, diameter, 2)
     assert isinstance(patch, mpatches.Rectangle)
     assert patch.get_xy() == (x - diameter / 2, y - diameter / 2)
-    assert patch.get_width() == diameter
-    assert patch.get_height() == diameter
+    assert patch.get_width() == pytest.approx(diameter)
+    assert patch.get_height() == pytest.approx(diameter)
 
     # Test hexagonal pixel flat-y (shape=3)
     patch = plot_pixels._create_patch(x, y, diameter, 3)
@@ -287,11 +288,11 @@ def test__read_pixel_config():
     """Test reading pixel configuration from file."""
     config = plot_pixels._read_pixel_config(DUMMY_DAT_PATH)
 
-    assert config["rotate_angle"] == 10.0 * u.deg
+    assert_quantity_allclose(config["rotate_angle"], 10.0 * u.deg)
     assert config["pixel_shape"] == 2
-    assert config["pixel_spacing"] == 0.640
-    assert config["module_gap"] == 0.02
-    assert config["pixel_diameter"] == 0.6
+    assert_quantity_allclose(config["pixel_spacing"], 0.640)
+    assert_quantity_allclose(config["module_gap"], 0.02)
+    assert_quantity_allclose(config["pixel_diameter"], 0.6)
     assert len(config["pixel_ids"]) == 31
     assert config["pixels_on"].count(True) == 30
 
@@ -319,7 +320,7 @@ def test__prepare_pixel_data(mock_read):
     assert "pixel_spacing" in data
     assert "module_gap" in data
     assert "module_number" in data
-    assert data["pixel_spacing"] == 0.6
+    assert data["pixel_spacing"] == pytest.approx(0.6)
 
 
 def test__add_coordinate_axes():
@@ -372,7 +373,7 @@ def test_prepare_pixel_data_two_mirror(mock_is_two_mirror):
 
             data = plot_pixels._prepare_pixel_data(DUMMY_DAT_PATH, telescope)
             assert "pixel_spacing" in data
-            assert data["pixel_spacing"] == 0.64
+            assert data["pixel_spacing"] == pytest.approx(0.64)
 
 
 @mock.patch("simtools.utils.names.get_array_element_type_from_name")
@@ -382,7 +383,7 @@ def test__create_pixel_patches(mock_create_patch, mock_is_edge_pixel, mock_get_a
     """Test the logic of _create_pixel_patches."""
     # Mock the return values for the patched functions
     mock_get_array_element_type.return_value = "SCT"
-    mock_is_edge_pixel.side_effect = lambda x, y, *args: x == 0.0 and y == 0.0
+    mock_is_edge_pixel.side_effect = lambda x, y, *args: np.isclose(x, 0.0) and np.isclose(y, 0.0)
     mock_create_patch.side_effect = (
         lambda x, y, diameter, shape: f"Patch({x}, {y}, {diameter}, {shape})"
     )

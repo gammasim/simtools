@@ -25,10 +25,10 @@ def test_telescope():
     assert parser.CommandLineParser.telescope("MSTx-NectarCam") == "MSTx-NectarCam"
 
     with pytest.raises(ValueError, match=r"Invalid name Whipple"):
-        assert parser.CommandLineParser.telescope("Whipple")
+        parser.CommandLineParser.telescope("Whipple")
 
     with pytest.raises(ValueError, match=r"Invalid name LST"):
-        assert parser.CommandLineParser.telescope("LST")
+        parser.CommandLineParser.telescope("LST")
 
 
 def test_efficiency_interval():
@@ -73,20 +73,30 @@ def test_zenith_angle(caplog):
 
 
 def test_parse_quantity_pair():
-    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100GeV 5 TeV"]:
+    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100 GeV 5 TeV", "100GeV 5 TeV"]:
         e_pair = parser.CommandLineParser.parse_quantity_pair(test_string)
-        assert pytest.approx(e_pair[0].value) == 100.0
+        assert e_pair[0].value == pytest.approx(100.0)
         assert e_pair[0].unit == u.GeV
-        assert pytest.approx(e_pair[1].value) == 5.0
+        assert e_pair[1].value == pytest.approx(5.0)
         assert e_pair[1].unit == u.TeV
+
+    q1, q2 = parser.CommandLineParser.parse_quantity_pair(
+        "(<Quantity 200. GeV>, <Quantity 500. GeV>)"
+    )
+    assert q1 == 200 * u.GeV
+    assert q2 == 500 * u.GeV
 
     with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
         parser.CommandLineParser.parse_quantity_pair("100 GeV 5 TeV 20 PeV")
 
-    with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):
+    with pytest.raises(
+        ValueError, match=r"^Could not parse quantities: 'abc' did not parse as unit"
+    ):
         parser.CommandLineParser.parse_quantity_pair("100 GeV 5 abc")
 
-    with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
+    with pytest.raises(
+        ValueError, match=r'^Could not parse quantities: Cannot parse "eV" as a Quantity.'
+    ):
         parser.CommandLineParser.parse_quantity_pair("a GeV 5 TeV")
 
 
@@ -94,7 +104,7 @@ def test_parse_integer_and_quantity():
     for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m", "(5, <Quantity 1500 m>)"]:
         c_pair = parser.CommandLineParser.parse_integer_and_quantity(test_string)
         assert c_pair[0] == 5
-        assert pytest.approx(c_pair[1].value) == 1500.0
+        assert c_pair[1].value == pytest.approx(1500.0)
         assert c_pair[1].unit == u.m
 
     with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):
@@ -251,7 +261,11 @@ def test_layout_parsers():
 def test_simulation_configuration():
     _parser_9 = parser.CommandLineParser()
     _parser_9.initialize_default_arguments(
-        simulation_configuration={"software": None, "corsika_configuration": ["all"]}
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["all"],
+            "sim_telarray_configuration": ["all"],
+        }
     )
     job_groups = _parser_9._action_groups
     for group in job_groups:
@@ -261,6 +275,10 @@ def test_simulation_configuration():
             assert any(action.dest == "primary" for action in group._group_actions)
         if str(group.title) == "shower parameters":
             assert any(action.dest == "view_cone" for action in group._group_actions)
+        if str(group.title) == "sim_telarray configuration":
+            assert any(
+                action.dest == "sim_telarray_instrument_seeds" for action in group._group_actions
+            )
 
     _parser_10 = parser.CommandLineParser()
     _parser_10.initialize_default_arguments(
