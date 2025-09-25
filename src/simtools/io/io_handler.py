@@ -31,8 +31,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
         """
         Set paths for input and output.
 
-        TODO model_path used for what?
-
         Parameters
         ----------
         output_path: str or Path
