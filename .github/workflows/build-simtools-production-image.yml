@@ -1,5 +1,5 @@
 ---
-name: docker-corsika-simtelarray
+name: build-simtools-production-image
 # Build and push vanilla CORSIKA / sim_telarray image and simtools images for different CPU architectures.
 # Integration tests are running on the non-optimized ('no_opt') image.
 
@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - './docker/Dockerfile-simtelarray'
-      - './docker/Dockerfile-prod-opt'
+      - docker/Dockerfile-simtelarray
+      - docker/Dockerfile-prod-opt
   release:
     types: [published]
   schedule:
@@ -41,7 +41,7 @@ jobs:
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
             autoconf.tar.gz
-          retention-days: 1
+          retention-days: 3
 
   build-production-images-optimized:
     runs-on: ubuntu-latest
@@ -129,12 +129,6 @@ jobs:
           file: ./docker/Dockerfile-prod-opt
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-prod
-      - name: set image tag
-        run: |
-            echo "image_tag=$(echo '${{ steps.meta.outputs.tags }}' | head -n1)" >> "$GITHUB_ENV"
-        id: set-image-tag
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
 
   test-images:
     runs-on: ubuntu-latest
