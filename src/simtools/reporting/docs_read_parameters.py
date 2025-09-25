@@ -148,7 +148,7 @@ class ReadParameters:
         return plot_names
 
     def _get_telescope_identifier(self, model_version=None):
-        """Get the appropriate telescope identifier for file naming (e.g., LSTN-design, LSTN-01)."""
+        """Get the appropriate telescope design type for file naming (e.g., LSTN-design)."""
         model_version = model_version or self.model_version
         telescope_design = self.db.get_design_model(
             model_version, self.array_element, collection="telescopes"
