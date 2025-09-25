@@ -90,13 +90,14 @@ class RunnerServices:
         dict
             Dictionary containing paths requires for simulation configuration.
         """
-        self.directory["output"] = io_handler.IOHandler().get_output_directory()
+        ioh = io_handler.IOHandler()
+        self.directory["output"] = ioh.get_output_directory()
         _logger.debug(f"Creating output dir {self.directory['output']}")
         for dir_name in ["sub_scripts", "sub_logs"]:
-            self.directory[dir_name] = io_handler.IOHandler().get_output_directory(dir_name)
+            self.directory[dir_name] = ioh.get_output_directory(dir_name)
         for _simulation_software in self._get_simulation_software_list(simulation_software):
             for dir_name in ["data", "inputs", "logs"]:
-                self.directory[dir_name] = io_handler.IOHandler().get_output_directory(
+                self.directory[dir_name] = ioh.get_output_directory(
                     [_simulation_software, dir_name]
                 )
         self._logger.debug(f"Data directories for {simulation_software}: {self.directory}")
