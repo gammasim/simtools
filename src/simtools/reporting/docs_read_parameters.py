@@ -20,6 +20,7 @@ from simtools.version import sort_versions
 from simtools.visualization import plot_pixels, plot_tables
 
 logger = logging.getLogger()
+MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 
 class ReadParameters:
@@ -147,7 +148,7 @@ class ReadParameters:
         return plot_names
 
     def _get_telescope_identifier(self, model_version=None):
-        """Get the appropriate telescope identifier for file naming."""
+        """Get the appropriate telescope identifier for file naming (e.g., LSTN-design, LSTN-01)."""
         model_version = model_version or self.model_version
         telescope_design = self.db.get_design_model(
             model_version, self.array_element, collection="telescopes"
@@ -639,7 +640,7 @@ class ReadParameters:
         # Write table rows
         for item in comparison_data.get(parameter):
             file.write(
-                f"| {item['parameter_version']} | {item['model_version']} |{item['value']} |\n"
+                f"| {item['parameter_version']} | {item['model_version']} | {item['value']} |\n"
             )
 
         file.write("\n")
@@ -664,7 +665,8 @@ class ReadParameters:
 
         if parameter != "camera_config_file":
             plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
-            file.write(f"![Parameter plot.]({outpath}/{plot_name}.png)")
+            image_path = outpath / f"{plot_name}.png"
+            file.write(f"![Parameter plot.]({image_path.as_posix()})")
             return
 
         # camera_config_file: find latest value and convert markdown link to png filename
@@ -677,12 +679,13 @@ class ReadParameters:
         if latest_value is None:
             return
 
-        match = re.search(r"\[([^\]]+)\]", latest_value)
+        match = MARKDOWN_LINK_RE.search(latest_value)
         if not match:
             return
 
         filename_png = Path(match.group(1)).with_suffix(".png").name
-        file.write(f"![Camera configuration plot.]({outpath}/{filename_png})")
+        image_path = outpath / filename_png
+        file.write(f"![Camera configuration plot.]({image_path.as_posix()})")
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
