@@ -9,7 +9,6 @@ applications:
     simtel_cfg_file: ./tests/resources/simtel_config_test_la_palma.cfg
     simtel_telescope_name: CT1
     telescope: LSTN-01
-    use_plain_output_path: true
   test_name: num_gains
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

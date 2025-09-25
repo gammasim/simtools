@@ -129,7 +129,6 @@ def main():  # noqa: D103
         parameter_version=args_dict.get("parameter_version", "0.0.0"),
         output_file=Path(f"nsb_pixel_rate-{args_dict.get('parameter_version', '0.0.0')}.json"),
         output_path=Path(args_dict["output_path"]) / args_dict["telescope"] / "nsb_pixel_rate",
-        use_plain_output_path=args_dict.get("use_plain_output_path"),
     )
 
 

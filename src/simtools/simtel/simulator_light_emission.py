@@ -286,7 +286,7 @@ class SimulatorLightEmission(SimtelRunner):
             The commands to run the Light Emission package
         """
         config_directory = self.io_handler.get_model_configuration_directory(
-            label=self.label, model_version=self.site_model.model_version
+            model_version=self.site_model.model_version
         )
         app_name = self._get_light_emission_application_name()
         corsika_observation_level = self.site_model.get_parameter_value_with_unit(

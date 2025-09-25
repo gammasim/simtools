@@ -92,9 +92,7 @@ class RayTracing:
         self.use_random_focal_length = use_random_focal_length
         self.random_focal_length_seed = random_focal_length_seed
         self.mirrors = self._initialize_mirror_configuration(source_distance, mirror_numbers)
-        self.output_directory = self._io_handler.get_output_directory(
-            label=self.label, sub_dir="ray_tracing"
-        )
+        self.output_directory = self._io_handler.get_output_directory()
         self.output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
         self._file_results = self.output_directory.joinpath("results").joinpath(
             self._generate_file_name(file_type="ray_tracing", suffix=".ecsv")

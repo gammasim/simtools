@@ -9,7 +9,6 @@ applications:
     telescope: SSTS-design
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
-    use_plain_output_path: true
     zenith_angle: 0.
   integration_tests:
   - output_file: validate_camera_efficiency_SSTS-design_nsb.pdf

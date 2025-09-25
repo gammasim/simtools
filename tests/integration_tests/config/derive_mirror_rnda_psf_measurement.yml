@@ -13,7 +13,6 @@ applications:
     site: North
     telescope: MSTx-NectarCam
     test: true
-    use_plain_output_path: true
     use_random_focal_length: true
   integration_tests:
   - output_file: test_derive_mirror_rnda_psf_measurement.ecsv

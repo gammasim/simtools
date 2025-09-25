@@ -23,8 +23,8 @@ def pfp_command():
 
 def test_corsika_runner(corsika_runner_mock_array_model):
     cr = corsika_runner_mock_array_model
-    assert "corsika_sim_telarray" not in str(cr._directory["output"])
-    assert "corsika" in str(cr._directory["output"])
+    assert "corsika_sim_telarray" not in str(cr._directory["data"])
+    assert "corsika" in str(cr._directory["data"])
     assert isinstance(cr._directory["data"], pathlib.Path)
 
 

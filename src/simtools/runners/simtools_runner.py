@@ -122,7 +122,6 @@ def _read_application_configuration(configuration_file, steps, logger):
     - output files will be written out to './output/<workflow directory>/'
 
     Replaces the placeholders in the configuration file with the actual values.
-    Sets 'USE_PLAIN_OUTPUT_PATH' to True for all applications.
 
     Parameters
     ----------
@@ -195,7 +194,6 @@ def _replace_placeholders_in_configuration(
                 for item in value
             ]
     if output_path:
-        configuration["use_plain_output_path"] = True
         configuration["output_path"] = str(output_path)
 
     return configuration

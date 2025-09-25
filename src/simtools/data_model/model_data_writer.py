@@ -30,8 +30,6 @@ class ModelDataWriter:
         Dictionary with configuration parameters.
     output_path: str or Path
         Path to output file.
-    use_plain_output_path: bool
-        Use plain output path.
     args_dict: dict
         Dictionary with configuration parameters.
 
@@ -42,7 +40,6 @@ class ModelDataWriter:
         product_data_file=None,
         product_data_format=None,
         output_path=None,
-        use_plain_output_path=True,
         args_dict=None,
     ):
         """Initialize model data writer."""
@@ -51,11 +48,8 @@ class ModelDataWriter:
         self.schema_dict = {}
         if args_dict is not None:
             output_path = args_dict.get("output_path", output_path)
-            use_plain_output_path = args_dict.get("use_plain_output_path", use_plain_output_path)
         if output_path is not None:
-            self.io_handler.set_paths(
-                output_path=output_path, use_plain_output_path=use_plain_output_path
-            )
+            self.io_handler.set_paths(output_path=output_path)
         try:
             self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
         except TypeError:
@@ -105,7 +99,6 @@ class ModelDataWriter:
         parameter_version,
         output_file,
         output_path=None,
-        use_plain_output_path=False,
         metadata_input_dict=None,
         db_config=None,
         unit=None,
@@ -128,8 +121,6 @@ class ModelDataWriter:
             Name of output file.
         output_path: str or Path
             Path to output file.
-        use_plain_output_path: bool
-            Use plain output path.
         metadata_input_dict: dict
             Input to metadata collector.
         db_config: dict
@@ -147,7 +138,6 @@ class ModelDataWriter:
             product_data_format="json",
             args_dict=None,
             output_path=output_path,
-            use_plain_output_path=use_plain_output_path,
         )
         if db_config is not None:
             writer.check_db_for_existing_parameter(

@@ -12,7 +12,6 @@ applications:
     site: South
     telescope: MSTx-FlashCam
     test: true
-    use_plain_output_path: true
     use_random_focal_length: true
     random_focal_length_seed: 100
   integration_tests:

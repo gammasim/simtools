@@ -5,7 +5,6 @@ applications:
     model_version: 6.0
     output_path: simtools-output/reports/productions/
     simulation_software: corsika
-    use_plain_output_path: true
   integration_tests:
   - output_file: 6.0/configuration_corsika.md
   test_name: run

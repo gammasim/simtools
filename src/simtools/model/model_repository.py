@@ -358,7 +358,6 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         parameter_version=param_data["version"],
         output_file=f"{param}-{param_data['version']}.json",
         output_path=param_dir,
-        use_plain_output_path=True,
         unit=param_data.get("unit"),
         meta_parameter=param_data.get("meta_parameter", False),
     )

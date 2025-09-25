@@ -40,12 +40,12 @@ def test_get_corsika_site_parameters(db_config, model_version):
 
 
 def test_get_corsika_site_parameters_with_model_directory(array_model):
-    """Test that the amtospheric profile file is provided with the model directory."""
+    """Test that the atmospheric profile file is provided with the model directory."""
     model_directory = array_model.get_config_directory()
     corsika_site_parameters = array_model.site_model.get_corsika_site_parameters(
         config_file_style=True, model_directory=model_directory
     )
-    assert "test/model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
+    assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
 
 
 def test_get_array_elements_for_layout(db_config, model_version):

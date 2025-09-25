@@ -299,8 +299,7 @@ def main():
 
         visualize.save_figure(
             fig_out,
-            io_handler_instance.get_output_directory(label, sub_dir="application-plots")
-            / plot_file_name,
+            io_handler_instance.get_output_directory() / plot_file_name,
             dpi=400,
         )
         plt.close()

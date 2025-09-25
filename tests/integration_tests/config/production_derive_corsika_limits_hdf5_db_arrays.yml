@@ -12,7 +12,6 @@ applications:
     output_path: simtools-output
     plot_histograms: true
     site: North
-    use_plain_output_path: true
   integration_tests:
   - output_file: corsika_simulation_limits_lookup.ecsv
   - output_file: corsika_simulation_limits_lookup.meta.yml

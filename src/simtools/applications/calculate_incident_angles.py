@@ -144,10 +144,7 @@ def main():
 
     logger.info("Starting calculation of incident angles")
 
-    output_base = Path(args_dict.get("output_path", "./"))
-    output_dir = (
-        output_base / label if not args_dict.get("use_plain_output_path", False) else output_base
-    )
+    output_dir = Path(args_dict.get("output_path", "./"))
     base_label = args_dict.get("label", label)
     telescope_name = args_dict["telescope"]
     label_with_telescope = f"{base_label}_{telescope_name}"

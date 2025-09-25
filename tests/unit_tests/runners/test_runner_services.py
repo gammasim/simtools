@@ -119,8 +119,8 @@ def test_load_corsika_data_directories(runner_service_config_only):
 
 
 def test_has_file(io_handler, runner_service, file_base_name):
-    corsika_file = io_handler.get_input_data_file(
-        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
+    corsika_file = io_handler.get_test_data_file(
+        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
     )
     # Copying the corsika file to the expected location and
     # changing its name for the sake of this test.
@@ -186,7 +186,7 @@ def test_get_data_file_path(runner_service, corsika_runner_mock_array_model, fil
 
 
 def test_get_sub_file_path(runner_service, file_base_name, io_handler):
-    script_file_dir = io_handler.get_output_directory("test-corsika-runner").joinpath("scripts")
+    script_file_dir = io_handler.get_output_directory().joinpath("scripts")
     assert runner_service._get_sub_file_path(
         file_type="script",
         file_name=file_base_name,
@@ -198,7 +198,7 @@ def test_get_sub_file_path(runner_service, file_base_name, io_handler):
         mode="err",
     ) == script_file_dir.joinpath(f"sub_{file_base_name}.err")
 
-    log_file_dir = io_handler.get_output_directory("test-corsika-runner").joinpath("sub_logs")
+    log_file_dir = io_handler.get_output_directory().joinpath("sub_logs")
     assert runner_service._get_sub_file_path(
         file_type="sub_log",
         file_name=file_base_name,

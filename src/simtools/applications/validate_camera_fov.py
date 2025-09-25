@@ -94,9 +94,8 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
+    output_dir = _io_handler.get_output_directory()
 
     tel_model = TelescopeModel(
         site=args_dict["site"],

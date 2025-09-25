@@ -47,7 +47,7 @@ class CameraEfficiency:
             site=config_data["site"],
             telescope_name=config_data["telescope"],
         )
-        self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
+        self.output_dir = self.io_handler.get_output_directory()
 
         self._results = None
         self._has_results = False
@@ -101,10 +101,7 @@ class CameraEfficiency:
                 label=self.label,
             )
 
-            _file[label] = self.io_handler.get_output_directory(
-                label=self.label,
-                sub_dir="camera_efficiency",
-            ).joinpath(file_name)
+            _file[label] = self.io_handler.get_output_directory().joinpath(file_name)
         return _file
 
     def simulate(self):

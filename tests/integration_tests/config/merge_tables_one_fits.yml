@@ -9,7 +9,6 @@ applications:
     - SHOWERS
     - TRIGGERS
     - FILE_INFO
-    use_plain_output_path: true
   integration_tests:
   - output_file: merged.fits.gz
   test_name: one_fits

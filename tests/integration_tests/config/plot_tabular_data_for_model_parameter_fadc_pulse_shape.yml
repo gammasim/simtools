@@ -8,7 +8,6 @@ applications:
     plot_type: all
     site: North
     telescope: LSTN-design
-    use_plain_output_path: true
   integration_tests:
   - output_file: fadc_pulse_shape_1.0.0_North_LSTN-design.pdf
   test_name: fadc_pulse_shape
