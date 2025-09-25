@@ -157,7 +157,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(logging.INFO)
 
-    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_path = io_handler.IOHandler().get_output_directory()
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     axes = load_axes(args_dict["axes"])

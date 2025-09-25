@@ -6,7 +6,6 @@ applications:
     output_path: simtools-output/reports/productions/
     site: North
     telescope: LSTN-01
-    use_plain_output_path: true
   integration_tests:
   - output_file: 6.0/LSTN-01.md
   test_name: run

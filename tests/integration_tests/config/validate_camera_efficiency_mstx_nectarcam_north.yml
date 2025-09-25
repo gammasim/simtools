@@ -9,7 +9,6 @@ applications:
     zenith_angle: 0.
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
-    use_plain_output_path: true
     log_level: debug
   integration_tests:
   - output_file: validate_camera_efficiency_MSTx-NectarCam_nsb.pdf

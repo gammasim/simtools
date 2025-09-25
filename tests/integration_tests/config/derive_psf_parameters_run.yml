@@ -9,7 +9,6 @@ applications:
     telescope: LSTN-01
     test: true
     zenith: 20
-    use_plain_output_path: true
   integration_tests:
   - output_file: results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_derive_psf_parameters.ecsv
   test_name: run

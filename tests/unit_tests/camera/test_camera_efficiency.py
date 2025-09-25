@@ -40,10 +40,7 @@ def prepare_results_file(io_handler):
         "tests/resources/"
         "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
-    output_directory = io_handler.get_output_directory(
-        label="validate_camera_efficiency",
-        sub_dir="camera_efficiency",
-    )
+    output_directory = io_handler.get_output_directory()
     shutil.copy(test_file_name, output_directory)
     return output_directory.joinpath(test_file_name)
 

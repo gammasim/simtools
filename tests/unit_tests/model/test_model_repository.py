@@ -753,7 +753,6 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
         parameter_version=param_data["version"],
         output_file=f"{param}-{param_data['version']}.json",
         output_path=model_parameters_dir / telescope / param,
-        use_plain_output_path=True,
         unit=None,
         meta_parameter=False,
     )

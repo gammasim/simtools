@@ -149,9 +149,8 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    output_path = _io_handler.get_output_directory(label, sub_dir="")
 
-    manager = ProductionStatisticsHandler(args_dict, output_path=output_path)
+    manager = ProductionStatisticsHandler(args_dict, output_path=_io_handler.get_output_directory())
     manager.run()
 
 

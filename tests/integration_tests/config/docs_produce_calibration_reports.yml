@@ -4,7 +4,6 @@ applications:
   configuration:
     model_version: 6.0
     output_path: simtools-output/reports/productions/
-    use_plain_output_path: true
   integration_tests:
   - output_file: 6.0/ILLN-01.md
   model_version_use_current: true
