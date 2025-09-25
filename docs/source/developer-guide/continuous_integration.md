@@ -12,7 +12,7 @@ The simtools continuous integration tests, lints, and builds code, documentation
 | `CI-integrationtests` | x |  `docs/**`, `tests/unit_tests/**` | opened, synchronize | x | nightly |
 | `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - |
 | `CI-software-update` | - | - | - | - | monthly |
-| `build-simtools-production-image` | x | `docker/Dockerfile-simtelarray`, `docker/Dockerfile-prod-opt` | - | x | weekly (no deploy) |
+| `build-simtools-production-image` | x | `docker/Dockerfile-prod-opt` | - | x | weekly (no deploy) |
 | `build-simtools-dev-image` | x | `docker/Dockerfile-dev` | - | x | weekly (no deploy) |
 | `changelog` | x | - | opened, labeled, unlabeled, ready_for_review | - | - |
 | `pypi` | - | - | - | x | - |
