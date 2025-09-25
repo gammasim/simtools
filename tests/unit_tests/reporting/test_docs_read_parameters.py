@@ -14,14 +14,13 @@ DESCRIPTION = "Test parameter"
 SHORT_DESC = "Short"
 
 
-def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
+def test_get_all_parameter_descriptions(telescope_model_lst, db_config, tmp_path):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
     # Call get_all_parameter_descriptions
     description_dict = read_parameters.get_all_parameter_descriptions()
 
@@ -31,7 +30,7 @@ def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_conf
     assert isinstance(description_dict.get("focal_length").get("inst_class"), str)
 
 
-def test_produce_array_element_report(telescope_model_lst, io_handler, db_config, mocker):
+def test_produce_array_element_report(telescope_model_lst, db_config, tmp_path):
     """Test array element report generation with both observatory and telescope scenarios."""
     # Test observatory report path
     args = {
@@ -39,8 +38,7 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
         "model_version": telescope_model_lst.model_version,
         "observatory": True,
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     # Mock observatory parameters
     mock_obs_params = {
@@ -54,7 +52,7 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
         read_parameters.produce_array_element_report()
 
         # Verify observatory report was generated
-        obs_file = output_path / f"OBS-{args['site']}.md"
+        obs_file = tmp_path / f"OBS-{args['site']}.md"
         assert obs_file.exists()
 
         # Verify DB was called with correct parameters
@@ -68,7 +66,7 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
     # Test telescope report
     args["observatory"] = False
     args["telescope"] = telescope_model_lst.name
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     mock_telescope_params = {
         "focal_length": {
@@ -85,7 +83,7 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
         read_parameters.produce_array_element_report()
 
         # Verify telescope report was generated
-        tel_file = output_path / f"{telescope_model_lst.name}.md"
+        tel_file = tmp_path / f"{telescope_model_lst.name}.md"
         assert tel_file.exists()
 
         # Verify DB was called with correct parameters
@@ -163,7 +161,7 @@ def test__generate_plots(tmp_test_directory, db_config):
         read_parameters, "_plot_parameter_tables", return_value=["plot2"]
     ) as mock_plot:
         result = read_parameters._generate_plots(
-            "some_param", "1.0.0", input_file, tmp_test_directory, False
+            "some_param", "1.0.0", input_file, tmp_test_directory
         )
         assert result == ["plot2"]
         mock_plot.assert_called_once()
@@ -173,7 +171,7 @@ def test__generate_plots(tmp_test_directory, db_config):
         read_parameters, "_plot_camera_config", return_value=["camera_plot"]
     ) as mock_camera_plot:
         result = read_parameters._generate_plots(
-            "camera_config_file", "1.0.0", input_file, tmp_test_directory, False
+            "camera_config_file", "1.0.0", input_file, tmp_test_directory
         )
         assert result == ["camera_plot"]
         mock_camera_plot.assert_called_once()
@@ -192,21 +190,20 @@ def test__plot_parameter_tables(tmp_test_directory, db_config):
     args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
     result = read_parameters._plot_parameter_tables(
-        "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory), True
+        "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory)
     )
     assert result == ["pm_photoelectron_spectrum_1.0.0_North_LSTN-design"]
 
     args = {"telescope": None, "site": "North", "model_version": "6.0.0"}
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
     result = read_parameters._plot_parameter_tables(
-        "camera_config_file", "1.0.0", Path(tmp_test_directory), False
+        "camera_config_file", "1.0.0", Path(tmp_test_directory)
     )
     assert result == []
 
 
-def test__format_parameter_value(io_handler, db_config):
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+def test__format_parameter_value(db_config, tmp_path):
+    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=tmp_path)
     parameter_name = "test"
 
     mock_data_1 = [[24.74, 9.0, 350.0, 1066.0], ["ns", "ns", "V", "V"], False, "1.0.0"]
@@ -226,34 +223,8 @@ def test__format_parameter_value(io_handler, db_config):
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
 
 
-def test__wrap_at_underscores(io_handler, db_config):
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
-
-    # "this_is_a_test" -> parts: ['this', 'is', 'a', 'test']
-    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 -> wrap
-    # before "test"
-    result_1 = read_parameters._wrap_at_underscores("this_is_a_test", 10)
-    assert result_1 == "this_is_a test"
-
-    result_2 = read_parameters._wrap_at_underscores("this_is_a_really_long_test", 10)
-    assert result_2 == "this_is_a really long_test"
-
-    # No underscores -> nothing to wrap
-    result_3 = read_parameters._wrap_at_underscores("simpletext", 10)
-    assert result_3 == "simpletext"
-
-    # Whole string fits under max width
-    result_4 = read_parameters._wrap_at_underscores("this_is_short", 20)
-    assert result_4 == "this_is_short"
-
-    result_5 = read_parameters._wrap_at_underscores("this_is_exactly_10", 10)
-    assert result_5 == "this_is exactly_10"
-
-
-def test__group_model_versions_by_parameter_version(io_handler, db_config):
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+def test__group_model_versions_by_parameter_version(db_config, tmp_path):
+    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=tmp_path)
 
     mock_data = {
         "nsb_pixel_rate": [
@@ -413,13 +384,10 @@ def test__compare_parameter_across_versions(tmp_test_directory, db_config):
     assert "none_valued_param" not in comparison_data
 
 
-def test__compare_parameter_across_versions_empty_param_dict(io_handler, db_config):
+def test__compare_parameter_across_versions_empty_param_dict(db_config, tmp_path):
     """Test _compare_parameter_across_versions with empty parameter dictionaries."""
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     # Test data with empty parameter dictionary for version 5.0.0
     mock_data = {
@@ -448,15 +416,14 @@ def test__compare_parameter_across_versions_empty_param_dict(io_handler, db_conf
     assert qe_comparison[0]["parameter_version"] == "1.0.0"
 
 
-def test_get_array_element_parameter_data_none_value(io_handler, db_config, mocker):
+def test_get_array_element_parameter_data_none_value(db_config, mocker, tmp_path):
     """Test that get_array_element_parameter_data correctly handles None values."""
     args = {
         "telescope": "tel",
         "site": "North",
         "model_version": "v1",
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     # Mock the model_parameters that will be filtered through
     model_params = {"test_param": "description"}
@@ -504,11 +471,10 @@ def test_get_array_element_parameter_data_none_value(io_handler, db_config, mock
     assert read_parameters.db.get_model_parameters.called
 
 
-def test_produce_observatory_report(io_handler, db_config, mocker):
+def test_produce_observatory_report(db_config, mocker, tmp_path):
     """Test generation of observatory parameter report with all parameter types and empty data."""
     args = {"site": "North", "model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config, args, output_path)
+    read_parameters = ReadParameters(db_config, args, tmp_path)
 
     # Test with empty parameter data
     mock_logger = mocker.patch("logging.Logger.warning")
@@ -530,7 +496,7 @@ def test_produce_observatory_report(io_handler, db_config, mocker):
         )
 
         # Verify no file was created
-        output_file = Path(output_path) / f"OBS-{args['site']}.md"
+        output_file = Path(tmp_path) / f"OBS-{args['site']}.md"
         assert not output_file.exists()
 
     # Test with valid parameter data
@@ -587,7 +553,7 @@ def test_produce_observatory_report(io_handler, db_config, mocker):
         )
 
         # Check output file exists and contains expected content
-        output_file = Path(output_path) / f"OBS-{args['site']}.md"
+        output_file = Path(tmp_path) / f"OBS-{args['site']}.md"
         assert output_file.exists()
 
         content = output_file.read_text()
@@ -597,11 +563,10 @@ def test_produce_observatory_report(io_handler, db_config, mocker):
         assert "none_valued_param" not in content
 
 
-def test__write_array_layouts_section(io_handler, db_config, mocker):
+def test__write_array_layouts_section(db_config, tmp_path):
     """Test writing array layouts section."""
     args = {"site": "North", "model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config, args, output_path)
+    read_parameters = ReadParameters(db_config, args, tmp_path)
 
     mock_layouts = [
         {
@@ -631,11 +596,10 @@ def test__write_array_layouts_section(io_handler, db_config, mocker):
     assert "![Layout1 Layout](/_images/OBS-North_Layout1_6-0-0.png)" in output
 
 
-def test__write_array_triggers_section(io_handler, db_config):
+def test__write_array_triggers_section(db_config, tmp_path):
     """Test writing array triggers section."""
     args = {}
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config, args, output_path)
+    read_parameters = ReadParameters(db_config, args, tmp_path)
 
     mock_triggers = [
         {
@@ -667,11 +631,10 @@ def test__write_array_triggers_section(io_handler, db_config):
     assert "| Trigger2 | 3 telescopes | 150 ns | No | 75 m |" in output
 
 
-def test__write_parameters_table(io_handler, db_config):
+def test__write_parameters_table(db_config, tmp_path):
     """Test writing parameters table."""
     args = {}
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config, args, output_path)
+    read_parameters = ReadParameters(db_config, args, tmp_path)
 
     mock_params = {
         "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0.0"},
@@ -697,21 +660,19 @@ def test__write_parameters_table(io_handler, db_config):
     )
 
 
-def test_model_version_setter_with_valid_string(db_config, io_handler):
+def test_model_version_setter_with_valid_string(db_config, tmp_path):
     """Test setting model_version with a valid string."""
     args = {"model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     read_parameters.model_version = "7.0.0"
     assert read_parameters.model_version == "7.0.0"
 
 
-def test_model_version_setter_with_invalid_list(db_config, io_handler):
+def test_model_version_setter_with_invalid_list(db_config, tmp_path):
     """Test setting model_version with an invalid list containing more than one element."""
     args = {"model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     error_message = "Only one model version can be passed to ReadParameters, not a list."
 
@@ -799,14 +760,13 @@ def test_model_version_setter_with_invalid_list(db_config, io_handler):
     ],
 )
 def test_get_simulation_configuration_data(
-    simulation_software, param_dict, descriptions, io_handler, db_config
+    simulation_software, param_dict, descriptions, db_config, tmp_path
 ):
     args = {
         "model_version": "6.0.0",
         "simulation_software": simulation_software,
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     with (
         patch.object(read_parameters, "get_all_parameter_descriptions", return_value=descriptions),
@@ -839,15 +799,14 @@ def test_get_simulation_configuration_data(
             assert data[1][5] == "Short description 2"  # Short description
 
 
-def test__write_to_file(telescope_model_lst, io_handler, db_config):
+def test__write_to_file(telescope_model_lst, db_config, tmp_path):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
         "simulation_software": "corsika",
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     mock_data = [
         [telescope_model_lst.name, "param_1", "1.0.0", "5.0", "Full description 1", "Short 1"],
@@ -861,7 +820,7 @@ def test__write_to_file(telescope_model_lst, io_handler, db_config):
         ],
     ]
 
-    output_file = output_path / "output.md"
+    output_file = tmp_path / "output.md"
 
     with output_file.open("w") as f:
         read_parameters._write_to_file(mock_data, f)
@@ -874,17 +833,14 @@ def test__write_to_file(telescope_model_lst, io_handler, db_config):
     assert "0.3 GeV, 0.2 GeV" in result
 
 
-def test_produce_simulation_configuration_report(io_handler, db_config):
+def test_produce_simulation_configuration_report(db_config, tmp_path):
     args = {
         "telescope": "LSTN-01",
         "site": "North",
         "model_version": "6.0.0",
         "simulation_software": "sim_telarray",
     }
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"productions/{args.get('model_version')}"
-    )
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     mock_data = [
         (
@@ -908,7 +864,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
     with patch.object(read_parameters, "get_simulation_configuration_data", return_value=mock_data):
         read_parameters.produce_simulation_configuration_report()
 
-        report_file = output_path / f"configuration_{read_parameters.software}.md"
+        report_file = tmp_path / f"configuration_{read_parameters.software}.md"
         assert report_file.exists()
 
         content = report_file.read_text()
@@ -920,24 +876,21 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
 
     # testing for corsika
     args["simulation_software"] = "corsika"
-    read_parameters_corsika = ReadParameters(
-        db_config=db_config, args=args, output_path=output_path
-    )
+    read_parameters_corsika = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     with patch.object(
         read_parameters_corsika, "get_simulation_configuration_data", return_value=mock_data
     ):
         read_parameters_corsika.produce_simulation_configuration_report()
 
-        report_file_corsika = output_path / f"configuration_{read_parameters.software}.md"
+        report_file_corsika = tmp_path / f"configuration_{read_parameters.software}.md"
         assert report_file_corsika.exists()
 
 
-def test_produce_calibration_reports(io_handler, db_config, mocker):
+def test_produce_calibration_reports(db_config, mocker, tmp_path):
     """Test generation of calibration report for an array element."""
     args = {"model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
     description = "Description for laser events"
     # Mock array elements
     mock_array_elements = ["ILLN-01"]
@@ -1039,7 +992,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
         read_parameters.produce_calibration_reports()
 
     # Verify output file exists
-    output_file = Path(output_path) / "ILLN-01.md"
+    output_file = Path(tmp_path) / "ILLN-01.md"
     assert output_file.exists()
 
     # Check file content
@@ -1053,7 +1006,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     assert "| laser events |" in content
 
     # Check comparison reports
-    output_path_2 = Path(output_path).parent.parent / "parameters"
+    output_path_2 = Path(tmp_path).parent.parent / "parameters"
     output_file_2 = output_path_2 / "ILLN-01/array_element_position_ground.md"
     assert output_file_2.exists()
     content_2 = output_file_2.read_text()
@@ -1061,12 +1014,11 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     assert "**Telescope**: ILLN-01" in content_2
 
 
-def test_get_calibration_data(io_handler, db_config):
+def test_get_calibration_data(db_config, tmp_path):
     args = {
         "model_version": "6.0.0",
     }
-    output_path = io_handler.get_output_directory(sub_dir=f"{args.get('model_version')}")
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_path)
 
     mock_data = {
         "dark_events": {
@@ -1253,7 +1205,7 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
     )
 
     # Monkeypatch _convert_to_md to avoid file IO and return a relative path
-    def _fake_convert_to_md(self, parameter, parameter_version, input_file, design_type):
+    def _fake_convert_to_md(self, parameter, parameter_version, input_file):
         return "_data_files/myfile.md"
 
     monkeypatch.setattr(ReadParameters, "_convert_to_md", _fake_convert_to_md)
@@ -1335,3 +1287,164 @@ def test_is_markdown_link():
     assert read_parameters.is_markdown_link("[text](target") is False
     assert read_parameters.is_markdown_link("[text]target)") is False
     assert read_parameters.is_markdown_link("") is False
+
+
+def test_write_file_flag_section_non_camera(db_config, tmp_path):
+    """Parameter not 'camera_config_file' should write a parameter plot link."""
+    rp = ReadParameters(
+        db_config=db_config,
+        args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
+        output_path=tmp_path,
+    )
+
+    # Prepare comparison_data for a non-camera parameter
+    comparison_data = {
+        "param_x": [{"parameter_version": "1.0.0", "model_version": "6.0.0", "file_flag": True}]
+    }
+
+    # Monkeypatch telescope identifier to a simple string to avoid DB calls
+    rp._get_telescope_identifier = lambda mv=None: "LSTN-01"
+
+    buf = StringIO()
+    with patch("simtools.io.io_handler.IOHandler.get_output_directory", return_value=tmp_path):
+        rp._write_file_flag_section(buf, "param_x", comparison_data)
+    content = buf.getvalue()
+
+    assert "The latest parameter version is plotted below." in content
+    assert "![Parameter plot.]" in content
+
+
+def test_write_file_flag_section_camera_config_file_with_match(tmp_path, db_config):
+    """camera_config_file branch should extract filename from markdown link and write camera plot link."""
+    rp = ReadParameters(
+        db_config=db_config,
+        args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
+        output_path=tmp_path,
+    )
+
+    # Latest entry contains a markdown link with filename
+    comparison_data = {
+        "camera_config_file": [
+            {
+                "parameter_version": "1.0.0",
+                "model_version": "6.0.0",
+                "file_flag": True,
+                "value": "[cam_config.dat](link)",
+            }
+        ]
+    }
+
+    # Ensure _get_telescope_identifier doesn't error
+    rp._get_telescope_identifier = lambda mv=None: "LSTN-01"
+
+    buf = StringIO()
+    with patch("simtools.io.io_handler.IOHandler.get_output_directory", return_value=tmp_path):
+        rp._write_file_flag_section(buf, "camera_config_file", comparison_data)
+    content = buf.getvalue()
+
+    assert "The latest parameter version is plotted below." in content
+    assert "![Camera configuration plot.]" in content
+    assert ".png" in content
+
+
+def test_write_single_calibration_report_emphasis(tmp_path, db_config):
+    """Ensure emphasized parameters keep emphasis and underscores are replaced by spaces in display."""
+    output_file = tmp_path / "ILLN-01.md"
+
+    rp = ReadParameters(db_config=db_config, args={"model_version": "6.0.0"}, output_path=tmp_path)
+
+    # Build data grouped by class with one emphasized and one normal parameter
+    data = [
+        ["Calibration", "***laser_events***", "1.0.0", "10", "Desc", None],
+        ["Calibration", "pedestal_events", "1.0.0", "100", "Desc2", "Short2"],
+    ]
+
+    # Call the writer directly; patch names.is_design_type to avoid validating the synthetic name
+    with patch.object(names, "is_design_type", return_value=False):
+        rp._write_single_calibration_report(output_file, "ILLN-01", data, "ILLN-design")
+
+    content = output_file.read_text(encoding="utf-8")
+    # Emphasized name should preserve bold/italics and replace underscore with space
+    assert "***laser events***" in content
+    # Normal parameter should have spaces for readability
+    assert "pedestal events" in content
+
+
+def test_write_file_flag_section_camera_config_latest_value_none(tmp_path, db_config):
+    """camera_config_file branch: latest value for latest model exists but is None."""
+
+    rp = ReadParameters(
+        db_config=db_config,
+        args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
+        output_path=tmp_path,
+    )
+
+    # Create comparison_data where the latest model version is present but its value is None
+    comparison_data = {
+        "camera_config_file": [
+            {
+                "parameter_version": "1.0.0",
+                "model_version": "6.0.0",
+                "file_flag": True,
+                "value": None,
+            }
+        ]
+    }
+
+    rp._get_telescope_identifier = lambda mv=None: "LSTN-01"
+
+    buf = StringIO()
+    rp._write_file_flag_section(buf, "camera_config_file", comparison_data)
+    content = buf.getvalue()
+
+    # The method writes the intro line and then early-returns when latest_value is None
+    assert "The latest parameter version is plotted below." in content
+    # No image link should be present
+    assert "![Camera configuration plot.]" not in content
+
+
+def test_write_file_flag_section_camera_config_no_markdown_match(tmp_path, db_config):
+    """camera_config_file branch: latest value exists but does not contain a markdown link."""
+    rp = ReadParameters(
+        db_config=db_config,
+        args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
+        output_path=tmp_path,
+    )
+
+    # Latest entry contains a plain string without a markdown link
+    comparison_data = {
+        "camera_config_file": [
+            {
+                "parameter_version": "1.0.0",
+                "model_version": "6.0.0",
+                "file_flag": True,
+                "value": "no link here",
+            }
+        ]
+    }
+
+    rp._get_telescope_identifier = lambda mv=None: "LSTN-01"
+
+    buf = StringIO()
+    rp._write_file_flag_section(buf, "camera_config_file", comparison_data)
+    content = buf.getvalue()
+
+    # Intro present, but regex didn't match so no camera image link should be written
+    assert "The latest parameter version is plotted below." in content
+    assert "![Camera configuration plot.]" not in content
+
+
+def test_write_single_calibration_report_non_str_param(tmp_path, db_config):
+    """Ensure non-string parameter names are written unchanged."""
+    output_file = tmp_path / "ILLN-02.md"
+
+    rp = ReadParameters(db_config=db_config, args={"model_version": "6.0.0"}, output_path=tmp_path)
+
+    # Parameter value is an int (non-str) to hit the 'else: new_param = param' branch
+    data = [["Calibration", 12345, "1.0.0", "10", "Desc", None]]
+
+    rp._write_single_calibration_report(output_file, "ILLN-02", data, "ILLN-design")
+
+    content = output_file.read_text(encoding="utf-8")
+    # The numeric parameter name should appear unchanged in the output
+    assert "12345" in content
