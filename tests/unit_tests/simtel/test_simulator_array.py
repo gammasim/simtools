@@ -23,7 +23,6 @@ def simtel_runner(corsika_config_mock_array_model, simtel_path):
 
 def test_simtel_runner(simtel_runner):
     sr = simtel_runner
-    assert "sim_telarray" in str(sr._directory["output"])
     assert "sim_telarray" in str(sr._directory["data"])
     assert isinstance(sr._directory["data"], Path)
 

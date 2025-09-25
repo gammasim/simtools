@@ -186,7 +186,7 @@ def test_get_data_file_path(runner_service, corsika_runner_mock_array_model, fil
 
 
 def test_get_sub_file_path(runner_service, file_base_name, io_handler):
-    script_file_dir = io_handler.get_output_directory("corsika").joinpath("scripts")
+    script_file_dir = io_handler.get_output_directory().joinpath("scripts")
     assert runner_service._get_sub_file_path(
         file_type="script",
         file_name=file_base_name,
@@ -198,7 +198,7 @@ def test_get_sub_file_path(runner_service, file_base_name, io_handler):
         mode="err",
     ) == script_file_dir.joinpath(f"sub_{file_base_name}.err")
 
-    log_file_dir = io_handler.get_output_directory("corsika").joinpath("sub_logs")
+    log_file_dir = io_handler.get_output_directory().joinpath("sub_logs")
     assert runner_service._get_sub_file_path(
         file_type="sub_log",
         file_name=file_base_name,
