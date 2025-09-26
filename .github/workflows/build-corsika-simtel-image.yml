@@ -107,7 +107,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
+          platforms: ${{ matrix.version.avx_instruction == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
             BUILD_OPT=${{ matrix.production.build_opt }}
             EXTRA_DEF=${{ matrix.production.extra_def }}
@@ -117,7 +118,8 @@ jobs:
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
           secrets: |
             gitlab_token=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
-          push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+          # push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+          push: True
           file: ./docker/Dockerfile-corsika-simtel
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
