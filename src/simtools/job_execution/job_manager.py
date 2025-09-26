@@ -54,6 +54,7 @@ def retry_command(command, max_attempts=3, delay=10):
             else:
                 logger.error(f"Command failed after {max_attempts} attempts")
                 raise exc from None
+
     return False
 
 
