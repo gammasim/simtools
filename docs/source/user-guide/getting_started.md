@@ -63,7 +63,7 @@ simtools is available as a Python package from [PypPi](https://pypi.org/project/
 To install, prepare a python environment, e.g.:
 
 ```console
-mamba create --name simtools-prod python=3.11
+mamba create --name simtools-prod python=3.12
 mamba activate simtools-prod
 ```
 
