@@ -1,5 +1,5 @@
 ---
-name: build-simtools-dev
+name: docker-simtools-dev
 # Build simtools images for developers based on CORSIKA / sim_telarray images (no optimizations)
 
 on:
