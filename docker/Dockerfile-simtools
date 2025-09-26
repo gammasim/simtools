@@ -3,6 +3,11 @@
 #
 # This Dockerfile adds simtools to a base image that already contains
 # CORSIKA and sim_telarray.
+#
+# hadolint global ignore=DL3007,DL3013,DL3041,SC1091
+# - DL3007, DL3041: ignore warnings about using latest
+# - DL3013: ignore warnings about installing non-specific versions with microdnf)
+# - SC1091: ignore warning about not being able to source the bashrc
 
 ARG BASE_IMAGE
 ARG BUILD_BRANCH=main
@@ -16,7 +21,6 @@ ARG PYTHON_VERSION
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# hadolint ignore=DL3041
 RUN microdnf update -y && microdnf install -y \
     git \
     python${PYTHON_VERSION}-pip \
@@ -26,7 +30,6 @@ RUN microdnf update -y && microdnf install -y \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
 
-# hadolint ignore=SC1091
 RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
