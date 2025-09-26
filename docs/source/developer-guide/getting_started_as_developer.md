@@ -1,7 +1,7 @@
 # Getting Started as Developer
 
 The developer environment for simtools consists of the simtools packages, the CORSIKA/sim_telarray packages, and the model database.
-The usage of the docker container for developers is strongly recommended and assumed to be the default environment for developers.
+The usage of the Docker container for developers is strongly recommended and assumed to be the default environment for developers.
 Note the correct setting of environment variables to connect to the model database (see also the [user's guide](../user-guide/getting_started.md))
 and to point to the simulation software paths.
 
@@ -14,7 +14,7 @@ The images contain:
 - a python environment with all simtools dependencies (including the `dev` options of the project)
 - g++ compiler and other build tools
 
-The corresponding docker file is [./docker/Dockerfile-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-dev).
+The corresponding Docker file is [./docker/Dockerfile-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-dev).
 
 The simtools package is not installed in the container, but should be installed from source. This allows to develop using your editor of choice.
 
@@ -58,7 +58,7 @@ mamba activate simtools-dev
 pip install -e .
 ```
 
-To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the [CORSIKA/sim_telarray docker file](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-prod-opt).
+To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the [CORSIKA/sim_telarray Docker file](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-prod-opt).
 
 ```{note}
 The installation of CORSIKA/sim_telarray from source requires access to the
