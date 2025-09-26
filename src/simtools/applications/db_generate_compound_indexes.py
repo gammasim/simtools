@@ -40,25 +40,12 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    # databases without internal databases we don't have rights to modify
-    databases = [
-        d for d in db.db_client.list_database_names() if d not in ("config", "admin", "local")
-    ]
-    requested = db.get_db_name(
-        db_name=args_dict["db_name"],
-        db_simulation_model_version=args_dict.get("db_simulation_model_version"),
-        model_name=args_dict.get("db_simulation_model"),
-    )
-    if requested != "all" and requested not in databases:
-        raise ValueError(
-            f"Requested database '{requested}' not found. "
-            f"Following databases are available: {', '.join(databases)}"
-        )
 
-    databases = databases if requested == "all" else [requested]
-    for db_name in databases:
-        logger.info(f"Generating compound indexes for database: {db_name}")
-        db.generate_compound_indexes(db_name=db_name)
+    db.generate_compound_indexes_for_databases(
+        db_name=args_dict["db_name"],
+        db_simulation_model=args_dict.get("db_simulation_model"),
+        db_simulation_model_version=args_dict.get("db_simulation_model_version"),
+    )
 
 
 if __name__ == "__main__":

@@ -1515,3 +1515,18 @@ def test_get_db_name(db):
         )
         == "test_db"
     )
+
+
+def test_is_remote_database():
+    test_db = db_handler.DatabaseHandler(None)
+
+    assert test_db.is_remote_database() is False
+
+    test_db.mongo_db_config = {"db_server": "remote.server.com"}
+    assert test_db.is_remote_database() is True
+
+    test_db.mongo_db_config = {"db_server": "localhost"}
+    assert test_db.is_remote_database() is False
+
+    test_db.mongo_db_config = {"db_server": ""}
+    assert test_db.is_remote_database() is False
