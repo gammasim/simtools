@@ -1,11 +1,11 @@
 # Getting Started as Developer
 
 The developer environment for simtools consists of the simtools packages, the CORSIKA/sim_telarray packages, and the model database.
-The usage of the Docker container for developers is strongly recommended and assumed to be the default environment for developers.
+The usage of the container for developers is strongly recommended and assumed to be the default environment for developers.
 Note the correct setting of environment variables to connect to the model database (see also the [user's guide](../user-guide/getting_started.md))
 and to point to the simulation software paths.
 
-## Docker Environment for Developers
+## Container Environment for Developers
 
 Container images for developers are available from the [GitHub container registry](https://github.com/gammasim/simtools/pkgs/container/simtools-dev).
 The images contain:
@@ -18,7 +18,7 @@ The corresponding Docker file is [./docker/Dockerfile-dev](https://github.com/ga
 
 The simtools package is not installed in the container, but should be installed from source. This allows to develop using your editor of choice.
 
-The following steps outline how to set up the development environment using Docker:
+The following steps outline how to set up the development environment using containers
 
 1. Clone simtools from GitHub into a directory `external/simtools`:
 
@@ -32,7 +32,7 @@ The following steps outline how to set up the development environment using Dock
 2. Start up a container (the image will be downloaded, if it is not available in your environment):
 
     ```bash
-    docker run --rm -it -v "$(pwd)/external:/workdir/external" \
+    podman run --rm -it -v "$(pwd)/external:/workdir/external" \
         ghcr.io/gammasim/simtools-dev:latest \
         bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
     ```
@@ -41,7 +41,7 @@ The following steps outline how to set up the development environment using Dock
     the environmental variable `$SIMTOOLS_SIMTEL_PATH` and those for the database access are automatically set
     (if variables are set correctly in the `.env` file).
 
-## Installation without Docker
+## Installation without Containers
 
 Developers can install simtools directly from the [simtools GitHub repository](https://github.com/gammasim/simtools):
 

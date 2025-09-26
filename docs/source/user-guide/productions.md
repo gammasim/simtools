@@ -91,7 +91,7 @@ Container images are available from the GitHub and CTAO container registries and
 Example:
 
 ```bash
-apptainer build simtools.sif docker://ghcr.io/gammasim/simtools-prod-250304-corsika-78000-bernlohr-1.69-prod6-baseline-qgs3-avx2:20250507-154410
+apptainer build simtools.sif docker://ghcr.io/gammasim/simtools-250304-corsika-78000-bernlohr-1.69-prod6-baseline-qgs3-avx2:20250507-154410
 ```
 
 #### Running Grid Productions
