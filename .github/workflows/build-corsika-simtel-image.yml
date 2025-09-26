@@ -118,9 +118,7 @@ jobs:
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
           secrets: |
             gitlab_token=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
-          # TODO
-          # push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
-          push: true
+          push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-corsika-simtel
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
