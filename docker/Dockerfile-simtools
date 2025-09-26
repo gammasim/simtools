@@ -22,11 +22,13 @@ ARG PYTHON_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN microdnf update -y && microdnf install -y \
-    git gcc gcc-c++ epel-release && \
-    microdnf install -y \
-    "python${PYTHON_VERSION}" "python${PYTHON_VERSION}-pip" "python${PYTHON_VERSION}-devel" && \
+    git gcc gcc-c++ \
+    python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
+
+# Create python symlink pointing to the specified Python version
+RUN ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
 RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
