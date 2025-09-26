@@ -16,6 +16,7 @@ ARG PYTHON_VERSION
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# hadolint ignore=DL3041
 RUN microdnf update -y && microdnf install -y \
     git \
     python${PYTHON_VERSION}-pip \
@@ -25,6 +26,7 @@ RUN microdnf update -y && microdnf install -y \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
 
+# hadolint ignore=SC1091
 RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
