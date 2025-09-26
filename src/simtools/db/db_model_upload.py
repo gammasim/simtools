@@ -31,6 +31,7 @@ def add_complete_model(
     if not _confirm_remote_database_upload(db):
         return
 
+    repository_dir = None
     try:
         repository_dir = clone_simulation_model_repository(
             tmp_dir,
@@ -55,7 +56,7 @@ def add_complete_model(
     except Exception as exc:
         raise RuntimeError(f"Upload of simulation model failed: {exc}") from exc
     finally:
-        if repository_dir.exists():
+        if repository_dir is not None and repository_dir.exists():
             shutil.rmtree(repository_dir)
 
     logger.info("Upload of simulation model completed successfully")
