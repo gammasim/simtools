@@ -8,6 +8,32 @@ set -e
 
 DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
 
+# Retry function for commands that may fail due to network issues
+retry_command() {
+    local max_attempts=3
+    local delay=10
+    local attempt=1
+    local command="$*"
+
+    while [ $attempt -le $max_attempts ]; do
+        echo "Attempt $attempt of $max_attempts: $command"
+        if eval "$command"; then
+            echo "Command succeeded on attempt $attempt"
+            return 0
+        else
+            echo "Command failed on attempt $attempt"
+            if [ $attempt -lt $max_attempts ]; then
+                echo "Waiting ${delay}s before retry..."
+                sleep $delay
+            fi
+            attempt=$((attempt + 1))
+        fi
+    done
+
+    echo "Command failed after $max_attempts attempts"
+    return 1
+}
+
 # Check that this script is not sourced but executed
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     echo "This script must be executed, not sourced."
@@ -30,10 +56,10 @@ rm -rf ./tmp_model_parameters
 
 CURRENT_DIR=$(pwd)
 if [ -n "$DB_SIMULATION_MODEL_BRANCH" ]; then
-  git clone --depth=1 -b "$DB_SIMULATION_MODEL_BRANCH" $DB_SIMULATION_MODEL_URL ./tmp_model_parameters
+  retry_command "git clone --depth=1 -b \"$DB_SIMULATION_MODEL_BRANCH\" \"$DB_SIMULATION_MODEL_URL\" ./tmp_model_parameters"
 else
   # generates detached head warning - fine for us.
-  git clone --branch "$DB_SIMULATION_MODEL_VERSION" --depth 1 "$DB_SIMULATION_MODEL_URL" ./tmp_model_parameters
+  retry_command "git clone --branch \"$DB_SIMULATION_MODEL_VERSION\" --depth 1 \"$DB_SIMULATION_MODEL_URL\" ./tmp_model_parameters"
 fi
 
 cd ./tmp_model_parameters || exit
