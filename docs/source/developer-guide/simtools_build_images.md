@@ -1,7 +1,7 @@
 # Build Images
 
 Pre-built images are available from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
-Replace the command by the container run engine of your choice (e.g., docker).
+Replace the command by the container run engine of your choice (e.g., Docker).
 
 ## Build a simulation production container
 
@@ -31,7 +31,7 @@ podman run --rm -it -v "$(pwd)/external:/workdir/external" simtools bash
 
 ## Build a developers container locally
 
-To build an image locally run in the [docker](https://github.com/gammasim/simtools/tree/main/docker) directory:
+To build an image locally run in the [./docker](https://github.com/gammasim/simtools/tree/main/docker) directory:
 
 ```bash
 podman build -f Dockerfile-dev -t simtools-dev .
