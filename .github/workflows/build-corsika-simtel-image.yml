@@ -1,16 +1,17 @@
 ---
-name: build-corsika-simtel-image
+name: build-corsika-simtel
 # Build and push CORSIKA / sim_telarray base images for different CPU architectures.
+# The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
+#
+# The images are built and pushed when manually triggered (workflow_dispatch).
 
 on:
   workflow_dispatch:
   pull_request:
     paths:
       - docker/Dockerfile-corsika-simtel
-  release:
-    types: [published]
   schedule:
-    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC (build only)
+    - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
 
 env:
   REGISTRY: ghcr.io
@@ -118,8 +119,7 @@ jobs:
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
           secrets: |
             gitlab_token=${{ secrets.CORSIKA_OPT_PATCHES_GITLAB }}
-          # push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
-          push: True
+          push: ${{ github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-corsika-simtel
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
