@@ -1,5 +1,10 @@
 ---
-name: build-simtools-production-image
+name: build-simtools-production-image-deprecated
+# DEPRECATED: This workflow has been split into two separate workflows:
+# 1. build-corsika-simtel-image.yml - Builds base CORSIKA/sim_telarray images
+# 2. build-simtools-image.yml - Builds simtools images using the base images
+#
+# Original description:
 # Build and push vanilla CORSIKA / sim_telarray image and simtools images for different CPU architectures.
 # Integration tests are running on the non-optimized ('no_opt') image.
 
