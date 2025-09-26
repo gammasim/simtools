@@ -6,7 +6,7 @@ name: build-simtools
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["build-corsika-simtel-image"]
+    workflows: ["build-corsika-simtel"]
     types: [completed]
   pull_request:
     paths:
