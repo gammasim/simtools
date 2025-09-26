@@ -20,8 +20,9 @@ FROM ghcr.io/gammasim/corsika-simtel-${SIMTEL_VERSION}-corsika-${CORSIKA_VERSION
 WORKDIR /workdir
 
 RUN microdnf update -y && microdnf install -y \
-    findutils gcc-c++ git \
-    "python${PYTHON_VERSION}-pip" "python${PYTHON_VERSION}-devel" wget && \
+    findutils gcc-c++ git wget epel-release && \
+    microdnf install -y \
+    "python${PYTHON_VERSION}" "python${PYTHON_VERSION}-pip" "python${PYTHON_VERSION}-devel" && \
     microdnf clean all
 
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \

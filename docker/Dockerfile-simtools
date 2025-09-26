@@ -22,11 +22,9 @@ ARG PYTHON_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN microdnf update -y && microdnf install -y \
-    git \
-    python${PYTHON_VERSION}-pip \
-    python${PYTHON_VERSION}-devel \
-    gcc \
-    gcc-c++ && \
+    git gcc gcc-c++ epel-release && \
+    microdnf install -y \
+    "python${PYTHON_VERSION}" "python${PYTHON_VERSION}-pip" "python${PYTHON_VERSION}-devel" && \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
 
