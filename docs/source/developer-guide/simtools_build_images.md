@@ -31,7 +31,7 @@ podman run --rm -it -v "$(pwd)/external:/workdir/external" simtools bash
 
 ## Build a developers container locally
 
-To build an image locally run in the [./docker](https://github.com/gammasim/simtools/tree/main/docker) directory:
+To build an image locally run in the [`./docker`](https://github.com/gammasim/simtools/tree/main/docker) directory:
 
 ```bash
 podman build -f Dockerfile-dev -t simtools-dev .
