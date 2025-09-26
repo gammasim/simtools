@@ -18,6 +18,7 @@ ARG AVX_INSTRUCTION="no_opt"
 ARG PYTHON_VERSION="3.12"
 FROM ghcr.io/gammasim/corsika-simtel-${SIMTEL_VERSION}-corsika-${CORSIKA_VERSION}-bernlohr-${BERNLOHR_VERSION}-${BUILD_OPT}-${HADRONIC_MODEL}-${AVX_INSTRUCTION}:latest
 WORKDIR /workdir
+ARG PYTHON_VERSION
 
 RUN microdnf update -y && microdnf install -y \
     findutils gcc-c++ git wget \
