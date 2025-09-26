@@ -49,6 +49,7 @@ jobs:
       - name: Lint Docker files
         run: |
           find ./docker -name "Dockerfile-*" -print0 | while IFS= read -r -d '' dockerfile; do
+            echo "HADOLINT: $dockerfile"
             docker run --rm -i ghcr.io/hadolint/hadolint < "$dockerfile"
           done
 

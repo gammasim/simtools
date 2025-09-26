@@ -19,7 +19,7 @@ These images eliminate all manual installation steps and allow direct execution 
 
 ### Pre-built Images
 
-- **Production images** (`simtools-prod`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
+- **Production images** (`simtools`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
   - Different CORSIKA/sim_telarray versions
   - Compile options (e.g., `prod5`, `prod6`)
   - CPU optimizations (e.g., `avx2`, `avx512`, `no_opt`)
@@ -34,10 +34,10 @@ Pre-built images are hosted on the [simtools package registry](https://github.co
 Start an Interactive Container:
 
 ```bash
-docker run --rm -it \
+podman run --rm -it \
     --env-file .env \
     -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
+    ghcr.io/gammasim/simtools-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
     bash
 ```
 
@@ -46,10 +46,10 @@ Any simtools application can be run inside the container.
 Run a simtools application:
 
 ```bash
-docker run --rm -it \
+podman run --rm -it \
     --env-file .env \
     -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
+    ghcr.io/gammasim/simtools-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
     simtools-convert-geo-coordinates-of-array-elements \
     --input ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
     --export ground \
