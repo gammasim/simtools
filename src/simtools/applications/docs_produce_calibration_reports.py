@@ -6,7 +6,7 @@ import logging
 
 from simtools.configuration import configurator
 from simtools.io import io_handler
-from simtools.reporting.docs_read_parameters import ReadParameters
+from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.utils import general as gen
 
 
@@ -15,6 +15,12 @@ def _parse(label):
     config = configurator.Configurator(
         label=label,
         description=("Produce a markdown report for calibration parameters."),
+    )
+
+    config.parser.add_argument(
+        "--all_model_versions",
+        action="store_true",
+        help="Produce reports for all model versions.",
     )
 
     return config.initialize(
@@ -33,16 +39,17 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
-    read_parameters = ReadParameters(
-        db_config=db_config, args=args, output_path=output_path / f"{args.get('model_version')}"
-    )
+    generator = ReportGenerator(db_config=db_config, args=args, output_path=output_path)
+    generator.auto_generate_calibration_reports()
 
-    read_parameters.produce_calibration_reports()
-
-    logger.info(
-        f"Calibation reports for model version {args.get('model_version')} produced successfully."
-    )
-    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
+    if args.get("all_model_versions"):
+        logger.info("Calibration reports for all model versions produced successfully.")
+    else:
+        logger.info(
+            f"Calibration reports for model version {args.get('model_version')}"
+            " produced successfully."
+        )
+    logger.info(f"Output path: {output_path}")
 
 
 if __name__ == "__main__":

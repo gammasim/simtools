@@ -215,3 +215,34 @@ class ReportGenerator:
         """Generate all observatory reports based on which --all_* flags are passed."""
         for params in self._generate_observatory_report_combinations():
             self._generate_single_observatory_report(*params)
+
+    def auto_generate_calibration_reports(self):
+        """Generate calibration reports for one or all model versions.
+
+        Mirrors the pattern used by other auto_generate_* methods: if
+        --all_model_versions is set, produce reports for every model version in
+        the DB; otherwise produce reports only for the configured model_version.
+        """
+        model_versions = (
+            self.db.get_model_versions()
+            if self.args.get("all_model_versions")
+            else [self.args["model_version"]]
+        )
+
+        for version in model_versions:
+            # update args and create a per-version output directory
+            self.args.update({"model_version": version})
+            output_path = Path(self.output_path) / str(version)
+
+            try:
+                ReadParameters(self.db_config, self.args, output_path).produce_calibration_reports()
+            except ValueError as err:
+                # Some model versions do not have calibration_devices in the DB;
+                msg = str(err)
+                if "calibration_devices" in msg and "zero results" in msg:
+                    logger.info(
+                        f"Skipping model version {version}: no calibration devices defined ({msg})"
+                    )
+                    continue
+                # re-raise unexpected ValueErrors
+                raise
