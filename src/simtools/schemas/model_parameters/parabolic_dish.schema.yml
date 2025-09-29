@@ -18,9 +18,6 @@ data:
     default: false
 instrument:
   class: Structure
-  type:
-    - LSTN
-    - LSTS
 activity:
   setting:
     - SetParameterFromExternal

@@ -12,8 +12,7 @@ description: |-
   (per time slice) for a photo-electron with average (not most probable)
   signal.  This is after photo detector, preamplifier, cable, and shaper
   at the input of the ADC or FADC.
-short_description: Peak amplitude above pedestal for a photo electron with average
-  signal (low-gain channels).
+short_description: Peak amplitude above pedestal for a photo electron with average signal (low-gain channels).
 data:
   - type: float64
     description: FADC amplitude (for low-gain channel in case of dual-readout chain).
@@ -24,13 +23,6 @@ data:
       min: 0.0
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

@@ -20,9 +20,6 @@ data:
       min: 0
 instrument:
   class: Camera
-  type:
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

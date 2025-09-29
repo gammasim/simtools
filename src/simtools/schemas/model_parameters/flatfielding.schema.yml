@@ -15,13 +15,6 @@ description: |-
   have equal single-p.e. amplitudes.
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 data:
   - type: boolean
     unit: dimensionless

@@ -22,9 +22,6 @@ data:
     default: 0
 instrument:
   class: Camera
-  type:
-    - MSTx-FlashCam
-    - SSTS
 activity:
   setting:
     - SetParameterFromExternal

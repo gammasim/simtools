@@ -44,7 +44,6 @@ source:
   - Configuration
 simulation_software:
   - name: corsika
-...
 ---
 title: Schema for corsika_starting_grammage model parameter
 schema_version: 0.2.0
@@ -87,7 +86,6 @@ source:
   - Configuration
 simulation_software:
   - name: corsika
-...
 ---
 title: Schema for corsika_starting_grammage model parameter
 schema_version: 0.1.0

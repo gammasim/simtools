@@ -16,11 +16,6 @@ data:
     default: 'atm_trans_2147_1_10_2_0_2147.dat'
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

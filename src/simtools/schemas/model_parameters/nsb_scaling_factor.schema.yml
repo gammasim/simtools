@@ -19,11 +19,6 @@ data:
       max: 1000.0
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

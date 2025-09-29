@@ -26,8 +26,6 @@ data:
       min: -2
 instrument:
   class: Camera
-  type:
-    - null
 activity:
   setting:
     - null
