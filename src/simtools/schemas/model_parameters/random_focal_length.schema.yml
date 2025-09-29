@@ -6,7 +6,8 @@ meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: random_focal_length
-developer_note: Note - Description changed significantly in the sim_telarray manual.
+developer_note: |-
+  Note - Description changed significantly in the sim_telarray manual.
 description: |-
   The spread of random fluctuations in mirror panel focal lengths.
   These parameters get only applied if the focal lengths in the mirror list
