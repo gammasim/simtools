@@ -23,8 +23,6 @@ data:
       min: -2.0
 instrument:
   class: Camera
-  type:
-    - null
 activity:
   setting:
     - SetParameterFromExternal

@@ -15,13 +15,6 @@ data:
     default: 'no_such_file.dat'
 instrument:
   class: Structure
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

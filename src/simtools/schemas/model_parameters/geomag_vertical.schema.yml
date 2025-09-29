@@ -8,18 +8,13 @@ meta_schema_version: 0.1.0
 name: geomag_vertical
 short_description: Vertical component of geomagnetic field.
 description: |-
-   Vertical component in downwards direction of the geomagnetic
-   field at given site.
+  Vertical component in downwards direction of the geomagnetic
+  field at given site.
 data:
   - type: float64
     unit: uT
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetGeomagneticField

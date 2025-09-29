@@ -18,11 +18,6 @@ data:
       max: 90.0
 instrument:
   class: Site
-  type:
-    - Observatory
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal
