@@ -58,7 +58,7 @@ mamba activate simtools-dev
 pip install -e .
 ```
 
-To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the [CORSIKA/sim_telarray Docker file](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-prod-opt).
+To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the [CORSIKA/sim_telarray Docker file](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika-simtel).
 
 ```{note}
 The installation of CORSIKA/sim_telarray from source requires access to the
