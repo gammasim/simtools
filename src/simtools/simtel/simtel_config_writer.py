@@ -175,19 +175,19 @@ class SimtelConfigWriter:
         }
 
         shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
-        if shape == "exponential":
+        if "exponential" in shape:
             simtel_par["laser_pulse_exptime"] = parameters.get("flasher_pulse_exp_decay", {}).get(
                 "value", 0.0
             )
-            simtel_par["laser_pulse_sigtime"] = 0.0
-            simtel_par["laser_pulse_twidth"] = 0.0
-            return simtel_par
-        simtel_par["laser_pulse_exptime"] = 0.0
+        else:
+            simtel_par["laser_pulse_exptime"] = 0.0
 
         width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
-        if shape in mapping:
+        if shape == "gauss-exponential":
+            simtel_par["laser_pulse_sigtime"] = width
+        elif shape in mapping:
             simtel_par[mapping[shape]] = width
         else:
             self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")

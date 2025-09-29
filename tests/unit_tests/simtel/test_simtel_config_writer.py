@@ -388,6 +388,7 @@ def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory,
         ("gauss", 2.5, 2.5, 0.0, 0.0),
         ("tophat", 5.0, 0.0, 5.0, 0.0),
         ("exponential", 3.2, 0.0, 0.0, 3.2),
+        ("gauss-exponential", 3.2, 3.2, 0.0, 3.2),
         ("GAUSS", 1.5, 1.5, 0.0, 0.0),  # case insensitive
     ],
 )
@@ -401,8 +402,6 @@ def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
         "flasher_pulse_exp_decay": {"value": width},
     }
     result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
-
-    print("AAAAA", shape, width, result)
 
     assert result["laser_pulse_sigtime"] == pytest.approx(expected_sigtime)
     assert result["laser_pulse_twidth"] == pytest.approx(expected_twidth)
