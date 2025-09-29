@@ -172,10 +172,18 @@ class SimtelConfigWriter:
         mapping = {
             "gauss": "laser_pulse_sigtime",
             "tophat": "laser_pulse_twidth",
-            "exponential": "laser_pulse_exptime",
         }
 
         shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
+        if shape == "exponential":
+            simtel_par["laser_pulse_exptime"] = parameters.get("flasher_pulse_exp_decay", {}).get(
+                "value", 0.0
+            )
+            simtel_par["laser_pulse_sigtime"] = 0.0
+            simtel_par["laser_pulse_twidth"] = 0.0
+            return simtel_par
+        simtel_par["laser_pulse_exptime"] = 0.0
+
         width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))

@@ -398,8 +398,11 @@ def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
     parameters = {
         "flasher_pulse_shape": {"value": shape},
         "flasher_pulse_width": {"value": width},
+        "flasher_pulse_exp_decay": {"value": width},
     }
     result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
+
+    print("AAAAA", shape, width, result)
 
     assert result["laser_pulse_sigtime"] == pytest.approx(expected_sigtime)
     assert result["laser_pulse_twidth"] == pytest.approx(expected_twidth)
