@@ -59,11 +59,6 @@ data:
         unit: dimensionless
 instrument:
   class: Site
-  type:
-    - Observatory
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

@@ -14,13 +14,6 @@ short_description: |-
   reset to false.
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 data:
   - type: float64
     unit: ns
