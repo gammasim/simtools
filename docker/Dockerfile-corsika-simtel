@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
-# Dockerfile for production build of the CTAO Simulation Pipeline.
+# Dockerfile for base CORSIKA / sim_telarray build.
 #
-# Contains CORSIKA (non-optimized / optimized), sim_telarray, and simtools
+# Contains only CORSIKA (non-optimized / optimized) and sim_telarray
 # Requires CORSIKA and sim_telarray source code tarballs (plus tarball for
 # CORSIKA optimized build) to be in the same directory as this Dockerfile.
 
@@ -13,10 +13,7 @@ ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG BERNLOHR_VERSION="1.68"
-ARG PYTHON_VERSION=3.12
 ARG AUTOCONF_VERSION="2.71"
-ARG BUILD_BRANCH=main
-ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 
 #
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
@@ -45,9 +42,6 @@ ARG HADRONIC_MODEL
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
 ARG BERNLOHR_VERSION
-ARG BUILD_BRANCH
-ARG PYTHON_VERSION
-ARG SIMTOOLS_REQUIREMENT
 ARG CORSIKA_OPT_PATCH_VERSION
 ARG AUTOCONF_VERSION
 
@@ -163,13 +157,10 @@ RUN echo "build_opt: $BUILD_OPT" > ./build_opts.yml && \
     echo "corsika_opt_patch_version: $CORSIKA_OPT_PATCH_VERSION" >> ./build_opts.yml && \
     echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml
 
+# Final stage - minimal base image with CORSIKA and sim_telarray
 FROM almalinux:9.5-minimal
-ARG BUILD_BRANCH
-ARG SIMTOOLS_REQUIREMENT
-ARG PYTHON_VERSION
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 WORKDIR /workdir
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN microdnf update -y && microdnf install -y \
     bc \
@@ -179,19 +170,8 @@ RUN microdnf update -y && microdnf install -y \
     procps \
     findutils \
     gcc-c++ \
-    git \
-    libgfortran \
-    python${PYTHON_VERSION}-pip && \
+    libgfortran && \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
 
-RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
-  && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
-  && python${PYTHON_VERSION} -m venv env \
-  && . env/bin/activate \
-  && pip install --no-cache-dir -U pip \
-  && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
-  && echo ". /workdir/env/bin/activate" >> ~/.bashrc
-
 ENV SIMTEL_PATH="/workdir/sim_telarray"
-ENV PATH="/workdir/env/bin/:$PATH"
