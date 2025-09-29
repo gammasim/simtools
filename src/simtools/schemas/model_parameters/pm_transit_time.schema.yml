@@ -33,7 +33,8 @@ data:
     default: 300.
     allowed_range:
       min: 0.0
-    developer_note: "This parameter can describe in sim_telarray the fraction of total\nnominal voltage in case total nominal voltage is set to zero."
+    developer_note: |-
+      "This parameter can describe in sim_telarray the fraction of total nominal voltage in case total nominal voltage is set to zero."
   - name: total_nominal_voltage
     type: float64
     default: 1100.
@@ -41,7 +42,8 @@ data:
     unit: V
     allowed_range:
       min: 0.0
-    developer_note: "If zero (or one), the third value of the fixed voltage is assumed to\nrepresent the fraction of the total nominal voltage in sim_telarray."
+    developer_note: |-
+      "If zero (or one), the third value of the fixed voltage is assumed to represent the fraction of the total nominal voltage in sim_telarray."
 instrument:
   class: Camera
 activity:
