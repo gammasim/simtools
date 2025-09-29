@@ -125,18 +125,15 @@ r"""
 
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        description="Derive mirror random reflection angle.", label=label
+        description="Derive mirror random reflection angle.", label=get_application_label(__file__)
     )
     psf_group = config.parser.add_mutually_exclusive_group()
     psf_group.add_argument(
@@ -217,15 +214,11 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
+def main():
+    """Derive mirror random reflection angle of a single mirror panel."""
+    args_dict, db_config, _, _ = startup_application(_parse)
 
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+    panel_psf = MirrorPanelPSF(args_dict.get("label"), args_dict, db_config)
     panel_psf.derive_random_reflection_angle(save_figures=True)
     panel_psf.print_results()
     panel_psf.write_optimization_data()

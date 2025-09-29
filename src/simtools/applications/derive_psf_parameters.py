@@ -110,22 +110,19 @@ r"""
 
 """
 
-import logging
-from pathlib import Path
-
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
-from simtools.utils.general import get_log_level_from_user
 
 
 def _parse():
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description=(
             "Derive mirror_reflection_random_angle, mirror_align_random_horizontal "
             "and mirror_align_random_vertical using cumulative PSF measurement."
-        )
+        ),
     )
     config.parser.add_argument(
         "--src_distance",
@@ -196,16 +193,12 @@ def _parse():
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
+def main():
+    """Derive PSF parameters."""
+    args_dict, db_config, _, _io_handler = startup_application(_parse)
 
-    label = label = Path(__file__).stem
-    logger = logging.getLogger()
-    logger.setLevel(get_log_level_from_user(args_dict["log_level"]))
-
-    _io_handler = io_handler.IOHandler()
     tel_model, site_model, _ = initialize_simulation_models(
-        label=label,
+        label=args_dict.get("label"),
         db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],

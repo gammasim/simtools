@@ -23,37 +23,24 @@ Plot tabular data using a configuration file.
 
 """
 
-import logging
-from pathlib import Path
-
 import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 from simtools.visualization import plot_tables
 
 
-def _parse(label, description, usage):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-    usage : str
-        Example on how to use the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description, usage=usage)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Plots tabular data.",
+        usage="""simtools-plot-tabular-data --plot_config config_file_name "
+                 --output_file output_file_name""",
+    )
 
     config.parser.add_argument(
         "--plot_config",
@@ -79,15 +66,7 @@ def _parse(label, description, usage):
 
 def main():
     """Plot tabular data."""
-    args_dict, db_config_ = _parse(
-        label=Path(__file__).stem,
-        description="Plots tabular data.",
-        usage="""simtools-plot-tabular-data --plot_config config_file_name "
-                 --output_file output_file_name""",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "INFO")))
-    io_handler_instance = io_handler.IOHandler()
+    args_dict, db_config, _, _io_handler = startup_application(_parse)
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
         schema.validate_dict_using_schema(
@@ -98,14 +77,14 @@ def main():
 
     plot_tables.plot(
         config=plot_config["plot"],
-        output_file=io_handler_instance.get_output_file(args_dict["output_file"]),
-        db_config=db_config_,
+        output_file=_io_handler.get_output_file(args_dict["output_file"]),
+        db_config=db_config,
         data_path=args_dict.get("table_data_path"),
     )
 
     MetadataCollector.dump(
         args_dict,
-        io_handler_instance.get_output_file(args_dict["output_file"]),
+        _io_handler.get_output_file(args_dict["output_file"]),
         add_activity_name=True,
     )
 

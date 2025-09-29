@@ -60,38 +60,24 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
 import numpy as np
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import schema
 from simtools.io import ascii_handler
-from simtools.io.io_handler import IOHandler
 from simtools.simtel import simtel_config_reader
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Convert all model parameters from sim_telarray",
+    )
 
     config.parser.add_argument(
         "--simtel_cfg_file",
@@ -177,7 +163,7 @@ def get_number_of_camera_pixel(args_dict, logger):
     return _camera_pixel
 
 
-def read_and_export_parameters(args_dict, logger):
+def read_and_export_parameters(args_dict, logger, io_handler):
     """
     Read and export parameters from sim_telarray configuration file to json files.
 
@@ -190,6 +176,8 @@ def read_and_export_parameters(args_dict, logger):
         Dictionary with command line arguments.
     logger: logging.Logger
         Logger object
+    io_handler: IOHandler
+        IOHandler object
 
     Returns
     -------
@@ -204,9 +192,6 @@ def read_and_export_parameters(args_dict, logger):
         args_dict["simtel_cfg_file"]
     )
     logger.info(f"Found {len(_simtel_parameters)} parameters in sim_telarray configuration file.")
-
-    io_handler = IOHandler()
-    io_handler.set_paths(output_path=args_dict["output_path"])
 
     _camera_pixel = get_number_of_camera_pixel(args_dict, logger)
 
@@ -324,15 +309,13 @@ def print_list_of_files(args_dict, logger):
             logger.info(f"{file.name}: {model_dict['value']}")
 
 
-def main():  # noqa: D103
-    args_dict, _ = _parse(
-        label=Path(__file__).stem,
-        description="Convert simulation model parameters from sim_telarray to simtools format.",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Convert all simulation model parameters exported from sim_telarray format."""
+    args_dict, _, logger, _io_handler = startup_application(_parse)
 
-    _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(args_dict, logger)
+    _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(
+        args_dict, logger, _io_handler
+    )
     print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger)
     print_list_of_files(args_dict, logger)
 

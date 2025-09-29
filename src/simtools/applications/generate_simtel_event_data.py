@@ -124,26 +124,24 @@ To read a reduced event data file, use the following command reading on of the t
 
 """
 
-import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 
-def _parse(label, description):
-    """
-    Parse command line arguments.
-
-    Returns
-    -------
-    dict
-        Parsed command-line arguments.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line arguments."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description=(
+            "Process files and store reduced dataset with event information, "
+            "array information and triggered telescopes."
+        ),
+    )
 
     config.parser.add_argument(
         "--input",
@@ -163,19 +161,9 @@ def _parse(label, description):
     return config.initialize(db_config=False, output=True)
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-
-    args_dict, _ = _parse(
-        label=label,
-        description=(
-            "Process files and store reduced dataset with event information, "
-            "array information and triggered telescopes."
-        ),
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Generate a reduced dataset of event data from output of telescope simulations."""
+    args_dict, _, logger, _ = startup_application(_parse, setup_io_handler=False)
     logger.info(f"Loading input files from: {args_dict['input']}")
 
     input_pattern = Path(args_dict["input"])

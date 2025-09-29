@@ -80,7 +80,7 @@ Examples
 import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import data_reader
 from simtools.io import ascii_handler
@@ -92,7 +92,8 @@ _logger = logging.getLogger(__name__)
 def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        description="Merge CORSIKA limit tables and check grid completeness."
+        label=get_application_label(__file__),
+        description="Merge CORSIKA limit tables and check grid completeness.",
     )
     config.parser.add_argument(
         "--input_files",
@@ -142,9 +143,7 @@ def _parse():
 
 def main():
     """Merge CORSIKA limit tables and check grid completeness."""
-    args_dict, _ = _parse()
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "info")))
+    args_dict, _, _, _ = startup_application(_parse)
 
     merger = CorsikaMergeLimits()
     grid_definition = (

@@ -67,29 +67,14 @@ r"""
     will be written to data_directory/label/simtel-data.
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_startup import startup_application
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
 
 
-def _parse(description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    description: str
-        Application description.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-
-    """
-    config = configurator.Configurator(description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(description="Run simulations for productions")
     config.parser.add_argument(
         "--data_directory",
         help=(
@@ -152,11 +137,9 @@ def _parse(description=None):
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse(description="Run simulations for productions")
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Run simulations for productions."""
+    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
 
     simulator = Simulator(label=args_dict.get("label"), args_dict=args_dict, db_config=db_config)
 

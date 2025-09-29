@@ -31,24 +31,19 @@ The following example applies a patch update with changes defined in a YAML file
 
 """
 
-import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model import model_repository
 
 
-def _parse(label, description):
-    """
-    Parse command line arguments.
-
-    Returns
-    -------
-    dict
-        Parsed command-line arguments.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line arguments."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate a new simulation model production",
+    )
     config.parser.add_argument(
         "--simulation_models_path",
         type=str,
@@ -65,11 +60,9 @@ def _parse(label, description):
     return config.initialize(db_config=False, output=False)
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, _ = _parse(label=label, description="Generate a new simulation model production")
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Generate a new simulation model production."""
+    args_dict, _, _, _ = startup_application(_parse)
 
     model_repository.generate_new_production(
         modifications=args_dict["modifications"],

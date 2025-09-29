@@ -7,20 +7,18 @@ The report includes detailed information on each parameter,
 such as the parameter name, value, unit, description, and short description.
 """
 
-import logging
 from pathlib import Path
 
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
-from simtools.utils import general as gen
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=("Produce a markdown report for model parameters."),
     )
 
@@ -51,34 +49,35 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    label_name = "reports"
-    args, db_config = _parse(label_name)
+def main():
+    """Produce a markdown file for a given array element, site, and model version."""
+    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    output_path = _io_handler.get_output_directory()
 
-    io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
-
-    if any([args.get("all_telescopes"), args.get("all_sites"), args.get("all_model_versions")]):
+    if any(
+        [
+            args_dict.get("all_telescopes"),
+            args_dict.get("all_sites"),
+            args_dict.get("all_model_versions"),
+        ]
+    ):
         ReportGenerator(
             db_config,
-            args,
+            args_dict,
             output_path,
         ).auto_generate_array_element_reports()
 
     else:
-        model_version = args["model_version"]
+        model_version = args_dict["model_version"]
         ReadParameters(
             db_config,
-            args,
+            args_dict,
             Path(output_path / f"{model_version}"),
         ).produce_array_element_report()
 
         logger.info(
-            f"Markdown report generated for {args['site']}"
-            f" Telescope {args['telescope']} (v{model_version}):"
+            f"Markdown report generated for {args_dict['site']}"
+            f" Telescope {args_dict['telescope']} (v{model_version}):"
             f" {output_path}"
         )
 

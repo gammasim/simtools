@@ -33,16 +33,15 @@
 
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io import io_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description="Get file(s) from the DB.",
         usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
     )
@@ -57,12 +56,9 @@ def _parse():
     return config.initialize(db_config=True, output=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    _io_handler = io_handler.IOHandler()
+def main():
+    """Get file from database."""
+    args_dict, db_config, logger, _io_handler = startup_application(_parse)
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     file_id = db.export_model_files(

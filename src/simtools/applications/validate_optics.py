@@ -65,7 +65,6 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
 import astropy.units as u
@@ -73,18 +72,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
             "of the telescope requested."
@@ -118,18 +116,12 @@ def _parse(label):
     return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory()
+def main():
+    """Validate the optical model parameters through ray tracing simulations."""
+    args_dict, db_config, logger, _io_handler = startup_application(_parse, setup_io_handler=True)
 
     tel_model, site_model, _ = initialize_simulation_models(
-        label=label,
+        label=Path(__file__).stem,
         db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
@@ -147,7 +139,9 @@ def main():  # noqa: D103
     # }
     # tel_model.change_multiple_parameters(**pars_to_change)
 
-    print(f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n")
+    logger.info(
+        f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
+    )
 
     ray = RayTracing(
         telescope_model=tel_model,
@@ -171,14 +165,14 @@ def main():  # noqa: D103
 
         ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plot_file_name = "_".join((label, tel_model.name, key))
-        plot_file = output_dir.joinpath(plot_file_name)
+        plot_file_name = "_".join((args_dict.get("label"), tel_model.name, key))
+        plot_file = _io_handler.get_output_file(plot_file_name)
         visualize.save_figure(plt, plot_file)
 
     # Plotting images
     if args_dict["plot_images"]:
-        plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
-        plot_file = output_dir.joinpath(plot_file_name)
+        plot_file_name = "_".join((args_dict.get("label"), tel_model.name, "images.pdf"))
+        plot_file = _io_handler.get_output_file(plot_file_name)
         pdf_pages = PdfPages(plot_file)
 
         logger.info(f"Plotting images into {plot_file}")

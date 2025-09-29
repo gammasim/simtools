@@ -38,32 +38,19 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Submit and validate a model parameters).",
+    )
 
     config.parser.add_argument(
         "--parameter", type=str, required=True, help="Parameter for simulation model"
@@ -98,20 +85,14 @@ def _parse(label, description):
     return config.initialize(output=True, db_config=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse(
-        label=Path(__file__).stem,
-        description="Submit and validate a model parameters).",
-    )
+def main():
+    """Submit and validate a model parameter value and metadata."""
+    args_dict, db_config, _, _io_handler = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    output_path = (
-        Path(args_dict["output_path"]) / args_dict["parameter"]
-        if args_dict.get("output_path")
-        else None
-    )
+    if args_dict.get("output_path"):
+        output_path = _io_handler.get_output_directory(sub_dir=args_dict.get("parameter"))
+    else:
+        output_path = None
 
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name=args_dict["parameter"],

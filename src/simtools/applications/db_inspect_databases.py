@@ -9,15 +9,16 @@ db_name (str, optional)
     Database name (use "all" for all databases)
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
 def _parse():
-    config = configurator.Configurator(description="Inspect databases")
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__), description="Inspect databases"
+    )
     config.parser.add_argument(
         "--db_name",
         help="Database name",
@@ -27,11 +28,9 @@ def _parse():
     return config.initialize(db_config=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Inspect databases."""
+    args_dict, db_config, _, _ = startup_application(_parse, setup_io_handler=False)
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     # databases without internal databases we don't have rights to modify

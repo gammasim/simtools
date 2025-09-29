@@ -76,19 +76,18 @@ Examples
 
 """
 
-import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.visualization.plot_simtel_events import PLOT_CHOICES, generate_and_save_plots
 
 
-def _parse(label: str):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Create diagnostic plots from sim_telarray files using simtools visualization."
         ),
@@ -178,17 +177,12 @@ def _parse(label: str):
 
 def main():
     """Generate plots from sim_telarray files."""
-    label = Path(__file__).stem
-    args, _db = _parse(label)
+    args_dict, _, _, _io_handler = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args.get("log_level", "INFO")))
+    simtel_files = [Path(p).expanduser() for p in gen.ensure_iterable(args_dict["simtel_files"])]
+    plots = list(gen.ensure_iterable(args_dict.get("plots")))
 
-    ioh = io_handler.IOHandler()
-    simtel_files = [Path(p).expanduser() for p in gen.ensure_iterable(args["simtel_files"])]
-    plots = list(gen.ensure_iterable(args.get("plots")))
-
-    generate_and_save_plots(simtel_files=simtel_files, plots=plots, args=args, ioh=ioh)
+    generate_and_save_plots(simtel_files=simtel_files, plots=plots, args=args_dict, ioh=_io_handler)
 
 
 if __name__ == "__main__":

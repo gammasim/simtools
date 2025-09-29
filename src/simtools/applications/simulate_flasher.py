@@ -56,18 +56,17 @@ telescope (str, optional)
     Telescope name (required for full simulation mode).
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
-    config = configurator.Configurator(label=label, description="Simulate flasher devices.")
+    config = configurator.Configurator(
+        label=get_application_label(__file__), description="Simulate flasher devices."
+    )
     config.parser.add_argument(
         "--run_mode",
         help="Flasher simulation run mode",
@@ -108,11 +107,7 @@ def _parse(label):
 
 def main():
     """Simulate flasher devices."""
-    label = Path(__file__).stem
-
-    args_dict, db_config = _parse(label)
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, logger, _ = startup_application(_parse)
 
     logger.info(
         f"Flasher simulation for telescope {args_dict['telescope']} "

@@ -32,19 +32,19 @@ r"""
 
     """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import validate_array_layouts_with_db, write_array_layouts
 
 
-def _parse(label, description):
+def _parse():
     """Parse command line configuration."""
-    config = configurator.Configurator(label=label, description=description)
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Submit and validate array layouts.",
+    )
 
     config.parser.add_argument(
         "--array_layouts",
@@ -69,14 +69,9 @@ def _parse(label, description):
     return config.initialize(output=True, db_config=True, simulation_model=["model_version"])
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse(
-        label=Path(__file__).stem,
-        description="Submit and validate array layouts.",
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Submit and validate array layouts."""
+    args_dict, db_config, _, _ = startup_application(_parse)
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 

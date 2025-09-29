@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""
+r"""
     Add a file to a DB.
 
     The name and location of the file are required.
@@ -37,21 +37,22 @@
 
 """
 
-import logging
 import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description="Add file to the DB.",
         usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",
     )
-
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--file_name",
@@ -161,11 +162,9 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
         db.db_client.drop_database(args_dict["db"])
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Add files to the database."""
+    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 

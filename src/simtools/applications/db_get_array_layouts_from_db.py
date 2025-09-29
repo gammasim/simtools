@@ -51,33 +51,19 @@ Retrieve telescope positions from database (utm coordinate system) and write to 
       --output_file telescope_positions-test_layout.ecsv
 """
 
-import logging
-from pathlib import Path
-
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Get list of array elements as defined in the db (array layout).",
+    )
 
     input_group = config.parser.add_mutually_exclusive_group()
     input_group.add_argument(
@@ -128,14 +114,8 @@ def _layout_from_db(args_dict, db_config):
 
 
 def main():
-    """Get list of array elements as defined in the db (array layout)."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label,
-        "Get list of array elements as defined in the db (array layout).",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    """Get list of array layouts or list of elements for a given layout as defined in the db."""
+    args_dict, db_config, logger, _ = startup_application(_parse)
 
     if args_dict.get("list_available_layouts", False):
         if args_dict.get("site", None) is None:

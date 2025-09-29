@@ -44,19 +44,18 @@ r"""
     The output is saved in simtools-output/validate_camera_efficiency.
 """
 
-import logging
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Calculate the camera efficiency and NSB pixel rates. "
             "Plot the camera efficiency vs wavelength for Cherenkov and NSB light."
@@ -103,16 +102,13 @@ def _parse(label):
     return _args_dict, _db_config
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Calculate the camera efficiency and NSB pixel rates."""
+    args_dict, db_config, _, _io_handler = startup_application(_parse)
 
     ce = CameraEfficiency(
         db_config=db_config,
-        label=args_dict.get("label", label),
+        label=args_dict.get("label"),
         config_data=args_dict,
     )
     ce.simulate()
@@ -128,7 +124,7 @@ def main():  # noqa: D103
         instrument=args_dict["telescope"],
         parameter_version=args_dict.get("parameter_version", "0.0.0"),
         output_file=Path(f"nsb_pixel_rate-{args_dict.get('parameter_version', '0.0.0')}.json"),
-        output_path=Path(args_dict["output_path"]) / args_dict["telescope"] / "nsb_pixel_rate",
+        output_path=_io_handler.get_output_directory() / args_dict["telescope"] / "nsb_pixel_rate",
     )
 
 

@@ -37,9 +37,7 @@ Derive trigger rates for the South Alpha layout:
 
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
@@ -47,6 +45,7 @@ from simtools.telescope_trigger_rates import telescope_trigger_rates
 def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description="Derive trigger rates for a single telescope or an array of telescopes.",
     )
     config.parser.add_argument(
@@ -78,11 +77,9 @@ def _parse():
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "info")))
+def main():
+    """Derive trigger rates for a single telescope or an array of telescopes."""
+    args_dict, db_config, _, _ = startup_application(_parse)
 
     telescope_trigger_rates(args_dict, db_config)
 

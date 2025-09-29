@@ -36,34 +36,19 @@ r"""
 
 """
 
-import logging
-from pathlib import Path
-
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Submit and validate data (e.g., input data to tools, model parameters).",
+    )
 
     config.parser.add_argument(
         "--input_meta",
@@ -92,14 +77,9 @@ def _parse(label, description):
     return config.initialize(output=True)
 
 
-def main():  # noqa: D103
-    args_dict, _ = _parse(
-        label=Path(__file__).stem,
-        description="Submit and validate data (e.g., input data to tools, model parameters).",
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Submit and validate data (e.g., input data to tools, model parameters)."""
+    args_dict, _, _, _ = startup_application(_parse)
 
     _metadata = None if args_dict.get("ignore_metadata") else MetadataCollector(args_dict)
 

@@ -60,23 +60,23 @@ r"""
 
 """
 
-import logging
-from pathlib import Path
 from pprint import pprint
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description=(
             "Get a parameter entry from DB for a specific telescope or a site. "
             "The application receives a parameter name, a site, a telescope (if applicable), "
             "and a version. It then prints out the parameter entry. "
-        )
+        ),
     )
 
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
@@ -104,11 +104,9 @@ def _parse():
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Get a parameter entry from DB for a specific telescope or a site."""
+    args_dict, db_config, logger, _io_handler = startup_application(_parse)
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
@@ -129,20 +127,18 @@ def main():  # noqa: D103
             export_file_as_table=args_dict["export_model_file_as_table"],
         )
         param_value = pars[args_dict["parameter"]]["value"]
-        table_file = Path(io_handler.IOHandler().get_output_directory()) / f"{param_value}"
+        table_file = _io_handler.get_output_file(param_value)
         logger.info(f"Exported model file {param_value} to {table_file}")
         if table and table_file.suffix != ".ecsv":
             table.write(table_file.with_suffix(".ecsv"), format="ascii.ecsv", overwrite=True)
             logger.info(f"Exported model file {param_value} to {table_file.with_suffix('.ecsv')}")
 
     if args_dict["output_file"] is not None:
-        _output_file = (
-            Path(io_handler.IOHandler().get_output_directory()) / args_dict["output_file"]
-        )
         pars[args_dict["parameter"]].pop("_id")
         pars[args_dict["parameter"]].pop("entry_date")
         ascii_handler.write_data_to_file(
-            data=pars[args_dict["parameter"]], output_file=_output_file
+            data=pars[args_dict["parameter"]],
+            output_file=_io_handler.get_output_file(args_dict["output_file"]),
         )
     else:
         pprint(pars[args_dict["parameter"]])
