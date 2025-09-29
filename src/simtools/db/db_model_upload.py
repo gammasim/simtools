@@ -26,7 +26,25 @@ def add_complete_model(
 
     Generate compound indexes for the new database.
 
+    Parameters
+    ----------
+    tmp_dir : Path or str
+        Temporary directory to use for cloning the repository.
+    db : DatabaseHandler
+        Database handler object.
+    db_simulation_model : str
+        Name of the simulation model in the database.
+    db_simulation_model_version : str
+        Version of the simulation model in the database.
+    repository_url : str
+        URL of the simulation model repository to clone.
+    repository_branch : str, optional
+        Branch of the repository to use. If None, the default branch is used.
 
+    Returns
+    -------
+    None
+        This function does not return a value.
     """
     if not _confirm_remote_database_upload(db):
         return
