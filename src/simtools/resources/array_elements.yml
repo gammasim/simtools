@@ -136,7 +136,27 @@ data:
     observatory: "CTAO"
     site: ["North", "South"]
     design_types: ["FlashCam", "NectarCam", "test"]
-    description: "Flat-fielding device"
+    description: "Flat-fielding device (MST)"
+  LSFN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Flat-fielding device (LST)"
+  LSFS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Flat-fielding device (LST)"
+  SSFS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Flat-fielding device (SST)"
+  SCFS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Flat-fielding device (SCT)"
   HESS:
     collection: "telescopes"
     site: "South"
