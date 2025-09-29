@@ -13,17 +13,20 @@ Example
 
 """
 
-import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.io import ascii_handler
 
 
-def _parse(label, description):
+def _parse():
     """Parse command line arguments."""
-    config = configurator.Configurator(label=label, description=description)
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Compare two directories with model production tables in JSON format.",
+    )
     config.parser.add_argument(
         "--directory_1",
         type=str,
@@ -82,14 +85,9 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             print(f"Missing in dir1: {rel_path}")
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, _ = _parse(
-        label=label,
-        description=("Compare two directories with model production tables in JSON format."),
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Compare two directories with model production tables in JSON format."""
+    args_dict, _, _, _ = startup_application(_parse, setup_io_handler=False)
 
     _compare_json_dirs(Path(args_dict["directory_1"]), Path(args_dict["directory_2"]))
 

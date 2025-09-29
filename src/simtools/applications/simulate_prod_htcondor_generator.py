@@ -45,29 +45,17 @@ priority (int, optional)
 
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.job_execution import htcondor_script_generator
 
 
-def _parse(description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    description: str
-        Application description.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-
-    """
-    config = configurator.Configurator(description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Prepare simulations production for HT Condor job submission",
+    )
     config.parser.add_argument(
         "--apptainer_image",
         help="Apptainer image to use for the simulation (full path).",
@@ -88,11 +76,9 @@ def _parse(description=None):
     )
 
 
-def main():  # noqa: D103
-    args_dict, _ = _parse(description="Prepare simulations production for HT Condor job submission")
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Generate HT Condor submission script and submit file."""
+    args_dict, _, _, _ = startup_application(_parse)
 
     htcondor_script_generator.generate_submission_script(args_dict)
 

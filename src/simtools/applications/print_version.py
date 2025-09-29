@@ -6,53 +6,25 @@ The versions of simtools, the DB, sim_telarray, and CORSIKA are printed.
 
 """
 
-import logging
-from pathlib import Path
-
 from simtools import dependencies, version
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import ascii_handler, io_handler
-from simtools.utils import general as gen
+from simtools.io import ascii_handler
 
 
-def _parse(label, description, usage):
-    """
-    Parse command line configuration.
-
-    No command line arguments are required for this application,
-    but the configurator is called to set up the DB connection and
-    the structure with _parse is kept from other applications for consistency.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-    usage : str
-        Example on how to use the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description, usage=usage)
-
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Print the versions of simtools, the DB, sim_telarray and CORSIKA.",
+        usage="simtools-print-version",
+    )
     return config.initialize(db_config=True, output=True, require_command_line=False)
 
 
 def main():
     """Print the versions of the simtools software."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label=label,
-        description="Print the versions of simtools, the DB, sim_telarray and CORSIKA.",
-        usage="simtools-print-version",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    io_handler_instance = io_handler.IOHandler()
+    args_dict, db_config, _, _io_handler = startup_application(_parse)
 
     version_string = dependencies.get_version_string(db_config)
     version_dict = {"simtools version": version.__version__}
@@ -71,7 +43,7 @@ def main():
     if not args_dict.get("output_file_from_default", False):
         ascii_handler.write_data_to_file(
             data=version_dict,
-            output_file=io_handler_instance.get_output_file(
+            output_file=_io_handler.get_output_file(
                 args_dict.get("output_file", "simtools_version.json")
             ),
         )

@@ -69,25 +69,24 @@
 
 """
 
-import logging
 from collections import OrderedDict
-from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
 import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def _parse(label):
+def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
@@ -125,18 +124,12 @@ def load_data(datafile):
     return data
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory()
+def main():
+    """Validate the cumulative PSF of a telescope model against data."""
+    args_dict, db_config, logger, _io_handler = startup_application(_parse)
 
     tel_model, site_model, _ = initialize_simulation_models(
-        label=label,
+        label=args_dict.get("label"),
         db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
@@ -161,10 +154,9 @@ def main():  # noqa: D103
     # Plotting cumulative PSF
     im = ray.images()[0]
 
-    print(f"d80 in cm = {im.get_psf()}")
+    logger.info(f"d80 in cm = {im.get_psf()}")
 
-    # Plotting cumulative PSF
-    # Measured cumulative PSF
+    # Plotting measured cumulative PSF
     data_to_plot = OrderedDict()
     radius = None
     if args_dict.get("data", None):
@@ -172,7 +164,7 @@ def main():  # noqa: D103
         data_to_plot["measured"] = load_data(data_file)
         radius = data_to_plot["measured"]["Radius [cm]"]
 
-    # Simulated cumulative PSF
+    # Plotting simulated cumulative PSF
     if radius is not None:
         data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
     else:
@@ -181,8 +173,8 @@ def main():  # noqa: D103
     fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
 
-    plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
-    plot_file = output_dir.joinpath(plot_file_name)
+    plot_file_name = args_dict.get("label") + "_" + tel_model.name + "_cumulative_PSF"
+    plot_file = _io_handler.get_output_file(plot_file_name)
     visualize.save_figure(fig, plot_file)
 
     # Plotting image
@@ -192,8 +184,8 @@ def main():  # noqa: D103
     fig.gca().add_artist(circle)
     fig.gca().set_aspect("equal")
 
-    plot_file_name = label + "_" + tel_model.name + "_image"
-    plot_file = output_dir.joinpath(plot_file_name)
+    plot_file_name = args_dict.get("label") + "_" + tel_model.name + "_image"
+    plot_file = _io_handler.get_output_file(plot_file_name)
     visualize.save_figure(fig, plot_file)
 
 

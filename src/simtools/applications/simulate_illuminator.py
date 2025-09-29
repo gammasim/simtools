@@ -53,18 +53,15 @@ output_prefix (str, optional)
     Prefix for output files (default: empty).
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Simulate light emission by a calibration light source (not attached to a telescope)."
         ),
@@ -119,16 +116,12 @@ def _parse(label):
 
 def main():
     """Simulate light emission from illuminator."""
-    label = Path(__file__).stem
-
-    args_dict, db_config = _parse(label)
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, _, _ = startup_application(_parse)
 
     light_source = SimulatorLightEmission(
         light_emission_config=args_dict,
         db_config=db_config,
-        label=label,
+        label=args_dict.get("label"),
     )
     light_source.simulate()
 

@@ -71,18 +71,16 @@ Example of a secondary mirror incident angle plot for a SST:
     :width: 49 %
 """
 
-import logging
-from pathlib import Path
-
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Calculate photon incident angles on focal plane and primary/secondary mirrors."
         ),
@@ -135,17 +133,13 @@ def _parse(label):
 
 
 def main():
-    """Application to calculate incident angles using ray tracing."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    """Calculate photon incident angles on focal plane and primary/secondary mirrors."""
+    args_dict, db_config, logger, _io_handler = startup_application(_parse)
 
     logger.info("Starting calculation of incident angles")
 
-    output_dir = Path(args_dict.get("output_path", "./"))
-    base_label = args_dict.get("label", label)
+    output_dir = _io_handler.get_output_path(args_dict)
+    base_label = args_dict.get("label", get_application_label(__file__))
     telescope_name = args_dict["telescope"]
     label_with_telescope = f"{base_label}_{telescope_name}"
 

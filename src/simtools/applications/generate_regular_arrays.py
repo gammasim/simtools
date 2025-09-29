@@ -24,14 +24,13 @@ Runtime < 10 s.
     simtools-generate-regular-arrays --site=North
 """
 
-import logging
 from pathlib import Path
 
 import astropy.units as u
 from astropy.table import QTable
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.utils import names
 
@@ -42,7 +41,7 @@ telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
 
 def _parse():
     config = configurator.Configurator(
-        label=Path(__file__).stem,
+        label=get_application_label(__file__),
         description=(
             "Generate a regular array of telescope and save as astropy table.\n"
             "Default telescope distances for 4 telescope square arrays are: \n"
@@ -58,10 +57,7 @@ def _parse():
 
 def main():
     """Create layout array files (ecsv) of regular arrays."""
-    args_dict, _ = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, _, logger, _ = startup_application(_parse)
 
     if args_dict["site"] == "South":
         array_list = ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]

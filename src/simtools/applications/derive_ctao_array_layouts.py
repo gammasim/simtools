@@ -42,10 +42,7 @@ r"""
             --updated_parameter_version 3.0.0
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
@@ -55,10 +52,10 @@ from simtools.layout.array_layout_utils import (
 )
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description="Derive CTAO array layouts from CTAO common identifiers repository.",
     )
     config.parser.add_argument(
@@ -85,11 +82,9 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse(Path(__file__).stem)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Derive CTAO array layouts from CTAO common identifiers repository."""
+    args_dict, db_config, logger, _ = startup_application(_parse)
 
     ctao_array_layouts = retrieve_ctao_array_layouts(
         site=args_dict["site"],

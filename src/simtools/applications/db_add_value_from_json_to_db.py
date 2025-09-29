@@ -25,18 +25,21 @@ r"""
 
 """
 
-import logging
 import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 
 
 def _parse():
-    config = configurator.Configurator(description="Add a new parameter to the DB.")
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__), description="Add a new parameter to the DB."
+    )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file_name", help="file to be added", type=str)
     group.add_argument(
@@ -55,11 +58,9 @@ def _parse():
     return config.initialize(db_config=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Add value from JSON to database."""
+    args_dict, db_config, logger, _ = startup_application(_parse)
 
     if args_dict.get("test_db", False):
         db_config["db_simulation_model_version"] = str(uuid.uuid4())

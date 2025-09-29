@@ -164,36 +164,19 @@ r"""
         Total time needed: 8s.
 """
 
-import logging
 import time
-from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
-from simtools.io import io_handler
-
-logger = logging.getLogger()
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing the application.
-    description: str
-        Description of the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.",
+    )
 
     config.parser.add_argument(
         "--iact_file",
@@ -280,20 +263,16 @@ def _parse(label, description):
     return config_parser, _
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
-    io_handler_instance = io_handler.IOHandler()
-    args_dict, _ = _parse(label, description)
+def main():
+    """Generate a set of histograms for the Cherenkov photons saved in the CORSIKA IACT file."""
+    args_dict, _, logger, _io_handler = startup_application(_parse)
 
-    output_path = io_handler_instance.get_output_directory()
-
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()
-    logger.info("Starting the application.")
 
     corsika_histograms_instance = CorsikaHistograms(
-        args_dict["iact_file"], output_path=output_path, hdf5_file_name=args_dict["hdf5_file_name"]
+        args_dict["iact_file"],
+        output_path=_io_handler.get_output_directory(),
+        hdf5_file_name=args_dict["hdf5_file_name"],
     )
     corsika_histograms_instance.run_export_pipeline(
         individual_telescopes=args_dict["individual_telescopes"],

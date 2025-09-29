@@ -21,33 +21,18 @@ r"""
 
     """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import metadata_model
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate a default simtools metadata file from a json schema.",
+    )
 
     config.parser.add_argument(
         "--schema",
@@ -65,21 +50,15 @@ def _parse(label, description):
     return config.initialize(output=False, require_command_line=True)
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, _ = _parse(
-        label, description="Generate a default simtools metadata file from a json schema."
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Generate a default simtools metadata file from a json schema."""
+    args_dict, _, logger, _io_handler = startup_application(_parse)
 
     default_values = metadata_model.get_default_metadata_dict(args_dict["schema"])
 
     if args_dict["output_file"] is None:
         print(default_values)
     else:
-        _io_handler = io_handler.IOHandler()
         output_file = _io_handler.get_output_file(args_dict["output_file"])
         logger.info(f"Writing default values to {output_file}")
         ascii_handler.write_data_to_file(

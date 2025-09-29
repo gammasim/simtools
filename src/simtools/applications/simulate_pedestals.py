@@ -54,17 +54,16 @@ azimuth_angle (float, optional)
     Azimuth angle in degrees.
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
-    config = configurator.Configurator(label=label, description="Simulate calibration events.")
+    config = configurator.Configurator(
+        label=get_application_label(__file__), description="Simulate calibration events."
+    )
     config.parser.add_argument(
         "--run_mode",
         help="Calibration run mode",
@@ -106,11 +105,7 @@ def _parse(label):
 
 
 def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, _, _ = startup_application(_parse, setup_io_handler=False)
 
     simulator = Simulator(label=args_dict.get("label"), args_dict=args_dict, db_config=db_config)
     simulator.simulate()

@@ -99,39 +99,26 @@ Plot all layouts for the North site and model version 6.0.0:
     simtools-plot-array-layout --site North --plot_all_layouts --model_version=6.0.0
 """
 
-import logging
-from pathlib import Path
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import simtools.layout.array_layout_utils as layout_utils
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.visualization import visualize
 from simtools.visualization.plot_array_layout import plot_array_layout
 
 
-def _parse(label, description, usage=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-    usage : str
-        Example on how to use the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description, usage=usage)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Plots array layout.",
+        usage=(
+            "Use '--array_layout_name plot_all' to plot all layouts for the given site "
+            "and model version."
+        ),
+    )
 
     config.parser.add_argument(
         "--figure_name",
@@ -248,18 +235,7 @@ def read_layouts(args_dict, db_config, logger):
 
 def main():
     """Plot array layout application."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label,
-        (
-            "Plots array layout."
-            "Use '--array_layout_name plot_all' to plot all layouts for the given site "
-            "and model version."
-        ),
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    io_handler_instance = io_handler.IOHandler()
+    args_dict, db_config, logger, _io_handler = startup_application(_parse)
 
     layouts = read_layouts(args_dict, db_config, logger)
 
@@ -299,7 +275,7 @@ def main():
 
         visualize.save_figure(
             fig_out,
-            io_handler_instance.get_output_directory() / plot_file_name,
+            _io_handler.get_output_directory() / plot_file_name,
             dpi=400,
         )
         plt.close()

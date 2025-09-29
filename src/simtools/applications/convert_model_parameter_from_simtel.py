@@ -35,33 +35,18 @@ r"""
 
 """
 
-import logging
-from pathlib import Path
-
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Convert simulation model parameter from sim_telarray to simtools format.",
+    )
 
     config.parser.add_argument(
         "--schema", help="Schema file for model parameter validation", required=True
@@ -81,14 +66,9 @@ def _parse(label=None, description=None):
     return config.initialize(simulation_model=["telescope", "parameter_version"], output=True)
 
 
-def main():  # noqa: D103
-    args_dict, _ = _parse(
-        label=Path(__file__).stem,
-        description="Convert simulation model parameter from sim_telarray to simtools format.",
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Convert simulation model parameter from sim_telarray to simtools format."""
+    args_dict, _, logger, _ = startup_application(_parse, setup_io_handler=False)
 
     simtel_config_reader = SimtelConfigReader(
         schema_file=args_dict["schema"],
