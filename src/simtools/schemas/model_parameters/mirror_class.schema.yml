@@ -12,8 +12,8 @@ description: |-
   parabolic primary made of a single piece (1), and a a secondary mirror
   optics (2), with primary and secondary each made of a single piece.
   Class 3 represents a simple Fresnel lens implementation.
-short_description: Parameter to control the type of mirror used (DC, parabolic or
-  SC).
+short_description: |-
+  Parameter to control the type of mirror used (DC, parabolic or SC).
 data:
   - type: uint64
     unit: dimensionless
@@ -23,13 +23,6 @@ data:
       max: 3
 instrument:
   class: Structure
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

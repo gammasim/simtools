@@ -21,13 +21,6 @@ data:
     description: Array element altitude above sea level.
 instrument:
   class: Structure
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

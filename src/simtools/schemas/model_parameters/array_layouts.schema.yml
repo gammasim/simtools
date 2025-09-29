@@ -33,11 +33,6 @@ data:
         additionalProperties: false
 instrument:
   class: Site
-  type:
-    - Observatory
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

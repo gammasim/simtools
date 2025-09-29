@@ -32,13 +32,6 @@ data:
       max: 1.
 instrument:
   class: Structure
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

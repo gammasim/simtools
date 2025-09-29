@@ -19,9 +19,6 @@ data:
     condition: default_trigger==AnalogSum
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
 activity:
   setting:
     - SetParameterFromExternal

@@ -19,11 +19,6 @@ data:
       min: 0.0
 instrument:
   class: Site
-  type:
-    - Observatory
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal
