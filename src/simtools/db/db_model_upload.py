@@ -322,6 +322,17 @@ def clone_simulation_model_repository(
     """
     Clone a git repository containing simulation model parameters and production tables.
 
+    Parameters
+    ----------
+    target_dir : Path or str
+        Target directory to clone the repository into.
+    repository_url : str
+        URL of the git repository to clone.
+    db_simulation_model_version : str
+        Version tag of the simulation model to checkout.
+    repository_branch : str, optional
+        Branch of the repository to use. If None, the version tag is used.
+
     Returns
     -------
     Path
