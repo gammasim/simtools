@@ -1,16 +1,13 @@
 %YAML 1.2
 ---
-title: Schema for flasher_pulse_width model parameter
+title: Schema for flasher_pulse_exp_decay model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_pulse_width
+name: flasher_pulse_exp_decay
 description: |-
-  Flasher pulse shape characteristic width.
-  For 'TopHat', this is the pulse width, for 'Gauss' the rms.
-short_description: |-
-  Flasher pulse shape width.
+  Exponential decay time of the flasher pulse shape.
 data:
   - type: float64
     unit: ns
@@ -19,6 +16,9 @@ data:
       min: 0
 instrument:
   class: Calibration
+  type:
+    - ILLN
+    - ILLS
 activity:
   setting:
     - SetParameterFromExternal

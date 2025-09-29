@@ -15,6 +15,7 @@ data:
       - Gauss
       - TopHat
       - Exponential
+      - Gauss-Exponential
 instrument:
   class: Calibration
 activity:
