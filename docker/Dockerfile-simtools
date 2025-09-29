@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1.4
+# Dockerfile for simtools build on top of CORSIKA/sim_telarray base image.
+#
+# This Dockerfile adds simtools to a base image that already contains
+# CORSIKA and sim_telarray.
+#
+# hadolint global ignore=DL3007,DL3013,DL3041,SC1091
+# - DL3007, DL3041: ignore warnings about using latest
+# - DL3013: ignore warnings about installing non-specific versions with microdnf)
+# - SC1091: ignore warning about not being able to source the bashrc
+
+ARG BASE_IMAGE
+ARG BUILD_BRANCH=main
+ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
+ARG PYTHON_VERSION=3.12
+
+FROM ${BASE_IMAGE}
+ARG BUILD_BRANCH
+ARG SIMTOOLS_REQUIREMENT
+ARG PYTHON_VERSION
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN microdnf update -y && microdnf install -y \
+    git gcc gcc-c++ \
+    python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+    microdnf clean all && \
+    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
+
+# Create python symlink pointing to the specified Python version
+RUN ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+
+RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
+  && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
+  && python${PYTHON_VERSION} -m venv env \
+  && . env/bin/activate \
+  && pip install --no-cache-dir -U pip \
+  && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
+  && echo ". /workdir/env/bin/activate" >> ~/.bashrc
+
+ENV PATH="/workdir/env/bin/:$PATH"
