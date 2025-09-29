@@ -54,33 +54,19 @@ Expected output is a ecsv file in the directory printed to the screen.
 
 """
 
-import logging
-from pathlib import Path
-
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Print a list of array element positions",
+    )
 
     config.parser.add_argument(
         "--input",
@@ -139,21 +125,13 @@ def _parse(label=None, description=None):
 
 def main():
     """Print a list of array elements."""
-    label = Path(__file__).stem
-    model_parameter_name = "array_coordinates"
-    args_dict, db_config = _parse(
-        label,
-        description=f"Print a list of array element positions ({model_parameter_name})",
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, _, _ = startup_application(_parse)
 
     if args_dict.get("input", "").endswith(".json"):
         site = args_dict.get("site", None)
         metadata, validate_schema_file = None, None
     else:
-        metadata = MetadataCollector(args_dict=args_dict, model_parameter_name=model_parameter_name)
+        metadata = MetadataCollector(args_dict=args_dict, model_parameter_name="array_coordinates")
         site = metadata.get_site(from_input_meta=True)
         validate_schema_file = metadata.get_data_model_schema_file_name()
 

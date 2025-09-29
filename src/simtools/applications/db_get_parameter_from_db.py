@@ -60,23 +60,24 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 from pprint import pprint
 
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description=(
             "Get a parameter entry from DB for a specific telescope or a site. "
             "The application receives a parameter name, a site, a telescope (if applicable), "
             "and a version. It then prints out the parameter entry. "
-        )
+        ),
     )
 
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
@@ -105,10 +106,7 @@ def _parse():
 
 
 def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 

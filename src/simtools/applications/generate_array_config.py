@@ -25,42 +25,23 @@ North - 5.0.0:
 The output is saved in simtools-output/test/model.
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate sim_telarray configuration files for a given array.",
+    )
     return config.initialize(db_config=True, simulation_model=["site", "layout", "model_version"])
 
 
 def main():
     """Generate sim_telarray configuration files for a given array."""
-    args_dict, db_config = _parse(
-        label=Path(__file__).stem,
-        description=("Generate sim_telarray configuration files for a given array."),
-    )
-    logger = logging.getLogger("simtools")
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, _, _ = startup_application(_parse)
 
     array_model = ArrayModel(
         label=args_dict["label"],

@@ -60,13 +60,12 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
 import numpy as np
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -74,24 +73,12 @@ from simtools.io.io_handler import IOHandler
 from simtools.simtel import simtel_config_reader
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Convert all model parameters from sim_telarray",
+    )
 
     config.parser.add_argument(
         "--simtel_cfg_file",
@@ -325,12 +312,7 @@ def print_list_of_files(args_dict, logger):
 
 
 def main():  # noqa: D103
-    args_dict, _ = _parse(
-        label=Path(__file__).stem,
-        description="Convert simulation model parameters from sim_telarray to simtools format.",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, _, logger, _ = startup_application(_parse, setup_io_handler=False)
 
     _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(args_dict, logger)
     print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger)

@@ -62,33 +62,18 @@ step 2 and 3 (useful for debugging):
 
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_startup import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.runners import simtools_runner
 
 
-def _parse(label, description, usage):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-    usage : str
-        Example on how to use the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description, usage=usage)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Run simtools applications using a configuration file.",
+        usage="simtools-run-application --config_file config_file_name",
+    )
 
     config.parser.add_argument(
         "--configuration_file",
@@ -113,13 +98,7 @@ def _parse(label, description, usage):
 
 
 def main():  # noqa: D103
-    args_dict, db_config = _parse(
-        Path(__file__).stem,
-        description="Run simtools applications using a configuration file.",
-        usage="simtools-run-application --config_file config_file_name",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
 
     simtools_runner.run_applications(args_dict, db_config, logger)
 
