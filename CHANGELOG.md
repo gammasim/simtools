@@ -7,6 +7,40 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.22.0](https://github.com/gammasim/simtools/releases/tag/v0.22.0) - 2025-09-30
+
+### Bugfixes
+
+- Fix integration tests after introducing the usage of `major.minor` model versions for tests. ([#1777](https://github.com/gammasim/simtools/pull/1777))
+- Use correct sign for flasher distance calculation with flasher z coordinate pointing towards camera. ([#1784](https://github.com/gammasim/simtools/pull/1784))
+
+### Documentation
+
+- Improve documentation on DB upload. ([#1775](https://github.com/gammasim/simtools/pull/1775))
+
+### New Features
+
+- Add software version range validation. Introduce software version for updated or new flasher simulation model parameters. ([#1763](https://github.com/gammasim/simtools/pull/1763))
+- Implement simulation models production table and model parameter update using the `simtools-maintain-simulation-model-add-production` application. ([#1765](https://github.com/gammasim/simtools/pull/1765))
+- Schema for info.yml files used in simulation models. ([#1790](https://github.com/gammasim/simtools/pull/1790))
+- Add flat-fielding devices for all telescope types. ([#1798](https://github.com/gammasim/simtools/pull/1798))
+- Add new application `simtools-db-upload-model-repository` for simplified upload of repository data to the database. ([#1801](https://github.com/gammasim/simtools/pull/1801))
+- Add flasher exponential decay pulse shape parameter. ([#1802](https://github.com/gammasim/simtools/pull/1802))
+
+### Maintenance
+
+- Linked parameter plots to parameter comparison reports. ([#1661](https://github.com/gammasim/simtools/pull/1661))
+- Added CLI argument to flexibly change PSF containment percentage as needed. ([#1766](https://github.com/gammasim/simtools/pull/1766))
+- Remove 'LATEST' options when setting the `DB_SIMULATION_MODEL_VERSION` configuration option (require explicit setting of the DB version). ([#1785](https://github.com/gammasim/simtools/pull/1785))
+- Introduce a simpler naming for the database (CTAO-Simulation-Model instead of CTAO-Simulation-ModelParameters). ([#1787](https://github.com/gammasim/simtools/pull/1787))
+- Remove `use_plain_output` option and generalize output direction generation. ([#1792](https://github.com/gammasim/simtools/pull/1792))
+- Simplify generation of production image and remove outdated `build-corsika-simtelarray` target. ([#1794](https://github.com/gammasim/simtools/pull/1794))
+- Increase robustness for unit and integration tests when cloning remote Git repositories. Add a 3x retry. ([#1796](https://github.com/gammasim/simtools/pull/1796))
+- Split CORSIKA/sim_telarray and simtools images into two. ([#1797](https://github.com/gammasim/simtools/pull/1797))
+- Change minimum python version requirement to 3.12 (following CTAO recommendation). ([#1799](https://github.com/gammasim/simtools/pull/1799))
+- Remove 'instrument:type' and 'instrument:site' in model parameter schema files. ([#1803](https://github.com/gammasim/simtools/pull/1803))
+
+
 ## [v0.21.0](https://github.com/gammasim/simtools/releases/tag/v0.21.0) - 2025-09-23
 
 ### Bugfixes
