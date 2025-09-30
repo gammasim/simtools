@@ -145,7 +145,7 @@ def version_kind(version_string):
     Returns
     -------
     str
-        The kind of version string ("major.minor" or "major.minor.patch").
+        The kind of version string ("major.minor", "major.minor.patch", or "major").
     """
     try:
         ver = Version(version_string)
