@@ -1515,3 +1515,149 @@ def test_get_db_name(db):
         )
         == "test_db"
     )
+
+
+def test_is_remote_database():
+    test_db = db_handler.DatabaseHandler(None)
+
+    assert test_db.is_remote_database() is False
+
+    test_db.mongo_db_config = {"db_server": "remote.server.com"}
+    assert test_db.is_remote_database() is True
+
+    test_db.mongo_db_config = {"db_server": "localhost"}
+    assert test_db.is_remote_database() is False
+
+    test_db.mongo_db_config = {"db_server": ""}
+    assert test_db.is_remote_database() is False
+
+
+def test_print_connection_info(db, mocker, caplog):
+    """Test print_connection_info method."""
+    with caplog.at_level(logging.INFO):
+        db.print_connection_info()
+
+    expected_message = (
+        f"Connected to MongoDB at {db.mongo_db_config['db_server']}:"
+        f"{db.mongo_db_config['db_api_port']} "
+        f"using database: {db.db_name}"
+    )
+    assert expected_message in caplog.text
+
+
+def test_print_connection_info_no_config(db_no_config_file, caplog):
+    """Test print_connection_info method with no configuration."""
+    with caplog.at_level(logging.INFO):
+        db_no_config_file.print_connection_info()
+
+    assert "No MongoDB configuration provided." in caplog.text
+
+
+def test_generate_compound_indexes_for_databases_specific_db(db, mocker, test_db):
+    """Test generate_compound_indexes_for_databases with specific database."""
+    mock_list_database_names = mocker.patch.object(
+        db.db_client, "list_database_names", return_value=["config", "admin", "local", test_db]
+    )
+    mock_generate_compound_indexes = mocker.patch.object(db, "generate_compound_indexes")
+
+    db.generate_compound_indexes_for_databases(
+        db_name=test_db, db_simulation_model="test_model", db_simulation_model_version="1.0.0"
+    )
+
+    mock_list_database_names.assert_called_once()
+    mock_generate_compound_indexes.assert_called_once_with(db_name=test_db)
+
+
+def test_generate_compound_indexes_for_databases_all_databases(db, mocker):
+    """Test generate_compound_indexes_for_databases with all databases."""
+    test_dbs = ["db1", "db2", "db3"]
+    mock_list_database_names = mocker.patch.object(
+        db.db_client, "list_database_names", return_value=["config", "admin", "local", *test_dbs]
+    )
+    mock_generate_compound_indexes = mocker.patch.object(db, "generate_compound_indexes")
+
+    db.generate_compound_indexes_for_databases(
+        db_name="all", db_simulation_model="test_model", db_simulation_model_version="1.0.0"
+    )
+
+    mock_list_database_names.assert_called_once()
+    assert mock_generate_compound_indexes.call_count == 3
+    for test_db in test_dbs:
+        mock_generate_compound_indexes.assert_any_call(db_name=test_db)
+
+
+def test_generate_compound_indexes_for_databases_db_not_found(db, mocker):
+    """Test generate_compound_indexes_for_databases with non-existent database."""
+    mock_list_database_names = mocker.patch.object(
+        db.db_client,
+        "list_database_names",
+        return_value=["config", "admin", "local", "existing_db"],
+    )
+
+    with pytest.raises(ValueError, match=r"Requested database 'non_existent' not found"):
+        db.generate_compound_indexes_for_databases(
+            db_name="non_existent",
+            db_simulation_model="test_model",
+            db_simulation_model_version="1.0.0",
+        )
+
+    mock_list_database_names.assert_called_once()
+
+
+def test_generate_compound_indexes_for_databases_with_get_db_name(db, mocker):
+    """Test generate_compound_indexes_for_databases using get_db_name."""
+    expected_db = "test_model-1-0-0"
+    mock_list_database_names = mocker.patch.object(
+        db.db_client, "list_database_names", return_value=["config", "admin", "local", expected_db]
+    )
+    mock_generate_compound_indexes = mocker.patch.object(db, "generate_compound_indexes")
+
+    db.generate_compound_indexes_for_databases(
+        db_name=None, db_simulation_model="test_model", db_simulation_model_version="1.0.0"
+    )
+
+    mock_list_database_names.assert_called_once()
+    mock_generate_compound_indexes.assert_called_once_with(db_name=expected_db)
+
+
+def test_generate_compound_indexes_with_test_db(db, mocker, test_db):
+    """Test generate_compound_indexes method."""
+    mock_collection = mocker.Mock()
+    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_collection)
+
+    db.generate_compound_indexes(db_name=test_db)
+
+    expected_collections = [
+        "telescopes",
+        "sites",
+        "configuration_sim_telarray",
+        "configuration_corsika",
+        "calibration_devices",
+        "production_tables",
+    ]
+
+    assert mock_get_collection.call_count == len(expected_collections)
+    assert mock_collection.create_index.call_count == len(expected_collections)
+
+    # Verify calls for model collections
+    for collection in expected_collections[:-1]:  # All except production_tables
+        mock_get_collection.assert_any_call(collection, db_name=test_db)
+        mock_collection.create_index.assert_any_call(
+            [("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]
+        )
+
+    # Verify call for production_tables
+    mock_get_collection.assert_any_call("production_tables", db_name=test_db)
+    mock_collection.create_index.assert_any_call([("collection", 1), ("model_version", 1)])
+
+
+def test_generate_compound_indexes_default_db_name(db, mocker):
+    """Test generate_compound_indexes with default db_name."""
+    mock_collection = mocker.Mock()
+    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_collection)
+    db.db_name = "default_db"
+
+    db.generate_compound_indexes()
+
+    # Verify it uses the default db_name
+    mock_get_collection.assert_any_call("telescopes", db_name="default_db")
