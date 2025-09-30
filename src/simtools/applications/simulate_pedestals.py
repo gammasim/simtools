@@ -104,8 +104,9 @@ def _parse():
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config, _, _ = startup_application(_parse, setup_io_handler=False)
+def main():
+    """Simulate pedestal events."""
+    args_dict, db_config, _, _ = startup_application(_parse)
 
     simulator = Simulator(label=args_dict.get("label"), args_dict=args_dict, db_config=db_config)
     simulator.simulate()
