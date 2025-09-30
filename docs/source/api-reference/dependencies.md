@@ -7,7 +7,7 @@
 ## application_control
 
 ```{eval-rst}
-.. automodule:: application_control
+.. automodule:: simtools.application_control
    :members:
 
 (dependencies)=
