@@ -49,7 +49,7 @@ def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
         label=get_application_label(__file__),
-        description="Submit and validate a model parameters).",
+        description="Submit and validate a model parameter.",
     )
 
     config.parser.add_argument(
