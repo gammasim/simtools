@@ -42,6 +42,7 @@ def main():
     databases = [
         d for d in db.db_client.list_database_names() if d not in ("config", "admin", "local")
     ]
+    logger.debug(f"Available databases: {databases}")
     requested = db.get_db_name(
         db_name=args_dict["db_name"],
         db_simulation_model_version=args_dict.get("db_simulation_model_version"),
