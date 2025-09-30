@@ -73,8 +73,8 @@ The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generat
 
 #### Option 1 (preferred): Fill local database from model parameter repository
 
-The script `upload_from_model_repository_to_db.sh` uses the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) from the CTAO GitLab and
-uploads its contents to the local database instance.
+The simtools package includes the application `simtools-db-upload-model-repository` to upload the model parameters from a
+local clone of the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) to a local database instance.
 
 #### Option 2: Fill local database from remote DB dump
 
