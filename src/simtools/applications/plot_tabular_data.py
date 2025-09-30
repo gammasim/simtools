@@ -24,7 +24,7 @@ Plot tabular data using a configuration file.
 """
 
 import simtools.utils.general as gen
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema

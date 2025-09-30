@@ -25,7 +25,7 @@ North - 5.0.0:
 The output is saved in simtools-output/test/model.
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 

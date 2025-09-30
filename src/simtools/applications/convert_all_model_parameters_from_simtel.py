@@ -65,7 +65,7 @@ from pathlib import Path
 import numpy as np
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import schema
 from simtools.io import ascii_handler

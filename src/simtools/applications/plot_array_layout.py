@@ -103,7 +103,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import simtools.layout.array_layout_utils as layout_utils
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.visualization import visualize
 from simtools.visualization.plot_array_layout import plot_array_layout

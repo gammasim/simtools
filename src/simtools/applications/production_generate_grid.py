@@ -47,7 +47,7 @@ from pathlib import Path
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.model.site_model import SiteModel

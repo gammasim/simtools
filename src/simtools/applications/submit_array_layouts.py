@@ -32,7 +32,7 @@ r"""
 
     """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import ascii_handler

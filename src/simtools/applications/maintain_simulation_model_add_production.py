@@ -33,7 +33,7 @@ The following example applies a patch update with changes defined in a YAML file
 
 from pathlib import Path
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model import model_repository
 

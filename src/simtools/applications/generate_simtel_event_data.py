@@ -126,7 +126,7 @@ To read a reduced event data file, use the following command reading on of the t
 
 from pathlib import Path
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
