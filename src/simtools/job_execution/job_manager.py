@@ -2,6 +2,7 @@
 
 import logging
 import subprocess
+import time
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -9,8 +10,52 @@ import simtools.utils.general as gen
 __all__ = ["JobExecutionError", "JobManager"]
 
 
+logger = logging.getLogger(__name__)
+
+
 class JobExecutionError(Exception):
     """Job execution error."""
+
+
+def retry_command(command, max_attempts=3, delay=10):
+    """
+    Execute a shell command with retry logic for network-related failures.
+
+    Parameters
+    ----------
+    command : str
+        Shell command to execute.
+    max_attempts : int
+        Maximum number of retry attempts (default: 3).
+    delay : int
+        Delay in seconds between attempts (default: 10).
+
+    Returns
+    -------
+    bool
+        True if command succeeded, False if all attempts failed.
+
+    Raises
+    ------
+    subprocess.CalledProcessError
+        If command fails after all retry attempts.
+    """
+    for attempt in range(1, max_attempts + 1):
+        logger.info(f"Attempt {attempt} of {max_attempts}: {command}")
+        try:
+            subprocess.run(command, shell=True, check=True, text=True)
+            logger.info(f"Command succeeded on attempt {attempt}")
+            return True
+        except subprocess.CalledProcessError as exc:
+            logger.warning(f"Command failed on attempt {attempt}")
+            if attempt < max_attempts:
+                logger.info(f"Waiting {delay}s before retry...")
+                time.sleep(delay)
+            else:
+                logger.error(f"Command failed after {max_attempts} attempts")
+                raise exc from None
+
+    return False
 
 
 class JobManager:

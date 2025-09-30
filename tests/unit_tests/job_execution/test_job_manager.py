@@ -193,3 +193,47 @@ def test_submit_local_test_mode(
     job_submitter._logger.info.assert_any_call(job_messages["running_locally"])
     job_submitter._logger.info.assert_any_call("Testing (local)")
     mock_subprocess_run.assert_not_called()
+
+
+def test_retry_command_success_first_attempt(mocker):
+    mock_subprocess_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_subprocess_run.return_value = None
+
+    result = jm.retry_command("echo test", max_attempts=3, delay=1)
+
+    assert result is True
+    mock_subprocess_run.assert_called_once_with("echo test", shell=True, check=True, text=True)
+
+
+def test_retry_command_success_second_attempt(mocker):
+    mock_subprocess_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_subprocess_run.side_effect = [subprocess.CalledProcessError(1, "echo test"), None]
+    mock_sleep = mocker.patch("simtools.job_execution.job_manager.time.sleep")
+
+    result = jm.retry_command("echo test", max_attempts=3, delay=5)
+
+    assert result is True
+    assert mock_subprocess_run.call_count == 2
+    mock_sleep.assert_called_once_with(5)
+
+
+def test_retry_command_failure_all_attempts(mocker):
+    mock_subprocess_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, "failing command")
+    mock_sleep = mocker.patch("simtools.job_execution.job_manager.time.sleep")
+
+    with pytest.raises(subprocess.CalledProcessError):
+        jm.retry_command("failing command", max_attempts=2, delay=1)
+
+    assert mock_subprocess_run.call_count == 2
+    mock_sleep.assert_called_once_with(1)
+
+
+def test_retry_command_default_parameters(mocker):
+    mock_subprocess_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_subprocess_run.return_value = None
+
+    result = jm.retry_command("echo test")
+
+    assert result is True
+    mock_subprocess_run.assert_called_once_with("echo test", shell=True, check=True, text=True)
