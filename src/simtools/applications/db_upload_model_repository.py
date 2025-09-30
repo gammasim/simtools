@@ -19,21 +19,23 @@ tmp_dir (str, optional)
 
 Examples
 --------
-Upload model repository to database using version tag:
+Upload model repository to database using a version tag
+(see simulation model repository for available tags):
 
 .. code-block:: console
 
     simtools-db-upload-model-repository \\
         --db_simulation_model CTAO-Simulation-Model \\
-        --db_simulation_model_version 6.2.0
+        --db_simulation_model_version v10.10.10
 
-Upload model repository using specific branch:
+Upload model repository using specific branch (the version tag is
+used to name the database, but no tag checkout is done):
 
 .. code-block:: console
 
     simtools-db-upload-model-repository \\
         --db_simulation_model CTAO-Simulation-Model \\
-        --db_simulation_model_version 6.2.0 \\
+        --db_simulation_model_version v10.10.10 \\
         --branch main
 
 """
