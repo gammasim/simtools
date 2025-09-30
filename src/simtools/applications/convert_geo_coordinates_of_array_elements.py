@@ -55,7 +55,7 @@ Expected output is a ecsv file in the directory printed to the screen.
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout

@@ -53,7 +53,7 @@ output_prefix (str, optional)
     Prefix for output files (default: empty).
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 

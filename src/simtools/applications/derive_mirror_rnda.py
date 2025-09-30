@@ -125,7 +125,7 @@ r"""
 
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
 

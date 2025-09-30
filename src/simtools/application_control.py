@@ -1,8 +1,4 @@
-"""
-Application startup utilities for simtools applications.
-
-This module provides common startup functionality for simtools applications.
-"""
+"""Application control utilities for startup and shutdown simtools applications."""
 
 import logging
 from pathlib import Path

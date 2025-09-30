@@ -80,7 +80,7 @@ Examples
 import logging
 from pathlib import Path
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model import data_reader
 from simtools.io import ascii_handler

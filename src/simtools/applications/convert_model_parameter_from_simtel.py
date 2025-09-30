@@ -36,7 +36,7 @@ r"""
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 

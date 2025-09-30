@@ -46,7 +46,7 @@ Plot tabular data for all types defined in the schema file:
 
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.visualization import plot_tables

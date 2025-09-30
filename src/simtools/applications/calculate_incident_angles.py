@@ -71,7 +71,7 @@ Example of a secondary mirror incident angle plot for a SST:
     :width: 49 %
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles

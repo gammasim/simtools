@@ -110,7 +110,7 @@ r"""
 
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt

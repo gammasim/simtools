@@ -37,7 +37,7 @@ Derive trigger rates for the South Alpha layout:
 
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 

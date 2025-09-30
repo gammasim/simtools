@@ -36,7 +36,7 @@ r"""
 
 from pathlib import Path
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
 from simtools.configuration import configurator
 

@@ -52,7 +52,7 @@ Retrieve telescope positions from database (utm coordinate system) and write to 
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel

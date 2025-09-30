@@ -2,7 +2,7 @@
 
 r"""Produces a markdown file for calibration reports."""
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.reporting.docs_read_parameters import ReadParameters
 

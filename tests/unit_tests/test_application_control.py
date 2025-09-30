@@ -1,9 +1,9 @@
-"""Unit tests for application_startup module."""
+"""Unit tests for application_control module."""
 
 import logging
 from unittest.mock import MagicMock
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 
 
 def test_get_application_label():

@@ -79,7 +79,7 @@ Examples
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.visualization.plot_simtel_events import PLOT_CHOICES, generate_and_save_plots
 

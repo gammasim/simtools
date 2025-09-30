@@ -72,7 +72,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing

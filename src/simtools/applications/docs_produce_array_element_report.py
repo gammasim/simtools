@@ -9,7 +9,7 @@ such as the parameter name, value, unit, description, and short description.
 
 from pathlib import Path
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters

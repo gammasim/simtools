@@ -82,7 +82,7 @@ Derive limits for a given file for custom defined array layouts:
         --output_file corsika_simulation_limits_lookup.ecsv
 """
 
-from simtools.application_startup import get_application_label, startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,

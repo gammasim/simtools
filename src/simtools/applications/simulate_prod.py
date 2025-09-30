@@ -67,7 +67,7 @@ r"""
     will be written to data_directory/label/simtel-data.
 """
 
-from simtools.application_startup import startup_application
+from simtools.application_control import startup_application
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
 
