@@ -1,0 +1,1328 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulator &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=5686f5df"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulator';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.22.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simulator</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simulator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simulator class for managing simulations of showers and array of telescopes.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.corsika_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span><span class="p">,</span> <span class="n">table_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.job_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">JobManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.array_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.corsika_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaRunner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.corsika_simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaSimtelRunner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventDataWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_array</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.testing.sim_telarray_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_sim_telarray_metadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">semver_to_int</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;InvalidRunsToSimulateError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Simulator&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="InvalidRunsToSimulateError">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.InvalidRunsToSimulateError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidRunsToSimulateError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid runs to simulate.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Simulator">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Simulator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulator is managing the simulation of showers and of the array of telescopes.</span>
+
+<span class="sd">    It interfaces with simulation software packages (e.g., CORSIKA or sim_telarray).</span>
+
+<span class="sd">    The configuration is set as a dict corresponding to the command line configuration groups</span>
+<span class="sd">    (especially simulation_software, simulation_model, simulation_parameters).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Configuration dictionary</span>
+<span class="sd">        (includes simulation_software, simulation_model, simulation_parameters groups).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+<span class="sd">    extra_commands: str or list of str</span>
+<span class="sd">        Extra commands to be added to the run script before the run command.</span>
+<span class="sd">    db_config: dict</span>
+<span class="sd">        Database configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">args_dict</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">extra_commands</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Simulator class.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span> <span class="o">=</span> <span class="n">db_config</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Init Simulator </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_run_list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_commands</span> <span class="o">=</span> <span class="n">extra_commands</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sim_telarray_instrument_seeds&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;sim_telarray_random_instrument_instances&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;seed_file_name&quot;</span><span class="p">:</span> <span class="s2">&quot;sim_telarray_instrument_seeds.txt&quot;</span><span class="p">,</span>  <span class="c1"># name only; no directory</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_array_models</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_runner</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The attribute simulation_software.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_software</span>
+
+    <span class="nd">@simulation_software</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_software</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set and test simulation_software type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation_software: choices: [sim_telarray, corsika, corsika_sim_telarray]</span>
+<span class="sd">            implemented are sim_telarray and CORSIKA or corsika_sim_telarray</span>
+<span class="sd">            (running CORSIKA and piping it directly to sim_telarray)</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">simulation_software</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid simulation software: </span><span class="si">{</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_software</span> <span class="o">=</span> <span class="n">simulation_software</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_array_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize array simulation models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of ArrayModel objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">versions</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">ArrayModel</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+                <span class="n">layout_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">),</span>
+                <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+                <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_seed_for_random_instrument_instances</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">],</span> <span class="n">version</span>
+                    <span class="p">),</span>
+                    <span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">[</span>
+                        <span class="s2">&quot;random_instrument_instances&quot;</span>
+                    <span class="p">],</span>
+                    <span class="s2">&quot;seed_file_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;seed_file_name&quot;</span><span class="p">],</span>
+                <span class="p">},</span>
+                <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">calibration_device_types</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_calibration_device_types</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">versions</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_seed_for_random_instrument_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate seed for random instances of the instrument.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        seed : str</span>
+<span class="sd">            Seed string given through configuration.</span>
+<span class="sd">        model_version: str</span>
+<span class="sd">            Model version.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Seed for random instances of the instrument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">seed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">semver_to_int</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10000000</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span> <span class="o">+</span> <span class="mi">1000000</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;North&quot;</span> <span class="k">else</span> <span class="n">seed</span> <span class="o">+</span> <span class="mi">2000000</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span> <span class="o">+</span> <span class="p">(</span><span class="nb">int</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="n">seed</span> <span class="o">+</span> <span class="p">(</span><span class="nb">int</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_run_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize run list using the configuration values.</span>
+
+<span class="sd">        Uses &#39;run_number&#39;, &#39;run_number_offset&#39; and &#39;number_of_runs&#39; arguments</span>
+<span class="sd">        to create a list of run numbers.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of run numbers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">offset_run_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_number_offset&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;run_number&quot;</span><span class="p">,</span> <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_run_list_and_range</span><span class="p">(</span>
+                <span class="n">run_list</span><span class="o">=</span><span class="n">offset_run_number</span><span class="p">,</span>
+                <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_run_list_and_range</span><span class="p">(</span>
+            <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">run_range</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">offset_run_number</span><span class="p">,</span>
+                <span class="n">offset_run_number</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">],</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_run_list_and_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare list of run numbers from a list or from a range.</span>
+
+<span class="sd">        If both arguments are given, they will be merged into a single list.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run_list: list</span>
+<span class="sd">            list of runs (integers)</span>
+<span class="sd">        run_range:list</span>
+<span class="sd">            min and max of range of runs to be simulated (two list entries)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            list of unique run numbers (integers)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">run_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">run_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Nothing to prepare - run_list and run_range not given.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">validated_runs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">run_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">validated_runs</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">run_list</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">validated_runs</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run list must contain only integers: </span><span class="si">{</span><span class="n">run_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">run_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">run_range</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">run_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Run_range must contain two integers only: </span><span class="si">{</span><span class="n">run_range</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">run_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">run_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">run_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">validated_runs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">run_range</span><span class="p">))</span>
+
+        <span class="n">validated_runs_unique</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">validated_runs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Runlist: </span><span class="si">{</span><span class="n">validated_runs_unique</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">validated_runs_unique</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_corsika_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define CORSIKA configurations based on the simulation model.</span>
+
+<span class="sd">        For &#39;corsika_sim_telarray&#39;, this is a list since multiple configurations</span>
+<span class="sd">        might be defined to run in a single job using multipipe.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CorsikaConfig or list of CorsikaConfig</span>
+<span class="sd">            CORSIKA configuration(s) based on the simulation model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">corsika_configurations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">array_model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="n">corsika_configurations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">CorsikaConfig</span><span class="p">(</span>
+                    <span class="n">array_model</span><span class="o">=</span><span class="n">array_model</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                    <span class="n">args_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">,</span>
+                    <span class="n">db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+                    <span class="n">dummy_simulations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_calibration_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">corsika_configurations</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span>
+            <span class="k">else</span> <span class="n">corsika_configurations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize corsika configuration and simulation runners.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner</span>
+<span class="sd">            Simulation runner object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">corsika_configurations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_configuration</span><span class="p">()</span>
+
+        <span class="n">runner_class</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;corsika&quot;</span><span class="p">:</span> <span class="n">CorsikaRunner</span><span class="p">,</span>
+            <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span> <span class="n">SimulatorArray</span><span class="p">,</span>
+            <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">:</span> <span class="n">CorsikaSimtelRunner</span><span class="p">,</span>
+        <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">)</span>
+
+        <span class="n">runner_args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="s2">&quot;corsika_config&quot;</span><span class="p">:</span> <span class="n">corsika_configurations</span><span class="p">,</span>
+            <span class="s2">&quot;simtel_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;use_multipipe&quot;</span><span class="p">:</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="n">CorsikaSimtelRunner</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">SimulatorArray</span><span class="p">:</span>
+            <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;keep_seeds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corsika_test_seeds&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">CorsikaRunner</span><span class="p">:</span>
+            <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;sim_telarray_seeds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span>
+        <span class="k">if</span> <span class="n">runner_class</span> <span class="ow">is</span> <span class="n">CorsikaSimtelRunner</span><span class="p">:</span>
+            <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;sequential&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sequential&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">runner_args</span><span class="p">[</span><span class="s2">&quot;calibration_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_calibration_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">runner_class</span><span class="p">(</span><span class="o">**</span><span class="n">runner_args</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_results_without_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fill results dict without calling submit (e.g., for testing).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_file_list: str or list of str</span>
+<span class="sd">            Single file or list of files of shower simulations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">):</span>
+            <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_guess_run_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_results</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">run</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulator.simulate">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.simulate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Submit a run script as a job.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_file_list: str or list of str</span>
+<span class="sd">            Single file or list of files of shower simulations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">runs_and_files_to_submit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_and_files_to_submit</span><span class="p">(</span>
+            <span class="n">input_file_list</span><span class="o">=</span><span class="n">input_file_list</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Starting submission for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">runs_and_files_to_submit</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;run</span><span class="si">{</span><span class="s1">&#39;s&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">runs_and_files_to_submit</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">runs_and_files_to_submit</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">run_script</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">prepare_run_script</span><span class="p">(</span>
+                <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">input_file</span><span class="p">,</span> <span class="n">extra_commands</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_commands</span>
+            <span class="p">)</span>
+
+            <span class="n">job_manager</span> <span class="o">=</span> <span class="n">JobManager</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_test</span><span class="p">)</span>
+            <span class="n">job_manager</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                <span class="n">run_script</span><span class="o">=</span><span class="n">run_script</span><span class="p">,</span>
+                <span class="n">run_out_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
+                <span class="p">),</span>
+                <span class="n">log_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+                    <span class="n">file_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">),</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_results</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">run_number</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_runs_and_files_to_submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a dictionary with run numbers and simulation files.</span>
+
+<span class="sd">        The latter are expected to be given for the sim_telarray simulator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_file_list: str or list of str</span>
+<span class="sd">            Single file or list of files of shower simulations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        runs_and_files: dict</span>
+<span class="sd">            dictionary with run number as key and (if available) simulation</span>
+<span class="sd">            file name as value</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no runs are to be submitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting runs and files to submit (</span><span class="si">{</span><span class="n">input_file_list</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_file_list</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
+            <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess_run_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">):</span> <span class="n">file</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">input_file_list</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_to_simulate</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_runs_and_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No runs to submit.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_runs_and_files</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_guess_run_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract the run number from the given file name.</span>
+
+<span class="sd">        Input file names can follow any pattern with the</span>
+<span class="sd">        string &#39;run&#39; followed by the run number.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: Path</span>
+<span class="sd">            Simulation file name</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            The extracted run number. If extraction fails, returns 1 and logs a warning.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">run_str</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;run\d*&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">run_str</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run number could not be guessed from </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> using run = 1&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fill the results dict with input, output, hist, and log files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: str</span>
+<span class="sd">            input file name</span>
+<span class="sd">        run_number: int</span>
+<span class="sd">            run number</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">,</span> <span class="s2">&quot;sub_out&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="s2">&quot;event_data&quot;</span><span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_file_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+
+        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_file_name</span><span class="p">(</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">)):</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">get_file_name</span><span class="p">(</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span> <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;log&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;hist&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;event_data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;event_data&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;corsika&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span>
+                        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Simulator.get_file_list">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.get_file_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get list of files generated by simulations.</span>
+
+<span class="sd">        Options are &quot;input&quot;, &quot;simtel_output&quot;, &quot;hist&quot;, &quot;log&quot;, &quot;corsika_log&quot;.</span>
+<span class="sd">        Not all file types are available for all simulation types.</span>
+<span class="sd">        Returns an empty list for an unknown file type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_type : str</span>
+<span class="sd">            File type to be listed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List with the full path of all output files.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">file_type</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_resources_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare a simple report on computing wall clock time used in the simulations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_file_list: str or list of str</span>
+<span class="sd">            Single file or list of files of shower simulations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">           Dictionary with reports on computing resources</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_file_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;Wall time/run [sec]&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_results_without_run</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
+
+        <span class="n">runtime</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">_resources</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
+            <span class="n">_resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_resources</span><span class="p">(</span><span class="n">run_number</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;runtime&quot;</span><span class="p">):</span>
+                <span class="n">runtime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_resources</span><span class="p">[</span><span class="s2">&quot;runtime&quot;</span><span class="p">])</span>
+
+        <span class="n">mean_runtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">runtime</span><span class="p">)</span>
+
+        <span class="n">resource_summary</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">resource_summary</span><span class="p">[</span><span class="s2">&quot;Wall time/run [sec]&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_runtime</span>
+        <span class="k">if</span> <span class="s2">&quot;n_events&quot;</span> <span class="ow">in</span> <span class="n">_resources</span> <span class="ow">and</span> <span class="n">_resources</span><span class="p">[</span><span class="s2">&quot;n_events&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">resource_summary</span><span class="p">[</span><span class="s2">&quot;#events/run&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_resources</span><span class="p">[</span><span class="s2">&quot;n_events&quot;</span><span class="p">]</span>
+            <span class="n">resource_summary</span><span class="p">[</span><span class="s2">&quot;Wall time/1000 events [sec]&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">mean_runtime</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">_resources</span><span class="p">[</span><span class="s2">&quot;n_events&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">resource_summary</span>
+
+<div class="viewcode-block" id="Simulator.resources">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.resources">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print a simple report on computing resources used.</span>
+
+<span class="sd">        Includes run time per run only at this point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_file_list: str or list of str</span>
+<span class="sd">            Single file or list of files of shower simulations.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_resources_report</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----------------------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing Resources Report - </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2"> Simulations&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">resources</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----------------------------&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_runs_to_simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process run_list and run_range and return the validated list of runs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run_list: list</span>
+<span class="sd">            list of runs (integers)</span>
+<span class="sd">        run_range:list</span>
+<span class="sd">            min and max of range of runs to be simulated (two list entries)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            list of unique run numbers (integers)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">run_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">run_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_run_list_and_range</span><span class="p">(</span><span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulator.save_file_lists">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.save_file_lists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_file_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save files lists for output and log files.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">file_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">]:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">_files.txt&quot;</span><span class="p">)</span>
+            <span class="n">file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving list of </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">):</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files to save for </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2"> files.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulator.save_reduced_event_lists">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.save_reduced_event_lists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_reduced_event_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save reduced event lists with event data on simulated and triggered events.</span>
+
+<span class="sd">        The files are saved with the same name as the sim_telarray output file</span>
+<span class="sd">        but with a &#39;hdf5&#39; extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Reduced event lists can only be saved for sim_telarray simulations.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">input_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
+        <span class="n">output_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;event_data&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_files</span><span class="p">):</span>
+            <span class="n">generator</span> <span class="o">=</span> <span class="n">SimtelIOEventDataWriter</span><span class="p">([</span><span class="n">input_file</span><span class="p">])</span>
+            <span class="n">table_handler</span><span class="o">.</span><span class="n">write_tables</span><span class="p">(</span>
+                <span class="n">tables</span><span class="o">=</span><span class="n">generator</span><span class="o">.</span><span class="n">process_files</span><span class="p">(),</span>
+                <span class="n">output_file</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">),</span>
+                <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulator.pack_for_register">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.pack_for_register">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pack_for_register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_for_grid_upload</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pack simulation output files for registering on the grid.</span>
+
+<span class="sd">        Creates separate tarballs for each model version&#39;s log files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        directory_for_grid_upload: str</span>
+<span class="sd">            Directory for the tarball with output files.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Packing the output files for registering on the grid (</span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">output_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
+        <span class="n">log_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="n">corsika_log_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">)</span>
+        <span class="n">histogram_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;hist&quot;</span><span class="p">)</span>
+        <span class="n">reduced_event_files</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;event_data&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save_reduced_event_lists&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
+
+        <span class="n">directory_for_grid_upload</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">directory_for_grid_upload</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">directory_for_grid_upload</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;directory_for_grid_upload&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># If there are more than one model version,</span>
+        <span class="c1"># duplicate the corsika log file to have one for each model version with the &quot;right name&quot;.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">corsika_log_files</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_corsika_log_file_for_all_versions</span><span class="p">(</span><span class="n">corsika_log_files</span><span class="p">)</span>
+
+        <span class="c1"># Group files by model version</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="n">model_version</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="n">model_files</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">pack_model_files</span><span class="p">())</span>
+
+            <span class="c1"># Filter files for this model version</span>
+            <span class="n">model_logs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">log_files</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+            <span class="n">model_hists</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">histogram_files</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+            <span class="n">model_corsika_logs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">corsika_log_files</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">model_logs</span><span class="p">:</span>
+                <span class="n">tar_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_logs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;log.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;log_hist.tar.gz&quot;</span><span class="p">)</span>
+                <span class="n">tar_file_path</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">)</span>
+                <span class="c1"># Add all relevant model, log, histogram, and CORSIKA log files to the tarball</span>
+                <span class="n">files_to_tar</span> <span class="o">=</span> <span class="n">model_logs</span> <span class="o">+</span> <span class="n">model_hists</span> <span class="o">+</span> <span class="n">model_corsika_logs</span> <span class="o">+</span> <span class="n">model_files</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">pack_tar_file</span><span class="p">(</span><span class="n">tar_file_path</span><span class="p">,</span> <span class="n">files_to_tar</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file_to_move</span> <span class="ow">in</span> <span class="n">output_files</span> <span class="o">+</span> <span class="n">reduced_event_files</span><span class="p">:</span>
+            <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_to_move</span><span class="p">)</span>
+            <span class="n">destination_file</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span> <span class="o">/</span> <span class="n">source_file</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="n">destination_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overwriting existing file: </span><span class="si">{</span><span class="n">destination_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output files for the grid placed in </span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulator.validate_metadata">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.validate_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate metadata in the sim_telarray output files.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No sim_telarray files to validate.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;simtel_output&quot;</span><span class="p">)</span>
+            <span class="n">output_file</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating metadata for </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">assert_sim_telarray_metadata</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata for sim_telarray file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> is valid.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No sim_telarray file found for model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_corsika_log_file_for_all_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_log_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create copies of the CORSIKA log file for each model version.</span>
+
+<span class="sd">        Adds a header comment to each copy explaining its relationship to the original.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        corsika_log_files: list</span>
+<span class="sd">            List containing the original CORSIKA log file path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">original_log</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">corsika_log_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># Find which model version the original log belongs to</span>
+        <span class="n">original_version</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+                <span class="sa">rf</span><span class="s2">&quot;(?&lt;![0-9A-Za-z])</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="p">)</span><span class="si">}</span><span class="s2">(?![0-9A-Za-z])&quot;</span><span class="p">,</span>
+                <span class="n">original_log</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="o">==</span> <span class="n">original_version</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">new_log</span> <span class="o">=</span> <span class="n">original_log</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">original_log</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="n">original_version</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">new_log</span><span class="p">,</span> <span class="s2">&quot;wt&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">new_file</span><span class="p">:</span>
+                <span class="c1"># Write the header to the new file</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;###############################################################</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Copy of CORSIKA log file from model version </span><span class="si">{</span><span class="n">original_version</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Applicable also for </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2"> (same CORSIKA configuration,</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;different sim_telarray model versions in the same run).</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;###############################################################</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+                <span class="c1"># Copy the content of the original log file, ignoring invalid characters</span>
+                <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">original_log</span><span class="p">,</span> <span class="s2">&quot;rt&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">orig_file</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">orig_file</span><span class="p">:</span>
+                        <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+            <span class="n">corsika_log_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">new_log</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_calibration_run</span><span class="p">(</span><span class="n">run_mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if this simulation is a calibration run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run_mode: str</span>
+<span class="sd">            Run mode of the simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if it is a calibration run, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">run_mode</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;pedestals&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dark_pedestals&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb_only_pedestals&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;direct_injection&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_calibration_device_types</span><span class="p">(</span><span class="n">run_mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the list of calibration device types based on the run mode.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run_mode: str</span>
+<span class="sd">            Run mode of the simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of calibration device types.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">run_mode</span> <span class="o">==</span> <span class="s2">&quot;direct_injection&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;flat_fielding&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
