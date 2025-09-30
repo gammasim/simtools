@@ -18,9 +18,6 @@ data:
       - Gauss-Exponential
 instrument:
   class: Calibration
-  type:
-    - ILLN
-    - ILLS
 activity:
   setting:
     - SetParameterFromExternal

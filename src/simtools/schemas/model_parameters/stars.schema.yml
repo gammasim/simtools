@@ -20,11 +20,6 @@ data:
     default: null
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

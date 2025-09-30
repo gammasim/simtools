@@ -260,18 +260,6 @@ definitions:
           - Telescope
           - configuration_sim_telarray
           - configuration_corsika
-      type:
-        type: array
-        items:
-          $ref: '#/definitions/InstrumentTypeElement'
-      site:
-        type: array
-        description: "associated CTAO site"
-        items:
-          type: string
-          enum:
-            - North
-            - South
     required:
       - class
     title: Instrument

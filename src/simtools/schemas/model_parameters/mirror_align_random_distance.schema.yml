@@ -16,11 +16,6 @@ data:
     condition: mirror_class==1
 instrument:
   class: Structure
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetMirrorPanelAlignment

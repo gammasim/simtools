@@ -19,11 +19,6 @@ data:
       max: 0.25
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetParameterFromExternal

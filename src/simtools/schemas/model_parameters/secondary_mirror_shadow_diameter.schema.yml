@@ -22,9 +22,6 @@ data:
     default: -1.
 instrument:
   class: Structure
-  type:
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

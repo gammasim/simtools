@@ -17,11 +17,6 @@ data:
     default: 0.24
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

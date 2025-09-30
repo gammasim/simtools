@@ -76,11 +76,6 @@ data:
         required: [name, multiplicity, width, hard_stereo, min_separation]
 instrument:
   class: Site
-  type:
-    - Observatory
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetParameterFromExternal

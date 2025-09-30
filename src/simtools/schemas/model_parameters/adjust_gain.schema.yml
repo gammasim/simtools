@@ -20,11 +20,6 @@ data:
       max: 10.
 instrument:
   class: Camera
-  type:
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal
