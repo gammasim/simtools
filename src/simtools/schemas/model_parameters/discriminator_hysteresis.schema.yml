@@ -13,13 +13,6 @@ description: |-
 short_description: Value of the discriminator hysteresis.
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 data:
   - type: float64
     unit: mV

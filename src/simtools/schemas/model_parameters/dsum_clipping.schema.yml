@@ -10,8 +10,7 @@ description: |-
   The amplitude level (in ADC counts above pedestal) at which the digitized
   signal from each pixel (after optional shaping) is clipped for its
   contribution to the digital sum trigger.
-short_description: Amplitude level at which the digitized signal from each pixel is
-  clipped.
+short_description: Amplitude level at which the digitized signal from each pixel is clipped.
 data:
   - type: int64
     default: 0
@@ -21,9 +20,6 @@ data:
     condition: default_trigger==DigitalSum
 instrument:
   class: Camera
-  type:
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetParameterFromExternal

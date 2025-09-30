@@ -8,8 +8,8 @@ meta_schema_version: 0.1.0
 name: geomag_rotation
 short_description: Rotation angle between geographic South and geomagnetic North.
 description: |-
-   Rotation angle between geographic South and geomagnetic North direction
-   (corresponds to CORSIKA ARRANG parameter).
+  Rotation angle between geographic South and geomagnetic North direction
+  (corresponds to CORSIKA ARRANG parameter).
 data:
   - type: float64
     unit: deg
@@ -18,11 +18,6 @@ data:
       max: 180.0
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetGeomagneticField
