@@ -1,6 +1,14 @@
 (dependencymanagement)=
 
-# Dependency and version management.
+# Application, dependency and version management.
+
+(application_control)=
+
+## application_control
+
+```{eval-rst}
+.. automodule:: application_control
+   :members:
 
 (dependencies)=
 
