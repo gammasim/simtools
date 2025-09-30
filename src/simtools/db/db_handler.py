@@ -2,6 +2,7 @@
 
 import io
 import logging
+import re
 from collections import defaultdict
 from pathlib import Path
 from threading import Lock
@@ -124,6 +125,34 @@ class DatabaseHandler:
             return None
         return None if (db_simulation_model_version or model_name) else self.db_name
 
+    def print_connection_info(self):
+        """Print the connection information."""
+        if self.mongo_db_config:
+            self._logger.info(
+                f"Connected to MongoDB at {self.mongo_db_config['db_server']}:"
+                f"{self.mongo_db_config['db_api_port']} "
+                f"using database: {self.db_name}"
+            )
+        else:
+            self._logger.info("No MongoDB configuration provided.")
+
+    def is_remote_database(self):
+        """
+        Check if the database is remote.
+
+        Check for domain pattern like "cta-simpipe-protodb.zeuthen.desy.de"
+
+        Returns
+        -------
+        bool
+            True if the database is remote, False otherwise.
+        """
+        if self.mongo_db_config:
+            db_server = self.mongo_db_config["db_server"]
+            domain_pattern = r"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$"
+            return bool(re.match(domain_pattern, db_server))
+        return False
+
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
         if mongo_db_config is None or all(value is None for value in mongo_db_config.values()):
@@ -167,6 +196,46 @@ class DatabaseHandler:
             tlsallowinvalidhostnames=True,
             tlsallowinvalidcertificates=True,
         )
+
+    def generate_compound_indexes_for_databases(
+        self, db_name, db_simulation_model, db_simulation_model_version
+    ):
+        """
+        Generate compound indexes for several databases.
+
+        Parameters
+        ----------
+        db_name: str
+            Name of the database.
+        db_simulation_model: str
+            Name of the simulation model.
+        db_simulation_model_version: str
+            Version of the simulation model.
+
+        Raises
+        ------
+        ValueError
+            If the requested database is not found.
+
+        """
+        databases = [
+            d for d in self.db_client.list_database_names() if d not in ("config", "admin", "local")
+        ]
+        requested = self.get_db_name(
+            db_name=db_name,
+            db_simulation_model_version=db_simulation_model_version,
+            model_name=db_simulation_model,
+        )
+        if requested != "all" and requested not in databases:
+            raise ValueError(
+                f"Requested database '{requested}' not found. "
+                f"Following databases are available: {', '.join(databases)}"
+            )
+
+        databases = databases if requested == "all" else [requested]
+        for dbs in databases:
+            self._logger.info(f"Generating compound indexes for database: {dbs}")
+            self.generate_compound_indexes(db_name=dbs)
 
     def generate_compound_indexes(self, db_name=None):
         """

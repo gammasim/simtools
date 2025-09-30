@@ -61,6 +61,7 @@ simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
 simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
 simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
+simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
