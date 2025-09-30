@@ -169,7 +169,7 @@ def compare_versions(version_string_1, version_string_2, level=MAJOR_MINOR_PATCH
     version_string_2 : str
         Second version string to compare.
     level : str, optional
-        Level of comparison: "major", "major.minor", or "major.minor.patch
+        Level of comparison: "major", "major.minor", or "major.minor.patch"
 
     Returns
     -------
