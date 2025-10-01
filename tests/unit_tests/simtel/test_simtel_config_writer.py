@@ -155,8 +155,38 @@ def test_convert_model_parameters_to_simtel_format(
         content = f.read()
         assert "Trigger 1 of 1" in content
         assert "hardstereo" in content
-        assert "minsep" in content
-        assert "width" in content
+        assert "minsep 40" in content
+        assert "width 10" in content
+
+
+def test_convert_model_parameters_to_simtel_format_hard_stereo_false(
+    simtel_config_writer, tmp_test_directory, telescope_model_lst
+):
+    model_path = Path(tmp_test_directory) / "model"
+    model_path.mkdir(exist_ok=True)
+
+    array_triggers = [
+        {
+            "name": "MSTS_single_telescope",
+            "multiplicity": {"value": 1},
+            "width": {"value": 10, "unit": "ns"},
+            "min_separation": {"value": 40, "unit": "m"},
+            "hard_stereo": {"value": False, "unit": None},
+        },
+    ]
+    simtel_name, value = simtel_config_writer._convert_model_parameters_to_simtel_format(
+        "array_triggers", array_triggers, model_path, {"MSTS-01": telescope_model_lst}
+    )
+
+    assert simtel_name == "array_triggers"
+    assert value == "array_triggers.dat"
+
+    with open(Path(model_path) / value) as f:
+        content = f.read()
+        assert "Trigger 1 of 1" in content
+        assert "hardstereo" not in content
+        assert "minsep 40" in content
+        assert "width 10" in content
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
