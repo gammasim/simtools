@@ -66,7 +66,7 @@ def test_new_testeff_version_file_not_found(builtins_open):
     with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake_for_test/path"}):
         with mock.patch(builtins_open, side_effect=FileNotFoundError):
             with pytest.raises(
-                FileNotFoundError, match="The testeff executable could not be found."
+                FileNotFoundError, match=r"The testeff executable could not be found."
             ):
                 helpers._new_testeff_version()
 

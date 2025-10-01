@@ -61,7 +61,7 @@ def test_get_array_elements_for_layout(db_config, model_version):
     assert "LSTN-01" in _north.get_array_elements_for_layout("test_layout")
 
     with pytest.raises(
-        ValueError, match="Array layout 'not_a_layout' not found in 'North' site model."
+        ValueError, match=r"Array layout 'not_a_layout' not found in 'North' site model."
     ):
         _north.get_array_elements_for_layout("not_a_layout")
 
