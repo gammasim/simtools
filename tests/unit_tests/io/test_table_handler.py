@@ -95,7 +95,7 @@ def mock_h5py_file(mocker):
 
 
 def test_read_table_file_type_empty_list():
-    with pytest.raises(ValueError, match="No input files provided."):
+    with pytest.raises(ValueError, match=r"No input files provided."):
         read_table_file_type([])
 
 
@@ -278,7 +278,7 @@ def test_write_tables_fits_overwrite_false(tmp_path, mock_table, mock_fits_objec
 
     mocker.patch("pathlib.Path.exists", return_value=True)
 
-    with pytest.raises(FileExistsError, match="^Output file "):
+    with pytest.raises(FileExistsError, match=r"^Output file "):
         write_tables([mock_table], output_file, overwrite_existing=False, file_type="FITS")
 
 

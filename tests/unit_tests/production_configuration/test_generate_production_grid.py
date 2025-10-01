@@ -289,7 +289,7 @@ def test_apply_lookup_table_limits(grid_gen):
 def test_no_matching_rows_in_lookup_table(axes_definition, observing_location, observing_time):
     """Test behavior when no matching rows are found in the lookup table."""
     with pytest.raises(
-        ValueError, match="No matching rows in the lookup table for telescope_ids: \\[999\\]"
+        ValueError, match=r"No matching rows in the lookup table for telescope_ids: \[999\]"
     ):
         GridGeneration(
             axes=axes_definition,

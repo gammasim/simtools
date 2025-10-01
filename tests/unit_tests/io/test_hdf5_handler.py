@@ -54,7 +54,7 @@ def test_fill_hdf5_table_wrong_dimensions(corsika_histograms_instance_set_histog
     x_label = "test_x_label"
     y_label = None
 
-    with pytest.raises(ValueError, match="Histogram must be either 1D or 2D."):
+    with pytest.raises(ValueError, match=r"Histogram must be either 1D or 2D."):
         fill_hdf5_table(
             hist,
             x_bin_edges,
@@ -72,7 +72,7 @@ def test_fill_hdf5_table_1d_with_y_bin_edges(corsika_histograms_instance_set_his
     x_label = "test_x_label"
     y_label = None
 
-    with pytest.raises(ValueError, match="y_bin_edges should be None for 1D histograms."):
+    with pytest.raises(ValueError, match=r"y_bin_edges should be None for 1D histograms."):
         fill_hdf5_table(
             hist,
             x_bin_edges,
@@ -90,7 +90,7 @@ def test_fill_hdf5_table_2d_without_y_bin_edges(corsika_histograms_instance_set_
     x_label = "test_x_label"
     y_label = "test_y_label"
 
-    with pytest.raises(ValueError, match="y_bin_edges should not be None for 2D histograms."):
+    with pytest.raises(ValueError, match=r"y_bin_edges should not be None for 2D histograms."):
         fill_hdf5_table(
             hist,
             x_bin_edges,
