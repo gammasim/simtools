@@ -953,8 +953,6 @@ class ReadParameters:
 
     def generate_model_parameter_reports_for_devices(self, array_elements):
         """Create model-parameter comparison reports for calibration devices."""
-        # Keep the calibration device reports in the same output directory as telescope reports
-        # Don't change the output path to a different location
         for calibration_device in array_elements:
             device_sites = names.get_site_from_array_element_name(calibration_device)
             # parameters are site independent so just take the first site to read from db
