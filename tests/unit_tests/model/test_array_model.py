@@ -220,7 +220,7 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
     ):
         archive_path = array_model.pack_model_files()
 
-        assert archive_path == mock_output_dir.joinpath("model_files.tar.gz")
+        assert archive_path == mock_output_dir.joinpath(f"model_files_{model_version}.tar.gz")
         assert mock_tarfile.add.call_count == 2
 
     mock_rglob = MagicMock(return_value=[])
