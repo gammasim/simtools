@@ -10,6 +10,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools.io import io_handler
+from simtools.light_emission.native_backend import HAS_NATIVE, run_ff_1m_native
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
@@ -61,10 +62,15 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
-        if self.calibration_model.get_parameter_value("flasher_type"):
-            config["light_source_type"] = self.calibration_model.get_parameter_value(
-                "flasher_type"
-            ).lower()
+        # Try to get flasher_type from database model, but don't fail if it's missing
+        try:
+            flasher_type_from_db = self.calibration_model.get_parameter_value("flasher_type")
+            if flasher_type_from_db and not config.get("light_source_type"):
+                config["light_source_type"] = flasher_type_from_db.lower()
+        except (KeyError, AttributeError):
+            # flasher_type not available in database, use provided config or default
+            if not config.get("light_source_type"):
+                config["light_source_type"] = "flat_fielding"  # Default fallback
 
         config["flasher_photons"] = (
             self.calibration_model.get_parameter_value("flasher_photons")
@@ -88,21 +94,137 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             The output simtel file path.
         """
+        # Optional native path (feature-gated): when enabled and available, run ff-1m via bindings.
+        if self.light_emission_config.get("use_native_lightemission"):
+            return self.simulate_native()
+
         run_script = self.prepare_script()
         log_path = Path(self.output_directory) / "logfile.log"
         with open(log_path, "w", encoding="utf-8") as fh:
-            subprocess.run(
-                run_script,
-                shell=False,
-                check=False,
-                text=True,
-                stdout=fh,
-                stderr=fh,
-            )
+            try:
+                subprocess.run(
+                    run_script,
+                    shell=False,
+                    check=True,
+                    text=True,
+                    stdout=fh,
+                    stderr=fh,
+                )
+            except subprocess.CalledProcessError:
+                self._logger.warning("Light emission subprocess returned non-zero exit status")
         out = Path(self._get_simulation_output_filename())
         if not out.exists():
             self._logger.warning(f"Expected sim_telarray output not found: {out}")
         return out
+
+    def simulate_native(self):
+        """Simulate using native LightEmission bindings when available.
+
+        Currently supports only ff-1m. Falls back to subprocess if bindings are missing.
+        """
+        app_name = self._get_light_emission_application_name()
+        if app_name != "ff-1m" or not HAS_NATIVE:
+            self._logger.info(
+                "Native path unavailable for %s; falling back to subprocess.", app_name
+            )
+            return self._simulate_via_subprocess()
+
+        # Prepare inputs matching the CLI we used to call.
+        config_directory = self.io_handler.get_model_configuration_directory(
+            model_version=self.site_model.model_version
+        )
+        corsika_observation_level = self.site_model.get_parameter_value_with_unit(
+            "corsika_observation_level"
+        )
+        altitude_m = corsika_observation_level.to(u.m).value
+        atmosphere_id = self._prepare_flasher_atmosphere_files(config_directory)
+
+        flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
+        camera_radius = fiducial_radius_from_shape(
+            self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
+            .to(u.cm)
+            .value,
+            self.telescope_model.get_parameter_value("camera_body_shape"),
+        )
+        flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
+            "flasher_wavelength"
+        )
+        dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
+        angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
+
+        iact_path = Path(self.output_directory) / f"{app_name}.iact.gz"
+        run_ff_1m_native(
+            output_path=iact_path,
+            altitude_m=altitude_m,
+            atmosphere_id=int(atmosphere_id),
+            photons=float(self.light_emission_config["flasher_photons"]),
+            bunch_size=int(self.calibration_model.get_parameter_value("flasher_bunch_size")),
+            x_cm=float(flasher_xyz[0].to(u.cm).value),
+            y_cm=float(flasher_xyz[1].to(u.cm).value),
+            distance_cm=float(dist_cm),
+            camera_radius_cm=float(camera_radius),
+            spectrum_nm=int(flasher_wavelength.to(u.nm).value),
+            lightpulse=str(self._get_pulse_shape_string_for_sim_telarray()),
+            angular_distribution=str(angular_distribution),
+        )
+
+        # Now run sim_telarray on the produced IACT file (same as subprocess path).
+        return self._simulate_via_subprocess(skip_light_emission=True)
+
+    def _simulate_via_subprocess(self, skip_light_emission: bool = False):
+        """Execute the existing shell-based pipeline.
+
+        If ``skip_light_emission`` is True, we assume the IACT file already exists.
+        """
+        app_name = self._get_light_emission_application_name()
+
+        run_script = self.prepare_script()
+        if skip_light_emission:
+            run_script = self._strip_light_emission_from_script(run_script)
+
+        log_path = Path(self.output_directory) / "logfile.log"
+        with open(log_path, "w", encoding="utf-8") as fh:
+            try:
+                subprocess.run(
+                    run_script,
+                    shell=False,
+                    check=True,
+                    text=True,
+                    stdout=fh,
+                    stderr=fh,
+                )
+            except subprocess.CalledProcessError:
+                self._logger.warning("sim_telarray subprocess returned non-zero exit status")
+
+        out = Path(self._get_simulation_output_filename())
+        if not out.exists():
+            self._logger.warning(f"Expected sim_telarray output not found: {out}")
+            return out
+
+        # cleanup the produced IACT file to mirror original behavior
+        iact = Path(self.output_directory) / f"{app_name}.iact.gz"
+        try:
+            if iact.exists():
+                iact.unlink()
+        except OSError:
+            self._logger.debug("Failed to remove temporary IACT file")
+        return out
+
+    def _strip_light_emission_from_script(self, run_script: Path) -> Path:
+        """Return a copy of the script containing only the sim_telarray part."""
+        content = run_script.read_text(encoding="utf-8").splitlines(True)
+        filtered = [content[0]]  # shebang
+        marker = f"{self._make_simtel_script()}".strip()
+        found = False
+        for ln in content[1:]:
+            if marker in ln:
+                found = True
+            if found:
+                filtered.append(ln)
+        tmp = run_script.with_name(f"{run_script.stem}-simtel-only.sh")
+        tmp.write_text("".join(filtered), encoding="utf-8")
+        tmp.chmod(tmp.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        return tmp
 
     def prepare_script(self):
         """
@@ -463,10 +585,11 @@ class SimulatorLightEmission(SimtelRunner):
             Distance between calibration device and focal plane.
         """
         focal_length = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
-        flasher_z = self.calibration_model.get_parameter_value_with_unit("flasher_position")[2].to(
-            u.m
-        )
-        return focal_length - flasher_z
+        flasher_position = self.calibration_model.get_parameter_value_with_unit("flasher_position")
+
+        flasher_z_m = flasher_position[2].to(u.m)
+
+        return focal_length - flasher_z_m
 
     def _get_angular_distribution_string_for_sim_telarray(self):
         """

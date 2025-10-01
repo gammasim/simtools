@@ -1,16 +1,18 @@
 [build-system]
-build-backend = "setuptools.build_meta"
+build-backend = "build_backend"
 requires = [
+  "pybind11>=2.11",
   "setuptools>=64",
   "setuptools-scm[toml]>=8",
 ]
+
+backend-path = [ "." ]
 
 [project]
 name = "gammasimtools"
 description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.md"
 license = "BSD-3-Clause"
-license-files = [ "LICENSE" ]
 authors = [
   { name = "simtools developers", email = "simtools-developer@desy.de" },
 ]
@@ -113,6 +115,7 @@ scripts.simtools-production-generate-grid = "simtools.applications.production_ge
 scripts.simtools-production-merge-corsika-limits = "simtools.applications.production_merge_corsika_limits:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
+scripts.simtools-simulate-flasher-native = "simtools.applications.simulate_flasher_native:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"
 scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"

@@ -34,8 +34,13 @@ RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
   && . env/bin/activate \
-  && pip install --no-cache-dir -U pip \
-  && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
+  && pip install --no-cache-dir -U pip setuptools wheel pybind11 \
+  && cd simtools \
+  && export SIMTOOLS_BUILD_LE=1 \
+  && export SIMTEL_PATH="/workdir/sim_telarray" \
+  && python setup_native_extension.py build_ext --inplace || echo "Native build failed, will use subprocess fallback" \
+  && pip install --no-cache-dir -e . \
+  && python -c "from simtools.light_emission.native_backend import HAS_NATIVE; print(f'Native backend: {HAS_NATIVE}')" \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
 ENV PATH="/workdir/env/bin/:$PATH"

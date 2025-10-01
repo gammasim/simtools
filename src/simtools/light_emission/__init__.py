@@ -1,0 +1,1 @@
+"""Light emission simulation components."""
