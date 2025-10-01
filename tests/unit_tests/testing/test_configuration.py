@@ -75,7 +75,7 @@ def test_create_tmp_output_path(tmp_test_directory):
     assert tmp_output_path.is_dir()
 
     with pytest.raises(
-        KeyError, match="No application defined in configuration {'test_name': 'test_name'}."
+        KeyError, match=r"No application defined in configuration {'test_name': 'test_name'}."
     ):
         configuration.create_tmp_output_path(tmp_test_directory, {"test_name": "test_name"})
 
@@ -296,7 +296,8 @@ def test_skip_test_for_model_version_skip():
     config = {"configuration": {"model_version": "v1.0"}, "model_version_use_current": True}
     model_version_requested = "v2.0"
     with pytest.raises(
-        configuration.VersionError, match="Model version requested v2.0 not supported for this test"
+        configuration.VersionError,
+        match=r"Model version requested v2.0 not supported for this test",
     ):
         configuration._skip_test_for_model_version(config, model_version_requested)
 
