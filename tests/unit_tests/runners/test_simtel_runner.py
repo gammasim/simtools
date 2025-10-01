@@ -87,7 +87,7 @@ def test_get_config_option(simtel_runner):
 
 
 def test_raise_simtel_error(simtel_runner):
-    with pytest.raises(SimtelExecutionError, match="Simtel log file does not exist."):
+    with pytest.raises(SimtelExecutionError, match=r"Simtel log file does not exist."):
         simtel_runner._raise_simtel_error()
 
 

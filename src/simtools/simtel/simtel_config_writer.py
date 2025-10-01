@@ -172,14 +172,22 @@ class SimtelConfigWriter:
         mapping = {
             "gauss": "laser_pulse_sigtime",
             "tophat": "laser_pulse_twidth",
-            "exponential": "laser_pulse_exptime",
         }
 
         shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
+        if "exponential" in shape:
+            simtel_par["laser_pulse_exptime"] = parameters.get("flasher_pulse_exp_decay", {}).get(
+                "value", 0.0
+            )
+        else:
+            simtel_par["laser_pulse_exptime"] = 0.0
+
         width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
-        if shape in mapping:
+        if shape == "gauss-exponential":
+            simtel_par["laser_pulse_sigtime"] = width
+        elif shape in mapping:
             simtel_par[mapping[shape]] = width
         else:
             self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
@@ -203,7 +211,7 @@ class SimtelConfigWriter:
         value = "none" if value is None else value  # simtel requires 'none'
         if isinstance(value, bool):
             value = 1 if value else 0
-        elif isinstance(value, (list, np.ndarray)):  # noqa: UP038
+        elif isinstance(value, (list, np.ndarray)):
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 

@@ -268,7 +268,7 @@ def test_validate_array_layouts_with_db_invalid():
         ]
     }
 
-    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel3', 'tel4'\\]"):
+    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel3', 'tel4'\]"):
         cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
 
 
@@ -282,7 +282,7 @@ def test_validate_array_layouts_with_db_empty_production_table():
         ]
     }
 
-    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel1'\\]"):
+    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel1'\]"):
         cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
 
 
@@ -306,7 +306,7 @@ def test_validate_array_layouts_with_db_missing_keys():
         ]
     }
 
-    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel1'\\]"):
+    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel1'\]"):
         cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
 
     # Missing value key
@@ -338,7 +338,7 @@ def test_validate_array_layouts_with_db_partial_invalid():
         ]
     }
 
-    with pytest.raises(ValueError, match="Invalid array elements found: \\['tel3'\\]"):
+    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel3'\]"):
         cta_array_layouts.validate_array_layouts_with_db(production_table, array_layouts)
 
 
@@ -399,7 +399,7 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
         return_value=fake_data,
     )
 
-    with pytest.raises(ValueError, match="Missing 'value' key in layout file."):
+    with pytest.raises(ValueError, match=r"Missing 'value' key in layout file."):
         get_array_layouts_from_parameter_file("test_file.json", "6.0.0", db_config)
 
 

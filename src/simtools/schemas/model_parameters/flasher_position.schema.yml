@@ -31,9 +31,6 @@ data:
     default: primary_mirror_frame
 instrument:
   class: Calibration
-  type:
-    - ILLN
-    - ILLS
 activity:
   setting:
     - SetParameterFromExternal

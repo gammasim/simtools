@@ -50,7 +50,7 @@ def test_rotate_telescope_position(caplog) -> None:
     with pytest.raises(TypeError):
         transf.rotate(x, y[0], angle_deg)
     with pytest.raises(
-        TypeError, match="x and y types are not valid! Cannot perform transformation."
+        TypeError, match=r"x and y types are not valid! Cannot perform transformation."
     ):
         transf.rotate("1", "2", angle_deg)
     with pytest.raises(TypeError):

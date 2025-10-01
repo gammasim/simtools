@@ -21,9 +21,6 @@ data:
       min: 200
 instrument:
   class: Calibration
-  type:
-    - ILLN
-    - ILLS
 activity:
   setting:
     - SetParameterFromExternal

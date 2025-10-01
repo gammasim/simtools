@@ -14,8 +14,7 @@ description: |-
   threshold and signal integral conditions have to be met before a `true'
   output signal starts. Normally, either of them being non-zero should be
   sufficient.
-short_description: Time over threshold required before logic response switches to
-  true.
+short_description: Time over threshold required before logic response switches to true.
 data:
   - type: float64
     unit: ns
@@ -26,13 +25,6 @@ data:
       max: 100.0
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

@@ -16,13 +16,6 @@ data:
       min: 100000
 instrument:
   class: configuration_sim_telarray
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

@@ -1,4 +1,3 @@
-%YAML 1.2
 ---
 title: Schema for dsum_threshold model parameter
 schema_version: 0.2.0
@@ -14,8 +13,7 @@ description: |-
   triggered. The assigned threshold value would have to be one count lower
   than in a camera-internal trigger implementation (like MSTx-FlashCam) where
   reaching (\'>=\') the threshold is enough.
-short_description: Amplitude level above which a digital sum leads to a telescope
-  trigger.
+short_description: Amplitude level above which a digital sum leads to a telescope trigger.
 data:
   - type: int64
     unit: count
@@ -25,9 +23,6 @@ data:
     condition: default_trigger==DigitalSum
 instrument:
   class: Camera
-  type:
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetParameterFromExternal
@@ -39,7 +34,6 @@ source:
   - Observation execution
 simulation_software:
   - name: sim_telarray
-...
 ---
 title: Schema for dsum_threshold model parameter
 schema_version: 0.1.0
@@ -55,8 +49,7 @@ description: |-
   triggered. The assigned threshold value would have to be one count lower
   than in a camera-internal trigger implementation (like MSTx-FlashCam) where
   reaching (\'>=\') the threshold is enough.
-short_description: Amplitude level above which a digital sum leads to a telescope
-  trigger.
+short_description: Amplitude level above which a digital sum leads to a telescope trigger.
 data:
   - type: float64
     unit: count
@@ -66,9 +59,6 @@ data:
     condition: default_trigger==DigitalSum
 instrument:
   class: Camera
-  type:
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetParameterFromExternal

@@ -39,9 +39,6 @@ data:
     condition: mirror_class==2
 instrument:
   class: Structure
-  type:
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

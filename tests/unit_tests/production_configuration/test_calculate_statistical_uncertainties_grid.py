@@ -214,7 +214,7 @@ def test_compute_efficiency_and_uncertainties(test_fits_file, metric):
     )
 
     with pytest.raises(
-        ValueError, match="Reconstructed event counts exceed simulated event counts."
+        ValueError, match=r"Reconstructed event counts exceed simulated event counts."
     ):
         evaluator.compute_efficiency_and_uncertainties(20.0, 10.0)
 

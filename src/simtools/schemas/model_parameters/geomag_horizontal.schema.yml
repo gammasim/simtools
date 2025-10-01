@@ -8,18 +8,13 @@ meta_schema_version: 0.1.0
 name: geomag_horizontal
 short_description: Horizontal component of geomagnetic field.
 description: |-
-   Horizontal component in direction of magnetic North of the geomagnetic
-   field at given site.
+  Horizontal component in direction of magnetic North of the geomagnetic
+  field at given site.
 data:
   - type: float64
     unit: uT
 instrument:
   class: Site
-  type:
-    - Atmosphere
-  site:
-    - North
-    - South
 activity:
   setting:
     - SetGeomagneticField
