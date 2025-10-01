@@ -332,7 +332,7 @@ def test_read_production_tables_invalid_version_in_history(mock_collect_data, tm
 
     from packaging.version import InvalidVersion
 
-    with pytest.raises(InvalidVersion, match="Invalid version: 'not.a.version'"):
+    with pytest.raises(InvalidVersion, match=r"Invalid version: 'not.a.version'"):
         db_model_upload._read_production_tables(model_path)
 
 

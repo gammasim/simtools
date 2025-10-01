@@ -41,7 +41,7 @@ class SimulatorLightEmission(SimtelRunner):
             simtel_path=light_emission_config.get("simtel_path"), label=label, corsika_config=None
         )
 
-        self.output_directory = self.io_handler.get_output_directory(label)
+        self.output_directory = self.io_handler.get_output_directory()
 
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(

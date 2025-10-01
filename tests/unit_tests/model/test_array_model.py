@@ -38,7 +38,7 @@ def test_array_model_from_file(db_config, io_handler, model_version, telescope_n
 
 
 def test_array_model_init_without_layout_or_telescope_list(db_config, io_handler, model_version):
-    with pytest.raises(ValueError, match="No array elements found."):
+    with pytest.raises(ValueError, match=r"No array elements found."):
         ArrayModel(
             label="test",
             site="North",

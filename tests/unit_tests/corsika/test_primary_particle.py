@@ -16,11 +16,11 @@ def test_init():
     assert p.corsika7_id is None
 
     with pytest.raises(
-        ValueError, match="Both 'particle_id_type' and 'particle_id' must be provided."
+        ValueError, match=r"Both 'particle_id_type' and 'particle_id' must be provided together\."
     ):
         PrimaryParticle(particle_id_type="corsika7_id")
     with pytest.raises(
-        ValueError, match="Both 'particle_id_type' and 'particle_id' must be provided."
+        ValueError, match=r"Both 'particle_id_type' and 'particle_id' must be provided together\."
     ):
         PrimaryParticle(particle_id_type="common_name")
     with pytest.raises(ValueError, match="Particle ID type must be one of"):
