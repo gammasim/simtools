@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        simtel_version: ['240205', '240927', '250304']
+        simtel_version: ['240205', '240927', '250304', '250903']
 
     steps:
       - name: Checkout repository
@@ -33,6 +33,7 @@ jobs:
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O autoconf.tar.gz
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
         with:
@@ -40,9 +41,29 @@ jobs:
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
             autoconf.tar.gz
-          retention-days: 3
+          retention-days: 1
+
+  download-auxiliary-files:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Download QGSJet
+        run: |
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O qgsjet2.bz2
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsjet3.bz2
+      - name: Upload QGSJet files
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload-qgsjet-files
+          path: |
+            qgsjet2.bz2
+            qgsjet3.bz2
+          retention-days: 1
+
 
   build-base-images:
+    if: false
     runs-on: ubuntu-latest
     needs: download-corsika
     permissions:
