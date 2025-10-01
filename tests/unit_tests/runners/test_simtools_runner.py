@@ -58,7 +58,7 @@ def test_set_input_output_directories():
     assert setting_workflow == "LSTN-01/pm_photoelectron_spectrum/20250304T073000"
 
     path = "output/LSTN-01/pm_photoelectron_spectrum/20250304T073000/config.yml"
-    with pytest.raises(ValueError, match="^Could not find subdirectory under"):
+    with pytest.raises(ValueError, match=r"^Could not find subdirectory under"):
         simtools_runner._set_input_output_directories(path)
 
 
