@@ -3,9 +3,9 @@ applications:
 - application: simtools-simulate-flasher
   configuration:
     run_mode: direct_injection
-    light_source: MSFx-FlashCam
+    light_source: MSFx-NectarCam
     array_layout_name: subsystem_msts
-    label: test-flasher-direct-injection-south
+    label: test-flasher-direct-injection-mst-nectarcam
     log_level: DEBUG
     model_version: 6.0.0
     number_of_events: 3

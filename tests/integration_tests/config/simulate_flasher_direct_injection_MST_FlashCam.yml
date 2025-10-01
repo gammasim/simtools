@@ -1,0 +1,20 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: direct_injection
+    light_source: MSFx-FlashCam
+    array_layout_name: 1mst
+    label: test-flasher-direct-injection-mst-flashcam
+    log_level: DEBUG
+    model_version: 6.0.0
+    number_of_events: 3
+    output_path: simtools-output
+    run_number: 10
+    sim_telarray_random_instrument_instances: 100
+    site: South
+  integration_tests:
+  - output_file: sim_telarray/data/run000010/run000010_za20deg_azm000deg_South_subsystem_msts_6.0.0_test-flasher-direct-injection-south.simtel.zst
+  test_name: direction_injection
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
