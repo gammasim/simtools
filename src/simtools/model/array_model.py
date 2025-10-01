@@ -367,8 +367,8 @@ class ArrayModel:
             self._logger.warning("No model files found to pack.")
             return None
 
-        archive_name = self.get_config_directory() / "model_files.tar.gz"
-        general.pack_tar_file(archive_name, model_files)
+        archive_name = self.get_config_directory() / f"model_files_{self.model_version}.tar.gz"
+        general.pack_tar_file(archive_name, model_files, sub_dir=f"model/{self.model_version}")
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
