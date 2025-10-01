@@ -114,6 +114,7 @@ jobs:
           simtools-db-upload-model-repository \
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+            --branch implement-realistic-flasher-model-parameters
 
       - name: Integration tests
         shell: bash -l {0}
