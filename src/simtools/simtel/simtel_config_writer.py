@@ -13,8 +13,6 @@ import simtools.version
 from simtools.io import ascii_handler
 from simtools.utils import names
 
-__all__ = ["SimtelConfigWriter"]
-
 
 def sim_telarray_random_seeds(seed, number):
     """

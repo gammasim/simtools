@@ -10,8 +10,6 @@ metrics and the evaluator's results.
 import astropy.units as u
 import numpy as np
 
-__all__ = ["ProductionStatisticsDerivator"]
-
 
 class ProductionStatisticsDerivator:
     """

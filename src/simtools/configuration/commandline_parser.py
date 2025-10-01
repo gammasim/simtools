@@ -10,10 +10,6 @@ import astropy.units as u
 import simtools.version
 from simtools.utils import names
 
-__all__ = [
-    "CommandLineParser",
-]
-
 
 class CommandLineParser(argparse.ArgumentParser):
     """

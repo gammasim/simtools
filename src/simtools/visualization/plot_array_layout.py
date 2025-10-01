@@ -13,8 +13,6 @@ from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
 
-__all__ = ["get_telescope_patch", "plot_array_layout"]
-
 
 def plot_array_layout(
     telescopes,
