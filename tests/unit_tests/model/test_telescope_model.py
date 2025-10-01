@@ -318,7 +318,7 @@ def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
     fake_table = astropy.table.Table({"Off-axis angle": [1.0], "eff_area": [123.4]})
 
     with patch("astropy.io.ascii.read", return_value=fake_table):
-        with pytest.raises(ValueError, match="^No value for the on-axis"):
+        with pytest.raises(ValueError, match=r"^No value for the on-axis"):
             telescope_model_lst.get_on_axis_eff_optical_area()
 
 

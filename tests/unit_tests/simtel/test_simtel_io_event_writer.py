@@ -174,7 +174,7 @@ def test_process_files(
 
 
 def test_no_input_files():
-    with pytest.raises(TypeError, match="No input files provided."):
+    with pytest.raises(TypeError, match=r"No input files provided."):
         SimtelIOEventDataWriter(None, None)
 
 
@@ -301,7 +301,7 @@ def test_get_nsb_level_from_file_name(lookup_table_generator):
 
 def test_get_nsb_level_from_file_name_invalid_input(lookup_table_generator):
     """Test NSB level parsing with invalid input."""
-    with pytest.raises(AttributeError, match="Invalid file name."):
+    with pytest.raises(AttributeError, match=r"Invalid file name."):
         lookup_table_generator._get_nsb_level_from_file_name(None)
 
 

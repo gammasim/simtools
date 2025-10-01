@@ -349,13 +349,13 @@ def test_model_version_setter(mocker):
     # It is invalid because a list with one element will always be converted to a string
     # in the configurator
     with pytest.raises(
-        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+        ValueError, match=r"Only one model version can be passed to ModelParameter, not a list."
     ):
         model_param.model_version = ["6.0.0"]
 
     # Test setting an invalid multi-element list model version
     with pytest.raises(
-        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+        ValueError, match=r"Only one model version can be passed to ModelParameter, not a list."
     ):
         model_param.model_version = ["7.0.0", "8.0.0"]
 

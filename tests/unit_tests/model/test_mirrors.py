@@ -171,10 +171,10 @@ def test_get_single_mirror_parameters_simtel_missing_column(io_handler, mirror_t
     mirrors.mirror_table.rename_column("mirror_x", "mirror_xa")
     (
         mirror_x,
-        mirror_y,
-        mirror_diameter,
+        _mirror_y,
+        _mirror_diameter,
         focal_length,
-        shape_type,
+        _shape_type,
     ) = mirrors.get_single_mirror_parameters(198)
     assert 0 == mirror_x
     assert focal_length.value == pytest.approx(2920.0)

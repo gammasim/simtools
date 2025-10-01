@@ -61,9 +61,9 @@ def test_prepare_run_script_with_input_file(corsika_runner_mock_array_model, cap
 
 
 def test_prepare_run_script_with_invalid_run(corsika_runner_mock_array_model):
-    with pytest.raises(ValueError, match="^Invalid type of run number"):
+    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
         _ = corsika_runner_mock_array_model.prepare_run_script(run_number=-2)
-    with pytest.raises(ValueError, match="^could not convert string to float"):
+    with pytest.raises(ValueError, match=r"^could not convert string to float"):
         _ = corsika_runner_mock_array_model.prepare_run_script(run_number="test")
 
 
