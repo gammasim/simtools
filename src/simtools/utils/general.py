@@ -345,7 +345,7 @@ def resolve_file_patterns(file_names):
     return _files
 
 
-def pack_tar_file(tar_file_name, file_list):
+def pack_tar_file(tar_file_name, file_list, sub_dir=None):
     """
     Pack files into a tar.gz archive.
 
@@ -355,6 +355,8 @@ def pack_tar_file(tar_file_name, file_list):
         Name of the output tar.gz file.
     file_list: list
         List of files to include in the archive.
+    sub_dir: str, optional
+        Subdirectory within the archive to place the files.
     """
     file_list = [Path(f) for f in file_list]
     base = Path(os.path.commonpath([f.resolve() for f in file_list]))
@@ -365,7 +367,8 @@ def pack_tar_file(tar_file_name, file_list):
 
     with tarfile.open(tar_file_name, "w:gz") as tar:
         for file in file_list:
-            tar.add(file, arcname=file.name)
+            arc_name = Path(sub_dir) / file.name if sub_dir else file.name
+            tar.add(file, arcname=str(arc_name))
 
 
 def get_log_excerpt(log_file, n_last_lines=30):
