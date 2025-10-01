@@ -103,5 +103,5 @@ def test_fill_defaults():
         }
     }
 
-    with pytest.raises(KeyError, match="Missing 'properties' key in schema."):
+    with pytest.raises(KeyError, match=r"Missing 'properties' key in schema\."):
         metadata_model._fill_defaults(schema)

@@ -128,7 +128,7 @@ def test_calculate_production_statistics_at_invalid_grid_point(derivator):
 
     # Energy 10000 TeV is outside the bin range (1-1000 TeV)
     # Should raise ValueError
-    with pytest.raises(ValueError, match="Energy .* is outside the range"):
+    with pytest.raises(ValueError, match=r"Energy .* is outside the range"):
         derivator.calculate_production_statistics_at_grid_point(grid_point)
 
 
