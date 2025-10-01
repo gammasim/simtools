@@ -33,14 +33,12 @@ jobs:
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O autoconf.tar.gz
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
         with:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-            autoconf.tar.gz
           retention-days: 1
 
   download-auxiliary-files:
@@ -48,24 +46,26 @@ jobs:
 
     steps:
 
-      - name: Download QGSJet
+      - name: Download QGSJet and autoconf
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O qgsjet2.bz2
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsjet3.bz2
-      - name: Upload QGSJet files
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O autoconf.tar.gz
+      - name: Upload QGSJet files and autoconf
         uses: actions/upload-artifact@v4
         with:
-          name: upload-qgsjet-files
+          name: upload-auxiliary-files
           path: |
             qgsjet2.bz2
             qgsjet3.bz2
+            autoconf.tar.gz
           retention-days: 1
 
 
   build-base-images:
     if: false
     runs-on: ubuntu-latest
-    needs: download-corsika
+    needs: [download-corsika, download-auxiliary-files]
     permissions:
       contents: read
       packages: write
@@ -101,6 +101,17 @@ jobs:
       - name: Rename corsika-simtel-package files
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+
+      - name: Download auxiliary files
+        uses: actions/download-artifact@v5
+        with:
+          name: upload-auxiliary-files
+          path: ./downloaded-artifacts
+
+      - name: Rename auxiliary files
+        run: |
+          mv ./downloaded-artifacts/qgsjet2.bz2 qgsjet2.bz2
+          mv ./downloaded-artifacts/qgsjet3.bz2 qgsjet3.bz2
           mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
 
       - name: Set up Docker Buildx
