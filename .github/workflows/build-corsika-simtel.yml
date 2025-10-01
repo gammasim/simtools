@@ -50,7 +50,7 @@ jobs:
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O qgsdat-II-04.bz2
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O autoconf.tar.gz
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: Upload QGSJet files and autoconf
         uses: actions/upload-artifact@v4
         with:
