@@ -31,7 +31,8 @@ jobs:
 
       - name: Download corsika-simtel-package
         run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
+          # CLOUD_SIMTEL_R_<version> secrets points to reduced tarballs without QGSJet and autoconf
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_R_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
