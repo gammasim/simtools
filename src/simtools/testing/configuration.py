@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import simtools.utils.general as gen
+import simtools.version as simtools_version
 from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
@@ -130,11 +131,23 @@ def configure(config, tmp_test_directory, request):
 
 
 def _skip_test_for_model_version(config, model_version_requested):
-    """Skip test if model version requested is not supported."""
-    if config.get("model_version_use_current") is None or model_version_requested is None:
+    """
+    Skip test if model version requested is not supported.
+
+    Compares full and major.minor version strings.
+    """
+    if not (config.get("model_version_use_current") and model_version_requested):
         return
-    model_version_config = config["configuration"]["model_version"]
-    if model_version_requested != model_version_config:
+    model_version_config = str(config["configuration"]["model_version"])
+
+    if (
+        simtools_version.compare_versions(
+            model_version_requested,
+            model_version_config,
+            level=simtools_version.version_kind(model_version_requested),
+        )
+        != 0
+    ):
         raise VersionError(
             f"Model version requested {model_version_requested} not supported for this test"
         )
