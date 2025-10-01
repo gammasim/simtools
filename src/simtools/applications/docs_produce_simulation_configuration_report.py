@@ -23,6 +23,12 @@ def _parse(label):
         help="Produce reports for all model versions.",
     )
 
+    config.parser.add_argument(
+        "--output_dir",
+        type=str,
+        help="Output subdirectory name within the main output directory.",
+    )
+
     return config.initialize(
         db_config=True,
         simulation_model=["model_version"],
@@ -36,6 +42,11 @@ def main():  # noqa: D103
 
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory()
+
+    # Create subdirectory if output_dir is specified
+    if args.get("output_dir"):
+        output_path = output_path / args["output_dir"]
+        output_path.mkdir(parents=True, exist_ok=True)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
