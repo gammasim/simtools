@@ -16,12 +16,11 @@ license = "BSD-3-Clause"
 authors = [
   { name = "simtools developers", email = "simtools-developer@desy.de" },
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Astronomy",
@@ -86,6 +85,7 @@ scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_ar
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-db-inspect-databases = "simtools.applications.db_inspect_databases:main"
+scripts.simtools-db-upload-model-repository = "simtools.applications.db_upload_model_repository:main"
 scripts.simtools-derive-ctao-array-layouts = "simtools.applications.derive_ctao_array_layouts:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-derive-photon-electron-spectrum = "simtools.applications.derive_photon_electron_spectrum:main"

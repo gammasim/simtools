@@ -143,3 +143,48 @@ def test_sort_versions():
     invalid_versions = ["1.0.0", "not_a_version", "2.0.0"]
     with pytest.raises(ValueError, match=r"Invalid version in list"):
         version.sort_versions(invalid_versions)
+
+
+def test_version_kind():
+    assert version.version_kind("6.0.0") == version.MAJOR_MINOR_PATCH
+    assert version.version_kind("6.0") == version.MAJOR_MINOR
+    assert version.version_kind("6") == "major"
+    with pytest.raises(ValueError, match=r"Invalid version string"):
+        version.version_kind("no_version")
+
+
+def test_compare_versions():
+    # Test exact equality
+    assert version.compare_versions("1.0.0", "1.0.0") == 0
+    assert version.compare_versions("2.5.3", "2.5.3") == 0
+
+    # Test major version comparison
+    assert version.compare_versions("2.0.0", "1.0.0") == 1
+    assert version.compare_versions("1.0.0", "2.0.0") == -1
+
+    # Test minor version comparison
+    assert version.compare_versions("1.2.0", "1.1.0") == 1
+    assert version.compare_versions("1.1.0", "1.2.0") == -1
+
+    # Test patch version comparison
+    assert version.compare_versions("1.0.2", "1.0.1") == 1
+    assert version.compare_versions("1.0.1", "1.0.2") == -1
+
+    # Test level parameter - major only
+    assert version.compare_versions("1.9.9", "1.0.0", level="major") == 0
+    assert version.compare_versions("2.0.0", "1.9.9", level="major") == 1
+    assert version.compare_versions("1.0.0", "2.9.9", level="major") == -1
+
+    # Test level parameter - major.minor
+    assert version.compare_versions("1.2.9", "1.2.0", level=version.MAJOR_MINOR) == 0
+    assert version.compare_versions("1.3.0", "1.2.9", level=version.MAJOR_MINOR) == 1
+    assert version.compare_versions("1.2.0", "1.3.9", level=version.MAJOR_MINOR) == -1
+
+    # Test level parameter - major.minor.patch (default)
+    assert version.compare_versions("1.2.3", "1.2.3", level=version.MAJOR_MINOR_PATCH) == 0
+    assert version.compare_versions("1.2.4", "1.2.3", level=version.MAJOR_MINOR_PATCH) == 1
+    assert version.compare_versions("1.2.3", "1.2.4", level=version.MAJOR_MINOR_PATCH) == -1
+
+    # Test invalid level
+    with pytest.raises(ValueError, match=r"Unknown level"):
+        version.compare_versions("1.0.0", "1.0.0", level="invalid")

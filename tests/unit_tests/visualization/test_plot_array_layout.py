@@ -226,7 +226,7 @@ def test_get_positions_with_utm_columns(monkeypatch):
 def test_get_positions_missing_columns():
     # Test that a table missing required position columns raises ValueError.
     tbl = QTable({"some_column": [1, 2, 3] * u.m})
-    with pytest.raises(ValueError, match="Missing required position columns."):
+    with pytest.raises(ValueError, match=r"Missing required position columns."):
         get_positions(tbl)
 
 

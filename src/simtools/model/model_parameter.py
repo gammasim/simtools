@@ -198,6 +198,31 @@ class ModelParameter:
 
         return _parameter
 
+    def _create_quantity_for_value(self, value, unit):
+        """
+        Create an astropy quantity for a single value and unit.
+
+        Parameters
+        ----------
+        value: numeric or str
+            The value to create a quantity for.
+        unit: str or None
+            The unit string or None.
+
+        Returns
+        -------
+        astropy.Quantity or original value
+            Astropy quantity for numeric values with units,
+            original value for non-numeric values.
+        """
+        if not isinstance(value, int | float):
+            return value
+
+        if unit is None or unit == "null":
+            return value * u.dimensionless_unscaled
+
+        return value * u.Unit(unit)
+
     def get_parameter_value_with_unit(self, par_name):
         """
         Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
@@ -221,8 +246,21 @@ class ModelParameter:
         _value = self.get_parameter_value(par_name, _parameter)
 
         try:
-            units = self._parse_units(_parameter)
-            return self._apply_units(_value, units)
+            if isinstance(_parameter.get("unit"), str):
+                _unit = [item.strip() for item in _parameter.get("unit").split(",")]
+            else:
+                _unit = _parameter.get("unit")
+
+            # if there is only one value or the values share one unit
+            if (isinstance(_value, (int | float))) or (len(_value) > len(_unit)):
+                return _value * u.Unit(_unit[0])
+
+            # Create list of quantities for multiple values with different units
+            return [
+                self._create_quantity_for_value(_value[i], _unit[i] if i < len(_unit) else None)
+                for i in range(len(_value))
+            ]
+
         except (KeyError, TypeError, AttributeError) as exc:
             self._logger.debug(
                 f"{exc} encountered for parameter {par_name}, returning only value without units."

@@ -184,7 +184,7 @@ def test_get_data_columns():
     # Test the assertion for minimum columns
     data_1col = np.zeros(3, dtype=[("x", float)])
     with pytest.raises(
-        AssertionError, match="Input array must have at least two columns with titles."
+        AssertionError, match=r"Input array must have at least two columns with titles."
     ):
         visualize._get_data_columns(data_1col)
 
