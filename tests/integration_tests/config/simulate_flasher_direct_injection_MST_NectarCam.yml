@@ -7,7 +7,7 @@ applications:
     array_layout_name: subsystem_msts
     label: test-flasher-direct-injection-mst-nectarcam
     log_level: DEBUG
-    model_version: 6.0.0
+    model_version: 6.0
     number_of_events: 3
     output_path: simtools-output
     run_number: 10
