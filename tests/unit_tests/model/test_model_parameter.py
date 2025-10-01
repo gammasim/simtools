@@ -349,13 +349,13 @@ def test_model_version_setter(mocker):
     # It is invalid because a list with one element will always be converted to a string
     # in the configurator
     with pytest.raises(
-        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+        ValueError, match=r"Only one model version can be passed to ModelParameter, not a list."
     ):
         model_param.model_version = ["6.0.0"]
 
     # Test setting an invalid multi-element list model version
     with pytest.raises(
-        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+        ValueError, match=r"Only one model version can be passed to ModelParameter, not a list."
     ):
         model_param.model_version = ["7.0.0", "8.0.0"]
 
@@ -421,3 +421,9 @@ def test_add_additional_models(telescope_model_lst, mocker):
     models_dict = {"model1": mock_model, "model2": mock_model2}
     telescope_copy._add_additional_models(models_dict)
     assert telescope_copy.parameters["param2"] == "value2"
+
+
+def test__create_quantity_for_value(telescope_model_lst):
+    assert telescope_model_lst._create_quantity_for_value("abc", "m") == "abc"
+    assert telescope_model_lst._create_quantity_for_value(5, "m") == 5 * u.m
+    assert telescope_model_lst._create_quantity_for_value(5, None) == 5

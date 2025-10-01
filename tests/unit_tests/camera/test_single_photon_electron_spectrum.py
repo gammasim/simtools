@@ -71,7 +71,7 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
     with pytest.raises(
         NotImplementedError,
         match=(
-            "Derivation of single photon electron spectrum using a simtool is not yet implemented."
+            r"Derivation of single photon electron spectrum using a simtool is not yet implemented."
         ),
     ):
         spe_spectrum.derive_single_pe_spectrum()

@@ -138,7 +138,7 @@ def test_read_table_data_no_table_data_defined():
     config = {"tables": [{"label": "test_table", "column_x": "x", "column_y": "y"}]}
     db_config = None
 
-    with pytest.raises(ValueError, match="No table data defined in configuration."):
+    with pytest.raises(ValueError, match=r"No table data defined in configuration."):
         plot_tables.read_table_data(config, db_config)
 
 
