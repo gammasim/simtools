@@ -25,9 +25,6 @@ data:
     condition: default_trigger==DigitalSum
 instrument:
   class: Camera
-  type:
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetParameterFromExternal

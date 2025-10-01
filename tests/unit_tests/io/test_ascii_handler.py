@@ -194,7 +194,7 @@ def test_read_file_encoded_in_utf_or_latin_unicode_decode_error():
     with patch("builtins.open", mock_open()) as mocked_open:
         mocked_open.side_effect = UnicodeDecodeError("utf-8", b"", 0, 1, "mock reason")
         with pytest.raises(
-            UnicodeDecodeError, match="Unable to decode file.*using UTF-8 or Latin-1"
+            UnicodeDecodeError, match=r"Unable to decode file.*using UTF-8 or Latin-1"
         ):
             read_file_encoded_in_utf_or_latin(mock_file_name)
 

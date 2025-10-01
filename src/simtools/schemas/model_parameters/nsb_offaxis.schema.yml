@@ -60,13 +60,6 @@ data:
     unit: dimensionless
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetNightSkyBackgroundRate

@@ -19,13 +19,6 @@ data:
         description: "Calibration device name"
 instrument:
   class: Camera
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

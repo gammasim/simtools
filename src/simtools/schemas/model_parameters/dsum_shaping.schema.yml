@@ -27,9 +27,6 @@ data:
     default: null
 instrument:
   class: Camera
-  type:
-    - MSTx-NectarCam
-    - MSTx-FlashCam
 activity:
   setting:
     - SetParameterFromExternal

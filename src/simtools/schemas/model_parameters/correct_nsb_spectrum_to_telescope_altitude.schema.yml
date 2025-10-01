@@ -17,13 +17,6 @@ data:
     default: "atm_trans_2200_1_3_0_0_0.dat"
 instrument:
   class: configuration_sim_telarray
-  type:
-    - LSTN
-    - LSTS
-    - MSTx-NectarCam
-    - MSTx-FlashCam
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

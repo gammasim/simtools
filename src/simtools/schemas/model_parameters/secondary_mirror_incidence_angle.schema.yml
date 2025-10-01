@@ -15,9 +15,6 @@ data:
     default: 'no_such_file.dat'
 instrument:
   class: Structure
-  type:
-    - SSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

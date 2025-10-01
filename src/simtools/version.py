@@ -6,6 +6,9 @@
 
 from packaging.version import InvalidVersion, Version
 
+MAJOR_MINOR_PATCH = "major.minor.patch"
+MAJOR_MINOR = "major.minor"
+
 try:
     try:
         from ._dev_version import version
@@ -128,3 +131,61 @@ def sort_versions(version_list, reverse=False):
         return [str(v) for v in sorted(map(Version, version_list), reverse=reverse)]
     except InvalidVersion as exc:
         raise ValueError(f"Invalid version in list: {version_list}") from exc
+
+
+def version_kind(version_string):
+    """
+    Determine the kind of version string.
+
+    Parameters
+    ----------
+    version_string : str
+        The version string to analyze.
+
+    Returns
+    -------
+    str
+        The kind of version string ("major.minor", "major.minor.patch", or "major").
+    """
+    try:
+        ver = Version(version_string)
+    except InvalidVersion as exc:
+        raise ValueError(f"Invalid version string: {version_string}") from exc
+    if ver.release and len(ver.release) >= 3:
+        return MAJOR_MINOR_PATCH
+    if len(ver.release) == 2:
+        return MAJOR_MINOR
+    return "major"
+
+
+def compare_versions(version_string_1, version_string_2, level=MAJOR_MINOR_PATCH):
+    """
+    Compare two versions at the given level: "major", "major.minor", "major.minor.patch".
+
+    Parameters
+    ----------
+    version_string_1 : str
+        First version string to compare.
+    version_string_2 : str
+        Second version string to compare.
+    level : str, optional
+        Level of comparison: "major", "major.minor", or "major.minor.patch"
+
+    Returns
+    -------
+    int
+        -1 if version_string_1 < version_string_2
+         0 if version_string_1 == version_string_2
+         1 if version_string_1 > version_string_2
+    """
+    ver1 = Version(version_string_1).release
+    ver2 = Version(version_string_2).release
+
+    if level == "major":
+        ver1, ver2 = ver1[:1], ver2[:1]
+    elif level == MAJOR_MINOR:
+        ver1, ver2 = ver1[:2], ver2[:2]
+    elif level != MAJOR_MINOR_PATCH:
+        raise ValueError(f"Unknown level: {level}")
+
+    return (ver1 > ver2) - (ver1 < ver2)

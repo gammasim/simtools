@@ -64,7 +64,7 @@ Be careful of the settings described below to avoid accidental overwriting of th
 
 The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generates a local database instance in a container:
 
-* downloads a MongoDB Docker image
+* downloads a MongoDB container image
 * starts a container with the image and initialize a new database
 * add a user with `readWrite` role
 * defines a container network called `simtools-mongo-network` (check with `podman network ls`)
@@ -73,8 +73,8 @@ The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generat
 
 #### Option 1 (preferred): Fill local database from model parameter repository
 
-The script `upload_from_model_repository_to_db.sh` uses the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) from the CTAO GitLab and
-uploads its contents to the local database instance.
+The simtools package includes the application `simtools-db-upload-model-repository` to upload the model parameters from a
+local clone of the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) to a local database instance.
 
 #### Option 2: Fill local database from remote DB dump
 
@@ -89,7 +89,7 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 
 ### Upload to and download from the local database instance
 
-Startup a container and connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g,:
+Startup a container and connect to the local network adding `--network simtools-mongo-network` to the `podman run` command, e.g,:
 
 ```bash
 podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
@@ -121,5 +121,5 @@ cd /workdir/external/database_scripts
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
 
 :::{Danger}
-Attention: this script removes all local Docker containers, images, and networks without awaiting confirmation.
+Attention: this script removes all local containers, images, and networks without awaiting confirmation.
 :::

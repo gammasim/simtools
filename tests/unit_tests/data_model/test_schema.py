@@ -274,19 +274,19 @@ def test_get_schema_for_version_with_list_and_missing_version():
         {"schema_version": "2.0.0", "name": "latest"},
         {"schema_version": "1.0.0", "name": "old"},
     ]
-    with pytest.raises(ValueError, match="Schema version 3.0.0 not found in dummy_file.yml."):
+    with pytest.raises(ValueError, match=r"Schema version 3\.0\.0 not found in dummy_file\.yml\."):
         schema._get_schema_for_version(schema_list, DUMMY_FILE, "3.0.0")
 
 
 def test_get_schema_for_version_with_none_version():
     test_schema = {"schema_version": "1.0.0", "name": "test"}
-    with pytest.raises(ValueError, match="Schema version not given in dummy_file.yml."):
+    with pytest.raises(ValueError, match=r"Schema version not given in dummy_file\.yml\."):
         schema._get_schema_for_version(test_schema, DUMMY_FILE, None)
 
 
 def test_get_schema_for_version_with_empty_list():
     schema_list = []
-    with pytest.raises(ValueError, match="No schemas found in dummy_file.yml."):
+    with pytest.raises(ValueError, match=r"No schemas found in dummy_file.yml."):
         schema._get_schema_for_version(schema_list, DUMMY_FILE, "latest")
 
 
@@ -347,7 +347,7 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     # Test 8: Invalid version constraint should raise ValueError
     invalid_data = {"simulation_software": [{"name": "simtools", "version": ">=2.0.0"}]}
     with pytest.raises(
-        ValueError, match="Version 1.0.0 of simtools does not match constraint >=2.0.0"
+        ValueError, match=r"Version 1.0.0 of simtools does not match constraint >=2.0.0"
     ):
         schema._validate_deprecation_and_version(invalid_data)
 
