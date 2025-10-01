@@ -48,22 +48,21 @@ jobs:
 
       - name: Download QGSJet and autoconf
         run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O qgsjet2.bz2
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsjet3.bz2
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O qgsdat-II-04.bz2
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET2 }}/download -O autoconf.tar.gz
       - name: Upload QGSJet files and autoconf
         uses: actions/upload-artifact@v4
         with:
           name: upload-auxiliary-files
           path: |
-            qgsjet2.bz2
-            qgsjet3.bz2
+            qgsdat-II-04.bz2
+            qgsdat-III.bz2
             autoconf.tar.gz
           retention-days: 1
 
 
   build-base-images:
-    if: false
     runs-on: ubuntu-latest
     needs: [download-corsika, download-auxiliary-files]
     permissions:
@@ -110,8 +109,8 @@ jobs:
 
       - name: Rename auxiliary files
         run: |
-          mv ./downloaded-artifacts/qgsjet2.bz2 qgsjet2.bz2
-          mv ./downloaded-artifacts/qgsjet3.bz2 qgsjet3.bz2
+          mv ./downloaded-artifacts/qgsdat-II-04.bz2 qgsdat-II-04.bz2
+          mv ./downloaded-artifacts/qgsdat-III.bz2 qgsdat-III.bz2
           mv ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
 
       - name: Set up Docker Buildx
