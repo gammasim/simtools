@@ -196,7 +196,7 @@ def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
 
 def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError, match="label_not_valid is not valid."):
+        with pytest.raises(ValueError, match=r"label_not_valid is not valid\."):
             corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
     assert "label_not_valid is not valid." in caplog.text
 
