@@ -589,7 +589,8 @@ class SimtelConfigWriter:
             width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
             trigger_lines[tel_type] += f" width {width}"
             if trigger_dict.get("hard_stereo"):
-                trigger_lines[tel_type] += " hardstereo"
+                if trigger_dict["hard_stereo"]["value"]:
+                    trigger_lines[tel_type] += " hardstereo"
             if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
                 min_sep = trigger_dict["min_separation"]["value"] * u.Unit(
                     trigger_dict["min_separation"]["unit"]
