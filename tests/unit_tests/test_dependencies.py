@@ -194,7 +194,7 @@ def test_build_options(monkeypatch, fake_path):
         dependencies.get_build_options()
     # SIMTEL_PATH defined, but no build_opts.yml file
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    with pytest.raises(FileNotFoundError, match="No build_opts.yml file found."):
+    with pytest.raises(FileNotFoundError, match=r"No build_opts.yml file found."):
         dependencies.get_build_options()
 
     # mock ascii_handler.collect_data_from_file to return a dict
@@ -304,13 +304,13 @@ def test_get_corsika_version_empty_line(
 
 def test_get_build_options_no_env_var(monkeypatch):
     monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-    with pytest.raises(ValueError, match="SIMTOOLS_SIMTEL_PATH not defined."):
+    with pytest.raises(ValueError, match=r"SIMTOOLS_SIMTEL_PATH not defined."):
         dependencies.get_build_options()
 
 
 def test_get_build_options_file_not_found(monkeypatch, fake_path):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    with pytest.raises(FileNotFoundError, match="No build_opts.yml file found."):
+    with pytest.raises(FileNotFoundError, match=r"No build_opts.yml file found."):
         dependencies.get_build_options()
 
 
@@ -331,7 +331,7 @@ def test_get_build_options_container_file_not_found(monkeypatch, fake_path, subp
     with mock.patch(subprocess_run, return_value=mock_result):
         with pytest.raises(
             FileNotFoundError,
-            match="No build_opts.yml file found in container: File not found in container.",
+            match=r"No build_opts.yml file found in container: File not found in container.",
         ):
             dependencies.get_build_options(run_time=["docker", "exec", "container"])
 
@@ -353,5 +353,5 @@ def test_get_build_options_container_yaml_error(monkeypatch, fake_path, subproce
     mock_result.returncode = 0
     mock_result.stdout = "invalid_yaml: ["
     with mock.patch(subprocess_run, return_value=mock_result):
-        with pytest.raises(ValueError, match="Error parsing build_opts.yml from container:"):
+        with pytest.raises(ValueError, match=r"Error parsing build_opts.yml from container:"):
             dependencies.get_build_options(run_time=["docker", "exec", "container"])

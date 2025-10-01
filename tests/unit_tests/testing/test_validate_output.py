@@ -355,7 +355,7 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
         {"path_descriptor": "wrong_path", "file": "output_file", "expected_output": {}}
     ]
     with pytest.raises(
-        KeyError, match="Path wrong_path not found in integration test configuration."
+        KeyError, match=r"Path wrong_path not found in integration test configuration."
     ):
         validate_output._validate_output_path_and_file(config, wrong_integration_test)
 
@@ -414,7 +414,7 @@ def test_validate_application_output_with_assertion_error(output_path):
         "test_output_files": [{"path_descriptor": "output_path", "file": test_path}],
     }
     with pytest.raises(
-        AssertionError, match="Output file /path/to/output/not_there does not exist."
+        AssertionError, match=r"Output file /path/to/output/not_there does not exist."
     ):
         validate_output._validate_output_path_and_file(
             config, [{"path_descriptor": "output_path", "file": test_path}]

@@ -55,7 +55,7 @@ def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
 @mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)
 def test_read_sim_telarray_metadata_attribute_error(mock_decode, sim_telarray_file_gamma):
     simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
-    with pytest.raises(AttributeError, match="^Error reading metadata from file"):
+    with pytest.raises(AttributeError, match=r"^Error reading metadata from file"):
         read_sim_telarray_metadata(sim_telarray_file_gamma)
 
 
