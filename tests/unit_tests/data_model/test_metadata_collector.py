@@ -657,5 +657,5 @@ def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
 
 def test_read_input_metadata_from_yml_or_json_no_file():
     collector = MetadataCollector(args_dict={})
-    with pytest.raises(FileNotFoundError, match="Failed reading metadata from missing_file.yml"):
+    with pytest.raises(FileNotFoundError, match=r"Failed reading metadata from missing_file\.yml"):
         collector._read_input_metadata_from_yml_or_json("missing_file.yml")
