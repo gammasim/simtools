@@ -24,7 +24,6 @@ FROM almalinux:9.5 AS patches_stage
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
 
-
 RUN yum update -y && yum install -y git && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
@@ -132,8 +131,10 @@ RUN mv ./corsika-7*/run corsika-run && \
     find . -name "*.o" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
-# Unzip QGSJet tables; remove tables not needed (e.g. remove qgs3 tables when using qgs2)
+# Use QGSJet tables downloaded externally (overwrite any existing copies)
 WORKDIR /workdir/sim_telarray/corsika-run
+COPY qgsdat-II-04.bz2 .
+COPY qgsdat-III.bz2 .
 RUN if [ "$HADRONIC_MODEL" = "qgs3" ]; then \
         if [ -f qgsdat-III.bz2 ]; then \
             bzip2 -dq qgsdat-III.bz2; \
