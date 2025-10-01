@@ -19,8 +19,6 @@ from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
 
-__all__ = ["DatabaseHandler"]
-
 logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 
