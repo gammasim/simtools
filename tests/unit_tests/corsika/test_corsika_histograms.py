@@ -113,7 +113,7 @@ def test_hist_config_custom_config(corsika_histograms_instance):
     assert hist_config == custom_config
 
 
-def test_hist_config_save_and_read_yml(corsika_histograms_instance, io_handler):
+def test_hist_config_save_and_read_yml(corsika_histograms_instance):
     # Test producing the yaml file
     temp_hist_config = corsika_histograms_instance.hist_config
     corsika_histograms_instance.hist_config_to_yaml()
@@ -154,7 +154,7 @@ def test_create_histograms(corsika_histograms_instance):
         assert isinstance(corsika_histograms_instance.hist_time_altitude[0], bh.Histogram)
 
 
-def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
+def test_fill_histograms_no_rotation(corsika_output_file_name):
     # Sample test of photons: 1 telescope, 2 photons
     photons = [
         {
@@ -291,7 +291,7 @@ def test_set_histograms_passing_config(corsika_histograms_instance):
     assert corsika_histograms_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
 
 
-def test_raise_if_no_histogram(corsika_output_file_name, caplog, io_handler):
+def test_raise_if_no_histogram(corsika_output_file_name, caplog):
     corsika_histograms_instance_not_hist = CorsikaHistograms(corsika_output_file_name)
     with pytest.raises(HistogramNotCreatedError):
         corsika_histograms_instance_not_hist._raise_if_no_histogram()
@@ -796,7 +796,7 @@ def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_export_event_header_1d_histogram(corsika_histograms_instance_set_histograms, io_handler):
+def test_export_event_header_1d_histogram(corsika_histograms_instance_set_histograms):
     corsika_event_header_example = {
         "total_energy": "event_1d_histograms_total_energy",
         "azimuth": "event_1d_histograms_azimuth",
@@ -812,7 +812,7 @@ def test_export_event_header_1d_histogram(corsika_histograms_instance_set_histog
     assert len(tables) == 4
 
 
-def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histograms, io_handler):
+def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histograms):
     # Test writing the default photon histograms as well
     corsika_histograms_instance_set_histograms.export_histograms()
     tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
@@ -867,7 +867,7 @@ def test_parse_telescope_indices_none(corsika_dummy_input, tmp_path):
         assert ch.parse_telescope_indices(None) is None
 
 
-def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path, io_handler):
+def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path):
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
         mock.patch.object(CorsikaHistograms, "_initialize_header"),
@@ -877,7 +877,7 @@ def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path, io_handler
         assert np.array_equal(indices, np.array([1, 2, 3]))
 
 
-def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path, io_handler):
+def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path):
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
         mock.patch.object(CorsikaHistograms, "_initialize_header"),
@@ -887,7 +887,7 @@ def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path, io_handl
             ch.parse_telescope_indices(["a", "2"])
 
 
-def test_should_overwrite(corsika_dummy_input, tmp_path, io_handler):
+def test_should_overwrite(corsika_dummy_input, tmp_path):
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
         mock.patch.object(CorsikaHistograms, "_initialize_header"),
@@ -901,7 +901,7 @@ def test_should_overwrite(corsika_dummy_input, tmp_path, io_handler):
         assert ch.should_overwrite(False, None, None) is False
 
 
-def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path, io_handler):
+def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
     # Mock heavy operations inside pipeline
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
@@ -941,7 +941,7 @@ def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path, io_handler):
             assert out["pdf_photons"].name == "photons.pdf"
 
 
-def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_path, io_handler):
+def test_run_export_pipeline_event1d_event2d_and_hdf5(corsika_dummy_input, tmp_path):
     # Cover event1d/event2d branches and write_hdf5 path, including overwrite flag logic
     with (
         mock.patch.object(CorsikaHistograms, "read_event_information"),
