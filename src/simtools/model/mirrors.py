@@ -8,8 +8,6 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-__all__ = ["InvalidMirrorListFileError", "Mirrors"]
-
 
 class InvalidMirrorListFileError(Exception):
     """Exception for invalid mirror list file."""

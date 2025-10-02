@@ -10,8 +10,6 @@ import numpy as np
 from simtools.io import ascii_handler
 from simtools.utils import names
 
-__all__ = ["SimtelConfigReader"]
-
 
 def get_list_of_simtel_parameters(simtel_config_file):
     """

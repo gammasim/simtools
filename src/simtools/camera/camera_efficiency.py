@@ -15,8 +15,6 @@ from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficienc
 from simtools.utils import names
 from simtools.visualization import visualize
 
-__all__ = ["CameraEfficiency"]
-
 
 class CameraEfficiency:
     """
