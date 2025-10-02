@@ -36,24 +36,20 @@ Merge tables from two files generated with 'simtools-generate-simtel-event-data'
 
 """
 
-import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.io import io_handler, table_handler
 
 
-def _parse(label, description):
-    """
-    Parse command line arguments.
-
-    Returns
-    -------
-    dict
-        Parsed command-line arguments.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line arguments."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Merge tables from multiple input files into single tables.",
+    )
 
     input_group = config.parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument(
@@ -72,28 +68,23 @@ def _parse(label, description):
     return config.initialize(db_config=False, output=True)
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
+def main():
+    """Merge tables from multiple input files into single tables."""
+    app_context = startup_application(_parse)
 
-    args_dict, _ = _parse(
-        label=label,
-        description=("Merge tables from multiple input files into single tables."),
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    logger.info(f"Loading input files: {args_dict['input_files']}")
+    app_context.logger.info(f"Loading input files: {app_context.args['input_files']}")
 
     # accept fits.gz files (.gz)
     input_files = gen.get_list_of_files_from_command_line(
-        args_dict["input_files"], [".hdf5", ".gz"]
+        app_context.args["input_files"], [".hdf5", ".gz"]
     )
 
     output_path = io_handler.IOHandler().get_output_directory()
-    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
+    output_filepath = Path(output_path).joinpath(f"{app_context.args['output_file']}")
 
     table_handler.merge_tables(
         input_files,
-        input_table_names=args_dict["table_names"],
+        input_table_names=app_context.args["table_names"],
         output_file=output_filepath,
     )
 
