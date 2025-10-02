@@ -43,7 +43,7 @@ jobs:
           - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_instruction: 'sse4'}
         production:
           # list of productions build options: 'prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc'
-          - {build_opt: 'prod6-sc', extra_def: ''}
+          # - {build_opt: 'prod6-sc', extra_def: ''}  # currently not used
           - {build_opt: 'prod6-baseline', extra_def: ''}
 
     env:
@@ -113,7 +113,7 @@ jobs:
           - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_instruction: 'avx2'}
         production:
           # list of productions build options: 'prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc'
-          - {build_opt: 'prod6-sc', extra_def: ''}
+          # - {build_opt: 'prod6-sc', extra_def: ''} # currently not used
           - {build_opt: 'prod6-baseline', extra_def: ''}
         model_version:
           - "6.0"
