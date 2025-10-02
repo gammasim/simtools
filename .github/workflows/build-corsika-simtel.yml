@@ -118,7 +118,6 @@ jobs:
           mv -v ./downloaded-artifacts/qgsdat-III.bz2 qgsdat-III.bz2
           mv -v ./downloaded-artifacts/autoconf.tar.gz autoconf.tar.gz
           ls -lh autoconf.tar.gz
-          tar -tvzf autoconf.tar.gz
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
