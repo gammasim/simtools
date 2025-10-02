@@ -118,7 +118,7 @@ jobs:
         model_version:
           - "6.0"
     container:
-      image: ghcr.io/gammasim/simtools-prod-sim-telarray-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}
+      image: ghcr.io/gammasim/simtools-sim-telarray-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}
       options: --user 0
 
     services:
