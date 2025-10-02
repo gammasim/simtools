@@ -15,8 +15,6 @@ from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 
-__all__ = ["DataValidator"]
-
 
 class DataValidator:
     """

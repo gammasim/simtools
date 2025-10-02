@@ -7,7 +7,7 @@
 
 # Shared build arguments
 ARG CORSIKA_VERSION="77550"
-ARG CORSIKA_OPT_PATCH_VERSION="v1.0.0"
+ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
@@ -23,7 +23,6 @@ ARG AUTOCONF_VERSION="2.71"
 FROM almalinux:9.5 AS patches_stage
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
-
 
 RUN yum update -y && yum install -y git && \
     yum clean all && \
@@ -132,8 +131,10 @@ RUN mv ./corsika-7*/run corsika-run && \
     find . -name "*.o" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
-# Unzip QGSJet tables; remove tables not needed (e.g. remove qgs3 tables when using qgs2)
+# Use QGSJet tables downloaded externally (overwrite any existing copies)
 WORKDIR /workdir/sim_telarray/corsika-run
+COPY qgsdat-II-04.bz2 .
+COPY qgsdat-III.bz2 .
 RUN if [ "$HADRONIC_MODEL" = "qgs3" ]; then \
         if [ -f qgsdat-III.bz2 ]; then \
             bzip2 -dq qgsdat-III.bz2; \

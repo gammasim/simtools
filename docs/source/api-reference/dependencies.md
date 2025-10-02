@@ -1,6 +1,15 @@
 (dependencymanagement)=
 
-# Dependency and version management.
+# Application, dependency and version management.
+
+(application_control)=
+
+## application_control
+
+```{eval-rst}
+.. automodule:: simtools.application_control
+   :members:
+```
 
 (dependencies)=
 

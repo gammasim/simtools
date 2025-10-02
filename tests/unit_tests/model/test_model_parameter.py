@@ -226,7 +226,7 @@ def test_flen_type(telescope_model_lst):
     assert isinstance(flen_info["value"], float)
 
 
-def test_updating_export_model_files(db_config, io_handler, model_version):
+def test_updating_export_model_files(db_config, model_version):
     tel = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",

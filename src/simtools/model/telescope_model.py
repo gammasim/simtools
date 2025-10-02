@@ -13,8 +13,6 @@ from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.utils import names
 
-__all__ = ["TelescopeModel"]
-
 
 class TelescopeModel(ModelParameter):
     """

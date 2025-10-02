@@ -52,7 +52,7 @@ def test_init_zero_focal_length(caplog):
     assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
 
 
-def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, caplog):
+def test_reading_simtel_file(io_handler, tmp_test_directory, mocker, caplog):
     test_file = io_handler.get_test_data_file(
         file_name=(
             "ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz"

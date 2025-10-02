@@ -17,21 +17,20 @@ Example
 
 """
 
-import logging
-
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model import model_repository
-from simtools.utils import general as gen
 
 
 def _parse():
-    """Parse command line arguments."""
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description=(
             "Verify simulation model production tables and model parameters for completeness. "
             "This application checks that all model parameters defined in the production tables "
             "exist in the simulation models repository."
-        )
+        ),
     )
     config.parser.add_argument(
         "--simulation_models_path",
@@ -42,14 +41,12 @@ def _parse():
     return config.initialize(db_config=False, output=False, paths=False)
 
 
-def main():  # noqa: D103
-    args_dict, _ = _parse()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Verify simulation model production tables."""
+    app_context = startup_application(_parse)
 
     if not model_repository.verify_simulation_model_production_tables(
-        simulation_models_path=args_dict["simulation_models_path"]
+        simulation_models_path=app_context.args["simulation_models_path"]
     ):
         raise RuntimeError(
             "Verification failed: Some model parameters are missing in the repository."

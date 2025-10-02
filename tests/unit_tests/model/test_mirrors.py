@@ -49,7 +49,7 @@ def write_tmp_mirror_list(io_handler, tmp_test_directory, incomplete_mirror_tabl
     )
 
 
-def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel, tmp_test_directory):
+def test_read_mirror_list_from_sim_telarray(mirror_template_simtel, tmp_test_directory):
     mirrors = mirror_template_simtel
     assert 198 == mirrors.number_of_mirrors
     assert mirrors.mirror_diameter.value == pytest.approx(151.0)
@@ -67,7 +67,7 @@ def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel, 
     assert "mirror_z" not in red_mirrors.mirror_table.columns
 
 
-def test_read_mirror_list_from_ecsv(io_handler, mirror_template_ecsv):
+def test_read_mirror_list_from_ecsv(mirror_template_ecsv):
     mirrors = mirror_template_ecsv
     assert 198 == mirrors.number_of_mirrors
     assert mirrors.mirror_diameter.value == pytest.approx(151.0)
@@ -149,23 +149,23 @@ def assert_mirror_parameters(mirror_x, mirror_y, mirror_diameter, focal_length, 
     assert shape_type.value == 3
 
 
-def test_get_single_mirror_parameters_ecsv(io_handler, mirror_template_ecsv):
+def test_get_single_mirror_parameters_ecsv(mirror_template_ecsv):
     mirrors = mirror_template_ecsv
     assert_mirror_parameters(*mirrors.get_single_mirror_parameters(198))
 
 
-def test_get_single_mirror_parameters_simtel(io_handler, mirror_template_simtel):
+def test_get_single_mirror_parameters_simtel(mirror_template_simtel):
     mirrors = mirror_template_simtel
     assert_mirror_parameters(*mirrors.get_single_mirror_parameters(198))
 
 
-def test_get_single_mirror_parameters_simtel_wrong_id(io_handler, mirror_template_simtel):
+def test_get_single_mirror_parameters_simtel_wrong_id(mirror_template_simtel):
     logger.info("Wrong mirror id returns the first mirror table row")
     mirrors = mirror_template_simtel
     assert_mirror_parameters(*mirrors.get_single_mirror_parameters(9999))
 
 
-def test_get_single_mirror_parameters_simtel_missing_column(io_handler, mirror_template_simtel):
+def test_get_single_mirror_parameters_simtel_missing_column(mirror_template_simtel):
     logger.info("Removing column mirror_x")
     mirrors = mirror_template_simtel
     mirrors.mirror_table.rename_column("mirror_x", "mirror_xa")
