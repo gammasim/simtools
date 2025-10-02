@@ -13,8 +13,6 @@ import simtools.version
 from simtools.io import ascii_handler
 from simtools.utils import names
 
-__all__ = ["SimtelConfigWriter"]
-
 
 def sim_telarray_random_seeds(seed, number):
     """
@@ -588,7 +586,7 @@ class SimtelConfigWriter:
             trigger_lines[tel_type] += ", ".join(map(str, tel_list))
             width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
             trigger_lines[tel_type] += f" width {width}"
-            if trigger_dict.get("hard_stereo"):
+            if trigger_dict.get("hard_stereo", {}).get("value"):
                 trigger_lines[tel_type] += " hardstereo"
             if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
                 min_sep = trigger_dict["min_separation"]["value"] * u.Unit(

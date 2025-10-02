@@ -30,6 +30,8 @@ repos:
   - id: check-added-large-files
     args: ['--maxkb=500']
   - id: check-json
+  - id: no-commit-to-branch
+    args: [--branch=main]
 # https://github.com/HunterMcGushion/docstr_coverage
 - repo: https://github.com/HunterMcGushion/docstr_coverage
   rev: v2.3.2  # most recent docstr-coverage release or commit sha

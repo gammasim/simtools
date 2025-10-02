@@ -6,8 +6,6 @@ import astropy.units as u
 import numpy as np
 import pyproj
 
-__all__ = ["InvalidCoordSystemErrorError", "TelescopePosition"]
-
 
 class InvalidCoordSystemErrorError(Exception):
     """Exception for invalid coordinate system."""

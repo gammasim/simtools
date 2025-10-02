@@ -7,11 +7,6 @@ import astropy.units as u
 import numpy as np
 from astropy.units import UnitsError
 
-__all__ = [
-    "convert_2d_to_radial_distr",
-    "rotate",
-]
-
 _logger = logging.getLogger(__name__)
 
 

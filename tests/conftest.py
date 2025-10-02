@@ -47,7 +47,7 @@ def data_path():
     return "./data/"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io.io_handler.IOHandler()

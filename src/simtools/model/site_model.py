@@ -9,8 +9,6 @@ from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
 
-__all__ = ["SiteModel"]
-
 
 class SiteModel(ModelParameter):
     """

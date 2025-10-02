@@ -8,8 +8,6 @@ import numpy as np
 
 from simtools.utils.geometry import rotate
 
-__all__ = ["Camera"]
-
 
 class Camera:
     """
