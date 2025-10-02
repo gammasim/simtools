@@ -4,9 +4,7 @@ r"""Produces a markdown file for a given simulation configuration."""
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
-from simtools.utils import general as gen
 
 
 def _parse():
@@ -37,7 +35,9 @@ def main():
         f"{app_context.args.get('model_version')}"
     )
 
-    report_generator = ReportGenerator(db_config=db_config, args=args, output_path=output_path)
+    report_generator = ReportGenerator(
+        db_config=app_context.db_config, args=app_context.args, output_path=output_path
+    )
     report_generator.auto_generate_simulation_configuration_reports()
 
     app_context.logger.info(
