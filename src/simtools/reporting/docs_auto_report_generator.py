@@ -299,20 +299,14 @@ class ReportGenerator:
                     array_elements.append(design_model)
 
             if array_elements:
-                # Update args with the current version for this iteration
-                original_version = self.args.get("model_version")
-                self.args.update({"model_version": version})
+                # Create a copy of args with the current version for this iteration
+                version_args = self.args.copy()
+                version_args["model_version"] = version
 
                 # Generate parameter comparison reports for calibration devices
                 ReadParameters(
-                    self.db_config, self.args, self.output_path
+                    self.db_config, version_args, self.output_path
                 ).generate_model_parameter_reports_for_devices(array_elements)
-
-                # Restore original version
-                if original_version:
-                    self.args.update({"model_version": original_version})
-                else:
-                    self.args.pop("model_version", None)
 
                 logger.info(
                     "Calibration device parameter reports generated for"
