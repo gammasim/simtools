@@ -4,7 +4,7 @@ r"""Produces a markdown file for calibration reports."""
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.reporting.docs_read_parameters import ReadParameters
+from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
 
 def _parse():
@@ -12,6 +12,12 @@ def _parse():
     config = configurator.Configurator(
         label=get_application_label(__file__),
         description=("Produce a markdown report for calibration parameters."),
+    )
+
+    config.parser.add_argument(
+        "--all_model_versions",
+        action="store_true",
+        help="Produce reports for all model versions.",
     )
 
     return config.initialize(
@@ -24,19 +30,20 @@ def main():
     """Produce a markdown file for calibration reports."""
     app_context = startup_application(_parse)
 
-    output_path = app_context.io_handler.get_output_directory(
-        f"{app_context.args.get('model_version')}"
-    )
+    output_path = app_context.io_handler.get_output_directory()
 
-    read_parameters = ReadParameters(
+    generator = ReportGenerator(
         db_config=app_context.db_config, args=app_context.args, output_path=output_path
     )
-    read_parameters.produce_calibration_reports()
+    generator.auto_generate_calibration_reports()
 
-    app_context.logger.info(
-        f"Calibration reports for model version {app_context.args.get('model_version')} "
-        "produced successfully."
-    )
+    if app_context.args.get("all_model_versions"):
+        app_context.logger.info("Calibration reports for all model versions produced successfully.")
+    else:
+        app_context.logger.info(
+            f"Calibration reports for model version {app_context.args.get('model_version')}"
+            " produced successfully."
+        )
     app_context.logger.info(f"Output path: {output_path}")
 
 
