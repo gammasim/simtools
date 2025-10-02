@@ -62,11 +62,11 @@ def _parse():
 
 def main():
     """Generate a new simulation model production."""
-    args_dict, _, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     model_repository.generate_new_production(
-        modifications=args_dict["modifications"],
-        simulation_models_path=Path(args_dict["simulation_models_path"]),
+        modifications=app_context.args["modifications"],
+        simulation_models_path=Path(app_context.args["simulation_models_path"]),
     )
 
 

@@ -116,12 +116,12 @@ def _parse():
 
 def main():
     """Simulate light emission from illuminator."""
-    args_dict, db_config, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     light_source = SimulatorLightEmission(
-        light_emission_config=args_dict,
-        db_config=db_config,
-        label=args_dict.get("label"),
+        light_emission_config=app_context.args,
+        db_config=app_context.db_config,
+        label=app_context.args.get("label"),
     )
     light_source.simulate()
 

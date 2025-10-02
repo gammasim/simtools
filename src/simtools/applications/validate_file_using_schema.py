@@ -189,14 +189,14 @@ def validate_metadata(args_dict, logger):
 
 def main():
     """Validate a file or files in a directory using a schema."""
-    args_dict, _, logger, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    if args_dict["data_type"].lower() == "metadata":
-        validate_metadata(args_dict, logger)
-    elif args_dict["data_type"].lower() == "schema":
-        validate_dict_using_schema(args_dict, logger)
+    if app_context.args["data_type"].lower() == "metadata":
+        validate_metadata(app_context.args, app_context.logger)
+    elif app_context.args["data_type"].lower() == "schema":
+        validate_dict_using_schema(app_context.args, app_context.logger)
     else:
-        validate_data_files(args_dict, logger)
+        validate_data_files(app_context.args, app_context.logger)
 
 
 if __name__ == "__main__":

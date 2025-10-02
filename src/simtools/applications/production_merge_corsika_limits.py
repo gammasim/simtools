@@ -77,7 +77,6 @@ Examples
           --output_file merged_limits.ecsv
 """
 
-import logging
 from pathlib import Path
 
 from simtools.application_control import get_application_label, startup_application
@@ -85,8 +84,6 @@ from simtools.configuration import configurator
 from simtools.data_model import data_reader
 from simtools.io import ascii_handler
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
-
-_logger = logging.getLogger(__name__)
 
 
 def _parse():
@@ -143,27 +140,27 @@ def _parse():
 
 def main():
     """Merge CORSIKA limit tables and check grid completeness."""
-    args_dict, _, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     merger = CorsikaMergeLimits()
     grid_definition = (
-        ascii_handler.collect_data_from_file(args_dict["grid_definition"])
-        if args_dict.get("grid_definition")
+        ascii_handler.collect_data_from_file(app_context.args["grid_definition"])
+        if app_context.args.get("grid_definition")
         else None
     )
 
-    if args_dict.get("merged_table"):
+    if app_context.args.get("merged_table"):
         # Case 3: Check coverage on an existing merged table
-        merged_table_path = Path(args_dict["merged_table"]).expanduser()
+        merged_table_path = Path(app_context.args["merged_table"]).expanduser()
         merged_table = data_reader.read_table_from_file(merged_table_path)
         input_files = [merged_table_path]
-    elif args_dict.get("input_files") or args_dict.get("input_files_list"):
+    elif app_context.args.get("input_files") or app_context.args.get("input_files_list"):
         # Case 1 & 2: Merge files
         input_files = []
 
         # Process input_files argument
-        if args_dict.get("input_files"):
-            raw_paths = args_dict.get("input_files")
+        if app_context.args.get("input_files"):
+            raw_paths = app_context.args.get("input_files")
             if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
                 input_dir = Path(raw_paths[0]).expanduser()
                 input_files.extend(input_dir.glob("*.ecsv"))
@@ -171,8 +168,8 @@ def main():
                 input_files.extend(Path(f).expanduser() for f in raw_paths)
 
         # Process input_files_list argument
-        if args_dict.get("input_files_list"):
-            files_from_list = merger.read_file_list(args_dict["input_files_list"])
+        if app_context.args.get("input_files_list"):
+            files_from_list = merger.read_file_list(app_context.args["input_files_list"])
             input_files.extend(files_from_list)
 
         if not input_files:
@@ -187,15 +184,15 @@ def main():
 
     is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
 
-    if args_dict.get("plot_grid_coverage"):
+    if app_context.args.get("plot_grid_coverage"):
         merger.plot_grid_coverage(merged_table, grid_definition)
 
-    if args_dict.get("plot_limits"):
+    if app_context.args.get("plot_limits"):
         merger.plot_limits(merged_table)
 
-    if not args_dict.get("merged_table"):
+    if not app_context.args.get("merged_table"):
         # Write output file only when merging
-        output_file = merger.output_dir / args_dict["output_file"]
+        output_file = merger.output_dir / app_context.args["output_file"]
         merger.write_merged_table(
             merged_table,
             output_file,

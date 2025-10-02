@@ -132,9 +132,9 @@ def _parse():
 
 def main():
     """Derive limits for energy, radial distance, and viewcone."""
-    args_dict, db_config, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    generate_corsika_limits_grid(args_dict, db_config)
+    generate_corsika_limits_grid(app_context.args, app_context.db_config)
 
 
 if __name__ == "__main__":

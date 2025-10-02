@@ -60,18 +60,20 @@ def _parse():
 
 def main():
     """Add value from JSON to database."""
-    args_dict, db_config, logger, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    if args_dict.get("test_db", False):
-        db_config["db_simulation_model_version"] = str(uuid.uuid4())
-        logger.info(f"Using test database version {db_config['db_simulation_model_version']}")
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    if app_context.args.get("test_db", False):
+        app_context.db_config["db_simulation_model_version"] = str(uuid.uuid4())
+        app_context.logger.info(
+            f"Using test database version {app_context.db_config['db_simulation_model_version']}"
+        )
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
     files_to_insert = []
-    if args_dict.get("file_name", None) is not None:
-        files_to_insert.append(args_dict["file_name"])
+    if app_context.args.get("file_name", None) is not None:
+        files_to_insert.append(app_context.args["file_name"])
     else:
-        files_to_insert.extend(Path(args_dict["input_path"]).glob("*json"))
+        files_to_insert.extend(Path(app_context.args["input_path"]).glob("*json"))
 
     if len(files_to_insert) < 1:
         raise ValueError("No files were provided to upload")
@@ -79,32 +81,34 @@ def main():
 
     print(
         f"Should the following parameter{plural} be inserted to the "
-        f"{args_dict['db_collection']} DB collection?:\n"
+        f"{app_context.args['db_collection']} DB collection?:\n"
     )
     print(*files_to_insert, sep="\n")
     print()
 
-    logger.info(f"DB {db.get_db_name()} selected.")
+    app_context.logger.info(f"DB {db.get_db_name()} selected.")
 
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
             par_dict = ascii_handler.collect_data_from_file(file_name=file_to_insert_now)
-            logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
+            app_context.logger.info(
+                f"Adding the following parameter to the DB: {par_dict['parameter']}"
+            )
             db.add_new_parameter(
                 par_dict=par_dict,
-                collection_name=args_dict["db_collection"],
+                collection_name=app_context.args["db_collection"],
                 file_prefix="./",
             )
-            logger.info(
+            app_context.logger.info(
                 f"Value for {par_dict['parameter']} added to "
-                f"{args_dict['db_collection']} collection."
+                f"{app_context.args['db_collection']} collection."
             )
     else:
-        logger.info("Aborted, no change applied to the database")
+        app_context.logger.info("Aborted, no change applied to the database")
 
     # drop test database; be safe and required DB name is sandbox
-    if args_dict.get("test_db", False) and "sandbox" in db.get_db_name():
-        logger.info(f"Test database used. Dropping all data from {db.get_db_name()}")
+    if app_context.args.get("test_db", False) and "sandbox" in db.get_db_name():
+        app_context.logger.info(f"Test database used. Dropping all data from {db.get_db_name()}")
         db.db_client.drop_database(db.get_db_name())
 
 

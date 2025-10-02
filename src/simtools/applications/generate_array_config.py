@@ -41,15 +41,15 @@ def _parse():
 
 def main():
     """Generate sim_telarray configuration files for a given array."""
-    args_dict, db_config, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     array_model = ArrayModel(
-        label=args_dict["label"],
-        model_version=args_dict["model_version"],
-        mongo_db_config=db_config,
-        site=args_dict.get("site"),
-        layout_name=args_dict.get("array_layout_name"),
-        array_elements=args_dict.get("array_elements"),
+        label=app_context.args["label"],
+        model_version=app_context.args["model_version"],
+        mongo_db_config=app_context.db_config,
+        site=app_context.args.get("site"),
+        layout_name=app_context.args.get("array_layout_name"),
+        array_elements=app_context.args.get("array_elements"),
     )
     array_model.print_telescope_list()
     array_model.export_all_simtel_config_files()

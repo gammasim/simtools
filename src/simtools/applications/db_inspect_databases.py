@@ -30,14 +30,14 @@ def _parse():
 
 def main():
     """Inspect databases."""
-    args_dict, db_config, _, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
     # databases without internal databases we don't have rights to modify
     databases = [
         d for d in db.db_client.list_database_names() if d not in ("config", "admin", "local")
     ]
-    requested = args_dict["db_name"]
+    requested = app_context.args["db_name"]
     if requested != "all" and requested not in databases:
         raise ValueError(
             f"Requested database '{requested}' not found. "

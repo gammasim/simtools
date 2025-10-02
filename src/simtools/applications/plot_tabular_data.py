@@ -66,25 +66,25 @@ def _parse():
 
 def main():
     """Plot tabular data."""
-    args_dict, db_config, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
         schema.validate_dict_using_schema(
-            ascii_handler.collect_data_from_file(args_dict["plot_config"]),
+            ascii_handler.collect_data_from_file(app_context.args["plot_config"]),
             PLOT_CONFIG_SCHEMA,
         )
     )
 
     plot_tables.plot(
         config=plot_config["plot"],
-        output_file=_io_handler.get_output_file(args_dict["output_file"]),
-        db_config=db_config,
-        data_path=args_dict.get("table_data_path"),
+        output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
+        db_config=app_context.db_config,
+        data_path=app_context.args.get("table_data_path"),
     )
 
     MetadataCollector.dump(
-        args_dict,
-        _io_handler.get_output_file(args_dict["output_file"]),
+        app_context.args,
+        app_context.io_handler.get_output_file(app_context.args["output_file"]),
         add_activity_name=True,
     )
 

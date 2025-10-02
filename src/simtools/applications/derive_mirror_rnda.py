@@ -216,9 +216,11 @@ def _parse():
 
 def main():
     """Derive mirror random reflection angle of a single mirror panel."""
-    args_dict, db_config, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    panel_psf = MirrorPanelPSF(args_dict.get("label"), args_dict, db_config)
+    panel_psf = MirrorPanelPSF(
+        app_context.args.get("label"), app_context.args, app_context.db_config
+    )
     panel_psf.derive_random_reflection_angle(save_figures=True)
     panel_psf.print_results()
     panel_psf.write_optimization_data()

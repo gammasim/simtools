@@ -35,14 +35,14 @@ def _parse():
 
 def main():
     """Generate compound indexes for the specified database."""
-    args_dict, db_config, _, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
     db.generate_compound_indexes_for_databases(
-        db_name=args_dict["db_name"],
-        db_simulation_model=args_dict.get("db_simulation_model"),
-        db_simulation_model_version=args_dict.get("db_simulation_model_version"),
+        db_name=app_context.args["db_name"],
+        db_simulation_model=app_context.args.get("db_simulation_model"),
+        db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
     )
 
 

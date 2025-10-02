@@ -87,22 +87,28 @@ def _parse():
 
 def main():
     """Submit and validate a model parameter value and metadata."""
-    args_dict, db_config, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    if args_dict.get("output_path"):
-        output_path = _io_handler.get_output_directory(sub_dir=args_dict.get("parameter"))
+    if app_context.args.get("output_path"):
+        output_path = app_context.io_handler.get_output_directory(
+            sub_dir=app_context.args.get("parameter")
+        )
     else:
         output_path = None
 
     writer.ModelDataWriter.dump_model_parameter(
-        parameter_name=args_dict["parameter"],
-        value=args_dict["value"],
-        instrument=args_dict["instrument"],
-        parameter_version=args_dict["parameter_version"],
-        output_file=Path(args_dict["parameter"] + "-" + args_dict["parameter_version"] + ".json"),
+        parameter_name=app_context.args["parameter"],
+        value=app_context.args["value"],
+        instrument=app_context.args["instrument"],
+        parameter_version=app_context.args["parameter_version"],
+        output_file=Path(
+            app_context.args["parameter"] + "-" + app_context.args["parameter_version"] + ".json"
+        ),
         output_path=output_path,
-        metadata_input_dict=args_dict,
-        db_config=db_config if args_dict.get("check_parameter_version") else None,
+        metadata_input_dict=app_context.args,
+        db_config=app_context.db_config
+        if app_context.args.get("check_parameter_version")
+        else None,
     )
 
 

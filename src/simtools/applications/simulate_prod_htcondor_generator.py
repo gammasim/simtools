@@ -78,9 +78,9 @@ def _parse():
 
 def main():
     """Generate HT Condor submission script and submit file."""
-    args_dict, _, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    htcondor_script_generator.generate_submission_script(args_dict)
+    htcondor_script_generator.generate_submission_script(app_context.args)
 
 
 if __name__ == "__main__":

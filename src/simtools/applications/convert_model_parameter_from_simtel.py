@@ -68,29 +68,29 @@ def _parse():
 
 def main():
     """Convert simulation model parameter from sim_telarray to simtools format."""
-    args_dict, _, logger, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
     simtel_config_reader = SimtelConfigReader(
-        schema_file=args_dict["schema"],
-        simtel_config_file=args_dict["simtel_cfg_file"],
-        simtel_telescope_name=args_dict["simtel_telescope_name"],
+        schema_file=app_context.args["schema"],
+        simtel_config_file=app_context.args["simtel_cfg_file"],
+        simtel_telescope_name=app_context.args["simtel_telescope_name"],
     )
-    logger.info(f"Simtel parameter: {simtel_config_reader.parameter_dict}")
+    app_context.logger.info(f"Simtel parameter: {simtel_config_reader.parameter_dict}")
     if simtel_config_reader.parameter_dict is None or len(simtel_config_reader.parameter_dict) == 0:
-        logger.error("Parameter not found in sim_telarray configuration file.")
+        app_context.logger.error("Parameter not found in sim_telarray configuration file.")
         return
 
     simtel_config_reader.compare_simtel_config_with_schema()
 
     _json_dict = writer.ModelDataWriter.dump_model_parameter(
         parameter_name=simtel_config_reader.parameter_name,
-        value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
-        instrument=args_dict["telescope"],
-        parameter_version=args_dict["parameter_version"],
-        output_file=args_dict["output_file"],
-        output_path=args_dict.get("output_path"),
+        value=simtel_config_reader.parameter_dict.get(app_context.args["simtel_telescope_name"]),
+        instrument=app_context.args["telescope"],
+        parameter_version=app_context.args["parameter_version"],
+        output_file=app_context.args["output_file"],
+        output_path=app_context.args.get("output_path"),
     )
-    logger.info(f"Validated parameter: {_json_dict}")
+    app_context.logger.info(f"Validated parameter: {_json_dict}")
 
 
 if __name__ == "__main__":

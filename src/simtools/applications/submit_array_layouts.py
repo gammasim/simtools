@@ -71,18 +71,20 @@ def _parse():
 
 def main():
     """Submit and validate array layouts."""
-    args_dict, db_config, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
     array_layouts = validate_array_layouts_with_db(
         production_table=db.read_production_table_from_mongo_db(
-            collection_name="telescopes", model_version=args_dict["model_version"]
+            collection_name="telescopes", model_version=app_context.args["model_version"]
         ),
-        array_layouts=ascii_handler.collect_data_from_file(args_dict["array_layouts"]),
+        array_layouts=ascii_handler.collect_data_from_file(app_context.args["array_layouts"]),
     )
 
-    write_array_layouts(array_layouts=array_layouts, args_dict=args_dict, db_config=db_config)
+    write_array_layouts(
+        array_layouts=array_layouts, args_dict=app_context.args, db_config=app_context.db_config
+    )
 
 
 if __name__ == "__main__":

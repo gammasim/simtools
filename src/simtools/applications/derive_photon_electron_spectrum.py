@@ -113,9 +113,9 @@ def _parse():
 
 def main():
     """Derive single photon electron spectrum from a given amplitude spectrum."""
-    args_dict, _, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    single_pe = SinglePhotonElectronSpectrum(args_dict)
+    single_pe = SinglePhotonElectronSpectrum(app_context.args)
     single_pe.derive_single_pe_spectrum()
     single_pe.write_single_pe_spectrum()
 

@@ -163,24 +163,26 @@ def _parse():
 
 def main():
     """Generate a reduced dataset of event data from output of telescope simulations."""
-    args_dict, _, logger, _ = startup_application(_parse, setup_io_handler=False)
-    logger.info(f"Loading input files from: {args_dict['input']}")
+    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context.logger.info(f"Loading input files from: {app_context.args['input']}")
 
-    input_pattern = Path(args_dict["input"])
+    input_pattern = Path(app_context.args["input"])
     files = list(input_pattern.parent.glob(input_pattern.name))
     if not files:
-        logger.warning("No matching input files found.")
+        app_context.logger.warning("No matching input files found.")
         return
 
-    output_filepath = io_handler.IOHandler().get_output_file(args_dict["output_file"])
-    generator = SimtelIOEventDataWriter(files, args_dict["max_files"])
+    output_filepath = io_handler.IOHandler().get_output_file(app_context.args["output_file"])
+    generator = SimtelIOEventDataWriter(files, app_context.args["max_files"])
     tables = generator.process_files()
     table_handler.write_tables(tables, output_filepath, overwrite_existing=True)
-    MetadataCollector.dump(args_dict=args_dict, output_file=output_filepath.with_suffix(".yml"))
+    MetadataCollector.dump(
+        args_dict=app_context.args, output_file=output_filepath.with_suffix(".yml")
+    )
 
-    if args_dict["print_dataset_information"] > 0:
+    if app_context.args["print_dataset_information"] > 0:
         for table in tables:
-            table.pprint(max_lines=args_dict["print_dataset_information"], max_width=-1)
+            table.pprint(max_lines=app_context.args["print_dataset_information"], max_width=-1)
 
 
 if __name__ == "__main__":

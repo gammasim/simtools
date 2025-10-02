@@ -106,9 +106,13 @@ def _parse():
 
 def main():
     """Simulate pedestal events."""
-    args_dict, db_config, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    simulator = Simulator(label=args_dict.get("label"), args_dict=args_dict, db_config=db_config)
+    simulator = Simulator(
+        label=app_context.args.get("label"),
+        args_dict=app_context.args,
+        db_config=app_context.db_config,
+    )
     simulator.simulate()
 
 

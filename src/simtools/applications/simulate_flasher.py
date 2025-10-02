@@ -107,31 +107,32 @@ def _parse():
 
 def main():
     """Simulate flasher devices."""
-    args_dict, db_config, logger, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    logger.info(
-        f"Flasher simulation for telescope {args_dict['telescope']} "
-        f" with light source {args_dict['light_source']} "
-        f" ({args_dict['number_of_events']} events, run mode: {args_dict['run_mode']})"
+    app_context.logger.info(
+        f"Flasher simulation for telescope {app_context.args['telescope']} "
+        f" with light source {app_context.args['light_source']} "
+        f" ({app_context.args['number_of_events']} events, "
+        f"run mode: {app_context.args['run_mode']})"
     )
 
-    if args_dict["run_mode"] == "full_simulation":
+    if app_context.args["run_mode"] == "full_simulation":
         light_source = SimulatorLightEmission(
-            light_emission_config=args_dict,
-            db_config=db_config,
-            label=args_dict.get("label"),
+            light_emission_config=app_context.args,
+            db_config=app_context.db_config,
+            label=app_context.args.get("label"),
         )
-    elif args_dict["run_mode"] == "direct_injection":
+    elif app_context.args["run_mode"] == "direct_injection":
         light_source = Simulator(
-            args_dict=args_dict,
-            db_config=db_config,
-            label=args_dict.get("label"),
+            args_dict=app_context.args,
+            db_config=app_context.db_config,
+            label=app_context.args.get("label"),
         )
     else:
-        raise ValueError(f"Unsupported run_mode: {args_dict['run_mode']}")
+        raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     light_source.simulate()
-    logger.info("Flasher simulation completed.")
+    app_context.logger.info("Flasher simulation completed.")
 
 
 if __name__ == "__main__":
