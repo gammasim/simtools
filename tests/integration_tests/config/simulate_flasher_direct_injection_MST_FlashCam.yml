@@ -4,7 +4,7 @@ applications:
   configuration:
     run_mode: direct_injection
     light_source: MSFx-FlashCam
-    array_layout_name: 1mst
+    array_layout_name: subsystem_msts
     label: test-flasher-direct-injection-mst-flashcam
     log_level: DEBUG
     model_version: 6.0
@@ -12,9 +12,9 @@ applications:
     output_path: simtools-output
     run_number: 10
     sim_telarray_random_instrument_instances: 100
-    site: South
+    site: North
   integration_tests:
-  - output_file: sim_telarray/data/run000010/run000010_za20deg_azm000deg_South_1mst_6.0_test-flasher-direct-injection-mst-flashcam.simtel.zst
+  - output_file: sim_telarray/data/run000010/run000010_za20deg_azm000deg_South_subsystem_msts_6.0_test-flasher-direct-injection-mst-flashcam.simtel.zst
   test_name: direction_injection
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
