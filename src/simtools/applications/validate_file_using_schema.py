@@ -32,35 +32,22 @@ r"""
 
 """
 
-import logging
 import re
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
 from simtools.io import ascii_handler
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label (str)
-        application label
-    description (str)
-        application description
-
-    Returns
-    -------
-    config (Configurator)
-        application configuration
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Validate a file (metadata, schema, or data file) using a schema.",
+    )
     config.parser.add_argument(
         "--file_name",
         help="File to be validated (full path or name pattern, e.g., '*.json')",
@@ -200,21 +187,16 @@ def validate_metadata(args_dict, logger):
     logger.info(f"Successful validation of metadata {args_dict['file_name']}")
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, _ = _parse(
-        label, description="Validate a file (metadata, schema, or data file) using a schema."
-    )
+def main():
+    """Validate a file or files in a directory using a schema."""
+    app_context = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    if args_dict["data_type"].lower() == "metadata":
-        validate_metadata(args_dict, logger)
-    elif args_dict["data_type"].lower() == "schema":
-        validate_dict_using_schema(args_dict, logger)
+    if app_context.args["data_type"].lower() == "metadata":
+        validate_metadata(app_context.args, app_context.logger)
+    elif app_context.args["data_type"].lower() == "schema":
+        validate_dict_using_schema(app_context.args, app_context.logger)
     else:
-        validate_data_files(args_dict, logger)
+        validate_data_files(app_context.args, app_context.logger)
 
 
 if __name__ == "__main__":

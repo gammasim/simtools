@@ -51,33 +51,19 @@ Retrieve telescope positions from database (utm coordinate system) and write to 
       --output_file telescope_positions-test_layout.ecsv
 """
 
-import logging
-from pathlib import Path
-
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Get list of array elements as defined in the db (array layout).",
+    )
 
     input_group = config.parser.add_mutually_exclusive_group()
     input_group.add_argument(
@@ -128,33 +114,27 @@ def _layout_from_db(args_dict, db_config):
 
 
 def main():
-    """Get list of array elements as defined in the db (array layout)."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label,
-        "Get list of array elements as defined in the db (array layout).",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    """Get list of array layouts or list of elements for a given layout as defined in the db."""
+    app_context = startup_application(_parse)
 
-    if args_dict.get("list_available_layouts", False):
-        if args_dict.get("site", None) is None:
+    if app_context.args.get("list_available_layouts", False):
+        if app_context.args.get("site", None) is None:
             raise ValueError("Site must be provided to list available layouts.")
         site_model = SiteModel(
-            mongo_db_config=db_config,
-            model_version=args_dict["model_version"],
-            site=args_dict["site"],
+            mongo_db_config=app_context.db_config,
+            model_version=app_context.args["model_version"],
+            site=app_context.args["site"],
         )
         print(site_model.get_list_of_array_layouts())
     else:
-        logger.info("Array layout: %s", args_dict["array_layout_name"])
-        layout = _layout_from_db(args_dict, db_config)
+        app_context.logger.info("Array layout: %s", app_context.args["array_layout_name"])
+        layout = _layout_from_db(app_context.args, app_context.db_config)
         layout.pprint()
 
-        if not args_dict.get("output_file_from_default", False):
+        if not app_context.args.get("output_file_from_default", False):
             writer.ModelDataWriter.dump(
-                args_dict=args_dict,
-                output_file=args_dict["output_file"],
+                args_dict=app_context.args,
+                output_file=app_context.args["output_file"],
                 metadata=None,
                 product_data=layout,
             )

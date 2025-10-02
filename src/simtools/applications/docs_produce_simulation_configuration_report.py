@@ -2,18 +2,17 @@
 
 r"""Produces a markdown file for a given simulation configuration."""
 
-import logging
-
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.io import io_handler
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.utils import general as gen
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=("Produce a markdown report for model parameters."),
     )
 
@@ -30,24 +29,22 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    label_name = "reports"
-    args, db_config = _parse(label_name)
+def main():
+    """Produce a markdown file for a given simulation configuration."""
+    app_context = startup_application(_parse)
 
-    io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory()
+    output_path = app_context.io_handler.get_output_directory(
+        f"{app_context.args.get('model_version')}"
+    )
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
-
-    # Use ReportGenerator so --all_model_versions is supported consistently
     report_generator = ReportGenerator(db_config=db_config, args=args, output_path=output_path)
     report_generator.auto_generate_simulation_configuration_reports()
 
-    logger.info(
-        f"Configuration reports for {args.get('simulation_software')} produced successfully."
+    app_context.logger.info(
+        f"Configuration reports for {app_context.args.get('simulation_software')} "
+        "produced successfully."
     )
-    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
+    app_context.logger.info(f"Output path: {output_path}")
 
 
 if __name__ == "__main__":

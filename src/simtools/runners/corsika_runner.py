@@ -7,8 +7,6 @@ from pathlib import Path
 from simtools.io import io_handler
 from simtools.runners.runner_services import RunnerServices
 
-__all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfigError"]
-
 
 class MissingRequiredEntryInCorsikaConfigError(Exception):
     """Exception for missing required entry in corsika config."""

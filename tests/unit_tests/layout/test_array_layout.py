@@ -14,14 +14,14 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def array_layout_north_instance(io_handler, db_config, model_version):
+def array_layout_north_instance(db_config, model_version):
     return ArrayLayout(
         site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
     )
 
 
 @pytest.fixture
-def array_layout_south_instance(io_handler, db_config, model_version):
+def array_layout_south_instance(db_config, model_version):
     return ArrayLayout(
         site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
     )

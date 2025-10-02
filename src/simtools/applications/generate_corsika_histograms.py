@@ -164,36 +164,19 @@ r"""
         Total time needed: 8s.
 """
 
-import logging
 import time
-from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
-from simtools.io import io_handler
-
-logger = logging.getLogger()
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing the application.
-    description: str
-        Description of the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.",
+    )
 
     config.parser.add_argument(
         "--iact_file",
@@ -280,34 +263,30 @@ def _parse(label, description):
     return config_parser, _
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
-    io_handler_instance = io_handler.IOHandler()
-    args_dict, _ = _parse(label, description)
+def main():
+    """Generate a set of histograms for the Cherenkov photons saved in the CORSIKA IACT file."""
+    app_context = startup_application(_parse)
 
-    output_path = io_handler_instance.get_output_directory()
-
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()
-    logger.info("Starting the application.")
 
     corsika_histograms_instance = CorsikaHistograms(
-        args_dict["iact_file"], output_path=output_path, hdf5_file_name=args_dict["hdf5_file_name"]
+        app_context.args["iact_file"],
+        output_path=app_context.io_handler.get_output_directory(),
+        hdf5_file_name=app_context.args["hdf5_file_name"],
     )
     corsika_histograms_instance.run_export_pipeline(
-        individual_telescopes=args_dict["individual_telescopes"],
-        hist_config=args_dict["hist_config"],
-        indices_arg=args_dict["telescope_indices"],
-        write_pdf=args_dict["pdf"],
-        write_hdf5=args_dict["hdf5"],
-        event1d=args_dict["event_1d_histograms"],
-        event2d=args_dict["event_2d_histograms"],
-        test=args_dict["test"],
+        individual_telescopes=app_context.args["individual_telescopes"],
+        hist_config=app_context.args["hist_config"],
+        indices_arg=app_context.args["telescope_indices"],
+        write_pdf=app_context.args["pdf"],
+        write_hdf5=app_context.args["hdf5"],
+        event1d=app_context.args["event_1d_histograms"],
+        event2d=app_context.args["event_2d_histograms"],
+        test=app_context.args["test"],
     )
 
     final_time = time.time()
-    logger.info(
+    app_context.logger.info(
         f"Finalizing the application. Total time needed: {round(final_time - initial_time)}s."
     )
 

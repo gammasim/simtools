@@ -54,33 +54,19 @@ Expected output is a ecsv file in the directory printed to the screen.
 
 """
 
-import logging
-from pathlib import Path
-
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Print a list of array element positions",
+    )
 
     config.parser.add_argument(
         "--input",
@@ -139,52 +125,47 @@ def _parse(label=None, description=None):
 
 def main():
     """Print a list of array elements."""
-    label = Path(__file__).stem
-    model_parameter_name = "array_coordinates"
-    args_dict, db_config = _parse(
-        label,
-        description=f"Print a list of array element positions ({model_parameter_name})",
-    )
+    app_context = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    if args_dict.get("input", "").endswith(".json"):
-        site = args_dict.get("site", None)
+    if app_context.args.get("input", "").endswith(".json"):
+        site = app_context.args.get("site", None)
         metadata, validate_schema_file = None, None
     else:
-        metadata = MetadataCollector(args_dict=args_dict, model_parameter_name=model_parameter_name)
+        metadata = MetadataCollector(
+            args_dict=app_context.args, model_parameter_name="array_coordinates"
+        )
         site = metadata.get_site(from_input_meta=True)
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
+        mongo_db_config=app_context.db_config,
+        model_version=app_context.args["model_version"],
         site=site,
-        telescope_list_file=args_dict["input"],
-        telescope_list_metadata_file=args_dict["input_meta"],
-        validate=not args_dict["skip_input_validation"],
+        telescope_list_file=app_context.args["input"],
+        telescope_list_metadata_file=app_context.args["input_meta"],
+        validate=not app_context.args["skip_input_validation"],
     )
-    layout.select_assets(args_dict["select_assets"])
+    layout.select_assets(app_context.args["select_assets"])
     layout.convert_coordinates()
 
-    if args_dict["export"] is not None:
+    if app_context.args["export"] is not None:
         product_data = (
             layout.export_one_telescope_as_json(
-                crs_name=args_dict["export"], parameter_version=args_dict.get("parameter_version")
+                crs_name=app_context.args["export"],
+                parameter_version=app_context.args.get("parameter_version"),
             )
-            if args_dict.get("input", "").endswith(".json")
-            else layout.export_telescope_list_table(crs_name=args_dict["export"])
+            if app_context.args.get("input", "").endswith(".json")
+            else layout.export_telescope_list_table(crs_name=app_context.args["export"])
         )
         writer.ModelDataWriter.dump(
-            args_dict=args_dict,
+            args_dict=app_context.args,
             metadata=metadata,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
         )
     else:
         layout.print_telescope_list(
-            crs_name=args_dict["print"],
+            crs_name=app_context.args["print"],
         )
 
 
