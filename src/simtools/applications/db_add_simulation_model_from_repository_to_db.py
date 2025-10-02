@@ -51,31 +51,19 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler, db_model_upload
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing application.
-    description : str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Add or update a model parameter database to the DB",
+    )
     config.parser.add_argument(
         "--input_path",
         help="Path to simulation model repository.",
@@ -102,20 +90,19 @@ def _parse(label=None, description=None):
 
 
 def main():
-    """Application main."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label, description="Add or update a model parameter database to the DB"
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    """Add or update a model parameter database to the DB."""
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
-    if args_dict.get("type") == "model_parameters":
-        db_model_upload.add_model_parameters_to_db(input_path=Path(args_dict["input_path"]), db=db)
-    elif args_dict.get("type") == "production_tables":
-        db_model_upload.add_production_tables_to_db(input_path=Path(args_dict["input_path"]), db=db)
+    if app_context.args.get("type") == "model_parameters":
+        db_model_upload.add_model_parameters_to_db(
+            input_path=Path(app_context.args["input_path"]), db=db
+        )
+    elif app_context.args.get("type") == "production_tables":
+        db_model_upload.add_production_tables_to_db(
+            input_path=Path(app_context.args["input_path"]), db=db
+        )
 
 
 if __name__ == "__main__":
