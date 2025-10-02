@@ -95,14 +95,14 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
-        command = f" {input_file}"
-        command += f" | gzip > {self._log_file} 2>&1 || exit"
-        command += super().get_config_option(
+        command = super().get_config_option(
             "power_law",
             SimulatorArray.get_power_law_for_sim_telarray_histograms(
                 self.corsika_config.primary_particle
             ),
         )
+        command += f" {input_file}"
+        command += f" | gzip > {self._log_file} 2>&1 || exit"
         return command
 
     def _make_run_command_for_calibration_simulations(self, input_file=None):
