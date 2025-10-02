@@ -4,8 +4,6 @@ import logging
 
 from simtools.model.model_parameter import ModelParameter
 
-__all__ = ["CalibrationModel"]
-
 
 class CalibrationModel(ModelParameter):
     """

@@ -10,11 +10,6 @@ from ctapipe.io import read_table
 
 from simtools.utils.names import sanitize_name
 
-__all__ = [
-    "fill_hdf5_table",
-    "read_hdf5",
-]
-
 _logger = logging.getLogger(__name__)
 
 

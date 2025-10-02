@@ -20,8 +20,6 @@ from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
 from simtools.utils import names
 from simtools.visualization import visualize
 
-__all__ = ["RayTracing"]
-
 INVALID_KEY_TO_PLOT = "Invalid key to plot"
 
 

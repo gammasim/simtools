@@ -15,8 +15,6 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import general, names
 
-__all__ = ["ArrayModel"]
-
 
 class ArrayModel:
     """

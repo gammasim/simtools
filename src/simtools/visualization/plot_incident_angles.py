@@ -11,8 +11,6 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
-__all__ = ["plot_incident_angles"]
-
 Y_AXIS_BIN_COUNT_LABEL = "Density"
 
 
