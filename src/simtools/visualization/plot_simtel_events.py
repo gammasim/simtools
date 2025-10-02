@@ -16,17 +16,6 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.visualization.plot_corsika_histograms import save_figs_to_pdf
 from simtools.visualization.visualize import save_figure
 
-__all__ = [
-    "generate_and_save_plots",
-    "plot_simtel_event_image",
-    "plot_simtel_integrated_pedestal_image",
-    "plot_simtel_integrated_signal_image",
-    "plot_simtel_peak_timing",
-    "plot_simtel_step_traces",
-    "plot_simtel_time_traces",
-    "plot_simtel_waveform_matrix",
-]
-
 _logger = logging.getLogger(__name__)
 
 # Reusable literal constants (duplicated from visualize to avoid circular deps)
