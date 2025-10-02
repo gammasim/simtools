@@ -8,8 +8,6 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.runners.runner_services import RunnerServices
 
-__all__ = ["InvalidOutputFileError", "SimtelExecutionError", "SimtelRunner"]
-
 
 class SimtelExecutionError(Exception):
     """Exception for sim_telarray execution error."""

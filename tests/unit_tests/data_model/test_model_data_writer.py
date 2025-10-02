@@ -86,7 +86,7 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
     assert Path(data_file).is_file()
 
 
-def test_dump(args_dict, io_handler):
+def test_dump(args_dict):
     empty_table = Table()
 
     args_dict["output_file"] = "test_file.ecsv"

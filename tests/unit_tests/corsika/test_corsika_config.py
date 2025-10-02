@@ -104,7 +104,7 @@ def test_repr(corsika_config_mock_array_model):
     assert "site" in repr(corsika_config_mock_array_model)
 
 
-def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model):
+def test_fill_corsika_configuration(corsika_config_mock_array_model):
     empty_config = CorsikaConfig(
         array_model=None, label="test-corsika-config", args_dict=None, db_config=None
     )
@@ -132,9 +132,7 @@ def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model)
         assert key in corsika_config_mock_array_model.config
 
 
-def test_fill_corsika_configuration_model_version(
-    io_handler, corsika_config_mock_array_model, gcm2
-):
+def test_fill_corsika_configuration_model_version(corsika_config_mock_array_model, gcm2):
     """Test handling a list of model versions as input, taking the first one only."""
 
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
@@ -490,7 +488,7 @@ def test_generate_corsika_input_file_with_test_seeds(corsika_config_mock_array_m
             assert f"SEED {seed} 0 0" in file_content
 
 
-def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handler, model_version):
+def test_get_corsika_config_file_name(corsika_config_mock_array_model, model_version):
     file_name = (
         "proton_run000001_za020deg_azm000deg_cone0-10_South_"
         f"test_layout_{model_version}_test-corsika-config"
