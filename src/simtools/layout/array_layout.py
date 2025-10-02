@@ -17,8 +17,6 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names, value_conversion
 
-__all__ = ["ArrayLayout", "InvalidTelescopeListFileError"]
-
 
 class InvalidTelescopeListFileError(Exception):
     """Exception for invalid telescope list file."""

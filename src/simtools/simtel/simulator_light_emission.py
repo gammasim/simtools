@@ -16,8 +16,6 @@ from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.utils.geometry import fiducial_radius_from_shape
 
-__all__ = ["SimulatorLightEmission"]
-
 
 class SimulatorLightEmission(SimtelRunner):
     """

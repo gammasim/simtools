@@ -22,11 +22,6 @@ from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.version import semver_to_int
 
-__all__ = [
-    "InvalidRunsToSimulateError",
-    "Simulator",
-]
-
 
 class InvalidRunsToSimulateError(Exception):
     """Exception for invalid runs to simulate."""

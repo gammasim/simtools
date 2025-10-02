@@ -13,8 +13,6 @@ from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
 
-__all__ = ["ModelDataWriter"]
-
 
 class ModelDataWriter:
     """

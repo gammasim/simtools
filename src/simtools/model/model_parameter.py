@@ -13,8 +13,6 @@ from simtools.io import ascii_handler, io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
-__all__ = ["InvalidModelParameterError", "ModelParameter"]
-
 
 class InvalidModelParameterError(Exception):
     """Exception for invalid model parameter."""

@@ -37,7 +37,7 @@ def simulation_file(model_version):
 
 
 @pytest.fixture
-def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_path):
+def corsika_simtel_runner(corsika_config_mock_array_model, simtel_path):
     """CorsikaSimtelRunner object."""
     return CorsikaSimtelRunner(
         corsika_config=corsika_config_mock_array_model,
@@ -48,7 +48,7 @@ def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_pa
 
 
 @pytest.fixture
-def corsika_simtel_runner_calibration(io_handler, corsika_config_mock_array_model, simtel_path):
+def corsika_simtel_runner_calibration(corsika_config_mock_array_model, simtel_path):
     """CorsikaSimtelRunner object."""
     return CorsikaSimtelRunner(
         corsika_config=corsika_config_mock_array_model,

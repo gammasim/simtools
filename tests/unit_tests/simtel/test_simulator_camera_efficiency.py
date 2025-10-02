@@ -97,7 +97,7 @@ def test_check_run_result(simulator_camera_efficiency):
 
 
 @pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_version_prod5):
+def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5):
     logger.warning(
         "Running test_get_one_dim_distribution using prod5 model "
         " (prod6 model with 1D transmission function)"
