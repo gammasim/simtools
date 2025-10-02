@@ -142,8 +142,8 @@ def get_number_of_camera_pixel(args_dict, logger):
     ----------
     args_dict: dict
         Dictionary with command line arguments.
-    logger: logging.Logger
-        Logger object
+    logger: logging.logger
+        logger object
 
     Returns
     -------
@@ -174,8 +174,8 @@ def read_and_export_parameters(args_dict, logger, io_handler):
     ----------
     args_dict: dict
         Dictionary with command line arguments.
-    logger: logging.Logger
-        Logger object
+    logger: logging.logger
+        logger object
     io_handler: IOHandler
         IOHandler object
 
@@ -248,8 +248,8 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
         List of sim_telarray parameters not found in simtools schema files.
     args_dict: dict
         Dictionary with command line arguments.
-    logger: logging.Logger
-        Logger object
+    logger: logging.logger
+        logger object
 
     """
     logger.info(
@@ -298,8 +298,8 @@ def print_list_of_files(args_dict, logger):
     ----------
     args_dict: dict
         Dictionary with command line arguments.
-    logger: logging.Logger
-        Logger object
+    logger: logging.logger
+        logger object
 
     """
     model_files = sorted(Path(args_dict["output_path"]).rglob("*.json"))
@@ -311,13 +311,15 @@ def print_list_of_files(args_dict, logger):
 
 def main():
     """Convert all simulation model parameters exported from sim_telarray format."""
-    args_dict, _, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(
-        args_dict, logger, _io_handler
+        app_context.args, app_context.logger, app_context.io_handler
     )
-    print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger)
-    print_list_of_files(args_dict, logger)
+    print_parameters_not_found(
+        _parameters_not_in_simtel, _simtel_parameters, app_context.args, app_context.logger
+    )
+    print_list_of_files(app_context.args, app_context.logger)
 
 
 if __name__ == "__main__":

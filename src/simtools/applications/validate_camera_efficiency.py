@@ -90,26 +90,26 @@ def _parse():
         action="store_true",
         required=False,
     )
-    _args_dict, _db_config = config.initialize(
+    args_dict, db_config = config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version", "parameter_version"],
         simulation_configuration={"corsika_configuration": ["zenith_angle", "azimuth_angle"]},
     )
-    if _args_dict["site"] is None or _args_dict["telescope"] is None:
+    if args_dict["site"] is None or args_dict["telescope"] is None:
         config.parser.print_help()
         print("\n\nSite and telescope must be provided\n\n")
         raise RuntimeError("Site and telescope must be provided")
-    return _args_dict, _db_config
+    return args_dict, db_config
 
 
 def main():
     """Calculate the camera efficiency and NSB pixel rates."""
-    args_dict, db_config, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     ce = CameraEfficiency(
-        db_config=db_config,
-        label=args_dict.get("label"),
-        config_data=args_dict,
+        db_config=app_context.db_config,
+        label=app_context.args.get("label"),
+        config_data=app_context.args,
     )
     ce.simulate()
     ce.analyze(force=True)
@@ -119,12 +119,18 @@ def main():
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name="nsb_pixel_rate",
         value=ce.get_nsb_pixel_rate(
-            reference_conditions=args_dict.get("write_reference_nsb_rate_as_parameter", False)
+            reference_conditions=app_context.args.get(
+                "write_reference_nsb_rate_as_parameter", False
+            )
         ),
-        instrument=args_dict["telescope"],
-        parameter_version=args_dict.get("parameter_version", "0.0.0"),
-        output_file=Path(f"nsb_pixel_rate-{args_dict.get('parameter_version', '0.0.0')}.json"),
-        output_path=_io_handler.get_output_directory() / args_dict["telescope"] / "nsb_pixel_rate",
+        instrument=app_context.args["telescope"],
+        parameter_version=app_context.args.get("parameter_version", "0.0.0"),
+        output_file=Path(
+            f"nsb_pixel_rate-{app_context.args.get('parameter_version', '0.0.0')}.json"
+        ),
+        output_path=app_context.io_handler.get_output_directory()
+        / app_context.args["telescope"]
+        / "nsb_pixel_rate",
     )
 
 

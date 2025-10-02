@@ -139,23 +139,28 @@ def _parse():
 
 def main():
     """Run simulations for productions."""
-    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    simulator = Simulator(label=args_dict.get("label"), args_dict=args_dict, db_config=db_config)
+    simulator = Simulator(
+        label=app_context.args.get("label"),
+        args_dict=app_context.args,
+        db_config=app_context.db_config,
+    )
 
     simulator.simulate()
     simulator.validate_metadata()
 
-    logger.info(
-        f"Production run complete for primary {args_dict['primary']} showers "
-        f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
-        f"at {args_dict['site']} site, using {args_dict['model_version']} model."
+    app_context.logger.info(
+        f"Production run complete for primary {app_context.args['primary']} showers "
+        f"from {app_context.args['azimuth_angle']} azimuth and "
+        f"{app_context.args['zenith_angle']} zenith "
+        f"at {app_context.args['site']} site, using {app_context.args['model_version']} model."
     )
-    if args_dict["save_reduced_event_lists"]:
+    if app_context.args["save_reduced_event_lists"]:
         simulator.save_reduced_event_lists()
-    if args_dict.get("pack_for_grid_register"):
-        simulator.pack_for_register(args_dict["pack_for_grid_register"])
-    if args_dict["save_file_lists"]:
+    if app_context.args.get("pack_for_grid_register"):
+        simulator.pack_for_register(app_context.args["pack_for_grid_register"])
+    if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
 
 

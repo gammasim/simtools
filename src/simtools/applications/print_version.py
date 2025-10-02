@@ -24,9 +24,9 @@ def _parse():
 
 def main():
     """Print the versions of the simtools software."""
-    args_dict, db_config, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    version_string = dependencies.get_version_string(db_config)
+    version_string = dependencies.get_version_string(app_context.db_config)
     version_dict = {"simtools version": version.__version__}
 
     print()
@@ -40,11 +40,11 @@ def main():
         key, value = version_entry.split(": ", 1)
         version_dict[key] = value
 
-    if not args_dict.get("output_file_from_default", False):
+    if not app_context.args.get("output_file_from_default", False):
         ascii_handler.write_data_to_file(
             data=version_dict,
-            output_file=_io_handler.get_output_file(
-                args_dict.get("output_file", "simtools_version.json")
+            output_file=app_context.io_handler.get_output_file(
+                app_context.args.get("output_file", "simtools_version.json")
             ),
         )
 

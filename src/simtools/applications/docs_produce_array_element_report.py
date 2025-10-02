@@ -51,33 +51,33 @@ def _parse():
 
 def main():
     """Produce a markdown file for a given array element, site, and model version."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
-    output_path = _io_handler.get_output_directory()
+    app_context = startup_application(_parse)
+    output_path = app_context.io_handler.get_output_directory()
 
     if any(
         [
-            args_dict.get("all_telescopes"),
-            args_dict.get("all_sites"),
-            args_dict.get("all_model_versions"),
+            app_context.args.get("all_telescopes"),
+            app_context.args.get("all_sites"),
+            app_context.args.get("all_model_versions"),
         ]
     ):
         ReportGenerator(
-            db_config,
-            args_dict,
+            app_context.db_config,
+            app_context.args,
             output_path,
         ).auto_generate_array_element_reports()
 
     else:
-        model_version = args_dict["model_version"]
+        model_version = app_context.args["model_version"]
         ReadParameters(
-            db_config,
-            args_dict,
+            app_context.db_config,
+            app_context.args,
             Path(output_path / f"{model_version}"),
         ).produce_array_element_report()
 
-        logger.info(
-            f"Markdown report generated for {args_dict['site']}"
-            f" Telescope {args_dict['telescope']} (v{model_version}):"
+        app_context.logger.info(
+            f"Markdown report generated for {app_context.args['site']}"
+            f" Telescope {app_context.args['telescope']} (v{model_version}):"
             f" {output_path}"
         )
 

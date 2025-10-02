@@ -52,15 +52,15 @@ def _parse():
 
 def main():
     """Generate a default simtools metadata file from a json schema."""
-    args_dict, _, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    default_values = metadata_model.get_default_metadata_dict(args_dict["schema"])
+    default_values = metadata_model.get_default_metadata_dict(app_context.args["schema"])
 
-    if args_dict["output_file"] is None:
+    if app_context.args["output_file"] is None:
         print(default_values)
     else:
-        output_file = _io_handler.get_output_file(args_dict["output_file"])
-        logger.info(f"Writing default values to {output_file}")
+        output_file = app_context.io_handler.get_output_file(app_context.args["output_file"])
+        app_context.logger.info(f"Writing default values to {output_file}")
         ascii_handler.write_data_to_file(
             data=default_values, output_file=output_file, sort_keys=False
         )

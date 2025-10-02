@@ -22,18 +22,22 @@ def _parse():
 
 def main():
     """Produce a markdown file for calibration reports."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    output_path = _io_handler.get_output_directory(f"{args_dict.get('model_version')}")
+    output_path = app_context.io_handler.get_output_directory(
+        f"{app_context.args.get('model_version')}"
+    )
 
-    read_parameters = ReadParameters(db_config=db_config, args=args_dict, output_path=output_path)
+    read_parameters = ReadParameters(
+        db_config=app_context.db_config, args=app_context.args, output_path=output_path
+    )
     read_parameters.produce_calibration_reports()
 
-    logger.info(
-        f"Calibration reports for model version {args_dict.get('model_version')} "
+    app_context.logger.info(
+        f"Calibration reports for model version {app_context.args.get('model_version')} "
         "produced successfully."
     )
-    logger.info(f"Output path: {output_path}")
+    app_context.logger.info(f"Output path: {output_path}")
 
 
 if __name__ == "__main__":

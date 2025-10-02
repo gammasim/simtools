@@ -134,30 +134,30 @@ def _parse():
 
 def main():
     """Calculate photon incident angles on focal plane and primary/secondary mirrors."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    logger.info("Starting calculation of incident angles")
+    app_context.logger.info("Starting calculation of incident angles")
 
-    output_dir = _io_handler.get_output_directory()
-    base_label = args_dict.get("label", get_application_label(__file__))
-    telescope_name = args_dict["telescope"]
+    output_dir = app_context.io_handler.get_output_directory()
+    base_label = app_context.args.get("label", get_application_label(__file__))
+    telescope_name = app_context.args["telescope"]
     label_with_telescope = f"{base_label}_{telescope_name}"
 
     calculator = IncidentAnglesCalculator(
-        simtel_path=args_dict["simtel_path"],
-        db_config=db_config,
-        config_data=args_dict,
+        simtel_path=app_context.args["simtel_path"],
+        db_config=app_context.db_config,
+        config_data=app_context.args,
         output_dir=output_dir,
         label=base_label,
     )
-    offsets = [float(v) for v in args_dict.get("off_axis_angles", [0.0])]
+    offsets = [float(v) for v in app_context.args.get("off_axis_angles", [0.0])]
 
     results_by_offset = calculator.run_for_offsets(offsets)
     plot_incident_angles(
         results_by_offset,
         output_dir,
         label_with_telescope,
-        debug_plots=args_dict.get("debug_plots", False),
+        debug_plots=app_context.args.get("debug_plots", False),
     )
     total = sum(len(t) for t in results_by_offset.values())
     summary_msg = (
@@ -166,7 +166,7 @@ def main():
     )
     if total < 1_000_000:
         summary_msg += " (below 1e6; results may be statistically unstable)"
-    logger.info(summary_msg)
+    app_context.logger.info(summary_msg)
 
 
 if __name__ == "__main__":

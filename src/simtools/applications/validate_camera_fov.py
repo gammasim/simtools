@@ -85,45 +85,47 @@ def _parse():
 
 def main():
     """Validate camera field of view."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     label = "validate_camera_fov"
 
     tel_model = TelescopeModel(
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
+        site=app_context.args["site"],
+        telescope_name=app_context.args["telescope"],
+        mongo_db_config=app_context.db_config,
+        model_version=app_context.args["model_version"],
         label=label,
     )
     tel_model.export_model_files()
 
-    logger.info(f"\nValidating the camera FoV of {tel_model.name}\n")
+    app_context.logger.info(f"\nValidating the camera FoV of {tel_model.name}\n")
 
     focal_length = tel_model.get_telescope_effective_focal_length("cm")
     camera = tel_model.camera
 
     fov, r_edge_avg = camera.calc_fov()
 
-    logger.info(f"\nEffective focal length = {focal_length:.3f} cm")
-    logger.info(f"{tel_model.name} FoV = {fov:.3f} deg")
-    logger.info(f"Avg. edge radius = {r_edge_avg:.3f} cm\n")
+    app_context.logger.info(f"\nEffective focal length = {focal_length:.3f} cm")
+    app_context.logger.info(f"{tel_model.name} FoV = {fov:.3f} deg")
+    app_context.logger.info(f"Avg. edge radius = {r_edge_avg:.3f} cm\n")
 
     # Now plot the camera as well
     try:
-        pixel_ids_to_print = int(args_dict["print_pixels_id"])
+        pixel_ids_to_print = int(app_context.args["print_pixels_id"])
         if pixel_ids_to_print == 0:
             pixel_ids_to_print = -1  # so not print the zero pixel
     except ValueError as exc:
-        if args_dict["print_pixels_id"].lower() == "all":
+        if app_context.args["print_pixels_id"].lower() == "all":
             pixel_ids_to_print = camera.get_number_of_pixels()
         else:
             raise ValueError(
-                f"The value provided to --print_pixels_id ({args_dict['print_pixels_id']}) "
+                f"The value provided to --print_pixels_id ({app_context.args['print_pixels_id']}) "
                 "should be an integer or All"
             ) from exc
-    fig = plot_camera.plot_pixel_layout(camera, args_dict["camera_in_sky_coor"], pixel_ids_to_print)
-    output_dir = _io_handler.get_output_directory()
+    fig = plot_camera.plot_pixel_layout(
+        camera, app_context.args["camera_in_sky_coor"], pixel_ids_to_print
+    )
+    output_dir = app_context.io_handler.get_output_directory()
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     visualize.save_figure(fig, f"{plot_file_prefix!s}", log_title="camera")
 

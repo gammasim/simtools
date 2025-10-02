@@ -1,10 +1,21 @@
 """Application control utilities for startup and shutdown simtools applications."""
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.io import io_handler
+
+
+@dataclass
+class ApplicationContext:
+    """Container for common application context elements."""
+
+    args: dict
+    db_config: dict
+    logger: logging.Logger
+    io_handler: io_handler.IOHandler | None
 
 
 def startup_application(parse_function, setup_io_handler=True, logger_name=None):
@@ -45,10 +56,10 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
     .. code-block:: python
 
         def main():
-            args_dict, db_config, logger, io_handler_instance = startup_application(_parse)
+            app_context = startup_application(_parse)
 
             # Application-specific code follows
-            logger.info("Starting application")
+            app_context.logger.info("Starting application")
             # ... rest of application logic
 
     Usage without IOHandler:
@@ -56,10 +67,10 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
     .. code-block:: python
 
         def main():
-            args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
+            app_context = startup_application(_parse, setup_io_handler=False)
 
             # Application-specific code follows
-            logger.info("Starting application")
+            app_context.logger.info("Starting application")
             # ... rest of application logic
     """
     args_dict, db_config = parse_function()
@@ -72,7 +83,12 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
-    return args_dict, db_config, logger, io_handler_instance
+    return ApplicationContext(
+        args=args_dict,
+        db_config=db_config,
+        logger=logger,
+        io_handler=io_handler_instance,
+    )
 
 
 def get_application_label(file_path):

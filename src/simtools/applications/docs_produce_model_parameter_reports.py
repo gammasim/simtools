@@ -36,26 +36,26 @@ def _parse():
 
 def main():
     """Produce a model parameter report per array element."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
-    output_path = _io_handler.get_output_directory()
+    app_context = startup_application(_parse)
+    output_path = app_context.io_handler.get_output_directory()
 
-    if any([args_dict.get("all_telescopes"), args_dict.get("all_sites")]):
+    if any([app_context.args.get("all_telescopes"), app_context.args.get("all_sites")]):
         ReportGenerator(
-            db_config,
-            args_dict,
+            app_context.db_config,
+            app_context.args,
             output_path,
         ).auto_generate_parameter_reports()
 
     else:
         ReadParameters(
-            db_config,
-            args_dict,
+            app_context.db_config,
+            app_context.args,
             output_path,
         ).produce_model_parameter_reports()
 
-        logger.info(
-            f"Markdown report generated for {args_dict['site']}"
-            f"Telescope {args_dict['telescope']}: {output_path}"
+        app_context.logger.info(
+            f"Markdown report generated for {app_context.args['site']}"
+            f"Telescope {app_context.args['telescope']}: {output_path}"
         )
 
 

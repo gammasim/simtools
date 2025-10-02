@@ -136,8 +136,8 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
         Dictionary of parsed command-line arguments.
     db : DatabaseHandler
         Database handler object.
-    logger : logging.Logger
-        Logger object for logging messages.
+    logger : logging.logger
+        logger object for logging messages.
     """
     plural = "" if len(files_to_insert) == 1 else "s"
 
@@ -164,12 +164,12 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
 
 def main():
     """Add files to the database."""
-    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
-    files_to_insert = collect_files_to_insert(args_dict, logger, db)
-    confirm_and_insert_files(files_to_insert, args_dict, db, logger)
+    files_to_insert = collect_files_to_insert(app_context.args, app_context.logger, db)
+    confirm_and_insert_files(files_to_insert, app_context.args, db, app_context.logger)
 
 
 if __name__ == "__main__":

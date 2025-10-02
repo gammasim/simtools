@@ -106,42 +106,44 @@ def _parse():
 
 def main():
     """Get a parameter entry from DB for a specific telescope or a site."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
     pars = db.get_model_parameter(
-        parameter=args_dict["parameter"],
-        site=args_dict["site"],
-        array_element_name=args_dict.get("telescope"),
-        parameter_version=args_dict.get("parameter_version"),
-        model_version=args_dict.get("model_version"),
+        parameter=app_context.args["parameter"],
+        site=app_context.args["site"],
+        array_element_name=app_context.args.get("telescope"),
+        parameter_version=app_context.args.get("parameter_version"),
+        model_version=app_context.args.get("model_version"),
     )
-    if args_dict["export_model_file"] or args_dict["export_model_file_as_table"]:
+    if app_context.args["export_model_file"] or app_context.args["export_model_file_as_table"]:
         table = db.export_model_file(
-            parameter=args_dict["parameter"],
-            site=args_dict["site"],
-            array_element_name=args_dict["telescope"],
-            parameter_version=args_dict.get("parameter_version"),
-            model_version=args_dict.get("model_version"),
-            export_file_as_table=args_dict["export_model_file_as_table"],
+            parameter=app_context.args["parameter"],
+            site=app_context.args["site"],
+            array_element_name=app_context.args["telescope"],
+            parameter_version=app_context.args.get("parameter_version"),
+            model_version=app_context.args.get("model_version"),
+            export_file_as_table=app_context.args["export_model_file_as_table"],
         )
-        param_value = pars[args_dict["parameter"]]["value"]
-        table_file = _io_handler.get_output_file(param_value)
-        logger.info(f"Exported model file {param_value} to {table_file}")
+        param_value = pars[app_context.args["parameter"]]["value"]
+        table_file = app_context.io_handler.get_output_file(param_value)
+        app_context.logger.info(f"Exported model file {param_value} to {table_file}")
         if table and table_file.suffix != ".ecsv":
             table.write(table_file.with_suffix(".ecsv"), format="ascii.ecsv", overwrite=True)
-            logger.info(f"Exported model file {param_value} to {table_file.with_suffix('.ecsv')}")
+            app_context.logger.info(
+                f"Exported model file {param_value} to {table_file.with_suffix('.ecsv')}"
+            )
 
-    if args_dict["output_file"] is not None:
-        pars[args_dict["parameter"]].pop("_id")
-        pars[args_dict["parameter"]].pop("entry_date")
+    if app_context.args["output_file"] is not None:
+        pars[app_context.args["parameter"]].pop("_id")
+        pars[app_context.args["parameter"]].pop("entry_date")
         ascii_handler.write_data_to_file(
-            data=pars[args_dict["parameter"]],
-            output_file=_io_handler.get_output_file(args_dict["output_file"]),
+            data=pars[app_context.args["parameter"]],
+            output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
         )
     else:
-        pprint(pars[args_dict["parameter"]])
+        pprint(pars[app_context.args["parameter"]])
 
 
 if __name__ == "__main__":

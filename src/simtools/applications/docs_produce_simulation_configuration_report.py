@@ -23,18 +23,23 @@ def _parse():
 
 def main():
     """Produce a markdown file for a given simulation configuration."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    output_path = _io_handler.get_output_directory(f"{args_dict.get('model_version')}")
+    output_path = app_context.io_handler.get_output_directory(
+        f"{app_context.args.get('model_version')}"
+    )
 
-    read_parameters = ReadParameters(db_config=db_config, args=args_dict, output_path=output_path)
+    read_parameters = ReadParameters(
+        db_config=app_context.db_config, args=app_context.args, output_path=output_path
+    )
 
     read_parameters.produce_simulation_configuration_report()
 
-    logger.info(
-        f"Configuration reports for {args_dict.get('simulation_software')} produced successfully."
+    app_context.logger.info(
+        f"Configuration reports for {app_context.args.get('simulation_software')} "
+        "produced successfully."
     )
-    logger.info(f"Output path: {output_path}")
+    app_context.logger.info(f"Output path: {output_path}")
 
 
 if __name__ == "__main__":

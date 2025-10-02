@@ -118,14 +118,14 @@ def _parse():
 
 def main():
     """Validate the optical model parameters through ray tracing simulations."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse, setup_io_handler=True)
+    app_context = startup_application(_parse, setup_io_handler=True)
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=Path(__file__).stem,
-        db_config=db_config,
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        model_version=args_dict["model_version"],
+        db_config=app_context.db_config,
+        site=app_context.args["site"],
+        telescope_name=app_context.args["telescope"],
+        model_version=app_context.args["model_version"],
     )
 
     ######################################################################
@@ -139,24 +139,24 @@ def main():
     # }
     # tel_model.change_multiple_parameters(**pars_to_change)
 
-    logger.info(
+    app_context.logger.info(
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
     )
 
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        simtel_path=args_dict["simtel_path"],
-        zenith_angle=args_dict["zenith"] * u.deg,
-        source_distance=args_dict["src_distance"] * u.km,
+        simtel_path=app_context.args["simtel_path"],
+        zenith_angle=app_context.args["zenith"] * u.deg,
+        source_distance=app_context.args["src_distance"] * u.km,
         off_axis_angle=np.linspace(
             0,
-            args_dict["max_offset"],
-            int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1,
+            app_context.args["max_offset"],
+            int(app_context.args["max_offset"] / app_context.args["offset_steps"]) + 1,
         )
         * u.deg,
     )
-    ray.simulate(test=args_dict["test"], force=False)
+    ray.simulate(test=app_context.args["test"], force=False)
     ray.analyze(force=True)
 
     # Plotting
@@ -165,17 +165,17 @@ def main():
 
         ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plot_file_name = "_".join((args_dict.get("label"), tel_model.name, key))
-        plot_file = _io_handler.get_output_file(plot_file_name)
+        plot_file_name = "_".join((app_context.args.get("label"), tel_model.name, key))
+        plot_file = app_context.io_handler.get_output_file(plot_file_name)
         visualize.save_figure(plt, plot_file)
 
     # Plotting images
-    if args_dict["plot_images"]:
-        plot_file_name = "_".join((args_dict.get("label"), tel_model.name, "images.pdf"))
-        plot_file = _io_handler.get_output_file(plot_file_name)
+    if app_context.args["plot_images"]:
+        plot_file_name = "_".join((app_context.args.get("label"), tel_model.name, "images.pdf"))
+        plot_file = app_context.io_handler.get_output_file(plot_file_name)
         pdf_pages = PdfPages(plot_file)
 
-        logger.info(f"Plotting images into {plot_file}")
+        app_context.logger.info(f"Plotting images into {plot_file}")
 
         for image in ray.images():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)

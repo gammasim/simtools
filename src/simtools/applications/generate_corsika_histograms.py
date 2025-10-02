@@ -265,28 +265,28 @@ def _parse():
 
 def main():
     """Generate a set of histograms for the Cherenkov photons saved in the CORSIKA IACT file."""
-    args_dict, _, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     initial_time = time.time()
 
     corsika_histograms_instance = CorsikaHistograms(
-        args_dict["iact_file"],
-        output_path=_io_handler.get_output_directory(),
-        hdf5_file_name=args_dict["hdf5_file_name"],
+        app_context.args["iact_file"],
+        output_path=app_context.io_handler.get_output_directory(),
+        hdf5_file_name=app_context.args["hdf5_file_name"],
     )
     corsika_histograms_instance.run_export_pipeline(
-        individual_telescopes=args_dict["individual_telescopes"],
-        hist_config=args_dict["hist_config"],
-        indices_arg=args_dict["telescope_indices"],
-        write_pdf=args_dict["pdf"],
-        write_hdf5=args_dict["hdf5"],
-        event1d=args_dict["event_1d_histograms"],
-        event2d=args_dict["event_2d_histograms"],
-        test=args_dict["test"],
+        individual_telescopes=app_context.args["individual_telescopes"],
+        hist_config=app_context.args["hist_config"],
+        indices_arg=app_context.args["telescope_indices"],
+        write_pdf=app_context.args["pdf"],
+        write_hdf5=app_context.args["hdf5"],
+        event1d=app_context.args["event_1d_histograms"],
+        event2d=app_context.args["event_2d_histograms"],
+        test=app_context.args["test"],
     )
 
     final_time = time.time()
-    logger.info(
+    app_context.logger.info(
         f"Finalizing the application. Total time needed: {round(final_time - initial_time)}s."
     )
 

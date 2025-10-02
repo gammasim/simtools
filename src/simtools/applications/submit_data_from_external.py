@@ -79,19 +79,23 @@ def _parse():
 
 def main():
     """Submit and validate data (e.g., input data to tools, model parameters)."""
-    args_dict, _, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    _metadata = None if args_dict.get("ignore_metadata") else MetadataCollector(args_dict)
+    _metadata = (
+        None if app_context.args.get("ignore_metadata") else MetadataCollector(app_context.args)
+    )
 
     data_validator = validate_data.DataValidator(
         schema_file=(
-            _metadata.get_data_model_schema_file_name() if _metadata else args_dict.get("schema")
+            _metadata.get_data_model_schema_file_name()
+            if _metadata
+            else app_context.args.get("schema")
         ),
-        data_file=args_dict["input"],
+        data_file=app_context.args["input"],
     )
 
     writer.ModelDataWriter.dump(
-        args_dict=args_dict,
+        args_dict=app_context.args,
         metadata=_metadata,
         product_data=data_validator.validate_and_transform(),
     )

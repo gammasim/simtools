@@ -43,10 +43,10 @@ def _parse():
 
 def main():
     """Verify simulation model production tables."""
-    args_dict, _, _, _ = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     if not model_repository.verify_simulation_model_production_tables(
-        simulation_models_path=args_dict["simulation_models_path"]
+        simulation_models_path=app_context.args["simulation_models_path"]
     ):
         raise RuntimeError(
             "Verification failed: Some model parameters are missing in the repository."

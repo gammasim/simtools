@@ -126,15 +126,15 @@ def load_axes(file_path: str):
 
 def main():
     """Run the Grid Generation application."""
-    args_dict, db_config, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    output_filepath = _io_handler.get_output_file(args_dict["output_file"])
+    output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
 
-    axes = load_axes(args_dict["axes"])
+    axes = load_axes(app_context.args["axes"])
     site_model = SiteModel(
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        site=args_dict["site"],
+        mongo_db_config=app_context.db_config,
+        model_version=app_context.args["model_version"],
+        site=app_context.args["site"],
     )
 
     ref_lat = site_model.get_parameter_value_with_unit("reference_point_latitude")
@@ -144,21 +144,23 @@ def main():
     observing_location = EarthLocation(lat=ref_lat, lon=ref_long, height=altitude)
 
     observing_time = (
-        Time(args_dict["observing_time"]) if args_dict.get("observing_time") else Time.now()
+        Time(app_context.args["observing_time"])
+        if app_context.args.get("observing_time")
+        else Time.now()
     )
 
     grid_gen = GridGeneration(
         axes=axes,
-        coordinate_system=args_dict["coordinate_system"],
+        coordinate_system=app_context.args["coordinate_system"],
         observing_location=observing_location,
         observing_time=observing_time,
-        lookup_table=args_dict["lookup_table"],
-        telescope_ids=args_dict["telescope_ids"],
+        lookup_table=app_context.args["lookup_table"],
+        telescope_ids=app_context.args["telescope_ids"],
     )
 
     grid_points = grid_gen.generate_grid()
 
-    if args_dict["coordinate_system"] == "ra_dec":
+    if app_context.args["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
     grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)
 

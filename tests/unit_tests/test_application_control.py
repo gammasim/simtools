@@ -32,19 +32,19 @@ def test_startup_application_basic():
     mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
 
     # Call startup_application
-    args_dict, db_config, logger, io_handler_instance = startup_application(mock_parse_function)
+    app_context = startup_application(mock_parse_function)
 
     # Verify parse function was called
     mock_parse_function.assert_called_once()
 
     # Verify returned values
-    assert args_dict == mock_args_dict
-    assert db_config == mock_db_config
-    assert isinstance(logger, logging.Logger)
-    assert io_handler_instance is not None
+    assert app_context.args == mock_args_dict
+    assert app_context.db_config == mock_db_config
+    assert isinstance(app_context.logger, logging.Logger)
+    assert app_context.io_handler is not None
 
     # Verify logger level was set
-    assert logger.level == logging.INFO
+    assert app_context.logger.level == logging.INFO
 
 
 def test_startup_application_without_io_handler():
@@ -55,21 +55,19 @@ def test_startup_application_without_io_handler():
     mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
 
     # Call startup_application without IOHandler
-    args_dict, db_config, logger, io_handler_instance = startup_application(
-        mock_parse_function, setup_io_handler=False
-    )
+    app_context = startup_application(mock_parse_function, setup_io_handler=False)
 
     # Verify parse function was called
     mock_parse_function.assert_called_once()
 
     # Verify returned values
-    assert args_dict == mock_args_dict
-    assert db_config == mock_db_config
-    assert isinstance(logger, logging.Logger)
-    assert io_handler_instance is None
+    assert app_context.args == mock_args_dict
+    assert app_context.db_config == mock_db_config
+    assert isinstance(app_context.logger, logging.Logger)
+    assert app_context.io_handler is None
 
     # Verify logger level was set to debug
-    assert logger.level == logging.DEBUG
+    assert app_context.logger.level == logging.DEBUG
 
 
 def test_startup_application_with_custom_logger_name():
@@ -80,10 +78,10 @@ def test_startup_application_with_custom_logger_name():
     mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
 
     # Call startup_application with custom logger name
-    _, _, logger, _ = startup_application(
+    app_context = startup_application(
         mock_parse_function, logger_name="test_logger", setup_io_handler=False
     )
 
     # Verify logger name
-    assert logger.name == "test_logger"
-    assert logger.level == logging.WARNING
+    assert app_context.logger.name == "test_logger"
+    assert app_context.logger.level == logging.WARNING

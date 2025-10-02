@@ -87,9 +87,9 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
 
 def main():
     """Compare two directories with model production tables in JSON format."""
-    args_dict, _, _, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    _compare_json_dirs(Path(args_dict["directory_1"]), Path(args_dict["directory_2"]))
+    _compare_json_dirs(Path(app_context.args["directory_1"]), Path(app_context.args["directory_2"]))
 
 
 if __name__ == "__main__":

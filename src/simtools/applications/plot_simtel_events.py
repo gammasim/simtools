@@ -177,12 +177,16 @@ def _parse():
 
 def main():
     """Generate plots from sim_telarray files."""
-    args_dict, _, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    simtel_files = [Path(p).expanduser() for p in gen.ensure_iterable(args_dict["simtel_files"])]
-    plots = list(gen.ensure_iterable(args_dict.get("plots")))
+    simtel_files = [
+        Path(p).expanduser() for p in gen.ensure_iterable(app_context.args["simtel_files"])
+    ]
+    plots = list(gen.ensure_iterable(app_context.args.get("plots")))
 
-    generate_and_save_plots(simtel_files=simtel_files, plots=plots, args=args_dict, ioh=_io_handler)
+    generate_and_save_plots(
+        simtel_files=simtel_files, plots=plots, args=app_context.args, ioh=app_context.io_handler
+    )
 
 
 if __name__ == "__main__":

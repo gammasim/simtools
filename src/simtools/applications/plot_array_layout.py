@@ -186,8 +186,8 @@ def read_layouts(args_dict, db_config, logger):
         Dictionary with command line arguments.
     db_config : dict
         Database configuration.
-    logger : logging.Logger
-        Logger instance.
+    logger : logging.app_context.logger
+        app_context.logger instance.
 
     Returns
     -------
@@ -235,17 +235,17 @@ def read_layouts(args_dict, db_config, logger):
 
 def main():
     """Plot array layout application."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    layouts = read_layouts(args_dict, db_config, logger)
+    layouts = read_layouts(app_context.args, app_context.db_config, app_context.logger)
 
-    if args_dict.get("array_layout_name_background"):
+    if app_context.args.get("array_layout_name_background"):
         background_layout = layout_utils.get_array_layouts_from_db(
-            args_dict["array_layout_name_background"],
-            args_dict["site"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
+            app_context.args["array_layout_name_background"],
+            app_context.args["site"],
+            app_context.args["model_version"],
+            app_context.db_config,
+            app_context.args["coordinate_system"],
         )["array_elements"]
     else:
         background_layout = None
@@ -254,28 +254,28 @@ def main():
     for layout in layouts:
         fig_out = plot_array_layout(
             telescopes=layout["array_elements"],
-            show_tel_label=args_dict["show_labels"],
-            axes_range=args_dict["axes_range"],
-            marker_scaling=args_dict["marker_scaling"],
+            show_tel_label=app_context.args["show_labels"],
+            axes_range=app_context.args["axes_range"],
+            marker_scaling=app_context.args["marker_scaling"],
             background_telescopes=background_layout,
         )
         site_string = ""
         if layout.get("site") is not None:
             site_string = f"_{layout['site']}"
-        elif args_dict["site"] is not None:
-            site_string = f"_{args_dict['site']}"
+        elif app_context.args["site"] is not None:
+            site_string = f"_{app_context.args['site']}"
         coordinate_system_string = (
-            f"_{args_dict['coordinate_system']}"
-            if args_dict["coordinate_system"] not in layout["name"]
+            f"_{app_context.args['coordinate_system']}"
+            if app_context.args["coordinate_system"] not in layout["name"]
             else ""
         )
-        plot_file_name = args_dict["figure_name"] or (
+        plot_file_name = app_context.args["figure_name"] or (
             f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
         )
 
         visualize.save_figure(
             fig_out,
-            _io_handler.get_output_directory() / plot_file_name,
+            app_context.io_handler.get_output_directory() / plot_file_name,
             dpi=400,
         )
         plt.close()

@@ -133,9 +133,11 @@ def _parse():
 
 def main():
     """Run the ProductionStatisticsHandler."""
-    args_dict, _, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    manager = ProductionStatisticsHandler(args_dict, output_path=_io_handler.get_output_directory())
+    manager = ProductionStatisticsHandler(
+        app_context.args, output_path=app_context.io_handler.get_output_directory()
+    )
     manager.run()
 
 

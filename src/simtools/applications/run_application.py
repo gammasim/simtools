@@ -99,9 +99,9 @@ def _parse():
 
 def main():
     """Run several simtools applications using a configuration file."""
-    args_dict, db_config, logger, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    simtools_runner.run_applications(args_dict, db_config, logger)
+    simtools_runner.run_applications(app_context.args, app_context.db_config, app_context.logger)
 
 
 if __name__ == "__main__":

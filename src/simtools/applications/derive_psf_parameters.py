@@ -195,21 +195,21 @@ def _parse():
 
 def main():
     """Derive PSF parameters."""
-    args_dict, db_config, _, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
     tel_model, site_model, _ = initialize_simulation_models(
-        label=args_dict.get("label"),
-        db_config=db_config,
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        model_version=args_dict["model_version"],
+        label=app_context.args.get("label"),
+        db_config=app_context.db_config,
+        site=app_context.args["site"],
+        telescope_name=app_context.args["telescope"],
+        model_version=app_context.args["model_version"],
     )
 
     psf_opt.run_psf_optimization_workflow(
         tel_model,
         site_model,
-        args_dict,
-        _io_handler.get_output_directory(),
+        app_context.args,
+        app_context.io_handler.get_output_directory(),
     )
 
 

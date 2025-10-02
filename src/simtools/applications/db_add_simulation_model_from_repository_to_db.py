@@ -91,14 +91,18 @@ def _parse():
 
 def main():
     """Add or update a model parameter database to the DB."""
-    args_dict, db_config, _, _ = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
-    if args_dict.get("type") == "model_parameters":
-        db_model_upload.add_model_parameters_to_db(input_path=Path(args_dict["input_path"]), db=db)
-    elif args_dict.get("type") == "production_tables":
-        db_model_upload.add_production_tables_to_db(input_path=Path(args_dict["input_path"]), db=db)
+    if app_context.args.get("type") == "model_parameters":
+        db_model_upload.add_model_parameters_to_db(
+            input_path=Path(app_context.args["input_path"]), db=db
+        )
+    elif app_context.args.get("type") == "production_tables":
+        db_model_upload.add_production_tables_to_db(
+            input_path=Path(app_context.args["input_path"]), db=db
+        )
 
 
 if __name__ == "__main__":

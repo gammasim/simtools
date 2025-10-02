@@ -58,19 +58,21 @@ def _parse():
 
 def main():
     """Get file from database."""
-    args_dict, db_config, logger, _io_handler = startup_application(_parse)
+    app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
     file_id = db.export_model_files(
-        dest=_io_handler.get_output_directory(),
-        file_names=args_dict["file_name"],
+        dest=app_context.io_handler.get_output_directory(),
+        file_names=app_context.args["file_name"],
     )
     if file_id is None:
-        logger.error(f"The file {args_dict['file_name']} was not found in {db.db_name}.")
+        app_context.logger.error(
+            f"The file {app_context.args['file_name']} was not found in {db.db_name}."
+        )
         raise FileNotFoundError
-    logger.info(
-        f"Got file {args_dict['file_name']} from DB {db.db_name} "
-        f"and saved into {_io_handler.get_output_directory()}"
+    app_context.logger.info(
+        f"Got file {app_context.args['file_name']} from DB {db.db_name} "
+        f"and saved into {app_context.io_handler.get_output_directory()}"
     )
 
 
