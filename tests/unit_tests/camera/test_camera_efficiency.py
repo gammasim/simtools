@@ -26,7 +26,7 @@ def config_data_lst(model_version_prod5, simtel_path):
 
 
 @pytest.fixture
-def camera_efficiency_lst(io_handler, db_config, config_data_lst):
+def camera_efficiency_lst(db_config, config_data_lst):
     return CameraEfficiency(
         config_data=config_data_lst,
         db_config=db_config,
@@ -71,7 +71,7 @@ def test_load_files(camera_efficiency_lst):
     assert camera_efficiency_lst._file["log"].name == _name + ".log"
 
 
-def test_simulate(io_handler, camera_efficiency_lst, caplog, mocker):
+def test_simulate(camera_efficiency_lst, caplog, mocker):
     mock_run = mocker.patch.object(SimulatorCameraEfficiency, "run")
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.simulate()

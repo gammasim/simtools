@@ -5,11 +5,6 @@ import logging
 
 from astropy.table import Table
 
-__all__ = [
-    "read_legacy_data_as_table",
-    "read_legacy_lst_single_pe",
-]
-
 logger = logging.getLogger(__name__)
 
 

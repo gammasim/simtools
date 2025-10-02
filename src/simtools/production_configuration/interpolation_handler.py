@@ -10,8 +10,6 @@ from simtools.production_configuration.derive_production_statistics import (
     ProductionStatisticsDerivator,
 )
 
-__all__ = ["InterpolationHandler"]
-
 
 class InterpolationHandler:
     """
