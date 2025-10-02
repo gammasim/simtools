@@ -31,9 +31,7 @@ def main():
     """Produce a markdown file for a given simulation configuration."""
     app_context = startup_application(_parse)
 
-    output_path = app_context.io_handler.get_output_directory(
-        f"{app_context.args.get('model_version')}"
-    )
+    output_path = app_context.io_handler.get_output_directory()
 
     report_generator = ReportGenerator(
         db_config=app_context.db_config, args=app_context.args, output_path=output_path
