@@ -2,18 +2,15 @@
 
 r"""Produces a markdown file for a given simulation configuration."""
 
-import logging
-
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.reporting.docs_read_parameters import ReadParameters
-from simtools.utils import general as gen
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=("Produce a markdown report for model parameters."),
     )
 
@@ -24,26 +21,25 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    label_name = "reports"
-    args, db_config = _parse(label_name)
+def main():
+    """Produce a markdown file for a given simulation configuration."""
+    app_context = startup_application(_parse)
 
-    io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory()
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
+    output_path = app_context.io_handler.get_output_directory(
+        f"{app_context.args.get('model_version')}"
+    )
 
     read_parameters = ReadParameters(
-        db_config=db_config, args=args, output_path=output_path / f"{args.get('model_version')}"
+        db_config=app_context.db_config, args=app_context.args, output_path=output_path
     )
 
     read_parameters.produce_simulation_configuration_report()
 
-    logger.info(
-        f"Configuration reports for {args.get('simulation_software')} produced successfully."
+    app_context.logger.info(
+        f"Configuration reports for {app_context.args.get('simulation_software')} "
+        "produced successfully."
     )
-    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
+    app_context.logger.info(f"Output path: {output_path}")
 
 
 if __name__ == "__main__":

@@ -13,16 +13,16 @@ db_name (str, optional)
     Database name (use "all" for all databases)
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
-        description="Generate compound indexes for a specific database"
+        description="Generate compound indexes for a specific database",
+        label=get_application_label(__file__),
     )
     config.parser.add_argument(
         "--db_name",
@@ -33,18 +33,16 @@ def _parse():
     return config.initialize(db_config=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
+def main():
+    """Generate compound indexes for the specified database."""
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
     db.generate_compound_indexes_for_databases(
-        db_name=args_dict["db_name"],
-        db_simulation_model=args_dict.get("db_simulation_model"),
-        db_simulation_model_version=args_dict.get("db_simulation_model_version"),
+        db_name=app_context.args["db_name"],
+        db_simulation_model=app_context.args.get("db_simulation_model"),
+        db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
     )
 
 
