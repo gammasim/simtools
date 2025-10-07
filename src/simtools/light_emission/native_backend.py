@@ -40,6 +40,7 @@ def run_ff_1m_native(
     spectrum_nm: int,
     lightpulse: str,
     angular_distribution: str,
+    events: int,
 ) -> None:
     """Run ff-1m via native bindings and write an IACT file.
 
@@ -74,6 +75,8 @@ def run_ff_1m_native(
         int(spectrum_nm),
         str(lightpulse),
         str(angular_distribution),
+        int(events),
     )
+
     if rc != 0:
         raise RuntimeError(f"ff-1m native call failed with code {rc}")

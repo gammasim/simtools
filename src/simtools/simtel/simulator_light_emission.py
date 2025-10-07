@@ -164,6 +164,7 @@ class SimulatorLightEmission(SimtelRunner):
             spectrum_nm=int(flasher_wavelength.to(u.nm).value),
             lightpulse=str(self._get_pulse_shape_string_for_sim_telarray()),
             angular_distribution=str(angular_distribution),
+            events=int(self.light_emission_config.get("number_of_events", 1)),
         )
 
         # Now run sim_telarray on the produced IACT file (same as subprocess path).
@@ -176,9 +177,21 @@ class SimulatorLightEmission(SimtelRunner):
         """
         app_name = self._get_light_emission_application_name()
 
-        run_script = self.prepare_script()
+        # When skipping light emission (native already produced IACT), avoid writing
+        # a full script with the LightEmission call. Generate a simtel-only script.
         if skip_light_emission:
-            run_script = self._strip_light_emission_from_script(run_script)
+            scripts_dir = self.output_directory.joinpath("scripts")
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            simtel_only = scripts_dir / f"{app_name}-simtel-only.sh"
+            lines = [
+                "#!/usr/bin/env bash\n",
+                f"{self._make_simtel_script()}\n\n",
+            ]
+            simtel_only.write_text("".join(lines), encoding="utf-8")
+            simtel_only.chmod(simtel_only.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+            run_script = simtel_only
+        else:
+            run_script = self.prepare_script()
 
         log_path = Path(self.output_directory) / "logfile.log"
         with open(log_path, "w", encoding="utf-8") as fh:

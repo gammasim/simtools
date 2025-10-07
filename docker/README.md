@@ -24,23 +24,28 @@ podman run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev
 ```
 
 ### Development with Native LightEmission
+Native bindings are auto-validated (and built if missing) when the container starts.
+To disable auto-build:
 ```bash
-# Build native bindings in container for performance
-podman run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && build_native_in_container.sh && bash"
+podman run --rm -e SIMTOOLS_NO_AUTO_NATIVE=1 -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash
 ```
 
 ## Production Usage
 
 ### Applications (with automatic native support)
+At entrypoint, the container checks the `_le` module for multi-event `ff_1m` support. If absent it builds it via CMake.
 ```bash
-# Production containers attempt native build automatically, fall back to subprocess if needed
-podman run --rm -v "$(pwd):/data" ghcr.io/gammasim/simtools:latest simtools-simulate-flasher --telescope MSTS-04 --site South --light_source MSFx-FlashCam
+# Run flasher with native backend (auto-build if needed)
+podman run --rm -v "$(pwd):/data" ghcr.io/gammasim/simtools:latest \
+	simtools-simulate-flasher-native --telescope MSTS-04 --site South --light_source MSFx-FlashCam
 
-# Use new native-optimized application
-podman run --rm -v "$(pwd):/data" ghcr.io/gammasim/simtools:latest simtools-simulate-flasher-native --telescope MSTS-04 --site South --light_source MSFx-FlashCam
+# Disable auto-build and rely on already-present module (or fail)
+podman run --rm -e SIMTOOLS_NO_AUTO_NATIVE=1 -v "$(pwd):/data" ghcr.io/gammasim/simtools:latest \
+	simtools-simulate-flasher-native --telescope MSTS-04 --site South --light_source MSFx-FlashCam
 
-# Force subprocess fallback for comparison/debugging
-podman run --rm -v "$(pwd):/data" ghcr.io/gammasim/simtools:latest simtools-simulate-flasher-native --force_subprocess --telescope MSTS-04 --site South --light_source MSFx-FlashCam
+# Force subprocess fallback (diagnostics)
+podman run --rm -v "$(pwd):/data" ghcr.io/gammasim/simtools:latest \
+	simtools-simulate-flasher-native --force_subprocess --telescope MSTS-04 --site South --light_source MSFx-FlashCam
 ```
 
 ## Database Connectivity
@@ -55,6 +60,6 @@ podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-netw
 
 - **Performance**: 2-5x faster than subprocess calls
 - **Memory**: Lower memory overhead
-- **Compatibility**: Graceful fallback if native build fails
+- **Compatibility**: Auto-build on startup, explicit failure if outdated
 - **Testing**: Easy comparison between native and subprocess modes
 - **Simplicity**: Integrated into existing containers, no separate images needed

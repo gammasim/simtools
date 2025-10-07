@@ -21,7 +21,7 @@ WORKDIR /workdir
 ARG PYTHON_VERSION
 
 RUN microdnf update -y && microdnf install -y \
-    findutils gcc-c++ git wget \
+    findutils gcc-c++ git wget cmake make \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all
 
@@ -37,20 +37,32 @@ RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproj
     pip uninstall -y toml-to-requirements && \
     pip install --no-cache-dir -r requirements.txt
 
-# Add native LightEmission build utilities
-COPY docker/build_native_lightemission.sh /usr/local/bin/
-COPY src/simtools/build_native_extension.py /usr/local/bin/
-RUN chmod +x /usr/local/bin/build_native_lightemission.sh
-
-# Set up environment variables for native builds
-ENV SIMTEL_PATH="/workdir/sim_telarray/"
-ENV SIMTOOLS_BUILD_LE=1
 ENV PATH="/workdir/simtools/env/bin/:$PATH"
-
-# Attempt to build native extension automatically when simtools is installed
-# This will be executed when the user installs simtools in the container
-RUN echo 'export SIMTOOLS_BUILD_LE=1' >> ~/.bashrc && \
-    echo 'export SIMTEL_PATH="/workdir/sim_telarray/"' >> ~/.bashrc
 SHELL ["/bin/bash", "-c"]
+
+# Pre-build native light emission extension
+ENV SIMTEL_PREFIX=/workdir/sim_telarray/sim_telarray \
+        HESSIO_LIBRARY=/workdir/sim_telarray/hessioxxx/lib/libhessio.so \
+        HESSIO_INCLUDE_DIR=/workdir/sim_telarray/hessioxxx/include
+
+# Build step (will no-op later if user mounts a different tree and re-runs cmake).
+RUN set -euo pipefail && \
+        if [ -d /workdir/external/simtools ]; then \
+            cd /workdir/external/simtools && \
+            mkdir -p build && \
+            cmake -S . -B build \
+                -DSIMTEL_PREFIX=${SIMTEL_PREFIX} \
+                -DHESSIO_LIBRARY=${HESSIO_LIBRARY} \
+                -DHESSIO_INCLUDE_DIR=${HESSIO_INCLUDE_DIR} || echo "[warn] Initial cmake configure failed (external mount expected at runtime)"; \
+            cmake --build build -j || echo "[warn] Native build skipped (likely empty placeholder)"; \
+        else \
+            echo "[info] simtools source not present during build; will rely on runtime mount + autobuild"; \
+        fi
+
+# Retain auto-build script.
+COPY scripts/simtools_native_autobuild.sh /usr/local/bin/simtools_native_autobuild.sh
+RUN chmod +x /usr/local/bin/simtools_native_autobuild.sh
+ENTRYPOINT ["/usr/local/bin/simtools_native_autobuild.sh"]
+CMD ["bash"]
 
 WORKDIR /workdir/external

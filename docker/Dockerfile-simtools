@@ -22,7 +22,7 @@ ARG PYTHON_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN microdnf update -y && microdnf install -y \
-    git gcc gcc-c++ \
+  git gcc gcc-c++ cmake make \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
@@ -36,11 +36,20 @@ RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && . env/bin/activate \
   && pip install --no-cache-dir -U pip setuptools wheel pybind11 \
   && cd simtools \
-  && export SIMTOOLS_BUILD_LE=1 \
-  && export SIMTEL_PATH="/workdir/sim_telarray" \
-  && python setup_native_extension.py build_ext --inplace || echo "Native build failed, will use subprocess fallback" \
+  && cmake -S . -B build \
+       -DSIMTEL_PREFIX=/workdir/sim_telarray/sim_telarray \
+       -DHESSIO_LIBRARY=/workdir/sim_telarray/hessioxxx/lib/libhessio.so \
+       -DHESSIO_INCLUDE_DIR=/workdir/sim_telarray/hessioxxx/include \
+  && cmake --build build -j || echo "[warn] native build failed; module will attempt runtime autobuild" \
   && pip install --no-cache-dir -e . \
   && python -c "from simtools.light_emission.native_backend import HAS_NATIVE; print(f'Native backend: {HAS_NATIVE}')" \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
 ENV PATH="/workdir/env/bin/:$PATH"
+
+# Copy auto-build script and use as entrypoint
+COPY scripts/simtools_native_autobuild.sh /usr/local/bin/simtools_native_autobuild.sh
+RUN chmod +x /usr/local/bin/simtools_native_autobuild.sh
+
+ENTRYPOINT ["/usr/local/bin/simtools_native_autobuild.sh"]
+CMD ["python", "-c", "import simtools; print('simtools ready')"]
