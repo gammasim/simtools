@@ -69,25 +69,24 @@
 
 """
 
-import logging
 from collections import OrderedDict
-from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
 import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def _parse(label):
+def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
@@ -125,54 +124,47 @@ def load_data(datafile):
     return data
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory()
+def main():
+    """Validate the cumulative PSF of a telescope model against data."""
+    app_context = startup_application(_parse)
 
     tel_model, site_model, _ = initialize_simulation_models(
-        label=label,
-        db_config=db_config,
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        model_version=args_dict["model_version"],
+        label=app_context.args.get("label"),
+        db_config=app_context.db_config,
+        site=app_context.args["site"],
+        telescope_name=app_context.args["telescope"],
+        model_version=app_context.args["model_version"],
     )
 
-    if args_dict.get("telescope_model_file"):
-        tel_model.change_multiple_parameters_from_file(args_dict["telescope_model_file"])
+    if app_context.args.get("telescope_model_file"):
+        tel_model.change_multiple_parameters_from_file(app_context.args["telescope_model_file"])
 
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        simtel_path=args_dict["simtel_path"],
-        zenith_angle=args_dict["zenith"] * u.deg,
-        source_distance=args_dict["src_distance"] * u.km,
+        simtel_path=app_context.args["simtel_path"],
+        zenith_angle=app_context.args["zenith"] * u.deg,
+        source_distance=app_context.args["src_distance"] * u.km,
         off_axis_angle=[0.0] * u.deg,
     )
 
-    ray.simulate(test=args_dict["test"], force=False)
+    ray.simulate(test=app_context.args["test"], force=False)
     ray.analyze(force=False)
 
     # Plotting cumulative PSF
     im = ray.images()[0]
 
-    print(f"d80 in cm = {im.get_psf()}")
+    app_context.logger.info(f"d80 in cm = {im.get_psf()}")
 
-    # Plotting cumulative PSF
-    # Measured cumulative PSF
+    # Plotting measured cumulative PSF
     data_to_plot = OrderedDict()
     radius = None
-    if args_dict.get("data", None):
-        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+    if app_context.args.get("data", None):
+        data_file = gen.find_file(app_context.args["data"], app_context.args["model_path"])
         data_to_plot["measured"] = load_data(data_file)
         radius = data_to_plot["measured"]["Radius [cm]"]
 
-    # Simulated cumulative PSF
+    # Plotting simulated cumulative PSF
     if radius is not None:
         data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
     else:
@@ -181,8 +173,8 @@ def main():  # noqa: D103
     fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
 
-    plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
-    plot_file = output_dir.joinpath(plot_file_name)
+    plot_file_name = app_context.args.get("label") + "_" + tel_model.name + "_cumulative_PSF"
+    plot_file = app_context.io_handler.get_output_file(plot_file_name)
     visualize.save_figure(fig, plot_file)
 
     # Plotting image
@@ -192,8 +184,8 @@ def main():  # noqa: D103
     fig.gca().add_artist(circle)
     fig.gca().set_aspect("equal")
 
-    plot_file_name = label + "_" + tel_model.name + "_image"
-    plot_file = output_dir.joinpath(plot_file_name)
+    plot_file_name = app_context.args.get("label") + "_" + tel_model.name + "_image"
+    plot_file = app_context.io_handler.get_output_file(plot_file_name)
     visualize.save_figure(fig, plot_file)
 
 

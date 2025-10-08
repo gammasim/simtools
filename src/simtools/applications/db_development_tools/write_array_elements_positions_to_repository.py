@@ -33,35 +33,23 @@
 
 """
 
-import logging
 from pathlib import Path
 
 import astropy.table
 
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
 from simtools.model.array_model import ArrayModel
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing application.
-    description : str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Add array element positions to model parameter repository",
+    )
     config.parser.add_argument(
         "--input",
         help="File containing a table of array element positions.",
@@ -96,8 +84,8 @@ def write_utm_array_elements_to_repository(args_dict, logger):
     ----------
     args_dict : dict
         Command line arguments.
-    logger : Logger
-        Logger object.
+    app_context.logger : app_context.logger
+        app_context.logger object.
 
     """
     array_elements = astropy.table.Table.read(args_dict["input"])
@@ -131,8 +119,8 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
         Command line arguments.
     db_config : dict
         Database configuration.
-    logger : Logger
-        Logger object.
+    logger : logger
+        logger object.
 
     """
     array_model = ArrayModel(
@@ -155,19 +143,16 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
 
 def main():
     """Application main."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label, description="Add array element positions to model parameter repository"
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    app_context = startup_application(_parse)
 
-    if args_dict["coordinate_system"] == "utm":
-        write_utm_array_elements_to_repository(args_dict, logger)
-    elif args_dict["coordinate_system"] == "ground":
-        write_ground_array_elements_to_repository(args_dict, db_config, logger)
+    if app_context.args["coordinate_system"] == "utm":
+        write_utm_array_elements_to_repository(app_context.args, app_context.logger)
+    elif app_context.args["coordinate_system"] == "ground":
+        write_ground_array_elements_to_repository(
+            app_context.args, app_context.db_config, app_context.logger
+        )
     else:
-        logger.error("Invalid coordinate system. Allowed are 'utm' and 'ground'.")
+        app_context.logger.error("Invalid coordinate system. Allowed are 'utm' and 'ground'.")
         raise ValueError
 
 

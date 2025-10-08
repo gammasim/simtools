@@ -56,18 +56,17 @@ telescope (str, optional)
     Telescope name (required for full simulation mode).
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
-    config = configurator.Configurator(label=label, description="Simulate flasher devices.")
+    config = configurator.Configurator(
+        label=get_application_label(__file__), description="Simulate flasher devices."
+    )
     config.parser.add_argument(
         "--run_mode",
         help="Flasher simulation run mode",
@@ -108,35 +107,32 @@ def _parse(label):
 
 def main():
     """Simulate flasher devices."""
-    label = Path(__file__).stem
+    app_context = startup_application(_parse)
 
-    args_dict, db_config = _parse(label)
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    logger.info(
-        f"Flasher simulation for telescope {args_dict['telescope']} "
-        f" with light source {args_dict['light_source']} "
-        f" ({args_dict['number_of_events']} events, run mode: {args_dict['run_mode']})"
+    app_context.logger.info(
+        f"Flasher simulation for telescope {app_context.args['telescope']} "
+        f" with light source {app_context.args['light_source']} "
+        f" ({app_context.args['number_of_events']} events, "
+        f"run mode: {app_context.args['run_mode']})"
     )
 
-    if args_dict["run_mode"] == "full_simulation":
+    if app_context.args["run_mode"] == "full_simulation":
         light_source = SimulatorLightEmission(
-            light_emission_config=args_dict,
-            db_config=db_config,
-            label=args_dict.get("label"),
+            light_emission_config=app_context.args,
+            db_config=app_context.db_config,
+            label=app_context.args.get("label"),
         )
-    elif args_dict["run_mode"] == "direct_injection":
+    elif app_context.args["run_mode"] == "direct_injection":
         light_source = Simulator(
-            args_dict=args_dict,
-            db_config=db_config,
-            label=args_dict.get("label"),
+            args_dict=app_context.args,
+            db_config=app_context.db_config,
+            label=app_context.args.get("label"),
         )
     else:
-        raise ValueError(f"Unsupported run_mode: {args_dict['run_mode']}")
+        raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     light_source.simulate()
-    logger.info("Flasher simulation completed.")
+    app_context.logger.info("Flasher simulation completed.")
 
 
 if __name__ == "__main__":

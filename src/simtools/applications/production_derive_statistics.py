@@ -50,27 +50,21 @@ The output will be a file containing the grid points with the derived number of 
 added.
 """
 
-import logging
-from pathlib import Path
-
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
 )
-from simtools.utils import general as gen
 
 
-def _parse(label, description):
-    """
-    Parse command line arguments for the statistical error evaluator application.
-
-    Returns
-    -------
-    argparse.Namespace
-        Parsed command line arguments.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line arguments."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description=(
+            "Evaluate statistical uncertainties from DL2 MC event files and interpolate results."
+        ),
+    )
 
     config.parser.add_argument(
         "--grid_points_production_file",
@@ -139,18 +133,11 @@ def _parse(label, description):
 
 def main():
     """Run the ProductionStatisticsHandler."""
-    label = Path(__file__).stem
+    app_context = startup_application(_parse)
 
-    args_dict, _ = _parse(
-        label,
-        "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
+    manager = ProductionStatisticsHandler(
+        app_context.args, output_path=app_context.io_handler.get_output_directory()
     )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    _io_handler = io_handler.IOHandler()
-
-    manager = ProductionStatisticsHandler(args_dict, output_path=_io_handler.get_output_directory())
     manager.run()
 
 
