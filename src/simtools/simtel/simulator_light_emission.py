@@ -127,7 +127,6 @@ class SimulatorLightEmission(SimtelRunner):
             )
             return self._simulate_via_subprocess()
 
-        # Prepare inputs matching the CLI we used to call.
         config_directory = self.io_handler.get_model_configuration_directory(
             model_version=self.site_model.model_version
         )
@@ -135,8 +134,7 @@ class SimulatorLightEmission(SimtelRunner):
             "corsika_observation_level"
         )
         altitude_m = corsika_observation_level.to(u.m).value
-        atmosphere_id = self._prepare_flasher_atmosphere_files(config_directory)
-
+        atmo_file = config_directory / self.site_model.get_parameter_value("atmospheric_profile")
         flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
         camera_radius = fiducial_radius_from_shape(
             self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
@@ -148,13 +146,15 @@ class SimulatorLightEmission(SimtelRunner):
             "flasher_wavelength"
         )
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
+
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
         iact_path = Path(self.output_directory) / f"{app_name}.iact.gz"
+
         run_ff_1m_native(
             output_path=iact_path,
             altitude_m=altitude_m,
-            atmosphere_id=int(atmosphere_id),
+            atmosphere_file=atmo_file,
             photons=float(self.light_emission_config["flasher_photons"]),
             bunch_size=int(self.calibration_model.get_parameter_value("flasher_bunch_size")),
             x_cm=float(flasher_xyz[0].to(u.cm).value),
@@ -167,7 +167,6 @@ class SimulatorLightEmission(SimtelRunner):
             events=int(self.light_emission_config.get("number_of_events", 1)),
         )
 
-        # Now run sim_telarray on the produced IACT file (same as subprocess path).
         return self._simulate_via_subprocess(skip_light_emission=True)
 
     def _simulate_via_subprocess(self, skip_light_emission: bool = False):
@@ -628,6 +627,6 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The pulse shape string.
         """
-        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape").lower()
+        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape")
         width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string

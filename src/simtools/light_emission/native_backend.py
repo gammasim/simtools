@@ -30,7 +30,7 @@ except ImportError:
 def run_ff_1m_native(
     output_path: Path,
     altitude_m: float,
-    atmosphere_id: int,
+    atmosphere_file: Path,
     photons: float,
     bunch_size: int,
     x_cm: float,
@@ -42,18 +42,18 @@ def run_ff_1m_native(
     angular_distribution: str,
     events: int,
 ) -> None:
-    """Run ff-1m via native bindings and write an IACT file.
-
-    Parameters are a minimal subset to mirror the CLI options we use today.
-    """
+    """Run ff-1m via native bindings and write an IACT file."""
     if not HAS_NATIVE or NATIVE is None:
         raise RuntimeError("Native LightEmission bindings not available")
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    _logger.debug(
-        "Running native ff-1m to %s (photons=%s, bunch=%s, xy=(%s,%s), d=%s cm)",
+    if not hasattr(NATIVE, "ff_1m"):
+        raise RuntimeError("Native module missing ff_1m; rebuild extension with updated bindings.")
+
+    _logger.info(
+        "Running native ff-1m (file) output=%s photons=%s bunch=%s xy=(%s,%s) d=%s cm",
         output_path,
         photons,
         bunch_size,
@@ -65,7 +65,7 @@ def run_ff_1m_native(
     rc = NATIVE.ff_1m(
         str(output_path),
         float(altitude_m),
-        int(atmosphere_id),
+        str(atmosphere_file),
         float(photons),
         int(bunch_size),
         float(x_cm),
@@ -77,6 +77,5 @@ def run_ff_1m_native(
         str(angular_distribution),
         int(events),
     )
-
     if rc != 0:
         raise RuntimeError(f"ff-1m native call failed with code {rc}")

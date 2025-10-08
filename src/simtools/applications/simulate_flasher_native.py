@@ -18,7 +18,7 @@ Example Usage
     .. code-block:: console
 
         simtools-simulate-flasher-native \
-        --light_source MSFx-FlashCam --model_version 6.0.2 \
+        --light_source MSFx-FlashCam --model_version 6.0 \
         --telescope MSTS-04 --site South --number_of_events 10 \
         --array_layout_name subsystem_msts
 
@@ -28,7 +28,7 @@ Example Usage
     .. code-block:: console
 
         simtools-simulate-flasher-native \
-        --light_source MSFx-FlashCam --model_version 6.0.0 \
+        --light_source MSFx-FlashCam --model_version 6.0 \
         --telescope MSTS-04 --site South \
         --force_subprocess
 
