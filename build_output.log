@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/workdir/external/simtools/setup.py", line 18, in <module>
-    from setuptools import setup
-ModuleNotFoundError: No module named 'setuptools'
