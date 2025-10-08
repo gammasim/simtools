@@ -225,9 +225,6 @@ class ModelParameter:
         """
         Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
 
-        For parameters with multiple values and corresponding units, returns a list where each
-        element is the value multiplied by its corresponding unit.
-
         Parameters
         ----------
         par_name: str
@@ -237,7 +234,6 @@ class ModelParameter:
         -------
         Astropy quantity with the value of the parameter multiplied by its unit.
         If no unit is provided in the model, the value is returned without a unit.
-        For lists with corresponding units, returns a list of quantities.
 
         """
         _parameter = self._get_parameter_dict(par_name)
@@ -263,49 +259,7 @@ class ModelParameter:
             self._logger.debug(
                 f"{exc} encountered for parameter {par_name}, returning only value without units."
             )
-            return _value
-
-    @staticmethod
-    def _parse_units(parameter_dict):
-        """Return units as a list (or None) from a parameter dict."""
-        unit_field = parameter_dict.get("unit")
-        if isinstance(unit_field, str):
-            return [item.strip() for item in unit_field.split(",")]
-        return unit_field
-
-    @staticmethod
-    def _apply_units(value, units):
-        """Apply units to a scalar or list value and return quantities or raw values."""
-        if units is None:
-            return value
-
-        # Scalar value handling
-        if not isinstance(value, list):
-            return value * u.Unit(units[0])
-
-        # List with single unit -> broadcast
-        if isinstance(units, list) and len(units) == 1:
-            return [val * u.Unit(units[0]) for val in value]
-
-        # List with matching units
-        if isinstance(units, list) and len(units) == len(value):
-            out = []
-            for i, val in enumerate(value):
-                unit_i = units[i]
-                if unit_i in (None, "null"):
-                    out.append(val)
-                else:
-                    out.append(val * u.Unit(unit_i))
-            return out
-
-        # Fallback: pad/truncate units to match value length
-        astropy_units = [
-            u.Unit(item) if item not in (None, "null") else u.dimensionless_unscaled
-            for item in units
-        ]
-        if len(astropy_units) < len(value):
-            astropy_units.extend([u.dimensionless_unscaled] * (len(value) - len(astropy_units)))
-        return [val * astropy_units[i] for i, val in enumerate(value)]
+            return _value  # if unit is NoneType
 
     def get_parameter_type(self, par_name):
         """
