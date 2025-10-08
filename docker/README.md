@@ -12,8 +12,7 @@ See the [simtools container documentation](https://gammasim.github.io/simtools/u
 - **`simtools`**: Production environment with native bindings pre-compiled
 
 Both containers now include native LightEmission support for improved performance.
-The native bindings provide direct access to sim_telarray LightEmission C++ code,
-eliminating subprocess overhead for 2-5x performance improvement in flasher simulations.
+The native bindings provide direct access to sim_telarray LightEmission C++ code.
 
 ## Development Usage
 
@@ -55,11 +54,3 @@ In case a local database is used:
 ```bash
 podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 ```
-
-## Native Backend Benefits
-
-- **Performance**: 2-5x faster than subprocess calls
-- **Memory**: Lower memory overhead
-- **Compatibility**: Auto-build on startup, explicit failure if outdated
-- **Testing**: Easy comparison between native and subprocess modes
-- **Simplicity**: Integrated into existing containers, no separate images needed
