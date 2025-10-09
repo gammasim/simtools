@@ -42,46 +42,24 @@ To generate a grid of simulation points, execute the script as follows:
         --telescope_ids 1
 """
 
-import logging
 from pathlib import Path
 
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.generate_production_grid import GridGeneration
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    axes (str, required)
-        Path to a YAML or JSON file defining the axes of the grid.
-    coordinate_system (str, optional, default='zenith_azimuth')
-        The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
-    observing_time (str, optional, default=now)
-        Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').
-    lookup_table (str, required)
-        Path to the lookup table for simulation limits. The table should contain
-        varying azimuth and/or zenith angles.
-    telescope_ids (list of int, optional)
-        List of telescope IDs as used in sim_telarray to filter the events.
-    output_file (str, optional, default='grid_output.json')
-        Output file for the generated grid points (default: 'grid_output.json').
-
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate a grid of simulation points using flexible axes definitions.",
+    )
 
     config.parser.add_argument(
         "--axes",
@@ -148,23 +126,15 @@ def load_axes(file_path: str):
 
 def main():
     """Run the Grid Generation application."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label,
-        "Generate a grid of simulation points using flexible axes definitions.",
-    )
+    app_context = startup_application(_parse)
 
-    _logger = logging.getLogger()
-    _logger.setLevel(logging.INFO)
+    output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
 
-    output_path = io_handler.IOHandler().get_output_directory()
-    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
-
-    axes = load_axes(args_dict["axes"])
+    axes = load_axes(app_context.args["axes"])
     site_model = SiteModel(
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        site=args_dict["site"],
+        mongo_db_config=app_context.db_config,
+        model_version=app_context.args["model_version"],
+        site=app_context.args["site"],
     )
 
     ref_lat = site_model.get_parameter_value_with_unit("reference_point_latitude")
@@ -174,21 +144,23 @@ def main():
     observing_location = EarthLocation(lat=ref_lat, lon=ref_long, height=altitude)
 
     observing_time = (
-        Time(args_dict["observing_time"]) if args_dict.get("observing_time") else Time.now()
+        Time(app_context.args["observing_time"])
+        if app_context.args.get("observing_time")
+        else Time.now()
     )
 
     grid_gen = GridGeneration(
         axes=axes,
-        coordinate_system=args_dict["coordinate_system"],
+        coordinate_system=app_context.args["coordinate_system"],
         observing_location=observing_location,
         observing_time=observing_time,
-        lookup_table=args_dict["lookup_table"],
-        telescope_ids=args_dict["telescope_ids"],
+        lookup_table=app_context.args["lookup_table"],
+        telescope_ids=app_context.args["telescope_ids"],
     )
 
     grid_points = grid_gen.generate_grid()
 
-    if args_dict["coordinate_system"] == "ra_dec":
+    if app_context.args["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
     grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)
 

@@ -42,10 +42,7 @@ r"""
             --updated_parameter_version 3.0.0
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
@@ -55,10 +52,10 @@ from simtools.layout.array_layout_utils import (
 )
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description="Derive CTAO array layouts from CTAO common identifiers repository.",
     )
     config.parser.add_argument(
@@ -85,34 +82,32 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse(Path(__file__).stem)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Derive CTAO array layouts from CTAO common identifiers repository."""
+    app_context = startup_application(_parse)
 
     ctao_array_layouts = retrieve_ctao_array_layouts(
-        site=args_dict["site"],
-        repository_url=args_dict["repository_url"],
-        branch_name=args_dict["repository_branch"],
+        site=app_context.args["site"],
+        repository_url=app_context.args["repository_url"],
+        branch_name=app_context.args["repository_branch"],
     )
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
     db_array_layouts = db.get_model_parameter(
         parameter="array_layouts",
-        site=args_dict["site"],
+        site=app_context.args["site"],
         array_element_name=None,
-        parameter_version=args_dict.get("parameter_version"),
-        model_version=args_dict.get("model_version"),
+        parameter_version=app_context.args.get("parameter_version"),
+        model_version=app_context.args.get("model_version"),
     )
     db_array_layouts["array_layouts"].pop("_id", None)
     db_array_layouts["array_layouts"].pop("entry_date", None)
-    logger.info(f"Layouts from model parameter database: {db_array_layouts}")
+    app_context.logger.info(f"Layouts from model parameter database: {db_array_layouts}")
 
     write_array_layouts(
         array_layouts=merge_array_layouts(db_array_layouts["array_layouts"], ctao_array_layouts),
-        args_dict=args_dict,
-        db_config=db_config,
+        args_dict=app_context.args,
+        db_config=app_context.db_config,
     )
 
 

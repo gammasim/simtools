@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""
+r"""
     Add a file to a DB.
 
     The name and location of the file are required.
@@ -37,21 +37,22 @@
 
 """
 
-import logging
 import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description="Add file to the DB.",
         usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",
     )
-
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--file_name",
@@ -135,8 +136,8 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
         Dictionary of parsed command-line arguments.
     db : DatabaseHandler
         Database handler object.
-    logger : logging.Logger
-        Logger object for logging messages.
+    logger : logging.logger
+        logger object for logging messages.
     """
     plural = "" if len(files_to_insert) == 1 else "s"
 
@@ -161,16 +162,14 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
         db.db_client.drop_database(args_dict["db"])
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
+def main():
+    """Add files to the database."""
+    app_context = startup_application(_parse, setup_io_handler=False)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-
-    files_to_insert = collect_files_to_insert(args_dict, logger, db)
-    confirm_and_insert_files(files_to_insert, args_dict, db, logger)
+    files_to_insert = collect_files_to_insert(app_context.args, app_context.logger, db)
+    confirm_and_insert_files(files_to_insert, app_context.args, db, app_context.logger)
 
 
 if __name__ == "__main__":
