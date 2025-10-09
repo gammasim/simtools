@@ -84,7 +84,7 @@ jobs:
 
       - name: Pre-commit
         run: |
-          pre-commit run --all-files
+          SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Save pre-commit cache
         if: success()  # only save if previous steps succeeded

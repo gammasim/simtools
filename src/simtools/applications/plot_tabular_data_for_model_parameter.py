@@ -46,19 +46,18 @@ Plot tabular data for all types defined in the schema file:
 
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import io_handler
 from simtools.visualization import plot_tables
 
 
-def _parse(label, description):
+def _parse():
     """Parse command line configuration."""
-    config = configurator.Configurator(label=label, description=description)
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Plots tabular data for a model parameter.",
+    )
 
     config.parser.add_argument("--parameter", type=str, required=True, help="Parameter name.")
     config.parser.add_argument(
@@ -73,31 +72,25 @@ def _parse(label, description):
 
 def main():
     """Plot tabular data."""
-    args_dict, db_config = _parse(
-        label=Path(__file__).stem,
-        description="Plots tabular data for a model parameter.",
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "INFO")))
-    io_handler_instance = io_handler.IOHandler()
+    app_context = startup_application(_parse)
 
     plot_configs, output_files = plot_tables.generate_plot_configurations(
-        parameter=args_dict["parameter"],
-        parameter_version=args_dict["parameter_version"],
-        site=args_dict["site"],
-        telescope=args_dict.get("telescope"),
-        output_path=io_handler_instance.get_output_directory(),
-        plot_type=args_dict["plot_type"],
-        db_config=db_config,
+        parameter=app_context.args["parameter"],
+        parameter_version=app_context.args["parameter_version"],
+        site=app_context.args["site"],
+        telescope=app_context.args.get("telescope"),
+        output_path=app_context.io_handler.get_output_directory(),
+        plot_type=app_context.args["plot_type"],
+        db_config=app_context.db_config,
     )
 
     for plot_config, output_file in zip(plot_configs, output_files):
         plot_tables.plot(
             config=plot_config,
             output_file=output_file,
-            db_config=db_config,
+            db_config=app_context.db_config,
         )
-        MetadataCollector.dump(args_dict, output_file=output_file, add_activity_name=True)
+        MetadataCollector.dump(app_context.args, output_file=output_file, add_activity_name=True)
 
 
 if __name__ == "__main__":
