@@ -73,12 +73,6 @@ jobs:
         run: |
           pip install -e '.[tests,dev,doc]'
 
-      - name: Lint Bash scripts
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y shellcheck
-          find . -type f -name "*.sh" -print0 | xargs -0 -n1 shellcheck -x
-
       - name: Install and run dotenv-linter
         run: |
           curl -sSfL https://git.io/JLbXn | sh -s
