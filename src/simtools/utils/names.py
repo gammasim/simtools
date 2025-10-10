@@ -110,7 +110,7 @@ def site_names():
 @cache
 def array_element_design_types(array_element_type):
     """
-    Get array element site types (e.g., 'design' or 'flashcam').
+    Get array element design type (e.g., 'design' or 'flashcam').
 
     Default values are ['design', 'test'].
 
