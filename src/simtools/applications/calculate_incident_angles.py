@@ -73,6 +73,7 @@ Example of a secondary mirror incident angle plot for a SST:
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
@@ -102,7 +103,7 @@ def _parse():
     config.parser.add_argument(
         "--number_of_photons",
         help="Number of star photons to trace (per run)",
-        type=int,
+        type=CommandLineParser.scientific_int,
         default=10000,
         required=False,
     )

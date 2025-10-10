@@ -12,6 +12,47 @@ logger = logging.getLogger()
 SIMULATION_MODEL_STRING = "simulation model"
 
 
+def test_scientific_int():
+    # Test regular integers as strings
+    assert parser.CommandLineParser.scientific_int("100") == 100
+    assert parser.CommandLineParser.scientific_int("0") == 0
+    assert parser.CommandLineParser.scientific_int("42") == 42
+
+    # Test regular integers as integers
+    assert parser.CommandLineParser.scientific_int(100) == 100
+    assert parser.CommandLineParser.scientific_int(0) == 0
+
+    # Test regular integers as floats
+    assert parser.CommandLineParser.scientific_int(100.0) == 100
+    assert parser.CommandLineParser.scientific_int(42.9) == 42
+
+    # Test scientific notation
+    assert parser.CommandLineParser.scientific_int("1e3") == 1000
+    assert parser.CommandLineParser.scientific_int("1E3") == 1000
+    assert parser.CommandLineParser.scientific_int("2.5e3") == 2500
+    assert parser.CommandLineParser.scientific_int("1e7") == 10000000
+    assert parser.CommandLineParser.scientific_int("5.5e6") == 5500000
+    assert parser.CommandLineParser.scientific_int("1.23e4") == 12300
+
+    # Test negative numbers
+    assert parser.CommandLineParser.scientific_int("-100") == -100
+    assert parser.CommandLineParser.scientific_int("-1e3") == -1000
+
+    # Test floats that convert to integers
+    assert parser.CommandLineParser.scientific_int("123.0") == 123
+    assert parser.CommandLineParser.scientific_int("123.9") == 123
+
+    # Test error cases
+    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'abc'"):
+        parser.CommandLineParser.scientific_int("abc")
+
+    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'not_a_number'"):
+        parser.CommandLineParser.scientific_int("not_a_number")
+
+    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'None'"):
+        parser.CommandLineParser.scientific_int(None)
+
+
 def test_site():
     assert parser.CommandLineParser.site("North") == "North"
     assert parser.CommandLineParser.site("South") == "South"
