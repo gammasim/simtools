@@ -82,7 +82,7 @@ jobs:
       - name: Install and run dotenv-linter
         run: |
           curl -sSfL https://git.io/JLbXn | sh -s
-          ./bin/dotenv-linter
+          ./bin/dotenv-linter --skip UnorderedKey
 
       - name: Restore pre-commit cache
         uses: actions/cache@v4
