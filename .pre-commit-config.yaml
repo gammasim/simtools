@@ -2,7 +2,7 @@
 repos:
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.13.2
+  rev: v0.14.0
   hooks:
   - id: ruff
     args: ["--fix"]
@@ -45,7 +45,7 @@ repos:
   - id: actionlint
 # https://pyproject-fmt.readthedocs.io/en/latest/
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "v2.6.0"
+  rev: "v2.10.0"
   hooks:
   - id: pyproject-fmt
 # codespell
