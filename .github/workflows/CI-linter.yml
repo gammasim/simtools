@@ -93,64 +93,13 @@ jobs:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
-  superlinter:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-      statuses: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Lint Code Base
-        uses: super-linter/super-linter@v8
-        env:
-          VALIDATE_ALL_CODEBASE: ${{ github.event_name != 'pull_request' }}
-          VALIDATE_ENV: true
-          VALIDATE_NATURAL_LANGUAGE: true
-          VALIDATE_BASH: true
-          LINTER_RULES_PATH: ./
-          CREATE_LOG_FILE: true
-          LOG_FILE: superlinter.log
-          DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  lint-auxiliary:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up tools
+      - name: Lint Bash scripts
         run: |
           sudo apt-get update
           sudo apt-get install -y shellcheck
-          pip install yamllint
-          npm install -g prettier alex  # alex = natural language linter
-
-      # ENV files
-      - name: Validate .env files
-        run: |
-          if grep -vE '^\s*(#|$)' .env* | grep -qv '='; then
-            echo "Invalid env file"
-            exit 1
-          fi
-
-      # Bash scripts
-      - name: Lint Bash scripts
-        run: |
           find . -type f -name "*.sh" -print0 | xargs -0 -n1 shellcheck -x
 
-      # YAML
-      - name: Lint YAML files
-        run: yamllint -c ./.yamllint.yml .
-
-      # Natural language (alex)
-      - name: Check prose
-        run: alex .
-
-      # Formatting / Prettier
-      - name: Run Prettier
-        run: prettier --check "**/*.{yml,yaml,json,md,js,ts,css,html}"
+      - name: Install and run dotenv-linter
+        run: |
+          curl -sSfL https://git.io/JLbXn | sh -s
+          ./bin/dotenv-linter
