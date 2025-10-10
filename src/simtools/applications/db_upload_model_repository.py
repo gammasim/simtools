@@ -40,10 +40,7 @@ used to name the database, but no tag checkout is done):
 
 """
 
-import logging
-from pathlib import Path
-
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler, db_model_upload
 
@@ -53,23 +50,12 @@ DEFAULT_REPOSITORY_URL = (
 )
 
 
-def _parse(label=None, description=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing application.
-    description : str
-        Description of application.
-
-    Returns
-    -------
-    tuple
-        Command line parser object and database configuration.
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Upload model parameters from repository to database",
+    )
     config.parser.add_argument(
         "--branch",
         help="Repository branch to clone (optional, defaults to using version tag).",
@@ -99,22 +85,18 @@ def _parse(label=None, description=None):
 
 def main():
     """Application main."""
-    args_dict, db_config = _parse(
-        label=Path(__file__).stem, description="Upload model parameters from repository to database"
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
     db.print_connection_info()
 
     db_model_upload.add_complete_model(
-        tmp_dir=args_dict.get("tmp_dir"),
+        tmp_dir=app_context.args.get("tmp_dir"),
         db=db,
-        db_simulation_model=args_dict.get("db_simulation_model"),
-        db_simulation_model_version=args_dict.get("db_simulation_model_version"),
+        db_simulation_model=app_context.args.get("db_simulation_model"),
+        db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
         repository_url=DEFAULT_REPOSITORY_URL,
-        repository_branch=args_dict.get("branch"),
+        repository_branch=app_context.args.get("branch"),
     )
 
 

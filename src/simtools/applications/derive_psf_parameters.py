@@ -110,22 +110,19 @@ r"""
 
 """
 
-import logging
-from pathlib import Path
-
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
-from simtools.utils.general import get_log_level_from_user
 
 
 def _parse():
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description=(
             "Derive mirror_reflection_random_angle, mirror_align_random_horizontal "
             "and mirror_align_random_vertical using cumulative PSF measurement."
-        )
+        ),
     )
     config.parser.add_argument(
         "--src_distance",
@@ -196,27 +193,23 @@ def _parse():
     )
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
+def main():
+    """Derive PSF parameters."""
+    app_context = startup_application(_parse)
 
-    label = label = Path(__file__).stem
-    logger = logging.getLogger()
-    logger.setLevel(get_log_level_from_user(args_dict["log_level"]))
-
-    _io_handler = io_handler.IOHandler()
     tel_model, site_model, _ = initialize_simulation_models(
-        label=label,
-        db_config=db_config,
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        model_version=args_dict["model_version"],
+        label=app_context.args.get("label"),
+        db_config=app_context.db_config,
+        site=app_context.args["site"],
+        telescope_name=app_context.args["telescope"],
+        model_version=app_context.args["model_version"],
     )
 
     psf_opt.run_psf_optimization_workflow(
         tel_model,
         site_model,
-        args_dict,
-        _io_handler.get_output_directory(),
+        app_context.args,
+        app_context.io_handler.get_output_directory(),
     )
 
 

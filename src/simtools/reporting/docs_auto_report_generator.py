@@ -175,6 +175,10 @@ class ReportGenerator:
                 f"Markdown report generated for {site} Telescope {telescope}: {self.output_path}"
             )
 
+        # Also generate calibration device parameter comparison reports when using --all_telescopes
+        if self.args.get("all_telescopes"):
+            self._generate_calibration_device_parameter_reports()
+
     def _generate_observatory_report_combinations(self) -> Generator[tuple[str, str], None, None]:
         """Generate combinations of sites and model versions for observatory reports.
 
@@ -215,3 +219,107 @@ class ReportGenerator:
         """Generate all observatory reports based on which --all_* flags are passed."""
         for params in self._generate_observatory_report_combinations():
             self._generate_single_observatory_report(*params)
+
+    def auto_generate_simulation_configuration_reports(self):
+        """Generate simulation configuration reports for one or all model versions.
+
+        If --all_model_versions is set, produce reports for every model version in
+        the DB; otherwise produce reports only for the configured model_version.
+        """
+        model_versions = (
+            self.db.get_model_versions()
+            if self.args.get("all_model_versions")
+            else [self.args["model_version"]]
+        )
+
+        for version in model_versions:
+            # update args and create a per-version output directory
+            self.args.update({"model_version": version})
+            output_path = Path(self.output_path) / str(version)
+
+            ReadParameters(
+                self.db_config, self.args, output_path
+            ).produce_simulation_configuration_report()
+
+            logger.info(f"Configuration reports for (v{version}) produced: {output_path}")
+
+    def auto_generate_calibration_reports(self):
+        """Generate calibration reports for one or all model versions.
+
+        Mirrors the pattern used by other auto_generate_* methods: if
+        --all_model_versions is set, produce reports for every model version in
+        the DB; otherwise produce reports only for the configured model_version.
+        """
+        model_versions = (
+            self.db.get_model_versions()
+            if self.args.get("all_model_versions")
+            else [self.args["model_version"]]
+        )
+
+        for version in model_versions:
+            # update args and create a per-version output directory
+            self.args.update({"model_version": version})
+            output_path = Path(self.output_path) / str(version)
+
+            try:
+                ReadParameters(self.db_config, self.args, output_path).produce_calibration_reports()
+                logger.info(f"Calibration reports for (v{version}) produced: {output_path}")
+            except ValueError as err:
+                # Some model versions do not have calibration_devices in the DB;
+                msg = str(err)
+                if "calibration_devices" in msg and "zero results" in msg:
+                    logger.info(
+                        f"Skipping model version {version}: no calibration devices defined ({msg})"
+                    )
+                    continue
+                # re-raise unexpected ValueErrors
+                raise
+
+    def _generate_calibration_device_parameter_reports(self):
+        """Generate parameter comparison reports for calibration devices for all model versions."""
+        # Get all model versions since no specific version is provided when using --all_telescopes
+        model_versions = self.db.get_model_versions()
+
+        for version in model_versions:
+            self._process_calibration_devices_for_version(version)
+
+    def _process_calibration_devices_for_version(self, version):
+        """Process calibration devices for a specific model version."""
+        try:
+            # Get all calibration devices for this version
+            calibration_array_elements = self.db.get_array_elements(
+                version, collection="calibration_devices"
+            )
+            array_elements = calibration_array_elements.copy()
+
+            # Add design models
+            for element in calibration_array_elements:
+                design_model = self.db.get_design_model(version, element, "calibration_devices")
+                if design_model and design_model not in array_elements:
+                    array_elements.append(design_model)
+
+            if array_elements:
+                # Create a copy of args with the current version for this iteration
+                version_args = self.args.copy()
+                version_args["model_version"] = version
+
+                # Generate parameter comparison reports for calibration devices
+                ReadParameters(
+                    self.db_config, version_args, self.output_path
+                ).generate_model_parameter_reports_for_devices(array_elements)
+
+                logger.info(
+                    "Calibration device parameter reports generated for"
+                    f" v{version}: {self.output_path}"
+                )
+
+        except ValueError as err:
+            # Some model versions may not have calibration_devices
+            msg = str(err)
+            if "calibration_devices" in msg and "zero results" in msg:
+                logger.info(
+                    f"Skipping model version {version}: no calibration devices defined ({msg})"
+                )
+                return
+            # re-raise unexpected ValueErrors
+            raise
