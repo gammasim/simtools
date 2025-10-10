@@ -71,41 +71,33 @@ class SimulatorArray(SimtelRunner):
         command = self._common_run_command(run_number, weak_pointing)
 
         if self.calibration_config:
-            command += self._make_run_command_for_calibration_simulations(input_file)
+            command += self._make_run_command_for_calibration_simulations()
         else:
-            command += self._make_run_command_for_shower_simulations(input_file)
+            command += self._make_run_command_for_shower_simulations()
+
+        # "-C show=all" should be the last option
+        command += super().get_config_option("show", "all")
+        command += f" {input_file} | gzip > {self._log_file} 2>&1 || exit"
 
         return clear_default_sim_telarray_cfg_directories(command)
 
-    def _make_run_command_for_shower_simulations(self, input_file=None):
+    def _make_run_command_for_shower_simulations(self):
         """
         Build and return the command to run sim_telarray shower simulations.
-
-        Parameters
-        ----------
-        input_file: str
-            Full path of the input CORSIKA file
-        run_number: int (optional)
-            run number
-        weak_pointing: bool (optional)
-            Specify weak pointing option for sim_telarray.
 
         Returns
         -------
         str
             Command to run sim_telarray.
         """
-        command = f" {input_file}"
-        command += f" | gzip > {self._log_file} 2>&1 || exit"
-        command += super().get_config_option(
+        return super().get_config_option(
             "power_law",
             SimulatorArray.get_power_law_for_sim_telarray_histograms(
                 self.corsika_config.primary_particle
             ),
         )
-        return command
 
-    def _make_run_command_for_calibration_simulations(self, input_file=None):
+    def _make_run_command_for_calibration_simulations(self):
         """Build sim_telarray command for calibration simulations."""
         cfg = self.calibration_config
         altitude = self.corsika_config.array_model.site_model.get_parameter_value_with_unit(
@@ -131,7 +123,6 @@ class SimulatorArray(SimtelRunner):
             n_events = cfg.get("number_of_flasher_events", cfg["number_of_events"])
             command += super().get_config_option("laser_events", n_events)
 
-        command += f" {input_file} | gzip > {self._log_file} 2>&1 || exit"
         return command
 
     def _common_run_command(self, run_number, weak_pointing=None):
@@ -160,7 +151,6 @@ class SimulatorArray(SimtelRunner):
             )
         elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
             command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
-        command += super().get_config_option("show", "all")
         command += super().get_config_option("output_file", output_file)
 
         return command
