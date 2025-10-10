@@ -117,3 +117,40 @@ jobs:
           LOG_FILE: superlinter.log
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lint-auxiliary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          pip install yamllint
+          npm install -g prettier alex  # alex = natural language linter
+
+      # ENV files
+      - name: Validate .env files
+        run: |
+          if grep -vE '^\s*(#|$)' .env* | grep -qv '='; then
+            echo "Invalid env file"
+            exit 1
+          fi
+
+      # Bash scripts
+      - name: Lint Bash scripts
+        run: |
+          find . -type f -name "*.sh" -print0 | xargs -0 -n1 shellcheck -x
+
+      # YAML
+      - name: Lint YAML files
+        run: yamllint -c ./.yamllint.yml .
+
+      # Natural language (alex)
+      - name: Check prose
+        run: alex .
+
+      # Formatting / Prettier
+      - name: Run Prettier
+        run: prettier --check "**/*.{yml,yaml,json,md,js,ts,css,html}"
