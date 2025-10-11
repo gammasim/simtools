@@ -160,7 +160,6 @@ def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
     tel_type = names.get_array_element_type_from_name(name)
     x, y, r = x.to(u.m), y.to(u.m), radius.to(u.m)
 
-    # Use gray color if telescope is grayed out
     color = "gray" if is_grayed_out else leg_h.get_telescope_config(tel_type)["color"]
 
     if tel_type == "SCTS":
