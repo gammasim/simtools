@@ -56,6 +56,12 @@ axes_range : float, optional
     Range of the both axes in meters.
 marker_scaling : float, optional.
     Scaling factor for plotting of array elements, optional.
+grayed_out_array_elements : list, optional
+    List of array elements to plot as gray circles.
+highlighted_array_elements : list, optional
+    List of array elements to plot with red circles around them.
+legend_location : str, optional
+    Location of the legend (default "best").
 
 Examples
 --------
@@ -97,6 +103,17 @@ Plot all layouts for the North site and model version 6.0.0:
 .. code-block:: console
 
     simtools-plot-array-layout --site North --plot_all_layouts --model_version=6.0.0
+
+Plot layout with some telescopes grayed out and others highlighted:
+
+.. code-block:: console
+
+    simtools-plot-array-layout --site North
+                               --array_layout_name alpha
+                               --model_version=6.0.0
+                               --grayed_out_array_elements LSTN-01 LSTN-02
+                               --highlighted_array_elements MSTN-01 MSTN-02
+                               --legend_location "upper right"
 """
 
 import matplotlib as mpl
@@ -162,6 +179,33 @@ def _parse():
         type=str,
         required=False,
         default=None,
+    )
+    config.parser.add_argument(
+        "--grayed_out_array_elements",
+        help="List of array elements to plot as gray circles.",
+        type=str,
+        nargs="*",
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--highlighted_array_elements",
+        help="List of array elements to plot with red circles around them.",
+        type=str,
+        nargs="*",
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--legend_location",
+        help=(
+            "Location of the legend (e.g., 'best', 'upper right', 'upper left', "
+            "'lower left', 'lower right', 'right', 'center left', 'center right', "
+            "'lower center', 'upper center', 'center')."
+        ),
+        type=str,
+        required=False,
+        default="best",
     )
     return config.initialize(
         db_config=True,
@@ -258,6 +302,9 @@ def main():
             axes_range=app_context.args["axes_range"],
             marker_scaling=app_context.args["marker_scaling"],
             background_telescopes=background_layout,
+            grayed_out_elements=app_context.args["grayed_out_array_elements"],
+            highlighted_elements=app_context.args["highlighted_array_elements"],
+            legend_location=app_context.args["legend_location"],
         )
         site_string = ""
         if layout.get("site") is not None:

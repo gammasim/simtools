@@ -20,6 +20,9 @@ def plot_array_layout(
     axes_range=None,
     marker_scaling=1.0,
     background_telescopes=None,
+    grayed_out_elements=None,
+    highlighted_elements=None,
+    legend_location="best",
 ):
     """
     Plot telescope array layout.
@@ -36,6 +39,12 @@ def plot_array_layout(
         Marker size scale factor.
     background_telescopes : Table or None
         Optional background telescope table.
+    grayed_out_elements : list or None
+        List of telescope names to plot as gray circles.
+    highlighted_elements : list or None
+        List of telescope names to plot with red circles around them.
+    legend_location : str
+        Location of the legend (default "best").
 
     Returns
     -------
@@ -44,25 +53,58 @@ def plot_array_layout(
     """
     fig, ax = plt.subplots(1)
 
-    patches, plot_range = get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling)
+    patches, plot_range, highlighted_patches = get_patches(
+        ax,
+        telescopes,
+        show_tel_label,
+        axes_range,
+        marker_scaling,
+        grayed_out_elements,
+        highlighted_elements,
+    )
 
     if background_telescopes is not None:
-        bg_patches, bg_range = get_patches(
+        bg_patches, bg_range, _ = get_patches(
             ax, background_telescopes, False, axes_range, marker_scaling
         )
         ax.add_collection(PatchCollection(bg_patches, match_original=True, alpha=0.1))
         if axes_range is None:
             plot_range = max(plot_range, bg_range)
 
-    update_legend(ax, telescopes)
-    finalize_plot(ax, patches, "Easting [m]", "Northing [m]", plot_range)
+    update_legend(ax, telescopes, grayed_out_elements, legend_location)
+    finalize_plot(ax, patches, "Easting [m]", "Northing [m]", plot_range, highlighted_patches)
 
     return fig
 
 
-def get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling):
+def get_patches(
+    ax,
+    telescopes,
+    show_tel_label,
+    axes_range,
+    marker_scaling,
+    grayed_out_elements=None,
+    highlighted_elements=None,
+):
     """
     Get plot patches and axis range.
+
+    Parameters
+    ----------
+    ax : Axes
+        Matplotlib axes object.
+    telescopes : Table
+        Telescope data table.
+    show_tel_label : bool
+        Show telescope labels.
+    axes_range : float or None
+        Axis range, auto if None.
+    marker_scaling : float
+        Marker size scale factor.
+    grayed_out_elements : list or None
+        List of telescope names to plot as gray circles.
+    highlighted_elements : list or None
+        List of telescope names to plot with red circles around them.
 
     Returns
     -------
@@ -70,28 +112,45 @@ def get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling):
         List of telescope patches.
     axes_range : float
         Calculated or input axis range.
+    highlighted_patches : list
+        List of highlighted telescope patches.
     """
     pos_x, pos_y = get_positions(telescopes)
     telescopes["pos_x_rotated"] = Column(pos_x)
     telescopes["pos_y_rotated"] = Column(pos_y)
 
-    patches, radii = create_patches(telescopes, marker_scaling, show_tel_label, ax)
+    patches, radii, highlighted_patches = create_patches(
+        telescopes, marker_scaling, show_tel_label, ax, grayed_out_elements, highlighted_elements
+    )
 
     if axes_range:
-        return patches, axes_range
+        return patches, axes_range, highlighted_patches
 
     r = max(radii).value
     max_x = max(abs(pos_x.min().value), abs(pos_x.max().value)) + r
     max_y = max(abs(pos_y.min().value), abs(pos_y.max().value)) + r
     updated_axes_range = max(max_x, max_y) * 1.1
 
-    return patches, updated_axes_range
+    return patches, updated_axes_range, highlighted_patches
 
 
 @u.quantity_input(x=u.m, y=u.m, radius=u.m)
-def get_telescope_patch(name, x, y, radius):
+def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
     """
     Create patch for a telescope.
+
+    Parameters
+    ----------
+    name : str
+        Telescope name.
+    x : Quantity
+        X position.
+    y : Quantity
+        Y position.
+    radius : Quantity
+        Telescope radius.
+    is_grayed_out : bool
+        Whether to plot telescope in gray.
 
     Returns
     -------
@@ -101,20 +160,23 @@ def get_telescope_patch(name, x, y, radius):
     tel_type = names.get_array_element_type_from_name(name)
     x, y, r = x.to(u.m), y.to(u.m), radius.to(u.m)
 
+    color = "gray" if is_grayed_out else leg_h.get_telescope_config(tel_type)["color"]
+
     if tel_type == "SCTS":
         return mpatches.Rectangle(
             ((x - r / 2).value, (y - r / 2).value),
             width=r.value,
             height=r.value,
-            fill=False,
-            color=leg_h.get_telescope_config(tel_type)["color"],
+            fill=is_grayed_out,
+            color=color,
         )
 
     return mpatches.Circle(
         (x.value, y.value),
         radius=r.value,
-        fill=tel_type.startswith("MST"),
-        color=leg_h.get_telescope_config(tel_type)["color"],
+        fill=is_grayed_out or tel_type.startswith("MST"),
+        alpha=0.5 if is_grayed_out else 1.0,
+        color=color,
     )
 
 
@@ -141,9 +203,26 @@ def get_positions(telescopes):
     return transf.rotate(x, y, locale_rotate_angle) if locale_rotate_angle != 0 else (x, y)
 
 
-def create_patches(telescopes, scale, show_label, ax):
+def create_patches(
+    telescopes, scale, show_label, ax, grayed_out_elements=None, highlighted_elements=None
+):
     """
     Create telescope patches and labels.
+
+    Parameters
+    ----------
+    telescopes : Table
+        Telescope data table.
+    scale : float
+        Marker size scale factor.
+    show_label : bool
+        Show telescope labels.
+    ax : Axes
+        Matplotlib axes object.
+    grayed_out_elements : list or None
+        List of telescope names to plot as gray circles.
+    highlighted_elements : list or None
+        List of telescope names to plot with red circles around them.
 
     Returns
     -------
@@ -151,9 +230,14 @@ def create_patches(telescopes, scale, show_label, ax):
         Shape patches.
     radii : list
         Telescope radii.
+    highlighted_patches : list
+        List of highlighted telescope patches.
     """
-    patches, radii = [], []
+    patches, radii, highlighted_patches = [], [], []
     fontsize, scale_factor = (4, 2) if len(telescopes) > 30 else (8, 1)
+
+    grayed_out_set = set(grayed_out_elements) if grayed_out_elements else set()
+    highlighted_set = set(highlighted_elements) if highlighted_elements else set()
 
     for tel in telescopes:
         name = get_telescope_name(tel)
@@ -161,14 +245,28 @@ def create_patches(telescopes, scale, show_label, ax):
         radii.append(radius)
         tel_type = names.get_array_element_type_from_name(name)
 
+        is_grayed_out = name in grayed_out_set
+        is_highlighted = name in highlighted_set
+
         patches.append(
             get_telescope_patch(
                 tel_type,
                 tel["pos_x_rotated"],
                 tel["pos_y_rotated"],
                 scale_factor * radius * scale,
+                is_grayed_out=is_grayed_out,
             )
         )
+
+        if is_highlighted:
+            highlight_patch = mpatches.Circle(
+                (tel["pos_x_rotated"].value, tel["pos_y_rotated"].value),
+                radius=(scale_factor * radius * scale * 4).value,
+                fill=False,
+                color="red",
+                linewidth=1,
+            )
+            highlighted_patches.append(highlight_patch)
 
         if show_label:
             ax.text(
@@ -180,7 +278,7 @@ def create_patches(telescopes, scale, show_label, ax):
                 fontsize=fontsize,
             )
 
-    return patches, radii
+    return patches, radii, highlighted_patches
 
 
 def get_telescope_name(tel):
@@ -211,10 +309,16 @@ def get_sphere_radius(tel):
     return tel["sphere_radius"] if "sphere_radius" in tel.colnames else 10.0 * u.m
 
 
-def update_legend(ax, telescopes):
+def update_legend(ax, telescopes, grayed_out_elements=None, legend_location="best"):
     """Add legend for telescope types and counts."""
-    names_list = [get_telescope_name(tel) for tel in telescopes]
-    types = [names.get_array_element_type_from_name(n) for n in names_list]
+    grayed_out_set = set(grayed_out_elements) if grayed_out_elements else set()
+
+    types = []
+    for tel in telescopes:
+        tel_name = get_telescope_name(tel)
+        if tel_name not in grayed_out_set:
+            types.append(names.get_array_element_type_from_name(tel_name))
+
     counts = Counter(types)
 
     objs, labels = [], []
@@ -237,12 +341,16 @@ def update_legend(ax, telescopes):
 
             handler_map[telescope_type] = BaseLegendHandlerWrapper(telescope_type)
 
-    ax.legend(objs, labels, handler_map=handler_map, prop={"size": 11}, loc="best")
+    ax.legend(objs, labels, handler_map=handler_map, prop={"size": 11}, loc=legend_location)
 
 
-def finalize_plot(ax, patches, x_title, y_title, axes_range):
+def finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches=None):
     """Finalize plot appearance and limits."""
     ax.add_collection(PatchCollection(patches, match_original=True))
+
+    if highlighted_patches:
+        ax.add_collection(PatchCollection(highlighted_patches, match_original=True))
+
     ax.set(xlabel=x_title, ylabel=y_title)
     ax.tick_params(labelsize=8)
     ax.axis("square")
