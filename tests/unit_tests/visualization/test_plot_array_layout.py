@@ -412,7 +412,7 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
         # Create real patch objects instead of strings
         dummy_patch = mpatches.Circle((0, 0), 1)  # Simple circle patch
         dummy_bg_patch = mpatches.Circle((0, 0), 1)  # Another circle patch
-        dummy_highlighted_patches = []  # Empty highlighted patches
+        dummy_highlighted_patches = []
         # For first call (primary telescopes)
         if calls["get_patches_count"] == 1:
             return ([dummy_patch], 50, dummy_highlighted_patches)
