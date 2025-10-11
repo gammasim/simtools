@@ -350,7 +350,6 @@ def finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches
     """Finalize plot appearance and limits."""
     ax.add_collection(PatchCollection(patches, match_original=True))
 
-    # Add highlighted patches if any
     if highlighted_patches:
         ax.add_collection(PatchCollection(highlighted_patches, match_original=True))
 
