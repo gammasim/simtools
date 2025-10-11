@@ -65,6 +65,11 @@ def test_make_run_command(simtel_runner):
     assert "file-by-run" in run_command
     assert "test_file_with_seeds.txt" in run_command
 
+    parts = run_command.split()
+    c_args = [parts[i + 1] for i, p in enumerate(parts) if p == "-C"]
+    # assert last one is show=all
+    assert c_args[-1] == "show=all"
+
 
 def test_make_run_command_with_calibration_config(simtel_runner):
     """Test make_run_command when calibration_config is set."""
@@ -79,6 +84,11 @@ def test_make_run_command_with_calibration_config(simtel_runner):
     assert "sim_telarray" in run_command
     assert "-C pedestal_events=100" in run_command
     assert input_file in run_command
+
+    parts = run_command.split()
+    c_args = [parts[i + 1] for i, p in enumerate(parts) if p == "-C"]
+    # assert last one is show=all
+    assert c_args[-1] == "show=all"
 
 
 def test_make_run_command_divergent(simtel_runner):
@@ -125,7 +135,6 @@ def test_nsb_only_pedestals_command(simtel_runner):
 
 
 def test_make_run_command_for_calibration_simulations(simtel_runner):
-    input_file = "test_calibration_simulations.inp"
     calibration_config = {
         "nsb_scaling_factor": 1.5,
         "stars": "stars.txt",
@@ -134,24 +143,18 @@ def test_make_run_command_for_calibration_simulations(simtel_runner):
     }
     simtel_runner.calibration_config = calibration_config
 
-    run_command = simtel_runner._make_run_command_for_calibration_simulations(
-        input_file=input_file,
-    )
+    run_command = simtel_runner._make_run_command_for_calibration_simulations()
     assert "-C nsb_scaling_factor=1.5" in run_command
     assert "-C stars=stars.txt" in run_command
     assert "-C pedestal_events=100" in run_command
-    assert input_file in run_command
 
     simtel_runner.calibration_config["run_mode"] = "nsb_only_pedestals"
-    run_command = simtel_runner._make_run_command_for_calibration_simulations(
-        input_file=input_file,
-    )
+    run_command = simtel_runner._make_run_command_for_calibration_simulations()
     assert "-C fadc_err_pedestal=0.0" in run_command  # From _nsb_only_pedestals_command
 
 
 def test_make_run_command_for_calibration_simulations_additional_modes(simtel_runner):
     """Test additional run modes for calibration simulations."""
-    input_file = "test_calibration.inp"
 
     # Test dark_pedestals mode
     simtel_runner.calibration_config = {
@@ -159,7 +162,7 @@ def test_make_run_command_for_calibration_simulations_additional_modes(simtel_ru
         "number_of_events": 50,
         "number_of_dark_events": 75,
     }
-    run_command = simtel_runner._make_run_command_for_calibration_simulations(input_file)
+    run_command = simtel_runner._make_run_command_for_calibration_simulations()
     assert "-C dark_events=75" in run_command
 
     # Test direct_injection mode
@@ -168,5 +171,5 @@ def test_make_run_command_for_calibration_simulations_additional_modes(simtel_ru
         "number_of_events": 50,
         "number_of_flasher_events": 200,
     }
-    run_command = simtel_runner._make_run_command_for_calibration_simulations(input_file)
+    run_command = simtel_runner._make_run_command_for_calibration_simulations()
     assert "-C laser_events=200" in run_command

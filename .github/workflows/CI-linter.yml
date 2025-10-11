@@ -84,7 +84,7 @@ jobs:
 
       - name: Pre-commit
         run: |
-          pre-commit run --all-files
+          SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Save pre-commit cache
         if: success()  # only save if previous steps succeeded
@@ -108,7 +108,7 @@ jobs:
       - name: Lint Code Base
         uses: super-linter/super-linter@v8
         env:
-          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name != 'pull_request' }}
           VALIDATE_ENV: true
           VALIDATE_NATURAL_LANGUAGE: true
           VALIDATE_BASH: true

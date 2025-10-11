@@ -2,19 +2,22 @@
 
 r"""Produces a markdown file for calibration reports."""
 
-import logging
-
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
-from simtools.reporting.docs_read_parameters import ReadParameters
-from simtools.utils import general as gen
+from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description=("Produce a markdown report for calibration parameters."),
+    )
+
+    config.parser.add_argument(
+        "--all_model_versions",
+        action="store_true",
+        help="Produce reports for all model versions.",
     )
 
     return config.initialize(
@@ -23,26 +26,25 @@ def _parse(label):
     )
 
 
-def main():  # noqa: D103
-    label_name = "reports"
-    args, db_config = _parse(label_name)
+def main():
+    """Produce a markdown file for calibration reports."""
+    app_context = startup_application(_parse)
 
-    io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory()
+    output_path = app_context.io_handler.get_output_directory()
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
-
-    read_parameters = ReadParameters(
-        db_config=db_config, args=args, output_path=output_path / f"{args.get('model_version')}"
+    generator = ReportGenerator(
+        db_config=app_context.db_config, args=app_context.args, output_path=output_path
     )
+    generator.auto_generate_calibration_reports()
 
-    read_parameters.produce_calibration_reports()
-
-    logger.info(
-        f"Calibation reports for model version {args.get('model_version')} produced successfully."
-    )
-    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
+    if app_context.args.get("all_model_versions"):
+        app_context.logger.info("Calibration reports for all model versions produced successfully.")
+    else:
+        app_context.logger.info(
+            f"Calibration reports for model version {app_context.args.get('model_version')}"
+            " produced successfully."
+        )
+    app_context.logger.info(f"Output path: {output_path}")
 
 
 if __name__ == "__main__":
