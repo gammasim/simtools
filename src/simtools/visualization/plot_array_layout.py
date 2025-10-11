@@ -259,7 +259,6 @@ def create_patches(
             )
         )
 
-        # Add red circle for highlighted telescopes
         if is_highlighted:
             highlight_patch = mpatches.Circle(
                 (tel["pos_x_rotated"].value, tel["pos_y_rotated"].value),
