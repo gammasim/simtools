@@ -314,7 +314,6 @@ def update_legend(ax, telescopes, grayed_out_elements=None, legend_location="bes
     """Add legend for telescope types and counts."""
     grayed_out_set = set(grayed_out_elements) if grayed_out_elements else set()
 
-    # Filter out grayed out telescopes from legend counts
     types = []
     for tel in telescopes:
         tel_name = get_telescope_name(tel)
