@@ -24,14 +24,13 @@ Runtime < 10 s.
     simtools-generate-regular-arrays --site=North
 """
 
-import logging
 from pathlib import Path
 
 import astropy.units as u
 from astropy.table import QTable
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.utils import names
 
@@ -42,7 +41,7 @@ telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
 
 def _parse():
     config = configurator.Configurator(
-        label=Path(__file__).stem,
+        label=get_application_label(__file__),
         description=(
             "Generate a regular array of telescope and save as astropy table.\n"
             "Default telescope distances for 4 telescope square arrays are: \n"
@@ -58,18 +57,15 @@ def _parse():
 
 def main():
     """Create layout array files (ecsv) of regular arrays."""
-    args_dict, _ = _parse()
+    app_context = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    if args_dict["site"] == "South":
+    if app_context.args["site"] == "South":
         array_list = ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]
     else:
         array_list = ["1MST", "4MST", "1LST", "4LST"]
 
     for array_name in array_list:
-        logger.info(f"Processing array {array_name}")
+        app_context.logger.info(f"Processing array {array_name}")
 
         tel_name, pos_x, pos_y, pos_z = [], [], [], []
         tel_size = array_name[1:4]
@@ -78,7 +74,7 @@ def main():
         if array_name[0] == "1":
             tel_name.append(
                 names.generate_array_element_name_from_type_site_id(
-                    tel_size, args_dict["site"], "01"
+                    tel_size, app_context.args["site"], "01"
                 )
             )
             pos_x.append(0 * u.m)
@@ -89,14 +85,14 @@ def main():
             for i in range(1, 5):
                 tel_name.append(
                     names.generate_array_element_name_from_type_site_id(
-                        tel_size, args_dict["site"], f"0{i}"
+                        tel_size, app_context.args["site"], f"0{i}"
                     )
                 )
                 pos_x.append(telescope_distance[tel_size] * (-1) ** (i // 2))
                 pos_y.append(telescope_distance[tel_size] * (-1) ** (i % 2))
                 pos_z.append(0 * u.m)
 
-        table = QTable(meta={"array_name": array_name, "site": args_dict["site"]})
+        table = QTable(meta={"array_name": array_name, "site": app_context.args["site"]})
         table["telescope_name"] = tel_name
         table["position_x"] = pos_x
         table["position_y"] = pos_y
@@ -104,14 +100,14 @@ def main():
         table.sort("telescope_name")
         table.pprint()
 
-        output_file = args_dict.get("output_file")
+        output_file = app_context.args.get("output_file")
         if output_file:
             output_path = Path(output_file)
             output_file = output_path.with_name(
-                f"{output_path.stem}-{args_dict['site']}-{array_name}{output_path.suffix}"
+                f"{output_path.stem}-{app_context.args['site']}-{array_name}{output_path.suffix}"
             )
         writer.ModelDataWriter.dump(
-            args_dict=args_dict,
+            args_dict=app_context.args,
             output_file=output_file,
             metadata=None,
             product_data=table,

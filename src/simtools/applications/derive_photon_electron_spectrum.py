@@ -34,18 +34,17 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
 from simtools.configuration import configurator
 
 
-def _parse(label):
+def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        label=label,
+        label=get_application_label(__file__),
         description="Derive single photon electron spectrum from a given amplitude spectrum.",
     )
     config.parser.add_argument(
@@ -112,13 +111,11 @@ def _parse(label):
     return config.initialize(db_config=False, output=True, simulation_model=["telescope"])
 
 
-def main():  # noqa: D103
-    args_dict, _ = _parse(Path(__file__).stem)
+def main():
+    """Derive single photon electron spectrum from a given amplitude spectrum."""
+    app_context = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    single_pe = SinglePhotonElectronSpectrum(args_dict)
+    single_pe = SinglePhotonElectronSpectrum(app_context.args)
     single_pe.derive_single_pe_spectrum()
     single_pe.write_single_pe_spectrum()
 
