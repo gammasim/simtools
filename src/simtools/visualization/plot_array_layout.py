@@ -236,7 +236,6 @@ def create_patches(
     patches, radii, highlighted_patches = [], [], []
     fontsize, scale_factor = (4, 2) if len(telescopes) > 30 else (8, 1)
 
-    # Convert lists to sets for faster lookup
     grayed_out_set = set(grayed_out_elements) if grayed_out_elements else set()
     highlighted_set = set(highlighted_elements) if highlighted_elements else set()
 
