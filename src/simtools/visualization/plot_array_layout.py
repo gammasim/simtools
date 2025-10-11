@@ -246,7 +246,6 @@ def create_patches(
         radii.append(radius)
         tel_type = names.get_array_element_type_from_name(name)
 
-        # Check if telescope should be grayed out
         is_grayed_out = name in grayed_out_set
         is_highlighted = name in highlighted_set
 
