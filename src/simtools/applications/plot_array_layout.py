@@ -302,9 +302,9 @@ def main():
             axes_range=app_context.args["axes_range"],
             marker_scaling=app_context.args["marker_scaling"],
             background_telescopes=background_layout,
-            grayed_out_elements=args_dict["grayed_out_array_elements"],
-            highlighted_elements=args_dict["highlighted_array_elements"],
-            legend_location=args_dict["legend_location"],
+            grayed_out_elements=app_context.args["grayed_out_array_elements"],
+            highlighted_elements=app_context.args["highlighted_array_elements"],
+            legend_location=app_context.args["legend_location"],
         )
         site_string = ""
         if layout.get("site") is not None:
