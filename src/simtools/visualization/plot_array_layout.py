@@ -174,7 +174,7 @@ def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
     return mpatches.Circle(
         (x.value, y.value),
         radius=r.value,
-        fill=is_grayed_out or tel_type.startswith("MST"),  # Always fill if grayed out
+        fill=is_grayed_out or tel_type.startswith("MST"),
         alpha=0.5 if is_grayed_out else 1.0,
         color=color,
     )
