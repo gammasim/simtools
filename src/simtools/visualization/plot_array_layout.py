@@ -167,7 +167,7 @@ def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
             ((x - r / 2).value, (y - r / 2).value),
             width=r.value,
             height=r.value,
-            fill=is_grayed_out,  # Fill if grayed out
+            fill=is_grayed_out,
             color=color,
         )
 
