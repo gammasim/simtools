@@ -281,7 +281,7 @@ def test_get_patches_simplest(monkeypatch):
 
     dummy_patches = ["dummy_patch1", "dummy_patch2"]  # Two patches
     dummy_radii = [2, 3] * u.m  # Two radii
-    dummy_highlighted_patches = []  # Empty highlighted patches
+    dummy_highlighted_patches = []
 
     def dummy_create_patches(
         telescopes, scale, show_label, ax, grayed_out_elements=None, highlighted_elements=None
