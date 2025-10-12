@@ -32,7 +32,7 @@ dependencies = [
   "boost-histogram",
   "ctao-dpps-cosmic-ray-spectra",
   "ctapipe",
-  "eventio",
+  "eventio<2",
   "h5py",
   "jsonschema",
   "matplotlib",
