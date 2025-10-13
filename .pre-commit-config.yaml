@@ -30,6 +30,7 @@ repos:
   - id: check-added-large-files
     args: ['--maxkb=500']
   - id: check-json
+  - id: check-toml
   - id: no-commit-to-branch
     args: [--branch=main]
 # https://github.com/HunterMcGushion/docstr_coverage
@@ -77,3 +78,8 @@ repos:
   - id: towncrier-update
     files: $docs/changes/
     args: ['--keep']
+# shellcheck
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.11.0.1
+  hooks:
+  - id: shellcheck
