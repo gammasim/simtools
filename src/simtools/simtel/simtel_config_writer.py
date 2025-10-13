@@ -95,7 +95,7 @@ class SimtelConfigWriter:
             Model parameters
         telescope_name: str
             Name of the telescope (use self._telescope_model_name if None)
-        _telescope_design_model: str
+        telescope_design_model: str
             Telescope design model.
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
