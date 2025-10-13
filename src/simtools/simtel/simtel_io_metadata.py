@@ -105,8 +105,8 @@ def get_sim_telarray_telescope_id(telescope_name, file):
     _, telescope_meta = read_sim_telarray_metadata(file)
     telescope_name_to_sim_telarray_id = {}
     for tel_id in telescope_meta.keys():
-        _optics_name = telescope_meta[tel_id].get("optics_config_name", None)
-        _camera_name = telescope_meta[tel_id].get("camera_config_name", None)
+        _optics_name = telescope_meta[tel_id].get("optics_config_variant", None)
+        _camera_name = telescope_meta[tel_id].get("camera_config_variant", None)
         if _optics_name == _camera_name and _optics_name == telescope_name:
             telescope_name_to_sim_telarray_id[telescope_name] = tel_id
 
@@ -132,7 +132,7 @@ def get_sim_telarray_telescope_id_to_telescope_name_mapping(file):
     for i, (tel_id, meta) in enumerate(telescope_meta.items()):
         try:
             telescope_name = names.validate_array_element_name(
-                meta.get("optics_config_name", f"Unknown-{tel_id}")
+                meta.get("optics_config_variant", f"Unknown-{tel_id}")
             )
         except ValueError:
             telescope_name = _guess_telescope_name_for_legacy_files(i, file)

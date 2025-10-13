@@ -82,7 +82,7 @@ class SimtelConfigWriter:
         self._simtel_path = simtel_path
 
     def write_telescope_config_file(
-        self, config_file_path, parameters, telescope_name=None, _telescope_design_model=None
+        self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
     ):
         """
         Write the sim_telarray config file for a single telescope.
@@ -102,7 +102,7 @@ class SimtelConfigWriter:
 
         simtel_par = self._get_parameters_for_sim_telarray(parameters, config_file_path)
         telescope_name = telescope_name or self._telescope_model_name
-        _telescope_design_model = _telescope_design_model or self._telescope_design_model
+        _telescope_design_model = telescope_design_model or self._telescope_design_model
 
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
@@ -262,11 +262,11 @@ class SimtelConfigWriter:
         if config_type == "telescope":
             meta_parameters.extend(
                 [
-                    f"camera_config_name = {telescope_model_name}",
-                    f"camera_config_variant = {telescope_design_model}",
+                    f"camera_config_name = {telescope_design_model}",
+                    f"camera_config_variant = {telescope_model_name}",
                     f"camera_config_version = {self._model_version}",
-                    f"optics_config_name = {telescope_model_name}",
-                    f"optics_config_variant = {telescope_design_model}",
+                    f"optics_config_name = {telescope_design_model}",
+                    f"optics_config_variant = {telescope_model_name}",
                     f"optics_config_version = {self._model_version}",
                 ]
             )
