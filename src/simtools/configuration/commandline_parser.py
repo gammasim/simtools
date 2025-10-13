@@ -558,6 +558,38 @@ class CommandLineParser(argparse.ArgumentParser):
         return job_group
 
     @staticmethod
+    def scientific_int(value):
+        """
+        Convert string (including scientific notation) to integer.
+
+        Parameters
+        ----------
+        value: str or int or float
+            Value to convert to integer. Can be a regular integer,
+            float, or string in scientific notation (e.g., '1e7').
+
+        Returns
+        -------
+        int
+            Converted integer value
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            If the value cannot be converted to an integer
+        """
+        try:
+            f = float(value)
+            if not f.is_integer():
+                raise ValueError
+            return int(f)
+        except (ValueError, TypeError) as exc:
+            raise argparse.ArgumentTypeError(
+                f"Invalid integer value: '{value}'. "
+                "Expected an integer or scientific notation like '1e7'."
+            ) from exc
+
+    @staticmethod
     def site(value):
         """
         Argument parser type to check that a valid site name is given.
