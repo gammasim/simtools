@@ -333,12 +333,12 @@ def _validate_deprecation_and_version(data, software_name=None, ignore_software_
         if software_name is not None and name.lower() != software_name.lower():
             continue
 
-        version = get_software_version(name)
-        if check_version_constraint(version, constraint):
-            _logger.debug(f"Version {version} of {name} matches constraint {constraint}.")
+        software_version = get_software_version(name)
+        if check_version_constraint(software_version, constraint):
+            _logger.debug(f"Version {software_version} of {name} matches constraint {constraint}.")
             continue
 
-        msg = f"Version {version} of {name} does not match constraint {constraint}."
+        msg = f"Version {software_version} of {name} does not match constraint {constraint}."
         if ignore_software_version:
             _logger.warning(f"{msg}, but version check is ignored.")
         else:
