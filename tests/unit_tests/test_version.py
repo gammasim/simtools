@@ -188,3 +188,25 @@ def test_compare_versions():
     # Test invalid level
     with pytest.raises(ValueError, match=r"Unknown level"):
         version.compare_versions("1.0.0", "1.0.0", level="invalid")
+
+    # CORSIKA style version (3-digit minor version)
+    assert version.compare_versions("7.6900", "7.6400") == 1
+
+    # sim_telarray style version (year, day of year, patch)
+    assert version.compare_versions("2025.246.0", "2024.365.0") == 1
+    assert version.compare_versions("2024.365.1", "2024.365.0") == 1
+    assert version.compare_versions("2024.365.0", "2024.365.1") == -1
+
+    # Invalid version strings
+    with pytest.raises(ValueError, match=r"^Invalid version"):
+        version.compare_versions("1.0.0", "not_a_version")
+    with pytest.raises(ValueError, match=r"^Invalid version"):
+        version.compare_versions("not_a_version", "1.0.0")
+
+
+def test_check_version_constraint():
+    assert version.check_version_constraint("6.0.2", ">=6.0.0")
+    assert version.check_version_constraint("6.0.2", "<=6.0.2")
+    assert version.check_version_constraint("6.0.2", "<6.0.2") is False
+    assert version.check_version_constraint("7.550", ">7.500")
+    assert version.check_version_constraint("2025.100.0", ">=2024.365.0")

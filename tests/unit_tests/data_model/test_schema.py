@@ -300,8 +300,14 @@ def test_get_schema_for_version_warns_on_version_mismatch(caplog):
 
 def test_validate_deprecation_and_version(caplog, monkeypatch):
     """Test _validate_deprecation_and_version function covering all edge cases."""
+
     # Mock simtools version for predictable testing
-    monkeypatch.setattr("simtools.version.__version__", "1.0.0")
+    def mock_get_software_version(software_name):
+        return "1.0.0"
+
+    monkeypatch.setattr(
+        "simtools.data_model.schema.get_software_version", mock_get_software_version
+    )
 
     # Test 1: Non-dict data should return early without errors
     schema._validate_deprecation_and_version("not_a_dict")
@@ -337,9 +343,9 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     # Test 7: Multiple software entries, only simtools matters
     multi_sw_data = {
         "simulation_software": [
-            {"name": "other_software", "version": ">=2.0.0"},
+            {"name": "other_software", "version": ">=0.2.0"},
             {"name": "simtools", "version": ">=0.5.0"},
-            {"name": "another_software", "version": ">=3.0.0"},
+            {"name": "another_software", "version": ">=0.8.0"},
         ]
     }
     schema._validate_deprecation_and_version(multi_sw_data)
@@ -379,7 +385,7 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     schema._validate_deprecation_and_version(custom_sw_data, software_name="custom_tool")
 
     # Test 14: No matching software name should pass
-    no_match_data = {"simulation_software": [{"name": "other_software", "version": ">=2.0.0"}]}
+    no_match_data = {"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}
     schema._validate_deprecation_and_version(no_match_data)
 
     # Test 15: Combined deprecation and version validation

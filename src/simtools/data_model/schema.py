@@ -4,12 +4,9 @@ import logging
 from pathlib import Path
 
 import jsonschema
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version
 from referencing import Registry, Resource
 
 import simtools.utils.general as gen
-from simtools import version
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -17,8 +14,10 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers
+from simtools.dependencies import get_software_version
 from simtools.io import ascii_handler
 from simtools.utils import names
+from simtools.version import check_version_constraint
 
 _logger = logging.getLogger(__name__)
 
@@ -124,7 +123,7 @@ def validate_dict_using_schema(
     if json_schema is None:
         json_schema = load_schema(schema_file, get_schema_version_from_data(data))
 
-    _validate_deprecation_and_version(data, ignore_software_version)
+    _validate_deprecation_and_version(data, ignore_software_version=ignore_software_version)
 
     validator = jsonschema.Draft6Validator(
         schema=json_schema,
@@ -307,9 +306,7 @@ def _add_array_elements(key, schema):
     return schema
 
 
-def _validate_deprecation_and_version(
-    data, software_name="simtools", ignore_software_version=False
-):
+def _validate_deprecation_and_version(data, software_name=None, ignore_software_version=False):
     """
     Check if data contains deprecated parameters or version mismatches.
 
@@ -317,8 +314,8 @@ def _validate_deprecation_and_version(
     ----------
     data: dict
         Data dictionary to check.
-    software_name: str
-        Name of the software to check version against.
+    software_name: str or None
+        Name of the software to check version against. If None, ready complete list
     ignore_software_version: bool
         If True, ignore software version check.
     """
@@ -329,27 +326,20 @@ def _validate_deprecation_and_version(
         note = data.get("deprecation_note", "(no deprecation note provided)")
         _logger.warning(f"Data is deprecated. Note: {note}")
 
-    def check_version(sw):
-        constraint = sw.get("version")
-        if constraint is None:
-            return
-        constraint = constraint.strip()
-        spec = SpecifierSet(constraint, prereleases=True)
-        if Version(version.__version__) in spec:
-            _logger.debug(
-                f"Version {version.__version__} of {software_name} matches constraint {constraint}."
-            )
-        else:
-            msg = (
-                f"Version {version.__version__} of {software_name} "
-                f"does not match constraint {constraint}."
-            )
-            if ignore_software_version:
-                _logger.warning(f"{msg}, but version check is ignored.")
-                return
-            raise ValueError(msg)
-
     for sw in data.get("simulation_software", []):
-        if sw.get("name") == software_name:
-            check_version(sw)
-            break
+        name, constraint = sw.get("name"), sw.get("version")
+        if not name or not constraint:
+            continue
+        if software_name is not None and name.lower() != software_name.lower():
+            continue
+
+        version = get_software_version(name)
+        if check_version_constraint(version, constraint):
+            _logger.debug(f"Version {version} of {name} matches constraint {constraint}.")
+            continue
+
+        msg = f"Version {version} of {name} does not match constraint {constraint}."
+        if ignore_software_version:
+            _logger.warning(f"{msg}, but version check is ignored.")
+        else:
+            raise ValueError(msg)

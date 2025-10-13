@@ -16,8 +16,8 @@ from pathlib import Path
 
 import yaml
 
-from simtools.db.db_handler import DatabaseHandler
 from simtools.io import ascii_handler
+from simtools.version import __version__
 
 _logger = logging.getLogger(__name__)
 
@@ -49,6 +49,30 @@ def get_version_string(db_config=None, run_time=None):
     )
 
 
+def get_software_version(software):
+    """
+    Return the version of the specified software package.
+
+    Parameters
+    ----------
+    software : str
+        Name of the software package.
+
+    Returns
+    -------
+    str
+        Version of the specified software package.
+    """
+    if software.lower() == "simtools":
+        return __version__
+
+    try:
+        version_call = f"get_{software.lower()}_version"
+        return globals()[version_call]()
+    except KeyError as exc:
+        raise ValueError(f"Unknown software: {software}") from exc
+
+
 def get_database_version_or_name(db_config, version=True):
     """
     Get the version or name of the simulation model data base used.
@@ -66,17 +90,16 @@ def get_database_version_or_name(db_config, version=True):
         Version or name of the simulation model data base used.
 
     """
-    if db_config is None:
-        return None
-    db = DatabaseHandler(db_config)
-    return db.mongo_db_config.get(
-        "db_simulation_model_version" if version else "db_simulation_model"
-    )
+    if version:
+        return db_config and db_config.get("db_simulation_model_version")
+    return db_config and db_config.get("db_simulation_model")
 
 
-def get_sim_telarray_version(run_time):
+def get_sim_telarray_version(run_time=None):
     """
     Get the version of the sim_telarray package using 'sim_telarray --version'.
+
+    Version strings for sim_telarray are of the form "2024.271.0" (year.day_of_year.patch).
 
     Parameters
     ----------
@@ -115,6 +138,8 @@ def get_sim_telarray_version(run_time):
 def get_corsika_version(run_time=None):
     """
     Get the version of the CORSIKA package.
+
+    Version strings for CORSIKA are of the form "7.7550" (major.minor with 3-digit minor).
 
     Parameters
     ----------
