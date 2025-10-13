@@ -123,7 +123,7 @@ def validate_dict_using_schema(
     if json_schema is None:
         json_schema = load_schema(schema_file, get_schema_version_from_data(data))
 
-    _validate_deprecation_and_version(data, ignore_software_version=ignore_software_version)
+    validate_deprecation_and_version(data, ignore_software_version=ignore_software_version)
 
     validator = jsonschema.Draft6Validator(
         schema=json_schema,
@@ -306,7 +306,7 @@ def _add_array_elements(key, schema):
     return schema
 
 
-def _validate_deprecation_and_version(data, software_name=None, ignore_software_version=False):
+def validate_deprecation_and_version(data, software_name=None, ignore_software_version=False):
     """
     Check if data contains deprecated parameters or version mismatches.
 
@@ -322,9 +322,11 @@ def _validate_deprecation_and_version(data, software_name=None, ignore_software_
     if not isinstance(data, dict):
         return
 
+    data_name = data.get("name", "<unknown>")
+
     if data.get("deprecated", False):
         note = data.get("deprecation_note", "(no deprecation note provided)")
-        _logger.warning(f"Data is deprecated. Note: {note}")
+        _logger.warning(f"Data for {data_name} is deprecated. Note: {note}")
 
     for sw in data.get("simulation_software", []):
         name, constraint = sw.get("name"), sw.get("version")
@@ -335,10 +337,13 @@ def _validate_deprecation_and_version(data, software_name=None, ignore_software_
 
         software_version = get_software_version(name)
         if check_version_constraint(software_version, constraint):
-            _logger.debug(f"Version {software_version} of {name} matches constraint {constraint}.")
+            _logger.debug(
+                f"{data_name}: version {software_version} of {name} matches "
+                f"constraint {constraint}."
+            )
             continue
 
-        msg = f"Version {software_version} of {name} does not match constraint {constraint}."
+        msg = f"{data_name}: version {software_version} of {name} does not match {constraint}."
         if ignore_software_version:
             _logger.warning(f"{msg}, but version check is ignored.")
         else:
