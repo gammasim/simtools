@@ -24,7 +24,6 @@ def test_scientific_int():
 
     # Test regular integers as floats
     assert parser.CommandLineParser.scientific_int(100.0) == 100
-    assert parser.CommandLineParser.scientific_int(42.9) == 42
 
     # Test scientific notation
     assert parser.CommandLineParser.scientific_int("1e3") == 1000
@@ -38,9 +37,33 @@ def test_scientific_int():
     assert parser.CommandLineParser.scientific_int("-100") == -100
     assert parser.CommandLineParser.scientific_int("-1e3") == -1000
 
-    # Test floats that convert to integers
+    # Test floats that represent integers (should be accepted)
     assert parser.CommandLineParser.scientific_int("123.0") == 123
-    assert parser.CommandLineParser.scientific_int("123.9") == 123
+    assert parser.CommandLineParser.scientific_int("42.0") == 42
+    assert parser.CommandLineParser.scientific_int(100.0) == 100
+    assert parser.CommandLineParser.scientific_int(0.0) == 0
+    assert parser.CommandLineParser.scientific_int("-10.0") == -10
+
+    # Test scientific notation that results in integers
+    assert parser.CommandLineParser.scientific_int("1.5e1") == 15  # 15.0
+    assert parser.CommandLineParser.scientific_int("2.0e3") == 2000  # 2000.0
+
+    # Test non-integer floats that should raise errors
+    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: '1.9'"):
+        parser.CommandLineParser.scientific_int("1.9")
+
+    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: '42.5'"):
+        parser.CommandLineParser.scientific_int("42.5")
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        parser.CommandLineParser.scientific_int(42.9)
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        parser.CommandLineParser.scientific_int(3.14)
+
+    # Test scientific notation that results in non-integers
+    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: '1.23e1'"):
+        parser.CommandLineParser.scientific_int("1.23e1")  # 12.3 is not an integer
 
     # Test error cases
     with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'abc'"):

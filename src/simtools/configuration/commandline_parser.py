@@ -579,11 +579,14 @@ class CommandLineParser(argparse.ArgumentParser):
             If the value cannot be converted to an integer
         """
         try:
-            return int(float(value))
+            f = float(value)
+            if not f.is_integer():
+                raise ValueError
+            return int(f)
         except (ValueError, TypeError) as exc:
             raise argparse.ArgumentTypeError(
                 f"Invalid integer value: '{value}'. "
-                "Expected an integer or scientific notation (e.g., '1e7')."
+                "Expected an integer or scientific notation like '1e7'."
             ) from exc
 
     @staticmethod
