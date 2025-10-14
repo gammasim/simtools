@@ -189,7 +189,7 @@ def test_compare_versions():
     with pytest.raises(ValueError, match=r"Unknown level"):
         version.compare_versions("1.0.0", "1.0.0", level="invalid")
 
-    # CORSIKA style version (3-digit minor version)
+    # CORSIKA style version (4-digit minor version)
     assert version.compare_versions("7.6900", "7.6400") == 1
 
     # sim_telarray style version (year, day of year, patch)
