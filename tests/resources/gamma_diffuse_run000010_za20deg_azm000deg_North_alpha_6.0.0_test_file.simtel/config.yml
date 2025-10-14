@@ -1,0 +1,25 @@
+---
+applications:
+- application: simtools-simulate-prod
+  configuration:
+    simulation_software: corsika_sim_telarray
+    label: test_file
+    model_version: 6.0.0
+    site: North
+    array_layout_name: alpha
+    primary: gamma
+    run_number: 10
+    azimuth_angle: 0
+    zenith_angle: 20
+    nshow: 50
+    view_cone: 0 deg 10 deg
+    energy_range: 30 GeV 10 TeV
+    core_scatter: 20 2000 m
+    data_directory: simtools-data
+    output_path: simtools-output
+    sim_telarray_instrument_seeds: 1745,290
+    corsika_test_seeds: true
+    pack_for_grid_register: simtools-grid-output
+    log_level: DEBUG
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
