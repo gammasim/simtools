@@ -603,6 +603,7 @@ class ModelParameter:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
+                telescope_design_model=self.design_model,
                 model_version=self.model_version,
                 label=self.label,
             )

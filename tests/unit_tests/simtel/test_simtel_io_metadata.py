@@ -49,7 +49,7 @@ def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
         assert key.lower() == key
 
     assert (float)(global_meta["latitude"]) > 0.0
-    assert global_meta["array_config_name"] == "test_layout"
+    assert global_meta["array_config_name"] == "alpha"
 
 
 @mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)
