@@ -139,7 +139,7 @@ def get_corsika_version(run_time=None):
     """
     Get the version of the CORSIKA package.
 
-    Version strings for CORSIKA are of the form "7.7550" (major.minor with 3-digit minor).
+    Version strings for CORSIKA are of the form "7.7550" (major.minor with 4-digit minor).
 
     Parameters
     ----------

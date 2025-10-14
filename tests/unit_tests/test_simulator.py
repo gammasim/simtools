@@ -384,7 +384,7 @@ def test_initialize_array_models_with_single_version(shower_simulator, model_ver
 
 def test_initialize_array_models_with_multiple_versions(shower_simulator):
     # Test with multiple model versions
-    model_versions = ["5.0.0", "6.0.0"]
+    model_versions = ["5.0.0", "6.0.1"]
     shower_simulator.args_dict["model_version"] = model_versions
     array_models = shower_simulator._initialize_array_models()
     assert len(array_models) == 2
@@ -427,7 +427,7 @@ def test_pack_for_register_with_multiple_versions(
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "local-test-shower-array-simulator"
-    model_versions = ["5.0.0", "6.0.0"]
+    model_versions = ["5.0.0", "6.0.1"]
     args_dict["model_version"] = model_versions
     local_shower_array_simulator = Simulator(
         label=args_dict["label"],
