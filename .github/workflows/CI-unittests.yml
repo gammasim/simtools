@@ -115,7 +115,8 @@ jobs:
         run: |
           simtools-db-upload-model-repository \
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
-            --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+            --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
+            --branch main
 
       - name: Unit tests
         shell: bash -l {0}
