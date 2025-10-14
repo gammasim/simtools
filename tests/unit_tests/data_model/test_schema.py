@@ -298,7 +298,7 @@ def test_get_schema_for_version_warns_on_version_mismatch(caplog):
     assert "Schema version 2.0.0 does not match 1.0.0" in caplog.text
 
 
-def testvalidate_deprecation_and_version(caplog, monkeypatch):
+def test_validate_deprecation_and_version(caplog, monkeypatch):
     """Test validate_deprecation_and_version function covering all edge cases."""
 
     # Mock simtools version for predictable testing
