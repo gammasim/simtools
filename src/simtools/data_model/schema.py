@@ -315,7 +315,7 @@ def validate_deprecation_and_version(data, software_name=None, ignore_software_v
     data: dict
         Data dictionary to check.
     software_name: str or None
-        Name of the software to check version against. If None, ready complete list
+        Name of the software to check version against. If None, use complete list
     ignore_software_version: bool
         If True, ignore software version check.
     """
