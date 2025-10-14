@@ -1,0 +1,889 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.derive_corsika_limits &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2753bf86"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/derive_corsika_limits';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.23.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.derive_corsika_limits</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.derive_corsika_limits</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Derive CORSIKA limits from a reduced event data file.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Table</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout.array_layout_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_array_elements_from_db_for_layouts</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventHistograms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_simtel_event_histograms</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="generate_corsika_limits_grid">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.generate_corsika_limits_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_corsika_limits_grid</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate CORSIKA limits.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">    db_config : dict, optional</span>
+<span class="sd">        Database configuration dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">):</span>
+        <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">get_array_elements_from_db_for_layouts</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+            <span class="n">db_config</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])[</span>
+            <span class="s2">&quot;telescope_configs&quot;</span>
+        <span class="p">]</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_ids</span> <span class="ow">in</span> <span class="n">telescope_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Processing file: </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;event_data_file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> with telescope config: </span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">_process_file</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_data_file&quot;</span><span class="p">],</span>
+            <span class="n">array_name</span><span class="p">,</span>
+            <span class="n">telescope_ids</span><span class="p">,</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;plot_histograms&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array_name</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="n">write_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_ids</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">plot_histograms</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute limits for a given event data file and telescope configuration.</span>
+
+<span class="sd">    Compute limits for energy, radial distance, and viewcone.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str</span>
+<span class="sd">        Path to the event data file.</span>
+<span class="sd">    array_name : str</span>
+<span class="sd">        Name of the telescope array configuration.</span>
+<span class="sd">    telescope_ids : list[int]</span>
+<span class="sd">        List of telescope IDs to filter the events.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+<span class="sd">    plot_histograms : bool</span>
+<span class="sd">        Whether to plot histograms.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing the computed limits and metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">histograms</span> <span class="o">=</span> <span class="n">SimtelIOEventHistograms</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="n">telescope_ids</span>
+    <span class="p">)</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+
+    <span class="n">limits</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">:</span> <span class="n">compute_lower_energy_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">),</span>
+        <span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">:</span> <span class="n">compute_upper_radius_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">),</span>
+        <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">:</span> <span class="n">compute_viewcone</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">plot_histograms</span><span class="p">:</span>
+        <span class="n">plot_simtel_event_histograms</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">,</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+            <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span>
+            <span class="n">array_name</span><span class="o">=</span><span class="n">array_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">limits</span>
+
+
+<div class="viewcode-block" id="write_results">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.write_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write the computed limits as astropy table to file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list[dict]</span>
+<span class="sd">        List of computed limits.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">_create_results_table</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">])</span>
+
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
+
+    <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results saved to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_results_table</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert list of simulation results to an astropy Table with metadata.</span>
+
+<span class="sd">    Round values to appropriate precision and add metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list[dict]</span>
+<span class="sd">        Computed limits per file and telescope configuration.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of lost events (added to metadata).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.table.Table</span>
+<span class="sd">        Table with computed limits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;primary_particle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;array_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;telescope_ids&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;zenith&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;azimuth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;nsb_level&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">}</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">_process_result_row</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+
+    <span class="n">table_cols</span> <span class="o">=</span> <span class="n">_create_table_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_cols</span><span class="p">)</span>
+
+    <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Lookup table for CORSIKA limits computed from simulations.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;loss_fraction&quot;</span><span class="p">:</span> <span class="n">loss_fraction</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_result_row</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process a single result row and add values to columns.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_round_value</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2"> to column data&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">):</span>
+            <span class="n">columns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">units</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">unit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">columns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+                <span class="n">units</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_round_value</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Round value based on key type.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">val</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e3</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">val</span> <span class="o">/</span> <span class="mi">25</span><span class="p">)</span> <span class="o">*</span> <span class="mi">25</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">val</span> <span class="o">/</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.25</span>
+    <span class="k">return</span> <span class="n">val</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_table_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create table columns with appropriate data types.&quot;&quot;&quot;</span>
+    <span class="n">table_cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+        <span class="n">col_data</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">col_data</span><span class="p">):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">col_data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">col_data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+        <span class="n">table_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table_cols</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the limits based on the loss fraction.</span>
+
+<span class="sd">    Add or subtract one bin to be on the safe side of the limit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hist : np.ndarray</span>
+<span class="sd">        1D histogram array.</span>
+<span class="sd">    bin_edges : np.ndarray</span>
+<span class="sd">        Array of bin edges.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+<span class="sd">    limit_type : str, optional</span>
+<span class="sd">        Type of limit (&#39;lower&#39; or &#39;upper&#39;). Default is &#39;lower&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Bin edge value corresponding to the threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">loss_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="n">total_events</span>
+    <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span>
+        <span class="n">cum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;lower&quot;</span><span class="p">:</span>
+        <span class="n">cum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;limit_type must be &#39;lower&#39; or &#39;upper&#39;&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compute_lower_energy_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_lower_energy_limit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_lower_energy_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the lower energy limit in TeV based on the event loss fraction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : SimtelIOEventHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Lower energy limit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energy_min</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">energy_min</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;energy_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;energy_min&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Lower energy limit is equal to the minimum energy of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_close</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">warning_text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the value is close to the reference value and log a warning if so.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">):</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">warning_text</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="compute_upper_radius_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_upper_radius_limit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_upper_radius_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the upper radial distance based on the event loss fraction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : SimtelIOEventHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Upper radial distance in m.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">radius_limit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">radius_limit</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;core_scatter_max&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Upper radius limit is equal to the maximum core scatter distance of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_viewcone">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_viewcone">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_viewcone</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the viewcone based on the event loss fraction.</span>
+
+<span class="sd">    The shower IDs of triggered events are used to create a mask for the</span>
+<span class="sd">    azimuth and altitude of the triggered events. A mapping is created</span>
+<span class="sd">    between the triggered events and the simulated events using the shower IDs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : SimtelIOEventHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Viewcone radius in degrees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">viewcone_limit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">viewcone_limit</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;viewcone_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;viewcone_max&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Upper viewcone limit is equal to the maximum viewcone distance of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

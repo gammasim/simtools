@@ -1,0 +1,1263 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>layout.array_layout &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2753bf86"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/layout/array_layout';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.23.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">layout.array_layout</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for layout.array_layout</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Prepare layout for coordinate transformations.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_reader</span><span class="p">,</span> <span class="n">schema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout.geo_coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoCoordinates</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout.telescope_position</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopePosition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
+
+
+<div class="viewcode-block" id="InvalidTelescopeListFileError">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.InvalidTelescopeListFileError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidTelescopeListFileError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid telescope list file.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="InvalidCoordinateDataTypeError">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.InvalidCoordinateDataTypeError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidCoordinateDataTypeError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for low-precision coordinate data type.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ArrayLayout">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ArrayLayout</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manage telescope positions at the array layout level.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mongo_db_config: dict</span>
+<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    site: str</span>
+<span class="sd">        Site name or location (e.g., North/South or LaPalma/Paranal)</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Version of the model (e.g., 6.0.0).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Name of the layout.</span>
+<span class="sd">    telescope_list_file: str or Path</span>
+<span class="sd">        Path to the telescope list file.</span>
+<span class="sd">    telescope_list_metadata_file: str or Path</span>
+<span class="sd">        Path to telescope list metadata (if not part of telescope_list_file)</span>
+<span class="sd">    validate: bool</span>
+<span class="sd">        Validate input file list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mongo_db_config</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_list_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize ArrayLayout.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">model_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span> <span class="o">=</span> <span class="n">GeoCoordinates</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_array_layout</span><span class="p">(</span>
+            <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">,</span>
+            <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="n">telescope_list_metadata_file</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return number of telescopes in the layout.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return telescope at list position i.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_site_parameters_from_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize site parameters required for transformations using the database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initialize parameters from DB&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No database configuration provided&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_corsika_site_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_reference_point</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference point: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_coordinate_systems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize array center and coordinate systems.</span>
+
+<span class="sd">        By definition, the array center is at (0,0) in</span>
+<span class="sd">        the ground coordinate system.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            invalid array center definition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span> <span class="o">=</span> <span class="n">TelescopePosition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;array_center&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_array_center_utm</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_altitude&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_name&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">_name</span> <span class="k">if</span> <span class="n">_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initialized array center at UTM </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
+            <span class="n">crs_local</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">),</span>
+            <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">(),</span>
+            <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epsg_code&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_array_center_utm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set array center coordinates in UTM system.</span>
+
+<span class="sd">        Convert array center position to WGS84 system</span>
+<span class="sd">        (as latitudes are required for the definition</span>
+<span class="sd">        for the definition of the ground coordinate system)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span>
+            <span class="s2">&quot;utm&quot;</span><span class="p">,</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_easting&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)),</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_northing&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
+            <span class="n">crs_local</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">(),</span>
+            <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epsg_code&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_altitude_from_corsika_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_axis_height</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate altitude.</span>
+
+<span class="sd">        The value is calculated from CORSIKA z-coordinate (if pos_z is given) or CORSIKA</span>
+<span class="sd">        z-coordinate from altitude (if altitude is given).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos_z: astropy.Quantity</span>
+<span class="sd">            CORSIKA z-coordinate of telescope in equivalent units of meter.</span>
+<span class="sd">        altitude: astropy.Quantity</span>
+<span class="sd">            Telescope altitude in equivalent units of meter.</span>
+<span class="sd">        tel_axis_height: astropy.Quantity</span>
+<span class="sd">            Telescope axis height in equivalent units of meter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.Quantity</span>
+<span class="sd">            Altitude or CORSIKA z-coordinate (np.nan in case of ill-defined value).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;pos_z: </span><span class="si">{</span><span class="n">pos_z</span><span class="si">}</span><span class="s2">, altitude: </span><span class="si">{</span><span class="n">altitude</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;axis_height: </span><span class="si">{</span><span class="n">telescope_axis_height</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;obs_level: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pos_z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">altitude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TelescopePosition</span><span class="o">.</span><span class="n">convert_telescope_altitude_from_corsika_system</span><span class="p">(</span>
+                <span class="n">pos_z</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span><span class="p">,</span>
+                <span class="n">telescope_axis_height</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">altitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pos_z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TelescopePosition</span><span class="o">.</span><span class="n">convert_telescope_altitude_to_corsika_system</span><span class="p">(</span>
+                <span class="n">altitude</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span><span class="p">,</span>
+                <span class="n">telescope_axis_height</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_telescope_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read and set telescope names.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        row: astropy table row</span>
+<span class="sd">            table row.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tel: TelescopePosition</span>
+<span class="sd">            Instance of TelescopePosition.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidTelescopeListFileError</span>
+<span class="sd">            in case neither telescope name or asset_code / sequence number are given.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tel</span> <span class="o">=</span> <span class="n">TelescopePosition</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;asset_code&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="c1"># asset code is not a valid telescope name; possibly a calibration device</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="o">=</span> <span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tel</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tel</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;asset_code&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;sequence_number&quot;</span><span class="p">]</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;asset_code&quot;</span><span class="p">]</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">sequence_number</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;sequence_number&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">geo_code</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;geo_code&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">tel</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Missing required row with telescope_name or asset_code/sequence_number&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidTelescopeListFileError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tel</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_set_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Try and set coordinates for all coordinate systems.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        row: dict</span>
+<span class="sd">            A row of the astropy.table.Table with array element coordinates.</span>
+<span class="sd">        tel: TelescopePosition</span>
+<span class="sd">            Instance of TelescopePosition.</span>
+<span class="sd">        table: astropy.table.Table or astropy.table.QTable</span>
+<span class="sd">            data table with array element coordinates.</span>
+<span class="sd">        crs_name: str</span>
+<span class="sd">            Name of coordinate system.</span>
+<span class="sd">        key1: str</span>
+<span class="sd">            Name of x-coordinate.</span>
+<span class="sd">        key2: str</span>
+<span class="sd">            Name of y-coordinate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span>
+                <span class="n">crs_name</span><span class="p">,</span>
+                <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_as_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">key1</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">key1</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
+                <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_as_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">key2</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">key2</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_set_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Try and set altitude.</span>
+
+<span class="sd">        It sets the altitude of the TelescopePosition instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        row: dict</span>
+<span class="sd">            A row of the astropy.table.Table with array element coordinates.</span>
+<span class="sd">        tel: TelescopePosition</span>
+<span class="sd">            Instance of TelescopePosition.</span>
+<span class="sd">        table: astropy.table.Table or astropy.table.QTable</span>
+<span class="sd">            data table with array element coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_altitude_from_corsika_z</span><span class="p">(</span>
+                    <span class="n">pos_z</span><span class="o">=</span><span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_as_quantity</span><span class="p">(</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span>
+                    <span class="p">),</span>
+                    <span class="n">telescope_axis_height</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">get_axis_height</span><span class="p">(),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span>
+                <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_as_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_array_layout</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">telescope_list_file</span><span class="p">,</span> <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the Layout array including site and telescope parameters.</span>
+
+<span class="sd">        Read array list if telescope_list_file is given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_list_file: str or Path</span>
+<span class="sd">            Path to the telescope list file.</span>
+<span class="sd">        telescope_list_metadata_file: str or Path</span>
+<span class="sd">            Path to the telescope list metadata file.</span>
+<span class="sd">        validate: bool</span>
+<span class="sd">            Validate telescope list file against schema.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.table.QTable</span>
+<span class="sd">            Table with the telescope layout information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing array (site and telescope parameters)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_site_parameters_from_db</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_coordinate_systems</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">telescope_list_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading telescope list from </span><span class="si">{</span><span class="n">telescope_list_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">telescope_list_file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_table_from_json_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">data_reader</span><span class="o">.</span><span class="n">read_table_from_file</span><span class="p">(</span>
+                <span class="n">file_name</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">,</span>
+                <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
+                <span class="n">metadata_file</span><span class="o">=</span><span class="n">telescope_list_metadata_file</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
+            <span class="n">tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_telescope_names</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="n">tel</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_try_set_coordinate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="s2">&quot;position_x&quot;</span><span class="p">,</span> <span class="s2">&quot;position_y&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_try_set_coordinate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="s2">&quot;utm&quot;</span><span class="p">,</span> <span class="s2">&quot;utm_east&quot;</span><span class="p">,</span> <span class="s2">&quot;utm_north&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_try_set_coordinate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="s2">&quot;mercator&quot;</span><span class="p">,</span> <span class="s2">&quot;latitude&quot;</span><span class="p">,</span> <span class="s2">&quot;longitude&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_try_set_altitude</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">table</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_table_from_json_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read a telescope position from a json file and return as astropy table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_name: str or Path</span>
+<span class="sd">            Path to the json file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.table.QTable</span>
+<span class="sd">            Table with the telescope layout information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="n">position</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">()</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="s2">&quot;utm&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]:</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;utm_east&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;utm_north&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">table</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_telescope_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get telescope model from the database.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Name of the telescope.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TelescopeModel</span>
+<span class="sd">            Telescope model instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TelescopeModel</span><span class="p">(</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">telescope_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set auxiliary CORSIKA parameters for a telescope.</span>
+
+<span class="sd">        Uses as default the design model if telescope is not found in the database.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope: TelescopePosition</span>
+<span class="sd">            Instance of TelescopePosition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">telescope_name</span> <span class="k">if</span> <span class="n">telescope_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">telescope</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Reading auxiliary telescope parameters for </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (model version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tel_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_model</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># telescope not found in the database revert to design model</span>
+                <span class="n">tel_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_model</span><span class="p">(</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">array_element_design_types</span><span class="p">(</span>
+                        <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
+                    <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">):</span>
+                <span class="n">telescope</span><span class="o">.</span><span class="n">set_auxiliary_parameter</span><span class="p">(</span>
+                    <span class="n">para</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="n">para</span><span class="p">)</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="ArrayLayout.add_telescope">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.add_telescope">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_telescope</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tel_corsika_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">design_model</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an individual telescope to the telescope list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Name of the telescope starting with L, M or S (e.g. LST-01, MST-06 ...)</span>
+<span class="sd">        crs_name: str</span>
+<span class="sd">            Name of coordinate system</span>
+<span class="sd">        xx: astropy.units.quantity.Quantity</span>
+<span class="sd">            x-coordinate for the given coordinate system</span>
+<span class="sd">        yy: astropy.units.quantity.Quantity</span>
+<span class="sd">            y-coordinate for the given coordinate system</span>
+<span class="sd">        altitude: astropy.units.quantity.Quantity</span>
+<span class="sd">            Altitude coordinate in equivalent units of u.m.</span>
+<span class="sd">        tel_corsika_z: astropy.units.quantity.Quantity</span>
+<span class="sd">            CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\</span>
+<span class="sd">            center).</span>
+<span class="sd">        design_model: str</span>
+<span class="sd">            Name of the design model (optional).</span>
+<span class="sd">            If none, telescope type + &quot;-design&quot; is used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tel</span> <span class="o">=</span> <span class="n">TelescopePosition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="n">design_model</span><span class="p">)</span>
+        <span class="n">tel</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span><span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">altitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span><span class="n">altitude</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">tel_corsika_z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_altitude_from_corsika_z</span><span class="p">(</span>
+                    <span class="n">pos_z</span><span class="o">=</span><span class="n">tel_corsika_z</span><span class="p">,</span> <span class="n">telescope_axis_height</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">get_axis_height</span><span class="p">()</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_export_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        File metadata for export of array element list to file.</span>
+
+<span class="sd">        Included array center definition, CORSIKA telescope parameters, and EPSG code.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Metadata header for array element list export.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">_meta</span><span class="p">[</span><span class="s2">&quot;center_easting&quot;</span><span class="p">],</span>
+                <span class="n">_meta</span><span class="p">[</span><span class="s2">&quot;center_northing&quot;</span><span class="p">],</span>
+                <span class="n">_meta</span><span class="p">[</span><span class="s2">&quot;center_altitude&quot;</span><span class="p">],</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="s2">&quot;utm&quot;</span><span class="p">)</span>
+        <span class="n">_meta</span><span class="p">[</span><span class="s2">&quot;epsg_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epsg_code&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_meta</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">return</span> <span class="n">_meta</span>
+
+<div class="viewcode-block" id="ArrayLayout.export_telescope_list_table">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.export_telescope_list_table">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_telescope_list_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export array elements positions to astropy table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        crs_name: str</span>
+<span class="sd">            Name of coordinate system to be used for export.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.table.QTable</span>
+<span class="sd">            Astropy table with the telescope layout information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_export_metadata</span><span class="p">())</span>
+
+        <span class="n">tel_names</span><span class="p">,</span> <span class="n">asset_code</span><span class="p">,</span> <span class="n">sequence_number</span><span class="p">,</span> <span class="n">geo_code</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span><span class="p">,</span> <span class="n">pos_t</span><span class="p">,</span> <span class="n">tel_r</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">:</span>
+            <span class="n">tel_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">asset_code</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span><span class="p">)</span>
+            <span class="n">sequence_number</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">sequence_number</span><span class="p">)</span>
+            <span class="n">geo_code</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">geo_code</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">tel</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">crs_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;ground&quot;</span><span class="p">:</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_altitude_from_corsika_z</span><span class="p">(</span>
+                    <span class="n">altitude</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">telescope_axis_height</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">get_axis_height</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">pos_t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">get_axis_height</span><span class="p">())</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">tel_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">get_sphere_radius</span><span class="p">())</span>
+
+        <span class="c1"># prefer asset_code / sequence_number of telescope_name</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">asset_code</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sequence_number</span><span class="p">):</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;asset_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">asset_code</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;sequence_number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sequence_number</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_names</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">geo_code</span><span class="p">):</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;geo_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">geo_code</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_name_x</span><span class="p">,</span> <span class="n">_name_y</span><span class="p">,</span> <span class="n">_name_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span>
+                <span class="n">crs_name</span><span class="o">=</span><span class="n">crs_name</span><span class="p">,</span> <span class="n">coordinate_field</span><span class="o">=</span><span class="s2">&quot;name&quot;</span>
+            <span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="n">_name_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_x</span>
+            <span class="n">table</span><span class="p">[</span><span class="n">_name_y</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_y</span>
+            <span class="n">table</span><span class="p">[</span><span class="n">_name_z</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_z</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_t</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_t</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tel_r</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;sphere_radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_r</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="s2">&quot;telescope_name&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;asset_code&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="s2">&quot;asset_code&quot;</span><span class="p">,</span> <span class="s2">&quot;sequence_number&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">table</span></div>
+
+
+<div class="viewcode-block" id="ArrayLayout.export_one_telescope_as_json">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.export_one_telescope_as_json">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_one_telescope_as_json</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">crs_name</span><span class="p">,</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">schema_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list containing a single telescope in simtools-DB-style json.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        crs_name: str</span>
+<span class="sd">            Name of coordinate system to be used for export.</span>
+<span class="sd">        schema_version: str</span>
+<span class="sd">            Version of the schema.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary with array element information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_telescope_list_table</span><span class="p">(</span><span class="n">crs_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only one telescope can be exported to json&quot;</span><span class="p">)</span>
+        <span class="n">parameter_name</span> <span class="o">=</span> <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;ground&quot;</span><span class="p">:</span>
+            <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;array_element_position_ground&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;utm&quot;</span><span class="p">:</span>
+            <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;array_element_position_utm&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;utm_east&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;utm_north&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;mercator&quot;</span><span class="p">:</span>
+            <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;array_element_position_mercator&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;latitude&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;longitude&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;schema_version&quot;</span><span class="p">:</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_model_parameter_schema_version</span><span class="p">(</span><span class="n">schema_version</span><span class="p">),</span>
+            <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">parameter_name</span><span class="p">,</span>
+            <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="s2">&quot;parameter_version&quot;</span><span class="p">:</span> <span class="n">parameter_version</span><span class="p">,</span>
+            <span class="s2">&quot;unique_id&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;meta_parameter&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;model_parameter_schema_version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="ArrayLayout.get_number_of_telescopes">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.get_number_of_telescopes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_number_of_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of telescopes in the list.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of telescopes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArrayLayout.print_telescope_list">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.print_telescope_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_telescope_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print list of telescopes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        crs_name: str</span>
+<span class="sd">            Name of coordinate system to be used for export.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">print_compact_format</span><span class="p">(</span>
+                <span class="n">crs_name</span><span class="o">=</span><span class="n">crs_name</span><span class="p">,</span>
+                <span class="n">print_header</span><span class="o">=</span><span class="p">(</span><span class="n">tel</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="n">corsika_observation_level</span><span class="o">=</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span> <span class="k">if</span> <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;ground&quot;</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArrayLayout.convert_coordinates">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.convert_coordinates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform all the possible conversions the coordinates of the tel positions.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting telescope coordinates&quot;</span><span class="p">)</span>
+
+        <span class="n">crs_wgs84</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">()</span>
+        <span class="n">crs_local</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">)</span>
+        <span class="n">crs_utm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epsg_code&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">:</span>
+            <span class="n">tel</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
+                <span class="n">crs_local</span><span class="o">=</span><span class="n">crs_local</span><span class="p">,</span>
+                <span class="n">crs_wgs84</span><span class="o">=</span><span class="n">crs_wgs84</span><span class="p">,</span>
+                <span class="n">crs_utm</span><span class="o">=</span><span class="n">crs_utm</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArrayLayout.select_assets">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.select_assets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Select a subsets of telescopes / assets from the layout.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        asset_list: list</span>
+<span class="sd">            List of assets to be selected (telescope names or types)</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the asset list is empty.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_n_telescopes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">asset_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">_telescope_list_from_name</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">tel</span> <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span> <span class="k">if</span> <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="ow">in</span> <span class="n">asset_list</span>
+                <span class="p">]</span>
+                <span class="n">_telescope_list_from_type</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">tel</span>
+                    <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span>
+                    <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span><span class="p">)</span> <span class="ow">in</span> <span class="n">asset_list</span>
+                <span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                    <span class="nb">set</span><span class="p">(</span><span class="n">_telescope_list_from_name</span> <span class="o">+</span> <span class="n">_telescope_list_from_type</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Selected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> telescopes (from originally </span><span class="si">{</span><span class="n">_n_telescopes</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No asset list provided, keeping all telescopes&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

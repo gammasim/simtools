@@ -1,0 +1,1390 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>configuration.commandline_parser &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2753bf86"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/configuration/commandline_parser';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.23.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">configuration.commandline_parser</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for configuration.commandline_parser</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Command line parser for applications.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+
+
+<div class="viewcode-block" id="CommandLineParser">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CommandLineParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Command line parser for applications.</span>
+
+<span class="sd">    Wrapper around standard python argparse.ArgumentParser.</span>
+
+<span class="sd">    Command line arguments should be given in snake_case, e.g. &#39;input_meta&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    argparse.ArgumentParser class</span>
+<span class="sd">        Object for parsing command line strings into Python objects. For a list of keywords, please\</span>
+<span class="sd">        refer to argparse.ArgumentParser documentation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_default_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_default_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_default_arguments</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">simulation_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simulation_configuration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize default arguments used by all applications (e.g., log level or test flag).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        paths: bool</span>
+<span class="sd">            Add path configuration to list of args.</span>
+<span class="sd">        output: bool</span>
+<span class="sd">            Add output file configuration to list of args.</span>
+<span class="sd">        simulation_model: list</span>
+<span class="sd">            List of simulation model configuration parameters to add to list of args</span>
+<span class="sd">            (use: &#39;model_version&#39;, &#39;telescope&#39;, &#39;site&#39;)</span>
+<span class="sd">        simulation_configuration: dict</span>
+<span class="sd">            Dict of simulation software configuration parameters to add to list of args.</span>
+<span class="sd">        db_config: bool</span>
+<span class="sd">            Add database configuration parameters to list of args.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_simulation_model_arguments</span><span class="p">(</span><span class="n">simulation_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_simulation_configuration_arguments</span><span class="p">(</span><span class="n">simulation_configuration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">db_config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialize_db_config_arguments</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialize_path_arguments</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">output</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialize_output_arguments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_config_files</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_application_execution_arguments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_user_arguments</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_config_files">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_config_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize configuration files.&quot;&quot;&quot;</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;configuration&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;simtools configuration file&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--env_file&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file with environment variables&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;.env&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_path_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_path_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_path_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize paths.&quot;&quot;&quot;</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;paths&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--data_path&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;path pointing towards data directory&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;./data/&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--output_path&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;path pointing towards output directory&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;./simtools-output/&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--model_path&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;path pointing towards simulation model file directory&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--simtel_path&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;path pointing to sim_telarray installation&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_output_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_output_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_output_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize application output files(s).&quot;&quot;&quot;</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--output_file&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;output data file&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--output_file_format&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file format of output data&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;ecsv&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--skip_output_validation&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;skip output data validation against schema&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_application_execution_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_application_execution_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize application execution arguments.&quot;&quot;&quot;</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;execution&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--test&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;test option for faster execution during development&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--label&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;job label&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--log_level&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;info&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;log level to print&quot;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--version&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;%(prog)s </span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_user_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_user_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_user_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize user arguments.&quot;&quot;&quot;</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--user_name&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;user name&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--user_organization&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;user organization&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--user_email&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;user email&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--user_orcid&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;user ORCID&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_db_config_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DB configuration parameters.&quot;&quot;&quot;</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;database configuration&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database user&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_pw&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database password&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_port&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database port&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--db_server&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database server address&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--db_api_authentication_database&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database  with user info (optional)&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--db_simulation_model&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;name of simulation model database&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--db_simulation_model_version&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;version of simulation model database&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_simulation_model_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_simulation_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize default arguments for simulation model definition.</span>
+
+<span class="sd">        Note that the model version is always required.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_options: list</span>
+<span class="sd">            Options to be set: &quot;telescope&quot;, &quot;site&quot;, &quot;layout&quot;, &quot;layout_file&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">model_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation model&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;model_version&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--model_version&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;production model version&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;parameter_version&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--parameter_version&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;model parameter version&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">option</span> <span class="ow">in</span> <span class="n">model_options</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;layout_file&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_option_site</span><span class="p">(</span><span class="n">_job_group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;telescope&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--telescope&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;telescope model name (e.g., LSTN-01, SSTS-design, ...)&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--telescope_model_file&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;Path to a YAML file containing modifications to the telescope model. &quot;</span>
+                    <span class="s2">&quot;This feature is intended for developers and lacks validation.&quot;</span>
+                <span class="p">),</span>
+                <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+                <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;layout&quot;</span> <span class="ow">in</span> <span class="n">model_options</span> <span class="ow">or</span> <span class="s2">&quot;layout_file&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_option_layout</span><span class="p">(</span>
+                <span class="n">job_group</span><span class="o">=</span><span class="n">_job_group</span><span class="p">,</span>
+                <span class="n">model_options</span><span class="o">=</span><span class="n">model_options</span><span class="p">,</span>
+                <span class="c1"># layout info is always required for layout related tasks with the exception</span>
+                <span class="c1"># of listing the available layouts in the DB</span>
+                <span class="n">required</span><span class="o">=</span><span class="s2">&quot;--list_available_layouts&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_option_string_actions</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_simulation_configuration_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_simulation_configuration_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_simulation_configuration_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_configuration</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize default arguments for simulation configuration and simulation software.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation_configuration: dict</span>
+<span class="sd">            Dict of simulation software configuration parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">simulation_configuration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s2">&quot;software&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_software</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;corsika_configuration&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">(</span>
+                <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;simulation configuration&quot;</span><span class="p">,</span>
+                <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;corsika_configuration&quot;</span><span class="p">],</span>
+                <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_corsika_configuration</span><span class="p">(),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">(</span>
+                <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;shower parameters&quot;</span><span class="p">,</span>
+                <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;corsika_configuration&quot;</span><span class="p">],</span>
+                <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_shower_configuration</span><span class="p">(),</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray_configuration&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">(</span>
+                <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray configuration&quot;</span><span class="p">,</span>
+                <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;sim_telarray_configuration&quot;</span><span class="p">],</span>
+                <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_sim_telarray_configuration</span><span class="p">(),</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize simulation software arguments.&quot;&quot;&quot;</span>
+        <span class="n">_software_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation software&quot;</span><span class="p">)</span>
+        <span class="n">_software_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--simulation_software&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Simulation software steps.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">],</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dictionary_with_corsika_configuration</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with CORSIKA configuration parameters.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>  <span class="c1"># pylint: disable=C0415</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Primary particle to simulate. &quot;</span>
+                    <span class="s2">&quot;(choices for common names: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PrimaryParticle</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">; &quot;</span>
+                    <span class="s2">&quot;use &#39;--primary_ID_type&#39; to use other particle ID types).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;primary_id_type&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Primary particle ID type&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;common_name&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Telescope pointing direction in azimuth. &quot;</span>
+                    <span class="s2">&quot;It can be in degrees between 0 and 360 or one of north, south, east or west. &quot;</span>
+                    <span class="s2">&quot;North is 0 degrees and the azimuth grows clockwise (East is 90 degrees).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Zenith angle in degrees (between 0 and 180).&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;nshow&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of showers per run to simulate.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;run_number_offset&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;An offset for the run number to be simulated.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;run_number&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Run number to be simulated.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;number_of_runs&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of runs to be simulated.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;event_number_first_shower&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Event number of first shower&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;correct_for_b_field_alignment&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Correct for B-field alignment&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dictionary_with_shower_configuration</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with shower configuration parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;eslope&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Slope of the energy spectrum.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;energy_range&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Energy range of the primary particle (min/max value, e&#39;g&#39;, &#39;10 GeV 5 TeV&#39;).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;3 GeV 330 TeV&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;view_cone&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;View cone radius for primary arrival directions &quot;</span>
+                    <span class="s2">&quot;(min/max value, e.g. &#39;0 deg 10 deg&#39;).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;0 deg 0 deg&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_scatter&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Scatter radius for shower cores (number of use; scatter radius).&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;10 1400 m&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dictionary_with_sim_telarray_configuration</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with sim_telarray configuration parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;sim_telarray_instrument_seeds&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Random seed used for sim_telarray instrument setup. &quot;</span>
+                    <span class="s2">&quot;If &#39;--sim_telarray_random_instrument_instances&#39; is not set: &quot;</span>
+                    <span class="s2">&quot;use as sim_telarray seed (&#39;random_seed&#39; parameter). Otherwise: &quot;</span>
+                    <span class="s2">&quot;use as base seed to generate the random instrument instance seeds.&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sim_telarray_random_instrument_instances&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of random instrument instances initialized in sim_telarray.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_configuration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">group_name</span><span class="p">,</span> <span class="n">selected_parameters</span><span class="p">,</span> <span class="n">available_parameters</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize simulation configuration arguments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group_name : str</span>
+<span class="sd">            Name of the group of arguments.</span>
+<span class="sd">        selected_parameters : list</span>
+<span class="sd">            List of selected parameters to be added to the group.</span>
+<span class="sd">        available_parameters : dict</span>
+<span class="sd">            Dictionary with available parameters and their configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">configuration_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">selected_parameters</span><span class="p">:</span>
+            <span class="n">selected_parameters</span> <span class="o">=</span> <span class="n">available_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">selected_parameters</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">available_parameters</span><span class="p">[</span><span class="n">param</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_model_option_layout</span><span class="p">(</span><span class="n">job_group</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add layout option to the job group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job_group: argparse.ArgumentParser</span>
+<span class="sd">            Job group</span>
+<span class="sd">        model_options: list</span>
+<span class="sd">            List of model options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        argparse.ArgumentParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_layout_group</span> <span class="o">=</span> <span class="n">job_group</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="n">required</span><span class="p">)</span>
+        <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--array_layout_name&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;array layout name(s) (e.g., alpha, subsystem_msts)&quot;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--array_element_list&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;list of array elements (e.g., LSTN-01, LSTN-02, MSTN).&quot;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;layout_file&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--array_layout_file&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file(s) with the list of array elements (astropy table format).&quot;</span><span class="p">,</span>
+                <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;layout_parameter_file&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--array_layout_parameter_file&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Array layout model parameter file (typically in JSON format).&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;plot_all_layouts&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--plot_all_layouts&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;plot all available layouts&quot;</span><span class="p">,</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">job_group</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_model_option_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_group</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add site option to the job group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job_group: argparse.ArgumentParser</span>
+<span class="sd">            Job group</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        argparse.ArgumentParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--site&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;site (e.g., North, South)&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">job_group</span>
+
+<div class="viewcode-block" id="CommandLineParser.scientific_int">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.scientific_int">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scientific_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert string (including scientific notation) to integer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: str or int or float</span>
+<span class="sd">            Value to convert to integer. Can be a regular integer,</span>
+<span class="sd">            float, or string in scientific notation (e.g., &#39;1e7&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Converted integer value</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        argparse.ArgumentTypeError</span>
+<span class="sd">            If the value cannot be converted to an integer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid integer value: &#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="s2">&quot;Expected an integer or scientific notation like &#39;1e7&#39;.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.site">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.site">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">site</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Argument parser type to check that a valid site name is given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: str</span>
+<span class="sd">            site name</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Validated site name</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        argparse.ArgumentTypeError</span>
+<span class="sd">            for invalid sites</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.telescope">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.telescope">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">telescope</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Argument parser type to check that a valid telescope name is given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: str</span>
+<span class="sd">            telescope name</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Validated telescope name</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        argparse.ArgumentTypeError</span>
+<span class="sd">            for invalid telescope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.efficiency_interval">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">efficiency_interval</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Argument parser type to check that value is an efficiency in the interval [0,1].</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: float</span>
+<span class="sd">            value provided through the command line</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Validated efficiency interval</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        argparse.ArgumentTypeError</span>
+<span class="sd">            When value is outside of the interval [0,1]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fvalue</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fvalue</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">fvalue</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> outside of allowed [0,1] interval&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fvalue</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.zenith_angle">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.zenith_angle">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">zenith_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Argument parser type to check that the zenith angle provided is in the interval [0, 180].</span>
+
+<span class="sd">        We allow here zenith angles larger than 90 degrees in the improbable case</span>
+<span class="sd">        such simulations are requested. It is not guaranteed that the actual simulation software</span>
+<span class="sd">        supports such angles!.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle: float, str, astropy.Quantity</span>
+<span class="sd">            zenith angle to verify</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Astropy.Quantity</span>
+<span class="sd">            Validated zenith angle in degrees</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        argparse.ArgumentTypeError</span>
+<span class="sd">            When angle is outside of the interval [0, 180]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fangle</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">fangle</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;The zenith angle provided is not a valid numerical or astropy.Quantity value.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+        <span class="k">if</span> <span class="n">fangle</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span> <span class="ow">or</span> <span class="n">fangle</span> <span class="o">&gt;</span> <span class="mf">180.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The provided zenith angle, </span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="s2">&quot;is outside of the allowed [0, 180] interval&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fangle</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.azimuth_angle">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.azimuth_angle">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">azimuth_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].</span>
+
+<span class="sd">        Other allowed options are north, south, east or west which will be translated to an angle</span>
+<span class="sd">        where north corresponds to zero.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle: float or str</span>
+<span class="sd">            azimuth angle to verify or convert</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Astropy.Quantity</span>
+<span class="sd">            Validated/Converted azimuth angle in degrees</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        argparse.ArgumentTypeError</span>
+<span class="sd">            When angle is outside of the interval [0, 360] or not in (north, south, east, west)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fangle</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fangle</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">fangle</span> <span class="o">&gt;</span> <span class="mf">360.0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The provided azimuth angle, </span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="s2">&quot;is outside of the allowed [0, 360] interval&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">fangle</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;The azimuth angle provided is not a valid numeric value. &quot;</span>
+                <span class="s2">&quot;Will check if it is an astropy.Quantity instead&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;The azimuth angle provided is not a valid numerical or string value.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;The azimuth angle provided is not a valid astropy.Quantity. &quot;</span>
+                <span class="s2">&quot;Will check if it is (north, south, east, west) instead&quot;</span>
+            <span class="p">)</span>
+        <span class="n">azimuth_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">in</span> <span class="n">azimuth_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">azimuth_map</span><span class="p">[</span><span class="n">azimuth_angle</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+            <span class="s2">&quot;The azimuth angle given as string can only be one of &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">. Otherwise use numerical values.&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.parse_quantity_pair">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.parse_quantity_pair">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_quantity_pair</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a string representing a pair of astropy quantities.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            A tuple of two astropy.units.Quantity objects.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the string cannot be parsed into exactly two quantities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(?&gt;[\d\.eE+-]+)\s*(?&gt;[A-Za-z]+)&quot;</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input string does not contain exactly two quantities.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not parse quantities: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.parse_integer_and_quantity">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.parse_integer_and_quantity">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_integer_and_quantity</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a string representing an integer and a quantity with units.</span>
+
+<span class="sd">        This is e.g., used for the &#39;core_scatter&#39; argument.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_string: str</span>
+<span class="sd">            The input string (e.g., &quot;5 1500 m&quot;) or</span>
+<span class="sd">            a tuple converted to string (e.g., &quot;(5, &lt;Quantity 1500 m&gt;)&quot;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple: A tuple containing an integer and an astropy.units.Quantity object.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError: If the input string does not match the required format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># tuple converted to string: &quot;(5, &lt;Quantity 1500 m&gt;)&quot;</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">char</span> <span class="ow">in</span> <span class="n">input_string</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">]):</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\((\d+), &lt;Quantity ([\d.]+) (.+)&gt;\)&quot;</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">input_string</span><span class="p">)</span>
+        <span class="c1"># string with integer and quantity: &quot;5 1500 m&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)&quot;</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">input_string</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input string does not contain an integer and a astropy quantity.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
