@@ -26,8 +26,8 @@ The following example applies a patch update with changes defined in a YAML file
 .. code-block:: console
 
     simtools-maintain-simulation-model-add-new-production \\
-        --simulation_models_path ../simulation-models-dev/simulation-models/ \\
-        --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml
+        --model_path ../simulation-models-dev/simulation-models/ \\
+        --model_version 6.0.2
 
 """
 
@@ -44,20 +44,7 @@ def _parse():
         label=get_application_label(__file__),
         description="Generate a new simulation model production",
     )
-    config.parser.add_argument(
-        "--simulation_models_path",
-        type=str,
-        required=True,
-        help="Path to the simulation models repository.",
-    )
-    config.parser.add_argument(
-        "--modifications",
-        type=str,
-        required=True,
-        help="File containing the list of changes to apply.",
-    )
-
-    return config.initialize(db_config=False, output=False)
+    return config.initialize(db_config=False, output=False, simulation_model=["model_version"])
 
 
 def main():
@@ -65,8 +52,8 @@ def main():
     app_context = startup_application(_parse)
 
     model_repository.generate_new_production(
-        modifications=app_context.args["modifications"],
-        simulation_models_path=Path(app_context.args["simulation_models_path"]),
+        model_version=app_context.args["model_version"],
+        simulation_models_path=Path(app_context.args["model_path"]),
     )
 
 

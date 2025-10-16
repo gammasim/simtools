@@ -18,6 +18,44 @@ from simtools.utils import names
 _logger = logging.getLogger(__name__)
 
 
+def get_production_directory(simulation_models_path, model_version=None):
+    """
+    Get the production directory for a specific model version.
+
+    Parameters
+    ----------
+    simulation_models_path : str
+        Path to the simulation models repository.
+    model_version : str, optional
+        Specific model version to get the production directory for.
+
+    Returns
+    -------
+    Path
+        Path to the production directory.
+    """
+    if model_version:
+        return Path(simulation_models_path) / "simulation-models/productions" / model_version
+    return Path(simulation_models_path) / "simulation-models/productions"
+
+
+def get_model_parameter_directory(simulation_models_path):
+    """
+    Get the model parameters directory.
+
+    Parameters
+    ----------
+    simulation_models_path : str
+        Path to the simulation models repository.
+
+    Returns
+    -------
+    Path
+        Path to the model parameters directory.
+    """
+    return Path(simulation_models_path) / "simulation-models/model_parameters"
+
+
 def verify_simulation_model_production_tables(simulation_models_path):
     """
     Verify the simulation model production tables in the specified path.
@@ -35,7 +73,7 @@ def verify_simulation_model_production_tables(simulation_models_path):
     bool
         True if all parameters found, False if any missing.
     """
-    productions_path = Path(simulation_models_path) / "simulation-models" / "productions"
+    productions_path = get_production_directory(simulation_models_path)
     production_files = list(productions_path.rglob("*.json"))
 
     _logger.info(
@@ -124,9 +162,7 @@ def _get_model_parameter_file_path(
     """
     collection = names.get_collection_name_from_parameter_name(parameter_name)
     return (
-        Path(simulation_models_path)
-        / "simulation-models"
-        / "model_parameters"
+        get_model_parameter_directory(simulation_models_path)
         / (
             collection
             if collection in ("configuration_sim_telarray", "configuration_corsika")
@@ -138,7 +174,7 @@ def _get_model_parameter_file_path(
     )
 
 
-def generate_new_production(modifications, simulation_models_path):
+def generate_new_production(model_version, simulation_models_path):
     """
     Generate a new production definition (production tables and model parameters).
 
@@ -151,26 +187,20 @@ def generate_new_production(modifications, simulation_models_path):
 
     Parameters
     ----------
-    modifications: str
-        Path to the YAML file defining the changes to be applied.
+    model_version: str
+        The model version to be created or updated.
     simulation_models_path: str
         Path to the simulation models repository.
     """
-    modifications = ascii_handler.collect_data_from_file(modifications)
-    model_version_history = modifications.get("model_version_history", [])
-    try:
-        # oldest version is the base version
-        base_model_version = min(set(model_version_history), key=Version)
-    except ValueError as exc:
-        raise ValueError(f"Base model version not found in {modifications}") from exc
-    model_version = modifications["model_version"]
-    changes = modifications.get("changes", {})
+    modification_dict = _get_changes_dict(model_version, simulation_models_path)
+    changes, base_model_version = _get_changes_to_production(
+        modification_dict, simulation_models_path
+    )
 
     _apply_changes_to_production_tables(
         changes,
         base_model_version,
-        model_version,
-        modifications.get("model_update", "full_update"),
+        modification_dict["model_version"],
         simulation_models_path,
     )
 
@@ -178,7 +208,7 @@ def generate_new_production(modifications, simulation_models_path):
 
 
 def _apply_changes_to_production_tables(
-    changes, base_model_version, model_version, update_type, simulation_models_path
+    changes, base_model_version, model_version, simulation_models_path
 ):
     """
     Apply changes to production tables and write them to target directory.
@@ -191,13 +221,12 @@ def _apply_changes_to_production_tables(
         The base model version (source directory for production tables).
     model_version: str
         The model version to be set in the JSON data.
-    update_type: str
-        Update mode, either 'full_update' or 'patch_update'.
     simulation_models_path: Path
         Path to the simulation models repository.
     """
-    source = simulation_models_path / "productions" / base_model_version
-    target = simulation_models_path / "productions" / model_version
+    source = get_production_directory(simulation_models_path, base_model_version)
+    target = get_production_directory(simulation_models_path, model_version)
+    update_type = changes.get("model_update", "full_update")
     _logger.info(f"Production tables {update_type} from {source} to {target}")
     target.mkdir(parents=True, exist_ok=True)
 
@@ -217,9 +246,10 @@ def _apply_changes_to_production_tables(
         if _apply_changes_to_production_table(
             table_name, data, changes, model_version, update_type == "patch_update"
         ):
-            _logger.info(f"Writing updated production table '{table_name}'")
+            target_file = target / f"{table_name}.json"
+            _logger.info(f"Writing updated production table '{target_file}'")
             data["production_table_name"] = table_name
-            ascii_handler.write_data_to_file(data, target / f"{table_name}.json", sort_keys=True)
+            ascii_handler.write_data_to_file(data, target_file, sort_keys=True)
 
 
 def _apply_changes_to_production_table(table_name, data, changes, model_version, patch_update):
@@ -254,6 +284,65 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         return False
 
     return True
+
+
+def _get_changes_dict(model_version, simulation_models_path):
+    """
+    Load the changes dictionary from the specified YAML file.
+
+    Parameters
+    ----------
+    model_version: str
+        Path to the YAML file defining the changes to be applied.
+    simulation_models_path: Path
+        Path to the simulation models directory.
+
+    Returns
+    -------
+    dict
+        The changes dictionary.
+    """
+    return ascii_handler.collect_data_from_file(
+        get_production_directory(simulation_models_path, model_version) / "info.yml"
+    )
+
+
+def _get_changes_to_production(modification_dict, simulation_models_path):
+    """
+    Prepare changes applied to production tables.
+
+    For full updates, this includes the combination of changes to be applied
+    for all model versions in the history, starting from the base version.
+
+    Parameters
+    ----------
+    modification_dict: dict
+        Modifications dictionary.
+    simulation_models_path: Path
+        Path to the simulation models directory.
+
+    Returns
+    -------
+    list, str
+        List of model versions in the history and base model version.
+    """
+    model_version_history = modification_dict.get("model_version_history", [])
+
+    try:
+        # oldest version is the base version
+        base_model_version = min(set(model_version_history), key=Version)
+    except ValueError as exc:
+        raise ValueError(f"Base model version not found in {model_version_history}") from exc
+
+    changes = modification_dict.get("changes", {})
+    if modification_dict.get("model_update", "full_update") == "patch_update":
+        return changes, base_model_version
+
+    for version in reversed(model_version_history):
+        _version_mod = _get_changes_dict(version, simulation_models_path)
+        changes.update(_version_mod.get("changes", {}))
+
+    return changes, base_model_version
 
 
 def _update_parameters_dict(table_parameters, changes, table_name):
@@ -330,7 +419,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    telescope_dir = simulation_models_path / "model_parameters" / telescope
+    telescope_dir = get_model_parameter_directory(simulation_models_path) / telescope
     if not telescope_dir.exists():
         _logger.info(f"Create directory for array element '{telescope}': '{telescope_dir}'.")
         telescope_dir.mkdir(parents=True, exist_ok=True)
