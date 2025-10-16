@@ -193,14 +193,16 @@ def generate_new_production(model_version, simulation_models_path):
         Path to the simulation models repository.
     """
     modification_dict = _get_changes_dict(model_version, simulation_models_path)
+    update_type = modification_dict.get("model_update", "full_update")
     changes, base_model_version = _get_changes_to_production(
-        modification_dict, simulation_models_path
+        modification_dict, simulation_models_path, update_type
     )
 
     _apply_changes_to_production_tables(
         changes,
         base_model_version,
         modification_dict["model_version"],
+        update_type,
         simulation_models_path,
     )
 
@@ -208,7 +210,7 @@ def generate_new_production(model_version, simulation_models_path):
 
 
 def _apply_changes_to_production_tables(
-    changes, base_model_version, model_version, simulation_models_path
+    changes, base_model_version, model_version, update_type, simulation_models_path
 ):
     """
     Apply changes to production tables and write them to target directory.
@@ -221,12 +223,13 @@ def _apply_changes_to_production_tables(
         The base model version (source directory for production tables).
     model_version: str
         The model version to be set in the JSON data.
+    update_type: str
+        Update mode, either 'full_update' or 'patch_update'.
     simulation_models_path: Path
         Path to the simulation models repository.
     """
     source = get_production_directory(simulation_models_path, base_model_version)
     target = get_production_directory(simulation_models_path, model_version)
-    update_type = changes.get("model_update", "full_update")
     _logger.info(f"Production tables {update_type} from {source} to {target}")
     target.mkdir(parents=True, exist_ok=True)
 
@@ -307,7 +310,9 @@ def _get_changes_dict(model_version, simulation_models_path):
     )
 
 
-def _get_changes_to_production(modification_dict, simulation_models_path):
+def _get_changes_to_production(
+    modification_dict, simulation_models_path, update_type="full_update"
+):
     """
     Prepare changes applied to production tables.
 
@@ -320,6 +325,8 @@ def _get_changes_to_production(modification_dict, simulation_models_path):
         Modifications dictionary.
     simulation_models_path: Path
         Path to the simulation models directory.
+    update_type: str
+        Update mode.
 
     Returns
     -------
@@ -331,16 +338,23 @@ def _get_changes_to_production(modification_dict, simulation_models_path):
     try:
         # oldest version is the base version
         base_model_version = min(set(model_version_history), key=Version)
-    except ValueError as exc:
-        raise ValueError(f"Base model version not found in {model_version_history}") from exc
+    except ValueError:
+        _logger.debug(f"Base model version not found in {model_version_history}")
+        return {}, modification_dict.get("model_version")
 
     changes = modification_dict.get("changes", {})
-    if modification_dict.get("model_update", "full_update") == "patch_update":
+    if update_type == "patch_update":
         return changes, base_model_version
 
-    for version in reversed(model_version_history):
-        _version_mod = _get_changes_dict(version, simulation_models_path)
-        changes.update(_version_mod.get("changes", {}))
+    for version_mod in reversed(model_version_history):
+        _changes_dict = _get_changes_dict(version_mod, simulation_models_path)
+        _version_changes, base_model_version = _get_changes_to_production(
+            _changes_dict, simulation_models_path, update_type="full_update"
+        )
+        changes.update(_version_changes)
+        # stop iterative loop after reaching first full version of production tables
+        if _changes_dict.get("model_update", "full_update") == "full_update":
+            break
 
     return changes, base_model_version
 
