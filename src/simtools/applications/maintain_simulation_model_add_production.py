@@ -3,8 +3,8 @@ Generate a new simulation model production and update tables and model parameter
 
 This script is used to maintain the simulation model repository. It allows to create
 new production tables by copying an existing base version and applies modifications
-to production tables and model parameters as provided in a YAML file (see the examples
-in the simulation models repository).
+to production tables and model parameters as provided in a configuration file (see
+the 'info.yml' examples in the simulation models repository).
 
 Two main use cases are covered by this script:
 

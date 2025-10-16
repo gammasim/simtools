@@ -340,8 +340,8 @@ def _get_changes_to_production(
 
     Returns
     -------
-    list, str
-        List of model versions in the history and base model version.
+    dict, str
+        Changes dictionary and base model version.
     """
     model_version_history = modification_dict.get("model_version_history", [])
 
