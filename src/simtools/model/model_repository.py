@@ -281,7 +281,7 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         table_parameters = {} if patch_update else data.get("parameters", {}).get(table_name, {})
         parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
         data["parameters"] = parameters
-        if deprecated:
+        if deprecated and patch_update:
             data["deprecated_parameters"] = deprecated
     elif patch_update:
         return False
@@ -346,12 +346,21 @@ def _get_changes_to_production(
     if update_type == "patch_update":
         return changes, base_model_version
 
+    def update_two_levels(d, u):
+        """Update changes dict, e.g. {"LSTN-design": { "parameter_name: { ... } } }."""
+        for k, v in u.items():
+            if isinstance(v, dict) and isinstance(d.get(k), dict):
+                d[k].update(v)
+            else:
+                d[k] = v
+        return d
+
     for version_mod in reversed(model_version_history):
         _changes_dict = _get_changes_dict(version_mod, simulation_models_path)
         _version_changes, base_model_version = _get_changes_to_production(
             _changes_dict, simulation_models_path, update_type="full_update"
         )
-        changes.update(_version_changes)
+        changes = update_two_levels(changes, _version_changes)
         # stop iterative loop after reaching first full version of production tables
         if _changes_dict.get("model_update", "full_update") == "full_update":
             break
@@ -388,6 +397,7 @@ def _update_parameters_dict(table_parameters, changes, table_name):
         if data.get("deprecated", False):
             _logger.info(f"Removing model parameter '{table_name} - {param}'")
             deprecated_params.append(param)
+            new_params[table_name].pop(param, None)
         else:
             version = data["version"]
             _logger.info(f"Setting '{table_name} - {param}' to version {version}")
