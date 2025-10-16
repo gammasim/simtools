@@ -3,15 +3,18 @@ Generate a new simulation model production and update tables and model parameter
 
 This script is used to maintain the simulation model repository. It allows to create
 new production tables by copying an existing base version and applies modifications
-to production tables and model parameters as provided in a YAML file (see the example file below).
+to production tables and model parameters as provided in a YAML file (see the examples
+in the simulation models repository).
 
 Two main use cases are covered by this script:
 
-1. full update: Create a complete new set of production tables (e.g. for new major or minor
+1. full update: create a complete new set of production tables (e.g. for new major or minor
    versions of the simulation models). This will copy all production tables from the source
    directory and apply the modifications to the tables that are listed in the modifications file.
+   If the full update is based on a previous patch update, the full history of changes is applied
+   iteratively until the last base version is reached.
 
-2. patch update: Create a set of new production tables including the changes defined in the
+2. patch update: create a set of new production tables including the changes defined in the
    modifications file. No unmodified tables are copied. For new production tables with patch
    modifications, the key-value pair 'base_model_version: <base_model version>' is added.
 

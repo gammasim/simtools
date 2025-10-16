@@ -1,8 +1,15 @@
 """Utilities for managing the simulation models repository.
 
 Simulation model parameters and production tables are managed through
-a gitlab repository ('SimulationModels'). This module provides service
+a gitlab repository ('simulation_models'). This module provides service
 functions to interact with and verify the repository.
+
+Main functionalities are:
+
+- validation of production tables against model parameters
+- generation of new production tables and model parameters based on
+ updates defined in a configuration file
+
 """
 
 import logging
@@ -181,14 +188,15 @@ def generate_new_production(model_version, simulation_models_path):
     The following steps are performed:
 
     - copy of production tables from an existing base model version
-    - update production tables with changes defined in a YAML file
+    - update production tables with changes defined in a configuration file (expected
+      to be called 'info.yml' in the target production directory)
     - generate new model parameter entries for changed parameters
     - allows for full or patch updates
 
     Parameters
     ----------
     model_version: str
-        The model version to be created or updated.
+        Model version to be created or updated.
     simulation_models_path: str
         Path to the simulation models repository.
     """
@@ -213,18 +221,18 @@ def _apply_changes_to_production_tables(
     changes, base_model_version, model_version, update_type, simulation_models_path
 ):
     """
-    Apply changes to production tables and write them to target directory.
+    Apply changes to or generate new production tables and write them to target directory.
 
     Parameters
     ----------
     changes: dict
-        The changes to be applied.
+        Changes to be applied.
     base_model_version: str
-        The base model version (source directory for production tables).
+        Base model version (source directory for production tables).
     model_version: str
-        The model version to be set in the JSON data.
+        Model version of the new production tables.
     update_type: str
-        Update mode, either 'full_update' or 'patch_update'.
+        Update type (e.g., 'full_update' or 'patch_update').
     simulation_models_path: Path
         Path to the simulation models repository.
     """
@@ -233,7 +241,7 @@ def _apply_changes_to_production_tables(
     _logger.info(f"Production tables {update_type} from {source} to {target}")
     target.mkdir(parents=True, exist_ok=True)
 
-    # load existing tables
+    # load existing tables from source
     tables = {}
     for file_path in Path(source).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
@@ -261,12 +269,14 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
 
     Parameters
     ----------
+    table_name: str
+        Name of the production table.
     data: dict
-        The data to be updated.
+        Data to be updated.
     changes: dict
-        The changes to be applied.
+        Changes to be applied.
     model_version: str
-        The model version to be set in the JSON data.
+        Model version of the new production tables.
     patch_update: bool
         True if patch update (modify only changed parameters), False for full update.
 
@@ -291,19 +301,19 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
 
 def _get_changes_dict(model_version, simulation_models_path):
     """
-    Load the changes dictionary from the specified YAML file.
+    Load the changes dictionary from 'info.yml' files in production directories.
 
     Parameters
     ----------
     model_version: str
-        Path to the YAML file defining the changes to be applied.
+        Model version of the new production tables.
     simulation_models_path: Path
         Path to the simulation models directory.
 
     Returns
     -------
     dict
-        The changes dictionary.
+        Changes dictionary.
     """
     return ascii_handler.collect_data_from_file(
         get_production_directory(simulation_models_path, model_version) / "info.yml"
