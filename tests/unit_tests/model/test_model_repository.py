@@ -995,7 +995,7 @@ def test_get_changes_to_production_patch_update(mock_get_changes_dict, tmp_path)
     mock_get_changes_dict.assert_not_called()
 
 
-def test_get_changes_to_production_empty_history():
+def test_get_changes_to_production_empty_history(tmp_test_directory):
     """Test handling of empty version history."""
     modification_dict = {
         "model_version": "6.0.0",
@@ -1005,7 +1005,7 @@ def test_get_changes_to_production_empty_history():
     }
 
     changes, base_version = model_repository._get_changes_to_production(
-        modification_dict, Path("/tmp"), update_type="full_update"
+        modification_dict, tmp_test_directory, update_type="full_update"
     )
 
     # When history is empty, should return empty changes and the model_version
