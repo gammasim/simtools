@@ -8,7 +8,7 @@ Main functionalities are:
 
 - validation of production tables against model parameters
 - generation of new production tables and model parameters based on
- updates defined in a configuration file
+  updates defined in a configuration file
 
 """
 
